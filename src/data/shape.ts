@@ -1,12 +1,13 @@
 import { LzData } from "./lzdata";
 import { Pair, Style, XY } from "./style";
+import { Text } from "./text";
 
 export enum PointType {
     Type0, // todo
 }
 
 export enum CurveMode {
-    Mode0, // todo
+    Mode0, // todo 1,2,3,4
 }
 
 export class Point {
@@ -121,6 +122,7 @@ export enum ShapeType {
     Artboard,
     Image,
     Page,
+    Text,
 }
 
 export enum BooleanOperation {
@@ -141,16 +143,13 @@ export enum ClippingMaskMode {
 }
 
 export class Shape {
-    private m_parent: Shape;
-    private m_lzData: LzData;
+    protected m_parent: Shape | undefined;
+    protected m_lzData: LzData;
     private m_type: ShapeType;
     private m_exportOptions: ExportOptions;
     private m_frame: ShapeFrame;
     private m_childs: Shape[] = [];
     private m_style: Style;
-    private m_points: Point[];
-    private m_imageRef: string;
-    private m_imageData: string | undefined;
     private m_booleanOperation: BooleanOperation;
     private m_isFixedToViewport: boolean = false;
     private m_isFlippedHorizontal: boolean = false;
@@ -169,24 +168,13 @@ export class Shape {
     private m_hasClippingMask: boolean = false;
     private m_changeListener: Function | undefined;
 
-	constructor(parent: Shape, 
+	constructor(parent: Shape | undefined, 
         lzData: LzData,
         type: ShapeType,
         name: string,
-        // nameIsFixed: boolean,
         booleanOperation: BooleanOperation,
-        // isFixedToViewport: boolean,
-        // isFlippedHorizontal: boolean,
-        // isFlippedVertical: boolean,
-        // isLocked: boolean,
-        // isVisible: boolean,
-        // layerListExpandedType: LayerListExpandedType,
-        // maintainScrollPosition: boolean,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
-        
-        points: Point[],
-        imageRef: string,
         style: Style) {
 
             this.m_parent = parent;
@@ -196,9 +184,6 @@ export class Shape {
             this.m_booleanOperation = booleanOperation;
             this.m_exportOptions = exportOptions;
             this.m_frame = frame;
-
-            this.m_points = points;
-            this.m_imageRef = imageRef;
             this.m_style = style;
 	}
 
@@ -272,16 +257,6 @@ export class Shape {
 	get style() {
 		return this.m_style;
 	}
-	// path shape
-	get pointsCount() {
-		return this.m_points.length;
-	}
-    getPointByIndex(idx: number) {
-        return this.m_points[idx];
-    }
-    mapPoints<T>(f: (value: Point, index: number, array: Point[]) => T): T[] {
-        return this.m_points.map(f);
-    }
 
 	onChange(cb: Function) {
 		this.m_changeListener = cb;
@@ -289,7 +264,30 @@ export class Shape {
 	fireChanged() {
 		if (this.m_changeListener) this.m_changeListener();
 	}
+	// bubbleEvent(event: string, args: any, forceAsync: boolean = false): any {
+	// 	return this.m_parent && this.m_parent.bubbleEvent(event, args, forceAsync);
+	// }
+}
 
+export class ImageShape extends Shape {
+    private m_imageRef: string;
+    private m_imageData: string | undefined;
+    // private m_lzData: LzData;
+    
+	constructor(parent: Shape | undefined, 
+        lzData: LzData,
+        type: ShapeType,
+        name: string,
+        booleanOperation: BooleanOperation,
+        exportOptions: ExportOptions,
+        frame: ShapeFrame,
+        imageRef: string,
+        style: Style) {
+            super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            this.m_imageRef = imageRef;
+	}
+
+    // image shape
 	async loadImage(): Promise<string> {
         if (this.m_imageData) {
             return this.m_imageData;
@@ -327,7 +325,54 @@ export class Shape {
 		const imageRef = this.m_imageRef;
 		return imageRef.substring(imageRef.lastIndexOf('.')+1);
 	}
-	bubbleEvent(event: string, args: any, forceAsync: boolean = false): any {
-		return this.m_parent && this.m_parent.bubbleEvent(event, args, forceAsync);
+}
+
+export class PathShape extends Shape {
+    private m_points: Point[];
+    private m_isClosed: boolean | undefined;
+
+	constructor(parent: Shape | undefined, 
+        lzData: LzData,
+        type: ShapeType,
+        name: string,
+        booleanOperation: BooleanOperation,
+        exportOptions: ExportOptions,
+        frame: ShapeFrame,
+        points: Point[],
+        style: Style) {
+            super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            this.m_points = points;
 	}
+    
+	// path shape
+	get pointsCount() {
+		return this.m_points.length;
+	}
+    getPointByIndex(idx: number) {
+        return this.m_points[idx];
+    }
+    mapPoints<T>(f: (value: Point, index: number, array: Point[]) => T): T[] {
+        return this.m_points.map(f);
+    }
+}
+
+export class TextShape extends Shape {
+    private m_text: Text;
+    
+	constructor(parent: Shape | undefined, 
+        lzData: LzData,
+        type: ShapeType,
+        name: string,
+        booleanOperation: BooleanOperation,
+        exportOptions: ExportOptions,
+        frame: ShapeFrame,
+        style: Style,
+        text: Text) {
+            super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            this.m_text = text;
+	}
+
+    get text() {
+        return this.m_text;
+    }
 }

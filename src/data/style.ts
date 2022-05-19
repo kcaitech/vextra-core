@@ -60,7 +60,9 @@ export interface XY<T1, T2> {
 }
 
 export enum GradientType {
-    Type0, // todo
+    Linear,
+    Radial,
+    Angular,
 }
 
 export class Gradient {
@@ -120,7 +122,9 @@ export class ContextSettings {
 }
 
 export enum FillType {
-    Type0, // todo
+    SolidColor, // todo
+    Gradient,
+    Pattern,
 }
 
 export class Fill {

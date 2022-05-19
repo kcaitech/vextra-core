@@ -19,6 +19,9 @@ export class Document extends EventEmitter {
 		// 	this._init(data);
 		// 	this.emit('ready');
 		// });
+        
+        // for debugger
+        (window as any).__document = this;
 	}
 	
 	get pageCount(): number {

@@ -1,10 +1,12 @@
-import { BooleanOperation, CurveMode, ExportOptions, Point, PointType, Shape, ShapeFrame, ShapeType } from "@/data/shape";
+import { BooleanOperation, CurveMode, ExportOptions, ImageShape, PathShape, Point, PointType, Shape, ShapeFrame, ShapeType, TextShape } from "@/data/shape";
 import { LzData } from '@/data/lzdata';
-import { Pair, Style, XY } from "@/data/style";
+import { XY } from "@/data/style";
 import { Env } from "./envio";
 import { importXY, importStyle, IJSON } from "./styleio";
+import { Page } from "@/data/page";
+import { importText } from "./textio";
 
-export function importShape<T extends Shape>(Class: any, env:Env, parent: Shape | undefined, lzData: LzData, data: IJSON): T {
+export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, data: IJSON): Shape {
 
     const type = ((t) => {
         switch(t) {
@@ -15,6 +17,7 @@ export function importShape<T extends Shape>(Class: any, env:Env, parent: Shape 
             case 'artboard': return ShapeType.Artboard;
             case 'bitmap': return ShapeType.Image;
             case 'page': return ShapeType.Page;
+            case 'text': return ShapeType.Text;
             default: return ShapeType.Rectangle;
         }
     })(data['_class']);
@@ -58,9 +61,22 @@ export function importShape<T extends Shape>(Class: any, env:Env, parent: Shape 
     const image = data['image'];
     const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
+    const text = data['attributedString'] && importText(data['attributedString']);
 
-    const shape = new Class(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, imageRef, style);
-    const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(Shape, env, shape, lzData, d));
+    const shape = ((type: ShapeType) => {
+        switch(type) {
+            case ShapeType.Artboard: return new Shape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            case ShapeType.Group: return new Shape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            case ShapeType.Image: return new ImageShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, imageRef, style);
+            case ShapeType.Page: return new Page(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            case ShapeType.Path: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style);
+            case ShapeType.Rectangle: return new Shape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            case ShapeType.Text: return new TextShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, text);
+        }
+    })(type);
+
+    // const shape = new Class(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, imageRef, style);
+    const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
     
     shape.initChilds(childs);
     return shape;

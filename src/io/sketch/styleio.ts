@@ -22,7 +22,7 @@ export interface IJSON {
 	[key: string]: any
 }
 
-function importColor(data: IJSON): Color {
+export function importColor(data: IJSON): Color {
     // if (!data)
     const alpha: number = data['alpha'] as number;
     let blue: number = data['blue'];
@@ -63,8 +63,10 @@ function importGradient(data: IJSON): Gradient {
     const from: XY<number, number> = importXY(data['from']);
     const gradientType: GradientType = ((t) => {
         switch(t) {
-            case 0: return GradientType.Type0;
-            default: return GradientType.Type0;
+            case 0: return GradientType.Linear;
+            case 1: return GradientType.Radial;
+            case 2: return GradientType.Angular;
+            default: return GradientType.Linear;
         }
     })(data['gradientType']);
     const to: XY<number, number> = importXY(data['to']);
@@ -113,16 +115,18 @@ export function importStyle(env:Env, data: IJSON): Style {
         const isEnabled: boolean = d['isEnabled'];
         const fillType: FillType = ((t) => {
                 switch(t) {
-                    case 0: return FillType.Type0;
-                    default: return FillType.Type0;
+                    case 0: return FillType.SolidColor;
+                    case 1: return FillType.Gradient;
+                    case 2: return FillType.Pattern;
+                    default: return FillType.SolidColor;
                 }
             })(d['fillType']);
         const color: Color = importColor(d['color']);
 
         const contextSettings: ContextSettings = importContextSettings(d['contextSettings']);
         let gradientId;
-        if (data['gradient']) {
-            const gradient = importGradient(data['gradient']);
+        if (fillType == FillType.Gradient && d['gradient']) {
+            const gradient = importGradient(d['gradient']);
             gradientId = genGradientId(gradient);
             gradients.set(gradientId, gradient);
         }
@@ -135,16 +139,18 @@ export function importStyle(env:Env, data: IJSON): Style {
         const isEnabled: boolean = d['isEnabled'];
         const fillType = ((t) => {
             switch(t) {
-                case 0: return FillType.Type0;
-                default: return FillType.Type0;
+                case 0: return FillType.SolidColor;
+                case 1: return FillType.Gradient;
+                case 2: return FillType.Pattern;
+                default: return FillType.SolidColor;
             }
         })(d['fillType']);
         const color: Color = importColor(d['color']);
-        const contextSettings: ContextSettings = importContextSettings(data['contextSettings']);
+        const contextSettings: ContextSettings = importContextSettings(d['contextSettings']);
 
         let gradientId;
-        if (data['gradient']) {
-            const gradient: Gradient = importGradient(data['gradient']);
+        if (fillType == FillType.Gradient && d['gradient']) {
+            const gradient: Gradient = importGradient(d['gradient']);
             gradientId = genGradientId(gradient);
             gradients.set(gradientId, gradient);
         }
