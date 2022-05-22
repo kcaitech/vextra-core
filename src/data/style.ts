@@ -96,8 +96,11 @@ export class Gradient {
     get to(): XY<number, number> {
         return this.m_to;
     }
-    get stops(): Stop[] {
-        return this.m_stops;
+    get stopsCount(): number {
+        return this.m_stops.length;
+    }
+    getStopByIndex(index: number): Stop {
+        return this.m_stops[index];
     }
 }
 
@@ -134,19 +137,22 @@ export class Fill {
     private m_color: Color;
     private m_contextSettings: ContextSettings;
     private m_gradientId: string | undefined;
+    private m_gradientType: GradientType | undefined;
 
     constructor(//shape: object, 
         isEnabled: boolean, 
         fillType: FillType, 
         color: Color, 
         contextSettings: ContextSettings, 
-        gradientId: string | undefined) {
+        gradientId: string | undefined,
+        gradientType: GradientType | undefined) {
             // this.m_shape = shape;
             this.m_isEnabled = isEnabled;
             this.m_fillType = fillType;
             this.m_color = color;
             this.m_contextSettings = contextSettings;
             this.m_gradientId = gradientId;
+            this.m_gradientType = gradientType;
     }
     // get shape(): object {
     //     return this.m_shape;
@@ -165,6 +171,9 @@ export class Fill {
     }
     get gradientId(): string | undefined {
         return this.m_gradientId;
+    }
+    get gradientType() : GradientType | undefined {
+        return this.m_gradientType;
     }
 }
 
@@ -175,19 +184,22 @@ export class Border {
     private m_color: Color;
     private m_contextSettings: ContextSettings;
     private m_gradientId: string | undefined;
+    private m_gradientType: GradientType | undefined;
 
     constructor(//shape: object, 
         isEnabled: boolean,
         fillType: FillType,
         color: Color,
         contextSettings: ContextSettings,
-        gradientId: string | undefined) {
+        gradientId: string | undefined,
+        gradientType: GradientType | undefined) {
             // this.m_shape = shape;
             this.m_isEnabled = isEnabled;
             this.m_fillType = fillType;
             this.m_color = color;
             this.m_contextSettings = contextSettings;
             this.m_gradientId = gradientId;
+            this.m_gradientType = gradientType;
     }
     // get shape(): object {
     //     return this.m_shape;
@@ -206,6 +218,9 @@ export class Border {
     }
     get gradientId(): string | undefined {
         return this.m_gradientId;
+    }
+    get gradientType() : GradientType | undefined {
+        return this.m_gradientType;
     }
 }
 

@@ -1,20 +1,5 @@
 import { Color } from "./style";
 
-// export class FontAttr {
-//     private m_name: string;
-//     private m_size: number;
-//     constructor(name: string, size: number) {
-//         this.m_name = name;
-//         this.m_size = size;
-//     }
-//     get name(): string {
-//         return this.m_name;
-//     }
-//     get size(): number {
-//         return this.m_size;
-//     }
-// }
-
 export class Attr {
     private m_fontName?: string;
     private m_fontSize?: number;
@@ -34,9 +19,6 @@ export class Attr {
     get color() {
         return this.m_color;
     }
-    // get length() {
-    //     return this.m_len;
-    // }
 }
 
 export class Span extends Attr {

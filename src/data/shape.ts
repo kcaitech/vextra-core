@@ -8,6 +8,10 @@ export enum PointType {
 
 export enum CurveMode {
     Mode0, // todo 1,2,3,4
+    Mode1,
+    Mode2,
+    Mode3,
+    Mode4,
 }
 
 export class Point {
@@ -123,6 +127,10 @@ export enum ShapeType {
     Image,
     Page,
     Text,
+    Oval,
+    Triangle,
+    Star,
+    Polygon,
 }
 
 export enum BooleanOperation {
@@ -269,6 +277,26 @@ export class Shape {
 	// }
 }
 
+export class RectShape extends Shape {
+    private m_fixedRadius: number;
+
+    constructor(parent: Shape | undefined, 
+        lzData: LzData,
+        type: ShapeType,
+        name: string,
+        booleanOperation: BooleanOperation,
+        exportOptions: ExportOptions,
+        frame: ShapeFrame,
+        style: Style,
+        fixedRadius?: number) {
+            super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            this.m_fixedRadius = fixedRadius || 0;
+	}
+    get fixedRadius() {
+        return this.m_fixedRadius;
+    }
+}
+
 export class ImageShape extends Shape {
     private m_imageRef: string;
     private m_imageData: string | undefined;
@@ -339,9 +367,11 @@ export class PathShape extends Shape {
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         points: Point[],
-        style: Style) {
+        style: Style,
+        isClosed?: boolean) {
             super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
             this.m_points = points;
+            this.m_isClosed = isClosed;
 	}
     
 	// path shape
@@ -353,6 +383,9 @@ export class PathShape extends Shape {
     }
     mapPoints<T>(f: (value: Point, index: number, array: Point[]) => T): T[] {
         return this.m_points.map(f);
+    }
+    get isClosed(): boolean {
+        return !!this.m_isClosed;
     }
 }
 

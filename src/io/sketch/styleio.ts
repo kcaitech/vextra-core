@@ -73,8 +73,14 @@ function importGradient(data: IJSON): Gradient {
     const stops: Stop[] = (data['stops'] || []).map((d: IJSON)=> {
         const position: number = d['position'];
         const color: Color = importColor(d['color']);
+
+        if (position < 0 || position > 1) {
+            throw new Error("position:" + position);
+        }
+
         return new Stop(position, color);
     });
+    stops.sort((a, b) => a.position - b.position);
     return new Gradient(elipseLength, from, gradientType, to, stops);
 }
 
@@ -125,13 +131,15 @@ export function importStyle(env:Env, data: IJSON): Style {
 
         const contextSettings: ContextSettings = importContextSettings(d['contextSettings']);
         let gradientId;
+        let gradientType;
         if (fillType == FillType.Gradient && d['gradient']) {
             const gradient = importGradient(d['gradient']);
+            gradientType = gradient.gradientType;
             gradientId = genGradientId(gradient);
             gradients.set(gradientId, gradient);
         }
 
-        return new Border(isEnabled, fillType, color, contextSettings, gradientId);
+        return new Border(isEnabled, fillType, color, contextSettings, gradientId, gradientType);
         });
 
     const contextSettings: ContextSettings = importContextSettings(data['contextSettings']);
@@ -149,13 +157,15 @@ export function importStyle(env:Env, data: IJSON): Style {
         const contextSettings: ContextSettings = importContextSettings(d['contextSettings']);
 
         let gradientId;
+        let gradientType;
         if (fillType == FillType.Gradient && d['gradient']) {
             const gradient: Gradient = importGradient(d['gradient']);
+            gradientType = gradient.gradientType;
             gradientId = genGradientId(gradient);
             gradients.set(gradientId, gradient);
         }
 
-        return new Fill(isEnabled, fillType, color, contextSettings, gradientId);
+        return new Fill(isEnabled, fillType, color, contextSettings, gradientId, gradientType);
     });
 
     const innerShadows: object[] = (data['innerShadows'] || []).map((d: object) => {

@@ -1,4 +1,4 @@
-import { BooleanOperation, CurveMode, ExportOptions, ImageShape, PathShape, Point, PointType, Shape, ShapeFrame, ShapeType, TextShape } from "@/data/shape";
+import { BooleanOperation, CurveMode, ExportOptions, ImageShape, PathShape, Point, PointType, RectShape, Shape, ShapeFrame, ShapeType, TextShape } from "@/data/shape";
 import { LzData } from '@/data/lzdata';
 import { XY } from "@/data/style";
 import { Env } from "./envio";
@@ -18,6 +18,10 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
             case 'bitmap': return ShapeType.Image;
             case 'page': return ShapeType.Page;
             case 'text': return ShapeType.Text;
+            case 'oval':
+            case 'star':
+            case 'triangle':
+            case 'polygon': return ShapeType.Path;
             default: return ShapeType.Rectangle;
         }
     })(data['_class']);
@@ -48,6 +52,10 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
         const curveMode: CurveMode = ((t) => {
             switch(t) {
                 case 0: return CurveMode.Mode0;
+                case 1: return CurveMode.Mode1;
+                case 2: return CurveMode.Mode2;
+                case 3: return CurveMode.Mode3;
+                case 4: return CurveMode.Mode4;
                 default: return CurveMode.Mode0;
             }
         })(d['curveMode']);
@@ -62,6 +70,7 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
     const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
     const text = data['attributedString'] && importText(data['attributedString']);
+    const isClosed = data['isClosed'];
 
     const shape = ((type: ShapeType) => {
         switch(type) {
@@ -69,9 +78,13 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
             case ShapeType.Group: return new Shape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
             case ShapeType.Image: return new ImageShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, imageRef, style);
             case ShapeType.Page: return new Page(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
-            case ShapeType.Path: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style);
+            case ShapeType.Path: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style, isClosed);
             case ShapeType.Rectangle: return new Shape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
             case ShapeType.Text: return new TextShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, text);
+            case ShapeType.Star:
+            case ShapeType.Polygon:
+            case ShapeType.Triangle:
+            case ShapeType.Oval: return new Page(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
         }
     })(type);
 
