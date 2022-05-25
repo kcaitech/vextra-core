@@ -177,6 +177,12 @@ export class Fill {
     }
 }
 
+export enum BorderPosition {
+    Inner,
+    Center,
+    Outer,
+}
+
 export class Border {
     // private m_shape: object; // todo
     private m_isEnabled: boolean;
@@ -185,6 +191,8 @@ export class Border {
     private m_contextSettings: ContextSettings;
     private m_gradientId: string | undefined;
     private m_gradientType: GradientType | undefined;
+    private m_position: BorderPosition;
+    private m_thickness: number;
 
     constructor(//shape: object, 
         isEnabled: boolean,
@@ -192,7 +200,9 @@ export class Border {
         color: Color,
         contextSettings: ContextSettings,
         gradientId: string | undefined,
-        gradientType: GradientType | undefined) {
+        gradientType: GradientType | undefined,
+        position: BorderPosition,
+        thickness: number) {
             // this.m_shape = shape;
             this.m_isEnabled = isEnabled;
             this.m_fillType = fillType;
@@ -200,6 +210,8 @@ export class Border {
             this.m_contextSettings = contextSettings;
             this.m_gradientId = gradientId;
             this.m_gradientType = gradientType;
+            this.m_position = position;
+            this.m_thickness = thickness;
     }
     // get shape(): object {
     //     return this.m_shape;
@@ -219,8 +231,14 @@ export class Border {
     get gradientId(): string | undefined {
         return this.m_gradientId;
     }
-    get gradientType() : GradientType | undefined {
+    get gradientType(): GradientType | undefined {
         return this.m_gradientType;
+    }
+    get position(): BorderPosition {
+        return this.m_position;
+    }
+    get thickness(): number {
+        return this.m_thickness;
     }
 }
 
@@ -241,6 +259,11 @@ export class Blur {
 }
 
 export class BorderOptions {
+    // private m_isEnabled: boolean;
+    // private m_dashPattern: 
+    // private m_lineCapStyle:
+    // private m_lineJoinStyle:
+
     // "borderOptions": {
     //     "_class": "borderOptions",
     //     "isEnabled": true,
@@ -332,19 +355,31 @@ export class Style {
     get borderOptions(): BorderOptions {
         return this.m_borderOptions;
     }
-    get borders(): Border[] {
-        return this.m_borders;
+    get bordersCount(): number {
+        return this.m_borders.length;
+    }
+    getBorderByIndex(index: number): Border {
+        return this.m_borders[index];
     }
     get contextSettings() {
         return this.m_contextSettings;
     }
-    get fills(): Fill[] {
-        return this.m_fills;
+    get fillsCount(): number {
+        return this.m_fills.length;
     }
-    get innerShadows(): object[] {
-        return this.m_innerShadows;
+    getFillByIndex(index: number): Fill {
+        return this.m_fills[index];
     }
-    get shadows(): object[] {
-        return this.m_shadows;
+    get innerShadowsCount(): number {
+        return this.m_innerShadows.length;
+    }
+    getInnerShadowByIndex(index: number) {
+        return this.m_innerShadows[index];
+    }
+    get shadowsCount(): number {
+        return this.m_shadows.length;
+    }
+    getShadowByIndex(index: number) {
+        return this.m_shadows[index];
     }
 }

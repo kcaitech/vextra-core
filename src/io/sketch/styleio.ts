@@ -2,6 +2,7 @@ import { BlendMode,
     Blur, 
     Border, 
     BorderOptions, 
+    BorderPosition, 
     Color, 
     ContextSettings, 
     Fill, 
@@ -28,9 +29,9 @@ export function importColor(data: IJSON): Color {
     let blue: number = data['blue'];
     let green: number = data['green'];
     let red: number = data['red'];
-    blue = Math.round(blue * 255) % 255;
-    green = Math.round(green * 255) % 255;
-    red = Math.round(red * 255) % 255;
+    blue = Math.min(Math.max(Math.round(blue * 255), 0), 255);
+    green = Math.min(Math.max(Math.round(green * 255), 0), 255);
+    red = Math.min(Math.max(Math.round(red * 255), 0), 255);
     return new Color(red, green, blue, alpha);
 }
 
@@ -71,16 +72,15 @@ function importGradient(data: IJSON): Gradient {
     })(data['gradientType']);
     const to: XY<number, number> = importXY(data['to']);
     const stops: Stop[] = (data['stops'] || []).map((d: IJSON)=> {
-        const position: number = d['position'];
-        const color: Color = importColor(d['color']);
-
-        if (position < 0 || position > 1) {
-            throw new Error("position:" + position);
+        let position: number = d['position'];
+        if (gradientType == GradientType.Angular) {
+            position = (position + 90.0 / 360.0) % 1;/* rotate 90deg */
         }
-
+        position = Math.min(Math.max(0, position), 1);
+        const color: Color = importColor(d['color']);
         return new Stop(position, color);
     });
-    stops.sort((a, b) => a.position - b.position);
+    stops.sort((a, b) => a.position == b.position ? -1 : a.position - b.position);
     return new Gradient(elipseLength, from, gradientType, to, stops);
 }
 
@@ -139,8 +139,19 @@ export function importStyle(env:Env, data: IJSON): Style {
             gradients.set(gradientId, gradient);
         }
 
-        return new Border(isEnabled, fillType, color, contextSettings, gradientId, gradientType);
-        });
+        const position: BorderPosition = ((p: number) => {
+            switch(p) {
+                case 0: return BorderPosition.Center;
+                case 1: return BorderPosition.Inner;
+                case 2: return BorderPosition.Outer;
+                default: return BorderPosition.Center;
+            }
+        })(d['position']);
+
+        const thickness: number = d['thickness'];
+
+        return new Border(isEnabled, fillType, color, contextSettings, gradientId, gradientType, position, thickness);
+    });
 
     const contextSettings: ContextSettings = importContextSettings(data['contextSettings']);
     const fills: Fill[] = (data['fills'] || []).map((d: IJSON) => {
