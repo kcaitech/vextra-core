@@ -16,7 +16,7 @@ export class RulerData {
 }
 
 export class Page extends Shape {
-    private m_gradients: Map<string, Gradient> | undefined;
+    // private m_gradients: Map<string, Gradient> | undefined;
     private m_horizontalRulerData: RulerData | undefined;
     private m_verticalRulerData: RulerData | undefined;
 
@@ -40,16 +40,16 @@ export class Page extends Shape {
     //     super(null, lzData, type, name, booleanOperation, exportOptions, frame, points, imageRef);
     // }
 
-    initGradients(gradients: Map<string, Gradient>) {
-        this.m_gradients = gradients;
-    }
+    // initGradients(gradients: Map<string, Gradient>) {
+    //     this.m_gradients = gradients;
+    // }
     get horizontalRulerData() {
 		return this.m_horizontalRulerData;
 	}
 	get verticalRulerData() {
 		return this.m_verticalRulerData;
 	}
-	get gradients() {
-		return this.m_gradients;
-	}
+	// get gradients() {
+	// 	return this.m_gradients;
+	// }
 }

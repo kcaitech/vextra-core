@@ -68,7 +68,7 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
 
     const image = data['image'];
     const imageRef = image && image['_ref'];
-    const style = importStyle(env, frame, data['style']);
+    const style = importStyle(env, data['style']);
     const text = data['attributedString'] && importText(data['attributedString']);
     const isClosed = data['isClosed'];
 

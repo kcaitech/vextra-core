@@ -136,23 +136,22 @@ export class Fill {
     private m_fillType: FillType;
     private m_color: Color;
     private m_contextSettings: ContextSettings;
-    private m_gradientId: string | undefined;
-    private m_gradientType: GradientType | undefined;
+    // private m_gradientId: string | undefined;
+    // private m_gradientType: GradientType | undefined;
+    private m_gradient: Gradient | undefined;
 
     constructor(//shape: object, 
         isEnabled: boolean, 
         fillType: FillType, 
         color: Color, 
         contextSettings: ContextSettings, 
-        gradientId: string | undefined,
-        gradientType: GradientType | undefined) {
+        gradient: Gradient | undefined) {
             // this.m_shape = shape;
             this.m_isEnabled = isEnabled;
             this.m_fillType = fillType;
             this.m_color = color;
             this.m_contextSettings = contextSettings;
-            this.m_gradientId = gradientId;
-            this.m_gradientType = gradientType;
+            this.m_gradient = gradient;
     }
     // get shape(): object {
     //     return this.m_shape;
@@ -169,12 +168,15 @@ export class Fill {
     get contextSettings(): ContextSettings {
         return this.m_contextSettings;
     }
-    get gradientId(): string | undefined {
-        return this.m_gradientId;
+    get gradient(): Gradient | undefined {
+        return this.m_gradient;
     }
-    get gradientType() : GradientType | undefined {
-        return this.m_gradientType;
-    }
+    // get gradientId(): string | undefined {
+    //     return this.m_gradientId;
+    // }
+    // get gradientType() : GradientType | undefined {
+    //     return this.m_gradientType;
+    // }
 }
 
 export enum BorderPosition {
@@ -189,29 +191,32 @@ export class Border {
     private m_fillType: FillType;
     private m_color: Color;
     private m_contextSettings: ContextSettings;
-    private m_gradientId: string | undefined;
-    private m_gradientType: GradientType | undefined;
+    // private m_gradientId: string | undefined;
+    // private m_gradientType: GradientType | undefined;
     private m_position: BorderPosition;
     private m_thickness: number;
+    private m_gradient: Gradient | undefined;
 
     constructor(//shape: object, 
         isEnabled: boolean,
         fillType: FillType,
         color: Color,
         contextSettings: ContextSettings,
-        gradientId: string | undefined,
-        gradientType: GradientType | undefined,
+        // gradientId: string | undefined,
+        // gradientType: GradientType | undefined,
         position: BorderPosition,
-        thickness: number) {
+        thickness: number,
+        gradient: Gradient | undefined) {
             // this.m_shape = shape;
             this.m_isEnabled = isEnabled;
             this.m_fillType = fillType;
             this.m_color = color;
             this.m_contextSettings = contextSettings;
-            this.m_gradientId = gradientId;
-            this.m_gradientType = gradientType;
+            // this.m_gradientId = gradientId;
+            // this.m_gradientType = gradientType;
             this.m_position = position;
             this.m_thickness = thickness;
+            this.m_gradient = gradient;
     }
     // get shape(): object {
     //     return this.m_shape;
@@ -228,17 +233,20 @@ export class Border {
     get contextSettings(): ContextSettings {
         return this.m_contextSettings;
     }
-    get gradientId(): string | undefined {
-        return this.m_gradientId;
-    }
-    get gradientType(): GradientType | undefined {
-        return this.m_gradientType;
-    }
+    // get gradientId(): string | undefined {
+    //     return this.m_gradientId;
+    // }
+    // get gradientType(): GradientType | undefined {
+    //     return this.m_gradientType;
+    // }
     get position(): BorderPosition {
         return this.m_position;
     }
     get thickness(): number {
         return this.m_thickness;
+    }
+    get gradient(): Gradient | undefined {
+        return this.m_gradient;
     }
 }
 

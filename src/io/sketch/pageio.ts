@@ -11,7 +11,7 @@ export async function importPage(lzData:LzData, ref: string): Promise<Page> {
 	const data: IJSON = JSON.parse(buffer.toString());
 
     const page: Page = importShape(env, undefined, lzData, data) as Page;
-    page.initGradients(env.gradients);
+    // page.initGradients(env.gradients);
 
     return page;
 }

@@ -60,7 +60,7 @@ function genGradientId(gradient: Gradient): string {
     return "gradient" + objectId(gradient);
 }
 
-function importGradient(frame:ShapeFrame, data: IJSON): Gradient {
+function importGradient(data: IJSON): Gradient {
     const elipseLength: number = data['elipseLength'];
     const from: XY<number, number> = importXY(data['from']);
     const gradientType: GradientType = ((t) => {
@@ -85,9 +85,9 @@ function importGradient(frame:ShapeFrame, data: IJSON): Gradient {
     return new Gradient(elipseLength, from, gradientType, to, stops);
 }
 
-export function importStyle(env:Env, frame:ShapeFrame, data: IJSON): Style {
+export function importStyle(env:Env, data: IJSON): Style {
 
-    const gradients = env.gradients;
+    // const gradients = env.gradients;
 
     const endMarkerType: MarkerType = ((t: number) => {
             switch(t) {
@@ -131,13 +131,13 @@ export function importStyle(env:Env, frame:ShapeFrame, data: IJSON): Style {
         const color: Color = importColor(d['color']);
 
         const contextSettings: ContextSettings = importContextSettings(d['contextSettings']);
-        let gradientId;
-        let gradientType;
+        let gradient;
+        // let gradientType;
         if (fillType == FillType.Gradient && d['gradient']) {
-            const gradient = importGradient(frame, d['gradient']);
-            gradientType = gradient.gradientType;
-            gradientId = genGradientId(gradient);
-            gradients.set(gradientId, gradient);
+            gradient = importGradient(d['gradient']);
+            // gradientType = gradient.gradientType;
+            // gradientId = genGradientId(gradient);
+            // gradients.set(gradientId, gradient);
         }
 
         const position: BorderPosition = ((p: number) => {
@@ -151,7 +151,7 @@ export function importStyle(env:Env, frame:ShapeFrame, data: IJSON): Style {
 
         const thickness: number = d['thickness'];
 
-        return new Border(isEnabled, fillType, color, contextSettings, gradientId, gradientType, position, thickness);
+        return new Border(isEnabled, fillType, color, contextSettings, position, thickness, gradient);
     });
 
     const contextSettings: ContextSettings = importContextSettings(data['contextSettings']);
@@ -168,16 +168,16 @@ export function importStyle(env:Env, frame:ShapeFrame, data: IJSON): Style {
         const color: Color = importColor(d['color']);
         const contextSettings: ContextSettings = importContextSettings(d['contextSettings']);
 
-        let gradientId;
-        let gradientType;
+        let gradient;
+        // let gradientType;
         if (fillType == FillType.Gradient && d['gradient']) {
-            const gradient: Gradient = importGradient(frame, d['gradient']);
-            gradientType = gradient.gradientType;
-            gradientId = genGradientId(gradient);
-            gradients.set(gradientId, gradient);
+            gradient = importGradient(d['gradient']);
+            // gradientType = gradient.gradientType;
+            // gradientId = genGradientId(gradient);
+            // gradients.set(gradientId, gradient);
         }
 
-        return new Fill(isEnabled, fillType, color, contextSettings, gradientId, gradientType);
+        return new Fill(isEnabled, fillType, color, contextSettings, gradient);
     });
 
     const innerShadows: object[] = (data['innerShadows'] || []).map((d: object) => {
