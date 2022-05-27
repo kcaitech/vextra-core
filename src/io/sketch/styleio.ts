@@ -18,6 +18,7 @@ import { BlendMode,
     XY} from "@/data/style";
 import { objectId } from "@/basic/objectid";
 import { Env } from "./envio";
+import { ShapeFrame } from "@/data/shape";
 
 export interface IJSON {
 	[key: string]: any
@@ -59,7 +60,7 @@ function genGradientId(gradient: Gradient): string {
     return "gradient" + objectId(gradient);
 }
 
-function importGradient(data: IJSON): Gradient {
+function importGradient(frame:ShapeFrame, data: IJSON): Gradient {
     const elipseLength: number = data['elipseLength'];
     const from: XY<number, number> = importXY(data['from']);
     const gradientType: GradientType = ((t) => {
@@ -84,7 +85,7 @@ function importGradient(data: IJSON): Gradient {
     return new Gradient(elipseLength, from, gradientType, to, stops);
 }
 
-export function importStyle(env:Env, data: IJSON): Style {
+export function importStyle(env:Env, frame:ShapeFrame, data: IJSON): Style {
 
     const gradients = env.gradients;
 
@@ -133,7 +134,7 @@ export function importStyle(env:Env, data: IJSON): Style {
         let gradientId;
         let gradientType;
         if (fillType == FillType.Gradient && d['gradient']) {
-            const gradient = importGradient(d['gradient']);
+            const gradient = importGradient(frame, d['gradient']);
             gradientType = gradient.gradientType;
             gradientId = genGradientId(gradient);
             gradients.set(gradientId, gradient);
@@ -170,7 +171,7 @@ export function importStyle(env:Env, data: IJSON): Style {
         let gradientId;
         let gradientType;
         if (fillType == FillType.Gradient && d['gradient']) {
-            const gradient: Gradient = importGradient(d['gradient']);
+            const gradient: Gradient = importGradient(frame, d['gradient']);
             gradientType = gradient.gradientType;
             gradientId = genGradientId(gradient);
             gradients.set(gradientId, gradient);
