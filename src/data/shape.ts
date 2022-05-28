@@ -134,7 +134,11 @@ export enum ShapeType {
 }
 
 export enum BooleanOperation {
-    op0, // todo
+    None,
+    Union,
+    Sbutract,
+    Intersect,
+    Difference,
 }
 
 export enum LayerListExpandedType {

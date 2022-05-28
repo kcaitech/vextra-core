@@ -39,8 +39,14 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
     })(data['frame']);
 
     const name: string = data['name'];
-    const booleanOperation: BooleanOperation = ((o) => {
-        return BooleanOperation.op0;
+    const booleanOperation: BooleanOperation = ((o: number) => {
+        switch(o) {
+            case 0: return BooleanOperation.Union;
+            case 1: return BooleanOperation.Sbutract;
+            case 2: return BooleanOperation.Intersect;
+            case 3: return BooleanOperation.Difference;
+            default: return BooleanOperation.None;
+        }
     })(data['booleanOperation']);
 
     const points: Point[] = (data['points'] || []).map((d: IJSON) => {
