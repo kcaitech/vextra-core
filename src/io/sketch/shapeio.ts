@@ -10,6 +10,7 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
 
     const type = ((t) => {
         switch(t) {
+            case 'symbolInstance':
             case 'rectangle': return ShapeType.Rectangle;
             case 'shapeGroup': return ShapeType.Group;
             case 'group': return ShapeType.Group;
