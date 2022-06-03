@@ -86,12 +86,12 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
             case ShapeType.Image: return new ImageShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, imageRef, style);
             case ShapeType.Page: return new Page(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
             case ShapeType.Path: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style, isClosed);
-            case ShapeType.Rectangle: return new Shape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            case ShapeType.Rectangle: return new RectShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
             case ShapeType.Text: return new TextShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, text);
             case ShapeType.Star:
             case ShapeType.Polygon:
             case ShapeType.Triangle:
-            case ShapeType.Oval: return new Page(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            case ShapeType.Oval: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style, isClosed);
         }
     })(type);
 

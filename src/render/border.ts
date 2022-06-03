@@ -1,7 +1,7 @@
 
 import { Shape } from '@/data/shape';
 import { Border, BorderPosition, FillType, Gradient, GradientType } from '@/data/style';
-import { ELArray, EL, el } from "./element";
+import { ELArray, EL, h } from "./element";
 import { render as renderGradient } from "./gradient";
 import { objectId } from '@/basic/objectid';
 
@@ -15,26 +15,26 @@ angularHandler[BorderPosition.Inner] = function (shape: Shape, border: Border, p
     const thickness = border.thickness;
     const width = frame.width;
     const height = frame.height;
-    let g_ = renderGradient(border.gradient as Gradient, frame);
+    const g_ = renderGradient(border.gradient as Gradient, frame);
 
-    return el("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, [
+    return h("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, [
 
-        el("mask", {
+        h("mask", {
             id: maskId,
             width,
             height
         }, [
-            el("rect", {
+            h("rect", {
                 x: 0,
                 y: 0,
                 width,
                 height,
                 fill: "black"
             }),
-            el("clipPath", { id: clipId }, el("path", {
+            h("clipPath", { id: clipId }, h("path", {
                 d: path
             })),
-            el('path', {
+            h('path', {
                 d: path,
                 stroke: "white",
                 'stroke-width': 2 * thickness,
@@ -42,14 +42,14 @@ angularHandler[BorderPosition.Inner] = function (shape: Shape, border: Border, p
             })
         ]),
 
-        el("foreignObject", {
+        h("foreignObject", {
             x: 0,
             y: 0,
             width,
             height,
             mask: "url(#" + maskId + ")"
         },
-            el("div", { width: "100%", height: "100%", style: g_.style }))
+            h("div", { width: "100%", height: "100%", style: g_.style }))
     ]);
 }
 
@@ -58,35 +58,35 @@ angularHandler[BorderPosition.Center] = function (shape: Shape, border: Border, 
     const frame = shape.frame;
     const thickness = border.thickness;
 
-    let g_ = renderGradient(border.gradient as Gradient, frame);
+    const g_ = renderGradient(border.gradient as Gradient, frame);
 
-    let x = -thickness / 2;
-    let y = -thickness / 2;
-    let width = frame.width + thickness;
-    let height = frame.height + thickness;
+    const x = -thickness / 2;
+    const y = -thickness / 2;
+    const width = frame.width + thickness;
+    const height = frame.height + thickness;
 
-    return el("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, [
-        el("mask", {
+    return h("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, [
+        h("mask", {
             id: maskId,
             maskContentUnits: "userSpaceOnUse",
             width,
             height
         }, [
-            el("rect", { x, y, width, height, fill: "black" }),
-            el("path", {
+            h("rect", { x, y, width, height, fill: "black" }),
+            h("path", {
                 d: path,
                 stroke: "white",
                 'stroke-width': thickness,
             })
         ]),
-        el("foreignObject", {
+        h("foreignObject", {
             width,
             height,
             x,
             y,
             mask: "url(#" + maskId + ")"
         },
-            el("div", { width: "100%", height: "100%", style: g_.style })),
+            h("div", { width: "100%", height: "100%", style: g_.style })),
     ])
 }
 
@@ -94,44 +94,44 @@ angularHandler[BorderPosition.Outer] = function (shape: Shape, border: Border, p
     const frame = shape.frame;
     const thickness = border.thickness;
 
-    let g_ = renderGradient(border.gradient as Gradient, frame);
-    let width = frame.width + 2 * thickness;
-    let height = frame.height + 2 * thickness;
-    let x = - thickness;
-    let y = - thickness;
-    let mask1Id = "mask1-border" + objectId(border);
-    let mask2Id = "mask2-border" + objectId(border);
+    const g_ = renderGradient(border.gradient as Gradient, frame);
+    const width = frame.width + 2 * thickness;
+    const height = frame.height + 2 * thickness;
+    const x = - thickness;
+    const y = - thickness;
+    const mask1Id = "mask1-border" + objectId(border);
+    const mask2Id = "mask2-border" + objectId(border);
 
-    return el("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, [
-        el("mask", {
+    return h("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, [
+        h("mask", {
             id: mask2Id,
             width,
             height
         }, [
-            el("mask", {
+            h("mask", {
                 id: mask1Id,
                 width,
                 height
             }, [
-                el("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
-                el("path", { d: path, fill: "black" })
+                h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
+                h("path", { d: path, fill: "black" })
             ]),
-            el("rect", { x, y, width, height, fill: "black" }),
-            el('path', {
+            h("rect", { x, y, width, height, fill: "black" }),
+            h('path', {
                 d: path,
                 stroke: "white",
                 'stroke-width': 2 * thickness,
                 mask: "url(#" + mask1Id + ")",
             })
         ]),
-        el("foreignObject", {
+        h("foreignObject", {
             width,
             height,
             x,
             y,
             mask: "url(#" + mask2Id + ")"
         },
-            el("div", { width: "100%", height: "100%", style: g_.style })),
+            h("div", { width: "100%", height: "100%", style: g_.style })),
     ]);
 }
 
@@ -142,26 +142,26 @@ handler[BorderPosition.Inner] = function (shape: Shape, border: Border, path: st
 
     let g_;
     let stroke;
-    let color = border.color;
-    let fillType = border.fillType;
+    const color = border.color;
+    const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
         stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
     } else {
         g_ = renderGradient(border.gradient as Gradient, frame);
         stroke = "url(#" + g_.id + ")";
     }
-    let x = frame.x;
-    let y = frame.y;
+    const x = frame.x;
+    const y = frame.y;
 
-    let elArr = [];
+    const elArr = [];
     if (g_ && g_.node) {
         elArr.push(g_.node);
     }
     elArr.push(
-        el("clipPath", { id: clipId }, el("path", {
+        h("clipPath", { id: clipId }, h("path", {
             d: path
         })),
-        el('path', {
+        h('path', {
             d: path,
             fill: "none",
             stroke,
@@ -169,7 +169,7 @@ handler[BorderPosition.Inner] = function (shape: Shape, border: Border, path: st
             "clip-path": "url(#" + clipId + ")"
         })
     );
-    return el("g", { transform: "translate(" + x + " " + y + ")" }, elArr);
+    return h("g", { transform: "translate(" + x + " " + y + ")" }, elArr);
 }
 
 handler[BorderPosition.Center] = function (shape: Shape, border: Border, path: string): EL {
@@ -178,22 +178,22 @@ handler[BorderPosition.Center] = function (shape: Shape, border: Border, path: s
 
     let g_;
     let stroke;
-    let color = border.color;
-    let fillType = border.fillType;
+    const color = border.color;
+    const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
         stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
     } else {
         g_ = renderGradient(border.gradient as Gradient, frame);
         stroke = "url(#" + g_.id + ")";
     }
-    let x = frame.x;
-    let y = frame.y;
+    const x = frame.x;
+    const y = frame.y;
 
     if (g_ && g_.node) {
         // elArr.push(g_.node);
-        return el("g", { transform: "translate(" + x + " " + y + ")" }, [
+        return h("g", { transform: "translate(" + x + " " + y + ")" }, [
             g_.node,
-            el('path', {
+            h('path', {
                 d: path,
                 fill: "none",
                 stroke,
@@ -202,7 +202,7 @@ handler[BorderPosition.Center] = function (shape: Shape, border: Border, path: s
             })
         ]);
     } else {
-        return el('path', {
+        return h('path', {
             d: path,
             fill: "none",
             stroke,
@@ -218,8 +218,8 @@ handler[BorderPosition.Outer] = function (shape: Shape, border: Border, path: st
 
     let g_;
     let stroke;
-    let color = border.color;
-    let fillType = border.fillType;
+    const color = border.color;
+    const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
         stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
     } else {
@@ -227,20 +227,20 @@ handler[BorderPosition.Outer] = function (shape: Shape, border: Border, path: st
         stroke = "url(#" + g_.id + ")";
     }
 
-    let maskId = "mask-border" + objectId(border);
+    const maskId = "mask-border" + objectId(border);
 
-    let width = frame.width + 2 * thickness;
-    let height = frame.height + 2 * thickness;
+    const width = frame.width + 2 * thickness;
+    const height = frame.height + 2 * thickness;
 
-    let elArr = [];
+    const elArr = [];
     if (g_ && g_.node) {
         elArr.push(g_.node);
     }
-    elArr.push(el("mask", { id: maskId }, [
-        el("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
-        el("path", { d: path, fill: "black" })
+    elArr.push(h("mask", { id: maskId }, [
+        h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
+        h("path", { d: path, fill: "black" })
     ]),
-        el('path', {
+        h('path', {
             d: path,
             fill: "none",
             stroke,
@@ -248,7 +248,7 @@ handler[BorderPosition.Outer] = function (shape: Shape, border: Border, path: st
             mask: "url(#" + maskId + ")"
         }))
 
-    return (el("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, elArr));
+    return (h("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, elArr));
 }
 
 export function render(shape: Shape, path?:string): ELArray {
@@ -256,20 +256,20 @@ export function render(shape: Shape, path?:string): ELArray {
     const bc = style.bordersCount;
     path = path || shape.getPath(true);
 
-    let elArr = new ELArray();
+    const elArr = new ELArray();
     for (let i = 0; i < bc; i++) {
         const border: Border = style.getBorderByIndex(i);
         if (!border.isEnabled) {
             continue;
         }
         const position = border.position;
-        let fillType = border.fillType;
-        let gradientType = border.gradient && border.gradient.gradientType;
+        const fillType = border.fillType;
+        const gradientType = border.gradient && border.gradient.gradientType;
 
         fillType == FillType.Gradient && gradientType == GradientType.Angular && (() => {
-            angularHandler[position](shape, border, path);
+            elArr.push(angularHandler[position](shape, border, path));
         })() || (fillType == FillType.SolidColor || fillType == FillType.Gradient) && (() => {
-            handler[position](shape, border, path);
+            elArr.push(handler[position](shape, border, path));
         })() || fillType == FillType.Pattern && (() => {
             return true; // todo
         })

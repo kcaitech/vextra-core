@@ -1,13 +1,13 @@
 import { objectId } from "@/basic/objectid";
 import { ShapeFrame } from "@/data/shape";
 import { Gradient, GradientType, Stop } from "@/data/style";
-import { EL, el } from "./element";
+import { EL, h } from "./element";
 
 function renderStop(d: Stop): EL {
     const position = d.position;
     const color = d.color;
     const rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
-    const n = el("stop", {
+    const n = h("stop", {
         offset: "" + (position * 100) + "%",
         "stop-color": rgbColor,
         "stop-opacity": color.alpha
@@ -26,7 +26,7 @@ export function render(value: Gradient, frame:ShapeFrame): {id:string, style:str
             const s = value.getStopByIndex(i);
             childs.push(renderStop(s));
         }
-        node = el("linearGradient", {
+        node = h("linearGradient", {
             id,
             x1: value.from.x,
             y1: value.from.y,
@@ -43,7 +43,7 @@ export function render(value: Gradient, frame:ShapeFrame): {id:string, style:str
         }
         const scaleX = frame.width > frame.height ? frame.height / frame.width : 1.0;
         const scaleY = frame.width < frame.height ? frame.width / frame.height : 1.0;
-        node = el("radialGradient", {
+        node = h("radialGradient", {
             id,
             cx: value.from.x,
             cy: value.from.y,

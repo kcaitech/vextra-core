@@ -540,3 +540,7 @@ export class TextShape extends Shape {
             ["z"]].map((v) => v.join(" ")).join(" ");
     }    
 }
+
+// todo
+// group shape
+// oval shape
