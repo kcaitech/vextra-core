@@ -133,7 +133,7 @@ export enum ShapeType {
     Polygon,
 }
 
-export enum BooleanOperation {
+export enum BoolOp {
     None,
     Union,
     Sbutract,
@@ -162,7 +162,7 @@ export class Shape {
     private m_frame: ShapeFrame;
     private m_childs: Shape[] = [];
     private m_style: Style;
-    private m_booleanOperation: BooleanOperation;
+    private m_boolOp: BoolOp;
     private m_isFixedToViewport: boolean = false;
     private m_isFlippedHorizontal: boolean = false;
     private m_isFlippedVertical: boolean = false;
@@ -184,7 +184,7 @@ export class Shape {
         lzData: LzData,
         type: ShapeType,
         name: string,
-        booleanOperation: BooleanOperation,
+        booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style) {
@@ -193,7 +193,7 @@ export class Shape {
             this.m_lzData = lzData;
             this.m_type = type;
             this.m_name = name;
-            this.m_booleanOperation = booleanOperation;
+            this.m_boolOp = booleanOperation;
             this.m_exportOptions = exportOptions;
             this.m_frame = frame;
             this.m_style = style;
@@ -203,8 +203,8 @@ export class Shape {
             this.m_childs = childs;
     }
 
-	get booleanOperation(): BooleanOperation {
-		return this.m_booleanOperation;
+	get boolOp(): BoolOp {
+		return this.m_boolOp;
 	}
 	get isFixedToViewport(): boolean {
 		return this.m_isFixedToViewport;
@@ -269,7 +269,10 @@ export class Shape {
 	get style() {
 		return this.m_style;
 	}
-    getPath(origin?: boolean): string {
+
+    getPath(offsetX: number, offsetY: number): string;
+    getPath(origin?: boolean): string;
+    getPath(arg1?: boolean | number, arg2?: number): string {
         return "";
     }
 
@@ -291,7 +294,7 @@ export class RectShape extends Shape {
         lzData: LzData,
         type: ShapeType,
         name: string,
-        booleanOperation: BooleanOperation,
+        booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style,
@@ -302,9 +305,12 @@ export class RectShape extends Shape {
     get fixedRadius() {
         return this.m_fixedRadius;
     }
-    getPath(origin?: boolean): string {
-        const x = origin ? 0 : this.frame.x;
-        const y = origin ? 0 : this.frame.y;
+
+    getPath(offsetX: number, offsetY: number): string;
+    getPath(origin?: boolean): string;
+    getPath(arg1?: boolean | number, arg2?: number): string {
+        const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
+        const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
         const w = this.frame.width;
         const h = this.frame.height;
         const r = 0; // todo
@@ -337,7 +343,7 @@ export class ImageShape extends Shape {
         lzData: LzData,
         type: ShapeType,
         name: string,
-        booleanOperation: BooleanOperation,
+        booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         imageRef: string,
@@ -385,9 +391,11 @@ export class ImageShape extends Shape {
 		return imageRef.substring(imageRef.lastIndexOf('.')+1);
 	}
 
-    getPath(origin?: boolean): string {
-        const x = origin ? 0 : this.frame.x;
-        const y = origin ? 0 : this.frame.y;
+    getPath(offsetX: number, offsetY: number): string;
+    getPath(origin?: boolean): string;
+    getPath(arg1?: boolean | number, arg2?: number): string {
+        const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
+        const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
         const w = this.frame.width;
         const h = this.frame.height;
         return [["M", x, y], 
@@ -406,7 +414,7 @@ export class PathShape extends Shape {
         lzData: LzData,
         type: ShapeType,
         name: string,
-        booleanOperation: BooleanOperation,
+        booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         points: Point[],
@@ -430,9 +438,12 @@ export class PathShape extends Shape {
     get isClosed(): boolean {
         return !!this.m_isClosed;
     }
-    getPath(origin?: boolean): string {
-        const offsetX = origin ? 0 : this.frame.x;
-        const offsetY = origin ? 0 : this.frame.y;
+
+    getPath(offsetX: number, offsetY: number): string;
+    getPath(origin?: boolean): string;
+    getPath(arg1?: boolean | number, arg2?: number): string {
+        const offsetX = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
+        const offsetY = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
         const width = this.frame.width;
         const height = this.frame.height;
 
@@ -461,25 +472,34 @@ export class PathShape extends Shape {
                 const adjFrom = p.curveFrom;
                 const adjTo = nextP.curveTo;
                 const pt = nextP.point;
-                bezierCurveTo(offsetX + adjFrom.x * width, offsetY + adjFrom.y * height,
-                    offsetX + adjTo.x * width, offsetY + adjTo.y * height,
-                    offsetX + pt.x * width, offsetY + pt.y * height);
+                bezierCurveTo(offsetX + adjFrom.x * width, 
+                    offsetY + adjFrom.y * height,
+                    offsetX + adjTo.x * width, 
+                    offsetY + adjTo.y * height,
+                    offsetX + pt.x * width, 
+                    offsetY + pt.y * height);
             }
             else if (p.hasCurveFrom && !nextP.hasCurveTo) {
                 const adjFrom = p.curveFrom;
                 const adjTo = nextP.point;
                 const pt = nextP.point;
-                bezierCurveTo(offsetX + adjFrom.x * width, offsetY + adjFrom.y * height,
-                    offsetX + adjTo.x * width, offsetY + adjTo.y * height,
-                    offsetX + pt.x * width, offsetY + pt.y * height);
+                bezierCurveTo(offsetX + adjFrom.x * width, 
+                    offsetY + adjFrom.y * height,
+                    offsetX + adjTo.x * width, 
+                    offsetY + adjTo.y * height,
+                    offsetX + pt.x * width, 
+                    offsetY + pt.y * height);
             }
             else if (!p.hasCurveFrom && nextP.hasCurveTo) {
                 const adjFrom = p.point;
                 const adjTo = nextP.curveTo;
                 const pt = nextP.point;
-                bezierCurveTo(offsetX + adjFrom.x * width, offsetY + adjFrom.y * height,
-                    offsetX + adjTo.x * width, offsetY + adjTo.y * height,
-                    offsetX + pt.x * width, offsetY + pt.y * height);
+                bezierCurveTo(offsetX + adjFrom.x * width, 
+                    offsetY + adjFrom.y * height,
+                    offsetX + adjTo.x * width, 
+                    offsetY + adjTo.y * height,
+                    offsetX + pt.x * width, 
+                    offsetY + pt.y * height);
             }
             else if (!isClose) {
                 const pt = nextP.point;
@@ -515,7 +535,7 @@ export class TextShape extends Shape {
         lzData: LzData,
         type: ShapeType,
         name: string,
-        booleanOperation: BooleanOperation,
+        booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style,
@@ -528,9 +548,11 @@ export class TextShape extends Shape {
         return this.m_text;
     }
 
-    getPath(origin?: boolean): string {
-        const x = origin ? 0 : this.frame.x;
-        const y = origin ? 0 : this.frame.y;
+    getPath(offsetX: number, offsetY: number): string;
+    getPath(origin?: boolean): string;
+    getPath(arg1?: boolean | number, arg2?: number): string {
+        const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
+        const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
         const w = this.frame.width;
         const h = this.frame.height;
         return [["M", x, y], 

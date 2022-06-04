@@ -1,5 +1,5 @@
 
-import { BooleanOperation, ExportOptions, Point, Shape, ShapeFrame, ShapeType } from "./shape";
+import { BoolOp, ExportOptions, Point, Shape, ShapeFrame, ShapeType } from "./shape";
 import { Gradient } from "./style";
 
 export class RulerData {

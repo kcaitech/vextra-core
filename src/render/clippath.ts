@@ -1,5 +1,5 @@
 import { Shape } from "@/data/shape";
-import { EL, h } from "./element";
+import { EL, h } from "./basic";
 
 // let g_clippath_id = 0; // 要用稳定的id，避免不必要的dom更新
 /**

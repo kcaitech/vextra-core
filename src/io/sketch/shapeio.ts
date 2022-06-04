@@ -1,4 +1,4 @@
-import { BooleanOperation, CurveMode, ExportOptions, ImageShape, PathShape, Point, PointType, RectShape, Shape, ShapeFrame, ShapeType, TextShape } from "@/data/shape";
+import { BoolOp, CurveMode, ExportOptions, ImageShape, PathShape, Point, PointType, RectShape, Shape, ShapeFrame, ShapeType, TextShape } from "@/data/shape";
 import { LzData } from '@/data/lzdata';
 import { XY } from "@/data/style";
 import { Env } from "./envio";
@@ -40,13 +40,13 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
     })(data['frame']);
 
     const name: string = data['name'];
-    const booleanOperation: BooleanOperation = ((o: number) => {
+    const booleanOperation: BoolOp = ((o: number) => {
         switch(o) {
-            case 0: return BooleanOperation.Union;
-            case 1: return BooleanOperation.Sbutract;
-            case 2: return BooleanOperation.Intersect;
-            case 3: return BooleanOperation.Difference;
-            default: return BooleanOperation.None;
+            case 0: return BoolOp.Union;
+            case 1: return BoolOp.Sbutract;
+            case 2: return BoolOp.Intersect;
+            case 3: return BoolOp.Difference;
+            default: return BoolOp.None;
         }
     })(data['booleanOperation']);
 
@@ -94,6 +94,15 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
             case ShapeType.Oval: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style, isClosed);
         }
     })(type);
+
+    // todo 不确定，是否sketch旧版本写的数据，现在的版本做不出来样张
+    // if (data['_class'] == "shapeGroup" && data['booleanOperation'] == 0) {
+    //     (data['layers'] || []).forEach((element:IJSON) => {
+    //         if (element['booleanOperation'] == -1) {
+    //             element['booleanOperation'] = 3;
+    //         }
+    //     });
+    // }
 
     // const shape = new Class(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, imageRef, style);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));

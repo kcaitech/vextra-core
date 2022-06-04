@@ -1,6 +1,6 @@
 import { Shape } from "@/data/shape";
 import { Fill, FillType, Gradient } from "@/data/style";
-import { ELArray, EL, h } from "./element";
+import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "@/basic/objectid";

@@ -28,15 +28,15 @@
 // export function h(tag: string, attr?: any, childs?: EL | EL[]): EL {
 //     return new EL(tag, attr, childs);
 // }
-// export function create<T>(e: EL | ELArray, h: (tag: string, attr: any, childs:T[]) => T): T | T[] {
+// export function transform<T>(e: EL | ELArray, h: (tag: string, attr: any, childs:T[]) => T): T | T[] {
 //     return (Array.isArray(e) ? e : [e]).map((a) => h(a.tag, a.attr, create(a.childs, h) as T[]));
 // }
 
 
-import { h as _h, isVNode, VNode } from "vue";
+import { h as _h, VNode } from "vue";
 export interface EL extends VNode {}
 export const h = _h;
 export class ELArray extends Array<VNode> {}
-export function create(e: EL | ELArray, h: (tag: string, attr: any, childs:VNode[]) => VNode): VNode | VNode[] {
+export function transform(e: EL | ELArray, h: (tag: string, attr: any, childs:VNode[]) => VNode): VNode | VNode[] {
     return e;
 }

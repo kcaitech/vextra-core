@@ -1,7 +1,7 @@
 
 import { Shape } from '@/data/shape';
 import { Border, BorderPosition, FillType, Gradient, GradientType } from '@/data/style';
-import { ELArray, EL, h } from "./element";
+import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { objectId } from '@/basic/objectid';
 
