@@ -1,5 +1,5 @@
 import { BoolOp, Shape, ShapeType } from "@/data/shape";
-import { difference, intersection, exclusion, union } from "./boolop";
+import { difference, intersection, subtract, union } from "./boolop";
 import { ELArray, EL, h } from "./basic";
 
 function opPath(bop: BoolOp, path0: string, path1: string): string {
@@ -12,7 +12,7 @@ function opPath(bop: BoolOp, path0: string, path1: string): string {
             path = intersection(path0, path1);
             break;
         case BoolOp.Sbutract:
-            path = exclusion(path0, path1);
+            path = subtract(path0, path1);
             break;
         case BoolOp.Union:
             path = union(path0, path1);
