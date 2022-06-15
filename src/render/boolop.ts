@@ -1,9 +1,9 @@
 
 import { parsePathString, path2curve, pathToAbsolute } from "@/path/transform";
-// import { union as un, difference as diff, intersection as intersect, exclusion as ex, pathSegsToStr } from "@/path/boolop"
+// import { union as un, difference as diff, intersection as intersect, exclusion as ex } from "@/path/boolop"
 
 import { union as un, subtract as diff, intersect as intersect, xor as ex } from "@/path/b3boolop"
-import { pathArrToStr, pathSegsToStr } from "@/path/boolop"
+import { pathArrToStr } from "@/path/boolop"
 
 export function union(path0: string, path1: string): string {
     if (path0.length == 0) {
