@@ -100,7 +100,13 @@ export function render(shape: Shape, bop: BoolOp, comsMap: Map<ShapeType, any>):
 
         const { count, path } = consumeOpShape(shape, i, bop, 0, 0);
         if (count > 0) {
-            childs.push(h("path", {d: path}));
+            const com = comsMap.get(ShapeType.Boolean);
+            if (com) {
+                childs.push(h(com, { data: shape.getChildByIndex(i), boolop: bop, path}));
+            }
+            else {
+                childs.push(h("path", {d: path}));
+            }
             i = i + count;
             continue;
         }

@@ -131,6 +131,7 @@ export enum ShapeType {
     Triangle,
     Star,
     Polygon,
+    Boolean,
 }
 
 export enum BoolOp {

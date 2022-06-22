@@ -91,6 +91,7 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
             case ShapeType.Star:
             case ShapeType.Polygon:
             case ShapeType.Triangle:
+            case ShapeType.Boolean: // 虚拟对象
             case ShapeType.Oval: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style, isClosed);
         }
     })(type);
