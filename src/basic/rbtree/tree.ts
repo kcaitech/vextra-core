@@ -21,9 +21,12 @@ export type LessOp<K> = (a: K, b: K) => boolean
  * @typeparam V value type
  */
 export class Tree<K = string, V = any> implements Map<K, V> {
-  /** @internal */ _root: Node<K, V> = Node.nilNode
-  /** @internal */ _size: number = 0
-  /** @internal */ readonly _less: Less<K, Node<K, V>>
+
+    /** @internal */ __root: Node<K, V> = Node.nilNode
+    /** @internal */ _size: number = 0
+    /** @internal */ readonly _less: Less<K, Node<K, V>>
+    /** @internal */ get _root() { return this.__root }
+    /** @internal */ set _root(value: Node<K, V>) { this.__root = value }
 
     /** Create a new red-black tree optionally with entries from `source` and
      * the sorting criterium `lessOp`.
@@ -116,7 +119,7 @@ export class Tree<K = string, V = any> implements Map<K, V> {
         const node = this._findNode(key)
         const result = this._deleteNode(node)
         if (node.ok)
-            node._parent = node._left = node._right = Node.nilNode
+            node.parent = node.left = node.right = Node.nilNode
         return result
     }
 
@@ -175,22 +178,22 @@ export class Tree<K = string, V = any> implements Map<K, V> {
     }
 
   /** @internal */ _firstNode(node: Node<K, V> = this._root): Node<K, V> {
-        while (node._left.ok) node = node._left
+        while (node.left.ok) node = node.left
         return node
     }
 
   /** @internal */ _lastNode(node: Node<K, V> = this._root): Node<K, V> {
-        while (node._right.ok) node = node._right
+        while (node.right.ok) node = node.right
         return node
     }
 
   /** @internal */ _nextNode(node: Node<K, V>): Node<K, V> {
         if (node.nil) return node
-        if (node._right.ok) return this._firstNode(node._right)
-        let parent = node._parent
-        while (parent.ok && node === parent._right) {
+        if (node.right.ok) return this._firstNode(node.right)
+        let parent = node.parent
+        while (parent.ok && node === parent.right) {
             node = parent
-            parent = parent._parent
+            parent = parent.parent
         }
         return parent
     }
@@ -200,14 +203,14 @@ export class Tree<K = string, V = any> implements Map<K, V> {
         node: Node<K, V> = this._root,
     ): Node<K, V> {
         while (node.ok && key !== node.key)
-            node = this._less(key, node) ? node._left : node._right
+            node = this._less(key, node) ? node.left : node.right
         return node
     }
 
   /** @internal */_insertNode(node: Node<K, V>): this {
         if (node.nil) return this
 
-        node._parent = node._left = node._right = Node.nilNode
+        node.parent = node.left = node.right = Node.nilNode
         this._size++
         if (this._root.nil) {
             this._root = node
@@ -218,49 +221,49 @@ export class Tree<K = string, V = any> implements Map<K, V> {
         parent = n = this._root
         while (n.ok) {
             parent = n
-            n = this._less(node.key, n) ? n._left : n._right
+            n = this._less(node.key, n) ? n.left : n.right
         }
-        node._parent = parent
+        node.parent = parent
 
         // Empirical insight from fuzzying: parent is never nil. I tried to create
         // a situation where parent is nil (add two nodes), but couldn't make
         // parent nil. However should it happen anyway (will throw TypeError), an
         // if branch could be added: if (parent.nil) this._root = node ... else
-        if (this._less(node.key, parent)) parent._left = node
-        else parent._right = node
-        node._red = true
+        if (this._less(node.key, parent)) parent.left = node
+        else parent.right = node
+        node.red = true
 
         // Reinstate the red-black tree invariants after the insert
-        while (node._parent._red) {
-            parent = node._parent
-            const grandp = parent._parent
-            if (parent === grandp._left) {
-                if (grandp._right._red) {
-                    parent._black = grandp._right._black = grandp._red = true
+        while (node.parent.red) {
+            parent = node.parent
+            const grandp = parent.parent
+            if (parent === grandp.left) {
+                if (grandp.right.red) {
+                    parent.black = grandp.right.black = grandp.red = true
                     node = grandp
                     continue
                 }
-                if (node === parent._right) {
-                    this._leftRotate(parent)
+                if (node === parent.right) {
+                    this.leftRotate(parent)
                         ;[parent, node] = [node, parent]
                 }
-                parent._black = grandp._red = true
-                this._rightRotate(grandp)
+                parent.black = grandp.red = true
+                this.rightRotate(grandp)
                 continue
             }
-            if (grandp._left._red) {
-                parent._black = grandp._left._black = grandp._red = true
+            if (grandp.left.red) {
+                parent.black = grandp.left.black = grandp.red = true
                 node = grandp
                 continue
             }
-            if (node === parent._left) {
-                this._rightRotate(parent)
+            if (node === parent.left) {
+                this.rightRotate(parent)
                     ;[parent, node] = [node, parent]
             }
-            parent._black = grandp._red = true
-            this._leftRotate(grandp)
+            parent.black = grandp.red = true
+            this.leftRotate(grandp)
         }
-        this._root._black = true
+        this._root.black = true
         return this
     }
 
@@ -274,112 +277,112 @@ export class Tree<K = string, V = any> implements Map<K, V> {
         this._size--
 
         let child: Node<K, V>, parent: Node<K, V>, red: boolean
-        if (node._left.ok && node._right.ok) {
-            const next = this._firstNode(node._right)
+        if (node.left.ok && node.right.ok) {
+            const next = this._firstNode(node.right)
             if (node === this._root) this._root = next
-            else node === node._parent._left
-                ? node._parent._left = next
-                : node._parent._right = next
-            child = next._right, parent = next._parent, red = next._red
+            else node === node.parent.left
+                ? node.parent.left = next
+                : node.parent.right = next
+            child = next.right, parent = next.parent, red = next.red
             if (node === parent) parent = next
             else {
-                if (child.ok) child._parent = parent
-                parent._left = child
-                next._right = node._right
-                node._right._parent = next
+                if (child.ok) child.parent = parent
+                parent.left = child
+                next.right = node.right
+                node.right.parent = next
             }
-            next._parent = node._parent
-            next._black = node._black
-            node._left._parent = next
+            next.parent = node.parent
+            next.black = node.black
+            node.left.parent = next
             if (red) return true
         }
         else {
-            node._left.ok ? child = node._left : child = node._right
-            parent = node._parent, red = node._red
-            if (child.ok) child._parent = parent
+            node.left.ok ? child = node.left : child = node.right
+            parent = node.parent, red = node.red
+            if (child.ok) child.parent = parent
             if (node === this._root) this._root = child
-            else parent._left === node ? parent._left = child : parent._right = child
+            else parent.left === node ? parent.left = child : parent.right = child
             if (red) return true
         }
 
         // Reinstate the red-black tree invariants after the delete
         node = child
-        while (node !== this._root && node._black) {
-            if (node === parent._left) {
-                let brother = parent._right
-                if (brother._red) {
-                    brother._black = parent._red = true
-                    this._leftRotate(parent)
-                    brother = parent._right
+        while (node !== this._root && node.black) {
+            if (node === parent.left) {
+                let brother = parent.right
+                if (brother.red) {
+                    brother.black = parent.red = true
+                    this.leftRotate(parent)
+                    brother = parent.right
                 }
-                if (brother._left._black && brother._right._black) {
-                    brother._red = true
+                if (brother.left.black && brother.right.black) {
+                    brother.red = true
                     node = parent
-                    parent = node._parent
+                    parent = node.parent
                     continue
                 }
-                if (brother._right._black) {
-                    brother._left._black = brother._red = true
-                    this._rightRotate(brother)
-                    brother = parent._right
+                if (brother.right.black) {
+                    brother.left.black = brother.red = true
+                    this.rightRotate(brother)
+                    brother = parent.right
                 }
-                brother._black = parent._black
-                parent._black = brother._right._black = true
-                this._leftRotate(parent)
+                brother.black = parent.black
+                parent.black = brother.right.black = true
+                this.leftRotate(parent)
                 node = this._root
                 break
             }
             else {
-                let brother = parent._left
-                if (brother._red) {
-                    brother._black = parent._red = true
-                    this._rightRotate(parent)
-                    brother = parent._left
+                let brother = parent.left
+                if (brother.red) {
+                    brother.black = parent.red = true
+                    this.rightRotate(parent)
+                    brother = parent.left
                 }
-                if (brother._left._black && brother._right._black) {
-                    brother._red = true
+                if (brother.left.black && brother.right.black) {
+                    brother.red = true
                     node = parent
-                    parent = node._parent
+                    parent = node.parent
                     continue
                 }
-                if (brother._left._black) {
-                    brother._right._black = brother._red = true
-                    this._leftRotate(brother)
-                    brother = parent._left
+                if (brother.left.black) {
+                    brother.right.black = brother.red = true
+                    this.leftRotate(brother)
+                    brother = parent.left
                 }
-                brother._black = parent._black
-                parent._black = brother._left._black = true
-                this._rightRotate(parent)
+                brother.black = parent.black
+                parent.black = brother.left.black = true
+                this.rightRotate(parent)
                 node = this._root
                 break
             }
         }
-        if (node.ok) node._black = true
+        if (node.ok) node.black = true
         return true
     }
 
-  /** @internal */ _leftRotate(node: Node<K, V>): void {
-        const child = node._right
-        node._right = child._left
-        if (child._left.ok) child._left._parent = node
-        child._parent = node._parent
+  /** @internal */ leftRotate(node: Node<K, V>): void {
+        const child = node.right
+        node.right = child.left
+        if (child.left.ok) child.left.parent = node
+        child.parent = node.parent
         if (node === this._root) this._root = child
-        else if (node === node._parent._left) node._parent._left = child
-        else node._parent._right = child
-        node._parent = child
-        child._left = node
+        else if (node === node.parent.left) node.parent.left = child
+        else node.parent.right = child
+        node.parent = child
+        child.left = node
     }
 
-  /** @internal */ _rightRotate(node: Node<K, V>): void {
-        const child = node._left
-        node._left = child._right
-        if (child._right.ok) child._right._parent = node
-        child._parent = node._parent
+  /** @internal */ rightRotate(node: Node<K, V>): void {
+        const child = node.left
+        node.left = child.right
+        if (child.right.ok) child.right.parent = node
+        child.parent = node.parent
         if (node === this._root) this._root = child
-        else if (node === node._parent._left) node._parent._left = child
-        else node._parent._right = child
-        node._parent = child
-        child._right = node
+        else if (node === node.parent.left) node.parent.left = child
+        else node.parent.right = child
+        node.parent = child
+        child.right = node
     }
 }
 
@@ -447,7 +450,7 @@ class Iter<K, V, R, N extends Node<K, V>, T extends IterTree<K, N>>
 // Create an object structurally compatible to Node but throwing on any access
 const throwDead = () => { throw new TypeError('Tree is dead') }
 function deadNode(): Node<any, any> {
-    const propNames = '_key _value _parent _left _right _black _red ok nil'
+    const propNames = '_key _value parent left right black red ok nil'
     const properties: PropertyDescriptorMap = {}
     for (const propName of propNames.split(' '))
         properties[propName] = { get: throwDead, set: throwDead }

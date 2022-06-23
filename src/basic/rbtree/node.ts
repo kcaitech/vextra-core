@@ -1,6 +1,33 @@
 // _parent, _left, _right are really OptNode<K, V>, however there was a
 // problem with type guards, so I forced Node<K, V> instead.
 
+export interface INode<K, V> {
+
+    /** The key of the entry which the Node represents */
+    key: K;
+
+    /** The value of the entry which the Node represents, can be mutated */
+    value: V;
+
+    /** True if node is nil */
+    get nil(): boolean;
+
+    /** True if node is not nil */
+    get ok(): boolean;
+
+    /** The entry which the Node represents */
+    entry(): [K, V];
+
+    /** Compact display of the node */
+    toString(maxLength: number): string;
+
+    black: boolean;
+    red: boolean;
+
+    left: INode<K, V>;
+    parent: INode<K, V>;
+    right: INode<K, V>;
+}
 
 /** Node has two tasks: first they are used to maintain the red-black tree's
  * internal order. For that properties starting with _ (underscore) are used,
@@ -10,35 +37,41 @@
  * in-place. Keys shouldn't be modified (there is no public writable property
  * anyway).
  */
-export class Node<K, V> {
+export class Node<K, V> implements INode<K, V> {
 
     /** The one and only nil Node */
     static readonly nilNode: Node<any, any> = _nilNode()
     
-    /** @internal */ readonly _key: K
-    /** @internal */ _value: V
-    /** @internal */ _parent: Node<K, V> = Node.nilNode as Node<K, V>
-    /** @internal */ _left: Node<K, V> = Node.nilNode as Node<K, V>
-    /** @internal */ _right: Node<K, V> = Node.nilNode as Node<K, V>
+    /** @internal */ readonly __key: K
+    /** @internal */ __value: V
+    /** @internal */ __parent: Node<K, V> = Node.nilNode as Node<K, V>
+    /** @internal */ __left: Node<K, V> = Node.nilNode as Node<K, V>
+    /** @internal */ __right: Node<K, V> = Node.nilNode as Node<K, V>
     /** @internal */ __black: boolean = true
     
-    /** @internal */ get _black() { return this.__black }
-    /** @internal */ set _black(value: boolean) { this.__black = value } // ignoring, see [[Nil]]
-    /** @internal */ get _red() { return !this._black }
-    /** @internal */ set _red(value: boolean) { this._black = !value }
+    /** @internal */ get black() { return this.__black }
+    /** @internal */ set black(value: boolean) { this.__black = value }
+    /** @internal */ get red() { return !this.__black }
+    /** @internal */ set red(value: boolean) { this.__black = !value }
+    /** @internal */ get left() { return this.__left }
+    /** @internal */ set left(value: Node<K, V>) { this.__left = value }
+    /** @internal */ get parent() { return this.__parent }
+    /** @internal */ set parent(value: Node<K, V>) { this.__parent = value }
+    /** @internal */ get right() { return this.__right }
+    /** @internal */ set right(value: Node<K, V>) { this.__right = value }
     
     /** Construct a new standalone Node with key and value */
     constructor(key: K, value: V) {
-        this._key = key
-        this._value = value
+        this.__key = key
+        this.__value = value
     }
 
     /** The key of the entry which the Node represents */
-    get key(): K { return this._key }
+    get key(): K { return this.__key }
 
     /** The value of the entry which the Node represents, can be mutated */
-    get value(): V { return this._value }
-    set value(value: V) { this._value = value }
+    get value(): V { return this.__value }
+    set value(value: V) { this.__value = value }
 
     /** True if node is nil */
     get nil(): boolean { return this === Node.nilNode }
@@ -51,20 +84,20 @@ export class Node<K, V> {
 
     /** Compact display of the node */
     toString(maxLength: number = 20): string {
-        const key = ('' + this.key).substr(0, maxLength)
-        const value = ('' + this.value).substr(0, maxLength)
+        const key = ('' + this.key).substring(0, maxLength)
+        const value = ('' + this.value).substring(0, maxLength)
         return `[${key}:${value}]`
     }
 
   // Compact display of the node with more details, <> for red and () for black
   /** @internal */ _details(maxLength: number = 20) {
-        const cut = (s: any) => ('' + s).substr(0, maxLength)
-        const o = this._black ? '(' : '<'
-        const c = this._black ? ')' : '>'
+        const cut = (s: any) => ('' + s).substring(0, maxLength)
+        const o = this.black ? '(' : '<'
+        const c = this.black ? ')' : '>'
         const key = cut(this.key)
         const value = cut(this.value)
-        const left = this._left.nil ? '·' : this._left.key
-        const right = this._right.nil ? '·' : this._right.key
+        const left = this.left.nil ? '·' : this.left.key
+        const right = this.right.nil ? '·' : this.right.key
         return `${o}${cut(left)} ${key}:${value} ${cut(right)}${c}`
     }
 }
@@ -75,12 +108,14 @@ function _nilNode(): Node<any, any> {
         new class extends Node<unknown, unknown> {
             toString() { return '·' }
             _details() { return '(·)' }
-            get _black() { return true }
-            set _black(_: boolean) { } // ignoring, see [[Nil]]
+            get black() { return true }
+            set black(_: boolean) { } // ignoring, see [[Nil]]
+            get red() { return false }
+            set red(_: boolean) { }
 
             constructor() {
                 super(Symbol('nilNode.key'), Symbol('nilNode.value'))
-                this._parent = this._left = this._right = this
+                this.parent = this.left = this.right = this
             }
         },
     )
