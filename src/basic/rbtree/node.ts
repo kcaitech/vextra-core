@@ -29,6 +29,43 @@ export interface INode<K, V> {
     right: INode<K, V>;
 }
 
+export interface IVisitor<K, V> extends INode<K, V> {
+    set(node: INode<K, V>): void;
+}
+
+export class DefaultVisitor<K, V> implements INode<K, V> {
+    private __node?: INode<K, V>;
+    set(node: INode<K, V>): void { this.__node = node }
+
+    get key(): K { return <K>this.__node?.key }
+
+    get value(): V { return <V>this.__node?.value }
+    set value(v: V) { (<INode<K, V>>this.__node).value = v }
+    get nil(): boolean {
+        return <boolean>this.__node?.nil;
+    }
+    get ok(): boolean {
+        return <boolean>this.__node?.ok;
+    }
+    entry(): [K, V] {
+        return <[K, V]>this.__node?.entry();
+    }
+    toString(maxLength: number = 20): string {
+        return <string>this.__node?.toString(maxLength);
+    }
+
+    get black() { return <boolean>this.__node?.black }
+    set black(value: boolean) { (<INode<K, V>>this.__node).black = value }
+    get red() { return <boolean>this.__node?.red }
+    set red(value: boolean) { (<INode<K, V>>this.__node).red = value }
+    get left() { return <INode<K, V>>this.__node?.left }
+    set left(value: INode<K, V>) { (<INode<K, V>>this.__node).left = value }
+    get parent() { return <INode<K, V>>this.__node?.parent }
+    set parent(value: INode<K, V>) { (<INode<K, V>>this.__node).parent = value }
+    get right() { return <INode<K, V>>this.__node?.right }
+    set right(value: INode<K, V>) { (<INode<K, V>>this.__node).right = value }
+}
+
 /** Node has two tasks: first they are used to maintain the red-black tree's
  * internal order. For that properties starting with _ (underscore) are used,
  * these are internal and not officially documented, for example `_black` and
