@@ -1,4 +1,4 @@
-import { BoolOp, CurveMode, ExportOptions, ImageShape, PathShape, Point, PointType, RectShape, Shape, ShapeFrame, ShapeType, TextShape } from "@/data/shape";
+import { BoolOp, CurveMode, ExportOptions, GroupShape, ImageShape, PathShape, Point, PointType, RectShape, Shape, ShapeFrame, ShapeType, Symbol, SymbolRef, TextShape } from "@/data/shape";
 import { LzData } from '@/data/lzdata';
 import { XY } from "@/data/style";
 import { Env } from "./envio";
@@ -10,9 +10,8 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
 
     const type = ((t) => {
         switch(t) {
-            case 'symbolInstance':
             case 'rectangle': return ShapeType.Rectangle;
-            case 'shapeGroup': return ShapeType.Group;
+            case 'shapeGroup': return ShapeType.ShapeGroup;
             case 'group': return ShapeType.Group;
             case 'shapePath': return ShapeType.Path;
             case 'artboard': return ShapeType.Artboard;
@@ -23,6 +22,8 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
             case 'star':
             case 'triangle':
             case 'polygon': return ShapeType.Path;
+            case 'symbolMaster': return ShapeType.Symbol;
+            case 'symbolInstance': return ShapeType.SymbolRef;
             default: return ShapeType.Rectangle;
         }
     })(data['_class']);
@@ -40,15 +41,31 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
     })(data['frame']);
 
     const name: string = data['name'];
-    const booleanOperation: BoolOp = ((o: number) => {
+    let booleanOperation: BoolOp = ((o: number) => {
+        // if (type === ShapeType.Group) {
+        //     o = -1;
+        // }
         switch(o) {
-            case 0: return BoolOp.Union;
+            case 0: {
+                // if (type === ShapeType.ShapeGroup)return BoolOp.GroupUnion;
+                if (type === ShapeType.Group) return BoolOp.None;
+                return BoolOp.Union;
+            }
             case 1: return BoolOp.Sbutract;
             case 2: return BoolOp.Intersect;
             case 3: return BoolOp.Difference;
+            case 4: return BoolOp.SimpleUnion;
             default: return BoolOp.None;
         }
     })(data['booleanOperation']);
+    if (type === ShapeType.ShapeGroup && booleanOperation === BoolOp.Union) {
+        booleanOperation = BoolOp.None;
+        (data['layers'] || []).forEach((d:IJSON) => {
+            if (d['booleanOperation'] === -1) {
+                d['booleanOperation'] = 4; // SimpleUnions
+            }
+        })
+    }
 
     const points: Point[] = (data['points'] || []).map((d: IJSON) => {
         const type: PointType = ((t) => {
@@ -81,18 +98,21 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
 
     const shape = ((type: ShapeType) => {
         switch(type) {
-            case ShapeType.Artboard: return new Shape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
-            case ShapeType.Group: return new Shape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            case ShapeType.Artboard: return new GroupShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            case ShapeType.ShapeGroup:
+            case ShapeType.Group: return new GroupShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
             case ShapeType.Image: return new ImageShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, imageRef, style);
             case ShapeType.Page: return new Page(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
             case ShapeType.Path: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style, isClosed);
+            case ShapeType.Boolean: // 虚拟对象, 实际上不应该出现的
             case ShapeType.Rectangle: return new RectShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
             case ShapeType.Text: return new TextShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, text);
             case ShapeType.Star:
             case ShapeType.Polygon:
             case ShapeType.Triangle:
-            case ShapeType.Boolean: // 虚拟对象
             case ShapeType.Oval: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style, isClosed);
+            case ShapeType.Symbol: return new Symbol(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, data['symbolID'], env.symbolManager);
+            case ShapeType.SymbolRef: return new SymbolRef(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, env.symbolManager, data['symbolID']);
         }
     })(type);
 
@@ -107,7 +127,7 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
 
     // const shape = new Class(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, imageRef, style);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
-    
-    shape.initChilds(childs);
+    if (shape instanceof GroupShape) shape.appendChilds(childs);
+
     return shape;
 }

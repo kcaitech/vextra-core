@@ -1,6 +1,5 @@
 
-import { BoolOp, ExportOptions, Point, Shape, ShapeFrame, ShapeType } from "./shape";
-import { Gradient } from "./style";
+import { GroupShape } from "./shape";
 
 export class RulerData {
     // "horizontalRulerData": {
@@ -15,7 +14,7 @@ export class RulerData {
     // }
 }
 
-export class Page extends Shape {
+export class Page extends GroupShape {
     // private m_gradients: Map<string, Gradient> | undefined;
     private m_horizontalRulerData: RulerData | undefined;
     private m_verticalRulerData: RulerData | undefined;

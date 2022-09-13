@@ -1,4 +1,4 @@
-import { BoolOp, Shape, ShapeType } from "@/data/shape";
+import { BoolOp, GroupShape, Shape, ShapeType } from "@/data/shape";
 import { difference, intersection, subtract, union } from "./boolop";
 import { ELArray, EL, h } from "./basic";
 
@@ -17,11 +17,14 @@ function opPath(bop: BoolOp, path0: string, path1: string): string {
         case BoolOp.Union:
             path = union(path0, path1);
             break;
+        case BoolOp.SimpleUnion:
+            path = path0 + path1;
+            break;
     }
     return path;
 }
 
-function consumeOpShape(shape: Shape, startIdx: number, bop: BoolOp, offsetX: number, offsetY: number): { count: number, path: string } {
+function consumeOpShape(shape: GroupShape, startIdx: number, bop: BoolOp, offsetX: number, offsetY: number): { count: number, path: string } {
     const cc = shape.childsCount;
     let i = startIdx;
     if (i >= cc - 1) {
@@ -64,7 +67,7 @@ export function render2path(shape: Shape, bop?: BoolOp, offsetX?: number, offset
     offsetY = offsetY || 0;
 
     // not group
-    if (shape.childsCount == 0) {
+    if (!(shape instanceof GroupShape)) {
         return shape.getPath(offsetX, offsetY);
     }
 
@@ -91,10 +94,14 @@ export function render2path(shape: Shape, bop?: BoolOp, offsetX?: number, offset
     return joinPath;
 }
 
-export function render(shape: Shape, bop: BoolOp, comsMap: Map<ShapeType, any>): EL {
+export function render(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>): EL {
     const childs:ELArray = [];
     const cc = shape.childsCount;
     bop = shape.boolOp == BoolOp.None ? bop : shape.boolOp;
+
+    // if (shape.type === ShapeType.ShapeGroup && bop === BoolOp.Union) {
+
+    // }
 
     for (let i = 0; i < cc;) {
 

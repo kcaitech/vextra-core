@@ -17,6 +17,7 @@
   "dependencies": {
     "eve": "^0.5.4",
     "node-stream-zip": "*",
+    "skia-canvas": "^0.9.30",
     "vue": "^3.2.13",
     "vue-class-component": "^8.0.0-0"
   },
