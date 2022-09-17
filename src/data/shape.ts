@@ -1,3 +1,4 @@
+import { Watchable } from "./basic";
 import { LzData } from "./lzdata";
 import { Pair, Style, XY } from "./style";
 import { Text } from "./text";
@@ -163,7 +164,7 @@ export interface IShape {
 
 }
 
-export class Shape implements IShape {
+export class Shape extends Watchable implements IShape {
     protected m_parent: Shape | undefined;
     protected m_lzData: LzData;
     private m_type: ShapeType;
@@ -197,7 +198,7 @@ export class Shape implements IShape {
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style) {
-
+        super();
         this.m_parent = parent;
         this.m_lzData = lzData;
         this.m_type = type;
