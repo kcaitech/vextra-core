@@ -1,5 +1,7 @@
 import { Document } from "@/data/document";
 import { LzData } from '@/data/lzdata';
+import { PagesMeta } from "@/data/meta";
+import { importMeta } from "./metaio";
 import { importPage } from "./pageio";
 import { IJSON } from "./styleio";
 
@@ -10,5 +12,8 @@ export async function importDocument(lzData: LzData) {
         return d['_ref'] + '.json';
     });
 
-    return new Document(lzData, pagesRef, importPage);
+    // todo
+    const meta: PagesMeta = await importMeta(lzData);
+
+    return new Document(lzData, meta, pagesRef, importPage);
 }

@@ -1,19 +1,22 @@
-import { EventEmitter } from "@/basic/event";
+import { Watchable } from "./basic";
 import { LzData } from "./lzdata";
+import { PagesMeta } from "./meta";
 import { Page } from "./page";
 import { Symbol, ISymbolManager } from "./shape";
 
-export class Document extends EventEmitter implements ISymbolManager {
+export class Document extends Watchable implements ISymbolManager {
     private m_lzData: LzData;
 	private m_pagesRef: string[];
 	private m_pages: Page[];
 	private m_pageImporter: Function;
     private m_symbols: Map<string, Symbol> = new Map();
     private m_symWaits: Map<string, (() => void)[]> = new Map();
+    private m_meta: PagesMeta;
 
-	constructor(lzData: LzData, pagesRef: string[], pageImporter: Function) {
+	constructor(lzData: LzData, meta: PagesMeta, pagesRef: string[], pageImporter: Function) {
 		super();
 		this.m_lzData = lzData;
+        this.m_meta = meta;
 		this.m_pages = [];
 		this.m_pagesRef = pagesRef;
 		this.m_pageImporter = pageImporter;
@@ -26,6 +29,10 @@ export class Document extends EventEmitter implements ISymbolManager {
         // for debugger
         (window as any).__document = this;
 	}
+
+    get meta(): PagesMeta {
+        return this.m_meta;
+    }
 	
 	get pageCount(): number {
 		return this.m_pagesRef.length;
@@ -41,6 +48,7 @@ export class Document extends EventEmitter implements ISymbolManager {
 		const ref = this.m_pagesRef[idx];
 		page = await this.m_pageImporter(this.m_lzData, ref, this);
 		this.m_pages[idx] = page;
+        this.notify();
 		return page;
 	}
 
