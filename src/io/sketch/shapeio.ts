@@ -1,4 +1,18 @@
-import { BoolOp, CurveMode, ExportOptions, GroupShape, ImageShape, PathShape, Point, PointType, RectShape, Shape, ShapeFrame, ShapeType, Symbol, SymbolRef, TextShape } from "@/data/shape";
+import { BoolOp, 
+    CurveMode, 
+    ExportOptions, 
+    GroupShape, 
+    ImageShape, 
+    PathShape, 
+    Point, 
+    PointType, 
+    RectShape, 
+    Shape, 
+    ShapeFrame, 
+    ShapeType, 
+    Symbol, 
+    SymbolRef, 
+    TextShape } from "@/data/shape";
 import { LzData } from '@/data/lzdata';
 import { XY } from "@/data/style";
 import { Env } from "./envio";

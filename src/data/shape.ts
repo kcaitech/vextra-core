@@ -1,6 +1,6 @@
 import { Watchable } from "./basic";
 import { LzData } from "./lzdata";
-import { Pair, Style, XY } from "./style";
+import { Style, XY } from "./style";
 import { Text } from "./text";
 
 export enum PointType {
@@ -188,7 +188,7 @@ export class Shape extends Watchable implements IShape {
     private m_shouldBreakMaskChain: boolean = false;
     private m_clippingMaskMode: ClippingMaskMode | undefined;
     private m_hasClippingMask: boolean = false;
-    private m_changeListener: Function | undefined;
+    // private m_changeListener: Function | undefined;
 
     constructor(parent: Shape | undefined,
         lzData: LzData,
@@ -277,12 +277,12 @@ export class Shape extends Watchable implements IShape {
         return "";
     }
 
-    onChange(cb: Function) {
-        this.m_changeListener = cb;
-    }
-    fireChanged() {
-        if (this.m_changeListener) this.m_changeListener();
-    }
+    // onChange(cb: Function) {
+    //     this.m_changeListener = cb;
+    // }
+    // fireChanged() {
+    //     if (this.m_changeListener) this.m_changeListener();
+    // }
     // bubbleEvent(event: string, args: any, forceAsync: boolean = false): any {
     // 	return this.m_parent && this.m_parent.bubbleEvent(event, args, forceAsync);
     // }
@@ -658,7 +658,19 @@ export class SymbolRef extends Shape {
         if (this.m_data) return this.m_data;
         return this.m_symMgr.getSymbol(this.m_id).then((s) => {
             this.m_data = s;
+            this.notify();
             return s;
+        })
+    }
+
+    peekSymbol(): Symbol | undefined {
+        return this.m_data;
+    }
+
+    loadSymbol() {
+        this.m_symMgr.getSymbol(this.m_id).then((s) => {
+            this.m_data = s;
+            this.notify();
         })
     }
 }

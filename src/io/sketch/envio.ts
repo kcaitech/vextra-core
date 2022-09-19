@@ -1,5 +1,4 @@
 import { ISymbolManager } from "@/data/shape";
-import { Gradient } from "@/data/style";
 
 export class Env {
     private m_symMgr: ISymbolManager;

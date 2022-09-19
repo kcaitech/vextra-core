@@ -9,16 +9,13 @@ import { BlendMode,
     FillType, 
     Gradient, 
     GradientType, 
-    makePair, 
     MarkerType, 
-    Pair, 
     Stop, 
     Style, 
     WindingRule, 
     XY} from "@/data/style";
 import { objectId } from "@/basic/objectid";
 import { Env } from "./envio";
-import { ShapeFrame } from "@/data/shape";
 
 export interface IJSON {
 	[key: string]: any
