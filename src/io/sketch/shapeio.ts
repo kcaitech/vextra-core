@@ -14,9 +14,9 @@ import { BoolOp,
     SymbolRef, 
     TextShape } from "@/data/shape";
 import { LzData } from '@/data/lzdata';
-import { XY } from "@/data/style";
+import { Color, XY } from "@/data/style";
 import { Env } from "./envio";
-import { importXY, importStyle, IJSON } from "./styleio";
+import { importXY, importStyle, IJSON, importColor } from "./styleio";
 import { Page } from "@/data/page";
 import { importText } from "./textio";
 import { Artboard } from "@/data/artboard";
@@ -122,7 +122,16 @@ function importArtboard(env:Env, type: ShapeType, parent: Shape | undefined, lzD
     const style = importStyle(env, data['style']);
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
+
+    const hasBackgroundColor: boolean = data['hasBackgroundColor'];
+    const includeBackgroundColorInExport: boolean = data['includeBackgroundColorInExport'];
+    const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
+
     const shape = new Artboard(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+
+    shape.hasBackgroundColor = hasBackgroundColor;
+    shape.includeBackgroundColorInExport = includeBackgroundColorInExport;
+    if (backgroundColor) shape.backgroundColor = backgroundColor;
 
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
     shape.appendChilds(childs);
