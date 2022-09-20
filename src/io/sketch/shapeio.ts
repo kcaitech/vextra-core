@@ -19,42 +19,44 @@ import { Env } from "./envio";
 import { importXY, importStyle, IJSON } from "./styleio";
 import { Page } from "@/data/page";
 import { importText } from "./textio";
+import { Artboard } from "@/data/artboard";
 
-export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, data: IJSON): Shape {
+// function importShapeType(data: IJSON): ShapeType {
+//     switch((data['_class'])) {
+//         case 'rectangle': return ShapeType.Rectangle;
+//         case 'shapeGroup': return ShapeType.ShapeGroup;
+//         case 'group': return ShapeType.Group;
+//         case 'shapePath': return ShapeType.Path;
+//         case 'artboard': return ShapeType.Artboard;
+//         case 'bitmap': return ShapeType.Image;
+//         case 'page': return ShapeType.Page;
+//         case 'text': return ShapeType.Text;
+//         case 'oval':
+//         case 'star':
+//         case 'triangle':
+//         case 'polygon': return ShapeType.Path;
+//         case 'symbolMaster': return ShapeType.Symbol;
+//         case 'symbolInstance': return ShapeType.SymbolRef;
+//         default: return ShapeType.Rectangle;
+//     }
+// }
 
-    const type = ((t) => {
-        switch(t) {
-            case 'rectangle': return ShapeType.Rectangle;
-            case 'shapeGroup': return ShapeType.ShapeGroup;
-            case 'group': return ShapeType.Group;
-            case 'shapePath': return ShapeType.Path;
-            case 'artboard': return ShapeType.Artboard;
-            case 'bitmap': return ShapeType.Image;
-            case 'page': return ShapeType.Page;
-            case 'text': return ShapeType.Text;
-            case 'oval':
-            case 'star':
-            case 'triangle':
-            case 'polygon': return ShapeType.Path;
-            case 'symbolMaster': return ShapeType.Symbol;
-            case 'symbolInstance': return ShapeType.SymbolRef;
-            default: return ShapeType.Rectangle;
-        }
-    })(data['_class']);
-
-	const exportOptions: ExportOptions = ((d) => {
+function importExportOptions(data: IJSON): ExportOptions {
+    return ((d) => {
         return new ExportOptions(); // todo
     })(data['exportOptions']);
+}
 
-    const frame: ShapeFrame = ((d) => {
-        const x = d['x'];
-        const y = d['y'];
-        const width = d['width'];
-        const height = d['height'];
-        return new ShapeFrame(x, y, width, height);
-    })(data['frame']);
+function importShapeFrame(data: IJSON): ShapeFrame {
+    const d:IJSON = data['frame'];
+    const x = d['x'];
+    const y = d['y'];
+    const width = d['width'];
+    const height = d['height'];
+    return new ShapeFrame(x, y, width, height);
+}
 
-    const name: string = data['name'];
+function importBoolOp(data:IJSON, type: ShapeType): BoolOp {
     let booleanOperation: BoolOp = ((o: number) => {
         // if (type === ShapeType.Group) {
         //     o = -1;
@@ -80,8 +82,11 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
             }
         })
     }
+    return booleanOperation;
+}
 
-    const points: Point[] = (data['points'] || []).map((d: IJSON) => {
+function importPoints(data:IJSON): Point[] {
+    return (data['points'] || []).map((d: IJSON) => {
         const type: PointType = ((t) => {
             return PointType.Type0; // todo
         })(d['_class']);
@@ -103,45 +108,197 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
         const point: XY<number, number> = importXY(d['point']);
         return new Point(type, cornerRadius, curveFrom, curveMode, curveTo, hasCurveFrom, hasCurveTo, point);
     });
+}
 
+function importArtboard(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): Artboard {
+    // const type = importShapeType(data);
+	const exportOptions = importExportOptions(data);
+    const frame = importShapeFrame(data);
+    const name: string = data['name'];
+    const booleanOperation = importBoolOp(data, type);
+    // const points: Point[] = importPoints(data);
+    // const image = data['image'];
+    // const imageRef = image && image['_ref'];
+    const style = importStyle(env, data['style']);
+    // const text = data['attributedString'] && importText(data['attributedString']);
+    // const isClosed = data['isClosed'];
+    const shape = new Artboard(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+
+    const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
+    shape.appendChilds(childs);
+
+    return shape;
+}
+
+function importGroupShape(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): GroupShape {
+    // const type = importShapeType(data);
+	const exportOptions = importExportOptions(data);
+    const frame = importShapeFrame(data);
+    const name: string = data['name'];
+    const booleanOperation = importBoolOp(data, type);
+    // const points: Point[] = importPoints(data);
+    // const image = data['image'];
+    // const imageRef = image && image['_ref'];
+    const style = importStyle(env, data['style']);
+    // const text = data['attributedString'] && importText(data['attributedString']);
+    // const isClosed = data['isClosed'];
+    const shape = new GroupShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+
+    const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
+    shape.appendChilds(childs);
+
+    return shape;
+}
+
+function importImage(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): ImageShape {
+    // const type = importShapeType(data);
+	const exportOptions = importExportOptions(data);
+    const frame = importShapeFrame(data);
+    const name: string = data['name'];
+    const booleanOperation = importBoolOp(data, type);
+    // const points: Point[] = importPoints(data);
     const image = data['image'];
     const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
-    const text = data['attributedString'] && importText(data['attributedString']);
-    const isClosed = data['isClosed'];
+    // const text = data['attributedString'] && importText(data['attributedString']);
+    // const isClosed = data['isClosed'];
 
-    const shape = ((type: ShapeType) => {
-        switch(type) {
-            case ShapeType.Artboard: return new GroupShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
-            case ShapeType.ShapeGroup:
-            case ShapeType.Group: return new GroupShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
-            case ShapeType.Image: return new ImageShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, imageRef, style);
-            case ShapeType.Page: return new Page(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
-            case ShapeType.Path: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style, isClosed);
-            case ShapeType.Boolean: // 虚拟对象, 实际上不应该出现的
-            case ShapeType.Rectangle: return new RectShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
-            case ShapeType.Text: return new TextShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, text);
-            case ShapeType.Star:
-            case ShapeType.Polygon:
-            case ShapeType.Triangle:
-            case ShapeType.Oval: return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style, isClosed);
-            case ShapeType.Symbol: return new Symbol(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, data['symbolID'], env.symbolManager);
-            case ShapeType.SymbolRef: return new SymbolRef(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, env.symbolManager, data['symbolID']);
-        }
-    })(type);
+    return new ImageShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, imageRef, style);
+}
 
-    // todo 不确定，是否sketch旧版本写的数据，现在的版本做不出来样张
-    // if (data['_class'] == "shapeGroup" && data['booleanOperation'] == 0) {
-    //     (data['layers'] || []).forEach((element:IJSON) => {
-    //         if (element['booleanOperation'] == -1) {
-    //             element['booleanOperation'] = 3;
-    //         }
-    //     });
-    // }
+function importPage(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): Page {
+    // const type = importShapeType(data);
+	const exportOptions = importExportOptions(data);
+    const frame = importShapeFrame(data);
+    const name: string = data['name'];
+    const booleanOperation = importBoolOp(data, type);
+    // const points: Point[] = importPoints(data);
+    // const image = data['image'];
+    // const imageRef = image && image['_ref'];
+    const style = importStyle(env, data['style']);
+    // const text = data['attributedString'] && importText(data['attributedString']);
+    // const isClosed = data['isClosed'];
 
-    // const shape = new Class(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, imageRef, style);
+    const shape = new Page(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
-    if (shape instanceof GroupShape) shape.appendChilds(childs);
+    shape.appendChilds(childs);
 
     return shape;
+}
+
+function importPathShape(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): PathShape {
+    // const type = importShapeType(data);
+	const exportOptions = importExportOptions(data);
+    const frame = importShapeFrame(data);
+    const name: string = data['name'];
+    const booleanOperation = importBoolOp(data, type);
+    const points: Point[] = importPoints(data);
+    // const image = data['image'];
+    // const imageRef = image && image['_ref'];
+    const style = importStyle(env, data['style']);
+    // const text = data['attributedString'] && importText(data['attributedString']);
+    const isClosed = data['isClosed'];
+
+    return new PathShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, points, style, isClosed);
+}
+
+function importRectShape(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): RectShape {
+    // const type = importShapeType(data);
+	const exportOptions = importExportOptions(data);
+    const frame = importShapeFrame(data);
+    const name: string = data['name'];
+    const booleanOperation = importBoolOp(data, type);
+    // const points: Point[] = importPoints(data);
+    // const image = data['image'];
+    // const imageRef = image && image['_ref'];
+    const style = importStyle(env, data['style']);
+    // const text = data['attributedString'] && importText(data['attributedString']);
+    // const isClosed = data['isClosed'];
+
+    return new RectShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+}
+
+function importTextShape(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): TextShape {
+    // const type = importShapeType(data);
+	const exportOptions = importExportOptions(data);
+    const frame = importShapeFrame(data);
+    const name: string = data['name'];
+    const booleanOperation = importBoolOp(data, type);
+    // const points: Point[] = importPoints(data);
+    // const image = data['image'];
+    // const imageRef = image && image['_ref'];
+    const style = importStyle(env, data['style']);
+    const text = data['attributedString'] && importText(data['attributedString']);
+    // const isClosed = data['isClosed'];
+    return new TextShape(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, text);
+}
+
+function importSymbol(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): Symbol {
+    // const type = importShapeType(data);
+	const exportOptions = importExportOptions(data);
+    const frame = importShapeFrame(data);
+    const name: string = data['name'];
+    const booleanOperation = importBoolOp(data, type);
+    // const points: Point[] = importPoints(data);
+    // const image = data['image'];
+    // const imageRef = image && image['_ref'];
+    const style = importStyle(env, data['style']);
+    // const text = data['attributedString'] && importText(data['attributedString']);
+    // const isClosed = data['isClosed'];
+
+    const shape = new Symbol(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, data['symbolID'], env.symbolManager);
+
+    const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
+    shape.appendChilds(childs);
+
+    return shape;
+}
+
+function importSymbolRef(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): SymbolRef {
+    // const type = importShapeType(data);
+	const exportOptions = importExportOptions(data);
+    const frame = importShapeFrame(data);
+    const name: string = data['name'];
+    const booleanOperation = importBoolOp(data, type);
+    // const points: Point[] = importPoints(data);
+    // const image = data['image'];
+    // const imageRef = image && image['_ref'];
+    const style = importStyle(env, data['style']);
+    // const text = data['attributedString'] && importText(data['attributedString']);
+    // const isClosed = data['isClosed'];
+
+    return new SymbolRef(parent, lzData, type, name, booleanOperation, exportOptions, frame, style, env.symbolManager, data['symbolID']);
+}
+
+export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, data: IJSON): Shape {
+
+    switch((data['_class'])) {
+        case 'rectangle': 
+            return importRectShape(env, ShapeType.Rectangle, parent, lzData, data); // ShapeType.Rectangle;
+        case 'shapeGroup':
+            return importGroupShape(env, ShapeType.ShapeGroup, parent, lzData, data); // ShapeType.ShapeGroup;
+        case 'group': 
+            return importGroupShape(env, ShapeType.Group, parent, lzData, data); // ShapeType.Group;
+        case 'shapePath':
+            return importPathShape(env, ShapeType.Path, parent, lzData, data); // ShapeType.Path;
+        case 'artboard':
+            return importArtboard(env, ShapeType.Artboard, parent, lzData, data); // ShapeType.Artboard;
+        case 'bitmap':
+            return importImage(env, ShapeType.Image, parent, lzData, data); // ShapeType.Image;
+        case 'page':
+            return importPage(env, ShapeType.Page, parent, lzData, data); // ShapeType.Page;
+        case 'text':
+            return importTextShape(env, ShapeType.Text, parent, lzData, data); // ShapeType.Text;
+        case 'oval':
+        case 'star':
+        case 'triangle':
+        case 'polygon':
+            return importPathShape(env, ShapeType.Path, parent, lzData, data); // ShapeType.Path;
+        case 'symbolMaster':
+            return importSymbol(env, ShapeType.Symbol, parent, lzData, data); // ShapeType.Symbol;
+        case 'symbolInstance':
+            return importSymbolRef(env, ShapeType.SymbolRef, parent, lzData, data); // ShapeType.SymbolRef;
+        default:
+            return importRectShape(env, ShapeType.Rectangle, parent, lzData, data); // ShapeType.Rectangle;
+    }
 }
