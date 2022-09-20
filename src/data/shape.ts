@@ -590,12 +590,7 @@ export class TextShape extends Shape {
 
 // todo
 // group shape
-
 // oval shape
-
-// Symbol:
-// SymbolRef 
-// SymbolMaster
 
 export interface ISymbolManager {
     addSymbol(id: string, data: Symbol): void;
