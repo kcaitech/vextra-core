@@ -27,6 +27,9 @@ export class Color {
     get red(): number {
         return this.m_red;
     }
+    toRGBA(): string {
+        return "rgba(" + this.red + "," + this.green + "," + this.blue + "," + this.alpha + ")";
+    }
 }
 
 export class Stop {

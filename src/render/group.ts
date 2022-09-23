@@ -94,7 +94,7 @@ export function render2path(shape: Shape, bop?: BoolOp, offsetX?: number, offset
     return joinPath;
 }
 
-export function render(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>): EL {
+export function renderGroupChilds(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>): ELArray {
     const childs:ELArray = [];
     const cc = shape.childsCount;
     bop = shape.boolOp == BoolOp.None ? bop : shape.boolOp;
@@ -125,6 +125,11 @@ export function render(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, a
         i = i + 1;
     }
 
+    return childs;
+}
+
+export function render(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>): EL {
+    const childs:ELArray = renderGroupChilds(shape, bop, comsMap);
     const frame = shape.frame;
     return h('g', { transform: 'translate(' + frame.x + ',' + frame.y + ')' }, childs);
 }
