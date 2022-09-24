@@ -1,7 +1,8 @@
 # sktest
 
 ## 开始
-npm install -g @vue/cli@4.5.17
+sudo npm install -g @vue/cli@5.0.8
+sudo npm install -g yarn@1.22.19
 
 npm install
 
