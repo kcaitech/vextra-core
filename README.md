@@ -1,8 +1,13 @@
 # sktest
 
-## 开始
+## 安装nodejs 16.x
+
+## 修改npm源
+npm config set registry https://registry.npmmirror.com
+ > restore: https://registry.npmjs.com
+
+## 开始, 是否不用-g也行？
 sudo npm install -g @vue/cli@5.0.8
-sudo npm install -g yarn@1.22.19
 
 npm install
 
