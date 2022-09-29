@@ -1,5 +1,5 @@
 // Transact
-import {objectId} from '../basic/objectid';
+import {objectId} from '@/basic/objectid';
 
 // 事务方案
 // 当对象有修改时，整体浅拷贝备份，由对象提供方法（save, restore)

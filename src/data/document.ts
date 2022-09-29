@@ -1,5 +1,4 @@
 import { Watchable } from "./basic";
-import { LzData } from "./lzdata";
 import { PagesMeta } from "./meta";
 import { Page } from "./page";
 import { Symbol, ISymbolManager } from "./shape";
@@ -24,6 +23,12 @@ export class PagesMgr extends Watchable {
 	}
     getPageIdByIndex(idx: number): string {
         return this.m_order[idx];
+    }
+    getPageById(id: string): Page | undefined {
+        return this.m_map.get(id);
+    }
+    getPageIndexById(id: string): number {
+        return this.m_order.indexOf(id);
     }
     getPageNameById(id: string): string {
         return this.m_meta.get(id)?.name || "";
