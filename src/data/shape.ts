@@ -170,7 +170,7 @@ export class Shape extends Watchable implements IShape {
     private m_type: ShapeType;
     private m_exportOptions: ExportOptions;
     private m_frame: ShapeFrame;
-
+    private m_id: string;
     private m_style: Style;
     private m_boolOp: BoolOp;
     private m_isFixedToViewport: boolean = false;
@@ -194,6 +194,7 @@ export class Shape extends Watchable implements IShape {
         lzData: LzData,
         type: ShapeType,
         name: string,
+        id: string,
         booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
@@ -203,12 +204,15 @@ export class Shape extends Watchable implements IShape {
         this.m_lzData = lzData;
         this.m_type = type;
         this.m_name = name;
+        this.m_id = id;
         this.m_boolOp = booleanOperation;
         this.m_exportOptions = exportOptions;
         this.m_frame = frame;
         this.m_style = style;
     }
-
+    get id() {
+        return this.m_id;
+    }
     get boolOp(): BoolOp {
         return this.m_boolOp;
     }
@@ -294,11 +298,12 @@ export class GroupShape extends Shape {
         lzData: LzData,
         type: ShapeType,
         name: string,
+        id: string,
         booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style) {
-            super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+            super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
         }
 
     appendChilds(childs: Shape[]) {
@@ -320,12 +325,13 @@ export class RectShape extends Shape {
         lzData: LzData,
         type: ShapeType,
         name: string,
+        id: string,
         booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style,
         fixedRadius?: number) {
-        super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_fixedRadius = fixedRadius || 0;
     }
     get fixedRadius() {
@@ -369,12 +375,13 @@ export class ImageShape extends Shape {
         lzData: LzData,
         type: ShapeType,
         name: string,
+        id: string,
         booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         imageRef: string,
         style: Style) {
-        super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_imageRef = imageRef;
     }
 
@@ -439,13 +446,14 @@ export class PathShape extends Shape {
         lzData: LzData,
         type: ShapeType,
         name: string,
+        id: string,
         booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         points: Point[],
         style: Style,
         isClosed?: boolean) {
-        super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_points = points;
         this.m_isClosed = isClosed;
     }
@@ -560,12 +568,13 @@ export class TextShape extends Shape {
         lzData: LzData,
         type: ShapeType,
         name: string,
+        id: string,
         booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style,
         text: Text) {
-        super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_text = text;
     }
 
@@ -599,59 +608,60 @@ export interface ISymbolManager {
 }
 
 export class Symbol extends GroupShape {
-    private m_id: string;
+    // private m_id: string;
     private m_symMgr: ISymbolManager;
 
     constructor(parent: Shape | undefined,
         lzData: LzData,
         type: ShapeType,
         name: string,
+        id: string,
         booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style,
-        id: string,
         mgr:ISymbolManager) {
-        super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_symMgr = mgr;
-        this.m_id = id;
+        // this.m_id = id;
         mgr.addSymbol(id, this);
     }
-    get id() {
-        return this.m_id;
-    }
+    // get id() {
+    //     return this.m_id;
+    // }
     deleted() {
-        this.m_symMgr.deleteSymbol(this.m_id);
+        this.m_symMgr.deleteSymbol(this.id);
     }
 }
 
 export class SymbolRef extends Shape {
     private m_symMgr: ISymbolManager;
-    private m_id: string;
+    private m_refId: string;
     private m_data?: Symbol;
     constructor(
         parent: Shape | undefined,
         lzData: LzData,
         type: ShapeType,
         name: string,
+        id: string,
         booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style,
         mgr:ISymbolManager, 
-        id: string, 
+        refId: string, 
         data?: Symbol) {
-        super(parent, lzData, type, name, booleanOperation, exportOptions, frame, style);
+        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_symMgr = mgr;
-        this.m_id = id;
+        this.m_refId = refId;
         this.m_data = data;
     }
-    get id() {
-        return this.m_id;
+    get refId() {
+        return this.m_refId;
     }
     async getSymbol(): Promise<Symbol> {
         if (this.m_data) return this.m_data;
-        return this.m_symMgr.getSymbol(this.m_id).then((s) => {
+        return this.m_symMgr.getSymbol(this.refId).then((s) => {
             this.m_data = s;
             this.notify();
             return s;
@@ -663,7 +673,7 @@ export class SymbolRef extends Shape {
     }
 
     loadSymbol() {
-        this.m_symMgr.getSymbol(this.m_id).then((s) => {
+        this.m_symMgr.getSymbol(this.refId).then((s) => {
             this.m_data = s;
             this.notify();
         })

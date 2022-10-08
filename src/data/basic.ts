@@ -1,5 +1,11 @@
 
 export class Watchable {
+
+    private static __wid = 0;
+    static genWId() {
+        return this.__wid++;
+    }
+
     private m_watcher:Set<((...args: any[]) => void)> = new Set();
 
     public watch(watcher:((...args: any[]) => void)): (() => void) {
