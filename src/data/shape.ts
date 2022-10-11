@@ -2,6 +2,7 @@ import { Watchable } from "./basic";
 import { LzData } from "./lzdata";
 import { Style, XY } from "./style";
 import { Text } from "./text";
+import { Atom, AtomGroup } from "./transact";
 
 export enum PointType {
     Type0, // todo
@@ -15,6 +16,7 @@ export enum CurveMode {
     Mode4,
 }
 
+@AtomGroup
 export class Point {
     private m_type: PointType;
     private m_cornerRadius: number;
@@ -88,6 +90,7 @@ export class ExportOptions {
     // },
 }
 
+@Atom
 export class ShapeFrame {
     // todo
     // "_class": "rect",
@@ -164,6 +167,7 @@ export interface IShape {
 
 }
 
+@AtomGroup
 export class Shape extends Watchable implements IShape {
     protected m_parent: Shape | undefined;
     protected m_lzData: LzData;
@@ -292,6 +296,7 @@ export class Shape extends Watchable implements IShape {
     // }
 }
 
+@AtomGroup
 export class GroupShape extends Shape {
     private m_childs: Shape[] = [];
     constructor(parent: Shape | undefined,
@@ -318,6 +323,7 @@ export class GroupShape extends Shape {
     }
 }
 
+@AtomGroup
 export class RectShape extends Shape {
     private m_fixedRadius: number;
 
@@ -366,6 +372,7 @@ export class RectShape extends Shape {
     }
 }
 
+@AtomGroup
 export class ImageShape extends Shape {
     private m_imageRef: string;
     private m_imageData: string | undefined;
@@ -438,6 +445,7 @@ export class ImageShape extends Shape {
     }
 }
 
+@AtomGroup
 export class PathShape extends Shape {
     private m_points: Point[];
     private m_isClosed: boolean | undefined;
@@ -561,6 +569,7 @@ export class PathShape extends Shape {
     }
 }
 
+@AtomGroup
 export class TextShape extends Shape {
     private m_text: Text;
 
@@ -607,6 +616,7 @@ export interface ISymbolManager {
     getSymbol(id: string): Promise<Symbol>;
 }
 
+@AtomGroup
 export class Symbol extends GroupShape {
     // private m_id: string;
     private m_symMgr: ISymbolManager;
@@ -634,6 +644,7 @@ export class Symbol extends GroupShape {
     }
 }
 
+@AtomGroup
 export class SymbolRef extends Shape {
     private m_symMgr: ISymbolManager;
     private m_refId: string;

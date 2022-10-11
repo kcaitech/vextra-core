@@ -1,3 +1,6 @@
+import { AtomGroup } from "./transact";
+
+@AtomGroup
 export class ArtboardMeta {
     private m_name: string;
     private m_id: string;
@@ -16,6 +19,7 @@ export class ArtboardMeta {
     }
 }
 
+@AtomGroup
 export class PageMeta {
     private m_id: string;
     private m_name: string;
@@ -42,4 +46,5 @@ export class PageMeta {
     }
 }
 
+@AtomGroup
 export class PagesMeta extends Map<string, PageMeta> {}

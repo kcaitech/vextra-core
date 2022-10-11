@@ -1,8 +1,10 @@
+import { Atom, AtomGroup } from "./transact";
+
 /**
  * @author: zhangruiqiang
  * @date: 2022/5/15
  */
-
+@Atom
 export class Color {
     private m_alpha: number;
     private m_blue: number;
@@ -32,6 +34,7 @@ export class Color {
     }
 }
 
+@Atom
 export class Stop {
     private m_position: number;
     private m_color: Color;
@@ -68,6 +71,7 @@ export enum GradientType {
     Angular,
 }
 
+@AtomGroup
 export class Gradient {
     private m_elipseLength: number;
     private m_from: XY<number, number>;
@@ -111,6 +115,7 @@ export enum BlendMode {
     Mode0, // todo
 }
 
+@Atom
 export class ContextSettings {
     private m_blendMode: BlendMode;
     private m_opacity: number;
@@ -133,6 +138,7 @@ export enum FillType {
     Pattern,
 }
 
+@AtomGroup
 export class Fill {
     // private m_shape: object;// todo
     private m_isEnabled: boolean;
@@ -188,6 +194,7 @@ export enum BorderPosition {
     Outer,
 }
 
+@AtomGroup
 export class Border {
     // private m_shape: object; // todo
     private m_isEnabled: boolean;
@@ -304,6 +311,7 @@ export enum WindingRule {
     Rule1, // todo
 }
 
+@AtomGroup
 export class Style {
     // private m_shape: object; // todo
     private m_endMarkerType: MarkerType;

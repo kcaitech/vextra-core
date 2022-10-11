@@ -1,5 +1,7 @@
 import { Color } from "./style";
+import { AtomGroup } from "./transact";
 
+@AtomGroup
 export class SpanAttr {
     private m_fontName?: string;
     private m_fontSize?: number;
@@ -21,6 +23,7 @@ export class SpanAttr {
     }
 }
 
+@AtomGroup
 export class Span extends SpanAttr {
     private m_len: number;
     constructor(len: number, fontName?: string, fontSize?: number, color?: Color) {
@@ -32,6 +35,7 @@ export class Span extends SpanAttr {
     }
 }
 
+@AtomGroup
 export class ParaAttr extends SpanAttr {
     private m_alignment: number = 0;
     private m_paragraphSpacing: number = 0;
@@ -57,6 +61,7 @@ export class ParaAttr extends SpanAttr {
     }
 }
 
+@AtomGroup
 export class Para {
     private m_text: string;
     private m_spans: Span[];
@@ -84,6 +89,7 @@ export class Para {
     }
 }
 
+@AtomGroup
 export class TextAttr extends ParaAttr {
     private m_kerning: number = 0;
     private m_textStyleVerticalAlignmentKey: number = 0;
@@ -116,6 +122,7 @@ export class TextAttr extends ParaAttr {
     }
 }
 
+@AtomGroup
 export class Text {
     private m_paras: Para[];
     private m_attr?: TextAttr;

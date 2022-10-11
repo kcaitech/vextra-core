@@ -1,6 +1,8 @@
 import { GroupShape } from "./shape";
 import { Color } from "./style";
+import { AtomGroup } from "./transact";
 
+@AtomGroup
 export class Artboard extends GroupShape {
     private m_hasBackgroundColor: boolean = false;
     private m_includeBackgroundColorInExport: boolean = false;

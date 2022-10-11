@@ -1,122 +1,323 @@
-// Transact
-import {objectId} from '@/basic/objectid';
+import { objectId } from '@/basic/objectid';
 
-// 事务方案
-// 当对象有修改时，整体浅拷贝备份，由对象提供方法（save, restore)
-// 在一个事务过程中，一个对象仅备份一次
-
-export interface IRecordable {
-	save(): object;
-	restore(saved: object): void;
-}
-
-//export class RecordableArray implements IRecordable {
-//	
-//}
-
-export class AtomRec {
-	private m_target: IRecordable;
-	private m_save: object;
-	
-	constructor(target: IRecordable) {
-		this.m_target = target;
-		this.m_save = target.save();
-	}
-	restore() {
-		const save = this.m_target.save();
-		this.m_target.restore(this.m_save);
-		this.m_save = save;
-	}
-}
-
-export class Record {
-    private m_name: string;
-	private m_recorded: Set<number> = new Set();
-	private m_atoms: AtomRec[] = [];
-
-    constructor(name: string) {
-        this.m_name = name;
+export function Atom(target: any) {
+    if (target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd) {
+        throw new Error("AtomData and AtomGroup are Conflict");
     }
-	
-	add(target: IRecordable) {
-		const id = objectId(target);
-		if (this.m_recorded.has(id)) {
-			return;
-		}
-		this.m_atoms.push(new AtomRec(target));
-		this.m_recorded.add(id);
-	}
-	restore() {
-		this.m_atoms.forEach((atom: AtomRec) => {
-			atom.restore();
-		});
-	}
-    get name(): string {
-        return this.m_name;
+    if (!target.prototype.__iid_b306492ce7b875cf08e206c4109490aa) {
+        target.prototype.__iid_b306492ce7b875cf08e206c4109490aa = true;
     }
 }
 
-export class Tape {
-    private m_records: Record[] = [];
-    private m_curRecord: Record | undefined;
-    private m_curIndex: number = 0;
-
-    constructor() {
+export function AtomGroup(target: any) {
+    if (target.prototype.__iid_b306492ce7b875cf08e206c4109490aa) {
+        throw new Error("AtomData and AtomGroup are Conflict");
     }
-
-    beginRec(name: string) {
-        if (this.m_curRecord) {
-            throw new Error("Nested Rec arg Not supported yet.");
-        }
-        this.m_curRecord = new Record(name);
+    if (!target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd) {
+        target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd = true;
     }
+}
 
-    endRec(rollback?:boolean) {
-        if (!this.m_curRecord) {
-            throw new Error("Not Started Rec yet.");
-        }
-        if (rollback) {
-            this.m_curRecord?.restore();
+const isAtom = (obj: any): boolean => obj && obj.__iid_b306492ce7b875cf08e206c4109490aa;
+const isAtomGroup = (obj: any): boolean => obj && obj.__iid_cdd67eac7c12025695ce30803b43c9cd;
+
+class Context {
+    public transact?: Transact;
+    public cache: Map<number, Set<PropertyKey>> = new Map();
+}
+
+function swapCached(context: Context, target: object, propertyKey: PropertyKey): boolean {
+    const cache = context.cache;
+    let set = cache.get(objectId(target));
+    if (!set) {
+        set = new Set<PropertyKey>();
+        set.add(propertyKey);
+        cache.set(objectId(target), set);
+        return false;
+    }
+    else if (set.has(propertyKey)) {
+        return true;
+    } else {
+        set.add(propertyKey);
+        return false;
+    }
+}
+
+class AtomHandler {
+    private __context: Context;
+    constructor(context: Context) {
+        this.__context = context;
+    }
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
+        if (this.__context.transact === undefined) {
+            console.warn("NOT inside transact!");
         }
         else {
-            if (this.m_curIndex < this.m_records.length) {
-                this.m_records.splice(this.m_curIndex);
-            }
-            this.m_records.push(this.m_curRecord);
-            this.m_curIndex = this.m_records.length;
+            throw new Error("Can't Modify Atom Data!");
         }
-        this.m_curRecord = undefined;
+        return Reflect.set(target, propertyKey, value, receiver);
+    }
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const val = Reflect.get(target, propertyKey, receiver);
+        if (val === undefined && propertyKey === "__isProxy") {
+            return true;
+        }
+        if (target instanceof Map && typeof val === 'function') {
+            return val.bind(target);
+        }
+        return val;
+    }
+    has(target: object, propertyKey: PropertyKey) {
+        if (target instanceof Map) {
+            return target.has(propertyKey);
+        }
+        const val = Reflect.has(target, propertyKey);
+        // if (target instanceof Map && typeof val === 'function') {
+        //     return val.bind(target);
+        // }
+        return val;
+    }
+}
+
+class GroupHandler {
+    private __context: Context;
+    constructor(context: Context) {
+        this.__context = context;
+    }
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
+
+        if (this.__context.transact === undefined) {
+            console.warn("NOT inside transact!");
+        } else {
+            if (target instanceof Array && propertyKey === "length" && target.length > value) {
+                for (let i = value, len = target.length; i < len; i++) {
+                    if (!swapCached(this.__context, target, i)) {
+                        const r = new Rec(target, i, target[i]);
+                        this.__context.transact.push(r);
+                    }
+                }
+            }
+            if (!swapCached(this.__context, target, propertyKey)) {
+                const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
+                this.__context.transact.push(r);
+            }
+        }
+        // todo
+        return Reflect.set(target, propertyKey, value, receiver);
+    }
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const val = Reflect.get(target, propertyKey, receiver);
+        if (val === undefined && propertyKey === "__isProxy") {
+            return true;
+        }
+        if (target instanceof Map && typeof val === 'function') {
+            return val.bind(target);
+        }
+        return val;
+    }
+    has(target: object, propertyKey: PropertyKey) {
+        if (target instanceof Map) {
+            return target.has(propertyKey);
+        }
+        const val = Reflect.has(target, propertyKey);
+        // if (target instanceof Map && typeof val === 'function') {
+        //     return val.bind(target);
+        // }
+        return val;
+    }
+}
+
+const isProxy = (obj: any): boolean => obj && obj["__isProxy"];
+
+class Rec {
+    private __target: object
+    private __propertyKey: PropertyKey
+    private __value: any
+    constructor(target: object, propertyKey: PropertyKey, value: any) {
+        this.__target = target
+        this.__propertyKey = propertyKey
+        this.__value = value
+    }
+    swap() {
+        const v = Reflect.get(this.__target, this.__propertyKey)
+        Reflect.set(this.__target, this.__propertyKey, this.__value);
+        this.__value = v;
+    }
+}
+
+class Transact extends Array<Rec> {
+    private __name: string;
+    constructor(name: string) {
+        super();
+        this.__name = name;
+    }
+    swap() {
+        for (let i = this.length - 1; i >= 0; i--) {
+            this[i].swap();
+        }
+    }
+    push(...items: Rec[]): number {
+
+        return super.push(...items);
+    }
+}
+
+export class Repository {
+    private __context: Context;
+    private __ah: AtomHandler;
+    private __gh: GroupHandler;
+    private __trans: Transact[] = [];
+    private __index: number = 0;
+    // private __data: any;
+
+    constructor() {
+        // this.__data = data;
+        this.__context = new Context();
+        this.__ah = new AtomHandler(this.__context);
+        this.__gh = new GroupHandler(this.__context);
+        // this.__data = this.makeProxy(data) as any;
     }
 
-    canUndo() {
-        return !this.m_curRecord && this.m_curIndex > 0;
-    }
-
-    canRedo() {
-        return !this.m_curRecord && this.m_curIndex < this.m_records.length;
-    }
+    // get data() {
+    //     return this.__data;
+    // }
 
     undo() {
-        if (!this.m_curRecord) {
-            throw new Error("Cant UNDO when Insided Rec.");
-        }
         if (!this.canUndo()) {
             return;
         }
-        let record = this.m_records[this.m_curIndex];
-        record.restore();
-        this.m_curIndex--;
+        this.__index--;
+        this.__trans[this.__index].swap();
     }
 
     redo() {
-        if (!this.m_curRecord) {
-            throw new Error("Cant REDO when Insided Rec.");
-        }
         if (!this.canRedo()) {
             return;
         }
-        let record = this.m_records[this.m_curIndex + 1];
-        record.restore();
-        this.m_curIndex++;
+        this.__trans[this.__index].swap();
+        this.__index++;
+    }
+
+    canUndo() {
+        return this.__index > 0;
+    }
+
+    canRedo() {
+        return this.__index < this.__trans.length;
+    }
+
+    startTransact(name: string) {
+        if (this.__context.transact !== undefined) {
+            throw new Error();
+        }
+        this.__context.cache.clear();
+        this.__context.transact = new Transact(name);
+    }
+
+    commitTransact() {
+        if (this.__context.transact === undefined) {
+            throw new Error();
+        }
+        this.__context.cache.clear();
+        this.__trans.length = this.__index;
+        this.__trans.push(this.__context.transact);
+        this.__index++;
+        this.__context.transact = undefined;
+    }
+
+    rollbackTransact() {
+        if (this.__context.transact === undefined) {
+            throw new Error();
+        }
+        this.__context.cache.clear();
+        this.__context.transact.swap();
+    }
+
+    isInTransact() {
+        return this.__context.transact !== undefined;
+    }
+
+    proxy(data: any): any {
+        if (isProxy(data)) {
+            return data;
+        }
+
+        const stack: any[] = [];
+        if (isAtom(data)) {
+            return new Proxy(data, this.__ah);
+        }
+        if (isAtomGroup(data)) {
+            stack.push(data);
+        }
+        else {
+            throw new Error("Data is Wrong?!");
+        }
+
+        while (stack.length > 0) {
+            const d = stack.pop();
+
+            if (d instanceof Map) {
+                d.forEach((v, k, m) => {
+                    if (isAtom(v)) {
+                        m.set(k, isProxy(v) ? v : new Proxy(v, this.__ah));
+                    }
+                    else if (isAtomGroup(v)) {
+                        if (!isProxy(v)) {
+                            m.set(k, new Proxy(v, this.__gh));
+                            stack.push(v);
+                        }
+                    }
+                    else if (typeof (v) === 'object' && k.startsWith("m_")) { // 还有array set map
+                        if (!isProxy(v)) {
+                            m.set(k, new Proxy(v, this.__gh));
+                            stack.push(v);
+                        }
+                    }
+                    // else if (v instanceof Array && Number.parseInt(k).toString() === k) {// k也可能是1，2，3
+                    //     // todo
+                    // }
+                    else {
+                        // todo check
+                        // 原生类型
+    
+                        // if (k.startsWith("m_")) {
+                        //     throw new Error("Data is Wrong?!");
+                        // }
+                    }
+                })
+            }
+            else {
+                for (const k in d) {
+                    const v = Reflect.get(d, k);
+                    if (isAtom(v)) {
+                        Reflect.set(d, k, isProxy(v) ? v : new Proxy(v, this.__ah));
+                    }
+                    else if (isAtomGroup(v)) {
+                        if (!isProxy(v)) {
+                            Reflect.set(d, k, new Proxy(v, this.__gh));
+                            stack.push(v);
+                        }
+                    }
+                    else if (typeof (v) === 'object' && k.startsWith("m_")) { // 还有array set map
+                        if (!isProxy(v)) {
+                            Reflect.set(d, k, new Proxy(v, this.__gh));
+                            stack.push(v);
+                        }
+                    }
+                    // else if (v instanceof Array && Number.parseInt(k).toString() === k) {// k也可能是1，2，3
+                    //     // todo
+                    // }
+                    else {
+                        // todo check
+                        // 原生类型
+
+                        // if (k.startsWith("m_")) {
+                        //     throw new Error("Data is Wrong?!");
+                        // }
+                    }
+                }
+            }
+        }
+        return new Proxy(data, this.__gh);
     }
 }

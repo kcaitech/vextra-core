@@ -6,17 +6,17 @@ export class Watchable {
         return this.__wid++;
     }
 
-    private m_watcher:Set<((...args: any[]) => void)> = new Set();
+    private __watcher:Set<((...args: any[]) => void)> = new Set();
 
     public watch(watcher:((...args: any[]) => void)): (() => void) {
-        this.m_watcher.add(watcher);
+        this.__watcher.add(watcher);
         return watcher;
     }
     public unwatch(watcher:((...args: any[]) => void)): boolean {
-        return this.m_watcher.delete(watcher);
+        return this.__watcher.delete(watcher);
     }
     public notify(...args: any[]) {
-        this.m_watcher.forEach(w => {
+        this.__watcher.forEach(w => {
             w(...args);
         });
     }

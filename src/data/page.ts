@@ -1,5 +1,6 @@
 
 import { GroupShape } from "./shape";
+import { AtomGroup } from "./transact";
 
 export class RulerData {
     // "horizontalRulerData": {
@@ -14,6 +15,7 @@ export class RulerData {
     // }
 }
 
+@AtomGroup
 export class Page extends GroupShape {
     // private m_gradients: Map<string, Gradient> | undefined;
     private m_horizontalRulerData: RulerData | undefined;

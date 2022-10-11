@@ -2,12 +2,14 @@ import { Watchable } from "./basic";
 import { PagesMeta } from "./meta";
 import { Page } from "./page";
 import { Symbol, ISymbolManager } from "./shape";
+import { AtomGroup } from "./transact";
 
+@AtomGroup
 export class PagesMgr extends Watchable {
     // private m_lzData: LzData;
     private m_order: string[];
     private m_map: Map<string, Page> = new Map();
-    private m_importer: (id:string)=>Promise<Page>;
+    private __importer: (id:string)=>Promise<Page>;
     private m_meta: PagesMeta;
 
     constructor(order: string[], meta: PagesMeta, importer: (id:string)=>Promise<Page>) {
@@ -15,7 +17,7 @@ export class PagesMgr extends Watchable {
         // this.m_lzData = lzData;
         this.m_meta = meta;
         this.m_order = order;
-        this.m_importer = importer;
+        this.__importer = importer;
     }
 
     get pageCount(): number {
@@ -43,13 +45,14 @@ export class PagesMgr extends Watchable {
 			return page;
 		}
 		const ref = this.m_order[idx];
-		page = await this.m_importer(ref);
+		page = await this.__importer(ref);
 		this.m_map.set(ref, page);
         this.notify();
 		return page;
 	}
 }
 
+@AtomGroup
 export class SymsMgr extends Watchable implements ISymbolManager {
     private m_symbols: Map<string, Symbol> = new Map();
     private m_symWaits: Map<string, (() => void)[]> = new Map();
@@ -78,6 +81,7 @@ export class SymsMgr extends Watchable implements ISymbolManager {
     }
 }
 
+@AtomGroup
 export class Document extends Watchable {
 
     private m_meta: PagesMeta;
@@ -89,8 +93,7 @@ export class Document extends Watchable {
         this.m_meta = meta;
         this.m_symsMgr = symsMgr;
         this.m_pagesMgr = pagesMgr;
-        // for debugger
-        (window as any).__document = this;
+        
 	}
 
     get meta(): PagesMeta {
