@@ -93,7 +93,6 @@ export class Document extends Watchable {
         this.m_meta = meta;
         this.m_symsMgr = symsMgr;
         this.m_pagesMgr = pagesMgr;
-        
 	}
 
     get meta(): PagesMeta {

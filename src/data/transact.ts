@@ -206,7 +206,12 @@ export class Repository {
         return this.__index < this.__trans.length;
     }
 
-    startTransact(name: string) {
+    /**
+     * 
+     * @param name 
+     * @param saved selection等
+     */
+    startTransact(name: string, saved: any) {
         if (this.__context.transact !== undefined) {
             throw new Error();
         }
@@ -214,7 +219,11 @@ export class Repository {
         this.__context.transact = new Transact(name);
     }
 
-    commitTransact() {
+    /**
+     * 
+     * @param cmd 最后打包成一个cmd，用于op，也可另外存
+     */
+    commitTransact(cmd: any) {
         if (this.__context.transact === undefined) {
             throw new Error();
         }
