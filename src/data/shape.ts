@@ -214,6 +214,9 @@ export class Shape extends Watchable implements IShape {
         this.m_frame = frame;
         this.m_style = style;
     }
+    get parent() {
+        return this.m_parent;
+    }
     get id() {
         return this.m_id;
     }
