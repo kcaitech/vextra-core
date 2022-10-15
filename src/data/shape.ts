@@ -167,8 +167,15 @@ export interface IShape {
 
 }
 
+interface IShapeNode {
+    get treeIndex(): number;
+    get treeNodeCount(): number;
+}
+
+
+
 @AtomGroup
-export class Shape extends Watchable implements IShape {
+export class Shape extends Watchable implements IShape, IShapeNode {
     protected m_parent: Shape | undefined;
     protected m_lzData: LzData;
     private m_type: ShapeType;
@@ -297,11 +304,26 @@ export class Shape extends Watchable implements IShape {
     // bubbleEvent(event: string, args: any, forceAsync: boolean = false): any {
     // 	return this.m_parent && this.m_parent.bubbleEvent(event, args, forceAsync);
     // }
+
+    get treeIndex(): number {
+        return this.m_parent ? this.m_parent.treeOffset(this) : 0;
+    }
+    get treeNodeCount(): number {
+        return 1;
+    }
+    protected treeOffset(shape: Shape): number {
+        return 0;
+    }
+    buildTreeNodeCount(): void {
+    }
 }
 
 @AtomGroup
 export class GroupShape extends Shape {
+
     private m_childs: Shape[] = [];
+    private __treeNodeCount: number = 0;
+
     constructor(parent: Shape | undefined,
         lzData: LzData,
         type: ShapeType,
@@ -323,6 +345,32 @@ export class GroupShape extends Shape {
     }
     getChildByIndex(idx: number) {
         return this.m_childs[idx];
+    }
+    
+    protected treeOffset(shape: Shape): number {
+        let offset = 0;
+        for (let i = 0, len = this.m_childs.length; i < len; i++) {
+            const s = this.m_childs[i];
+            if (s.equals(shape)) {
+                break;
+            }
+            offset += s.treeNodeCount
+        }
+        return this.m_parent ? (this.m_parent as GroupShape).treeOffset(this) + offset : offset;
+    }
+    get treeNodeCount(): number {
+        return this.__treeNodeCount;
+    }
+    // get treeIndex(): number {
+    // }
+    buildTreeNodeCount(): void {
+        let count = 0;
+        for (let i = 0, len = this.m_childs.length; i < len; i++) {
+            const s = this.m_childs[i];
+            s.buildTreeNodeCount();
+            count += s.treeNodeCount
+        }
+        this.__treeNodeCount = count;
     }
 }
 

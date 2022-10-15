@@ -1,4 +1,5 @@
 import { objectId } from '@/basic/objectid';
+import { parseStringStyle } from '@vue/shared';
 
 export function Atom(target: any) {
     if (target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd) {
@@ -267,7 +268,10 @@ export class Repository {
 
             if (d instanceof Map) {
                 d.forEach((v, k, m) => {
-                    if (isAtom(v)) {
+                    if (k.startsWith("__")) {
+                        // donothing
+                    }
+                    else if (isAtom(v)) {
                         m.set(k, isProxy(v) ? v : new Proxy(v, this.__ah));
                     }
                     else if (isAtomGroup(v)) {
@@ -298,7 +302,10 @@ export class Repository {
             else {
                 for (const k in d) {
                     const v = Reflect.get(d, k);
-                    if (isAtom(v)) {
+                    if (k.startsWith("__")) {
+                        // donothing
+                    }
+                    else if (isAtom(v)) {
                         Reflect.set(d, k, isProxy(v) ? v : new Proxy(v, this.__ah));
                     }
                     else if (isAtomGroup(v)) {

@@ -46,6 +46,10 @@ export class PagesMgr extends Watchable {
 		}
 		const ref = this.m_order[idx];
 		page = await this.__importer(ref);
+        
+        // init
+        page.buildTreeNodeCount();
+
 		this.m_map.set(ref, page);
         this.notify();
 		return page;
