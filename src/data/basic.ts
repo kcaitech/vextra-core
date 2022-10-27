@@ -13,7 +13,7 @@ export class ProxyObject {
         return this.__this;
     }
     equals(o: ProxyObject) {
-        return this.object === o.object;
+        return o && this.object === o.object;
     }
 }
 

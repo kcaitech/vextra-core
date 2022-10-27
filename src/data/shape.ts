@@ -321,7 +321,7 @@ export class Shape extends Watchable implements IShape, IShapeNode {
 @AtomGroup
 export class GroupShape extends Shape {
 
-    private m_childs: Shape[] = [];
+    private m_childs: Shape[] = []; // todo: 当数组比较长时，换个实现方式
     private __treeNodeCount: number = 0;
 
     constructor(parent: Shape | undefined,
@@ -346,7 +346,7 @@ export class GroupShape extends Shape {
     getChildByIndex(idx: number) {
         return this.m_childs[idx];
     }
-    
+
     protected treeOffset(shape: Shape): number {
         let offset = 0;
         for (let i = 0, len = this.m_childs.length; i < len; i++) {

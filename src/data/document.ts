@@ -1,4 +1,5 @@
 import { Watchable } from "./basic";
+import { IDocEdit } from "./iedit";
 import { PagesMeta } from "./meta";
 import { Page } from "./page";
 import { Symbol, ISymbolManager } from "./shape";
@@ -86,11 +87,12 @@ export class SymsMgr extends Watchable implements ISymbolManager {
 }
 
 @AtomGroup
-export class Document extends Watchable {
+export class Document extends Watchable implements IDocEdit {
 
     private m_meta: PagesMeta;
     private m_symsMgr: SymsMgr;
     private m_pagesMgr: PagesMgr;
+    private __shadows: IDocEdit[] = [];
 
 	constructor(meta: PagesMeta, symsMgr: SymsMgr, pagesMgr: PagesMgr) {
 		super();
@@ -98,6 +100,44 @@ export class Document extends Watchable {
         this.m_symsMgr = symsMgr;
         this.m_pagesMgr = pagesMgr;
 	}
+
+    addShadow(shadow: IDocEdit) {
+        this.__shadows.push(shadow);
+    }
+    delShadow(shadow: IDocEdit) {
+        const index = this.__shadows.indexOf(shadow);
+        if (index >= 0) {
+            this.__shadows.splice(index, 1);
+        }
+    }
+
+    delete(page: Page): boolean {
+        this.__shadows.forEach((s) => {
+            s.delete(page);
+        })
+        throw new Error("Method not implemented.");
+    }
+    insert(index: number, page: Page): boolean {
+        this.__shadows.forEach((s) => {
+            s.insert(index, page);
+        })
+        throw new Error("Method not implemented.");
+    }
+    create(): Page {
+        throw new Error("Method not implemented.");
+    }
+    modify(page: Page, attribute: string, value: any): boolean {
+        this.__shadows.forEach((s) => {
+            s.modify(page, attribute, value);
+        })
+        throw new Error("Method not implemented.");
+    }
+    move(page: Page, index: number): boolean {
+        this.__shadows.forEach((s) => {
+            s.move(page, index);
+        })
+        throw new Error("Method not implemented.");
+    }
 
     get meta(): PagesMeta {
         return this.m_meta;
