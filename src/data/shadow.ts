@@ -17,24 +17,44 @@ class ShapeNaviNode {
 /**
  * 用于更高效的顺序获取元素
  */
-class ShapeNaviIter {
-    private __index: number;
-    private __node: ShapeNaviNode;
-    constructor(node: ShapeNaviNode, index: number) {
+export class ShapeNaviIter {
+    // private __index: number;
+    private __node: ShapeNaviNode | undefined;
+    constructor(node: ShapeNaviNode | undefined) {
         this.__node = node;
-        this.__index = index;
+        // this.__index = index;
     }
     hasNext(): boolean {
-        throw new Error("Method not implemented.");
+        return this.__node !== undefined;
     }
     next(): Shape {
-        throw new Error("Method not implemented.");
-    }
-    hasPrev(): boolean {
-        throw new Error("Method not implemented.");
-    }
-    prev(): Shape {
-        throw new Error("Method not implemented.");
+        // 前序遍历
+        // 0 index 是node 自己
+        const node = this.__node as ShapeNaviNode;
+        // console.log('shadow next',ret);
+        // if (this.__node) {
+        // step next
+        if (node.__childs && node.__childs.length > 0) {
+            this.__node = node.__childs[0];
+        }
+        else {
+            let p = node.__parent;
+            let n = node;
+            let r: ShapeNaviNode | undefined = undefined;
+            while (p) {
+                const childs = p.__childs as ShapeNaviNode[];
+                const i = childs.indexOf(n);
+                if (i < childs.length - 1) {
+                    r = childs[i + 1];
+                    break;
+                }
+                n = p;
+                p = n.__parent;
+            }
+            this.__node = r;
+        }
+        // }
+        return node.__shape;
     }
 }
 
@@ -59,13 +79,46 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
     get length(): number {
         return this.__root.__totalCount - 1; // 不算root
     }
-    at(index: number): Shape {
-        // todo
-        throw new Error("Method not implemented.");
-    }
+    // at(index: number): Shape {
+    //     // todo
+    //     throw new Error("Method not implemented.");
+    // }
     iterAt(index: number): ShapeNaviIter {
-        // todo
-        throw new Error("Method not implemented.");
+        if (index < 0 || index >= this.length) {
+            return new ShapeNaviIter(undefined);
+        }
+        const childs = this.__root.__childs as ShapeNaviNode[];
+        let i = 0;
+        while (i < childs.length) {
+            if (index >= childs[i].__totalCount) {
+                index -= childs[i].__totalCount;
+                i++;
+            }
+            else {
+                break;
+            }
+        }
+        let n = childs[i];
+        while(n) {
+            if (index === 0) {
+                return new ShapeNaviIter(n);
+            }
+            index--;
+            const childs = n.__childs as ShapeNaviNode[];
+            let ii = 0;
+            while (ii < childs.length) {
+                if (index >= childs[ii].__totalCount) {
+                    index -= childs[ii].__totalCount;
+                    ii++;
+                }
+                else {
+                    break;
+                }
+            }
+            n = childs[ii];
+        }
+        // return new ShapeNaviIter(undefined);
+        throw new Error("iter at");
     }
 
     expand(shape: Shape) {
@@ -84,6 +137,7 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
             for (let i = 0; i < count; i++) {
                 const c = shape.getChildByIndex(i);
                 const n = new ShapeNaviNode(c);
+                n.__parent = node;
                 this.__map.set(c.id, n);
                 node.__childs.push(n);
             }
