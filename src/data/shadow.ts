@@ -27,14 +27,13 @@ export class ShapeNaviIter {
     hasNext(): boolean {
         return this.__node !== undefined;
     }
-    next(): Shape {
+    next(): { shape: Shape, expand: boolean} {
         // 前序遍历
         // 0 index 是node 自己
         const node = this.__node as ShapeNaviNode;
-        // console.log('shadow next',ret);
-        // if (this.__node) {
-        // step next
-        if (node.__childs && node.__childs.length > 0) {
+
+        // todo 去除折叠了的
+        if (node.__childs && node.__childs.length > 0 && node.__expand) {
             this.__node = node.__childs[0];
         }
         else {
@@ -53,8 +52,10 @@ export class ShapeNaviIter {
             }
             this.__node = r;
         }
-        // }
-        return node.__shape;
+        return {
+            shape: node.__shape,
+            expand: node.__expand
+        }
     }
 }
 
@@ -79,10 +80,6 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
     get length(): number {
         return this.__root.__totalCount - 1; // 不算root
     }
-    // at(index: number): Shape {
-    //     // todo
-    //     throw new Error("Method not implemented.");
-    // }
     iterAt(index: number): ShapeNaviIter {
         if (index < 0 || index >= this.length) {
             return new ShapeNaviIter(undefined);
@@ -90,8 +87,9 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
         const childs = this.__root.__childs as ShapeNaviNode[];
         let i = 0;
         while (i < childs.length) {
-            if (index >= childs[i].__totalCount) {
-                index -= childs[i].__totalCount;
+            const count = childs[i].__expand ? childs[i].__totalCount : 1;
+            if (index >= count) {
+                index -= count;
                 i++;
             }
             else {
@@ -107,8 +105,9 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
             const childs = n.__childs as ShapeNaviNode[];
             let ii = 0;
             while (ii < childs.length) {
-                if (index >= childs[ii].__totalCount) {
-                    index -= childs[ii].__totalCount;
+                const count = childs[ii].__expand ? childs[ii].__totalCount : 1;
+                if (index >= count) {
+                    index -= count;
                     ii++;
                 }
                 else {
@@ -180,6 +179,19 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
         this.notify("shrink", this.__indexOf(node), node.__totalCount);
     }
 
+    toggleExpand(shape: Shape) {
+        const node = this.__map.get(shape.id);
+        if (!node) {
+            throw new Error("toggle expand not find shape");
+        }
+        if (node.__expand) {
+            this.shrink(shape);
+        }
+        else {
+            this.expand(shape);
+        }
+    }
+
     __indexOf(node: ShapeNaviNode) {
         let c = node;
         let p = c.__parent;
@@ -209,13 +221,6 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
     }
 
     __del(node: ShapeNaviNode) {
-        // const node = this.__map.get(shape.id);
-        // if (!node) {
-        //     return undefined;
-        // }
-        // const saveIndex = this.__indexOf(node);
-        // this.__map.delete(shape.id);
-
         const c = node;
         let p = c.__parent;
 
@@ -228,8 +233,6 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
             p.__totalCount -= count;
             p = p.__parent;
         }
-        // this.notify("delete", saveIndex, node.__totalCount);
-        // return node;
     }
 
     delete(shape: Shape): boolean {
@@ -243,7 +246,6 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
         this.__del(node);
         this.notify("delete", saveIndex, node.__expand ? node.__totalCount : 1);
         return true;
-        // throw new Error("Method not implemented.");
     }
 
     __insert(node: ShapeNaviNode, index: number, c: ShapeNaviNode) {
@@ -275,10 +277,8 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
 
         this.notify("insert", this.__indexOf(c), 1);
         return true;
-        // throw new Error("Method not implemented.");
     }
     modify(shape: Shape, attribute: string, value: any): boolean {
-        // throw new Error("Method not implemented.");
         return true;
     }
     move(shape: Shape, target: GroupShape, index: number): boolean {
@@ -289,10 +289,7 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
             this.__del(node);
             this.notify("delete", saveIndex, node.__expand ? node.__totalCount : 1);
         }
-        // else {
-        //     // node = new ShapeNaviNode(shape);
-        // }
-        
+
         // insert
         const tar = this.__map.get(target.id);
         if (!tar) {
@@ -308,6 +305,5 @@ export class ShapeNaviShadow extends Watchable implements IPageEdit {
         this.notify("insert", this.__indexOf(c), c.__expand ? c.__totalCount : 1);
 
         return true;
-        // throw new Error("Method not implemented.");
     }
 }
