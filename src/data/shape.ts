@@ -90,7 +90,7 @@ export class ExportOptions {
     // },
 }
 
-@Atom
+@AtomGroup
 export class ShapeFrame {
     // todo
     // "_class": "rect",
@@ -120,6 +120,19 @@ export class ShapeFrame {
     }
     get height(): number {
         return this.m_height;
+    }
+
+    set x(x: number) {
+        this.m_x = x;
+    }
+    set y(y: number) {
+        this.m_y = y;
+    }
+    set width(w: number) {
+        this.m_width = w;
+    }
+    set height(h: number) {
+        this.m_height = h;
     }
 }
 

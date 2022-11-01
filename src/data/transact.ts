@@ -1,5 +1,6 @@
 import { objectId } from '@/basic/objectid';
-import { parseStringStyle } from '@vue/shared';
+import { Document } from './document';
+import { Page } from './page';
 
 export function Atom(target: any) {
     if (target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd) {
@@ -22,12 +23,12 @@ export function AtomGroup(target: any) {
 const isAtom = (obj: any): boolean => obj && obj.__iid_b306492ce7b875cf08e206c4109490aa;
 const isAtomGroup = (obj: any): boolean => obj && obj.__iid_cdd67eac7c12025695ce30803b43c9cd;
 
-class Context {
+class TContext {
     public transact?: Transact;
-    public cache: Map<number, Set<PropertyKey>> = new Map();
+    public cache: Map<number, Set<PropertyKey> > = new Map();
 }
 
-function swapCached(context: Context, target: object, propertyKey: PropertyKey): boolean {
+function swapCached(context: TContext, target: object, propertyKey: PropertyKey): boolean {
     const cache = context.cache;
     let set = cache.get(objectId(target));
     if (!set) {
@@ -45,13 +46,14 @@ function swapCached(context: Context, target: object, propertyKey: PropertyKey):
 }
 
 class AtomHandler {
-    private __context: Context;
-    constructor(context: Context) {
+    private __context: TContext;
+    constructor(context: TContext) {
         this.__context = context;
     }
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
         if (this.__context.transact === undefined) {
-            console.warn("NOT inside transact!");
+            // console.warn("NOT inside transact!");
+            throw new Error("NOT inside transact!");
         }
         else {
             throw new Error("Can't Modify Atom Data!");
@@ -81,14 +83,15 @@ class AtomHandler {
 }
 
 class GroupHandler {
-    private __context: Context;
-    constructor(context: Context) {
+    private __context: TContext;
+    constructor(context: TContext) {
         this.__context = context;
     }
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
 
         if (this.__context.transact === undefined) {
-            console.warn("NOT inside transact!");
+            // console.warn("NOT inside transact!");
+            throw new Error("NOT inside transact!");
         } else {
             if (target instanceof Array && propertyKey === "length" && target.length > value) {
                 for (let i = value, len = target.length; i < len; i++) {
@@ -163,17 +166,24 @@ class Transact extends Array<Rec> {
     }
 }
 
+export interface ISave4Restore {
+    save(): any;
+    restore(saved: any): void;
+}
+
 export class Repository {
-    private __context: Context;
+    private __context: TContext;
     private __ah: AtomHandler;
     private __gh: GroupHandler;
     private __trans: Transact[] = [];
     private __index: number = 0;
+    private __selection: ISave4Restore;
     // private __data: any;
 
-    constructor() {
+    constructor(selection: ISave4Restore) {
         // this.__data = data;
-        this.__context = new Context();
+        this.__selection = selection;
+        this.__context = new TContext();
         this.__ah = new AtomHandler(this.__context);
         this.__gh = new GroupHandler(this.__context);
         // this.__data = this.makeProxy(data) as any;
@@ -265,6 +275,10 @@ export class Repository {
 
         while (stack.length > 0) {
             const d = stack.pop();
+
+            // if (d instanceof Document || d instanceof Page) {
+            //     d.initRepo(this);
+            // }
 
             if (d instanceof Map) {
                 d.forEach((v, k, m) => {

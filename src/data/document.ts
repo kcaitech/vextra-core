@@ -1,5 +1,5 @@
 import { Watchable } from "./basic";
-import { IDocEdit } from "./iedit";
+import { IDocEditor } from "./ieditor";
 import { PagesMeta } from "./meta";
 import { Page } from "./page";
 import { Symbol, ISymbolManager } from "./shape";
@@ -87,12 +87,14 @@ export class SymsMgr extends Watchable implements ISymbolManager {
 }
 
 @AtomGroup
-export class Document extends Watchable implements IDocEdit {
+export class Document extends Watchable {
 
     private m_meta: PagesMeta;
     private m_symsMgr: SymsMgr;
     private m_pagesMgr: PagesMgr;
-    private __shadows: IDocEdit[] = [];
+    private __shadows: IDocEditor[] = [];
+    // private __editor: DocEditor | undefined;
+    // private __repo: Repository | undefined;
 
 	constructor(meta: PagesMeta, symsMgr: SymsMgr, pagesMgr: PagesMgr) {
 		super();
@@ -101,43 +103,32 @@ export class Document extends Watchable implements IDocEdit {
         this.m_pagesMgr = pagesMgr;
 	}
 
-    addShadow(shadow: IDocEdit) {
+    addShadow(shadow: IDocEditor) {
         this.__shadows.push(shadow);
     }
-    delShadow(shadow: IDocEdit) {
+    delShadow(shadow: IDocEditor) {
         const index = this.__shadows.indexOf(shadow);
         if (index >= 0) {
             this.__shadows.splice(index, 1);
         }
     }
+    get shadows() { // for editor
+        return this.__shadows;
+    }
 
-    delete(page: Page): boolean {
-        this.__shadows.forEach((s) => {
-            s.delete(page);
-        })
-        throw new Error("Method not implemented.");
-    }
-    insert(index: number, page: Page): boolean {
-        this.__shadows.forEach((s) => {
-            s.insert(index, page);
-        })
-        throw new Error("Method not implemented.");
-    }
-    create(): Page {
-        throw new Error("Method not implemented.");
-    }
-    modify(page: Page, attribute: string, value: any): boolean {
-        this.__shadows.forEach((s) => {
-            s.modify(page, attribute, value);
-        })
-        throw new Error("Method not implemented.");
-    }
-    move(page: Page, index: number): boolean {
-        this.__shadows.forEach((s) => {
-            s.move(page, index);
-        })
-        throw new Error("Method not implemented.");
-    }
+    // initRepo(repo: Repository) {
+    //     this.__repo = repo;
+    // }
+
+    // get editor(): DocEditor {
+    //     if (this.__repo === undefined) {
+    //         throw new Error("repo Not initialized!")
+    //     }
+    //     if (this.__editor === undefined) {
+    //         this.__editor = new DocEditor(this.__repo, this.__shadows);
+    //     }
+    //     return this.__editor;
+    // }
 
     get meta(): PagesMeta {
         return this.m_meta;

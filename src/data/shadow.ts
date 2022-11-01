@@ -1,5 +1,5 @@
 import { Watchable } from "./basic";
-import { IPageEdit } from "./iedit";
+import { IPageEditor } from "./ieditor";
 import { Page } from "./page";
 import { Shape, GroupShape } from "./shape";
 
@@ -62,7 +62,7 @@ export class ShapeNaviIter {
 /**
  * notify 如果index 为 -1 时，些节点是不可见的，不需要更新界面
  */
-export class ShapeNaviShadow extends Watchable implements IPageEdit {
+export class ShapeNaviShadow extends Watchable implements IPageEditor {
 
     // private __page: Page;
     private __root: ShapeNaviNode;
