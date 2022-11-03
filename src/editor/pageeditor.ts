@@ -1,6 +1,6 @@
 import { IPageEditor } from "../data/ieditor";
 import { Shape, GroupShape } from "../data/shape";
-import { Repository } from "../data/transact";
+import { isProxy, Repository } from "../data/transact";
 
 export class PageEditor implements IPageEditor {
     private __shadows: IPageEditor[];
@@ -45,6 +45,11 @@ export class PageEditor implements IPageEditor {
         throw new Error("Method not implemented.");
     }
     modify(shape: Shape, attribute: string, value: any): boolean {
+        if (!isProxy(shape)) {
+            //
+            // throw new Error("shape not ready to edit.")
+            shape = this.__repo.proxy(shape);
+        }
         this.__repo.startTransact(attribute, {});
         switch(attribute) {
             case "x": shape.frame.x = value; break;
