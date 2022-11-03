@@ -62,6 +62,7 @@ export class PageEditor implements IPageEditor {
         this.__shadows.forEach((s) => {
             s.modify(shape, attribute, value);
         })
+        shape.notify();
         return true;
         // throw new Error("Method not implemented.");
     }
