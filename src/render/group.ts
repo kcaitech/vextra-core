@@ -128,8 +128,8 @@ export function renderGroupChilds(shape: GroupShape, bop: BoolOp, comsMap: Map<S
     return childs;
 }
 
-export function render(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>): EL {
+export function render(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>, reflush?: number): EL {
     const childs:ELArray = renderGroupChilds(shape, bop, comsMap);
     const frame = shape.frame;
-    return h('g', { transform: 'translate(' + frame.x + ',' + frame.y + ')' }, childs);
+    return h('g', { transform: 'translate(' + frame.x + ',' + frame.y + ')', reflush: reflush || 0 }, childs);
 }
