@@ -1,6 +1,4 @@
-import { objectId } from '@/basic/objectid';
-import { Document } from './document';
-import { Page } from './page';
+import { objectId, __objidkey } from '@/basic/objectid';
 
 export function Atom(target: any) {
     if (target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd) {
@@ -51,7 +49,9 @@ class AtomHandler {
         this.__context = context;
     }
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
-        if (this.__context.transact === undefined) {
+        if (propertyKey == __objidkey) {
+            // do nothing
+        } else if (this.__context.transact === undefined) {
             // console.warn("NOT inside transact!");
             throw new Error("NOT inside transact!");
         }
@@ -90,8 +90,12 @@ class GroupHandler {
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
 
         if (this.__context.transact === undefined) {
-            // console.warn("NOT inside transact!");
-            throw new Error("NOT inside transact!");
+            // console.log(target, propertyKey, value, receiver)
+            if (propertyKey == __objidkey) {
+                // do nothing
+            } else {
+                throw new Error("NOT inside transact!");
+            }
         } else {
             if (target instanceof Array && propertyKey === "length" && target.length > value) {
                 for (let i = value, len = target.length; i < len; i++) {
@@ -131,7 +135,7 @@ class GroupHandler {
     }
 }
 
-const isProxy = (obj: any): boolean => obj && obj["__isProxy"];
+export const isProxy = (obj: any): boolean => obj && obj["__isProxy"];
 
 class Rec {
     private __target: object
