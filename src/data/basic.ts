@@ -1,23 +1,7 @@
-// 数据被Proxy后，用于判断
-// 1、 是否代理对象
-// 2、 代理对象与原对象是否相同判断
-export class ProxyObject {
-    private __this: ProxyObject;
-    constructor() {
-        this.__this = this;
-    }
-    get __isProxy() {
-        return this !== this.__this;
-    }
-    get object() {
-        return this.__this;
-    }
-    equals(o: ProxyObject) {
-        return o && this.object === o.object;
-    }
+export class Notifiable {
+    public notify(...args: any[]): void {}
 }
-
-export class Watchable extends ProxyObject {
+export class Watchable extends Notifiable {
 
     private static __wid = 0;
     static genWId() {

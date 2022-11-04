@@ -1,4 +1,4 @@
-import { Watchable } from "./basic";
+import { Notifiable, Watchable } from "./basic";
 import { LzData } from "./lzdata";
 import { Style, XY } from "./style";
 import { Text } from "./text";
@@ -91,7 +91,7 @@ export class ExportOptions {
 }
 
 @AtomGroup
-export class ShapeFrame {
+export class ShapeFrame extends Notifiable {
     // todo
     // "_class": "rect",
     // "constrainProportions": false,
@@ -103,11 +103,23 @@ export class ShapeFrame {
     private m_y: number;
     private m_height: number;
     private m_width: number;
+    private __parent: Notifiable | undefined;
     constructor(x: number, y: number, width: number, height: number) {
+        super();
         this.m_x = x;
         this.m_y = y;
         this.m_width = width;
         this.m_height = height;
+    }
+    notify(...args: any[]): void {
+        // throw new Error("Method not implemented.");
+        this.__parent && this.__parent.notify(...args);
+    }
+    set parent(p: Notifiable) {
+        if (this.__parent !== undefined) {
+            throw new Error("")
+        }
+        this.__parent = p;
     }
     get x(): number {
         return this.m_x;
@@ -232,6 +244,7 @@ export class Shape extends Watchable implements IShape, IShapeNode {
         this.m_boolOp = booleanOperation;
         this.m_exportOptions = exportOptions;
         this.m_frame = frame;
+        frame.parent = this;
         this.m_style = style;
     }
     get parent() {
@@ -364,7 +377,7 @@ export class GroupShape extends Shape {
         let offset = 0;
         for (let i = 0, len = this.m_childs.length; i < len; i++) {
             const s = this.m_childs[i];
-            if (s.equals(shape)) {
+            if (s.id == shape.id) {
                 break;
             }
             offset += s.treeNodeCount

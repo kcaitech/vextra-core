@@ -1,4 +1,5 @@
 import { objectId, __objidkey } from '@/basic/objectid';
+import { Notifiable, Watchable } from './basic';
 
 export function Atom(target: any) {
     if (target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd) {
@@ -105,7 +106,8 @@ class GroupHandler {
                     }
                 }
             }
-            if (!swapCached(this.__context, target, propertyKey)) {
+            else if (propertyKey.toString().startsWith('m_') &&
+                !swapCached(this.__context, target, propertyKey)) {
                 const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
                 this.__context.transact.push(r);
             }
@@ -150,6 +152,9 @@ class Rec {
         const v = Reflect.get(this.__target, this.__propertyKey)
         Reflect.set(this.__target, this.__propertyKey, this.__value);
         this.__value = v;
+        if (this.__target instanceof Notifiable) {
+            this.__target.notify();
+        }
     }
 }
 
@@ -165,7 +170,6 @@ class Transact extends Array<Rec> {
         }
     }
     push(...items: Rec[]): number {
-
         return super.push(...items);
     }
 }
@@ -175,7 +179,7 @@ export interface ISave4Restore {
     restore(saved: any): void;
 }
 
-export class Repository {
+export class Repository extends Watchable {
     private __context: TContext;
     private __ah: AtomHandler;
     private __gh: GroupHandler;
@@ -185,6 +189,7 @@ export class Repository {
     // private __data: any;
 
     constructor(selection: ISave4Restore) {
+        super();
         // this.__data = data;
         this.__selection = selection;
         this.__context = new TContext();
@@ -203,6 +208,7 @@ export class Repository {
         }
         this.__index--;
         this.__trans[this.__index].swap();
+        this.notify();
     }
 
     redo() {
@@ -211,6 +217,7 @@ export class Repository {
         }
         this.__trans[this.__index].swap();
         this.__index++;
+        this.notify();
     }
 
     canUndo() {
@@ -247,6 +254,7 @@ export class Repository {
         this.__trans.push(this.__context.transact);
         this.__index++;
         this.__context.transact = undefined;
+        this.notify();
     }
 
     rollbackTransact() {
