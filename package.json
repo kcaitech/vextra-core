@@ -4,6 +4,7 @@
   "private": true,
   "description": "My Electron application description",
   "author": "QIANG",
+  "main": "background.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -15,7 +16,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "eve": "^0.5.4",
     "node-stream-zip": "*",
     "skia-canvas": "^0.9.30",
     "vue": "^3.2.13",

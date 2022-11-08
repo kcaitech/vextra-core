@@ -17,3 +17,21 @@ npm run electron:serve
 
 ## 生成文档
 npx typedoc --tsconfig typedoc.tsconfig.json
+
+
+
+</br></br></br>
+---
+# 坑
+mac 升级之后 electron 打包报错 Exit code: ENOENT. spawn /usr/bin/python ENOENT
+重新下载python2.7 下载地址
+找到安装的位置
+which python
+然后你会得到一个地址
+vim ~/.zshrc
+## 在最后面加上 你刚才获取的地址 
+export PYTHON_PATH=/Users/badwin/Documents/****/****/python2-bin/python
+## 重启
+source ~/.zshrc
+再去打包就 ok了
+链接：https://www.jianshu.com/p/496d016ddefb
