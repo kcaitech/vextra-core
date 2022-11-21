@@ -1,19 +1,19 @@
-import { IDocEditor } from "../data/ieditor";
+import { IDocShadow } from "../data/ishadow";
 import { Page } from "../data/page";
 import { Repository } from "../data/transact";
 
-export class DocEditor implements IDocEditor {
-    private __shadows: IDocEditor[];
+export class DocEditor {
+    private __shadows: IDocShadow[];
     private __repo: Repository;
 
-    constructor(repo: Repository, shadows: IDocEditor[]) {
+    constructor(repo: Repository, shadows: IDocShadow[]) {
         this.__repo = repo;
         this.__shadows = shadows;
     }
-    addShadow(shadow: IDocEditor) {
+    addShadow(shadow: IDocShadow) {
         this.__shadows.push(shadow);
     }
-    delShadow(shadow: IDocEditor) {
+    delShadow(shadow: IDocShadow) {
         const index = this.__shadows.indexOf(shadow);
         if (index >= 0) {
             this.__shadows.splice(index, 1);
