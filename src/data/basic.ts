@@ -1,6 +1,11 @@
+export interface IBubblable {
+    bubbleup(...args: any[]): void;
+}
+
 export class Notifiable {
     public notify(...args: any[]): void {}
 }
+
 export class Watchable extends Notifiable {
 
     private static __wid = 0;

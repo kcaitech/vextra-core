@@ -1,5 +1,6 @@
 import { objectId, __objidkey } from '@/basic/objectid';
 import { Notifiable, Watchable } from './basic';
+import { TextAttr } from './text';
 
 export function Atom(target: any) {
     if (target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd) {
@@ -25,6 +26,25 @@ const isAtomGroup = (obj: any): boolean => obj && obj.__iid_cdd67eac7c12025695ce
 class TContext {
     public transact?: Transact;
     public cache: Map<number, Set<PropertyKey> > = new Map();
+    private __notifys: Map<number, Notifiable> = new Map();
+    public optiNotify: boolean = true;
+    addNotify(target: Notifiable) {
+        if (this.optiNotify) {
+            this.__notifys.set(objectId(target), target)
+        }
+        else {
+            target.notify();
+        }
+    }
+    fireNotify() {
+        this.__notifys.forEach((target) => {
+            target.notify();
+        })
+        this.__notifys.clear();
+    }
+    clearNotify() {
+        this.__notifys.clear();
+    }
 }
 
 function swapCached(context: TContext, target: object, propertyKey: PropertyKey): boolean {
@@ -50,7 +70,7 @@ class AtomHandler {
         this.__context = context;
     }
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
-        if (propertyKey == __objidkey) {
+        if (propertyKey.toString().startsWith("__")) {
             // do nothing
         } else if (this.__context.transact === undefined) {
             // console.warn("NOT inside transact!");
@@ -89,31 +109,58 @@ class GroupHandler {
         this.__context = context;
     }
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
-
+        // console.log(target, propertyKey, value, receiver)
+        let needNotify = false;
         if (this.__context.transact === undefined) {
             // console.log(target, propertyKey, value, receiver)
-            if (propertyKey == __objidkey) {
+            if (propertyKey.toString().startsWith("__")) {
                 // do nothing
             } else {
                 throw new Error("NOT inside transact!");
             }
-        } else {
-            if (target instanceof Array && propertyKey === "length" && target.length > value) {
-                for (let i = value, len = target.length; i < len; i++) {
-                    if (!swapCached(this.__context, target, i)) {
-                        const r = new Rec(target, i, target[i]);
+        } else if (target instanceof Array) {
+            if (propertyKey === "length") {
+                if (target.length > value) {
+                    for (let i = value, len = target.length; i < len; i++) {
+                        if (!swapCached(this.__context, target, i)) {
+                            const r = new Rec(target, i, target[i]);
+                            this.__context.transact.push(r);
+                        }
+                    }
+                }
+                if (target.length != value) {
+                    needNotify = true;
+                    if (!swapCached(this.__context, target, propertyKey)) {
+                        const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
+                        this.__context.transact.push(r);
+                    }
+                }
+            } else {
+                const propInt: number = Number.parseInt(propertyKey.toString());
+                const propIsInt = Number.isInteger(propInt) && propInt.toString() == propertyKey;
+                if ((propIsInt || propertyKey.toString().startsWith('m_'))) {
+                    needNotify = true;
+                    if (!swapCached(this.__context, target, propertyKey)) {
+                        const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
                         this.__context.transact.push(r);
                     }
                 }
             }
-            else if (propertyKey.toString().startsWith('m_') &&
-                !swapCached(this.__context, target, propertyKey)) {
+        }
+        else if (propertyKey.toString().startsWith('m_')) {
+            needNotify = true;
+            if (!swapCached(this.__context, target, propertyKey)) {
                 const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
                 this.__context.transact.push(r);
             }
         }
-        // todo
-        return Reflect.set(target, propertyKey, value, receiver);
+
+        const ret = Reflect.set(target, propertyKey, value, receiver);
+        if (needNotify && target instanceof Notifiable) {
+            // target.notify();
+            this.__context.addNotify(target);
+        }
+        return ret;
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const val = Reflect.get(target, propertyKey, receiver);
@@ -148,14 +195,18 @@ class Rec {
         this.__propertyKey = propertyKey
         this.__value = value
     }
-    swap() {
+    swap(ctx: TContext) {
         const v = Reflect.get(this.__target, this.__propertyKey)
         Reflect.set(this.__target, this.__propertyKey, this.__value);
         this.__value = v;
         if (this.__target instanceof Notifiable) {
-            this.__target.notify();
+            // this.__target.notify();
+            ctx.addNotify(this.__target);
         }
     }
+//     get target() {
+//         return this.__target;
+//     }
 }
 
 class Transact extends Array<Rec> {
@@ -164,9 +215,9 @@ class Transact extends Array<Rec> {
         super();
         this.__name = name;
     }
-    swap() {
+    swap(ctx: TContext) {
         for (let i = this.length - 1; i >= 0; i--) {
-            this[i].swap();
+            this[i].swap(ctx);
         }
     }
     push(...items: Rec[]): number {
@@ -207,7 +258,9 @@ export class Repository extends Watchable {
             return;
         }
         this.__index--;
-        this.__trans[this.__index].swap();
+        this.__context.optiNotify = true;
+        this.__trans[this.__index].swap(this.__context);
+        this.__context.fireNotify();
         this.notify();
     }
 
@@ -215,8 +268,10 @@ export class Repository extends Watchable {
         if (!this.canRedo()) {
             return;
         }
-        this.__trans[this.__index].swap();
+        this.__context.optiNotify = true;
+        this.__trans[this.__index].swap(this.__context);
         this.__index++;
+        this.__context.fireNotify();
         this.notify();
     }
 
@@ -233,10 +288,11 @@ export class Repository extends Watchable {
      * @param name 
      * @param saved selection等
      */
-    startTransact(name: string, saved: any) {
+    start(name: string, saved: any) {
         if (this.__context.transact !== undefined) {
             throw new Error();
         }
+        this.__context.optiNotify = true;
         this.__context.cache.clear();
         this.__context.transact = new Transact(name);
     }
@@ -245,7 +301,7 @@ export class Repository extends Watchable {
      * 
      * @param cmd 最后打包成一个cmd，用于op，也可另外存
      */
-    commitTransact(cmd: any) {
+    commit(cmd: any) {
         if (this.__context.transact === undefined) {
             throw new Error();
         }
@@ -254,22 +310,24 @@ export class Repository extends Watchable {
         this.__trans.push(this.__context.transact);
         this.__index++;
         this.__context.transact = undefined;
+        this.__context.fireNotify();
         this.notify();
     }
 
-    rollbackTransact() {
+    rollback() {
         if (this.__context.transact === undefined) {
             throw new Error();
         }
         this.__context.cache.clear();
-        this.__context.transact.swap();
+        this.__context.transact.swap(this.__context);
+        this.__context.clearNotify();
     }
 
     isInTransact() {
         return this.__context.transact !== undefined;
     }
 
-    proxy(data: any): any {
+    makeProxy(data: any): any {
         if (isProxy(data)) {
             return data;
         }

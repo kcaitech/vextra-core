@@ -1,7 +1,7 @@
 import { Page } from "./page";
 import { GroupShape, Shape } from "./shape";
 
-export interface IDocEditor {
+export interface IDocShadow {
     delete(page: Page): boolean;
     insert(index: number, page: Page): boolean;
     // create(): Page;
@@ -9,7 +9,7 @@ export interface IDocEditor {
     move(page: Page, index: number): boolean;
 }
 
-export interface IPageEditor {
+export interface IPageShadow {
     delete(shape: Shape): boolean;
     insert(parent: GroupShape, index: number, shape: Shape): boolean;
     // create(parent: GroupShape, type: string): Shape;
@@ -17,10 +17,10 @@ export interface IPageEditor {
     move(shape: Shape, target: GroupShape, index: number): boolean;
 }
 
-export interface IShapeEditor {
+export interface IShapeShadow {
 
 }
 
-export interface ITextEditor {
+export interface ITextShadow {
     // todo
 }

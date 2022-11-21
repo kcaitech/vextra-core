@@ -22,5 +22,5 @@ export async function importDocument(lzData: LzData) {
         return importPage(lzData, 'pages/'+id+'.json', symsMgr);
     });
 
-    return new Document(meta, symsMgr, pagesMgr);
+    return new Document(data["do_objectID"], meta, symsMgr, pagesMgr);
 }

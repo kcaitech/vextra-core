@@ -16,11 +16,13 @@
     "test": "jest"
   },
   "dependencies": {
+    "electron-store": "^8.1.0",
     "node-stream-zip": "*",
     "skia-canvas": "^0.9.30",
     "vue": "^3.2.13",
     "vue-class-component": "^8.0.0-0",
     "vue-i18n": "^9.2.2",
+    "vue-router": "^4.1.6",
     "zlib": "^1.0.5"
   },
   "devDependencies": {

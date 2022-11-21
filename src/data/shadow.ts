@@ -1,5 +1,5 @@
 import { Watchable } from "./basic";
-import { IPageEditor } from "./ieditor";
+import { IPageShadow } from "./ishadow";
 import { Page } from "./page";
 import { Shape, GroupShape } from "./shape";
 
@@ -62,7 +62,7 @@ export class ShapeNaviIter {
 /**
  * notify 如果index 为 -1 时，些节点是不可见的，不需要更新界面
  */
-export class ShapeNaviShadow extends Watchable implements IPageEditor {
+export class ShapeNaviShadow extends Watchable implements IPageShadow {
 
     // private __page: Page;
     private __root: ShapeNaviNode;
@@ -133,7 +133,7 @@ export class ShapeNaviShadow extends Watchable implements IPageEditor {
         if (!node.__childs && shape instanceof GroupShape) {
             node.__childs = [];
             const count = shape.childsCount;
-            for (let i = 0; i < count; i++) {
+            for (let i = count - 1; i >= 0; i--) {
                 const c = shape.getChildByIndex(i);
                 const n = new ShapeNaviNode(c);
                 n.__parent = node;
@@ -249,6 +249,8 @@ export class ShapeNaviShadow extends Watchable implements IPageEditor {
     }
 
     __insert(node: ShapeNaviNode, index: number, c: ShapeNaviNode) {
+        // 反转index
+        index = (node.__childs as ShapeNaviNode[]).length - index;
         c.__parent = node;
         (node.__childs as ShapeNaviNode[]).splice(index, 0, c);
         let p: ShapeNaviNode | undefined = c.__parent;

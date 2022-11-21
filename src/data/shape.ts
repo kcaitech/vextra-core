@@ -1,4 +1,4 @@
-import { Notifiable, Watchable } from "./basic";
+import { IBubblable, Notifiable, Watchable } from "./basic";
 import { LzData } from "./lzdata";
 import { Style, XY } from "./style";
 import { Text } from "./text";
@@ -91,7 +91,7 @@ export class ExportOptions {
 }
 
 @AtomGroup
-export class ShapeFrame extends Notifiable {
+export class ShapeFrame extends Notifiable implements IBubblable {
     // todo
     // "_class": "rect",
     // "constrainProportions": false,
@@ -103,7 +103,7 @@ export class ShapeFrame extends Notifiable {
     private m_y: number;
     private m_height: number;
     private m_width: number;
-    private __parent: Notifiable | undefined;
+    private __parent: Notifiable & IBubblable | undefined;
     constructor(x: number, y: number, width: number, height: number) {
         super();
         this.m_x = x;
@@ -111,11 +111,14 @@ export class ShapeFrame extends Notifiable {
         this.m_width = width;
         this.m_height = height;
     }
+    bubbleup(...args: any[]): void {
+        this.__parent && this.__parent.bubbleup(...args);
+    }
     notify(...args: any[]): void {
         // throw new Error("Method not implemented.");
         this.__parent && this.__parent.notify(...args);
     }
-    set parent(p: Notifiable) {
+    set parent(p: Notifiable & IBubblable) {
         if (this.__parent !== undefined) {
             throw new Error("")
         }
@@ -135,16 +138,54 @@ export class ShapeFrame extends Notifiable {
     }
 
     set x(x: number) {
-        this.m_x = x;
+        if (x !== this.m_x) {
+            this.m_x = x;
+            // this.bubbleup(this, "frame");
+        }
     }
     set y(y: number) {
-        this.m_y = y;
+        if (y !== this.m_y) {
+            this.m_y = y;
+            // this.bubbleup(this, "frame");
+        }
     }
     set width(w: number) {
-        this.m_width = w;
+        if (w !== this.m_width) {
+            this.m_width = w;
+            // this.bubbleup(this, "frame");
+        }
     }
     set height(h: number) {
-        this.m_height = h;
+        if (h !== this.m_height) {
+            this.m_height = h;
+            // this.bubbleup(this, "frame");
+        }
+    }
+    set(x: number, y: number, w: number, h: number, needBubble: boolean = true): boolean {
+        let changed = false;
+        if (x !== this.m_x) {
+            this.m_x = x;
+            changed = true;
+        }
+        if (y !== this.m_y) {
+            this.m_y = y;
+            changed = true;
+        }
+        if (w !== this.m_width) {
+            this.m_width = w;
+            changed = true;
+        }
+        if (h !== this.m_height) {
+            this.m_height = h;
+            changed = true;
+        }
+        // if (changed && needBubble) {
+        //     this.bubbleup(this, "frame");
+        // }
+        // if (changed) {
+        //     this.notify();
+        // }
+        return changed;
     }
 }
 
@@ -197,10 +238,8 @@ interface IShapeNode {
     get treeNodeCount(): number;
 }
 
-
-
 @AtomGroup
-export class Shape extends Watchable implements IShape, IShapeNode {
+export class Shape extends Watchable implements IShape, IShapeNode, IBubblable {
     protected m_parent: Shape | undefined;
     protected m_lzData: LzData;
     private m_type: ShapeType;
@@ -246,6 +285,9 @@ export class Shape extends Watchable implements IShape, IShapeNode {
         this.m_frame = frame;
         frame.parent = this;
         this.m_style = style;
+    }
+    bubbleup(...args: any[]): void {
+        if (this.m_parent) this.m_parent.bubbleup(this, ...args);
     }
     get parent() {
         return this.m_parent;
@@ -342,6 +384,20 @@ export class Shape extends Watchable implements IShape, IShapeNode {
     }
     buildTreeNodeCount(): void {
     }
+
+    realXY() {
+        let frame = this.frame;
+        let cx = frame.x;
+        let cy = frame.y;
+        let p = this.parent;
+        while (p) {
+            frame = p.frame;
+            cx += frame.x;
+            cy += frame.y;
+            p = p.parent;
+        }
+        return {x: cx, y: cy};
+    }
 }
 
 @AtomGroup
@@ -349,6 +405,8 @@ export class GroupShape extends Shape {
 
     private m_childs: Shape[] = []; // todo: 当数组比较长时，换个实现方式
     private __treeNodeCount: number = 0;
+    // private m_originX: number = 0;
+    // private m_originY: number = 0;
 
     constructor(parent: Shape | undefined,
         lzData: LzData,
@@ -364,6 +422,58 @@ export class GroupShape extends Shape {
 
     appendChilds(childs: Shape[]) {
         this.m_childs.push(...childs)
+    }
+
+    // updateFrame(): boolean {
+    //     const cc = this.childsCount || 0;
+    //     const frame = this.frame;
+    //     let right = 0;
+    //     let bottom = 0;
+    //     let left = 0;
+    //     let top = 0;
+    //     if (cc > 0) {
+    //         const child = this.getChildByIndex(0);
+    //         const cf = child.frame;
+    //         left = cf.x;
+    //         top = cf.y;
+    //         right = left + cf.width;
+    //         bottom = top + cf.height;
+    //     }
+    //     for (let i = 1; i < cc; i++) {
+    //         const child = this.getChildByIndex(i);
+    //         const cf = child.frame;
+    //         right = Math.max(right, cf.x + cf.width);
+    //         bottom = Math.max(bottom, cf.y + cf.height);
+    //         left = Math.min(left, cf.x);
+    //         top = Math.min(top, cf.y);
+    //     }
+    //     let x = frame.x;
+    //     let y = frame.y;
+    //     const width = frame.width;
+    //     const height = frame.height;
+    //     let offsetX = 0, offsetY = 0;
+    //     if (left < 0) {
+    //         offsetX = -left;
+    //         x += left;
+    //     }
+    //     if (top < 0) {
+    //         offsetY = -top;
+    //         y += top;
+    //     }
+
+    //     return this.frame.set(x, y, width, height, false);
+    // }
+
+    bubbleup(...args: any[]): void {
+        if (args.length > 2 && args[args.length - 1] == "frame") {
+            // update frame
+            // if (this.updateFrame()) {
+                super.bubbleup(...args);
+            // }
+        }
+        else {
+            super.bubbleup(...args);
+        }
     }
 
     get childsCount() {
@@ -696,7 +806,7 @@ export interface ISymbolManager {
 @AtomGroup
 export class Symbol extends GroupShape {
     // private m_id: string;
-    private m_symMgr: ISymbolManager;
+    private __symMgr: ISymbolManager;
 
     constructor(parent: Shape | undefined,
         lzData: LzData,
@@ -709,7 +819,7 @@ export class Symbol extends GroupShape {
         style: Style,
         mgr:ISymbolManager) {
         super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
-        this.m_symMgr = mgr;
+        this.__symMgr = mgr;
         // this.m_id = id;
         mgr.addSymbol(id, this);
     }
@@ -717,15 +827,15 @@ export class Symbol extends GroupShape {
     //     return this.m_id;
     // }
     deleted() {
-        this.m_symMgr.deleteSymbol(this.id);
+        this.__symMgr.deleteSymbol(this.id);
     }
 }
 
 @AtomGroup
 export class SymbolRef extends Shape {
-    private m_symMgr: ISymbolManager;
+    private __symMgr: ISymbolManager;
     private m_refId: string;
-    private m_data?: Symbol;
+    private __data?: Symbol;
     constructor(
         parent: Shape | undefined,
         lzData: LzData,
@@ -740,29 +850,29 @@ export class SymbolRef extends Shape {
         refId: string, 
         data?: Symbol) {
         super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
-        this.m_symMgr = mgr;
+        this.__symMgr = mgr;
         this.m_refId = refId;
-        this.m_data = data;
+        this.__data = data;
     }
     get refId() {
         return this.m_refId;
     }
     async getSymbol(): Promise<Symbol> {
-        if (this.m_data) return this.m_data;
-        return this.m_symMgr.getSymbol(this.refId).then((s) => {
-            this.m_data = s;
+        if (this.__data) return this.__data;
+        return this.__symMgr.getSymbol(this.refId).then((s) => {
+            this.__data = s; // todo
             this.notify();
             return s;
         })
     }
 
     peekSymbol(): Symbol | undefined {
-        return this.m_data;
+        return this.__data;
     }
 
     loadSymbol() {
-        this.m_symMgr.getSymbol(this.refId).then((s) => {
-            this.m_data = s;
+        this.__symMgr.getSymbol(this.refId).then((s) => {
+            this.__data = s;
             this.notify();
         })
     }

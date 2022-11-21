@@ -1,5 +1,5 @@
 import { Watchable } from "./basic";
-import { IDocEditor } from "./ieditor";
+import { IDocShadow } from "./ishadow";
 import { PagesMeta } from "./meta";
 import { Page } from "./page";
 import { Symbol, ISymbolManager } from "./shape";
@@ -89,24 +89,30 @@ export class SymsMgr extends Watchable implements ISymbolManager {
 @AtomGroup
 export class Document extends Watchable {
 
+    private m_id: string;
     private m_meta: PagesMeta;
     private m_symsMgr: SymsMgr;
     private m_pagesMgr: PagesMgr;
-    private __shadows: IDocEditor[] = [];
+    private __shadows: IDocShadow[] = [];
     // private __editor: DocEditor | undefined;
     // private __repo: Repository | undefined;
 
-	constructor(meta: PagesMeta, symsMgr: SymsMgr, pagesMgr: PagesMgr) {
+	constructor(id: string, meta: PagesMeta, symsMgr: SymsMgr, pagesMgr: PagesMgr) {
 		super();
+        this.m_id = id;
         this.m_meta = meta;
         this.m_symsMgr = symsMgr;
         this.m_pagesMgr = pagesMgr;
 	}
 
-    addShadow(shadow: IDocEditor) {
+    get id(): string {
+        return this.m_id;
+    }
+
+    addShadow(shadow: IDocShadow) {
         this.__shadows.push(shadow);
     }
-    delShadow(shadow: IDocEditor) {
+    delShadow(shadow: IDocShadow) {
         const index = this.__shadows.indexOf(shadow);
         if (index >= 0) {
             this.__shadows.splice(index, 1);
