@@ -24,7 +24,7 @@ function opPath(bop: BoolOp, path0: string, path1: string): string {
     return path;
 }
 
-function consumeOpShape(shape: GroupShape, startIdx: number, bop: BoolOp, offsetX: number, offsetY: number): { count: number, path: string } {
+function consumeOpShape(shape: GroupShape, startIdx: number, bop: BoolOp, offsetX: number, offsetY: number, consumed?: Array<Shape>): { count: number, path: string } {
     const cc = shape.childsCount;
     let i = startIdx;
     if (i >= cc - 1) {
@@ -40,9 +40,11 @@ function consumeOpShape(shape: GroupShape, startIdx: number, bop: BoolOp, offset
 
     const frame0 = child.frame;
     const frame1 = next.frame;
-    const path0 = render2path(child, bop, offsetX + frame0.x, offsetY + frame0.y);
-    const path1 = render2path(next, bop, offsetX + frame1.x, offsetY + frame1.y);
+    const path0 = render2path(child, bop, offsetX + frame0.x, offsetY + frame0.y, consumed);
+    const path1 = render2path(next, bop, offsetX + frame1.x, offsetY + frame1.y, consumed);
     let path = opPath(cbop, path0, path1);
+
+    if (consumed) consumed.push(child, next);
 
     i = i + 2;
     while (i < cc) {
@@ -50,9 +52,12 @@ function consumeOpShape(shape: GroupShape, startIdx: number, bop: BoolOp, offset
         const cbop = next.boolOp == BoolOp.None ? bop : next.boolOp;
         if (cbop != BoolOp.None) {
             const frame1 = next.frame;
-            const path1 = render2path(next, bop, offsetX + frame1.x, offsetY + frame1.y);
+            const path1 = render2path(next, bop, offsetX + frame1.x, offsetY + frame1.y, consumed);
             path = opPath(cbop, path, path1);
             i = i + 1;
+
+            if (consumed) consumed.push(next);
+
         } else {
             break;
         }
@@ -60,7 +65,7 @@ function consumeOpShape(shape: GroupShape, startIdx: number, bop: BoolOp, offset
     return { count: (i - startIdx), path };
 }
 
-export function render2path(shape: Shape, bop?: BoolOp, offsetX?: number, offsetY?: number): string {
+export function render2path(shape: Shape, bop?: BoolOp, offsetX?: number, offsetY?: number, consumed?: Array<Shape>): string {
 
     bop = bop || BoolOp.None;
     offsetX = offsetX || 0;
@@ -77,7 +82,7 @@ export function render2path(shape: Shape, bop?: BoolOp, offsetX?: number, offset
     let joinPath = "";
     for (let i = 0; i < cc;) {
 
-        const { count, path } = consumeOpShape(shape, i, bop, offsetX, offsetX);
+        const { count, path } = consumeOpShape(shape, i, bop, offsetX, offsetX, consumed);
         if (count > 0) {
             joinPath = joinPath + " " + path;
             i = i + count;
@@ -86,15 +91,17 @@ export function render2path(shape: Shape, bop?: BoolOp, offsetX?: number, offset
 
         const child = shape.getChildByIndex(i);
         const frame0 = child.frame;
-        const path0 = render2path(child, bop, offsetX + frame0.x, offsetY + frame0.y);
+        const path0 = render2path(child, bop, offsetX + frame0.x, offsetY + frame0.y, consumed);
         joinPath = joinPath + " " + path0;
         i = i + 1;
+
+        if (consumed) consumed.push(child);
     }
 
     return joinPath;
 }
 
-export function renderGroupChilds(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>): ELArray {
+export function renderGroupChilds(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>, consumed?: Array<Shape>): ELArray {
     const childs:ELArray = [];
     const cc = shape.childsCount;
     bop = shape.boolOp == BoolOp.None ? bop : shape.boolOp;
@@ -105,7 +112,7 @@ export function renderGroupChilds(shape: GroupShape, bop: BoolOp, comsMap: Map<S
 
     for (let i = 0; i < cc;) {
 
-        const { count, path } = consumeOpShape(shape, i, bop, 0, 0);
+        const { count, path } = consumeOpShape(shape, i, bop, 0, 0, consumed);
         if (count > 0) {
             const com = comsMap.get(ShapeType.Boolean);
             if (com) {
@@ -128,8 +135,8 @@ export function renderGroupChilds(shape: GroupShape, bop: BoolOp, comsMap: Map<S
     return childs;
 }
 
-export function render(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>, reflush?: number): EL {
-    const childs:ELArray = renderGroupChilds(shape, bop, comsMap);
+export function render(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>, reflush?: number, consumed?: Array<Shape>): EL {
+    const childs:ELArray = renderGroupChilds(shape, bop, comsMap, consumed);
     const frame = shape.frame;
     return h('g', { transform: 'translate(' + frame.x + ',' + frame.y + ')', reflush: reflush || 0 }, childs);
 }
