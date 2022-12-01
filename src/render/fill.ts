@@ -1,12 +1,12 @@
 import { Shape } from "@/data/shape";
 import { Fill, FillType, Gradient } from "@/data/style";
-import { ELArray, EL, h } from "./basic";
+// import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "@/basic/objectid";
 
-const handler: {[key: number]: (shape: Shape, fill: Fill, path: string) => EL} = {};
-handler[FillType.SolidColor] = function (shape: Shape, fill: Fill, path: string): EL {
+const handler: {[key: number]: (h: Function, shape: Shape, fill: Fill, path: string) => any} = {};
+handler[FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
     const color = fill.color;
     const frame = shape.frame;
     return h("path", {
@@ -19,11 +19,11 @@ handler[FillType.SolidColor] = function (shape: Shape, fill: Fill, path: string)
     });
 }
 
-handler[FillType.Gradient] = function (shape: Shape, fill: Fill, path: string): EL {
+handler[FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
     const color = fill.color;
     const frame = shape.frame;
-    const elArr = new ELArray();
-    const g_ = renderGradient(fill.gradient as Gradient, frame);
+    const elArr = new Array();
+    const g_ = renderGradient(h, fill.gradient as Gradient, frame);
     if (g_.node) {
         elArr.push(g_.node);
     }
@@ -31,7 +31,7 @@ handler[FillType.Gradient] = function (shape: Shape, fill: Fill, path: string): 
     const gStyle = g_.style;
     if (gStyle) {
         const id = "clippath-fill-" + objectId(fill);
-        const cp = clippathR(shape, id, path);
+        const cp = clippathR(h, shape, id, path);
         elArr.push(cp);
         elArr.push(h("foreignObject", {
             width: frame.width, height: frame.height, x: 0, y: 0,
@@ -54,10 +54,10 @@ handler[FillType.Gradient] = function (shape: Shape, fill: Fill, path: string): 
     return h("g", {transform: "translate(" + frame.x + " " + frame.y + ")"}, elArr);
 }
 
-export function render(shape: Shape, path?: string): ELArray {
+export function render(h: Function, shape: Shape, path?: string): Array<any> {
     const style = shape.style;
     const fillsCount = style.fillsCount;
-    const elArr = new ELArray();
+    const elArr = new Array();
     path = path || shape.getPath(true);
 
     for (let i = 0; i < fillsCount; i++) {
@@ -66,7 +66,7 @@ export function render(shape: Shape, path?: string): ELArray {
             continue;
         }
         const fillType = fill.fillType;
-        elArr.push(handler[fillType](shape, fill, path));
+        elArr.push(handler[fillType](h, shape, fill, path));
     }
     return elArr;
 }

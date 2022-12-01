@@ -37,10 +37,10 @@
 // }
 
 
-export { h } from "vue";
-import { VNode } from "vue";
-export interface EL extends VNode {}
-export class ELArray extends Array<VNode> {}
-export function transform(e: EL | ELArray, h: (tag: string, attr: any, childs:VNode[]) => VNode): VNode | VNode[] {
-    return e;
-}
+// export { h } from "vue";
+// import { VNode } from "vue";
+// export interface EL extends VNode {}
+// export class ELArray extends Array<VNode> {}
+// export function transform(e: EL | ELArray, h: (tag: string, attr: any, childs:VNode[]) => VNode): VNode | VNode[] {
+//     return e;
+// }

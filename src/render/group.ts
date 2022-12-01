@@ -1,6 +1,6 @@
 import { BoolOp, GroupShape, Shape, ShapeType } from "@/data/shape";
 import { difference, intersection, subtract, union } from "./boolop";
-import { ELArray, EL, h } from "./basic";
+// import { ELArray, EL, h } from "./basic";
 
 function opPath(bop: BoolOp, path0: string, path1: string): string {
     let path = "";
@@ -101,8 +101,8 @@ export function render2path(shape: Shape, bop?: BoolOp, offsetX?: number, offset
     return joinPath;
 }
 
-export function renderGroupChilds(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>, consumed?: Array<Shape>): ELArray {
-    const childs:ELArray = [];
+export function renderGroupChilds(h: Function, shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>, consumed?: Array<Shape>): Array<any> {
+    const childs: Array<any> = [];
     const cc = shape.childsCount;
     bop = shape.boolOp == BoolOp.None ? bop : shape.boolOp;
 
@@ -135,8 +135,8 @@ export function renderGroupChilds(shape: GroupShape, bop: BoolOp, comsMap: Map<S
     return childs;
 }
 
-export function render(shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>, reflush?: number, consumed?: Array<Shape>): EL {
-    const childs:ELArray = renderGroupChilds(shape, bop, comsMap, consumed);
+export function render(h: Function, shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>, reflush?: number, consumed?: Array<Shape>): any {
+    const childs:Array<any> = renderGroupChilds(h, shape, bop, comsMap, consumed);
     const frame = shape.frame;
     return h('g', { transform: 'translate(' + frame.x + ',' + frame.y + ')', reflush: reflush || 0 }, childs);
 }

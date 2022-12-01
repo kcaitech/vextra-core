@@ -1,6 +1,6 @@
 // LzDataRemote
 
-import { LzData } from "../data/lzdata";
+import { LzData } from "@/data/lzdata";
 
 export class LzDataRemote implements LzData {
     load(url: string): Promise<Buffer> {

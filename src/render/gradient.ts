@@ -1,9 +1,9 @@
 import { objectId } from "@/basic/objectid";
 import { ShapeFrame } from "@/data/shape";
 import { Gradient, GradientType, Stop } from "@/data/style";
-import { EL, h } from "./basic";
+// import { EL, h } from "./basic";
 
-function renderStop(d: Stop): EL {
+function renderStop(h: Function, d: Stop): any {
     const position = d.position;
     const color = d.color;
     const rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
@@ -15,16 +15,16 @@ function renderStop(d: Stop): EL {
     return n;
 }
 
-export function render(value: Gradient, frame:ShapeFrame): {id:string, style:string|undefined, node:EL|undefined} {
+export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:string, style:string|undefined, node:any} {
     const id = "gradient" + objectId(value);
     let style;
-    let node: EL | undefined;
+    let node: any;
     if (value.gradientType == GradientType.Linear) {
         const stopSCount = value.stopsCount;
         const childs = [];
         for (let i = 0; i < stopSCount; i++) {
             const s = value.getStopByIndex(i);
-            childs.push(renderStop(s));
+            childs.push(renderStop(h, s));
         }
         node = h("linearGradient", {
             id,
@@ -39,7 +39,7 @@ export function render(value: Gradient, frame:ShapeFrame): {id:string, style:str
         const childs = [];
         for (let i = 0; i < stopSCount; i++) {
             const s = value.getStopByIndex(i);
-            childs.push(renderStop(s));
+            childs.push(renderStop(h, s));
         }
         const scaleX = frame.width > frame.height ? frame.height / frame.width : 1.0;
         const scaleY = frame.width < frame.height ? frame.width / frame.height : 1.0;

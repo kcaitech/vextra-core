@@ -1,5 +1,5 @@
 import StreamZip from "node-stream-zip";
-import { LzData } from "../data/lzdata";
+import { LzData } from "@/data/lzdata";
 
 export class LzDataLocal implements LzData {
 	private m_zip: StreamZip;
