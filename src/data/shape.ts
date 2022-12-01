@@ -579,6 +579,10 @@ export class ImageShape extends Shape {
         this.m_imageRef = imageRef;
     }
 
+    peekImage(): string | undefined {
+        return this.m_imageData;
+    }
+
     // image shape
     async loadImage(): Promise<string> {
         if (this.m_imageData) {
