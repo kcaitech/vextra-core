@@ -292,6 +292,9 @@ export class Shape extends Watchable implements IShape, IShapeNode, IBubblable {
     get parent() {
         return this.m_parent;
     }
+    set parent(parent: Shape | undefined) {
+        this.m_parent = parent;
+    }
     get id() {
         return this.m_id;
     }
@@ -420,6 +423,7 @@ export class GroupShape extends Shape {
             super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
         }
 
+    // for io init
     appendChilds(childs: Shape[]) {
         this.m_childs.push(...childs)
     }
@@ -436,9 +440,11 @@ export class GroupShape extends Shape {
     }
     addChild(child: Shape) {
         this.m_childs.push(child);
+        child.parent = this;
     }
     addChildAt(child: Shape, idx: number) {
         this.m_childs.splice(idx, 0, child);
+        child.parent = this;
     }
 
     bubbleup(...args: any[]): void {
