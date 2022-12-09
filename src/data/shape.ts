@@ -241,7 +241,7 @@ interface IShapeNode {
 @AtomGroup
 export class Shape extends Watchable implements IShape, IShapeNode, IBubblable {
     protected m_parent: Shape | undefined;
-    protected m_lzData: LzData;
+    // protected m_lzData: LzData;
     private m_type: ShapeType;
     private m_exportOptions: ExportOptions;
     private m_frame: ShapeFrame;
@@ -266,7 +266,7 @@ export class Shape extends Watchable implements IShape, IShapeNode, IBubblable {
     // private m_changeListener: Function | undefined;
 
     constructor(parent: Shape | undefined,
-        lzData: LzData,
+        // lzData: LzData,
         type: ShapeType,
         name: string,
         id: string,
@@ -276,7 +276,7 @@ export class Shape extends Watchable implements IShape, IShapeNode, IBubblable {
         style: Style) {
         super();
         this.m_parent = parent;
-        this.m_lzData = lzData;
+        // this.m_lzData = lzData;
         this.m_type = type;
         this.m_name = name;
         this.m_id = id;
@@ -409,7 +409,7 @@ export class GroupShape extends Shape {
     // private m_originY: number = 0;
 
     constructor(parent: Shape | undefined,
-        lzData: LzData,
+        // lzData: LzData,
         type: ShapeType,
         name: string,
         id: string,
@@ -417,52 +417,29 @@ export class GroupShape extends Shape {
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style) {
-            super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+            super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
         }
 
     appendChilds(childs: Shape[]) {
         this.m_childs.push(...childs)
     }
-
-    // updateFrame(): boolean {
-    //     const cc = this.childsCount || 0;
-    //     const frame = this.frame;
-    //     let right = 0;
-    //     let bottom = 0;
-    //     let left = 0;
-    //     let top = 0;
-    //     if (cc > 0) {
-    //         const child = this.getChildByIndex(0);
-    //         const cf = child.frame;
-    //         left = cf.x;
-    //         top = cf.y;
-    //         right = left + cf.width;
-    //         bottom = top + cf.height;
-    //     }
-    //     for (let i = 1; i < cc; i++) {
-    //         const child = this.getChildByIndex(i);
-    //         const cf = child.frame;
-    //         right = Math.max(right, cf.x + cf.width);
-    //         bottom = Math.max(bottom, cf.y + cf.height);
-    //         left = Math.min(left, cf.x);
-    //         top = Math.min(top, cf.y);
-    //     }
-    //     let x = frame.x;
-    //     let y = frame.y;
-    //     const width = frame.width;
-    //     const height = frame.height;
-    //     let offsetX = 0, offsetY = 0;
-    //     if (left < 0) {
-    //         offsetX = -left;
-    //         x += left;
-    //     }
-    //     if (top < 0) {
-    //         offsetY = -top;
-    //         y += top;
-    //     }
-
-    //     return this.frame.set(x, y, width, height, false);
-    // }
+    removeChild(shape: Shape) {
+        const idx = this.indexOfChild(shape);
+        if (idx >= 0) {
+            this.m_childs.splice(idx, 1);
+        }
+    }
+    removeChildAt(shape: Shape, idx: number) {
+        if (idx >= 0) {
+            this.m_childs.splice(idx, 1);
+        }
+    }
+    addChild(child: Shape) {
+        this.m_childs.push(child);
+    }
+    addChildAt(child: Shape, idx: number) {
+        this.m_childs.splice(idx, 0, child);
+    }
 
     bubbleup(...args: any[]): void {
         if (args.length > 2 && args[args.length - 1] == "frame") {
@@ -481,6 +458,14 @@ export class GroupShape extends Shape {
     }
     getChildByIndex(idx: number) {
         return this.m_childs[idx];
+    }
+    indexOfChild(shape: Shape): number {
+        for (let i = 0, len = this.m_childs.length; i < len; i++) {
+            if (this.m_childs[i].id == shape.id) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     protected treeOffset(shape: Shape): number {
@@ -515,7 +500,7 @@ export class RectShape extends Shape {
     private m_fixedRadius: number;
 
     constructor(parent: Shape | undefined,
-        lzData: LzData,
+        // lzData: LzData,
         type: ShapeType,
         name: string,
         id: string,
@@ -524,7 +509,7 @@ export class RectShape extends Shape {
         frame: ShapeFrame,
         style: Style,
         fixedRadius?: number) {
-        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+        super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_fixedRadius = fixedRadius || 0;
     }
     get fixedRadius() {
@@ -563,7 +548,7 @@ export class RectShape extends Shape {
 export class ImageShape extends Shape {
     private m_imageRef: string;
     private m_imageData: string | undefined;
-    // private m_lzData: LzData;
+    private m_lzData: LzData;
 
     constructor(parent: Shape | undefined,
         lzData: LzData,
@@ -575,8 +560,9 @@ export class ImageShape extends Shape {
         frame: ShapeFrame,
         imageRef: string,
         style: Style) {
-        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+        super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_imageRef = imageRef;
+        this.m_lzData = lzData;
     }
 
     peekImage(): string | undefined {
@@ -642,7 +628,7 @@ export class PathShape extends Shape {
     private m_isClosed: boolean | undefined;
 
     constructor(parent: Shape | undefined,
-        lzData: LzData,
+        // lzData: LzData,
         type: ShapeType,
         name: string,
         id: string,
@@ -652,7 +638,7 @@ export class PathShape extends Shape {
         points: Point[],
         style: Style,
         isClosed?: boolean) {
-        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+        super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_points = points;
         this.m_isClosed = isClosed;
     }
@@ -765,7 +751,7 @@ export class TextShape extends Shape {
     private m_text: Text;
 
     constructor(parent: Shape | undefined,
-        lzData: LzData,
+        // lzData: LzData,
         type: ShapeType,
         name: string,
         id: string,
@@ -774,7 +760,7 @@ export class TextShape extends Shape {
         frame: ShapeFrame,
         style: Style,
         text: Text) {
-        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+        super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_text = text;
     }
 
@@ -813,7 +799,7 @@ export class Symbol extends GroupShape {
     private __symMgr: ISymbolManager;
 
     constructor(parent: Shape | undefined,
-        lzData: LzData,
+        // lzData: LzData,
         type: ShapeType,
         name: string,
         id: string,
@@ -822,7 +808,7 @@ export class Symbol extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         mgr:ISymbolManager) {
-        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+        super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
         this.__symMgr = mgr;
         // this.m_id = id;
         mgr.addSymbol(id, this);
@@ -842,7 +828,7 @@ export class SymbolRef extends Shape {
     private __data?: Symbol;
     constructor(
         parent: Shape | undefined,
-        lzData: LzData,
+        // lzData: LzData,
         type: ShapeType,
         name: string,
         id: string,
@@ -853,7 +839,7 @@ export class SymbolRef extends Shape {
         mgr:ISymbolManager, 
         refId: string, 
         data?: Symbol) {
-        super(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+        super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
         this.__symMgr = mgr;
         this.m_refId = refId;
         this.__data = data;

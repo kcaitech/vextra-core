@@ -128,7 +128,7 @@ function importArtboard(env:Env, type: ShapeType, parent: Shape | undefined, lzD
     const includeBackgroundColorInExport: boolean = data['includeBackgroundColorInExport'];
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
 
-    const shape = new Artboard(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+    const shape = new Artboard(parent, type, name, id, booleanOperation, exportOptions, frame, style);
 
     shape.hasBackgroundColor = hasBackgroundColor;
     shape.includeBackgroundColorInExport = includeBackgroundColorInExport;
@@ -153,7 +153,7 @@ function importGroupShape(env:Env, type: ShapeType, parent: Shape | undefined, l
     const style = importStyle(env, data['style']);
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
-    const shape = new GroupShape(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+    const shape = new GroupShape(parent, type, name, id, booleanOperation, exportOptions, frame, style);
 
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
     shape.appendChilds(childs);
@@ -192,7 +192,7 @@ function importPage(env:Env, type: ShapeType, parent: Shape | undefined, lzData:
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    const shape = new Page(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+    const shape = new Page(parent, type, name, id, booleanOperation, exportOptions, frame, style);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
     shape.appendChilds(childs);
 
@@ -213,7 +213,7 @@ function importPathShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     // const text = data['attributedString'] && importText(data['attributedString']);
     const isClosed = data['isClosed'];
 
-    return new PathShape(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, points, style, isClosed);
+    return new PathShape(parent, type, name, id, booleanOperation, exportOptions, frame, points, style, isClosed);
 }
 
 function importRectShape(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): RectShape {
@@ -230,7 +230,7 @@ function importRectShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    return new RectShape(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style);
+    return new RectShape(parent, type, name, id, booleanOperation, exportOptions, frame, style);
 }
 
 function importTextShape(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): TextShape {
@@ -246,7 +246,7 @@ function importTextShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     const style = importStyle(env, data['style']);
     const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
-    return new TextShape(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style, text);
+    return new TextShape(parent, type, name, id, booleanOperation, exportOptions, frame, style, text);
 }
 
 function importSymbol(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): Symbol {
@@ -263,7 +263,7 @@ function importSymbol(env:Env, type: ShapeType, parent: Shape | undefined, lzDat
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    const shape = new Symbol(parent, lzData, type, name, data['symbolID'], booleanOperation, exportOptions, frame, style, env.symbolManager);
+    const shape = new Symbol(parent, type, name, data['symbolID'], booleanOperation, exportOptions, frame, style, env.symbolManager);
 
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
     shape.appendChilds(childs);
@@ -285,7 +285,7 @@ function importSymbolRef(env:Env, type: ShapeType, parent: Shape | undefined, lz
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    return new SymbolRef(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, style, env.symbolManager, data['symbolID']);
+    return new SymbolRef(parent, type, name, id, booleanOperation, exportOptions, frame, style, env.symbolManager, data['symbolID']);
 }
 
 export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, data: IJSON): Shape {

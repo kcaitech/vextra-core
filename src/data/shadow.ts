@@ -294,7 +294,7 @@ export class ShapeNaviShadow extends Watchable implements IPageShadow {
 
         // insert
         const tar = this.__map.get(target.id);
-        if (!tar) {
+        if (!tar || !tar.__childs) {
             if (node) {
                 this.__map.delete(shape.id);
             }

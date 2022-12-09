@@ -1,6 +1,5 @@
 import { objectId, __objidkey } from '@/basic/objectid';
 import { Notifiable, Watchable } from './basic';
-import { TextAttr } from './text';
 
 export function Atom(target: any) {
     if (target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd) {
@@ -18,6 +17,11 @@ export function AtomGroup(target: any) {
     if (!target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd) {
         target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd = true;
     }
+}
+
+export interface ICMD {
+    exec(): void;
+    unexec(): void;
 }
 
 const isAtom = (obj: any): boolean => obj && obj.__iid_b306492ce7b875cf08e206c4109490aa;
@@ -122,7 +126,8 @@ class GroupHandler {
             if (propertyKey === "length") {
                 if (target.length > value) {
                     for (let i = value, len = target.length; i < len; i++) {
-                        if (!swapCached(this.__context, target, i)) {
+                        const a = target[i];
+                        if (a && !swapCached(this.__context, target, i)) {
                             const r = new Rec(target, i, target[i]);
                             this.__context.transact.push(r);
                         }
@@ -141,8 +146,23 @@ class GroupHandler {
                 if ((propIsInt || propertyKey.toString().startsWith('m_'))) {
                     needNotify = true;
                     if (!swapCached(this.__context, target, propertyKey)) {
+                        const saveLen = target.length;
                         const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
                         this.__context.transact.push(r);
+
+                        const ret = Reflect.set(target, propertyKey, value, receiver);
+                        if (needNotify && target instanceof Notifiable) {
+                            // target.notify();
+                            this.__context.addNotify(target);
+                        }
+                        // length, 设置完数据后array会自动增长长度，绕过了proxy
+                        if (saveLen !== target.length) {
+                            if (!swapCached(this.__context, target, "length")) {
+                                const r = new Rec(target, "length", saveLen);
+                                this.__context.transact.push(r);
+                            }
+                        }
+                        return ret;
                     }
                 }
             }
@@ -161,6 +181,44 @@ class GroupHandler {
             this.__context.addNotify(target);
         }
         return ret;
+    }
+    deleteProperty(target: object, propertyKey: PropertyKey) {
+
+        let needNotify = false;
+        if (this.__context.transact === undefined) {
+            // console.log(target, propertyKey, value, receiver)
+            if (propertyKey.toString().startsWith("__")) {
+                // do nothing
+            } else {
+                throw new Error("NOT inside transact!");
+            }
+        } else if (target instanceof Array) {
+            const propInt: number = Number.parseInt(propertyKey.toString());
+            const propIsInt = Number.isInteger(propInt) && propInt.toString() == propertyKey;
+            if ((propIsInt || propertyKey.toString().startsWith('m_'))) {
+                needNotify = true;
+                if (!swapCached(this.__context, target, propertyKey)) {
+                    const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
+                    this.__context.transact.push(r);
+                }
+                // todo length
+            }
+        }
+        else if (propertyKey.toString().startsWith('m_')) {
+            needNotify = true;
+            if (!swapCached(this.__context, target, propertyKey)) {
+                const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
+                this.__context.transact.push(r);
+            }
+        }
+
+        const result = Reflect.deleteProperty(target, propertyKey);
+        if (needNotify && target instanceof Notifiable) {
+            // target.notify();
+            this.__context.addNotify(target);
+        }
+
+        return result;
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const val = Reflect.get(target, propertyKey, receiver);
@@ -197,7 +255,18 @@ class Rec {
     }
     swap(ctx: TContext) {
         const v = Reflect.get(this.__target, this.__propertyKey)
-        Reflect.set(this.__target, this.__propertyKey, this.__value);
+        if (this.__target instanceof Array && this.__value === undefined && this.__propertyKey) {
+            const propInt: number = Number.parseInt(this.__propertyKey.toString());
+            const propIsInt = Number.isInteger(propInt) && propInt.toString() == this.__propertyKey;
+            if (propIsInt) {
+                // 不影响length
+                Reflect.deleteProperty(this.__target, this.__propertyKey);
+            } else {
+                Reflect.set(this.__target, this.__propertyKey, this.__value);
+            }
+        } else {
+            Reflect.set(this.__target, this.__propertyKey, this.__value);
+        }
         this.__value = v;
         if (this.__target instanceof Notifiable) {
             // this.__target.notify();
@@ -209,20 +278,49 @@ class Rec {
 //     }
 }
 
-class Transact extends Array<Rec> {
+class Transact extends Array<Rec | ICMD> {
     private __name: string;
+    // private __cmds: Array<ICMD> = [];
     constructor(name: string) {
         super();
         this.__name = name;
     }
-    swap(ctx: TContext) {
-        for (let i = this.length - 1; i >= 0; i--) {
-            this[i].swap(ctx);
+    exec(ctx: TContext): void {
+        // throw new Error('Method not implemented.');
+        // this.swap(ctx);
+        for (let i = 0, len = this.length; i < len; i++) {
+            const r = this[i];
+            if (r instanceof Rec) {
+                r.swap(ctx);
+            }
+            else {
+                r.exec();
+            }
         }
     }
-    push(...items: Rec[]): number {
+    unexec(ctx: TContext): void {
+        // throw new Error('Method not implemented.');
+        // this.swap(ctx);
+        for (let i = this.length - 1; i >= 0; i--) {
+            const r = this[i];
+            if (r instanceof Rec) {
+                r.swap(ctx);
+            }
+            else {
+                r.unexec();
+            }
+        }
+    }
+    // swap(ctx: TContext) {
+    //     for (let i = this.length - 1; i >= 0; i--) {
+    //         this[i].swap(ctx);
+    //     }
+    // }
+    push(...items: (Rec | ICMD)[]): number {
         return super.push(...items);
     }
+    // pushCMD(...cmds: ICMD[]): void {
+    // }
 }
 
 export interface ISave4Restore {
@@ -259,7 +357,7 @@ export class Repository extends Watchable {
         }
         this.__index--;
         this.__context.optiNotify = true;
-        this.__trans[this.__index].swap(this.__context);
+        this.__trans[this.__index].unexec(this.__context);
         this.__context.fireNotify();
         this.notify();
     }
@@ -269,7 +367,7 @@ export class Repository extends Watchable {
             return;
         }
         this.__context.optiNotify = true;
-        this.__trans[this.__index].swap(this.__context);
+        this.__trans[this.__index].exec(this.__context);
         this.__index++;
         this.__context.fireNotify();
         this.notify();
@@ -297,6 +395,13 @@ export class Repository extends Watchable {
         this.__context.transact = new Transact(name);
     }
 
+    push(...cmds: ICMD[]): void {
+        if (this.__context.transact === undefined) {
+            throw new Error();
+        }
+        this.__context.transact.push(...cmds);
+    }
+
     /**
      * 
      * @param cmd 最后打包成一个cmd，用于op，也可另外存
@@ -319,7 +424,7 @@ export class Repository extends Watchable {
             throw new Error();
         }
         this.__context.cache.clear();
-        this.__context.transact.swap(this.__context);
+        this.__context.transact.unexec(this.__context);
         this.__context.clearNotify();
     }
 
