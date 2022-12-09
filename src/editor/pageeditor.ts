@@ -29,10 +29,10 @@ class SDCMD implements ICMD {
     private __parent: GroupShape;
     private __idx: number;
     private __shape: Shape;
-    constructor(shadow: IPageShadow, shape: Shape) {
+    constructor(shadow: IPageShadow, shape: Shape, shapeParent: GroupShape, idx: number) {
         this.__shadow = shadow;
-        this.__parent = shape.parent as GroupShape;
-        this.__idx = this.__parent.indexOfChild(shape);
+        this.__parent = shapeParent;
+        this.__idx = idx; // this.__parent.indexOfChild(shape);
         this.__shape = shape;
     }
     exec(): void {
@@ -49,10 +49,10 @@ class SMCMD implements ICMD {
     private __shape: Shape;
     private __taridx: number;
     private __target: GroupShape;
-    constructor(shadow: IPageShadow, shape: Shape, target: GroupShape, index: number) {
+    constructor(shadow: IPageShadow, shape: Shape, shapeParent: GroupShape, idx: number, target: GroupShape, index: number) {
         this.__shadow = shadow;
-        this.__parent = shape.parent as GroupShape;
-        this.__idx = this.__parent.indexOfChild(shape);
+        this.__parent = shapeParent;
+        this.__idx = idx; //this.__parent.indexOfChild(shape);
         this.__shape = shape;
         this.__taridx = index;
         this.__target = target;
@@ -98,10 +98,11 @@ export class PageEditor {
         for (let i = 0, len = shapes.length; i < len; i++) {
             const s = shapes[i];
             const p = s.parent as GroupShape;
+            const idx = p.indexOfChild(s);
             p.removeChild(s);
             gshape.addChild(s);
             this.__shadowDisp.move(s, gshape, i);
-            this.__repo.push(new SMCMD(this.__shadowDisp, s, gshape, i));
+            this.__repo.push(new SMCMD(this.__shadowDisp, s, p, idx, gshape, i));
         }
         this.__repo.commit({});
         return true;
@@ -112,15 +113,17 @@ export class PageEditor {
         let saveidx = savep.indexOfChild(shape);
         for (let len = shape.childsCount; len > 0; len--) {
             const s = shape.getChildByIndex(0);
+            const p = s.parent as GroupShape;
+            const idx = p.indexOfChild(s);
             shape.removeChildAt(s, 0);
             savep.addChildAt(s, saveidx);
             this.__shadowDisp.move(s, savep, saveidx);
-            this.__repo.push(new SMCMD(this.__shadowDisp, s, savep, saveidx));
+            this.__repo.push(new SMCMD(this.__shadowDisp, s, p, idx, savep, saveidx));
             saveidx++;
         }
         savep.removeChild(shape);
         this.__shadowDisp.delete(shape);
-        this.__repo.push(new SDCMD(this.__shadowDisp, shape));
+        this.__repo.push(new SDCMD(this.__shadowDisp, shape, savep, saveidx));
         // todo: update frame
         this.__repo.commit({});
         return true;
