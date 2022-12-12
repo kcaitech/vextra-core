@@ -1,4 +1,4 @@
-import { IBubblable, Notifiable, Watchable } from "./basic";
+import { IBubblable, Notifiable, NotifyArray, Watchable } from "./basic";
 import { LzData } from "./lzdata";
 import { Style, XY } from "./style";
 import { Text } from "./text";
@@ -406,7 +406,7 @@ export class Shape extends Watchable implements IShape, IShapeNode, IBubblable {
 @AtomGroup
 export class GroupShape extends Shape {
 
-    private m_childs: Shape[] = []; // todo: 当数组比较长时，换个实现方式
+    private m_childs: NotifyArray<Shape>; // todo: 当数组比较长时，换个实现方式
     private __treeNodeCount: number = 0;
     // private m_originX: number = 0;
     // private m_originY: number = 0;
@@ -421,6 +421,7 @@ export class GroupShape extends Shape {
         frame: ShapeFrame,
         style: Style) {
             super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
+            this.m_childs = new NotifyArray(this);
         }
 
     // for io init

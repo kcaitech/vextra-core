@@ -28,3 +28,15 @@ export class Watchable extends Notifiable {
         });
     }
 }
+
+export class NotifyArray<T> extends Array<T> implements Notifiable {
+    private __notifyup: Notifiable | undefined;
+    constructor(notifyup?: Notifiable) {
+        super();
+        this.__notifyup = notifyup;
+    }
+    public notify(...args: any[]): void {
+        if (this.__notifyup) this.__notifyup.notify(...args);
+    }
+
+}

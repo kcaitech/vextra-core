@@ -1,5 +1,5 @@
 import { objectId, __objidkey } from '@/basic/objectid';
-import { Notifiable, Watchable } from './basic';
+import { Notifiable, NotifyArray, Watchable } from './basic';
 
 export function Atom(target: any) {
     if (target.prototype.__iid_cdd67eac7c12025695ce30803b43c9cd) {
@@ -151,7 +151,7 @@ class GroupHandler {
                         this.__context.transact.push(r);
 
                         const ret = Reflect.set(target, propertyKey, value, receiver);
-                        if (needNotify && target instanceof Notifiable) {
+                        if (needNotify && (target instanceof Notifiable || target instanceof NotifyArray)) {
                             // target.notify();
                             this.__context.addNotify(target);
                         }
@@ -176,7 +176,7 @@ class GroupHandler {
         }
 
         const ret = Reflect.set(target, propertyKey, value, receiver);
-        if (needNotify && target instanceof Notifiable) {
+        if (needNotify && (target instanceof Notifiable || target instanceof NotifyArray)) {
             // target.notify();
             this.__context.addNotify(target);
         }
@@ -213,7 +213,7 @@ class GroupHandler {
         }
 
         const result = Reflect.deleteProperty(target, propertyKey);
-        if (needNotify && target instanceof Notifiable) {
+        if (needNotify && (target instanceof Notifiable || target instanceof NotifyArray)) {
             // target.notify();
             this.__context.addNotify(target);
         }
@@ -268,18 +268,57 @@ class Rec {
             Reflect.set(this.__target, this.__propertyKey, this.__value);
         }
         this.__value = v;
-        if (this.__target instanceof Notifiable) {
+        if (this.__target instanceof Notifiable || this.__target instanceof NotifyArray) {
             // this.__target.notify();
             ctx.addNotify(this.__target);
         }
     }
-//     get target() {
-//         return this.__target;
-//     }
+    get target() {
+        return this.__target;
+    }
+    get propertyKey() {
+        return this.__propertyKey;
+    }
+}
+
+class ArrayRec extends Rec {
+    private __haslen: boolean = false;
+    private __len: number = 0;
+    private __recs: Array<Rec> = [];
+    constructor(target: object) {
+        super(target, "", "");
+    }
+
+    push(rec: Rec) {
+        if (objectId(rec.target) !== objectId(this.target)) {
+            throw new Error("");
+        }
+        if (this.__recs.length === 0) {
+            this.__len = Reflect.get(rec.target, "length");// (rec.target as Array<any>).length;
+        }
+        if (rec.propertyKey == "length") {
+            this.__haslen = true;
+        }
+        else {
+            this.__recs.push(rec);
+        }
+    }
+
+    swap(ctx: TContext): void {
+        const len = Reflect.get(this.target, "length")
+        for (let i = 0, l = this.__recs.length; i < l; i++) {
+            this.__recs[i].swap(ctx);
+        }
+        if (this.__haslen) {
+            Reflect.set(this.target, "length", this.__len);
+            this.__len = len;
+        }
+    }
 }
 
 class Transact extends Array<Rec | ICMD> {
     private __name: string;
+    private __cache: Map<number, ArrayRec > = new Map();
     // private __cmds: Array<ICMD> = [];
     constructor(name: string) {
         super();
@@ -299,8 +338,18 @@ class Transact extends Array<Rec | ICMD> {
         }
     }
     unexec(ctx: TContext): void {
-        // throw new Error('Method not implemented.');
-        // this.swap(ctx);
+
+        // 数组的操作是操作完[1，2，3]元素后再操作length，
+        // 如果反过来，先操作length再操作元素，会使元素数据丢失
+        // for (let i = 0, len = this.length; i < len; i++) {
+        //     const r = this[i];
+        //     if (r instanceof Rec) {
+        //         r.swap(ctx);
+        //     }
+        //     // else {
+        //     //     r.unexec();
+        //     // }
+        // }
         for (let i = this.length - 1; i >= 0; i--) {
             const r = this[i];
             if (r instanceof Rec) {
@@ -317,7 +366,23 @@ class Transact extends Array<Rec | ICMD> {
     //     }
     // }
     push(...items: (Rec | ICMD)[]): number {
-        return super.push(...items);
+        for (let i = 0, len = items.length; i < len; i++) {
+            const a = items[i];
+            if (a instanceof Rec && a.target instanceof Array) {
+                let arrRec = this.__cache.get(objectId(a.target));
+                if (arrRec === undefined) {
+                    arrRec = new ArrayRec(a.target);
+                    this.__cache.set(objectId(a.target), arrRec);
+                    super.push(arrRec);
+                }
+                arrRec.push(a);
+            }
+            else {
+                super.push(a);
+            }
+        }
+        return this.length;
+        // return super.push(...items);
     }
     // pushCMD(...cmds: ICMD[]): void {
     // }
