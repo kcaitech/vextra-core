@@ -1,10 +1,9 @@
-import { guid } from "@/basic/guid";
-import { BlendMode, BorderOptions, ContextSettings, MarkerType, Style, WindingRule } from "@/data/style";
 import { IPageShadow } from "@/data/ishadow";
-import { Shape, GroupShape, ShapeType, BoolOp, ExportOptions, ShapeFrame } from "@/data/shape";
+import { Shape, GroupShape } from "@/data/shape";
 import { ICMD, Repository } from "@/data/transact";
 import { PageSDisp } from "./sdispatcher";
 import { ShapeEditor } from "./shapeeditor";
+import { Creator } from "./creator";
 
 class SICMD implements ICMD {
     private __shadow: IPageShadow;
@@ -69,9 +68,11 @@ export class PageEditor {
     private __shadows: IPageShadow[];
     private __shadowDisp: PageSDisp;
     private __repo: Repository;
+    private __creator: Creator;
     // private __selection: Selection;
-    constructor(repo: Repository, shadows: IPageShadow[]) {
+    constructor(repo: Repository, creator: Creator, shadows: IPageShadow[]) {
         this.__repo = repo;
+        this.__creator = creator;
         this.__shadows = shadows;
         this.__shadowDisp = new PageSDisp(shadows);
         // this.__selection = selection;
@@ -83,12 +84,7 @@ export class PageEditor {
         const savep = fshape.parent as GroupShape;
         const saveidx = savep.indexOfChild(fshape);
         // 1、新建一个GroupShape
-        const exportOptions = new ExportOptions();
-        const frame = new ShapeFrame(0, 0, 0, 0,); // todo
-        const borderOptions = new BorderOptions();
-        const contextSettings = new ContextSettings(BlendMode.Mode0, 0);
-        const style = new Style(MarkerType.Type0, 0, MarkerType.Type0, WindingRule.Rule0, blur, borderOptions, [], contextSettings, [], [], []);
-        const gshape = new GroupShape(undefined, ShapeType.Group, "group", guid(), BoolOp.None, exportOptions, frame, style);
+        const gshape = this.__creator.newGroupShape();
         // 4、将GroupShape加入到save parent中
         savep.addChildAt(gshape, saveidx);
         this.__shadowDisp.insert(savep, saveidx, gshape);
@@ -159,7 +155,7 @@ export class PageEditor {
         })
         throw new Error("Method not implemented.");
     }
-    editorFor(shape: Shape): ShapeEditor {
+    editor4Shape(shape: Shape): ShapeEditor {
         return new ShapeEditor(shape, this.__repo, this.__shadowDisp);
     }
 }
