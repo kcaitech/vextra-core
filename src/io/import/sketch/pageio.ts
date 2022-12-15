@@ -23,18 +23,18 @@ function updatePageFrame(p: Page) {
         t = Math.min(ct, t);
         r = Math.max(cr, r);
         b = Math.max(cb, b);
-        console.log("c", i, cf)
+        // console.log("c", i, cf)
     }
-    console.log("pf", pf)
-    console.log(l, t, r, b)
+    // console.log("pf", pf)
+    // console.log(l, t, r, b)
     pf.set(pf.x + l, pf.y + t, r - l, b - t);
-    console.log(pf)
+    // console.log(pf)
 
     for (let i = 0; i < cc; i++) {
         const c = p.getChildByIndex(i);
         const cf = c.frame;
         cf.set(cf.x - l, cf.y - t, cf.width, cf.height);
-        console.log("c", i, cf)
+        // console.log("c", i, cf)
     }
 }
 

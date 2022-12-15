@@ -10,6 +10,7 @@ npm config set registry https://registry.npmmirror.com
 sudo npm install -g @vue/cli@5.0.8
 
 npm install
+? 如遇到electron-builder找不到：sudo npm i -g electron-builder
 
 npm run electron:serve
 
@@ -35,3 +36,8 @@ export PYTHON_PATH=/Users/badwin/Documents/****/****/python2-bin/python
 source ~/.zshrc
 再去打包就 ok了
 链接：https://www.jianshu.com/p/496d016ddefb
+
+
+## 服务端
+npm run build-server
+node dist_server/main.js --path ~/Documents/symbol.sketch
