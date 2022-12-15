@@ -47,4 +47,18 @@ export class PageMeta {
 }
 
 @AtomGroup
-export class PagesMeta extends Map<string, PageMeta> {}
+export class PagesMeta extends Array<PageMeta> {
+    private m_map: Map<string, PageMeta> = new Map();
+    constructor(metas:[string, PageMeta][]) {
+        super();
+        for (let i = 0, len = metas.length; i < len; i++) {
+            const a = metas[i];
+            super.push(a[1]);
+            this.m_map.set(...a);
+        }
+    }
+
+    get(id: string): PageMeta | undefined {
+        return this.m_map.get(id);
+    }
+}

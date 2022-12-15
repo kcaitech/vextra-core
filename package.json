@@ -13,10 +13,12 @@
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
-    "test": "jest"
+    "test": "jest",
+    "build-server": "webpack --config server.webpack.config.js"
   },
   "dependencies": {
     "electron-store": "^8.1.0",
+    "express": "^4.18.2",
     "node-stream-zip": "*",
     "skia-canvas": "^0.9.30",
     "vue": "^3.2.13",
@@ -49,6 +51,7 @@
     "typedoc": "^0.22.17",
     "typescript": "~4.5.5",
     "vue-cli-plugin-electron-builder": "~2.1.1",
+    "webpack-cli": "^5.0.1",
     "yarn": "^1.22.19"
   },
   "eslintConfig": {
