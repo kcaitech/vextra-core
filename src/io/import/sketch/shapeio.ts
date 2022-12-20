@@ -13,10 +13,10 @@ import { BoolOp,
     Symbol, 
     SymbolRef, 
     TextShape } from "@/data/shape";
-import { LzData } from '@/data/lzdata';
+import { IJSON, LzData } from '@/data/lzdata';
 import { Color, XY } from "@/data/style";
 import { Env } from "./envio";
-import { importXY, importStyle, IJSON, importColor } from "./styleio";
+import { importXY, importStyle, importColor } from "./styleio";
 import { Page } from "@/data/page";
 import { importText } from "./textio";
 import { Artboard } from "@/data/artboard";

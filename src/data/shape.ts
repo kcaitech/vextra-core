@@ -582,7 +582,7 @@ export class ImageShape extends Shape {
             return this.m_imageData;
         }
         const imageRef = this.m_imageRef;
-        const buffer = await this.m_lzData.load(imageRef);
+        const buffer = await this.m_lzData.loadRaw(imageRef);
 
         const uInt8Array = new Uint8Array(buffer)
         let i = uInt8Array.length;

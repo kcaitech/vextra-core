@@ -1,5 +1,5 @@
 import StreamZip from "node-stream-zip";
-import { LzData } from "@/data/lzdata";
+import { IJSON, LzData } from "@/data/lzdata";
 
 export class LzDataLocal implements LzData {
 	private m_zip: StreamZip;
@@ -12,11 +12,29 @@ export class LzDataLocal implements LzData {
 		this.m_zip.on('error', this._error.bind(this));
 		this.m_zip.on('ready', this._ready.bind(this));
 	}
+    
+    loadRaw(url: string): Promise<Buffer> {
+        return new Promise((resolve, reject) => {
+			const exec = () => {
+				const buffer = (this.m_zip.entryDataSync(url));
+                // const data = JSON.parse(buffer.toString());
+				resolve(buffer);
+			};
+
+			if (this.m_dataReady) {
+				exec();
+			}
+			else {
+				(this.m_waitList || (this.m_waitList = [])).push(exec);
+			}
+		})
+    }
 	
-	load(url: string): Promise<Buffer> {
+	load(url: string): Promise<IJSON> {
 		return new Promise((resolve, reject) => {
 			const exec = () => {
-				const data = (this.m_zip.entryDataSync(url));
+				const buffer = (this.m_zip.entryDataSync(url));
+                const data = JSON.parse(buffer.toString());
 				resolve(data);
 			};
 

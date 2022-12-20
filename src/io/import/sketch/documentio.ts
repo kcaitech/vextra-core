@@ -1,10 +1,9 @@
 import { Document, PagesMgr, SymsMgr } from "@/data/document";
-import { LzData } from '@/data/lzdata';
+import { IJSON, LzData } from '@/data/lzdata';
 import { PagesMeta } from "@/data/meta";
 import { Page } from "@/data/page";
 import { importMeta } from "./metaio";
 import { importPage } from "./pageio";
-import { IJSON } from "./styleio";
 
 export async function importDocument(lzData: LzData) {
     const buffer = await lzData.load('document.json');

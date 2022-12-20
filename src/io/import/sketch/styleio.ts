@@ -16,10 +16,7 @@ import { BlendMode,
     XY} from "@/data/style";
 import { objectId } from "@/basic/objectid";
 import { Env } from "./envio";
-
-export interface IJSON {
-	[key: string]: any
-}
+import { IJSON } from "@/data/lzdata";
 
 export function importColor(data: IJSON): Color {
     // if (!data)

@@ -1,5 +1,6 @@
+import { IJSON } from "@/data/lzdata";
 import { Para, Span, Text } from "@/data/text";
-import { IJSON, importColor } from "./styleio";
+import { importColor } from "./styleio";
 
 export function importText(data:IJSON): Text {
 

@@ -1,5 +1,8 @@
 // LzData
-
+export interface IJSON {
+	[key: string]: any
+}
 export interface LzData {
-	load(url: string): Promise<Buffer>;
+	load(url: string): Promise<IJSON>;
+    loadRaw(url: string): Promise<Buffer>;
 }

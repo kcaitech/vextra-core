@@ -1,0 +1,1 @@
+// users/[uid]/infos.json
