@@ -12,8 +12,10 @@ export class LzDataLocal implements LzData {
 		this.m_zip.on('error', this._error.bind(this));
 		this.m_zip.on('ready', this._ready.bind(this));
 	}
-    
-    loadRaw(url: string): Promise<Buffer> {
+
+    loadRaw(url: string): Promise<Uint8Array> {
+        // todo: url 需要转换
+        url = 'images/' + url;
         return new Promise((resolve, reject) => {
 			const exec = () => {
 				const buffer = (this.m_zip.entryDataSync(url));
@@ -31,6 +33,7 @@ export class LzDataLocal implements LzData {
     }
 	
 	load(url: string): Promise<IJSON> {
+        // todo: url 需要转换
 		return new Promise((resolve, reject) => {
 			const exec = () => {
 				const buffer = (this.m_zip.entryDataSync(url));

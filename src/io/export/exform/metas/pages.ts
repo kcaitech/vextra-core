@@ -1,18 +1,11 @@
 import { Document } from "@/data/document";
 
-export function exportDocument(data: Document) {
-    // export metas
-        // symbol
-        // page
-        // artboard
-    // export pages
-    // export media
-    // export infos?
-
+// id
+// name
+export function exportPagesMeta(data: Document) {
     const pagesMgr = data.pagesMgr;
     const count = pagesMgr.pageCount;
-    let ret = '{'
-    ret += '"pages":['
+    let ret = '['
         for (let i = 0; i < count; i++) {
             const id = pagesMgr.getPageIdByIndex(i);
             const name = pagesMgr.getPageNameById(id);
@@ -23,6 +16,5 @@ export function exportDocument(data: Document) {
                 + '}'
         }
     ret += ']'
-    ret += '}'
     return ret;
 }

@@ -50,9 +50,9 @@ export function importXY(str: string): XY<number, number> {
     return {x, y};
 }
 
-function genGradientId(gradient: Gradient): string {
-    return "gradient" + objectId(gradient);
-}
+// function genGradientId(gradient: Gradient): string {
+//     return "gradient" + objectId(gradient);
+// }
 
 function importGradient(data: IJSON): Gradient {
     const elipseLength: number = data['elipseLength'];

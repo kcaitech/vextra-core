@@ -551,14 +551,21 @@ export class RectShape extends Shape {
     }
 }
 
+export interface IMediaMgr {
+    loadImage(ref: string): Promise<string>;
+    // addRef(ref: string): void;
+}
+
 @AtomGroup
 export class ImageShape extends Shape {
     private m_imageRef: string;
     private m_imageData: string | undefined;
-    private m_lzData: LzData;
+    // private __lzData: LzData;
+    private __imageMgr: IMediaMgr;
 
     constructor(parent: Shape | undefined,
-        lzData: LzData,
+        // lzData: LzData,
+        imageMgr: IMediaMgr,
         type: ShapeType,
         name: string,
         id: string,
@@ -569,7 +576,9 @@ export class ImageShape extends Shape {
         style: Style) {
         super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
         this.m_imageRef = imageRef;
-        this.m_lzData = lzData;
+        // this.__lzData = lzData;
+        this.__imageMgr = imageMgr;
+        // imageMgr.addRef(imageRef);
     }
 
     peekImage(): string | undefined {
@@ -577,42 +586,18 @@ export class ImageShape extends Shape {
     }
 
     // image shape
-    async loadImage(): Promise<string> {
-        if (this.m_imageData) {
-            return this.m_imageData;
-        }
-        const imageRef = this.m_imageRef;
-        const buffer = await this.m_lzData.loadRaw(imageRef);
-
-        const uInt8Array = new Uint8Array(buffer)
-        let i = uInt8Array.length;
-        const binaryString = new Array(i);
-        while (i--) {
-            binaryString[i] = String.fromCharCode(uInt8Array[i]);
-        }
-        const data = binaryString.join('');
-
-        const base64 = window.btoa(data);
-
-        let image = '';
-        const ext = this.imageExt;
-        if (ext == "png") {
-            image = "data:image/png;base64," + base64;
-        }
-        else if (ext == "gif") {
-            image = "data:image/gif;base64," + base64;
-        }
-        else {
-            console.log("imageExt", ext);
-        }
-        this.m_imageData = image;
-        return image;
+    loadImage(): Promise<string> {
+        return this.__imageMgr.loadImage(this.m_imageRef);
     }
 
-    get imageExt() {
-        const imageRef = this.m_imageRef;
-        return imageRef.substring(imageRef.lastIndexOf('.') + 1);
+    get imageRef() {
+        return this.m_imageRef;
     }
+
+    // get imageExt() {
+    //     const imageRef = this.m_imageRef;
+    //     return imageRef.substring(imageRef.lastIndexOf('.') + 1);
+    // }
 
     getPath(offsetX: number, offsetY: number): string;
     getPath(origin?: boolean): string;
@@ -794,16 +779,16 @@ export class TextShape extends Shape {
 // group shape
 // oval shape
 
-export interface ISymbolManager {
-    addSymbol(id: string, data: Symbol): void;
-    deleteSymbol(id: string): void;
+export interface ISymsMgr {
+    // addSymbol(id: string, data: Symbol): void;
+    // deleteSymbol(id: string): void;
     getSymbol(id: string): Promise<Symbol>;
 }
 
 @AtomGroup
 export class Symbol extends GroupShape {
     // private m_id: string;
-    private __symMgr: ISymbolManager;
+    // private __symMgr: ISymsMgr;
 
     constructor(parent: Shape | undefined,
         // lzData: LzData,
@@ -813,24 +798,23 @@ export class Symbol extends GroupShape {
         booleanOperation: BoolOp,
         exportOptions: ExportOptions,
         frame: ShapeFrame,
-        style: Style,
-        mgr:ISymbolManager) {
+        style: Style) {
         super(parent, type, name, id, booleanOperation, exportOptions, frame, style);
-        this.__symMgr = mgr;
+        // this.__symMgr = mgr;
         // this.m_id = id;
-        mgr.addSymbol(id, this);
+        // mgr.addSymbol(id, this);
     }
     // get id() {
     //     return this.m_id;
     // }
-    deleted() {
-        this.__symMgr.deleteSymbol(this.id);
-    }
+    // deleted() {
+    //     this.__symMgr.deleteSymbol(this.id);
+    // }
 }
 
 @AtomGroup
 export class SymbolRef extends Shape {
-    private __symMgr: ISymbolManager;
+    private __symMgr: ISymsMgr;
     private m_refId: string;
     private __data?: Symbol;
     constructor(
@@ -843,7 +827,7 @@ export class SymbolRef extends Shape {
         exportOptions: ExportOptions,
         frame: ShapeFrame,
         style: Style,
-        mgr:ISymbolManager, 
+        mgr:ISymsMgr, 
         refId: string, 
         data?: Symbol) {
         super(parent, type, name, id, booleanOperation, exportOptions, frame, style);

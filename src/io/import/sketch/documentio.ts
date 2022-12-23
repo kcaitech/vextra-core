@@ -1,13 +1,14 @@
-import { Document, PagesMgr, SymsMgr } from "@/data/document";
+import { ArtboardsMgr, Document, MediaMgr, PagesMgr, SymsMgr } from "@/data/document";
 import { IJSON, LzData } from '@/data/lzdata';
-import { PagesMeta } from "@/data/meta";
 import { Page } from "@/data/page";
 import { importMeta } from "./metaio";
 import { importPage } from "./pageio";
 
 export async function importDocument(lzData: LzData) {
-    const buffer = await lzData.load('document.json');
-    const data: IJSON = JSON.parse(buffer.toString());
+    const data: IJSON = await lzData.load('document.json');
+    // const data: IJSON = JSON.parse(buffer.toString());
+
+    // todo
     const pageIds = (data["pages"] || []).map((d: IJSON) => {
         // return d['_ref'] + '.json';
         const ref: string = d['_ref'];
@@ -15,11 +16,13 @@ export async function importDocument(lzData: LzData) {
     });
 
     // todo
-    const meta: PagesMeta = await importMeta(lzData);
+    const meta = await importMeta(lzData, pageIds);
     const symsMgr = new SymsMgr();
-    const pagesMgr = new PagesMgr(pageIds, meta, (id: string): Promise<Page> => {
-        return importPage(lzData, 'pages/'+id+'.json', symsMgr);
+    const mediaMgr = new MediaMgr(lzData);
+    const pagesMgr = new PagesMgr(meta.pagesMeta, (id: string): Promise<Page> => {
+        return importPage(lzData, 'pages/'+id+'.json', symsMgr, mediaMgr);
     });
+    const artMgr = new ArtboardsMgr(meta.artboardsMeta);
 
-    return new Document(data["do_objectID"], meta, symsMgr, pagesMgr);
+    return new Document(data["do_objectID"], symsMgr, pagesMgr, mediaMgr, artMgr);
 }

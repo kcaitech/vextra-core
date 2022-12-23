@@ -170,12 +170,13 @@ function importImage(env:Env, type: ShapeType, parent: Shape | undefined, lzData
     const booleanOperation = importBoolOp(data, type);
     // const points: Point[] = importPoints(data);
     const image = data['image'];
-    const imageRef = image && image['_ref'];
+    const ref = image && image['_ref'] || "";
+    const imageRef = ref.substring(ref.indexOf('/') + 1);
     const style = importStyle(env, data['style']);
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
-
-    return new ImageShape(parent, lzData, type, name, id, booleanOperation, exportOptions, frame, imageRef, style);
+    env.mediaMgr.addRef(imageRef);
+    return new ImageShape(parent, env.mediaMgr, type, name, id, booleanOperation, exportOptions, frame, imageRef, style);
 }
 
 function importPage(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): Page {
@@ -262,8 +263,9 @@ function importSymbol(env:Env, type: ShapeType, parent: Shape | undefined, lzDat
     const style = importStyle(env, data['style']);
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
-
-    const shape = new Symbol(parent, type, name, data['symbolID'], booleanOperation, exportOptions, frame, style, env.symbolManager);
+    const id = data['symbolID'];
+    const shape = new Symbol(parent, type, name, id, booleanOperation, exportOptions, frame, style);
+    env.symbolManager.addSymbol(id, name, env.pageId, shape);
 
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
     shape.appendChilds(childs);
