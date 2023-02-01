@@ -19,6 +19,9 @@
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "palzip": [
+        "src/PAL/zip/browser.ts"
       ]
     },
     "lib": [
