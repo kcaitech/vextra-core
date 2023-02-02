@@ -13,6 +13,7 @@ npm install
 ? 如遇到electron-builder找不到：sudo npm i -g electron-builder
 
 npm run electron:serve
+网页：npm run serve
 
 </br>
 

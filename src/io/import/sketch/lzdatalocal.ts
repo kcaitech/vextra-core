@@ -1,4 +1,4 @@
-import { Zip } from "palzip";
+import { Zip } from "@pal/zip";
 import { IJSON, LzData } from "@/data/lzdata";
 
 export class LzDataLocal implements LzData {
@@ -6,8 +6,8 @@ export class LzDataLocal implements LzData {
 	private m_dataReady: boolean = false;
 	private m_waitList?: Function[];
 
-	constructor(file: File) {
-		this.m_zip = new Zip(file);
+	constructor(file: Zip) {
+		this.m_zip = file;
 
 		this.m_zip.on('error', () => {
 

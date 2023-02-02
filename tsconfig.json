@@ -20,8 +20,8 @@
       "@/*": [
         "src/*"
       ],
-      "palzip": [
-        "src/PAL/zip/browser.ts"
+      "@pal/*": [
+        "src/PAL/browser/*", "src/PAL/nodejs/*"
       ]
     },
     "lib": [
