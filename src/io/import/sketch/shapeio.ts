@@ -9,17 +9,19 @@ import { BoolOp,
     RectShape, 
     Shape, 
     ShapeFrame, 
+    ShapeGroupShape, 
     ShapeType, 
     Symbol, 
     SymbolRef, 
     TextShape } from "@/data/shape";
 import { IJSON, LzData } from '@/data/lzdata';
-import { Color, XY } from "@/data/style";
+import { Color } from "@/data/style";
 import { Env } from "./envio";
 import { importXY, importStyle, importColor } from "./styleio";
 import { Page } from "@/data/page";
 import { importText } from "./textio";
 import { Artboard } from "@/data/artboard";
+import { XY } from "@/data/types";
 
 // function importShapeType(data: IJSON): ShapeType {
 //     switch((data['_class'])) {
@@ -56,34 +58,49 @@ function importShapeFrame(data: IJSON): ShapeFrame {
     return new ShapeFrame(x, y, width, height);
 }
 
+// export declare enum BooleanOperation {
+//     None = -1,
+//     Union = 0,
+//     Subtract = 1,
+//     Intersection = 2,
+//     Difference = 3
+// }
 function importBoolOp(data:IJSON, type: ShapeType): BoolOp {
-    let booleanOperation: BoolOp = ((o: number) => {
+    const booleanOperation: BoolOp = ((o: number) => {
         // if (type === ShapeType.Group) {
         //     o = -1;
         // }
         switch(o) {
             case 0: {
                 // if (type === ShapeType.ShapeGroup)return BoolOp.GroupUnion;
-                if (type === ShapeType.Group) return BoolOp.None;
+                // if (type === ShapeType.Group) return BoolOp.None;
                 return BoolOp.Union;
             }
             case 1: return BoolOp.Sbutract;
             case 2: return BoolOp.Intersect;
             case 3: return BoolOp.Difference;
-            case 4: return BoolOp.SimpleUnion;
+            // case 4: return BoolOp.SimpleUnion;
             default: return BoolOp.None;
         }
     })(data['booleanOperation']);
-    if (type === ShapeType.ShapeGroup && booleanOperation === BoolOp.Union) {
-        booleanOperation = BoolOp.None;
-        (data['layers'] || []).forEach((d:IJSON) => {
-            if (d['booleanOperation'] === -1) {
-                d['booleanOperation'] = 4; // SimpleUnions
-            }
-        })
-    }
+    // if (type === ShapeType.ShapeGroup && booleanOperation === BoolOp.Union) {
+    //     booleanOperation = BoolOp.None;
+    //     (data['layers'] || []).forEach((d:IJSON) => {
+    //         if (d['booleanOperation'] === -1) {
+    //             d['booleanOperation'] = 4; // SimpleUnions
+    //         }
+    //     })
+    // }
     return booleanOperation;
 }
+
+// export declare enum CurveMode {
+//     None = 0,
+//     Straight = 1,
+//     Mirrored = 2,
+//     Asymmetric = 3,
+//     Disconnected = 4
+// }
 
 function importPoints(data:IJSON): Point[] {
     return (data['points'] || []).map((d: IJSON) => {
@@ -94,12 +111,12 @@ function importPoints(data:IJSON): Point[] {
         const curveFrom: XY<number, number> = importXY(d['curveFrom']);
         const curveMode: CurveMode = ((t) => {
             switch(t) {
-                case 0: return CurveMode.Mode0;
-                case 1: return CurveMode.Mode1;
-                case 2: return CurveMode.Mode2;
-                case 3: return CurveMode.Mode3;
-                case 4: return CurveMode.Mode4;
-                default: return CurveMode.Mode0;
+                case 0: return CurveMode.None;
+                case 1: return CurveMode.Straight;
+                case 2: return CurveMode.Mirrored;
+                case 3: return CurveMode.Asymmetric;
+                case 4: return CurveMode.Disconnected;
+                default: return CurveMode.None;
             }
         })(d['curveMode']);
         const curveTo: XY<number, number> = importXY(d['curveTo']);
@@ -154,6 +171,27 @@ function importGroupShape(env:Env, type: ShapeType, parent: Shape | undefined, l
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const shape = new GroupShape(parent, type, name, id, booleanOperation, exportOptions, frame, style);
+
+    const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
+    shape.appendChilds(childs);
+
+    return shape;
+}
+
+function importShapeGroupShape(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): GroupShape {
+    // const type = importShapeType(data);
+    const id: string = data['do_objectID'];
+	const exportOptions = importExportOptions(data);
+    const frame = importShapeFrame(data);
+    const name: string = data['name'];
+    const booleanOperation = importBoolOp(data, type);
+    // const points: Point[] = importPoints(data);
+    // const image = data['image'];
+    // const imageRef = image && image['_ref'];
+    const style = importStyle(env, data['style']);
+    // const text = data['attributedString'] && importText(data['attributedString']);
+    // const isClosed = data['isClosed'];
+    const shape = new ShapeGroupShape(parent, type, name, id, booleanOperation, exportOptions, frame, style);
 
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => importShape(env, shape, lzData, d));
     shape.appendChilds(childs);
@@ -296,7 +334,7 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
         case 'rectangle': 
             return importRectShape(env, ShapeType.Rectangle, parent, lzData, data); // ShapeType.Rectangle;
         case 'shapeGroup':
-            return importGroupShape(env, ShapeType.ShapeGroup, parent, lzData, data); // ShapeType.ShapeGroup;
+            return importShapeGroupShape(env, ShapeType.ShapeGroup, parent, lzData, data); // ShapeType.ShapeGroup;
         case 'group': 
             return importGroupShape(env, ShapeType.Group, parent, lzData, data); // ShapeType.Group;
         case 'shapePath':

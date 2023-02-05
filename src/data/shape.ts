@@ -1,19 +1,20 @@
 import { IBubblable, Notifiable, NotifyArray, Watchable } from "./basic";
-import { LzData } from "./lzdata";
-import { Style, XY } from "./style";
+import { parsePath } from "./pathparser";
+import { Style } from "./style";
 import { Text } from "./text";
-import { Atom, AtomGroup } from "./transact";
+import { AtomGroup } from "./transact";
+import { XY } from "./types";
 
 export enum PointType {
     Type0, // todo
 }
 
 export enum CurveMode {
-    Mode0, // todo 1,2,3,4
-    Mode1,
-    Mode2,
-    Mode3,
-    Mode4,
+    None,
+    Straight,
+    Mirrored,
+    Asymmetric,
+    Disconnected
 }
 
 @AtomGroup
@@ -210,7 +211,7 @@ export enum ShapeType {
 export enum BoolOp {
     None,
     Union,
-    SimpleUnion,
+    // SimpleUnion,
     Sbutract,
     Intersect,
     Difference,
@@ -503,6 +504,21 @@ export class GroupShape extends Shape {
 }
 
 @AtomGroup
+export class ShapeGroupShape extends GroupShape {
+    constructor(parent: Shape | undefined,
+        // lzData: LzData,
+        type: ShapeType,
+        name: string,
+        id: string,
+        booleanOperation: BoolOp,
+        exportOptions: ExportOptions,
+        frame: ShapeFrame,
+        style: Style) {
+            super(parent, type, name, id, booleanOperation, exportOptions, frame, style)
+        }
+}
+
+@AtomGroup
 export class RectShape extends Shape {
     private m_fixedRadius: number;
 
@@ -657,7 +673,10 @@ export class PathShape extends Shape {
         const width = this.frame.width;
         const height = this.frame.height;
 
-        let path = "";
+        let path = ""
+        // 还不确定哪个好点
+        // const path = parsePath(this, this.isClosed, offsetX, offsetY, width, height);
+        // return path;
 
         const bezierCurveTo = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number) => {
             path = path + " C" + x1 + " " + y1 + " " + x2 + " " + y2 + " " + tx + " " + ty;
@@ -733,7 +752,7 @@ export class PathShape extends Shape {
                 closePath();
             }
         }
-
+// console.log(path)
         return path;
     }
 }

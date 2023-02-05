@@ -12,11 +12,10 @@ import { BlendMode,
     MarkerType, 
     Stop, 
     Style, 
-    WindingRule, 
-    XY} from "@/data/style";
-import { objectId } from "@/basic/objectid";
+    WindingRule} from "@/data/style";
 import { Env } from "./envio";
 import { IJSON } from "@/data/lzdata";
+import { XY } from "@/data/types";
 
 export function importColor(data: IJSON): Color {
     // if (!data)

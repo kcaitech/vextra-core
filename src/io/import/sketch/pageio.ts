@@ -41,6 +41,7 @@ function updatePageFrame(p: Page) {
 export async function importPage(lzData:LzData, ref: string, symMgr: SymsMgr, mediaMgr: MediaMgr): Promise<Page> {
     
     const data: IJSON = await lzData.load(ref);
+    Object.freeze(data);
     const id: string = data['do_objectID'];
     const env = new Env(id, symMgr, mediaMgr);
     const page: Page = importShape(env, undefined, lzData, data) as Page;
