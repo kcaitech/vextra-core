@@ -42,39 +42,39 @@ function h(...args: any[]): string {
     }
 }
 
-comsMap.set(ShapeType.Artboard, (data: Shape, bop: BoolOp) => {
-    return art(h, data as Artboard, bop, comsMap);
+comsMap.set(ShapeType.Artboard, (data: Shape) => {
+    return art(h, data as Artboard, comsMap);
 });
-comsMap.set(ShapeType.Group, (data: Shape, bop: BoolOp) => {
-    return group(h, data as GroupShape, bop, comsMap);
+comsMap.set(ShapeType.Group, (data: Shape) => {
+    return group(h, data as GroupShape, comsMap);
 });
-comsMap.set(ShapeType.ShapeGroup, (data: Shape, bop: BoolOp) => {
-    return group(h, data as GroupShape, bop, comsMap);
+comsMap.set(ShapeType.ShapeGroup, (data: Shape) => {
+    return group(h, data as GroupShape, comsMap);
 });
-comsMap.set(ShapeType.Image, (data: Shape, bop: BoolOp) => {
+comsMap.set(ShapeType.Image, (data: Shape) => {
     const s = data as ImageShape;
     const url = s.peekImage() || "";
     return image(h, s, url);
 });
-comsMap.set(ShapeType.Page, (data: Shape, bop: BoolOp) => {
-    return group(h, data as GroupShape, bop, comsMap);
+comsMap.set(ShapeType.Page, (data: Shape) => {
+    return group(h, data as GroupShape, comsMap);
 });
-comsMap.set(ShapeType.Path, (data: Shape, bop: BoolOp) => {
+comsMap.set(ShapeType.Path, (data: Shape) => {
     return path(h, data as PathShape);
 });
-comsMap.set(ShapeType.Rectangle, (data: Shape, bop: BoolOp) => {
+comsMap.set(ShapeType.Rectangle, (data: Shape) => {
     return rect(h, data);
 });
-comsMap.set(ShapeType.Text, (data: Shape, bop: BoolOp) => {
+comsMap.set(ShapeType.Text, (data: Shape) => {
     return text(h, data as TextShape);
 });
-comsMap.set(ShapeType.Boolean, (data: Shape, bop: BoolOp, path: string) => { // todo
+comsMap.set(ShapeType.Boolean, (data: Shape, path: string) => { // todo
     return bool(h, data, path);
 });
-comsMap.set(ShapeType.Symbol, (data: Shape, bop: BoolOp) => {
-    return group(h, data as GroupShape, bop, comsMap);
+comsMap.set(ShapeType.Symbol, (data: Shape) => {
+    return group(h, data as GroupShape, comsMap);
 });
-comsMap.set(ShapeType.SymbolRef, (data: Shape, bop: BoolOp) => {
+comsMap.set(ShapeType.SymbolRef, (data: Shape) => {
     return symref(h, data as SymbolRef, comsMap);
 });
 

@@ -1,4 +1,4 @@
-import { BoolOp, ShapeType, SymbolRef } from "@/data/shape";
+import { ShapeType, SymbolRef } from "@/data/shape";
 import { renderGroupChilds as gR } from "@/render/group";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
@@ -17,7 +17,7 @@ export function render(h: Function, shape: SymbolRef, comsMap: Map<ShapeType, an
     childs.push(...borderR(h, shape, path));
 
     // symbol
-    childs.push(...gR(h, sym, BoolOp.None, comsMap));
+    childs.push(...gR(h, sym, comsMap));
 
     if (childs.length == 0) {
         // todo

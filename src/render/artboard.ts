@@ -2,7 +2,7 @@ import { Artboard } from "@/data/artboard";
 import { BoolOp, ShapeType } from "@/data/shape";
 import { renderGroupChilds as gR } from "@/render/group";
 
-export function render(h: Function, shape: Artboard, bop: BoolOp, comsMap: Map<ShapeType, any>, reflush?: number) {
+export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any>, reflush?: number) {
     // name
     // border
     // background
@@ -22,6 +22,6 @@ export function render(h: Function, shape: Artboard, bop: BoolOp, comsMap: Map<S
     } else {
         childs.push(h("rect", { x: 0, y: 0, width: frame.width, height: frame.height, filter: "url(#artboard-shadow)" }))
     }
-    childs.push(...gR(h, shape, bop, comsMap));
+    childs.push(...gR(h, shape, comsMap));
     return h('g', { transform: 'translate(' + frame.x + ',' + frame.y + ')', class: "artboard", reflush }, childs);
 }

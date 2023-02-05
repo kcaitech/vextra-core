@@ -58,7 +58,7 @@ export function render2path(shape: Shape, offsetX?: number, offsetY?: number, co
     return joinPath;
 }
 
-export function render(h: Function, shape: GroupShape, bop: BoolOp, comsMap: Map<ShapeType, any>, reflush?: number, consumed?: Array<Shape>): any {
+export function render(h: Function, shape: GroupShape, reflush?: number, consumed?: Array<Shape>): any {
     const path = render2path(shape, 0, 0, consumed);
 
     const frame = shape.frame;
