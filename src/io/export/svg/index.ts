@@ -1,7 +1,8 @@
-import { BoolOp, GroupShape, ImageShape, PathShape, Shape, ShapeType, SymbolRef, TextShape } from "@/data/shape";
+import { BoolOp, GroupShape, ImageShape, PathShape, Shape, ShapeGroupShape, ShapeType, SymbolRef, TextShape } from "@/data/shape";
 import { Artboard } from "@/data/artboard";
 import { render as art } from "@/render/artboard";
 import { render as group } from "@/render/group";
+import { render as shapegroup } from "@/render/shapegroup";
 import { render as image } from "@/render/image";
 import { render as path } from "@/render/pathshape";
 import { render as rect } from "@/render/rectangle";
@@ -49,7 +50,7 @@ comsMap.set(ShapeType.Group, (data: Shape) => {
     return group(h, data as GroupShape, comsMap);
 });
 comsMap.set(ShapeType.ShapeGroup, (data: Shape) => {
-    return group(h, data as GroupShape, comsMap);
+    return shapegroup(h, data as ShapeGroupShape);
 });
 comsMap.set(ShapeType.Image, (data: Shape) => {
     const s = data as ImageShape;

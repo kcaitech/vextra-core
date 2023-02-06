@@ -139,9 +139,9 @@ export class SymsMgr extends Watchable implements ISymsMgr {
 // "_ref": "images\/ae3909b2d282c78d2261e74a4738d64b8a51e4ab.png"
 @AtomGroup
 export class MediaMgr extends Watchable implements IMediaMgr {
-    // private m_buffers: Map<string, Buffer> = new Map();
-    private m_refs: Set<string> = new Set();
-    private m_medias: Map<string, {url?: string, buffer: Uint8Array}> = new Map();
+    // 缓存在lazy加载页面时会写入数据，不能记入到事务中
+    private __refs: Set<string> = new Set();
+    private __medias: Map<string, {url?: string, buffer: Uint8Array}> = new Map();
     private __lzData: LzData;
 
     constructor(lzData: LzData) {
@@ -150,7 +150,7 @@ export class MediaMgr extends Watchable implements IMediaMgr {
     }
 
     addRef(ref: string) {
-        this.m_refs.add(ref);
+        this.__refs.add(ref);
     }
 
     /*
@@ -170,20 +170,20 @@ function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
      */
 
     async loadRaw(ref: string): Promise<Uint8Array> {
-        const media = this.m_medias.get(ref);
+        const media = this.__medias.get(ref);
         if (media) {
             return media.buffer;
         }
         const buffer = await this.__lzData.loadRaw(ref);
         if (buffer) {
-            this.m_medias.set(ref, {buffer});
-            this.m_refs.add(ref);
+            this.__medias.set(ref, {buffer});
+            this.__refs.add(ref);
         }
         return buffer;
     }
 
     async loadImage(ref: string): Promise<string> {
-        const media = this.m_medias.get(ref);
+        const media = this.__medias.get(ref);
         if (media && media.url) {
             return media.url;
         }
@@ -216,8 +216,8 @@ function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
             console.log("imageExt", ext);
         }
 
-        this.m_medias.set(ref, {url, buffer});
-        this.m_refs.add(ref);
+        this.__medias.set(ref, {url, buffer});
+        this.__refs.add(ref);
         return url;
     }
 }
