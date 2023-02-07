@@ -11,7 +11,7 @@ handler[FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, 
     const frame = shape.frame;
     return h("path", {
         d: path,
-        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")",
+        fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
         "fill-opacity": color ? color.alpha : 1,
         stroke: 'none',
         'stroke-width': 0,
