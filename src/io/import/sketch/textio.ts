@@ -54,12 +54,14 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
                 attrIdx = attrIdx + 1;
             }
 
-            const pAttr = attrAttr["paragraphStyle"];
-            paraAttr.paragraphSpacing = pAttr["paragraphSpacing"] || 0;
-            paraAttr.alignment = importHorzAlignment(pAttr["alignment"]);
-            paraAttr.allowsDefaultTighteningForTruncation = pAttr["allowsDefaultTighteningForTruncation"] || 0;
-            paraAttr.maximumLineHeight = pAttr["maximumLineHeight"] || Number.MAX_VALUE;
-            paraAttr.minimumLineHeight = pAttr["minimumLineHeight"] || 0;
+            const pAttr = attrAttr && attrAttr["paragraphStyle"];
+            if (pAttr) {
+                paraAttr.paragraphSpacing = pAttr["paragraphSpacing"] || 0;
+                paraAttr.alignment = importHorzAlignment(pAttr["alignment"]);
+                paraAttr.allowsDefaultTighteningForTruncation = pAttr["allowsDefaultTighteningForTruncation"] || 0;
+                paraAttr.maximumLineHeight = pAttr["maximumLineHeight"] || Number.MAX_VALUE;
+                paraAttr.minimumLineHeight = pAttr["minimumLineHeight"] || 0;
+            }
         }
 
         index = end;
@@ -71,10 +73,12 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
         const styAttr = textStyle['encodedAttributes'];
         const styParaAttr = styAttr['paragraphStyle'];
         defaultAttr.verticalAlignment = importVertAlignment(textStyle['verticalAlignment']);
-        defaultAttr.alignment = importHorzAlignment(styParaAttr['alignment']);
-        defaultAttr.allowsDefaultTighteningForTruncation = styParaAttr['allowsDefaultTighteningForTruncation'];
-        defaultAttr.minimumLineHeight = styParaAttr['minimumLineHeight'];
-        defaultAttr.maximumLineHeight = styParaAttr['maximumLineHeight'];
+        if (styParaAttr) {
+            defaultAttr.alignment = importHorzAlignment(styParaAttr['alignment']);
+            defaultAttr.allowsDefaultTighteningForTruncation = styParaAttr['allowsDefaultTighteningForTruncation'];
+            defaultAttr.minimumLineHeight = styParaAttr['minimumLineHeight'];
+            defaultAttr.maximumLineHeight = styParaAttr['maximumLineHeight'];
+        }
         // const font:IJSON = styAttr['MSAttributedStringFontAttribute'] && styAttr['MSAttributedStringFontAttribute']['attributes'];
         // const color:IJSON = styAttr['MSAttributedStringColorAttribute'];
         // defaultAttr.fontName = font['name'];
