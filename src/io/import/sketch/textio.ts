@@ -1,15 +1,27 @@
 import { IJSON } from "@/data/lzdata";
-import { Para, Span, Text } from "@/data/text";
+import { Para, ParaAttr, Span, Text, TextAttr, TextHorizontalAlignment, TextVerticalAlignment } from "@/data/text";
 import { importColor } from "./styleio";
 
-export function importText(data:IJSON): Text {
+function importHorzAlignment(align: number) {
+    return [TextHorizontalAlignment.Left, 
+        TextHorizontalAlignment.Right, 
+        TextHorizontalAlignment.Centered, 
+        TextHorizontalAlignment.Justified, 
+        TextHorizontalAlignment.Natural][align] ?? TextHorizontalAlignment.Left;
+}
+function importVertAlignment(align: number) {
+    return [TextVerticalAlignment.Top, 
+        TextVerticalAlignment.Middle, 
+        TextVerticalAlignment.Bottom][align] ?? TextVerticalAlignment.Top;
+}
+
+export function importText(data:IJSON, textStyle:IJSON): Text {
 
     let text: string = data["string"] || "";
     if (text[text.length - 1] != '\n') {
         text = text + "\n"; // attr也要修正
     }
     let index = 0;
-    let defaultAttr; // todo
     const attributes = data["attributes"] || [];
     const paras: Para[] = [];
 
@@ -19,7 +31,7 @@ export function importText(data:IJSON): Text {
 
         const end = text.indexOf('\n', index) + 1;
         const ptext = text.substring(index, end);
-        let paraAttr; // todo
+        const paraAttr: ParaAttr = new ParaAttr(); // todo
         const spans: Span[] = [];
 
         let spanIndex = index;
@@ -41,10 +53,31 @@ export function importText(data:IJSON): Text {
             if (spanIndex >= location + length) {
                 attrIdx = attrIdx + 1;
             }
+
+            const pAttr = attrAttr["paragraphStyle"];
+            paraAttr.paragraphSpacing = pAttr["paragraphSpacing"] || 0;
+            paraAttr.alignment = importHorzAlignment(pAttr["alignment"]);
+            paraAttr.allowsDefaultTighteningForTruncation = pAttr["allowsDefaultTighteningForTruncation"] || 0;
+            paraAttr.maximumLineHeight = pAttr["maximumLineHeight"] || Number.MAX_VALUE;
+            paraAttr.minimumLineHeight = pAttr["minimumLineHeight"] || 0;
         }
 
         index = end;
         paras.push(new Para(ptext, spans, paraAttr));
+    }
+
+    const defaultAttr: TextAttr = new TextAttr();
+    if (textStyle) {
+        const styAttr = textStyle['encodedAttributes'];
+        const styParaAttr = styAttr['paragraphStyle'];
+        defaultAttr.verticalAlignment = importVertAlignment(textStyle['verticalAlignment']);
+        defaultAttr.alignment = importHorzAlignment(styParaAttr['alignment']);
+        defaultAttr.allowsDefaultTighteningForTruncation = styParaAttr['allowsDefaultTighteningForTruncation'];
+        defaultAttr.minimumLineHeight = styParaAttr['minimumLineHeight'];
+        defaultAttr.maximumLineHeight = styParaAttr['maximumLineHeight'];
+        // const font:IJSON = styAttr['MSAttributedStringFontAttribute'] && styAttr['MSAttributedStringFontAttribute']['attributes'];
+        // const color:IJSON = styAttr['MSAttributedStringColorAttribute'];
+        // defaultAttr.fontName = font['name'];
     }
 
     return new Text(paras, defaultAttr);

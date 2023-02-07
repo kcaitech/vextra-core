@@ -23,26 +23,6 @@ import { importText } from "./textio";
 import { Artboard } from "@/data/artboard";
 import { XY } from "@/data/types";
 
-// function importShapeType(data: IJSON): ShapeType {
-//     switch((data['_class'])) {
-//         case 'rectangle': return ShapeType.Rectangle;
-//         case 'shapeGroup': return ShapeType.ShapeGroup;
-//         case 'group': return ShapeType.Group;
-//         case 'shapePath': return ShapeType.Path;
-//         case 'artboard': return ShapeType.Artboard;
-//         case 'bitmap': return ShapeType.Image;
-//         case 'page': return ShapeType.Page;
-//         case 'text': return ShapeType.Text;
-//         case 'oval':
-//         case 'star':
-//         case 'triangle':
-//         case 'polygon': return ShapeType.Path;
-//         case 'symbolMaster': return ShapeType.Symbol;
-//         case 'symbolInstance': return ShapeType.SymbolRef;
-//         default: return ShapeType.Rectangle;
-//     }
-// }
-
 function importExportOptions(data: IJSON): ExportOptions {
     return ((d) => {
         return new ExportOptions(); // todo
@@ -58,49 +38,9 @@ function importShapeFrame(data: IJSON): ShapeFrame {
     return new ShapeFrame(x, y, width, height);
 }
 
-// export declare enum BooleanOperation {
-//     None = -1,
-//     Union = 0,
-//     Subtract = 1,
-//     Intersection = 2,
-//     Difference = 3
-// }
 function importBoolOp(data:IJSON, type: ShapeType): BoolOp {
-    const booleanOperation: BoolOp = ((o: number) => {
-        // if (type === ShapeType.Group) {
-        //     o = -1;
-        // }
-        switch(o) {
-            case 0: {
-                // if (type === ShapeType.ShapeGroup)return BoolOp.GroupUnion;
-                // if (type === ShapeType.Group) return BoolOp.None;
-                return BoolOp.Union;
-            }
-            case 1: return BoolOp.Sbutract;
-            case 2: return BoolOp.Intersect;
-            case 3: return BoolOp.Difference;
-            // case 4: return BoolOp.SimpleUnion;
-            default: return BoolOp.None;
-        }
-    })(data['booleanOperation']);
-    // if (type === ShapeType.ShapeGroup && booleanOperation === BoolOp.Union) {
-    //     booleanOperation = BoolOp.None;
-    //     (data['layers'] || []).forEach((d:IJSON) => {
-    //         if (d['booleanOperation'] === -1) {
-    //             d['booleanOperation'] = 4; // SimpleUnions
-    //         }
-    //     })
-    // }
-    return booleanOperation;
+    return [BoolOp.Union, BoolOp.Sbutract, BoolOp.Intersect, BoolOp.Difference][data['booleanOperation']] ?? BoolOp.None;
 }
-
-// export declare enum CurveMode {
-//     None = 0,
-//     Straight = 1,
-//     Mirrored = 2,
-//     Asymmetric = 3,
-//     Disconnected = 4
-// }
 
 function importPoints(data:IJSON): Point[] {
     return (data['points'] || []).map((d: IJSON) => {
@@ -110,14 +50,7 @@ function importPoints(data:IJSON): Point[] {
         const cornerRadius: number = d['cornerRadius'];
         const curveFrom: XY<number, number> = importXY(d['curveFrom']);
         const curveMode: CurveMode = ((t) => {
-            switch(t) {
-                case 0: return CurveMode.None;
-                case 1: return CurveMode.Straight;
-                case 2: return CurveMode.Mirrored;
-                case 3: return CurveMode.Asymmetric;
-                case 4: return CurveMode.Disconnected;
-                default: return CurveMode.None;
-            }
+            return [CurveMode.None, CurveMode.Straight, CurveMode.Mirrored, CurveMode.Asymmetric, CurveMode.Disconnected][t] ?? CurveMode.None;
         })(d['curveMode']);
         const curveTo: XY<number, number> = importXY(d['curveTo']);
         const hasCurveFrom: boolean = d['hasCurveFrom'];
@@ -283,7 +216,8 @@ function importTextShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
-    const text = data['attributedString'] && importText(data['attributedString']);
+    const textStyle = data['style'] && data['style']['textStyle'];
+    const text = data['attributedString'] && importText(data['attributedString'], textStyle);
     // const isClosed = data['isClosed'];
     return new TextShape(parent, type, name, id, booleanOperation, exportOptions, frame, style, text);
 }

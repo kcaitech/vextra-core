@@ -1,6 +1,20 @@
 import { Color } from "./style";
 import { AtomGroup } from "./transact";
 
+export enum TextVerticalAlignment {
+    Top, // = 0,
+    Middle, // = 1,
+    Bottom, // = 2
+}
+
+export enum TextHorizontalAlignment {
+    Left, // = 0,
+    Right, // = 1,
+    Centered, // = 2,
+    Justified, // = 3,
+    Natural, // = 4
+}
+
 @AtomGroup
 export class SpanAttr {
     private m_fontName?: string;
@@ -37,9 +51,11 @@ export class Span extends SpanAttr {
 
 @AtomGroup
 export class ParaAttr extends SpanAttr {
-    private m_alignment: number = 0;
+    private m_alignment: TextHorizontalAlignment = TextHorizontalAlignment.Left;
     private m_paragraphSpacing: number = 0;
     private m_allowsDefaultTighteningForTruncation: boolean = false;
+    private m_minimumLineHeight: number = 0;
+    private m_maximumLineHeight: number = Number.MAX_VALUE;
 
     get alignment(): number {
         return this.m_alignment;
@@ -58,6 +74,18 @@ export class ParaAttr extends SpanAttr {
     }
     set allowsDefaultTighteningForTruncation(a: boolean) {
         this.m_allowsDefaultTighteningForTruncation = a;
+    }
+    get minimumLineHeight() {
+        return this.m_minimumLineHeight;
+    }
+    set minimumLineHeight(v: number) {
+        this.m_minimumLineHeight = v;
+    }
+    get maximumLineHeight() {
+        return this.m_maximumLineHeight;
+    }
+    set maximumLineHeight(v: number) {
+        this.m_maximumLineHeight = v;
     }
 }
 
@@ -93,8 +121,14 @@ export class Para {
 export class TextAttr extends ParaAttr {
     private m_kerning: number = 0;
     private m_textStyleVerticalAlignmentKey: number = 0;
-    private m_verticalAlignment: number = 0; // 上中下
+    private m_verticalAlignment: TextVerticalAlignment = TextVerticalAlignment.Top; // 上中下
     private m_orientation: number = 0;
+
+    // "automaticallyDrawOnUnderlyingPath": false,
+    // "dontSynchroniseWithSymbol": false,
+    // "glyphBounds": "{{0, 4}, {246, 18}}",
+    // "lineSpacingBehaviour": 2,
+    // "textBehaviour": 0
 
     get kerning(): number {
         return this.m_kerning;
