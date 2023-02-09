@@ -22,6 +22,7 @@ import { Page } from "@/data/page";
 import { importText } from "./textio";
 import { Artboard } from "@/data/artboard";
 import { XY } from "@/data/types";
+import { TextBehaviour, Text } from "@/data/text";
 
 function importExportOptions(data: IJSON): ExportOptions {
     return ((d) => {
@@ -217,7 +218,9 @@ function importTextShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
     const textStyle = data['style'] && data['style']['textStyle'];
-    const text = data['attributedString'] && importText(data['attributedString'], textStyle);
+    const text: Text = data['attributedString'] && importText(data['attributedString'], textStyle);
+    const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixedWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
+    text.attr && (text.attr.textBehaviour = textBehaviour);
     // const isClosed = data['isClosed'];
     return new TextShape(parent, type, name, id, booleanOperation, exportOptions, frame, style, text);
 }

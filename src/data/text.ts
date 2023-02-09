@@ -15,6 +15,12 @@ export enum TextHorizontalAlignment {
     Natural, // = 4
 }
 
+export enum TextBehaviour {
+    Flexible, // = 0,
+    Fixed, // = 1,
+    FixedWidthAndHeight, // = 2
+}
+
 @AtomGroup
 export class SpanAttr {
     private m_fontName?: string;
@@ -56,6 +62,7 @@ export class ParaAttr extends SpanAttr {
     private m_allowsDefaultTighteningForTruncation: boolean = false;
     private m_minimumLineHeight: number = 0;
     private m_maximumLineHeight: number = Number.MAX_VALUE;
+    private m_kerning: number = 0;
 
     get alignment(): number {
         return this.m_alignment;
@@ -87,6 +94,12 @@ export class ParaAttr extends SpanAttr {
     set maximumLineHeight(v: number) {
         this.m_maximumLineHeight = v;
     }
+    get kerning(): number {
+        return this.m_kerning;
+    }
+    set kerning(a: number) {
+        this.m_kerning = a;
+    }
 }
 
 @AtomGroup
@@ -103,7 +116,7 @@ export class Para {
     get length() {
         return this.m_text.length;
     }
-    get defaultAttr() {
+    get attr() {
         return this.m_attr;
     }
     get text() {
@@ -119,10 +132,11 @@ export class Para {
 
 @AtomGroup
 export class TextAttr extends ParaAttr {
-    private m_kerning: number = 0;
+    // private m_kerning: number = 0;
     private m_textStyleVerticalAlignmentKey: number = 0;
     private m_verticalAlignment: TextVerticalAlignment = TextVerticalAlignment.Top; // 上中下
     private m_orientation: number = 0;
+    private m_textBehaviour: TextBehaviour = TextBehaviour.Flexible;
 
     // "automaticallyDrawOnUnderlyingPath": false,
     // "dontSynchroniseWithSymbol": false,
@@ -130,12 +144,12 @@ export class TextAttr extends ParaAttr {
     // "lineSpacingBehaviour": 2,
     // "textBehaviour": 0
 
-    get kerning(): number {
-        return this.m_kerning;
-    }
-    set kerning(k: number) {
-        this.m_kerning = k;
-    }
+    // get kerning(): number {
+    //     return this.m_kerning;
+    // }
+    // set kerning(k: number) {
+    //     this.m_kerning = k;
+    // }
     get textStyleVerticalAlignmentKey(): number {
         return this.m_textStyleVerticalAlignmentKey;
     }
@@ -154,6 +168,12 @@ export class TextAttr extends ParaAttr {
     set orientation(o: number) {
         this.m_orientation = o;
     }
+    get textBehaviour(): TextBehaviour {
+        return this.m_textBehaviour;
+    }
+    set textBehaviour(b: TextBehaviour) {
+        this.m_textBehaviour = b;
+    }
 }
 
 @AtomGroup
@@ -161,9 +181,9 @@ export class Text {
     private m_paras: Para[];
     private m_attr?: TextAttr;
 
-    constructor(paras: Para[], defaultAttr?: TextAttr) {
+    constructor(paras: Para[], attr?: TextAttr) {
         this.m_paras = paras;
-        this.m_attr = defaultAttr;
+        this.m_attr = attr;
     }
     get paraCount(): number {
         return this.m_paras.length;
@@ -171,7 +191,7 @@ export class Text {
     getParaByIndex(index: number) {
         return this.m_paras[index];
     }
-    get defaultAttr() {
+    get attr() {
         return this.m_attr;
     }
 }

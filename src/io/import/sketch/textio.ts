@@ -42,6 +42,8 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
             const attrAttr = attr['attributes'];
             const font:IJSON = attrAttr && attrAttr['MSAttributedStringFontAttribute'] && attrAttr['MSAttributedStringFontAttribute']['attributes'];
             const color:IJSON = attrAttr && attrAttr['MSAttributedStringColorAttribute'];
+            const kerning = attrAttr && attrAttr['kerning'];
+
             let len = Math.min(location + length - spanIndex, end - spanIndex);
 
             if (attrIdx == attributes.length - 1) {
@@ -61,6 +63,7 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
                 paraAttr.allowsDefaultTighteningForTruncation = pAttr["allowsDefaultTighteningForTruncation"] || 0;
                 paraAttr.maximumLineHeight = pAttr["maximumLineHeight"] || Number.MAX_VALUE;
                 paraAttr.minimumLineHeight = pAttr["minimumLineHeight"] || 0;
+                paraAttr.kerning = kerning || 0;
             }
         }
 
@@ -68,21 +71,21 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
         paras.push(new Para(ptext, spans, paraAttr));
     }
 
-    const defaultAttr: TextAttr = new TextAttr();
+    const textAttr: TextAttr = new TextAttr();
     if (textStyle) {
         const styAttr = textStyle['encodedAttributes'];
         const styParaAttr = styAttr['paragraphStyle'];
-        defaultAttr.verticalAlignment = importVertAlignment(textStyle['verticalAlignment']);
+        textAttr.verticalAlignment = importVertAlignment(textStyle['verticalAlignment']);
         if (styParaAttr) {
-            defaultAttr.alignment = importHorzAlignment(styParaAttr['alignment']);
-            defaultAttr.allowsDefaultTighteningForTruncation = styParaAttr['allowsDefaultTighteningForTruncation'];
-            defaultAttr.minimumLineHeight = styParaAttr['minimumLineHeight'];
-            defaultAttr.maximumLineHeight = styParaAttr['maximumLineHeight'];
+            textAttr.alignment = importHorzAlignment(styParaAttr['alignment']);
+            textAttr.allowsDefaultTighteningForTruncation = styParaAttr['allowsDefaultTighteningForTruncation'];
+            textAttr.minimumLineHeight = styParaAttr['minimumLineHeight'];
+            textAttr.maximumLineHeight = styParaAttr['maximumLineHeight'];
         }
         // const font:IJSON = styAttr['MSAttributedStringFontAttribute'] && styAttr['MSAttributedStringFontAttribute']['attributes'];
         // const color:IJSON = styAttr['MSAttributedStringColorAttribute'];
         // defaultAttr.fontName = font['name'];
     }
 
-    return new Text(paras, defaultAttr);
+    return new Text(paras, textAttr);
 }
