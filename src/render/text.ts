@@ -28,7 +28,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
 
     for (let i = 0; i < pc; i++) {
         const para = text.getParaByIndex(i);
-        const layouts = layoutPara(para, shape, layoutWidth);
+        const layouts = layoutPara(para, layoutWidth);
         const pAttr = para.attr;
 
         for (let lineIndex = 0, lineCount = layouts.length; lineIndex < lineCount; lineIndex++) {
@@ -46,20 +46,20 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
             for (let garrIdx = 0, garrCount = line.length; garrIdx < garrCount; garrIdx++) {
                 const gText = []
                 const gX = []
-                const gY = []
+                // const gY = []
                 const garr = line[garrIdx];
 
                 for (let gIdx = 0, gCount = garr.length; gIdx < gCount; gIdx++) {
                     const graph = garr[gIdx];
                     gText.push(graph.char);
                     gX.push(graph.x);
-                    gY.push(y);
+                    // gY.push(y);
                 }
 
                 const span = garr.attr;
 
                 const font = "normal " + (span?.fontSize || 0) + "px " + (span?.fontName);
-                childs.push(h('text', { x: gX.join(' '), y: gY.join(' '), style: { fill: span?.color?.toRGBA(), font, 'alignment-baseline': 'middle' } }, gText.join('')));
+                childs.push(h('text', { x: gX.join(' '), y, style: { fill: span?.color?.toRGBA(), font, 'alignment-baseline': 'middle' } }, gText.join('')));
             }
 
             y = y + halfLH;
