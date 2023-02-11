@@ -6,15 +6,16 @@
   "author": "QIANG",
   "main": "background.js",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
-    "electron:build": "vue-cli-service electron:build",
-    "electron:serve": "vue-cli-service electron:serve",
+    "dev:web": "vue-cli-service serve",
+    "build:web": "vue-cli-service build",
+    "dev:electron": "vue-cli-service electron:serve",
+    "build:electron": "vue-cli-service electron:build",
+    "dev:server": "webpack --config ./webpack.config.js",
+    "build:server": "webpack --config ./webpack.config.js",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
-    "test": "jest",
-    "build-server": "webpack --config server.webpack.config.js"
+    "lint": "vue-cli-service lint",
+    "test": "jest"
   },
   "dependencies": {
     "canvaskit-wasm": "^0.38.0",
