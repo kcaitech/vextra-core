@@ -4,13 +4,14 @@
 
 ## 修改npm源
 npm config set registry https://registry.npmmirror.com
- > restore: https://registry.npmjs.com
+--> restore: https://registry.npmjs.com
 
 ## 开始, 是否不用-g也行？
 sudo npm install -g @vue/cli@5.0.8
 
 npm install
-? 如遇到electron-builder找不到：sudo npm i -g electron-builder
+npm run install-electron-deps
+--> 如遇到electron-builder找不到：sudo npm i -g electron-builder
 
 npm run electron:serve
 网页：npm run serve
@@ -42,3 +43,5 @@ source ~/.zshrc
 ## 服务端
 npm run build-server
 node dist_server/main.js --path ~/Documents/symbol.sketch
+### docker
+--> docker run -d -v ~/Documents/:/usr/share/docs -p 8000:8000  sktest/server /usr/share/docs/symbol.sketch

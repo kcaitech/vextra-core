@@ -8,18 +8,16 @@
   "scripts": {
     "dev:web": "vue-cli-service serve",
     "build:web": "vue-cli-service build",
+    "install-electron-deps": "electron-builder install-app-deps",
     "dev:electron": "vue-cli-service electron:serve",
     "build:electron": "vue-cli-service electron:build",
     "dev:server": "webpack --config ./webpack.config.js",
-    "build:server": "webpack --config ./webpack.config.js",
-    "postinstall": "electron-builder install-app-deps",
-    "postuninstall": "electron-builder install-app-deps",
+    "build:server": "cross-env NODE_ENV='production' webpack --config ./webpack.config.js",
     "lint": "vue-cli-service lint",
     "test": "jest"
   },
   "dependencies": {
     "canvaskit-wasm": "^0.38.0",
-    "electron-store": "^8.1.0",
     "express": "^4.18.2",
     "express-ws": "^5.0.2",
     "jszip": "^3.10.1",
@@ -46,6 +44,7 @@
     "@vue/eslint-config-typescript": "^9.1.0",
     "@vue/test-utils": "^2.0.0",
     "chai": "^4.3.6",
+    "cross-env": "^7.0.3",
     "electron": "^20.0.0",
     "electron-devtools-installer": "^3.1.0",
     "eslint": "^7.32.0",
