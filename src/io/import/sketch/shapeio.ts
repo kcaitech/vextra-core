@@ -61,6 +61,23 @@ function importPoints(data:IJSON): Point[] {
     });
 }
 
+function importOverrides(shape: SymbolRef, data: IJSON[]) {
+    // console.log(data)
+    for (let i = 0, len = data.length; i < len; i++) {
+        const override = data[i];
+        // "0E2D5DC1-524E-4198-AA15-E88DC8C4A8C0_stringValue" -> string
+        // "1F0F8091-1390-46BB-B3B2-BF697DF68454_layerStyle" -> sharedStyleID
+        const name = override['overrideName'];
+        // "2A327495-1793-4570-BC24-1429F142D09C"
+        const value = override['value'];
+        const _idx = name.indexOf('_');
+        const id = name.substring(0, _idx);
+        const attr = name.substring(_idx + 1);
+
+        shape.addOverrid(id, attr, value);
+    }
+}
+
 function importArtboard(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): Artboard {
     // const type = importShapeType(data);
     const id: string = data['do_objectID'];
@@ -72,6 +89,9 @@ function importArtboard(env:Env, type: ShapeType, parent: Shape | undefined, lzD
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
+    if (data['sharedStyleID']) {
+        env.styleMgr.addShared(data['sharedStyleID'], style);
+    }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
@@ -102,6 +122,9 @@ function importGroupShape(env:Env, type: ShapeType, parent: Shape | undefined, l
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
+    if (data['sharedStyleID']) {
+        env.styleMgr.addShared(data['sharedStyleID'], style);
+    }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const shape = new GroupShape(parent, type, name, id, booleanOperation, exportOptions, frame, style);
@@ -123,6 +146,9 @@ function importShapeGroupShape(env:Env, type: ShapeType, parent: Shape | undefin
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
+    if (data['sharedStyleID']) {
+        env.styleMgr.addShared(data['sharedStyleID'], style);
+    }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const shape = new ShapeGroupShape(parent, type, name, id, booleanOperation, exportOptions, frame, style);
@@ -145,6 +171,9 @@ function importImage(env:Env, type: ShapeType, parent: Shape | undefined, lzData
     const ref = image && image['_ref'] || "";
     const imageRef = ref.substring(ref.indexOf('/') + 1);
     const style = importStyle(env, data['style']);
+    if (data['sharedStyleID']) {
+        env.styleMgr.addShared(data['sharedStyleID'], style);
+    }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     env.mediaMgr.addRef(imageRef);
@@ -162,6 +191,9 @@ function importPage(env:Env, type: ShapeType, parent: Shape | undefined, lzData:
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
+    if (data['sharedStyleID']) {
+        env.styleMgr.addShared(data['sharedStyleID'], style);
+    }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
@@ -183,6 +215,9 @@ function importPathShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
+    if (data['sharedStyleID']) {
+        env.styleMgr.addShared(data['sharedStyleID'], style);
+    }
     // const text = data['attributedString'] && importText(data['attributedString']);
     const isClosed = data['isClosed'];
 
@@ -200,6 +235,9 @@ function importRectShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
+    if (data['sharedStyleID']) {
+        env.styleMgr.addShared(data['sharedStyleID'], style);
+    }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
@@ -217,6 +255,9 @@ function importTextShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
+    if (data['sharedStyleID']) {
+        env.styleMgr.addShared(data['sharedStyleID'], style);
+    }
     const textStyle = data['style'] && data['style']['textStyle'];
     const text: Text = data['attributedString'] && importText(data['attributedString'], textStyle);
     const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixedWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
@@ -236,6 +277,9 @@ function importSymbol(env:Env, type: ShapeType, parent: Shape | undefined, lzDat
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
+    if (data['sharedStyleID']) {
+        env.styleMgr.addShared(data['sharedStyleID'], style);
+    }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const id = data['symbolID'];
@@ -259,10 +303,17 @@ function importSymbolRef(env:Env, type: ShapeType, parent: Shape | undefined, lz
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
+    if (data['sharedStyleID']) {
+        env.styleMgr.addShared(data['sharedStyleID'], style);
+    }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    return new SymbolRef(parent, type, name, id, booleanOperation, exportOptions, frame, style, env.symbolManager, data['symbolID']);
+    const shape = new SymbolRef(parent, type, name, id, booleanOperation, exportOptions, frame, style, env.symbolManager, data['symbolID']);
+
+    if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
+
+    return shape;
 }
 
 export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, data: IJSON): Shape {

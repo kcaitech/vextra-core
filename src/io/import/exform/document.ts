@@ -1,4 +1,4 @@
-import { ArtboardsMgr, Document, MediaMgr, PagesMgr, SymsMgr } from "@/data/document";
+import { ArtboardsMgr, Document, MediaMgr, PagesMgr, StyleMgr, SymsMgr } from "@/data/document";
 import { IJSON, LzData } from "@/data/lzdata";
 import { PageMeta, PagesMeta } from "@/data/meta";
 import { Page } from "@/data/page";
@@ -27,6 +27,7 @@ export async function importDocument(lzData: LzData, data: IJSON, page: IJSON) {
     const p = importPageFromData(lzData, page, symsMgr, mediaMgr);
     pagesMgr.setPage(p.id, p);
     const artMgr = new ArtboardsMgr([]);
+    const styleMgr = new StyleMgr();
 
-    return new Document(data["id"], symsMgr, pagesMgr, mediaMgr, artMgr);
+    return new Document(data["id"], symsMgr, pagesMgr, mediaMgr, artMgr, styleMgr);
 }

@@ -4,6 +4,7 @@ import { LzData } from "./lzdata";
 import { ArtboardMeta, ArtboardsMeta, PagesMeta } from "./meta";
 import { Page } from "./page";
 import { Symbol, ISymsMgr, IMediaMgr } from "./shape";
+import { Style } from "./style";
 import { AtomGroup } from "./transact";
 
 @AtomGroup
@@ -223,6 +224,15 @@ function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
 }
 
 @AtomGroup
+export class StyleMgr extends Watchable {
+    private __shareds: Map<string, Style> = new Map();
+
+    addShared(id: string, style: Style) {
+        this.__shareds.set(id, style);
+    }
+}
+
+@AtomGroup
 export class Document extends Watchable {
 
     private m_id: string;
@@ -230,12 +240,13 @@ export class Document extends Watchable {
     private m_symsMgr: SymsMgr;
     private m_pagesMgr: PagesMgr;
     private m_mediaMgr: MediaMgr;
+    private m_styleMgr: StyleMgr;
     private m_artboardMgr: ArtboardsMgr;
     private __shadows: IDocShadow[] = [];
     // private __editor: DocEditor | undefined;
     // private __repo: Repository | undefined;
 
-	constructor(id: string, symsMgr: SymsMgr, pagesMgr: PagesMgr, mediaMgr: MediaMgr, artMgr: ArtboardsMgr) {
+	constructor(id: string, symsMgr: SymsMgr, pagesMgr: PagesMgr, mediaMgr: MediaMgr, artMgr: ArtboardsMgr, styleMgr: StyleMgr) {
 		super();
         this.m_id = id;
         // this.m_meta = meta;
@@ -243,6 +254,7 @@ export class Document extends Watchable {
         this.m_pagesMgr = pagesMgr;
         this.m_mediaMgr = mediaMgr;
         this.m_artboardMgr = artMgr;
+        this.m_styleMgr = styleMgr;
 	}
 
     get id(): string {

@@ -1,4 +1,4 @@
-import { ArtboardsMgr, Document, MediaMgr, PagesMgr, SymsMgr } from "@/data/document";
+import { ArtboardsMgr, Document, MediaMgr, PagesMgr, StyleMgr, SymsMgr } from "@/data/document";
 import { IJSON, LzData } from '@/data/lzdata';
 import { Page } from "@/data/page";
 import { importMeta } from "./metaio";
@@ -20,9 +20,10 @@ export async function importDocument(lzData: LzData) {
     const symsMgr = new SymsMgr();
     const mediaMgr = new MediaMgr(lzData);
     const pagesMgr = new PagesMgr(meta.pagesMeta, (id: string): Promise<Page> => {
-        return importPage(lzData, 'pages/'+id+'.json', symsMgr, mediaMgr);
+        return importPage(lzData, 'pages/'+id+'.json', symsMgr, mediaMgr, styleMgr);
     });
     const artMgr = new ArtboardsMgr(meta.artboardsMeta);
+    const styleMgr = new StyleMgr();
 
-    return new Document(data["do_objectID"], symsMgr, pagesMgr, mediaMgr, artMgr);
+    return new Document(data["do_objectID"], symsMgr, pagesMgr, mediaMgr, artMgr, styleMgr);
 }

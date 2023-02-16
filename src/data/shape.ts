@@ -829,6 +829,9 @@ export class Symbol extends GroupShape {
     // deleted() {
     //     this.__symMgr.deleteSymbol(this.id);
     // }
+
+    // "allowsOverrides": true,
+    // "overrideProperties": []
 }
 
 @AtomGroup
@@ -836,6 +839,7 @@ export class SymbolRef extends Shape {
     private __symMgr: ISymsMgr;
     private m_refId: string;
     private __data?: Symbol;
+    private m_orrides: Map<string, Map<string, any> > = new Map();
     constructor(
         parent: Shape | undefined,
         // lzData: LzData,
@@ -865,16 +869,22 @@ export class SymbolRef extends Shape {
             return s;
         })
     }
-
     peekSymbol(): Symbol | undefined {
         return this.__data;
     }
-
     loadSymbol() {
         this.__symMgr.getSymbol(this.refId).then((s) => {
             this.__data = s;
             this.notify();
         })
     }
+    // overrideValues
+    addOverrid(id: string, attr: string, value: any) {
+        let attrs = this.m_orrides.get(id);
+        if (!attrs) {
+            attrs = new Map<string, any>();
+            this.m_orrides.set(id, attrs);
+        }
+        attrs.set(attr, value);
+    }
 }
-
