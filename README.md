@@ -1,4 +1,4 @@
-# sktest
+# kcdesign
 
 ## 安装nodejs 16.x
 
@@ -44,4 +44,4 @@ source ~/.zshrc
 npm run build-server
 node dist_server/main.js --path ~/Documents/symbol.sketch
 ### docker
---> docker run -d -v ~/Documents/:/usr/share/docs -p 8000:8000  sktest/server /usr/share/docs/symbol.sketch
+--> docker run -d -v ~/Documents/:/usr/share/docs -p 8000:8000  kcdesign/server /usr/share/docs/symbol.sketch

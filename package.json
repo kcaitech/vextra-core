@@ -1,9 +1,9 @@
 {
-  "name": "sktest",
+  "name": "kcdesign",
   "version": "0.1.0",
   "private": true,
   "description": "My Electron application description",
-  "author": "QIANG",
+  "author": "kcaisoft.com",
   "main": "background.js",
   "scripts": {
     "dev:web": "vue-cli-service serve",
@@ -91,7 +91,7 @@
     "not ie 11"
   ],
   "keywords": [],
-  "productName": "sktest",
+  "productName": "kcdesign",
   "jest": {
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     "moduleNameMapper": {
