@@ -23,6 +23,7 @@
     "express-ws": "^5.0.2",
     "jszip": "^3.10.1",
     "node-stream-zip": "*",
+    "sass": "^1.58.3",
     "skia-canvas": "^0.9.30",
     "vue": "^3.2.13",
     "vue-class-component": "^8.0.0-0",
