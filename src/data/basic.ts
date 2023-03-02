@@ -1,3 +1,8 @@
+/*
+ * @LastEditors: Zrx georgezrx@163.com
+ * @LastEditTime: 2023-03-02 14:11:24
+ * @FilePath: \kcdesign\src\data\basic.ts
+ */
 export interface IBubblable {
     bubbleup(...args: any[]): void;
 }
@@ -22,7 +27,7 @@ export class Watchable extends Notifiable {
     public unwatch(watcher:((...args: any[]) => void)): boolean {
         return this.__watcher.delete(watcher);
     }
-    public notify(...args: any[]) {
+    public notify(...args: any[]) {        
         this.__watcher.forEach(w => {
             w(...args);
         });
