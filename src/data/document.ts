@@ -236,6 +236,7 @@ export class StyleMgr extends Watchable {
 export class Document extends Watchable {
 
     private m_id: string;
+    private m_fullscreen: boolean;
     // private m_meta: PagesMeta;
     private m_symsMgr: SymsMgr;
     private m_pagesMgr: PagesMgr;
@@ -255,10 +256,19 @@ export class Document extends Watchable {
         this.m_mediaMgr = mediaMgr;
         this.m_artboardMgr = artMgr;
         this.m_styleMgr = styleMgr;
+        this.m_fullscreen = false;
 	}
 
     get id(): string {
         return this.m_id;
+    }
+
+    get isFullscreen(): boolean {
+        return this.m_fullscreen;
+    }
+
+    setScreen(toFull: boolean): void {
+        this.m_fullscreen = toFull
     }
 
     addShadow(shadow: IDocShadow) {

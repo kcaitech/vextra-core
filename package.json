@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "canvaskit-wasm": "^0.38.0",
-    "element-plus": "^2.2.32",
     "express": "^4.18.2",
     "express-ws": "^5.0.2",
     "jszip": "^3.10.1",
