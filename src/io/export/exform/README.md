@@ -1,6 +1,10 @@
 exchange format
 自有格式，用于前后端数据传输，内部数据存储，服务端数据存储
 
+symbols、artboards、pages单独记录再引用
+用户信息记录到redis
+
+
 OSS结构
 [fid]/metas/symbols.json
 [fid]/metas/pages.json

@@ -1,3 +1,4 @@
+import { DefaultNotifiable, Notifiable } from "./basic";
 import { Atom, AtomGroup } from "./transact";
 import { XY } from "./types";
 
@@ -32,6 +33,9 @@ export class Color {
     }
     toRGBA(): string {
         return "rgba(" + this.red + "," + this.green + "," + this.blue + "," + this.alpha + ")";
+    }
+    toRGB(): string {
+        return "rgb(" + this.red + "," + this.green + "," + this.blue + ")";
     }
 }
 
@@ -126,7 +130,7 @@ export enum FillType {
 }
 
 @AtomGroup
-export class Fill {
+export class Fill extends DefaultNotifiable {
     // private m_shape: object;// todo
     private m_isEnabled: boolean;
     private m_fillType: FillType;
@@ -142,6 +146,7 @@ export class Fill {
         color: Color, 
         contextSettings: ContextSettings, 
         gradient: Gradient | undefined) {
+            super("fill");
             // this.m_shape = shape;
             this.m_isEnabled = isEnabled;
             this.m_fillType = fillType;
@@ -173,6 +178,12 @@ export class Fill {
     // get gradientType() : GradientType | undefined {
     //     return this.m_gradientType;
     // }
+    set isEnabled(b: boolean) {
+        this.m_isEnabled = b;
+    }
+    set color(color: Color) {
+        this.color = color;
+    }
 }
 
 export enum BorderPosition {
@@ -182,7 +193,7 @@ export enum BorderPosition {
 }
 
 @AtomGroup
-export class Border {
+export class Border  extends DefaultNotifiable {
     // private m_shape: object; // todo
     private m_isEnabled: boolean;
     private m_fillType: FillType;
@@ -204,6 +215,7 @@ export class Border {
         position: BorderPosition,
         thickness: number,
         gradient: Gradient | undefined) {
+            super("border");
             // this.m_shape = shape;
             this.m_isEnabled = isEnabled;
             this.m_fillType = fillType;
@@ -299,7 +311,7 @@ export enum WindingRule {
 }
 
 @AtomGroup
-export class Style {
+export class Style extends DefaultNotifiable {
     // private m_shape: object; // todo
     private m_endMarkerType: MarkerType;
     private m_miterLimit: number;
@@ -326,6 +338,7 @@ export class Style {
         fills: Fill[],
         innerShadows: object[],
         shadows: object[]) {
+            super();
         // this.m_shape = shape;
         this.m_endMarkerType = endMarkerType;
         this.m_miterLimit = miterLimit;
@@ -338,6 +351,18 @@ export class Style {
         this.m_fills = fills;
         this.m_innerShadows = innerShadows;
         this.m_shadows = shadows;
+
+        
+    }
+
+    set parent(p: Notifiable) {
+        super.parent = p;
+        this.m_fills.forEach((f) => {
+            f && (f.parent = p);
+        })
+        this.m_borders.forEach((b) => {
+            b && (b.parent = p);
+        })
     }
 
     // get shape(): object {

@@ -1,4 +1,4 @@
-import { IBubblable, Notifiable, NotifyArray, Watchable } from "./basic";
+import { DefaultNotifiable, IBubblable, Notifiable, NotifyArray, Watchable } from "./basic";
 import { parsePath } from "./pathparser";
 import { Style } from "./style";
 import { Text } from "./text";
@@ -92,7 +92,7 @@ export class ExportOptions {
 }
 
 @AtomGroup
-export class ShapeFrame extends Notifiable implements IBubblable {
+export class ShapeFrame extends DefaultNotifiable {
     // todo
     // "_class": "rect",
     // "constrainProportions": false,
@@ -104,27 +104,15 @@ export class ShapeFrame extends Notifiable implements IBubblable {
     private m_y: number;
     private m_height: number;
     private m_width: number;
-    private __parent: Notifiable & IBubblable | undefined;
+
     constructor(x: number, y: number, width: number, height: number) {
-        super();
+        super("frame");
         this.m_x = x;
         this.m_y = y;
         this.m_width = width;
         this.m_height = height;
     }
-    bubbleup(...args: any[]): void {
-        this.__parent && this.__parent.bubbleup(...args);
-    }
-    notify(...args: any[]): void {
-        // throw new Error("Method not implemented.");
-        this.__parent && this.__parent.notify(...args);
-    }
-    set parent(p: Notifiable & IBubblable) {
-        if (this.__parent !== undefined) {
-            throw new Error("")
-        }
-        this.__parent = p;
-    }
+
     get x(): number {
         return this.m_x;
     }
@@ -240,7 +228,7 @@ interface IShapeNode {
 }
 
 @AtomGroup
-export class Shape extends Watchable implements IShape, IShapeNode, IBubblable {
+export class Shape extends Watchable implements IShape, IShapeNode {
     protected m_parent: Shape | undefined;
     // protected m_lzData: LzData;
     private m_type: ShapeType;
@@ -284,12 +272,14 @@ export class Shape extends Watchable implements IShape, IShapeNode, IBubblable {
         this.m_boolOp = booleanOperation;
         this.m_exportOptions = exportOptions;
         this.m_frame = frame;
-        frame.parent = this;
         this.m_style = style;
+
+        frame.parent = this;
+        style.parent = this;
     }
-    bubbleup(...args: any[]): void {
-        if (this.m_parent) this.m_parent.bubbleup(this, ...args);
-    }
+    // bubbleup(...args: any[]): void {
+    //     if (this.m_parent) this.m_parent.bubbleup(this, ...args);
+    // }
     get parent() {
         return this.m_parent;
     }
@@ -449,17 +439,17 @@ export class GroupShape extends Shape {
         child.parent = this;
     }
 
-    bubbleup(...args: any[]): void {
-        if (args.length > 2 && args[args.length - 1] == "frame") {
-            // update frame
-            // if (this.updateFrame()) {
-                super.bubbleup(...args);
-            // }
-        }
-        else {
-            super.bubbleup(...args);
-        }
-    }
+    // bubbleup(...args: any[]): void {
+    //     if (args.length > 2 && args[args.length - 1] == "frame") {
+    //         // update frame
+    //         // if (this.updateFrame()) {
+    //             super.bubbleup(...args);
+    //         // }
+    //     }
+    //     else {
+    //         super.bubbleup(...args);
+    //     }
+    // }
 
     get childsCount() {
         return this.m_childs.length;

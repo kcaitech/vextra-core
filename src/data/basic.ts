@@ -11,6 +11,29 @@ export class Notifiable {
     public notify(...args: any[]): void {}
 }
 
+export class DefaultNotifiable extends Notifiable {
+    protected __parent: Notifiable | undefined;
+    private __defaultargs: any;
+
+    constructor(defaultargs?: any) {
+        super();
+        this.__defaultargs = defaultargs;
+    }
+
+    notify(...args: any[]): void {
+        // throw new Error("Method not implemented.");
+        this.__parent && (
+            this.__defaultargs && this.__parent.notify(this.__defaultargs, ...args) || 
+            this.__parent.notify(...args));
+    }
+    set parent(p: Notifiable) {
+        if (this.__parent !== undefined) {
+            throw new Error("")
+        }
+        this.__parent = p;
+    }
+}
+
 export class Watchable extends Notifiable {
 
     private static __wid = 0;
