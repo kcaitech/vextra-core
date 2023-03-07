@@ -1,5 +1,3 @@
-import { AtomGroup } from "./transact";
-
 export function makePair<T1, T2>(first: T1, second: T2):Pair<T1, T2> {
     return {first, second};
 }

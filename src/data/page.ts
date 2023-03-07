@@ -1,10 +1,6 @@
-
-import { Notifiable } from "./basic";
 import { IPageShadow } from "./ishadow";
-import { LzData } from "./lzdata";
-import { BoolOp, ExportOptions, GroupShape, Shape, ShapeFrame, ShapeType } from "./shape";
-import { Style } from "./style";
-import { Atom, AtomGroup } from "./transact";
+import { GroupShape } from "./shape";
+import { AtomGroup } from "./transact";
 
 export class RulerData {
     // "horizontalRulerData": {

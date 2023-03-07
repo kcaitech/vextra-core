@@ -1,5 +1,4 @@
-import { DefaultNotifiable, IBubblable, Notifiable, NotifyArray, Watchable } from "./basic";
-import { parsePath } from "./pathparser";
+import { DefaultNotifiable, NotifyArray, Watchable } from "./basic";
 import { Style } from "./style";
 import { Text } from "./text";
 import { AtomGroup } from "./transact";

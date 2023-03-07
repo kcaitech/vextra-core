@@ -1,4 +1,4 @@
-import { CurveMode, PathShape, Point } from "./shape";
+import { CurveMode, PathShape } from "./shape";
 import { XY } from "./types";
 
 type CornerCalcInfo = {
