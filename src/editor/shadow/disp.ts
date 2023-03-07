@@ -2,7 +2,7 @@ import { IDocShadow, IPageShadow } from "@/data/ishadow";
 import { Page } from "@/data/page";
 import { Shape, GroupShape } from "@/data/shape";
 
-export class DocSDisp implements IDocShadow {
+export class DocShadowDisp implements IDocShadow {
     private __shadows: IDocShadow[];
 
     constructor(shadows: IDocShadow[]) {
@@ -35,7 +35,7 @@ export class DocSDisp implements IDocShadow {
 }
 
 // shadow dispatcher
-export class PageSDisp implements IPageShadow {
+export class PageShadowDisp implements IPageShadow {
     private __shadows: IPageShadow[];
     // private __selection: Selection;
     constructor(shadows: IPageShadow[]) {

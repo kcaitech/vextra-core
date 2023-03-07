@@ -1,13 +1,15 @@
 import { Selection } from "@/context/selection";
 import { Document } from "@/data/document";
 import { Page } from "@/data/page";
+import { Shape } from "@/data/shape";
 import { Repository } from "@/data/transact";
 import { Creator } from "./creator";
-import { DocEditor } from "./doceditor";
-import { PageEditor } from "./pageeditor";
+import { DocEditor } from "./document";
+import { PageEditor } from "./page";
+import { ShapeEditor } from "./shape";
 
-export { DocEditor } from "./doceditor";
-export { PageEditor } from "./pageeditor";
+export { DocEditor } from "./document";
+export { PageEditor } from "./page";
 
 export class Editor {
     private m_data: Document;
@@ -41,6 +43,17 @@ export class Editor {
         e = new PageEditor(this.m_repo as Repository, this.m_creator, page.shadows);
         this.m_pageEditors.set(page.id, e);
         return e;
+    }
+
+    editor4Shape(shape: Shape): ShapeEditor {
+        // get page
+        let p: Shape | undefined = shape;
+        while (p && (!(p instanceof Page))) {
+            p = p.parent;
+        }
+        if (!p) throw Error("shape has not parent Page!")
+        const pe = this.editor4Page(p as Page);
+        return pe.editor4Shape(shape);
     }
     
     get data() {

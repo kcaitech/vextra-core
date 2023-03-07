@@ -6,7 +6,7 @@ import { BorderOptions, ContextSettings, BlendMode, Style, MarkerType, WindingRu
 
 export class Creator {
 
-    newGroupShape(): GroupShape {
+    newGroupShape(): GroupShape { // todo
         // 1、新建一个GroupShape
         const exportOptions = new ExportOptions();
         const frame = new ShapeFrame(0, 0, 0, 0,); // todo

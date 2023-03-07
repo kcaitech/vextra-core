@@ -1,72 +1,14 @@
 import { IPageShadow } from "@/data/ishadow";
 import { Shape, GroupShape } from "@/data/shape";
-import { ICMD, Repository } from "@/data/transact";
-import { PageSDisp } from "./sdispatcher";
-import { ShapeEditor } from "./shapeeditor";
+import { Repository } from "@/data/transact";
+import { PageShadowDisp } from "./shadow/disp";
+import { ShapeEditor } from "./shape";
 import { Creator } from "./creator";
-
-class SICMD implements ICMD {
-    private __shadow: IPageShadow;
-    private __parent: GroupShape;
-    private __idx: number;
-    private __shape: Shape;
-    constructor(shadow: IPageShadow, parent: GroupShape, index: number, shape: Shape) {
-        this.__shadow = shadow;
-        this.__parent = parent;
-        this.__idx = index;
-        this.__shape = shape;
-    }
-    exec(): void {
-        this.__shadow.insert(this.__parent, this.__idx, this.__shape);
-    }
-    unexec(): void {
-        this.__shadow.delete(this.__shape);
-    }
-}
-class SDCMD implements ICMD {
-    private __shadow: IPageShadow;
-    private __parent: GroupShape;
-    private __idx: number;
-    private __shape: Shape;
-    constructor(shadow: IPageShadow, shape: Shape, shapeParent: GroupShape, idx: number) {
-        this.__shadow = shadow;
-        this.__parent = shapeParent;
-        this.__idx = idx; // this.__parent.indexOfChild(shape);
-        this.__shape = shape;
-    }
-    exec(): void {
-        this.__shadow.delete(this.__shape);
-    }
-    unexec(): void {
-        this.__shadow.insert(this.__parent, this.__idx, this.__shape);
-    }
-}
-class SMCMD implements ICMD {
-    private __shadow: IPageShadow;
-    private __parent: GroupShape;
-    private __idx: number;
-    private __shape: Shape;
-    private __taridx: number;
-    private __target: GroupShape;
-    constructor(shadow: IPageShadow, shape: Shape, shapeParent: GroupShape, idx: number, target: GroupShape, index: number) {
-        this.__shadow = shadow;
-        this.__parent = shapeParent;
-        this.__idx = idx; //this.__parent.indexOfChild(shape);
-        this.__shape = shape;
-        this.__taridx = index;
-        this.__target = target;
-    }
-    exec(): void {
-        this.__shadow.move(this.__shape, this.__target, this.__taridx);
-    }
-    unexec(): void {
-        this.__shadow.move(this.__shape, this.__parent, this.__idx);
-    }
-}
+import { ShadowDelCMD, ShadowInsertCMD, ShadowModifyCMD } from "./shadow/cmds";
 
 export class PageEditor {
     private __shadows: IPageShadow[];
-    private __shadowDisp: PageSDisp;
+    private __shadowDisp: PageShadowDisp;
     private __repo: Repository;
     private __creator: Creator;
     // private __selection: Selection;
@@ -74,7 +16,7 @@ export class PageEditor {
         this.__repo = repo;
         this.__creator = creator;
         this.__shadows = shadows;
-        this.__shadowDisp = new PageSDisp(shadows);
+        this.__shadowDisp = new PageShadowDisp(shadows);
         // this.__selection = selection;
     }
     group(shapes: Shape[]): boolean {
@@ -88,7 +30,7 @@ export class PageEditor {
         // 4、将GroupShape加入到save parent中
         savep.addChildAt(gshape, saveidx);
         this.__shadowDisp.insert(savep, saveidx, gshape);
-        this.__repo.push(new SICMD(this.__shadowDisp, savep, saveidx, gshape));
+        this.__repo.push(new ShadowInsertCMD(this.__shadowDisp, savep, saveidx, gshape));
         // 2、将shapes里对象从parent中退出
         // 3、将shapes里对象插入新建的GroupShape
         for (let i = 0, len = shapes.length; i < len; i++) {
@@ -98,11 +40,12 @@ export class PageEditor {
             p.removeChild(s);
             gshape.addChild(s);
             this.__shadowDisp.move(s, gshape, i);
-            this.__repo.push(new SMCMD(this.__shadowDisp, s, p, idx, gshape, i));
+            this.__repo.push(new ShadowModifyCMD(this.__shadowDisp, s, p, idx, gshape, i));
         }
         this.__repo.commit({});
         return true;
     }
+    // todo 需要调整子对象的位置
     ungroup(shape: GroupShape): boolean {
         this.__repo.start("", {});
         const savep = shape.parent as GroupShape;
@@ -114,12 +57,12 @@ export class PageEditor {
             shape.removeChildAt(s, 0);
             savep.addChildAt(s, saveidx);
             this.__shadowDisp.move(s, savep, saveidx);
-            this.__repo.push(new SMCMD(this.__shadowDisp, s, p, idx, savep, saveidx));
+            this.__repo.push(new ShadowModifyCMD(this.__shadowDisp, s, p, idx, savep, saveidx));
             saveidx++;
         }
         savep.removeChild(shape);
         this.__shadowDisp.delete(shape);
-        this.__repo.push(new SDCMD(this.__shadowDisp, shape, savep, saveidx));
+        this.__repo.push(new ShadowDelCMD(this.__shadowDisp, shape, savep, saveidx));
         // todo: update frame
         this.__repo.commit({});
         return true;
