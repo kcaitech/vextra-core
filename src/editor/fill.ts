@@ -1,4 +1,3 @@
-import { Shape } from "@/data/shape";
 import { Color, Fill, Style } from "@/data/style";
 
 // 填充
