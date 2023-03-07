@@ -1,4 +1,4 @@
-import { BoolOp, GroupShape, Shape, ShapeType } from "@/data/shape";
+import { BoolOp, GroupShape, Shape, ShapeType } from "@/data/data/shape";
 
 export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>): Array<any> {
     const childs: Array<any> = [];

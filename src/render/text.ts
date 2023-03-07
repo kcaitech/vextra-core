@@ -1,5 +1,5 @@
-import { TextShape } from "@/data/shape";
-import { TextBehaviour } from "@/data/text";
+import { TextShape } from "@/data/data/shape";
+import { TextBehaviour } from "@/data/data/text";
 import { layoutPara } from "@/layout/text";
 
 export function render(h: Function, shape: TextShape, reflush?: number) {

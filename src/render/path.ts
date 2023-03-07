@@ -1,4 +1,4 @@
-import { PathShape, Point } from "@/data/shape";
+import { PathShape, Point } from "@/data/data/shape";
 
 function format(str: string, args: any) {
     const keys = Object.keys(args);

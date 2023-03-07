@@ -1,5 +1,5 @@
-import { Artboard } from "@/data/artboard";
-import { BoolOp, ShapeType } from "@/data/shape";
+import { Artboard } from "@/data/data/artboard";
+import { BoolOp, ShapeType } from "@/data/data/shape";
 import { renderGroupChilds as gR } from "@/render/group";
 
 export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any>, reflush?: number) {

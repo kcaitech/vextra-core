@@ -1,5 +1,5 @@
-import { Shape } from "@/data/shape";
-import { Fill, FillType, Gradient } from "@/data/style";
+import { Shape } from "@/data/data/shape";
+import { Fill, FillType, Gradient } from "@/data/data/style";
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"

@@ -1,6 +1,6 @@
 import { objectId } from "@/basic/objectid";
-import { ShapeFrame } from "@/data/shape";
-import { Gradient, GradientType, Stop } from "@/data/style";
+import { ShapeFrame } from "@/data/data/shape";
+import { Gradient, GradientType, Stop } from "@/data/data/style";
 // import { EL, h } from "./basic";
 
 function renderStop(h: Function, d: Stop): any {
