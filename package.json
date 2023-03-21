@@ -1,6 +1,6 @@
 {
   "name": "@kcdesign/data",
-  "version": "0.1.0",
+  "version": "0.1.3-experimental.zrx.3",
   "private": false,
   "description": "kcdesign core module",
   "author": "kcaisoft.com",
@@ -35,8 +35,7 @@
   },
   "eslintConfig": {
     "root": true,
-    "env": {
-    },
+    "env": {},
     "extends": [
       "eslint:recommended"
     ],
