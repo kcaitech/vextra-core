@@ -19,9 +19,6 @@
       "node"
     ],
     "paths": {
-      "@/data*": [
-        "/*"
-      ]
     },
     "lib": [
       "esnext",
