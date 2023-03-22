@@ -1,2 +1,1 @@
-npm run build
-npm publish publish/
+！！！！！这是 kcaisoft.com 私有工程，公司的数字资产，请不要publish到公共仓库！！！！！
