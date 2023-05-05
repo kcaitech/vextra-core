@@ -5,6 +5,9 @@
   "description": "kcdesign core module",
   "author": "kcaisoft.com",
   "license": "ISC",
+  "publishConfig": {
+    "registry": "https://packages.aliyun.com/6393d698d690c872dceedcc0/npm/npm-registry/"
+  },
   "scripts": {
     "dev": "webpack --config ./webpack.config.js",
     "build": "cross-env NODE_ENV='production' webpack --config ./webpack.config.js",
