@@ -1,6 +1,6 @@
 {
   "name": "@kcdesign/data",
-  "version": "0.1.8-dev.czf.3",
+  "version": "0.1.8",
   "private": false,
   "description": "kcdesign core module",
   "author": "kcaisoft.com",
@@ -18,10 +18,10 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.329.0",
     "minio": "^7.1.0",
-    "@types/minio": "^7.0.18",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@types/minio": "^7.0.18",
     "@types/chai": "^4.3.1",
     "@types/debug": "^4.1.7",
     "@types/jest": "^28.1.3",
