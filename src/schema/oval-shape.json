@@ -1,0 +1,18 @@
+{
+    "description": "oval shape",
+    "type": "object",
+    "properties": {
+        "ellipse": {
+            "$ref": "./ellipse.json"
+        }
+    },
+    "required": [
+        "ellipse"
+    ],
+    "allOf": [
+        {
+            "$ref": "./path-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

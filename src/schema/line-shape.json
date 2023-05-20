@@ -1,0 +1,11 @@
+{
+    "description": "line shape",
+    "type": "object",
+    "properties": {},
+    "allOf": [
+        {
+            "$ref": "./path-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

@@ -1,0 +1,29 @@
+{
+  "description": "rect radius",
+  "type": "object",
+  "properties": {
+    "rlt": {
+      "type": "number",
+      "default": 0
+    },
+    "rrt": {
+      "type": "number",
+      "default": 0
+    },
+    "rrb": {
+      "type": "number",
+      "default": 0
+    },
+    "rlb": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "rlt",
+    "rrt",
+    "rrb",
+    "rlb"
+  ],
+  "additionalProperties": false
+}

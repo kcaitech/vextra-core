@@ -1,0 +1,21 @@
+{
+    "description": "document meta",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "default": "Page"
+        },
+        "pagesList": {
+            "type": "array",
+            "items": {
+                "$ref": "./page-list-item.json"
+            }
+        }
+    },
+    "required": [
+        "name",
+        "pagesList"
+    ],
+    "additionalProperties": false
+}

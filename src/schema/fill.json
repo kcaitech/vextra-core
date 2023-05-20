@@ -1,0 +1,29 @@
+{
+    "description": "fill",
+    "type": "object",
+    "properties": {
+        "isEnabled": {
+            "type": "boolean",
+            "default": false
+        },
+        "fillType": {
+            "$ref": "./fill-type.json"
+        },
+        "color": {
+            "$ref": "./color.json"
+        },
+        "contextSettings": {
+            "$ref": "./context-settings.json"
+        },
+        "gradient": {
+            "$ref": "./gradient.json"
+        }
+    },
+    "required": [
+        "isEnabled",
+        "fillType",
+        "color",
+        "contextSettings"
+    ],
+    "additionalProperties": false
+}

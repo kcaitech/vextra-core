@@ -1,0 +1,24 @@
+{
+    "description": "path shape",
+    "type": "object",
+    "properties": {
+        "points": {
+            "type": "array",
+            "items": {
+                "$ref": "./curve-point.json"
+            }
+        },
+        "isClosed": {
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "points"
+    ],
+    "allOf": [
+        {
+            "$ref": "./shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

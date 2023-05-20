@@ -1,0 +1,18 @@
+{
+    "description": "rect shape",
+    "type": "object",
+    "properties": {
+        "fixedRadius": {
+            "$ref": "./rect-radius.json"
+        }
+    },
+    "required": [
+        "fixedRadius"
+    ],
+    "allOf": [
+        {
+            "$ref": "./path-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

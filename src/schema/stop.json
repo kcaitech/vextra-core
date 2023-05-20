@@ -1,0 +1,17 @@
+{
+    "description": "stop",
+    "type": "object",
+    "properties": {
+        "position": {
+            "type": "number",
+            "default": 0
+        },
+        "color": {
+            "$ref": "./color.json"
+        }
+    },
+    "required": [
+        "position"
+    ],
+    "additionalProperties": false
+}

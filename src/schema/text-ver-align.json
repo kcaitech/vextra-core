@@ -1,0 +1,9 @@
+{
+    "description": "text vertical alignment",
+    "enum": [
+        "top",
+        "middle",
+        "bottom"
+    ],
+    "default": "top"
+}

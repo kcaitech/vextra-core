@@ -1,0 +1,33 @@
+{
+    "description": "blur",
+    "type": "object",
+    "properties": {
+        "isEnabled": {
+            "type": "boolean",
+            "default": false
+        },
+        "center": {
+            "$ref": "./point-2d.json"
+        },
+        "motionAngle": {
+            "type": "number"
+        },
+        "radius": {
+            "type": "number"
+        },
+        "saturation": {
+            "type": "number",
+            "default": 0
+        },
+        "type": {
+            "$ref": "./blur-type.json"
+        }
+    },
+    "required": [
+        "isEnabled",
+        "center",
+        "saturation",
+        "type"
+    ],
+    "additionalProperties": false
+}

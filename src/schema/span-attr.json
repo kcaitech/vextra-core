@@ -1,0 +1,17 @@
+{
+    "description": "span attr",
+    "type": "object",
+    "properties": {
+        "fontName": {
+            "type": "string"
+        },
+        "fontSize": {
+            "type": "number"
+        },
+        "color": {
+            "$ref": "./color.json"
+        }
+    },
+    "required": [],
+    "additionalProperties": false
+}

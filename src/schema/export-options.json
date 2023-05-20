@@ -1,0 +1,35 @@
+{
+    "description": "export options",
+    "type": "object",
+    "properties": {
+        "exportFormats": {
+            "type": "array",
+            "items": {
+                "$ref": "./export-format.json"
+            }
+        },
+        "includedChildIds": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 32,
+                "maxLength": 36
+            }
+        },
+        "childOptions": {
+            "type": "integer",
+            "default": 0
+        },
+        "shouldTrim": {
+            "type": "boolean",
+            "default": false
+        }
+    },
+    "required": [
+        "exportFormats",
+        "includedChildIds",
+        "childOptions",
+        "shouldTrim"
+    ],
+    "additionalProperties": false
+}

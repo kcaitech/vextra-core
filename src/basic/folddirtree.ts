@@ -1,0 +1,206 @@
+import { DirTree, Iter, Node } from "./dirtree";
+
+export interface DirItem {
+    id: string,
+    childs?: DirItem[]
+}
+
+class NodeData<T extends DirItem> {
+    data: T;
+    fold: boolean;
+    constructor(data: T, fold: boolean = true) {
+        this.data = data;
+        this.fold = fold;
+    }
+}
+
+class NodeType<T extends DirItem> extends Node<NodeData<T> > {
+    constructor(data: T, fold: boolean = true) {
+        super(new NodeData(data, fold));
+    }
+}
+
+export class FoldDirIter<T extends DirItem> {
+    private __iter: Iter<NodeData<T> >;
+    constructor(iter: Iter<NodeData<T> >) {
+        this.__iter = iter;
+    }
+    hasNext(): boolean {
+        return this.__iter.hasNext();
+    }
+    next(): {data: T, fold: boolean} {
+        const d = this.__iter.next();
+        return { data: d.data, fold: d.fold}
+    }
+}
+
+export class FoldDirTree<T extends DirItem> {
+
+    private __dirtree: DirTree<NodeData<T> >;
+    private __id2node: Map<string, NodeType<T> > = new Map();
+    private __saveFoldedDirState: boolean;
+    private __saveUnfolds: Set<string> = new Set();
+    private __revertChilds: boolean = true;
+
+    private __afterFold?: (it: FoldDirIter<T>) => void;
+    private __afterUnfold?: (data: T) => void;
+
+    constructor(props: {
+        saveFoldedDirState?: boolean, data?: T, fold?: boolean, revertChilds?: boolean
+    }) {
+        this.__saveFoldedDirState = props.saveFoldedDirState ?? true;
+        const node = props.data && new NodeType(props.data, props.fold ?? true);
+        this.__dirtree = new DirTree(node);
+        if (node) this.__id2node.set(node.__data.data.id, node);
+    }
+
+    onAfterFold(l: (it: FoldDirIter<T>) => void) {
+        this.__afterFold = l;
+    }
+
+    onAfterUnfold(l: (data: T) => void) {
+        this.__afterUnfold = l;
+    }
+
+    get length(): number {
+        return this.__dirtree.length;
+    }
+
+    iterAt(index: number): FoldDirIter<T> {
+        return new FoldDirIter<T>(this.__dirtree.iterAt(index));
+    }
+
+    at(index: number): {data: T, fold: boolean} | undefined {
+        const n = this.__dirtree.nodeAt(index);
+        if (n) return { data: n.__data.data, fold: n.__data.fold}
+        return undefined;
+    }
+
+    indexOf(data: T): number {
+        const node = this.__id2node.get(data.id);
+        if (node) return this.__dirtree.indexOf(node)
+        return -1;
+    }
+
+    isFold(data: T): boolean {
+        const node = this.__id2node.get(data.id);
+        return (node && node.__data.fold) ?? true; // 默认是折叠的
+    }
+
+    private __addIdMap(p: NodeType<T>) {
+        if (p && p.__count > 1) {
+            const childs = p.__childs as NodeType<T>[]
+            childs.forEach((c) => {
+                this.__id2node.set(c.__data.data.id, c);
+                this.__addIdMap(c);
+            })
+        }
+    }
+
+    private __fold(node: NodeType<T>, data: T): boolean {
+        const n = new NodeType(data, true);
+        if (!this.__dirtree.swap(node, n)) return false;
+        this.__id2node.set(data.id, n)
+        this.__removeIdMap(node);
+        if (this.__saveFoldedDirState) {
+            this.__saveUnfolds.delete(data.id)
+        }
+        if (this.__afterFold) {
+            const tree = new DirTree(node);
+            const it = new FoldDirIter<T>(tree.iterAt(0));
+            this.__afterFold(it);
+        }
+        return true;
+    }
+
+    fold(data: T): boolean {
+        const node = this.__id2node.get(data.id);
+        if (!node) return false;
+        if (node.__data.fold) return false;
+        return this.__fold(node, data);
+    }
+
+    private __removeIdMap(p: NodeType<T>) {
+        if (p && p.__count > 1) {
+            const childs = p.__childs as NodeType<T>[]
+            childs.forEach((c) => {
+                this.__id2node.delete(c.__data.data.id);
+                this.__removeIdMap(c);
+            })
+        }
+    }
+
+    private __unfold(node: NodeType<T>, data: T): boolean {
+        const childs = node.__data.data.childs as T[] | undefined;
+        if (!childs) return false;
+        const arr = childs.map((c) => new NodeData(c))
+        if (this.__revertChilds) arr.reverse()
+        const ret = this.__dirtree.insertArr(node, 0, arr);
+        ret.forEach((n) => this.__id2node.set(n.__data.data.id, n))
+        node.__data.fold = false;
+        if (this.__saveFoldedDirState) {
+            this.__saveUnfolds.add(data.id)
+            ret.forEach((n) => {
+                if (this.__saveUnfolds.has(n.__data.data.id)) {
+                    this.__unfold(n, n.__data.data)
+                }
+            })
+        }
+        if (this.__afterUnfold) {
+            this.__afterUnfold(data)
+        }
+        return true;
+    }
+
+    unfold(data: T): boolean {
+        const node = this.__id2node.get(data.id);
+        if (!node) return false;
+        if (!node.__data.fold) return false;
+        return this.__unfold(node, data);
+    }
+
+    toggleFold(data: T): boolean {
+        const node = this.__id2node.get(data.id);
+        if (!node) return false;
+        if (node.__data.fold) return this.__unfold(node, data);
+        else return this.__fold(node, data);
+    }
+
+    has(d: string | T): boolean {
+        if (typeof d === 'string') return this.__id2node.get(d) !== undefined;
+        return this.__id2node.get(d.id) !== undefined;
+    }
+
+    insert(parent: T | undefined, index: number, data: T): boolean {
+        const pnode = parent && this.__id2node.get(parent.id)
+        if (!pnode || pnode.__data.fold) return false;
+        const node = new NodeData(data);
+        const n = this.__dirtree.insert(pnode, index, node);
+        if (n) {
+            this.__id2node.set(data.id, n);
+            if (this.__saveFoldedDirState && this.__saveUnfolds.has(data.id)) {
+                this.__unfold(n, data);
+            }
+        }
+        return !!n;
+    }
+
+    delete(data: T): boolean {
+        // if (this.__saveFoldedDirState) { // 不删除
+        //     this.__saveUnfolds.delete(data.id)
+        // }
+        const node = this.__id2node.get(data.id);
+        if (node) return this.__dirtree.del(node)
+        return false;
+    }
+
+    childsOf(data: T): {data: T, fold: boolean}[] {
+        const n = this.__id2node.get(data.id);
+        if (n && n.__childs) {
+            return n.__childs.map((v) => {
+                return {data: v.__data.data, fold: v.__data.fold}
+            })
+        }
+        return [];
+    }
+}

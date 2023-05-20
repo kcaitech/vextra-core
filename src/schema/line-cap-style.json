@@ -1,0 +1,9 @@
+{
+    "description": "line cap style",
+    "enum": [
+        "butt",
+        "round",
+        "projecting"
+    ],
+    "default": "butt"
+}

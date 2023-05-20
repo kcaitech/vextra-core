@@ -1,0 +1,9 @@
+{
+    "description": "text behaviour",
+    "enum": [
+        "flexible",
+        "fixed",
+        "fixWidthAndHeight"
+    ],
+    "default": "flexible"
+}

@@ -1,0 +1,81 @@
+{
+    "description": "shape",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
+        "id": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 36,
+            "default": "$uuid"
+        },
+        "type": {
+            "$ref": "./shape-type.json"
+        },
+        "frame": {
+            "$ref": "./shape-frame.json"
+        },
+        "style": {
+            "$ref": "./style.json"
+        },
+        "boolOp": {
+            "$ref": "./bool-op.json"
+        },
+        "isFixedToViewport": {
+            "type": "boolean"
+        },
+        "isFlippedHorizontal": {
+            "type": "boolean"
+        },
+        "isFlippedVertical": {
+            "type": "boolean"
+        },
+        "isLocked": {
+            "type": "boolean"
+        },
+        "isVisible": {
+            "type": "boolean"
+        },
+        "exportOptions": {
+            "$ref": "./export-options.json"
+        },
+        "name": {
+            "type": "string",
+            "default": "Shape"
+        },
+        "nameIsFixed": {
+            "type": "boolean"
+        },
+        "resizingConstraint": {
+            "type": "number"
+        },
+        "resizingType": {
+            "$ref": "./resize-type.json"
+        },
+        "rotation": {
+            "type": "number"
+        },
+        "clippingMaskMode": {
+            "type": "integer"
+        },
+        "hasClippingMask": {
+            "type": "boolean"
+        },
+        "shouldBreakMaskChain": {
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "typeId",
+        "id",
+        "name",
+        "type",
+        "frame",
+        "style",
+        "boolOp"
+    ],
+    "additionalProperties": false
+}

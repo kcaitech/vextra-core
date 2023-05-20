@@ -1,0 +1,24 @@
+{
+    "description": "artboard shape",
+    "type": "object",
+    "properties": {
+        "hasBackgroundColor": {
+            "type": "boolean",
+            "default": true
+        },
+        "includeBackgroundColorInExport": {
+            "type": "boolean",
+            "default": false
+        },
+        "backgroundColor": {
+            "$ref": "./color.json"
+        }
+    },
+    "required": [],
+    "allOf": [
+        {
+            "$ref": "./group-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

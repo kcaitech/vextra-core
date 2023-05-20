@@ -1,0 +1,40 @@
+{
+    "description": "curve point",
+    "type": "object",
+    "properties": {
+        "cornerRadius": {
+            "type": "number",
+            "default": 0
+        },
+        "curveFrom": {
+            "$ref": "./point-2d.json"
+        },
+        "curveTo": {
+            "$ref": "./point-2d.json"
+        },
+        "hasCurveFrom": {
+            "type": "boolean",
+            "default": false
+        },
+        "hasCurveTo": {
+            "type": "boolean",
+            "default": false
+        },
+        "curveMode": {
+            "$ref": "./curve-mode.json"
+        },
+        "point": {
+            "$ref": "./point-2d.json"
+        }
+    },
+    "required": [
+        "cornerRadius",
+        "curveFrom",
+        "curveTo",
+        "hasCurveFrom",
+        "hasCurveTo",
+        "curveMode",
+        "point"
+    ],
+    "additionalProperties": false
+}

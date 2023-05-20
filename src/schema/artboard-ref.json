@@ -1,0 +1,19 @@
+{
+    "description": "artboard ref shape",
+    "type": "object",
+    "properties": {
+        "refId": {
+            "type": "string",
+            "default": "$uuid"
+        }
+    },
+    "required": [
+        "refId"
+    ],
+    "allOf": [
+        {
+            "$ref": "./shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

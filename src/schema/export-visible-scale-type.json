@@ -1,0 +1,9 @@
+{
+    "description": "visible scale type",
+    "enum": [
+        "scale",
+        "width",
+        "height"
+    ],
+    "default": "scale"
+}

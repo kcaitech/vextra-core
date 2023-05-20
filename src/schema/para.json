@@ -1,0 +1,24 @@
+{
+    "description": "para",
+    "type": "object",
+    "properties": {
+        "text": {
+            "type": "string",
+            "default": ""
+        },
+        "spans": {
+            "type": "array",
+            "items": {
+                "$ref": "./span.json"
+            }
+        },
+        "attr": {
+            "$ref": "./para-attr.json"
+        }
+    },
+    "required": [
+        "text",
+        "spans"
+    ],
+    "additionalProperties": false
+}

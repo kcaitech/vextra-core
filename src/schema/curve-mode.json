@@ -1,0 +1,11 @@
+{
+    "description": "curve mode",
+    "enum": [
+        "none",
+        "straight",
+        "mirrored",
+        "asymmetric",
+        "disconnected"
+    ],
+    "default": "none"
+}

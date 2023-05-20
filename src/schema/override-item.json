@@ -1,0 +1,23 @@
+{
+    "description": "override list item",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 36,
+            "default": "$uuid"
+        },
+        "value": {
+            "oneOf": [
+                {
+                    "$ref": "./style.json"
+                }
+            ]
+        }
+    },
+    "required": [
+        "id"
+    ],
+    "additionalProperties": false
+}

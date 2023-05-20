@@ -1,0 +1,12 @@
+{
+    "description": "flatten shape",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "allOf": [
+        {
+            "$ref": "./group-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

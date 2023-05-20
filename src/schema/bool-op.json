@@ -1,0 +1,11 @@
+{
+    "description": "bool op types",
+    "enum": [
+        "none",
+        "union",
+        "subtract",
+        "intersect",
+        "diff"
+    ],
+    "default": "none"
+}

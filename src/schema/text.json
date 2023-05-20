@@ -1,0 +1,19 @@
+{
+    "description": "text",
+    "type": "object",
+    "properties": {
+        "paras": {
+            "type": "array",
+            "items": {
+                "$ref": "./para.json"
+            }
+        },
+        "attr": {
+            "$ref": "./text-attr.json"
+        }
+    },
+    "required": [
+        "paras"
+    ],
+    "additionalProperties": false
+}

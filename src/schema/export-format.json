@@ -1,0 +1,26 @@
+{
+    "description": "export format",
+    "type": "object",
+    "properties": {
+        "absoluteSize": {
+            "type": "number"
+        },
+        "fileFormat": {
+            "$ref": "./export-file-format.json"
+        },
+        "name": {
+            "type": "string"
+        },
+        "namingScheme": {
+            "$ref": "./export-format-nameing-scheme.json"
+        },
+        "scale": {
+            "type": "number"
+        },
+        "visibleScaleType": {
+            "$ref": "./export-visible-scale-type.json"
+        }
+    },
+    "required": [],
+    "additionalProperties": false
+}

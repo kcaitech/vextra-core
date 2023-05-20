@@ -1,0 +1,29 @@
+{
+    "description": "ellipse attributes",
+    "type": "object",
+    "properties": {
+        "cx": {
+            "type": "number",
+            "default": 0
+        },
+        "cy": {
+            "type": "number",
+            "default": 0
+        },
+        "rx": {
+            "type": "number",
+            "default": 0
+        },
+        "ry": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "cx",
+        "cy",
+        "rx",
+        "ry"
+    ],
+    "additionalProperties": false
+}

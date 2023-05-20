@@ -1,0 +1,9 @@
+{
+    "description": "fill types",
+    "enum": [
+        "solid-color",
+        "gradient",
+        "pattern"
+    ],
+    "default": "solid-color"
+}

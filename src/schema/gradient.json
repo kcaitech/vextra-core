@@ -1,0 +1,33 @@
+{
+    "description": "gradient",
+    "type": "object",
+    "properties": {
+        "elipseLength": {
+            "type": "number",
+            "default": 0
+        },
+        "from": {
+            "$ref": "./point-2d.json"
+        },
+        "to": {
+            "$ref": "./point-2d.json"
+        },
+        "stops": {
+            "type": "array",
+            "items": {
+                "$ref": "./stop.json"
+            }
+        },
+        "gradientType": {
+            "$ref": "./gradient-type.json"
+        }
+    },
+    "required": [
+        "elipseLength",
+        "from",
+        "to",
+        "gradientType",
+        "stops"
+    ],
+    "additionalProperties": false
+}
