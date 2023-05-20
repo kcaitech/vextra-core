@@ -54,12 +54,14 @@ type Constructor<T = Record<string, any>> = new (...args: any[]) => T;
 
 export const Watchable = <T extends Constructor>(SuperClass: T) =>
     class extends SuperClass implements Notifiable {
-        protected __uuid = __uuid
-        private __watcher: Set<((...args: any[]) => void)> = new Set();
+        public __uuid = __uuid
+        public __watcher: Set<((...args: any[]) => void)> = new Set();
 
         public watch(watcher: ((...args: any[]) => void)): (() => void) {
             this.__watcher.add(watcher);
-            return watcher;
+            return () => {
+                this.__watcher.delete(watcher);
+            };
         }
         public unwatch(watcher: ((...args: any[]) => void)): boolean {
             return this.__watcher.delete(watcher);
