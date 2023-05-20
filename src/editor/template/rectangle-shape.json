@@ -1,0 +1,48 @@
+{
+  "typeId": "rect-shape",
+  "id": "7B35A2C4-87A6-7033-A030-87CDE15F803B",
+  "name": "rectangle",
+  "type": "rectangle",
+  "boolOp": "none",
+  "frame": {
+      "x": 0,
+      "y": 0,
+      "width": 100,
+      "height": 100
+  },
+  "style": {
+      "typeId": "style",
+      "miterLimit": 0,
+      "windingRule": "non-zero",
+      "blur": {
+          "isEnabled": false,
+          "center": { "x": 0, "y": 0 },
+          "saturation": 0,
+          "type": "gaussian"
+      },
+      "borderOptions": {
+          "isEnabled": false,
+          "lineCapStyle": "butt",
+          "lineJoinStyle": "miter"
+      },
+      "borders": [
+        {
+            "isEnabled": true,
+            "fillType": 0,
+            "color": {
+                "alpha": 1,
+                "blue": 0.592,
+                "green": 0.592,
+                "red": 0.592
+            }
+        }
+      ],
+      "contextSettings": {
+          "blenMode": "normal",
+          "opacity": 0
+      },
+      "fills": [],
+      "innerShadows": [],
+      "shadows": []
+  }
+}

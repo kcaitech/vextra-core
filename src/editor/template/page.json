@@ -1,0 +1,68 @@
+{
+    "typeId": "page",
+    "id": "3ACF7DAD-0728-4510-81D0-CFA1C0FAB148",
+    "type": "page",
+    "boolOp": "none",
+    "isFixedToViewport": false,
+    "isFlippedHorizontal": false,
+    "isFlippedVertical": false,
+    "isLocked": false,
+    "isVisible": true,
+    "name": "页面 1",
+    "nameIsFixed": false,
+    "resizingConstraint": 63,
+    "resizingType": "stretch",
+    "rotation": 0,
+    "shouldBreakMaskChain": false,
+    "exportOptions": {
+        "includedChildIds": [],
+        "childOptions": 0,
+        "shouldTrim": false,
+        "exportFormats": []
+    },
+    "frame": {
+        "height": 800,
+        "width": 600,
+        "x": 0,
+        "y": 0
+    },
+    "clippingMaskMode": 0,
+    "hasClippingMask": false,
+    "style": {
+        "typeId": "style",
+        "miterLimit": 10,
+        "windingRule": "non-zero",
+        "blur": {
+            "isEnabled": false,
+            "center": {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "motionAngle": 0,
+            "radius": 10,
+            "saturation": 1,
+            "type": "gaussian"
+        },
+        "borderOptions": {
+            "isEnabled": true,
+            "lineCapStyle": "butt",
+            "lineJoinStyle": "miter"
+        },
+        "borders": [],
+        "colorControls": {
+            "isEnabled": false,
+            "brightness": 0,
+            "contrast": 1,
+            "hue": 0,
+            "saturation": 1
+        },
+        "contextSettings": {
+            "blenMode": "normal",
+            "opacity": 1
+        },
+        "fills": [],
+        "innerShadows": [],
+        "shadows": []
+    },
+    "childs": []
+}
