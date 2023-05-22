@@ -34,6 +34,7 @@ export enum CtrlElementType { // 控制元素类型
 export interface AsyncTransfer {
     migrate: (targetParent: Shape) => void;
     trans: (start: PageXY, end: PageXY) => void;
+    transByWheel: (dx: number, dy: number) => void;
     close: () => undefined;
 }
 export interface AsyncBaseAction {
@@ -290,6 +291,15 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
+        const transByWheel = (dx: number, dy: number) => {
+            status = Status.Pending;
+            for (let i = 0; i < shapes.length; i++) {
+                if (shapes[i].isLocked) continue; // 🔒住不让动
+                translate(shapes[i], dx, dy);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
         const close = () => {
             if (status == Status.Fulfilled) {
                 this.__repo.commit({});
@@ -298,6 +308,6 @@ export class Controller {
             }
             return undefined;
         }
-        return { migrate, trans, close }
+        return { migrate, trans, close, transByWheel }
     }
 }
