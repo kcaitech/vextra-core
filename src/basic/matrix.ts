@@ -26,7 +26,7 @@ export class Matrix {
     constructor(m0: number, m1: number, m2: number, m3: number, m4: number, m5: number)
     constructor(...args: any) {
         this.m_matrix = args.length === 0 ? [1, 0, 0, 1, 0, 0] :
-            (args[0] instanceof Array ? args[0] : 
+            (args[0] instanceof Array ? args[0] :
                 (args[0] instanceof Matrix ? this.m_matrix = args[0].toArray() : [...args]));
     }
 
@@ -70,9 +70,9 @@ export class Matrix {
         this.multiAtLeft([cos, sin, -sin, cos, 0, 0])
         if (x || y) this.trans(x || 0, y || 0);
     }
-    computeCoord(point: {x: number, y: number}): {x: number, y: number};
-    computeCoord(x: number, y: number): {x: number, y: number};
-    computeCoord(pointOrX: number | {x: number, y: number}, _y?: number) {
+    computeCoord(point: { x: number, y: number }): { x: number, y: number };
+    computeCoord(x: number, y: number): { x: number, y: number };
+    computeCoord(pointOrX: number | { x: number, y: number }, _y?: number) {
         const isPoint = typeof pointOrX === 'object';
         const x = isPoint ? pointOrX.x : pointOrX;
         const y = isPoint ? pointOrX.y : _y!;
@@ -81,7 +81,7 @@ export class Matrix {
     }
     computeRef(dx: number, dy: number) {
         const m = this.m_matrix
-        return { x: m[0] * dx + m[2] * dy, y: m[1] * dx + m[3] * dy};
+        return { x: m[0] * dx + m[2] * dy, y: m[1] * dx + m[3] * dy };
     }
 
     get inverse() {
@@ -94,9 +94,9 @@ export class Matrix {
             (m[1] * m[4] - m[5] * m[0]) / d
         ];
     }
-    inverseCoord(point: {x: number, y: number}): {x: number, y: number};
-    inverseCoord(x: number, y: number): {x: number, y: number};
-    inverseCoord(pointOrX: number | {x: number, y: number}, _y?: number) {
+    inverseCoord(point: { x: number, y: number }): { x: number, y: number };
+    inverseCoord(x: number, y: number): { x: number, y: number };
+    inverseCoord(pointOrX: number | { x: number, y: number }, _y?: number) {
         const isPoint = typeof pointOrX === 'object';
         const x = isPoint ? pointOrX.x : pointOrX;
         const y = isPoint ? pointOrX.y : _y!;
@@ -129,8 +129,8 @@ export class Matrix {
             m[5] = 0;
         }
         else {
-            this.m_matrix = args[0] instanceof Array ? args[0] : 
-                    (args[0] instanceof Matrix ? this.m_matrix = args[0].toArray() : [...args]);
+            this.m_matrix = args[0] instanceof Array ? args[0] :
+                (args[0] instanceof Matrix ? this.m_matrix = args[0].toArray() : [...args]);
         }
     }
 
