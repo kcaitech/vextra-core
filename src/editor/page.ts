@@ -104,7 +104,7 @@ export class PageEditor {
 
             // 往上调整width,height
             updateFrame(gshape)
-
+            this.__page.addShape(gshape);
             this.__repo.commit({});
             return gshape;
         }
@@ -147,6 +147,7 @@ export class PageEditor {
                 saveidx++;
             }
             savep.removeChild(shape);
+            this.__page.removeShape(shape);
             // todo: update frame
             this.__repo.commit({});
             return childs;
