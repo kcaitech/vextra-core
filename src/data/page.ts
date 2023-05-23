@@ -25,17 +25,17 @@ export class Page extends GroupShape implements classes.Page {
             boolOp,
             childs
         )
-        const maping = (cs: Shape[]) => {
+        const mapping = (cs: Shape[]) => {
             for (let i = cs.length - 1; i > -1; i--) {
                 const item = cs[i];
                 this.addShape(item);
                 const childs = item?.childs || [];
                 if (childs.length) {
-                    maping(childs);
+                    mapping(childs);
                 }
             }
         }
-        maping(this.childs);
+        mapping(this.childs);
     }
     addShape(shape: Shape) {
         this.flat.set(shape.id, shape);

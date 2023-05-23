@@ -168,30 +168,21 @@ class ProxyHandler {
         return result;
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
-        if (target instanceof Map) { // map 对象的get拦截处理
-            if (propertyKey === 'size') {
-                return target.size;
-            } else {
-                const val = Reflect.get(target, propertyKey, receiver);
-                if (typeof val === 'function') {
-                    if (propertyKey === 'set' || propertyKey === 'delete') { // 只对Map对象的set、delete操作做get二级处理
-                        if (this.__context.transact !== undefined) { // 二级处理中有对底层数据的修改，所以应该在事务内进行
-                            return Reflect.get(this.sub(this.__context, target), propertyKey);
-                        } else {
-                            throw new Error("NOT inside transact!");
-                        }
-                    } else {
-                        return val.bind(target);
-                    }
+        const val = Reflect.get(target, propertyKey, receiver);
+        if (val === undefined && propertyKey === "__isProxy") {
+            return true;
+        }
+        if (target instanceof Map && typeof val == 'function') {
+            if (propertyKey == 'set' || propertyKey == 'delete') { // 只对Map对象的set、delete操作做get二级处理
+                if (this.__context.transact !== undefined) { // 二级处理中有对底层数据的修改，所以应该在事务内进行
+                    return Reflect.get(this.sub(this.__context, target), propertyKey);
+                } else {
+                    throw new Error("NOT inside transact!");
                 }
             }
-        } else {
-            const val = Reflect.get(target, propertyKey, receiver);
-            if (val === undefined && propertyKey === "__isProxy") {
-                return true;
-            }
-            return val;
+            return val.bind(target);
         }
+        return val;
     }
     has(target: object, propertyKey: PropertyKey) {
         if (target instanceof Map) {
