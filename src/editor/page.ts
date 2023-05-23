@@ -114,7 +114,7 @@ export class PageEditor {
         return false;
     }
 
-    ungroup(shape: GroupShape): boolean {
+    ungroup(shape: GroupShape): false | Shape[] {
         if (!shape.parent) return false;
 
         this.__repo.start("", {});
@@ -122,7 +122,7 @@ export class PageEditor {
             const savep = shape.parent as GroupShape;
             let saveidx = savep.indexOfChild(shape);
             const m = shape.matrix2Parent();
-
+            const childs: Shape[] = [];
             // 设置到shape上的旋转、翻转会丢失
             // adjust frame
             for (let i = 0, len = shape.childs.length; i < len; i++) {
@@ -143,12 +143,13 @@ export class PageEditor {
                 const c = shape.childs[0];
                 shape.removeChildAt(0);
                 savep.addChildAt(c, saveidx);
+                childs.push(c);
                 saveidx++;
             }
             savep.removeChild(shape);
             // todo: update frame
             this.__repo.commit({});
-            return true;
+            return childs;
         } catch (e) {
             this.__repo.rollback();
         }
