@@ -27,7 +27,7 @@ export class PageEditor {
         this.__page = page;
         this.__document = document;
     }
-    group(shapes: Shape[], groupname: string): boolean { // todo 传入的shape需要提前排好序
+    group(shapes: Shape[], groupname: string): false | GroupShape { // todo 传入的shape需要提前排好序
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
 
@@ -106,7 +106,7 @@ export class PageEditor {
             updateFrame(gshape)
 
             this.__repo.commit({});
-            return true;
+            return gshape;
         }
         catch (e) {
             this.__repo.rollback();
