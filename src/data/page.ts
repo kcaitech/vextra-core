@@ -39,13 +39,13 @@ export class Page extends GroupShape implements classes.Page {
     }
     addShape(shape: Shape) {
         this.flat.set(shape.id, shape);
-        if (shape.type == ShapeType.Artboard) {
+        if (shape.type === ShapeType.Artboard) {
             this.artboards.set(shape.id, shape as Artboard);
         }
     }
     removeShape(shape: Shape) {
         this.flat.delete(shape.id);
-        if (shape.type == ShapeType.Artboard) {
+        if (shape.type === ShapeType.Artboard) {
             this.artboards.delete(shape.id);
         }
         const child = (shape as GroupShape).childs;
