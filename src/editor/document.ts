@@ -5,41 +5,13 @@ import { PageListItem } from "../data/typesdefine";
 import { newPage } from "./creator";
 import { v4 as uuid } from "uuid";
 import { exportPage } from "../io/baseexport";
-import { importPage, IImportContext } from "../io/baseimport";
-import { IExportContext } from "../io/baseexport";
+import { importPage } from "../io/baseimport";
 import { newDocument } from "./creator";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);
 }
-class ExfContext implements IExportContext {
-    afterExport(obj: any): void {
-        if (!obj.typeId) {
-            //
-        }
-        else if (obj.typeId === 'symbol-ref-shape') {
-            this.symbols.add(obj.refId)
-            this.allsymbols.add(obj.refId)
-        }
-        else if (obj.typeId === 'image-shape') {
-            this.allmedias.add(obj.imageRef)
-        }
-        else if (obj.typeId === 'artboard-ref') {
-            this.artboards.add(obj.refId)
-            this.allartboards.add(obj.refId)
-        }
-    }
 
-    symbols = new Set<string>()
-    artboards = new Set<string>()
-
-    allmedias = new Set<string>()
-    allartboards = new Set<string>();
-    allsymbols = new Set<string>();
-}
-const noeffectCtx = new class implements IImportContext {
-    afterImport(obj: any): void { }
-}
 export class DocEditor {
     private __repo: Repository;
     private __document: Document;
@@ -83,9 +55,8 @@ export class DocEditor {
     }
     // 新建副本
     copy(page: Page, name: string): Page {
-        const ectx = new ExfContext();
-        const np = exportPage(ectx, page);
-        const p: Page = importPage(noeffectCtx, np);
+        const np = exportPage(page);
+        const p: Page = importPage(np);
         p.name = name;
         p.id = uuid();
         return p;

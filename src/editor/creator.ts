@@ -17,9 +17,6 @@ import {
 import { BasicArray } from "../data/basic";
 import { Para, Text } from "../data/text";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-const noeffectCtx = new class implements IImportContext {
-    afterImport(_: any): void { }
-}
 
 export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
@@ -37,13 +34,13 @@ export function newDocument(documentName: string, repo: Repository): Document {
 export function newPage(name: string): Page {
     templage_page.id = uuid();
     templage_page.name = name;
-    return importPage(noeffectCtx, templage_page as types.Page);
+    return importPage(templage_page as types.Page);
 }
 
 export function newGroupShape(name: string): GroupShape {
     template_group_shape.id = uuid();
     template_group_shape.name = name // i18n
-    const group = importGroupShape(noeffectCtx, template_group_shape as types.GroupShape);
+    const group = importGroupShape(template_group_shape as types.GroupShape);
     addCommonAttr(group)
     return group;
 }
@@ -68,7 +65,7 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     template_artboard.id = uuid();
     template_artboard.name = name;
     template_artboard.frame = frame;
-    const artboard = importArtboard(noeffectCtx, template_artboard as types.Artboard);
+    const artboard = importArtboard(template_artboard as types.Artboard);
     const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 255, 255, 255);
     const fill = new Fill(true, FillType.SolidColor, fillColor, contextSettings);
@@ -134,7 +131,7 @@ export function newTextShape(name: string, frame: ShapeFrame): TextShape {
     template_text_shape.name = name // i18n
     frame.width = 120;
     frame.height = 40;
-    const textshape: TextShape = importTextShape(noeffectCtx, template_text_shape as types.TextShape);
+    const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
     const style = newStyle();
     addCommonAttr(textshape);
     textshape.style = style;

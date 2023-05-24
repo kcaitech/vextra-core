@@ -1,14 +1,24 @@
 import { Repository } from "../data/transact";
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
-import { Shape, GroupShape } from "../data/shape";
+import { Shape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, RectShape, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
 import { updateFrame } from "./utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { newArtboard, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
+import { ShapeGroupCmd, ShapeInsert, ShapeMultiModify } from "coop/cmds";
+import { exportArtboard } from "io/baseexport";
+import { Artboard } from "data/artboard";
+import { exportImageShape } from "io/baseexport";
+import { exportLineShape } from "io/baseexport";
+import { exportOvalShape } from "io/baseexport";
+import { exportPathShape } from "io/baseexport";
+import { exportRectShape } from "io/baseexport";
+import { exportSymbolRefShape } from "io/baseexport";
+import { exportSymbolShape } from "io/baseexport";
+import { exportTextShape } from "io/baseexport";
 
 interface PageXY { // 页面坐标系的xy
-    x: number
     y: number
 }
 export interface AspectRatio {
@@ -17,6 +27,7 @@ export interface AspectRatio {
 }
 export interface ControllerOrigin { // 页面坐标系的xy
     x: number
+    y: number
     y: number
 }
 export interface ControllerFrame {// 页面坐标系
@@ -118,7 +129,20 @@ function singleHdl(shape: Shape, type: CtrlElementType, start: PageXY, end: Page
 // 单个图形处理(编组对象)
 function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
 
+function exportShape(shape: Shape): string | undefined {
+    switch (shape.type) {
+        case ShapeType.Artboard: return JSON.stringify(exportArtboard(shape as Artboard))
+        case ShapeType.Image: return JSON.stringify(exportImageShape(shape as ImageShape)) // todo
+        case ShapeType.Line: return JSON.stringify(exportLineShape(shape as LineShape))
+        case ShapeType.Oval: return JSON.stringify(exportOvalShape(shape as OvalShape))
+        case ShapeType.Path: return JSON.stringify(exportPathShape(shape as PathShape))
+        case ShapeType.Rectangle: return JSON.stringify(exportRectShape(shape as RectShape))
+        case ShapeType.SymbolRef: return JSON.stringify(exportSymbolRefShape(shape as SymbolRefShape))
+        case ShapeType.Symbol: return JSON.stringify(exportSymbolShape(shape as SymbolShape))
+        case ShapeType.Text: return JSON.stringify(exportTextShape(shape as TextShape))
+    }
 }
+
 // 处理异步编辑
 export class Controller {
     private __repo: Repository;
@@ -144,8 +168,10 @@ export class Controller {
         this.__repo.start("createshape", {});
         let status: Status = Status.Pending;
         let newShape: Shape | undefined;
+        let saveParent: GroupShape | undefined;
         const init = (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame): Shape | undefined => {
             status = Status.Pending;
+            saveParent = parent;
             const shape = this.create(type, name, frame);
             const xy = parent.frame2Page();
             shape.frame.x -= xy.x;
@@ -215,7 +241,13 @@ export class Controller {
 
         const close = () => {
             if (status == Status.Fulfilled) {
-                this.__repo.commit({});
+                const shapeJson = exportShape(newShape!);
+                if (!shapeJson) {
+                    this.__repo.rollback(); // 出错了！
+                }
+                else {
+                    this.__repo.commit(new ShapeInsert(saveParent!.id, saveParent!.childs.length - 1, shapeJson));
+                }
             } else {
                 this.__repo.rollback();
             }
@@ -228,6 +260,31 @@ export class Controller {
         if (this.__repo.transactCtx.transact) {
             this.__repo.rollback();
         }
+
+        // 保存可能修改到的属性
+        const saveDatas: {
+            shape: Shape,
+            x: number,
+            y: number,
+            w: number,
+            h: number,
+            rotate: number | undefined,
+            hflip: boolean | undefined,
+            vflip: boolean | undefined
+        }[] = shapes.map((shape) => {
+            const frame = shape.frame;
+            return {
+                shape,
+                x: frame.x,
+                y: frame.y,
+                w: frame.width,
+                h: frame.height,
+                rotate: shape.rotation,
+                hflip: shape.isFlippedHorizontal,
+                vflip: shape.isFlippedVertical
+            }
+        })
+
         this.__repo.start("action", {});
         let status: Status = Status.Pending;
         const execute = (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => {
@@ -260,7 +317,29 @@ export class Controller {
         }
         const close = () => {
             if (status == Status.Fulfilled) {
-                this.__repo.commit({});
+
+                const modifys = saveDatas.reduce((pre: { targetId: string, attrId: string, value?: string | number | boolean }[], cur) => {
+                    const frame = cur.shape.frame;
+                    if (frame.x !== cur.x || frame.y !== cur.y) {
+                        const op = { targetId: cur.shape.id, attrId: "move", value: JSON.stringify({ x: frame.x, y: frame.y }) };
+                        pre.push(op)
+                    }
+                    if (frame.width !== cur.w || frame.height !== cur.h) {
+                        const op = { targetId: cur.shape.id, attrId: "frame", value: JSON.stringify({ w: frame.width, h: frame.height }) };
+                        pre.push(op)
+                    }
+                    if (cur.shape.isFlippedHorizontal !== cur.hflip) {
+                        const op = { targetId: cur.shape.id, attrId: "isFlippedHorizontal", value: cur.shape.isFlippedHorizontal };
+                        pre.push(op)
+                    }
+                    if (cur.shape.isFlippedVertical !== cur.vflip) {
+                        const op = { targetId: cur.shape.id, attrId: "isFlippedVertical", value: cur.shape.isFlippedVertical };
+                        pre.push(op)
+                    }
+                    return pre;
+                }, []);
+
+                this.__repo.commit(new ShapeMultiModify(modifys));
             } else {
                 this.__repo.rollback();
             }
@@ -272,6 +351,29 @@ export class Controller {
         if (this.__repo.transactCtx.transact) {
             this.__repo.rollback();
         }
+        // 保存可能修改到的属性
+        const saveDatas: {
+            shape: Shape,
+            x: number,
+            y: number,
+            w: number,
+            h: number,
+            rotate: number | undefined,
+            hflip: boolean | undefined,
+            vflip: boolean | undefined
+        }[] = [shape].map((shape) => {
+            const frame = shape.frame;
+            return {
+                shape,
+                x: frame.x,
+                y: frame.y,
+                w: frame.width,
+                h: frame.height,
+                rotate: shape.rotation,
+                hflip: shape.isFlippedHorizontal,
+                vflip: shape.isFlippedVertical
+            }
+        })
         this.__repo.start("action", {});
         let status: Status = Status.Pending;
         const execute = (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => {
@@ -292,7 +394,28 @@ export class Controller {
         }
         const close = () => {
             if (status == Status.Fulfilled) {
-                this.__repo.commit({});
+                const modifys = saveDatas.reduce((pre: { targetId: string, attrId: string, value?: string | number | boolean }[], cur) => {
+                    const frame = cur.shape.frame;
+                    if (frame.x !== cur.x || frame.y !== cur.y) {
+                        const op = { targetId: cur.shape.id, attrId: "move", value: JSON.stringify({ x: frame.x, y: frame.y }) };
+                        pre.push(op)
+                    }
+                    if (frame.width !== cur.w || frame.height !== cur.h) {
+                        const op = { targetId: cur.shape.id, attrId: "frame", value: JSON.stringify({ w: frame.width, h: frame.height }) };
+                        pre.push(op)
+                    }
+                    if (cur.shape.isFlippedHorizontal !== cur.hflip) {
+                        const op = { targetId: cur.shape.id, attrId: "isFlippedHorizontal", value: cur.shape.isFlippedHorizontal };
+                        pre.push(op)
+                    }
+                    if (cur.shape.isFlippedVertical !== cur.vflip) {
+                        const op = { targetId: cur.shape.id, attrId: "isFlippedVertical", value: cur.shape.isFlippedVertical };
+                        pre.push(op)
+                    }
+                    return pre;
+                }, []);
+
+                this.__repo.commit(new ShapeMultiModify(modifys));
             } else {
                 this.__repo.rollback();
             }
@@ -302,9 +425,31 @@ export class Controller {
     }
     // 图形位置移动
     public asyncTransfer(s: Shape[]): AsyncTransfer {
-        if (this.__repo.transactCtx.transact) {
+        if (this.__repo.transactCtx.transact) { // ???
             this.__repo.rollback();
         }
+
+        // 保存可能修改到的属性
+        const saveDatas: {
+            shape: Shape,
+            x: number,
+            y: number,
+            parent: Shape | undefined,
+            idx: number
+        }[] = s.map((shape) => {
+            const frame = shape.frame;
+            return {
+                shape,
+                x: frame.x,
+                y: frame.y,
+                parent: shape.parent,
+                idx: (() => {
+                    if (shape.parent) return (shape.parent as GroupShape).childs.findIndex((v) => v.id === shape.id)
+                    return -1;
+                })(),
+            }
+        })
+
         this.__repo.start("transfer", {});
         const shapes: Shape[] = s;
         let status: Status = Status.Pending;
@@ -341,7 +486,23 @@ export class Controller {
         }
         const close = () => {
             if (status == Status.Fulfilled) {
-                this.__repo.commit({});
+
+                const cmd = saveDatas.reduce((pre, cur) => {
+                    const frame = cur.shape.frame;
+                    if (frame.x !== cur.x || frame.y !== cur.y) {
+                        pre.addModify(cur.shape.id, "move", JSON.stringify({ x: frame.x, y: frame.y }))
+                    }
+                    if (cur.parent && cur.shape.parent && cur.parent.id !== cur.shape.parent.id) {
+                        pre.addMove(
+                            cur.parent.id,
+                            cur.shape.parent.id,
+                            cur.idx,
+                            (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id))
+                    }
+                    return pre;
+                }, new ShapeGroupCmd())
+
+                this.__repo.commit(cmd);
             } else {
                 this.__repo.rollback();
             }
