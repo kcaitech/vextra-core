@@ -8,10 +8,23 @@ import { newArtboard, newLineShape, newOvalShape, newRectShape, newTextShape } f
 import { Page } from "../data/page";
 
 interface PageXY { // 页面坐标系的xy
-    x: number,
+    x: number
     y: number
 }
-
+export interface AspectRatio {
+    x: number
+    y: number
+}
+export interface ControllerOrigin { // 页面坐标系的xy
+    x: number
+    y: number
+}
+export interface ControllerFrame {// 页面坐标系
+    x: number
+    y: number
+    width: number
+    height: number
+}
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
     RectRight = 'rect-right',
@@ -40,6 +53,7 @@ export interface AsyncTransfer {
 export interface AsyncBaseAction {
     execute: (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => void;
     close: () => undefined;
+    execute4multi: (shapes: Shape[], type: CtrlElementType, oldControllerFrame: ControllerFrame, newControllerFrame: ControllerFrame) => void;
 }
 export interface AsyncLineAction {
     execute: (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => void;
@@ -56,7 +70,55 @@ export enum Status {
     Pending = 'pending',
     Fulfilled = 'fulfilled'
 }
+// 单个图形处理(普通对象)
+function singleHdl(shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
+    if (actionType === 'rotate') {
+        const newDeg = (shape.rotation || 0) + (deg || 0);
+        shape.rotate(newDeg);
+    } else {
+        if (type === CtrlElementType.RectLT) {
+            adjustLT2(shape, end.x, end.y);
+        } else if (type === CtrlElementType.RectRT) {
+            adjustRT2(shape, end.x, end.y);
+        } else if (type === CtrlElementType.RectRB) {
+            adjustRB2(shape, end.x, end.y);
+        } else if (type === CtrlElementType.RectLB) {
+            adjustLB2(shape, end.x, end.y);
+        } else if (type === CtrlElementType.RectTop) {
+            const m = shape.matrix2Page();
+            const p1 = m.inverseCoord(start.x, start.y);
+            const p2 = m.inverseCoord(end.x, end.y);
+            const dy = p2.y - p1.y;
+            const { x, y } = m.computeCoord(0, dy);
+            adjustLT2(shape, x, y);
+        } else if (type === CtrlElementType.RectRight) {
+            const m = shape.matrix2Page();
+            const p1 = m.inverseCoord(start.x, start.y);
+            const p2 = m.inverseCoord(end.x, end.y);
+            const dx = p2.x - p1.x;
+            const { x, y } = m.computeCoord(shape.frame.width + dx, 0);
+            adjustRT2(shape, x, y);
+        } else if (type === CtrlElementType.RectBottom) {
+            const m = shape.matrix2Page();
+            const p1 = m.inverseCoord(start.x, start.y);
+            const p2 = m.inverseCoord(end.x, end.y);
+            const dy = p2.y - p1.y;
+            const { x, y } = m.computeCoord(shape.frame.width, shape.frame.height + dy);
+            adjustRB2(shape, x, y);
+        } else if (type === CtrlElementType.RectLeft) {
+            const m = shape.matrix2Page();
+            const p1 = m.inverseCoord(start.x, start.y);
+            const p2 = m.inverseCoord(end.x, end.y);
+            const dx = p2.x - p1.x;
+            const { x, y } = m.computeCoord(dx, shape.frame.height);
+            adjustLB2(shape, x, y);
+        }
+    }
+}
+// 单个图形处理(编组对象)
+function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
 
+}
 // 处理异步编辑
 export class Controller {
     private __repo: Repository;
@@ -170,51 +232,28 @@ export class Controller {
         let status: Status = Status.Pending;
         const execute = (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => {
             status = Status.Pending;
-            for (let i = 0; i < shapes.length; i++) {
-                const item = shapes[i];
-                if (item.isLocked) continue; // 🔒住不让动
-                if (actionType === 'rotate') {
-                    const newDeg = (item.rotation || 0) + (deg || 0);
-                    item.rotate(newDeg);
+            const len = shapes.length;
+            if (len === 1) {
+                const item = shapes[0];
+                if (item.type === ShapeType.Group) {
+                    singleHdl4Group(item, type, start, end, deg, actionType); // 编组对象处理
                 } else {
-                    if (type === CtrlElementType.RectLT) {
-                        adjustLT2(item, end.x, end.y);
-                    } else if (type === CtrlElementType.RectRT) {
-                        adjustRT2(item, end.x, end.y);
-                    } else if (type === CtrlElementType.RectRB) {
-                        adjustRB2(item, end.x, end.y);
-                    } else if (type === CtrlElementType.RectLB) {
-                        adjustLB2(item, end.x, end.y);
-                    } else if (type === CtrlElementType.RectTop) {
-                        const m = item.matrix2Page();
-                        const p1 = m.inverseCoord(start.x, start.y);
-                        const p2 = m.inverseCoord(end.x, end.y);
-                        const dy = p2.y - p1.y;
-                        const { x, y } = m.computeCoord(0, dy);
-                        adjustLT2(item, x, y);
-                    } else if (type === CtrlElementType.RectRight) {
-                        const m = item.matrix2Page();
-                        const p1 = m.inverseCoord(start.x, start.y);
-                        const p2 = m.inverseCoord(end.x, end.y);
-                        const dx = p2.x - p1.x;
-                        const { x, y } = m.computeCoord(item.frame.width + dx, 0);
-                        adjustRT2(item, x, y);
-                    } else if (type === CtrlElementType.RectBottom) {
-                        const m = item.matrix2Page();
-                        const p1 = m.inverseCoord(start.x, start.y);
-                        const p2 = m.inverseCoord(end.x, end.y);
-                        const dy = p2.y - p1.y;
-                        const { x, y } = m.computeCoord(item.frame.width, item.frame.height + dy);
-                        adjustRB2(item, x, y);
-                    } else if (type === CtrlElementType.RectLeft) {
-                        const m = item.matrix2Page();
-                        const p1 = m.inverseCoord(start.x, start.y);
-                        const p2 = m.inverseCoord(end.x, end.y);
-                        const dx = p2.x - p1.x;
-                        const { x, y } = m.computeCoord(dx, item.frame.height);
-                        adjustLB2(item, x, y);
-                    }
+                    singleHdl(item, type, start, end, deg, actionType); // 普通对象处理
                 }
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const execute4multi = (shapes: Shape[], type: CtrlElementType, oldControllerFrame: ControllerFrame, newControllerFrame: ControllerFrame) => {
+            status = Status.Pending;
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shapes[i];
+                const { x, y, width, height } = shape.frame2Page();
+                const { x: ox, y: oy, width: ow, height: oh } = oldControllerFrame;
+                const { x: nx, y: ny, width: nw, height: nh } = newControllerFrame;
+                const ratio = { x: nw / ow, y: nh / oh };
+                expandTo(shape, width * ratio.x, height * ratio.y);
+                translateTo(shape, nx + (x - ox) * ratio.x, ny + (y - oy) * ratio.y);
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -227,7 +266,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { execute, close }
+        return { execute, close, execute4multi }
     }
     public asyncLineEditor(shape: Shape): AsyncLineAction {
         if (this.__repo.transactCtx.transact) {

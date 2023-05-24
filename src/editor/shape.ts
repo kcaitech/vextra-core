@@ -41,23 +41,6 @@ export class ShapeEditor {
         this.__shape.setLock();
         this.__repo.commit({});
     }
-    public continuityEditor(name: string) {
-        const _this = this;
-        const shape = this.__shape;
-        function start() {
-            _this.__repo.start(name, {});
-        }
-        function process() {
-            _this.__repo.transactCtx.fireNotify();
-        }
-        function back() {
-            _this.__repo.rollback();
-        }
-        function end() {
-            _this.__repo.commit({})
-        }
-        return { shape, start, process, back, end, expand, expandTo, translate, translateTo }
-    }
     public translate(dx: number, dy: number, round: boolean = true) {
         this.repowrap("translate", () => {
             translate(this.__shape, dx, dy, round);
