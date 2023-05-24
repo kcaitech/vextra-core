@@ -1,11 +1,7 @@
+import { ICMD } from 'coop/cmds';
 import { objectId, __objidkey } from '../basic/objectid';
 import { BasicMap, castNotifiable, IDataGruad, ISave4Restore, Notifiable } from './basic';
 import { Watchable } from './basic';
-
-export interface ICMD {
-    exec(): void;
-    unexec(): void;
-}
 
 class TContext {
     public transact?: Transact;
@@ -301,7 +297,7 @@ class ArrayRec extends Rec {
     }
 }
 
-class Transact extends Array<Rec | ICMD> {
+class Transact extends Array<Rec> {
     private __name: string;
     private __cache: Map<number, ArrayRec> = new Map();
     // private __cmds: Array<ICMD> = [];
@@ -314,43 +310,16 @@ class Transact extends Array<Rec | ICMD> {
         // this.swap(ctx);
         for (let i = 0, len = this.length; i < len; i++) {
             const r = this[i];
-            if (r instanceof Rec) {
-                r.swap(ctx);
-            }
-            else {
-                r.exec();
-            }
+            r.swap(ctx);
         }
     }
     unexec(ctx: TContext): void {
-
-        // 数组的操作是操作完[1，2，3]元素后再操作length，
-        // 如果反过来，先操作length再操作元素，会使元素数据丢失
-        // for (let i = 0, len = this.length; i < len; i++) {
-        //     const r = this[i];
-        //     if (r instanceof Rec) {
-        //         r.swap(ctx);
-        //     }
-        //     // else {
-        //     //     r.unexec();
-        //     // }
-        // }
         for (let i = this.length - 1; i >= 0; i--) {
             const r = this[i];
-            if (r instanceof Rec) {
-                r.swap(ctx);
-            }
-            else {
-                r.unexec();
-            }
+            r.swap(ctx);
         }
     }
-    // swap(ctx: TContext) {
-    //     for (let i = this.length - 1; i >= 0; i--) {
-    //         this[i].swap(ctx);
-    //     }
-    // }
-    push(...items: (Rec | ICMD)[]): number {
+    push(...items: Rec[]): number {
         for (let i = 0, len = items.length; i < len; i++) {
             const a = items[i];
             if (a instanceof Rec && a.target instanceof Array) {
@@ -369,9 +338,27 @@ class Transact extends Array<Rec | ICMD> {
         return this.length;
         // return super.push(...items);
     }
-    // pushCMD(...cmds: ICMD[]): void {
-    // }
 }
+
+interface R {
+    local: { // local cmd
+        userid: string,
+        id: string, // 需要唯一
+        cmd: ICMD,
+        // ref: string, // userside id // post时提供
+        poststate: "none" | "posted" | "done"
+        savedata: any, // delete时需要, shape记录id,及加入到deletedshapes, 文本直接记录被删除的文本及属性
+    }
+    remote: { // local & remote cmd
+        userid: string,
+        id: string,
+        cmd: ICMD,
+        ref: string, 
+        savedata: any, // 用于用户撤销操作，不需要传前端，需记录到数据库
+    }
+}
+// deletedshapes, 用于undo及op操作
+// 远程操作不需要记录transact, 但需要proxy. 有远程操作后, 之前的transact也不能直接undo了
 
 export class Repository extends Watchable(Object) implements IDataGruad {
     private __context: TContext;
@@ -379,6 +366,8 @@ export class Repository extends Watchable(Object) implements IDataGruad {
     private __trans: Transact[] = [];
     private __index: number = 0;
     // private __selection: ISave4Restore;
+
+
 
     constructor() {
         super();
@@ -434,18 +423,11 @@ export class Repository extends Watchable(Object) implements IDataGruad {
         this.__context.transact = new Transact(name);
     }
 
-    push(...cmds: ICMD[]): void {
-        if (this.__context.transact === undefined) {
-            throw new Error();
-        }
-        this.__context.transact.push(...cmds);
-    }
-
     /**
      * 
      * @param cmd 最后打包成一个cmd，用于op，也可另外存
      */
-    commit(cmd: any) {
+    commit(cmd: ICMD | {}) {
         if (this.__context.transact === undefined) {
             throw new Error();
         }
