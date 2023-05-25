@@ -32,12 +32,12 @@ export class ShapeEditor {
         this.__repo.commit({});
     }
     public toggleVisible(isVisible: boolean) {
-        this.__repo.start('setVisible', {});
+        this.__repo.start('toggleVisible', {});
         this.__shape.toggleVisible(isVisible);
         this.__repo.commit({});
     }
     public toggleLock(isLocked: boolean) {
-        this.__repo.start('setLock', {});
+        this.__repo.start('toggleLock', {});
         this.__shape.toggleLock(isLocked);
         this.__repo.commit({});
     }
