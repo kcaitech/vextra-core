@@ -240,13 +240,14 @@ export class Controller {
         }
 
         const close = () => {
-            if (status == Status.Fulfilled) {
-                const shapeJson = exportShape(newShape!);
-                if (!shapeJson) {
+            if (status == Status.Fulfilled && newShape && saveParent) {
+                const shapeJson = exportShape(newShape);
+                const page = saveParent.getPage();
+                if (!shapeJson || !page) {
                     this.__repo.rollback(); // 出错了！
                 }
                 else {
-                    this.__repo.commit(new ShapeInsert(saveParent!.id, saveParent!.childs.length - 1, shapeJson));
+                    this.__repo.commit(new ShapeInsert(page.id, saveParent.id, saveParent.childs.length - 1, shapeJson));
                 }
             } else {
                 this.__repo.rollback();
@@ -316,7 +317,7 @@ export class Controller {
             status = Status.Fulfilled;
         }
         const close = () => {
-            if (status == Status.Fulfilled) {
+            if (status == Status.Fulfilled && saveDatas.length > 0) {
 
                 const modifys = saveDatas.reduce((pre: { targetId: string, attrId: string, value?: string | number | boolean }[], cur) => {
                     const frame = cur.shape.frame;
@@ -338,8 +339,13 @@ export class Controller {
                     }
                     return pre;
                 }, []);
-
-                this.__repo.commit(new ShapeMultiModify(modifys));
+                const page = saveDatas[0].shape.getPage();
+                if (!page) {
+                    this.__repo.rollback();
+                }
+                else {
+                    this.__repo.commit(new ShapeMultiModify(page.id, modifys));
+                }
             } else {
                 this.__repo.rollback();
             }
@@ -393,7 +399,7 @@ export class Controller {
             status = Status.Fulfilled;
         }
         const close = () => {
-            if (status == Status.Fulfilled) {
+            if (status == Status.Fulfilled && saveDatas.length > 0) {
                 const modifys = saveDatas.reduce((pre: { targetId: string, attrId: string, value?: string | number | boolean }[], cur) => {
                     const frame = cur.shape.frame;
                     if (frame.x !== cur.x || frame.y !== cur.y) {
@@ -415,7 +421,13 @@ export class Controller {
                     return pre;
                 }, []);
 
-                this.__repo.commit(new ShapeMultiModify(modifys));
+                const page = saveDatas[0].shape.getPage();
+                if (!page) {
+                    this.__repo.rollback();
+                }
+                else {
+                    this.__repo.commit(new ShapeMultiModify(page.id, modifys));
+                }
             } else {
                 this.__repo.rollback();
             }
@@ -485,24 +497,34 @@ export class Controller {
             status = Status.Fulfilled;
         }
         const close = () => {
-            if (status == Status.Fulfilled) {
+            if (status == Status.Fulfilled && saveDatas.length > 0) {
+                const page = saveDatas[0].shape.getPage();
+                if (!page) {
+                    this.__repo.rollback();
+                }
+                else {
 
-                const cmd = saveDatas.reduce((pre, cur) => {
-                    const frame = cur.shape.frame;
-                    if (frame.x !== cur.x || frame.y !== cur.y) {
-                        pre.addModify(cur.shape.id, "move", JSON.stringify({ x: frame.x, y: frame.y }))
-                    }
-                    if (cur.parent && cur.shape.parent && cur.parent.id !== cur.shape.parent.id) {
-                        pre.addMove(
-                            cur.parent.id,
-                            cur.shape.parent.id,
-                            cur.idx,
-                            (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id))
-                    }
-                    return pre;
-                }, new ShapeGroupCmd())
+                    const cmd = saveDatas.reduce((pre, cur) => {
+                        const frame = cur.shape.frame;
+                        if (frame.x !== cur.x || frame.y !== cur.y) {
+                            const page = cur.shape.getPage();
 
-                this.__repo.commit(cmd);
+                            pre.addModify(page!.id, cur.shape.id, "move", JSON.stringify({ x: frame.x, y: frame.y }))
+                        }
+                        if (cur.parent && cur.shape.parent && cur.parent.id !== cur.shape.parent.id) {
+                            const page = cur.shape.getPage();
+                            pre.addMove(page!.id,
+                                cur.parent.id,
+                                cur.shape.parent.id,
+                                cur.idx,
+                                (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id))
+                        }
+                        return pre;
+                    }, new ShapeGroupCmd(page.id))
+
+                    this.__repo.commit(cmd);
+                }
+
             } else {
                 this.__repo.rollback();
             }
