@@ -31,14 +31,14 @@ export class ShapeEditor {
         this.__shape.setName(name);
         this.__repo.commit({});
     }
-    public toggleVisible(isVisible: boolean) {
+    public toggleVisible() {
         this.__repo.start('toggleVisible', {});
-        this.__shape.toggleVisible(isVisible);
+        this.__shape.toggleVisible();
         this.__repo.commit({});
     }
-    public toggleLock(isLocked: boolean) {
+    public toggleLock() {
         this.__repo.start('toggleLock', {});
-        this.__shape.toggleLock(isLocked);
+        this.__shape.toggleLock();
         this.__repo.commit({});
     }
     public translate(dx: number, dy: number, round: boolean = true) {
