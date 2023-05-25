@@ -213,6 +213,9 @@ export class PageEditor {
             default: return newRectShape(name, frame);
         }
     }
+    createGroup() {
+        return newGroupShape('tool-group');
+    }
     // 移动shape到目标Group的指定位置
     move(shape: Shape, target: GroupShape, to: number): boolean {
         const parent = shape.parent;
