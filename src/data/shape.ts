@@ -140,40 +140,12 @@ export class Shape extends Watchable(classes.Shape) {
     setName(name: string) {
         this.name = name;
     }
-    toggleVisible(isVisible: boolean) {
-        this.isVisible = isVisible;
-        if ([ShapeType.Group, ShapeType.Artboard].includes(this.type)) {
-            const childs: Shape[] = this.childs
-            setChild(childs);
-        }
-        function setChild(childs: Shape[]) {
-            for (let i = 0; i < childs.length; i++) {
-                const item = childs[i];
-                item.isVisible = isVisible;
-                if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
-                    const c: Shape[] = (item as GroupShape).childs;
-                    setChild(c);
-                }
-            }
-        }
+    toggleVisible() {
+        this.isVisible = !this.isVisible;
     }
 
-    toggleLock(isLocked: boolean) {
-        this.isLocked = isLocked;
-        if ([ShapeType.Group, ShapeType.Artboard].includes(this.type)) {
-            const childs: Shape[] = this.childs
-            setChild(childs);
-        }
-        function setChild(childs: Shape[]) {
-            for (let i = 0; i < childs.length; i++) {
-                const item = childs[i];
-                item.isLocked = isLocked;
-                if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
-                    const c: Shape[] = (item as GroupShape).childs;
-                    setChild(c);
-                }
-            }
-        }
+    toggleLock() {
+        this.isLocked = !this.isLocked;
     }
 }
 
