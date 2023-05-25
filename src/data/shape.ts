@@ -140,8 +140,8 @@ export class Shape extends Watchable(classes.Shape) {
     setName(name: string) {
         this.name = name;
     }
-    setVisible() {
-        this.isVisible = !this.isVisible;
+    toggleVisible(isVisible: boolean) {
+        this.isVisible = isVisible;
         if ([ShapeType.Group, ShapeType.Artboard].includes(this.type)) {
             const childs: Shape[] = this.childs
             setChild(childs);
@@ -149,7 +149,7 @@ export class Shape extends Watchable(classes.Shape) {
         function setChild(childs: Shape[]) {
             for (let i = 0; i < childs.length; i++) {
                 const item = childs[i];
-                item.isVisible = !item.isVisible;
+                item.isVisible = isVisible;
                 if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
                     const c: Shape[] = (item as GroupShape).childs;
                     setChild(c);
@@ -158,8 +158,8 @@ export class Shape extends Watchable(classes.Shape) {
         }
     }
 
-    setLock() {
-        this.isLocked = !this.isLocked;
+    toggleLock(isLocked: boolean) {
+        this.isLocked = isLocked;
         if ([ShapeType.Group, ShapeType.Artboard].includes(this.type)) {
             const childs: Shape[] = this.childs
             setChild(childs);
@@ -167,7 +167,7 @@ export class Shape extends Watchable(classes.Shape) {
         function setChild(childs: Shape[]) {
             for (let i = 0; i < childs.length; i++) {
                 const item = childs[i];
-                item.isLocked = !item.isLocked;
+                item.isLocked = isLocked;
                 if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
                     const c: Shape[] = (item as GroupShape).childs;
                     setChild(c);
@@ -605,7 +605,7 @@ export class OvalShape extends PathShape implements classes.OvalShape {
     }
     getPath(offsetX: number, offsetY: number): Path;
     getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
+    getPath(arg1?: boolean | number, arg2?: number): Path { // TODO 这个path生成还有一些问题，
         const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
         const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
         const w = this.frame.width;
