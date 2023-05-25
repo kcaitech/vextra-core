@@ -33,12 +33,12 @@ export class ShapeEditor {
     }
     public toggleVisible(isVisible: boolean) {
         this.__repo.start('setVisible', {});
-        this.__shape.setVisible(isVisible);
+        this.__shape.toggleVisible(isVisible);
         this.__repo.commit({});
     }
     public toggleLock(isLocked: boolean) {
         this.__repo.start('setLock', {});
-        this.__shape.setLock(isLocked);
+        this.__shape.toggleLock(isLocked);
         this.__repo.commit({});
     }
     public translate(dx: number, dy: number, round: boolean = true) {
