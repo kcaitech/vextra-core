@@ -284,6 +284,7 @@ export function exportGradientType(source: types.GradientType, ctx?: IExportCont
 /* fill */
 export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill {
     const ret = {
+        id: source.id,
         isEnabled: source.isEnabled,
         fillType: exportFillType(source.fillType, ctx),
         color: exportColor(source.color, ctx),
@@ -427,6 +428,7 @@ export function exportColorControls(source: types.ColorControls, ctx?: IExportCo
 /* border */
 export function exportBorder(source: types.Border, ctx?: IExportContext): types.Border {
     const ret = {
+        id: source.id,
         isEnabled: source.isEnabled,
         fillType: exportFillType(source.fillType, ctx),
         color: exportColor(source.color, ctx),
@@ -730,6 +732,12 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                     if (source.childs[i].typeId == 'symbol-shape') {
                         return exportSymbolShape(source.childs[i] as types.SymbolShape, ctx)
                     }
+                    if (source.childs[i].typeId == 'line-shape') {
+                        return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'oval-shape') {
+                        return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    }
                     {
                         console.error(source.childs[i])
                     }
@@ -897,6 +905,15 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (source.childs[i].typeId == 'text-shape') {
                         return exportTextShape(source.childs[i] as types.TextShape, ctx)
                     }
+                    if (source.childs[i].typeId == 'artboard') {
+                        return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                    }
+                    if (source.childs[i].typeId == 'line-shape') {
+                        return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'oval-shape') {
+                        return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    }
                     {
                         console.error(source.childs[i])
                     }
@@ -949,6 +966,15 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         }
                         if (source.childs[i].typeId == 'text-shape') {
                             return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                        }
+                        if (source.childs[i].typeId == 'artboard') {
+                            return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                        }
+                        if (source.childs[i].typeId == 'line-shape') {
+                            return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                        }
+                        if (source.childs[i].typeId == 'oval-shape') {
+                            return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                         }
                         {
                             console.error(source.childs[i])
@@ -1016,6 +1042,15 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         if (source.childs[i].typeId == 'text-shape') {
                             return exportTextShape(source.childs[i] as types.TextShape, ctx)
                         }
+                        if (source.childs[i].typeId == 'artboard') {
+                            return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                        }
+                        if (source.childs[i].typeId == 'line-shape') {
+                            return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                        }
+                        if (source.childs[i].typeId == 'oval-shape') {
+                            return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                        }
                         {
                             console.error(source.childs[i])
                         }
@@ -1081,6 +1116,15 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         }
                         if (source.childs[i].typeId == 'text-shape') {
                             return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                        }
+                        if (source.childs[i].typeId == 'artboard') {
+                            return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                        }
+                        if (source.childs[i].typeId == 'line-shape') {
+                            return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                        }
+                        if (source.childs[i].typeId == 'oval-shape') {
+                            return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                         }
                         {
                             console.error(source.childs[i])

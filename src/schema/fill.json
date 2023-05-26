@@ -1,0 +1,36 @@
+{
+    "description": "fill",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 36,
+            "default": "$uuid"
+        },
+        "isEnabled": {
+            "type": "boolean",
+            "default": false
+        },
+        "fillType": {
+            "$ref": "./fill-type.json"
+        },
+        "color": {
+            "$ref": "./color.json"
+        },
+        "contextSettings": {
+            "$ref": "./context-settings.json"
+        },
+        "gradient": {
+            "$ref": "./gradient.json"
+        }
+    },
+    "required": [
+        "id",
+        "isEnabled",
+        "fillType",
+        "color",
+        "contextSettings"
+    ],
+    "additionalProperties": false
+}
