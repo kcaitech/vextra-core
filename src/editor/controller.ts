@@ -17,6 +17,7 @@ import { exportRectShape } from "io/baseexport";
 import { exportSymbolRefShape } from "io/baseexport";
 import { exportSymbolShape } from "io/baseexport";
 import { exportTextShape } from "io/baseexport";
+import { SHAPE_ATTR_ID } from "./api";
 
 interface PageXY { // 页面坐标系的xy
     y: number
@@ -322,19 +323,23 @@ export class Controller {
                 const modifys = saveDatas.reduce((pre: { targetId: string, attrId: string, value?: string | number | boolean }[], cur) => {
                     const frame = cur.shape.frame;
                     if (frame.x !== cur.x || frame.y !== cur.y) {
-                        const op = { targetId: cur.shape.id, attrId: "move", value: JSON.stringify({ x: frame.x, y: frame.y }) };
+                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.xy, value: JSON.stringify({ x: frame.x, y: frame.y }) };
                         pre.push(op)
                     }
                     if (frame.width !== cur.w || frame.height !== cur.h) {
-                        const op = { targetId: cur.shape.id, attrId: "frame", value: JSON.stringify({ w: frame.width, h: frame.height }) };
+                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.wh, value: JSON.stringify({ w: frame.width, h: frame.height }) };
                         pre.push(op)
                     }
                     if (cur.shape.isFlippedHorizontal !== cur.hflip) {
-                        const op = { targetId: cur.shape.id, attrId: "isFlippedHorizontal", value: cur.shape.isFlippedHorizontal };
+                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.hflip, value: cur.shape.isFlippedHorizontal };
                         pre.push(op)
                     }
                     if (cur.shape.isFlippedVertical !== cur.vflip) {
-                        const op = { targetId: cur.shape.id, attrId: "isFlippedVertical", value: cur.shape.isFlippedVertical };
+                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.vflip, value: cur.shape.isFlippedVertical };
+                        pre.push(op)
+                    }
+                    if (cur.shape.rotation !== cur.rotate) {
+                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.rotate, value: cur.shape.rotation };
                         pre.push(op)
                     }
                     return pre;
@@ -403,19 +408,23 @@ export class Controller {
                 const modifys = saveDatas.reduce((pre: { targetId: string, attrId: string, value?: string | number | boolean }[], cur) => {
                     const frame = cur.shape.frame;
                     if (frame.x !== cur.x || frame.y !== cur.y) {
-                        const op = { targetId: cur.shape.id, attrId: "move", value: JSON.stringify({ x: frame.x, y: frame.y }) };
+                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.xy, value: JSON.stringify({ x: frame.x, y: frame.y }) };
                         pre.push(op)
                     }
                     if (frame.width !== cur.w || frame.height !== cur.h) {
-                        const op = { targetId: cur.shape.id, attrId: "frame", value: JSON.stringify({ w: frame.width, h: frame.height }) };
+                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.wh, value: JSON.stringify({ w: frame.width, h: frame.height }) };
                         pre.push(op)
                     }
                     if (cur.shape.isFlippedHorizontal !== cur.hflip) {
-                        const op = { targetId: cur.shape.id, attrId: "isFlippedHorizontal", value: cur.shape.isFlippedHorizontal };
+                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.hflip, value: cur.shape.isFlippedHorizontal };
                         pre.push(op)
                     }
                     if (cur.shape.isFlippedVertical !== cur.vflip) {
-                        const op = { targetId: cur.shape.id, attrId: "isFlippedVertical", value: cur.shape.isFlippedVertical };
+                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.vflip, value: cur.shape.isFlippedVertical };
+                        pre.push(op)
+                    }
+                    if (cur.shape.rotation !== cur.rotate) {
+                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.rotate, value: cur.shape.rotation };
                         pre.push(op)
                     }
                     return pre;
@@ -509,7 +518,7 @@ export class Controller {
                         if (frame.x !== cur.x || frame.y !== cur.y) {
                             const page = cur.shape.getPage();
 
-                            pre.addModify(page!.id, cur.shape.id, "move", JSON.stringify({ x: frame.x, y: frame.y }))
+                            pre.addModify(page!.id, cur.shape.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y }))
                         }
                         if (cur.parent && cur.shape.parent && cur.parent.id !== cur.shape.parent.id) {
                             const page = cur.shape.getPage();

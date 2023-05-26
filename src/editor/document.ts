@@ -7,6 +7,7 @@ import { v4 as uuid } from "uuid";
 import { exportPage } from "../io/baseexport";
 import { importPage } from "../io/baseimport";
 import { newDocument } from "./creator";
+import { PageDelete, PageInsert, PageMove } from "coop/cmds";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);
@@ -24,9 +25,10 @@ export class DocEditor {
         this.__repo.start('deletepage', {});
         const pagesmgr = this.__document;
         try {
+            const index = pagesmgr.indexOfPage(id);
             const isSuccess = pagesmgr.deletePage(id);
             if (isSuccess) {
-                this.__repo.commit({});
+                this.__repo.commit(new PageDelete(this.__document.id, index, 1));
                 return true;
             } else {
                 this.__repo.rollback();
@@ -43,7 +45,8 @@ export class DocEditor {
         const pagesmgr = this.__document;
         try {
             pagesmgr.insertPage(index, page);
-            this.__repo.commit({});
+            const np = exportPage(page);
+            this.__repo.commit(new PageInsert(this.__document.id, index, JSON.stringify(np)));
         } catch (error) {
             this.__repo.rollback();
         }
@@ -68,12 +71,12 @@ export class DocEditor {
             const pagesmgr = this.__document.pagesMgr;
             const target = pagesmgr.getPageMetaById(page.id);
             const idx = pagesmgr.getPageIndexById(page.id);
+            const descend = idx > to ? to : to - 1;
             if (to !== idx && target) {
-                const descend = idx > to ? to : to - 1;
                 this.__document.pagesList.splice(idx, 1);
                 this.__document.pagesList.splice(descend, 0, target);
             }
-            this.__repo.commit({});
+            this.__repo.commit(new PageMove(this.__document.id, idx, descend));
         } catch (e) {
             this.__repo.rollback();
         }
@@ -92,7 +95,7 @@ export class DocEditor {
                 if (hostIdx > -1) {
                     hostIdx = offsetOverhalf ? hostIdx + 1 : hostIdx;
                     pages.splice(hostIdx, 0, wanderer);
-                    this.__repo.commit({});
+                    this.__repo.commit(new PageMove(this.__document.id, wandererIdx, hostIdx));
                 } else {
                     this.__repo.rollback();
                 }

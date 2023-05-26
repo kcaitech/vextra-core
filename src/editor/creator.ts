@@ -52,7 +52,7 @@ export function newStyle(): Style {
     const borders = new BasicArray<Border>();
     const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 216, 216, 216);
-    const fill = new Fill(true, FillType.SolidColor, fillColor, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
     const fills = new BasicArray<Fill>();
     const innerShadows = new BasicArray<Shadow>();
     const shadows = new BasicArray<Shadow>();
@@ -68,7 +68,7 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     const artboard = importArtboard(template_artboard as types.Artboard);
     const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 255, 255, 255);
-    const fill = new Fill(true, FillType.SolidColor, fillColor, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
     artboard.style.fills.push(fill);
     artboard.hasBackgroundColor = true;
     artboard.isVisible = true;

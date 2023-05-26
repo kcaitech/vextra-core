@@ -12,6 +12,9 @@ import { createHorizontalBox } from "../basic/utils";
 import { SpanAttr } from "../data/text";
 import { deleteText, insertText } from "./text";
 import { Page } from "../data/page";
+import { ShapeDelete, ShapeModify, ShapeModifyAttr, ShapeModifyDelete, ShapeModifyInsert, TextDelete, TextInsert, TextInsert2 } from "coop/cmds";
+import { FILLS_ATTR_ID, FILLS_ID, SHAPE_ATTR_ID, TEXT_ID } from "./api";
+import { exportColor, exportFill } from "io/baseexport";
 export class ShapeEditor {
     private __shape: Shape;
     private __repo: Repository;
@@ -21,83 +24,105 @@ export class ShapeEditor {
         this.__repo = repo;
         this.__page = page;
     }
-    private repowrap(name: string, effect: () => void) {
-        this.__repo.start(name, {});
-        effect();
-        this.__repo.commit({});
-    }
+    // private repowrap(name: string, effect: () => void) {
+    //     this.__repo.start(name, {});
+    //     effect();
+    //     this.__repo.commit({});
+    // }
     public setName(name: string) {
         this.__repo.start('setName', {});
         this.__shape.setName(name);
-        this.__repo.commit({});
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.name, name));
     }
     public toggleVisible() {
         this.__repo.start('toggleVisible', {});
         this.__shape.toggleVisible();
-        this.__repo.commit({});
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.visible, JSON.stringify(this.__shape.isVisible)));
     }
     public toggleLock() {
         this.__repo.start('toggleLock', {});
         this.__shape.toggleLock();
-        this.__repo.commit({});
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.lock, JSON.stringify(this.__shape.isLocked)));
     }
     public translate(dx: number, dy: number, round: boolean = true) {
-        this.repowrap("translate", () => {
-            translate(this.__shape, dx, dy, round);
-        })
+        this.__repo.start("translate", {});
+        // this.repowrap("translate", () => {
+        translate(this.__shape, dx, dy, round);
+        // })
+        const frame = this.__shape.frame;
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y })));
     }
     public translateTo(x: number, y: number) {
-        this.repowrap("translateTo", () => {
-            translateTo(this.__shape, x, y);
-        })
+        this.__repo.start("translateTo", {});
+        // this.repowrap("translateTo", () => {
+        translateTo(this.__shape, x, y);
+        // })
+        const frame = this.__shape.frame;
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y })));
     }
     public expand(dw: number, dh: number) {
-        this.repowrap("expand", () => {
-            expand(this.__shape, dw, dh);
-        })
+        this.__repo.start("expand", {});
+        // this.repowrap("expand", () => {
+        expand(this.__shape, dw, dh);
+        // })
+        const frame = this.__shape.frame;
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.wh, JSON.stringify({ w: frame.width, h: frame.height })));
     }
     public expandTo(w: number, h: number) {
-        this.repowrap("expandTo", () => {
-            expandTo(this.__shape, w, h);
-        })
+        this.__repo.start("expandTo", {});
+        // this.repowrap("expandTo", () => {
+        expandTo(this.__shape, w, h);
+        // })
+        const frame = this.__shape.frame;
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.wh, JSON.stringify({ w: frame.width, h: frame.height })));
     }
 
     // flip
     public flipH() {
-        this.repowrap("flipHorizontal", () => {
-            this.__shape.flipHorizontal();
-            updateFrame(this.__shape);
-        })
+        this.__repo.start("flipHorizontal", {});
+        // this.repowrap("flipHorizontal", () => {
+        this.__shape.flipHorizontal();
+        updateFrame(this.__shape);
+        // })
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.hflip, JSON.stringify(this.__shape.isFlippedHorizontal)));
     }
     public flipV() {
-        this.repowrap("flipVertical", () => {
-            this.__shape.flipVertical();
-            updateFrame(this.__shape);
-        })
+        this.__repo.start("flipVertical", {});
+        // this.repowrap("flipVertical", () => {
+        this.__shape.flipVertical();
+        updateFrame(this.__shape);
+        // })
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.vflip, JSON.stringify(this.__shape.isFlippedVertical)));
     }
     // resizingConstraint
     public setResizingConstraint(value: number) {
-        this.repowrap("setResizingConstraint", () => {
-            this.__shape.setResizingConstraint(value);
-        })
+        this.__repo.start("setResizingConstraint", {});
+        // this.repowrap("setResizingConstraint", () => {
+        this.__shape.setResizingConstraint(value);
+        // })
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.resizingConstraint, JSON.stringify(this.__shape.resizingConstraint)));
     }
     // rotation
     public rotate(deg: number) {
-        this.repowrap("rotate", () => {
-            deg = deg % 360;
-            this.__shape.rotate(deg);
-            updateFrame(this.__shape);
-        })
+        this.__repo.start("rotate", {});
+        // this.repowrap("rotate", () => {
+        deg = deg % 360;
+        this.__shape.rotate(deg);
+        updateFrame(this.__shape);
+        // })
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.rotate, JSON.stringify(this.__shape.rotation)));
     }
     // radius
     public setRadius(radius: RectRadius) {
-        this.repowrap("setRadius", () => {
-            if (!(this.__shape.type === ShapeType.Rectangle)) {
-                radius.rlb = radius.rrt = radius.rrb = 0;
-            }
-            this.__shape.setRadius(radius);
-            // updateFrame(this.__shape);
-        })
+        this.__repo.start("setRadius", {});
+        // this.repowrap("setRadius", () => {
+        if (!(this.__shape.type === ShapeType.Rectangle)) {
+            radius.rlb = radius.rrt = radius.rrb = 0;
+        }
+        this.__shape.setRadius(radius);
+        // updateFrame(this.__shape);
+        // })
+        this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.radius, JSON.stringify(radius)));
     }
 
     // fill
@@ -106,16 +131,17 @@ export class ShapeEditor {
         if (this.__shape.type !== ShapeType.Artboard) {
             addFill(this.__shape.style, fill);
         }
-        this.__repo.commit({});
+        this.__repo.commit(new ShapeModifyInsert(this.__page.id, [this.__shape.id, FILLS_ID], this.__shape.style.fills.length - 1, FILLS_ATTR_ID.fill, JSON.stringify(exportFill(fill))));
     }
     public setFillColor(idx: number, color: Color) {
         this.__repo.start("setFillColor", {});
         if (this.__shape.type === ShapeType.Artboard) {
             (this.__shape as Artboard).setArtboardColor(color); // 画板的背景色不在shape的style中
+            this.__repo.commit(new ShapeModify(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.backgroundColor, JSON.stringify(exportColor(color))));
         } else {
             setFillColor(this.__shape.style, idx, color);
+            this.__repo.commit(new ShapeModify(this.__page.id, [this.__shape.id, FILLS_ID, this.__shape.style.fills[idx].id], FILLS_ATTR_ID.color, JSON.stringify(exportColor(color))));
         }
-        this.__repo.commit({});
     }
 
     public setFillEnable(idx: number) {
@@ -123,14 +149,14 @@ export class ShapeEditor {
         if (this.__shape.type !== ShapeType.Artboard) {
             setFillEnabled(this.__shape.style, idx);
         }
-        this.__repo.commit({});
+        this.__repo.commit(new ShapeModify(this.__page.id, [this.__shape.id, FILLS_ID, this.__shape.style.fills[idx].id], FILLS_ATTR_ID.enable, JSON.stringify(this.__shape.style.fills[idx].isEnabled)));
     }
     public deleteFill(idx: number) {
-        this.__repo.start("deleteFill", {});
         if (this.__shape.type !== ShapeType.Artboard) {
+            this.__repo.start("deleteFill", {});
             deleteFillByIndex(this.__shape.style, idx);
+            this.__repo.commit(new ShapeModifyDelete(this.__page.id, [this.__shape.id, FILLS_ID], idx, 1));
         }
-        this.__repo.commit({});
     }
 
     // border
@@ -210,13 +236,14 @@ export class ShapeEditor {
     public delete() {
         try {
             this.__repo.start("deleteShape", {});
-            if (this.__shape.parent) {
-                const childs = (this.__shape.parent as GroupShape).childs;
+            const parent = this.__shape.parent;
+            if (parent) {
+                const childs = (parent as GroupShape).childs;
                 const index = childs.findIndex(s => s.id === this.__shape.id);
                 if (index > -1) {
                     childs.splice(index, 1);
                     this.__page.removeShape(this.__shape);
-                    this.__repo.commit({});
+                    this.__repo.commit(new ShapeDelete(this.__page.id, parent.id, index, 1));
                 } else {
                     this.__repo.rollback();
                 }
@@ -252,7 +279,7 @@ export class ShapeEditor {
         try {
             this.__repo.start("deleteText", {});
             deleteText(this.__shape, index, count);
-            this.__repo.commit({});
+            this.__repo.commit(new TextDelete(this.__page.id, [this.__shape.id, TEXT_ID], index, count));
             return true;
         } catch (error) {
             this.__repo.rollback();
@@ -266,7 +293,10 @@ export class ShapeEditor {
             this.__repo.start("insertText", {});
             if (del > 0) deleteText(this.__shape, index, del);
             insertText(this.__shape, text, index, attr);
-            this.__repo.commit({});
+            const cmd = del > 0 ? new TextInsert2(this.__page.id, [this.__shape.id, TEXT_ID], index, del, text) :
+                new TextInsert(this.__page.id, [this.__shape.id, TEXT_ID], index, text);
+
+            this.__repo.commit(cmd);
             return true;
         } catch (error) {
             this.__repo.rollback();
