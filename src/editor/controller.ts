@@ -20,6 +20,7 @@ import { exportTextShape } from "io/baseexport";
 import { SHAPE_ATTR_ID } from "./api";
 
 interface PageXY { // 页面坐标系的xy
+    x: number
     y: number
 }
 export interface AspectRatio {
@@ -28,7 +29,6 @@ export interface AspectRatio {
 }
 export interface ControllerOrigin { // 页面坐标系的xy
     x: number
-    y: number
     y: number
 }
 export interface ControllerFrame {// 页面坐标系
@@ -129,7 +129,7 @@ function singleHdl(shape: Shape, type: CtrlElementType, start: PageXY, end: Page
 }
 // 单个图形处理(编组对象)
 function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
-
+}
 function exportShape(shape: Shape): string | undefined {
     switch (shape.type) {
         case ShapeType.Artboard: return JSON.stringify(exportArtboard(shape as Artboard))
