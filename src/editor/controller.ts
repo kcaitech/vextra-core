@@ -17,7 +17,7 @@ import { exportRectShape } from "io/baseexport";
 import { exportSymbolRefShape } from "io/baseexport";
 import { exportSymbolShape } from "io/baseexport";
 import { exportTextShape } from "io/baseexport";
-import { SHAPE_ATTR_ID } from "./api";
+import { SHAPE_ATTR_ID } from "./consts";
 
 interface PageXY { // 页面坐标系的xy
     x: number
