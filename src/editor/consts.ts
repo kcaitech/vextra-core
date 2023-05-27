@@ -1,3 +1,6 @@
+export const PAGE_ATTR_ID = {
+    name: "name"
+}
 
 export const SHAPE_ATTR_ID = {
     xy: "xy", // frame x,y

@@ -1,7 +1,7 @@
 import { Repository } from "../data/transact";
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
 import { Shape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, RectShape, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
-import { updateFrame } from "./utils";
+import { exportShape, updateFrame } from "./utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { newArtboard, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
@@ -129,19 +129,6 @@ function singleHdl(shape: Shape, type: CtrlElementType, start: PageXY, end: Page
 }
 // 单个图形处理(编组对象)
 function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
-}
-function exportShape(shape: Shape): string | undefined {
-    switch (shape.type) {
-        case ShapeType.Artboard: return JSON.stringify(exportArtboard(shape as Artboard))
-        case ShapeType.Image: return JSON.stringify(exportImageShape(shape as ImageShape)) // todo
-        case ShapeType.Line: return JSON.stringify(exportLineShape(shape as LineShape))
-        case ShapeType.Oval: return JSON.stringify(exportOvalShape(shape as OvalShape))
-        case ShapeType.Path: return JSON.stringify(exportPathShape(shape as PathShape))
-        case ShapeType.Rectangle: return JSON.stringify(exportRectShape(shape as RectShape))
-        case ShapeType.SymbolRef: return JSON.stringify(exportSymbolRefShape(shape as SymbolRefShape))
-        case ShapeType.Symbol: return JSON.stringify(exportSymbolShape(shape as SymbolShape))
-        case ShapeType.Text: return JSON.stringify(exportTextShape(shape as TextShape))
-    }
 }
 
 // 处理异步编辑
