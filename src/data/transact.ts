@@ -427,7 +427,7 @@ export class Repository extends Watchable(Object) implements IDataGruad {
      * 
      * @param cmd 最后打包成一个cmd，用于op，也可另外存
      */
-    commit(cmd: ICMD | {}) {
+    commit(cmd: ICMD) {
         if (this.__context.transact === undefined) {
             throw new Error();
         }
