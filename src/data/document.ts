@@ -73,6 +73,11 @@ export class Document extends DocumentMeta {
             return false;
         }
     }
+    deletePageAt(index: number): boolean {
+        if (index < 0 || index >= this.pagesList.length) return false;
+        this.pagesList.splice(index, 1);
+        return true;
+    }
     indexOfPage(pageOrId: Page | string): number {
         const id = typeof pageOrId === 'string' ? pageOrId : pageOrId.id;
         return this.pagesList.findIndex(p => p.id === id);

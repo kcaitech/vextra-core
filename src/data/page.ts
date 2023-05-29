@@ -6,7 +6,7 @@ import { Artboard } from "./artboard";
 export class Page extends GroupShape implements classes.Page {
     typeId = 'page';
     artboards: BasicMap<string, Artboard> = new BasicMap();
-    flat: BasicMap<string, Shape> = new BasicMap();
+    shapes: BasicMap<string, Shape> = new BasicMap();
     constructor(
         id: string,
         name: string,
@@ -28,7 +28,7 @@ export class Page extends GroupShape implements classes.Page {
         const mapping = (cs: Shape[]) => {
             for (let i = cs.length - 1; i > -1; i--) {
                 const item = cs[i];
-                this.addShape(item);
+                this.onAddShape(item);
                 const childs = item?.childs || [];
                 if (childs.length) {
                     mapping(childs);
@@ -37,28 +37,35 @@ export class Page extends GroupShape implements classes.Page {
         }
         mapping(this.childs);
     }
-    addShape(shape: Shape) {
-        this.flat.set(shape.id, shape);
+    onAddShape(shape: Shape) {
+        this.shapes.set(shape.id, shape);
         if (shape.type === ShapeType.Artboard) {
             this.artboards.set(shape.id, shape as Artboard);
         }
+        if (shape instanceof GroupShape) {
+            const childs = shape.childs;
+            childs.forEach((c) => this.onAddShape(c))
+        }
     }
-    removeShape(shape: Shape) {
-        this.flat.delete(shape.id);
+    onRemoveShape(shape: Shape) {
+        this.shapes.delete(shape.id);
         if (shape.type === ShapeType.Artboard) {
             this.artboards.delete(shape.id);
         }
         const child = (shape as GroupShape).childs;
         if (child && child.length) {
             for (let i = 0; i < child.length; i++) {
-                this.removeShape(child[i]);
+                this.onRemoveShape(child[i]);
             }
         }
+    }
+    getShape(shapeId: string): Shape | undefined {
+        return this.shapes.get(shapeId);
     }
     get artboardList() {
         return Array.from(this.artboards.values());
     }
     get flatShapes() {
-        return Array.from(this.flat.values());
+        return Array.from(this.shapes.values());
     }
 }
