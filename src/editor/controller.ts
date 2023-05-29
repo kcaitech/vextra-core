@@ -6,7 +6,7 @@ import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { newArtboard, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
-import { ShapeGroupCmd, ShapeInsert, ShapeMultiModify } from "coop/cmds";
+import { ShapeCMDGroup, ShapeInsert, ShapeBatchModify } from "coop/cmds";
 import { exportArtboard } from "io/baseexport";
 import { Artboard } from "data/artboard";
 import { exportImageShape } from "io/baseexport";
@@ -165,7 +165,7 @@ export class Controller {
             shape.frame.x -= xy.x;
             shape.frame.y -= xy.y;
             parent.addChildAt(shape);
-            page.addShape(shape);
+            page.onAddShape(shape);
             updateFrame(shape);
             newShape = parent.childs.at(-1);
             this.__repo.transactCtx.fireNotify();
@@ -336,7 +336,7 @@ export class Controller {
                     this.__repo.rollback();
                 }
                 else {
-                    this.__repo.commit(new ShapeMultiModify(page.id, modifys));
+                    this.__repo.commit(new ShapeBatchModify(page.id, modifys));
                 }
             } else {
                 this.__repo.rollback();
@@ -422,7 +422,7 @@ export class Controller {
                     this.__repo.rollback();
                 }
                 else {
-                    this.__repo.commit(new ShapeMultiModify(page.id, modifys));
+                    this.__repo.commit(new ShapeBatchModify(page.id, modifys));
                 }
             } else {
                 this.__repo.rollback();
@@ -516,7 +516,7 @@ export class Controller {
                                 (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id))
                         }
                         return pre;
-                    }, new ShapeGroupCmd(page.id))
+                    }, new ShapeCMDGroup(page.id))
 
                     this.__repo.commit(cmd);
                 }

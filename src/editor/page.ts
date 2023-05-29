@@ -10,7 +10,7 @@ import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo } from "./frame";
-import { PageModify, ShapeGroupCmd, ShapeInsert, ShapeMove } from "coop/cmds";
+import { PageModify, ShapeCMDGroup, ShapeInsert, ShapeMove } from "coop/cmds";
 import { PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
 import { exportGroupShape, exportShapeFrame } from "io/baseexport";
 
@@ -74,7 +74,7 @@ export class PageEditor {
 
             // 往上调整width & height
 
-            const cmd = new ShapeGroupCmd(this.__page.id);
+            const cmd = new ShapeCMDGroup(this.__page.id);
             cmd.addInsert(this.__page.id, savep.id, saveidx, JSON.stringify(exportGroupShape(gshape)))
 
             // 4、将GroupShape加入到save parent中
@@ -111,7 +111,7 @@ export class PageEditor {
 
             // 往上调整width,height
             updateFrame(gshape)
-            this.__page.addShape(gshape);
+            this.__page.onAddShape(gshape);
 
             this.__repo.commit(cmd);
             return gshape;
@@ -134,7 +134,7 @@ export class PageEditor {
             const childs: Shape[] = [];
             // 设置到shape上的旋转、翻转会丢失
             // adjust frame
-            const cmd = new ShapeGroupCmd(this.__page.id);
+            const cmd = new ShapeCMDGroup(this.__page.id);
 
             for (let i = 0, len = shape.childs.length; i < len; i++) {
                 const c = shape.childs[i]
@@ -160,7 +160,7 @@ export class PageEditor {
             }
             cmd.addDelete(this.__page.id, savep.id, saveidx, 1)
             savep.removeChild(shape);
-            this.__page.removeShape(shape);
+            this.__page.onRemoveShape(shape);
             // todo: update frame
             this.__repo.commit(cmd);
             return childs;
@@ -170,7 +170,7 @@ export class PageEditor {
         return false;
     }
 
-    private delete_inner(shape: Shape, cmd?: ShapeGroupCmd): boolean {
+    private delete_inner(shape: Shape, cmd?: ShapeCMDGroup): boolean {
         const p = shape.parent as GroupShape;
         if (!p) return false;
         if (cmd) cmd.addDelete(this.__page.id, p.id, p.childs.findIndex((v) => v.id === shape.id), 1)
@@ -188,9 +188,9 @@ export class PageEditor {
         const savep = shape.parent as GroupShape;
         if (!savep) return false;
         try {
-            const cmd = new ShapeGroupCmd(this.__page.id)
+            const cmd = new ShapeCMDGroup(this.__page.id)
             if (this.delete_inner(shape, cmd)) {
-                this.__page.removeShape(shape);
+                this.__page.onRemoveShape(shape);
                 this.__repo.commit(cmd)
                 return true;
             }
@@ -212,7 +212,7 @@ export class PageEditor {
         this.__repo.start("insertshape", {});
         try {
             parent.addChildAt(shape, index);
-            this.__page.addShape(shape);
+            this.__page.onAddShape(shape);
             updateFrame(shape);
             shape = parent.childs[index];
             this.__repo.commit(new ShapeInsert(this.__page.id, parent.id, index, JSON.stringify(exportShape(shape))));
@@ -293,7 +293,7 @@ export class PageEditor {
     shapeListDrag(wanderer: Shape, host: Shape, offsetOverhalf: boolean) {
         if (wanderer && host) {
             try {
-                const cmd = new ShapeGroupCmd(this.__page.id)
+                const cmd = new ShapeCMDGroup(this.__page.id)
                 const beforeXY = wanderer.frame2Page();
                 this.__repo.start('shapeLayerMove', {});
                 if (wanderer.id !== host.parent?.id) {
