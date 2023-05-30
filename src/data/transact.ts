@@ -2,6 +2,7 @@ import { ICMD } from 'coop/cmds';
 import { objectId, __objidkey } from '../basic/objectid';
 import { BasicMap, castNotifiable, IDataGruad, ISave4Restore, Notifiable } from './basic';
 import { Watchable } from './basic';
+import {CoopService} from "../coop/local";
 
 class TContext {
     public transact?: Transact;
@@ -436,6 +437,8 @@ export class Repository extends Watchable(Object) implements IDataGruad {
         this.__trans.push(this.__context.transact);
         this.__index++;
         this.__context.transact = undefined;
+        CoopService.commit(cmd);
+        CoopService.apply();
         this.__context.fireNotify();
         this.notify();
     }

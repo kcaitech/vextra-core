@@ -1,13 +1,13 @@
-import { ResourceMgr, Watchable } from "./basic";
-import { Style, Border } from "./style";
-import { Text } from "./text";
+import {BasicArray, ResourceMgr, Watchable} from "./basic";
+import {Border, Style} from "./style";
+import {Text} from "./text";
 import * as classes from "./baseclasses"
-import { BasicArray } from "./basic";
+import {BoolOp, CurvePoint, OverrideItem, RectRadius, ShapeFrame, ShapeType} from "./baseclasses"
+import {Path} from "./path";
+import {Matrix} from "../basic/matrix";
+
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, OverrideItem, Ellipse, RectRadius } from "./baseclasses"
-import { ShapeType, BoolOp, CurvePoint, OverrideItem, ShapeFrame, RectRadius } from "./baseclasses"
-import { Path } from "./path";
-import { Matrix } from "../basic/matrix";
-import { Page } from "./page";
+
 export class Shape extends Watchable(classes.Shape) {
 
     getPath(offsetX: number, offsetY: number): Path;
@@ -16,9 +16,9 @@ export class Shape extends Watchable(classes.Shape) {
         return new Path();
     }
 
-    getPage(): Page | undefined {
+    getPage(): Shape | undefined {
         let p: Shape | undefined = this;
-        while (p && !(p instanceof Page)) p = p.parent;
+        while (p && p.type != ShapeType.Page) p = p.parent;
         return p;
     }
 
