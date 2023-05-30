@@ -47,7 +47,7 @@ export class Page extends GroupShape implements classes.Page {
             childs.forEach((c) => this.onAddShape(c))
         }
     }
-    onRemoveShape(shape: Shape) {
+    onRemoveShape(shape: Shape) { // ot上要求被删除的对象也要能查找到
         this.shapes.delete(shape.id);
         if (shape.type === ShapeType.Artboard) {
             this.artboards.delete(shape.id);

@@ -7,7 +7,6 @@ export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, 
 import { ShapeType, BoolOp, CurvePoint, OverrideItem, ShapeFrame, RectRadius } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
-import { Page } from "./page";
 export class Shape extends Watchable(classes.Shape) {
 
     getPath(offsetX: number, offsetY: number): Path;
@@ -16,9 +15,9 @@ export class Shape extends Watchable(classes.Shape) {
         return new Path();
     }
 
-    getPage(): Page | undefined {
+    getPage(): Shape | undefined {
         let p: Shape | undefined = this;
-        while (p && !(p instanceof Page)) p = p.parent;
+        while (p && !(p.type !== ShapeType.Page)) p = p.parent;
         return p;
     }
 
