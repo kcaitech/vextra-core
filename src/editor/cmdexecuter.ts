@@ -2,14 +2,15 @@
 // todo 需要schema定义
 
 import { PageDelete, PageInsert, PageModify, ShapeBatchModify, ShapeCMDGroup, ShapeDelete, ShapeInsert, ShapeModify, ShapeMove, TextModify, TextDelete, TextInsert, TextInsert2, ShapeArrayAttrInsert, ShapeArrayAttrDelete, ShapeArrayAttrModify, ShapeArrayAttrMove } from "../coop/cmds";
-import { OpArrayInsert, OpArrayRemove } from "../coop/ot/arrayot";
 import { Document } from "../data/document";
 import { IImportContext, importFlattenShape, importArtboard, importGroupShape, importImageShape, importLineShape, importOvalShape, importPage, importPathShape, importRectShape, importSymbolRefShape, importSymbolShape, importTextShape } from "../io/baseimport";
-import { OpIdSet } from "../coop/ot/idot";
 import * as types from "../data/typesdefine"
-import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape } from "../data/classes";
+import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape } from "../data/classes";
 
 import * as api from "./api"
+import { SHAPE_ATTR_ID } from "./consts";
+import { ArrayOp, IdOp, OpType } from "../coop/ot/op";
+import { CMDTypes } from "coop/cmds/typesdef";
 // 每个command 对应的api
 
 // page
@@ -98,21 +99,21 @@ export class CMDExecuter {
     }
     pageInsert(cmd: PageInsert) {
         const op = cmd.ops[0];
-        if (op instanceof OpArrayInsert) {
+        if (op.type === OpType.array_insert) {
             const page = importPage(JSON.parse(cmd.data));
-            api.pageInsert(this.__document, page, op.range.start)
+            api.pageInsert(this.__document, page, (op as ArrayOp).range.start)
         }
     }
     pageDelete(cmd: PageDelete) {
         const op = cmd.ops[0];
-        if (op instanceof OpArrayRemove) { // oss需要保存历史版本以undo
-            api.pageDelete(this.__document, op.range.start)
+        if (op.type === OpType.array_remove) { // oss需要保存历史版本以undo
+            api.pageDelete(this.__document, (op as ArrayOp).range.start)
         }
     }
     pageModify(cmd: PageModify) {
         // 参见consts.ts PAGE_ATTR_ID
         const ops = cmd.ops;
-        if (ops.length === 1 && ops[0] instanceof OpIdSet && cmd.value) {// 以pagelist为准
+        if (ops.length === 1 && ops[0].type === OpType.id_set && cmd.value) {// 以pagelist为准
             const pageId = cmd.targets[0][0]
             api.pageModifyName(this.__document, pageId, cmd.value)
         }
@@ -124,10 +125,10 @@ export class CMDExecuter {
         const parentId = cmd.targets[0][0];
         const page = this.__document.pagesMgr.getSync(pageId)
         const op = cmd.ops[0]
-        if (page && op instanceof OpArrayInsert) { // 后续page加载后需要更新！
-            const parent = page.getShape(parentId);
+        if (page && op.type === OpType.array_insert) { // 后续page加载后需要更新！
+            const parent = page.getShape(parentId, true);
             if (parent && parent instanceof GroupShape) {
-                api.shapeInsert(page, parent, shape, op.range.start)
+                api.shapeInsert(page, parent, shape, (op as ArrayOp).range.start)
             }
         }
     }
@@ -136,24 +137,92 @@ export class CMDExecuter {
         const parentId = cmd.targets[0][0];
         const op = cmd.ops[0]
         const page = this.__document.pagesMgr.getSync(pageId)
-        if (page && op instanceof OpArrayRemove) {
-            const parent = page.getShape(parentId);
+        if (page && op.type === OpType.array_remove) {
+            const parent = page.getShape(parentId, true);
             if (parent && parent instanceof GroupShape) {
-                // todo
+                api.shapeDelete(page, parent, (op as ArrayOp).range.start)
             }
         }
     }
+    private _shapeModify(page: Page, shape: Shape, op: IdOp, value: string | undefined) {
+        const opId = op.opId;
+        if (opId === SHAPE_ATTR_ID.xy) {
+            if (op.type === OpType.id_set && value) {
+                const xy = JSON.parse(value)
+                api.shapeModifyXY(shape, xy.x, xy.y)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.wh) {
+            if (op.type === OpType.id_set && value) {
+                const wh = JSON.parse(value)
+                api.shapeModifyWH(shape, wh.w, wh.h)
+            }
+        }
+        // todo
+    }
     shapeModify(cmd: ShapeModify) {
-
+        const pageId = cmd.blockId;
+        const shapeId = cmd.targets[0][0];
+        const op = cmd.ops[0]
+        const page = this.__document.pagesMgr.getSync(pageId)
+        const shape = page && page.getShape(shapeId, true);
+        if (page && shape && (op.type === OpType.id_set || op.type === OpType.id_remove)) {
+            const value = cmd.value;
+            this._shapeModify(page, shape, op as IdOp, value);
+        }
     }
     shapeBatchModify(cmd: ShapeBatchModify) {
-
+        const pageId = cmd.blockId;
+        const page = this.__document.pagesMgr.getSync(pageId)
+        if (page) {
+            const ops = cmd.ops;
+            const values = cmd.values;
+            ops.forEach((op, index) => {
+                const shapeId = op.targetId[0];
+                const shape = page.getShape(shapeId, true);
+                const value = values[index];
+                if (shape && (op.type === OpType.id_set || op.type === OpType.id_remove)) {
+                    this._shapeModify(page, shape, op as IdOp, value);
+                }
+            })
+        }
     }
     shapeMove(cmd: ShapeMove) {
+        const pageId = cmd.blockId;
+        const page = this.__document.pagesMgr.getSync(pageId)
+        if (page) {
+            const ops = cmd.ops; // 正常是一个删除，一个插入
+            // 如果有用户同时move一个对象，现在是错的！
+            ops.forEach((op, index) => {
+                if (op.type === OpType.array_remove) {
 
+                }
+                else if (op.type === OpType.array_insert) {
+
+                }
+            })
+        }
     }
     shapeCMDGroup(cmdGroup: ShapeCMDGroup) {
-
+        cmdGroup.cmds.forEach((cmd) => {
+            switch (cmd.type) {
+                case CMDTypes.shape_insert:
+                    this.shapeInsert(cmd as ShapeInsert);
+                    break;
+                case CMDTypes.shape_delete:
+                    this.shapeDelete(cmd as ShapeDelete);
+                    break;
+                case CMDTypes.shape_modify:
+                    this.shapeModify(cmd as ShapeModify);
+                    break;
+                case CMDTypes.shape_batch_modify:
+                    this.shapeBatchModify(cmd as ShapeBatchModify);
+                    break;
+                case CMDTypes.shape_move:
+                    this.shapeMove(cmd as ShapeMove);
+                    break;
+            }
+        })
     }
     shapeArrAttrInsert(cmd: ShapeArrayAttrInsert) {
 
@@ -178,6 +247,6 @@ export class CMDExecuter {
 
     }
     textModify(cmd: TextModify) {
-        
+
     }
 }
