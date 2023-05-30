@@ -1,13 +1,13 @@
 // command 对应的要执行的api
 // todo 需要schema定义
 
-import { PageDelete, PageInsert, PageModify, ShapeBatchModify, ShapeCMDGroup, ShapeDelete, ShapeInsert, ShapeModify, ShapeMove, TextModify, TextDelete, TextInsert, TextInsert2, ShapeArrayAttrInsert, ShapeArrayAttrDelete, ShapeArrayAttrModify, ShapeArrayAttrMove } from "coop/cmds";
-import { OpArrayInsert, OpArrayRemove } from "coop/ot/arrayot";
-import { Document } from "data/document";
-import { IImportContext, importFlattenShape, importArtboard, importGroupShape, importImageShape, importLineShape, importOvalShape, importPage, importPathShape, importRectShape, importSymbolRefShape, importSymbolShape, importTextShape } from "io/baseimport";
-import { OpIdSet } from "coop/ot/idot";
+import { PageDelete, PageInsert, PageModify, ShapeBatchModify, ShapeCMDGroup, ShapeDelete, ShapeInsert, ShapeModify, ShapeMove, TextModify, TextDelete, TextInsert, TextInsert2, ShapeArrayAttrInsert, ShapeArrayAttrDelete, ShapeArrayAttrModify, ShapeArrayAttrMove } from "../coop/cmds";
+import { OpArrayInsert, OpArrayRemove } from "../coop/ot/arrayot";
+import { Document } from "../data/document";
+import { IImportContext, importFlattenShape, importArtboard, importGroupShape, importImageShape, importLineShape, importOvalShape, importPage, importPathShape, importRectShape, importSymbolRefShape, importSymbolShape, importTextShape } from "../io/baseimport";
+import { OpIdSet } from "../coop/ot/idot";
 import * as types from "../data/typesdefine"
-import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape } from "data/classes";
+import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape } from "../data/classes";
 
 import * as api from "./api"
 // 每个command 对应的api
@@ -132,7 +132,16 @@ export class CMDExecuter {
         }
     }
     shapeDelete(cmd: ShapeDelete) {
-
+        const pageId = cmd.blockId;
+        const parentId = cmd.targets[0][0];
+        const op = cmd.ops[0]
+        const page = this.__document.pagesMgr.getSync(pageId)
+        if (page && op instanceof OpArrayRemove) {
+            const parent = page.getShape(parentId);
+            if (parent && parent instanceof GroupShape) {
+                // todo
+            }
+        }
     }
     shapeModify(cmd: ShapeModify) {
 

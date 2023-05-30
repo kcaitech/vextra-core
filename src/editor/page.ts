@@ -10,9 +10,9 @@ import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo } from "./frame";
-import { PageModify, ShapeCMDGroup, ShapeInsert, ShapeMove } from "coop/cmds";
+import { PageModify, ShapeCMDGroup, ShapeInsert, ShapeMove } from "../coop/cmds";
 import { PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
-import { exportGroupShape, exportShapeFrame } from "io/baseexport";
+import { exportGroupShape, exportShapeFrame } from "../io/baseexport";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
@@ -175,6 +175,7 @@ export class PageEditor {
         if (!p) return false;
         if (cmd) cmd.addDelete(this.__page.id, p.id, p.childs.findIndex((v) => v.id === shape.id), 1)
         p.removeChild(shape);
+        this.__page.onRemoveShape(shape);
         if (p.childs.length > 0) {
             updateFrame(p.childs[0])
         }

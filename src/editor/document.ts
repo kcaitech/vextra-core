@@ -7,7 +7,7 @@ import { v4 as uuid } from "uuid";
 import { exportPage } from "../io/baseexport";
 import { importPage } from "../io/baseimport";
 import { newDocument } from "./creator";
-import { PageDelete, PageInsert, PageMove } from "coop/cmds";
+import { PageDelete, PageInsert, PageMove } from "../coop/cmds";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);

@@ -1,6 +1,6 @@
-import { Document } from "data/document";
-import { Page } from "data/page";
-import { GroupShape, Shape } from "data/shape";
+import { Document } from "../data/document";
+import { Page } from "../data/page";
+import { GroupShape, Shape } from "../data/shape";
 import { updateFrame } from "./utils";
 
 export function pageInsert(document: Document, page: Page, index: number) {

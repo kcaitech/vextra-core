@@ -1,22 +1,12 @@
 import { Repository } from "../data/transact";
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
-import { Shape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, RectShape, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
+import { Shape, GroupShape } from "../data/shape";
 import { exportShape, updateFrame } from "./utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { newArtboard, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
-import { ShapeCMDGroup, ShapeInsert, ShapeBatchModify } from "coop/cmds";
-import { exportArtboard } from "io/baseexport";
-import { Artboard } from "data/artboard";
-import { exportImageShape } from "io/baseexport";
-import { exportLineShape } from "io/baseexport";
-import { exportOvalShape } from "io/baseexport";
-import { exportPathShape } from "io/baseexport";
-import { exportRectShape } from "io/baseexport";
-import { exportSymbolRefShape } from "io/baseexport";
-import { exportSymbolShape } from "io/baseexport";
-import { exportTextShape } from "io/baseexport";
+import { ShapeCMDGroup, ShapeInsert, ShapeBatchModify } from "../coop/cmds";
 import { SHAPE_ATTR_ID } from "./consts";
 
 interface PageXY { // 页面坐标系的xy
