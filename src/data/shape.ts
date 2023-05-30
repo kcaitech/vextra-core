@@ -17,7 +17,7 @@ export class Shape extends Watchable(classes.Shape) {
 
     getPage(): Shape | undefined {
         let p: Shape | undefined = this;
-        while (p && !(p.type !== ShapeType.Page)) p = p.parent;
+        while (p && p.type !== ShapeType.Page) p = p.parent;
         return p;
     }
 
