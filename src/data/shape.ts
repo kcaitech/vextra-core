@@ -182,16 +182,19 @@ export class GroupShape extends Shape implements classes.GroupShape {
     // appendChilds(childs: Shape[]) {
     //     this.childs.push(...childs)
     // }
-    removeChild(shape: Shape) {
+    removeChild(shape: Shape): boolean {
         const idx = this.indexOfChild(shape);
         if (idx >= 0) {
             this.childs.splice(idx, 1);
         }
+        return idx >= 0;
     }
-    removeChildAt(idx: number) {
+    removeChildAt(idx: number): Shape | undefined {
         if (idx >= 0) {
-            this.childs.splice(idx, 1);
+            const del = this.childs.splice(idx, 1);
+            if (del.length > 0) return del[0];
         }
+        return undefined;
     }
     addChild(child: Shape) {
         this.childs.push(child);

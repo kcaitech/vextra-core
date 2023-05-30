@@ -1,6 +1,6 @@
 import { ICMD } from 'coop/cmds';
 import { objectId, __objidkey } from '../basic/objectid';
-import { BasicMap, castNotifiable, IDataGruad, ISave4Restore, Notifiable } from './basic';
+import { castNotifiable, IDataGruad, ISave4Restore, Notifiable } from './basic';
 import { Watchable } from './basic';
 
 class TContext {
@@ -222,7 +222,7 @@ class Rec {
         this.__value = value
     }
     swap(ctx: TContext) {
-        if (this.__target instanceof BasicMap) {
+        if (this.__target instanceof Map) {
             if (this.__propertyKey === 'set' || this.__propertyKey === 'delete') {
                 if (this.__value.isContentExist) {
                     this.__target.delete(this.__value.content.id);
