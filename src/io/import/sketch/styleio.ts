@@ -12,7 +12,7 @@ import {
     Style} from "../../../data/style";
 import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
-import { uuid } from "basic/uuid";
+import { uuid } from "../../../basic/uuid";
 
 interface IJSON {
     [key: string]: any
