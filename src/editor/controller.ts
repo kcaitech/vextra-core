@@ -6,17 +6,17 @@ import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { newArtboard, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
-import { ShapeGroupCmd, ShapeInsert, ShapeMultiModify } from "coop/cmds";
-import { exportArtboard } from "io/baseexport";
-import { Artboard } from "data/artboard";
-import { exportImageShape } from "io/baseexport";
-import { exportLineShape } from "io/baseexport";
-import { exportOvalShape } from "io/baseexport";
-import { exportPathShape } from "io/baseexport";
-import { exportRectShape } from "io/baseexport";
-import { exportSymbolRefShape } from "io/baseexport";
-import { exportSymbolShape } from "io/baseexport";
-import { exportTextShape } from "io/baseexport";
+import { ShapeGroupCmd, ShapeInsert, ShapeMultiModify } from "../coop/cmds";
+import { exportArtboard } from "../io/baseexport";
+import { Artboard } from "../data/artboard";
+import { exportImageShape } from "../io/baseexport";
+import { exportLineShape } from "../io/baseexport";
+import { exportOvalShape } from "../io/baseexport";
+import { exportPathShape } from "../io/baseexport";
+import { exportRectShape } from "../io/baseexport";
+import { exportSymbolRefShape } from "../io/baseexport";
+import { exportSymbolShape } from "../io/baseexport";
+import { exportTextShape } from "../io/baseexport";
 import { SHAPE_ATTR_ID } from "./consts";
 
 interface PageXY { // 页面坐标系的xy

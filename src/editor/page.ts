@@ -10,9 +10,9 @@ import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo } from "./frame";
-import { PageModify, ShapeGroupCmd, ShapeInsert, ShapeMove } from "coop/cmds";
+import { PageModify, ShapeGroupCmd, ShapeInsert, ShapeMove } from "../coop/cmds";
 import { PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
-import { exportGroupShape, exportShapeFrame } from "io/baseexport";
+import { exportGroupShape, exportShapeFrame } from "../io/baseexport";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
