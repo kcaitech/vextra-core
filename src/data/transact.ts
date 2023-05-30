@@ -11,7 +11,7 @@ class TContext {
     public optiNotify: boolean = true;
     addNotify(target: Notifiable | undefined) {
         if (!target) {
-            // 
+            //
         }
         else if (this.optiNotify) {
             this.__notifys.set(objectId(target), target)
@@ -354,7 +354,7 @@ interface R {
         userid: string,
         id: string,
         cmd: ICMD,
-        ref: string, 
+        ref: string,
         savedata: any, // 用于用户撤销操作，不需要传前端，需记录到数据库
     }
 }
@@ -411,8 +411,8 @@ export class Repository extends Watchable(Object) implements IDataGruad {
     }
 
     /**
-     * 
-     * @param name 
+     *
+     * @param name
      * @param saved selection等
      */
     start(name: string, saved: any) {
@@ -425,7 +425,7 @@ export class Repository extends Watchable(Object) implements IDataGruad {
     }
 
     /**
-     * 
+     *
      * @param cmd 最后打包成一个cmd，用于op，也可另外存
      */
     commit(cmd: ICMD) {
@@ -450,6 +450,7 @@ export class Repository extends Watchable(Object) implements IDataGruad {
         this.__context.cache.clear();
         this.__context.transact.unexec(this.__context);
         this.__context.transact = undefined;
+        CoopService.apply();
         this.__context.fireNotify();
     }
 
