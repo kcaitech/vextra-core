@@ -1,13 +1,12 @@
-import {BasicArray, ResourceMgr, Watchable} from "./basic";
-import {Border, Style} from "./style";
-import {Text} from "./text";
+import { ResourceMgr, Watchable } from "./basic";
+import { Style, Border } from "./style";
+import { Text } from "./text";
 import * as classes from "./baseclasses"
-import {BoolOp, CurvePoint, OverrideItem, RectRadius, ShapeFrame, ShapeType} from "./baseclasses"
-import {Path} from "./path";
-import {Matrix} from "../basic/matrix";
-
+import { BasicArray } from "./basic";
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, OverrideItem, Ellipse, RectRadius } from "./baseclasses"
-
+import { ShapeType, BoolOp, CurvePoint, OverrideItem, ShapeFrame, RectRadius } from "./baseclasses"
+import { Path } from "./path";
+import { Matrix } from "../basic/matrix";
 export class Shape extends Watchable(classes.Shape) {
 
     getPath(offsetX: number, offsetY: number): Path;
@@ -18,7 +17,7 @@ export class Shape extends Watchable(classes.Shape) {
 
     getPage(): Shape | undefined {
         let p: Shape | undefined = this;
-        while (p && p.type != ShapeType.Page) p = p.parent;
+        while (p && p.type !== ShapeType.Page) p = p.parent;
         return p;
     }
 
@@ -183,16 +182,19 @@ export class GroupShape extends Shape implements classes.GroupShape {
     // appendChilds(childs: Shape[]) {
     //     this.childs.push(...childs)
     // }
-    removeChild(shape: Shape) {
+    removeChild(shape: Shape): boolean {
         const idx = this.indexOfChild(shape);
         if (idx >= 0) {
             this.childs.splice(idx, 1);
         }
+        return idx >= 0;
     }
-    removeChildAt(idx: number) {
+    removeChildAt(idx: number): Shape | undefined {
         if (idx >= 0) {
-            this.childs.splice(idx, 1);
+            const del = this.childs.splice(idx, 1);
+            if (del.length > 0) return del[0];
         }
+        return undefined;
     }
     addChild(child: Shape) {
         this.childs.push(child);
