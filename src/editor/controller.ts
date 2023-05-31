@@ -1,6 +1,6 @@
 import { Repository } from "../data/transact";
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
-import { Shape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, RectShape, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
+import { Shape, GroupShape } from "../data/shape";
 import { exportShape, updateFrame } from "./utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
@@ -155,7 +155,7 @@ export class Controller {
             shape.frame.x -= xy.x;
             shape.frame.y -= xy.y;
             parent.addChildAt(shape);
-            page.addShape(shape);
+            page.onAddShape(shape);
             updateFrame(shape);
             newShape = parent.childs.at(-1);
             this.__repo.transactCtx.fireNotify();
@@ -225,7 +225,7 @@ export class Controller {
                     this.__repo.rollback(); // 出错了！
                 }
                 else {
-                    this.__repo.commit(new ShapeInsert(page.id, saveParent.id, saveParent.childs.length - 1, shapeJson));
+                    this.__repo.commit(new ShapeInsert(page.id, saveParent.id, newShape.id, saveParent.childs.length - 1, shapeJson));
                 }
             } else {
                 this.__repo.rollback();
@@ -326,7 +326,7 @@ export class Controller {
                     this.__repo.rollback();
                 }
                 else {
-                    this.__repo.commit(new ShapeMultiModify(page.id, modifys));
+                    this.__repo.commit(new ShapeBatchModify(page.id, modifys));
                 }
             } else {
                 this.__repo.rollback();
@@ -412,7 +412,7 @@ export class Controller {
                     this.__repo.rollback();
                 }
                 else {
-                    this.__repo.commit(new ShapeMultiModify(page.id, modifys));
+                    this.__repo.commit(new ShapeBatchModify(page.id, modifys));
                 }
             } else {
                 this.__repo.rollback();
@@ -503,10 +503,10 @@ export class Controller {
                                 cur.parent.id,
                                 cur.shape.parent.id,
                                 cur.idx,
-                                (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id))
+                                (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id), cur.shape.id)
                         }
                         return pre;
-                    }, new ShapeGroupCmd(page.id))
+                    }, new ShapeCMDGroup(page.id))
 
                     this.__repo.commit(cmd);
                 }

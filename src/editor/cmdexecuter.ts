@@ -1,7 +1,29 @@
 // command 对应的要执行的api
 // todo 需要schema定义
 
-import { PageDelete, PageInsert, PageModify, ShapeBatchModify, ShapeCMDGroup, ShapeDelete, ShapeInsert, ShapeModify, ShapeMove, TextModify, TextDelete, TextInsert, TextInsert2, ShapeArrayAttrInsert, ShapeArrayAttrDelete, ShapeArrayAttrModify, ShapeArrayAttrMove, ICMD, PageMove, TextMove } from "../coop/cmds";
+import {
+    PageDelete,
+    PageInsert,
+    PageModify,
+    ShapeBatchModify,
+    ShapeCMDGroup,
+    ShapeDelete,
+    ShapeInsert,
+    ShapeModify,
+    ShapeMove,
+    TextModify,
+    TextDelete,
+    TextInsert,
+    TextInsert2,
+    ShapeArrayAttrInsert,
+    ShapeArrayAttrDelete,
+    ShapeArrayAttrModify,
+    ShapeArrayAttrMove,
+    ICMD,
+    PageMove,
+    TextMove,
+    BasicCMD
+} from "../coop/cmds";
 import { Document } from "../data/document";
 import { IImportContext, importFlattenShape, importArtboard, importGroupShape, importImageShape, importLineShape, importOvalShape, importPage, importPathShape, importRectShape, importSymbolRefShape, importSymbolShape, importTextShape } from "../io/baseimport";
 import * as types from "../data/typesdefine"
@@ -10,8 +32,13 @@ import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape } from
 import * as api from "./api"
 import { SHAPE_ATTR_ID } from "./consts";
 import { ArrayOp, IdOp, OpType, ShapeOp } from "../coop/ot/op";
-import { CMDTypes } from "coop/cmds/typesdef";
-import { Repository } from "data/transact";
+import { CMDTypes } from "../coop/cmds/typesdef";
+import { Repository } from "../data/transact";
+
+import { fromObject } from "../basic/utils"
+import {OpArrayNone} from "../coop/ot/arrayot";
+import {OpShapeNone} from "../coop/ot/shapeot";
+import {OpIdNone} from "../coop/ot/idot";
 // 每个command 对应的api
 
 // page
@@ -108,68 +135,69 @@ export class CMDExecuter {
             this.__repo.commitRemote();
         }
         catch (e) {
-            this.__repo.rollback();
+            console.log("exec error:", e)
+            this.__repo.rollbackRemote();
         }
     }
 
     private _exec(cmd: ICMD) {
-        switch (cmd.type) {
+        switch ((cmd as any)._type) {
             case CMDTypes.page_insert:
-                this.pageInsert(cmd as PageInsert);
+                this.pageInsert(fromObject(PageInsert.prototype, cmd));
                 break;
             case CMDTypes.page_delete:
-                this.pageDelete(cmd as PageDelete);
+                this.pageDelete(fromObject(PageDelete.prototype, cmd));
                 break;
             case CMDTypes.page_modify:
-                this.pageModify(cmd as PageModify);
+                this.pageModify(fromObject(PageModify.prototype, cmd));
                 break;
             case CMDTypes.page_move:
-                this.pageMove(cmd as PageMove);
+                this.pageMove(fromObject(PageMove.prototype, cmd));
                 break;
             case CMDTypes.shape_array_attr_insert:
-                this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
+                this.shapeArrAttrInsert(fromObject(ShapeArrayAttrInsert.prototype, cmd));
                 break;
             case CMDTypes.shape_array_attr_modify:
-                this.shapeArrAttrModify(cmd as ShapeArrayAttrModify);
+                this.shapeArrAttrModify(fromObject(ShapeArrayAttrModify.prototype, cmd));
                 break;
             case CMDTypes.shape_array_attr_move:
-                this.shapeArrAttrMove(cmd as ShapeArrayAttrMove);
+                this.shapeArrAttrMove(fromObject(ShapeArrayAttrMove.prototype, cmd));
                 break;
-            case CMDTypes.shape_array_attr_remove:
-                this.shapeArrAttrDelete(cmd as ShapeArrayAttrDelete);
+            case CMDTypes.shape_array_attr_delete:
+                this.shapeArrAttrDelete(fromObject(ShapeArrayAttrDelete.prototype, cmd));
                 break;
             case CMDTypes.shape_batch_modify:
-                this.shapeBatchModify(cmd as ShapeBatchModify);
+                this.shapeBatchModify(fromObject(ShapeBatchModify.prototype, cmd));
                 break;
             case CMDTypes.shape_cmd_group:
-                this.shapeCMDGroup(cmd as ShapeCMDGroup);
+                this.shapeCMDGroup(fromObject(ShapeCMDGroup.prototype, cmd));
                 break;
             case CMDTypes.text_delete:
-                this.textDelete(cmd as TextDelete);
+                this.textDelete(fromObject(TextDelete.prototype, cmd));
                 break;
             case CMDTypes.text_insert:
-                this.textInsert(cmd as TextInsert);
+                this.textInsert(fromObject(TextInsert.prototype, cmd));
                 break;
             case CMDTypes.text_insert2:
-                this.textInsert2(cmd as TextInsert2);
+                this.textInsert2(fromObject(TextInsert2.prototype, cmd));
                 break;
             case CMDTypes.text_modify:
-                this.textModify(cmd as TextModify);
+                this.textModify(fromObject(TextModify.prototype, cmd));
                 break;
             case CMDTypes.text_move:
-                this.textMove(cmd as TextMove);
+                this.textMove(fromObject(TextMove.prototype, cmd));
                 break;
             case CMDTypes.shape_delete:
-                this.textDelete(cmd as TextDelete);
+                this.textDelete(fromObject(TextDelete.prototype, cmd));
                 break;
             case CMDTypes.shape_insert:
-                this.shapeInsert(cmd as ShapeInsert);
+                this.shapeInsert(fromObject(ShapeInsert.prototype, cmd));
                 break;
             case CMDTypes.shape_modify:
-                this.shapeModify(cmd as ShapeModify);
+                this.shapeModify(fromObject(ShapeModify.prototype, cmd));
                 break;
             case CMDTypes.shape_move:
-                this.shapeMove(cmd as ShapeMove);
+                this.shapeMove(fromObject(ShapeMove.prototype, cmd));
                 break;
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
@@ -177,22 +205,24 @@ export class CMDExecuter {
     }
 
     pageInsert(cmd: PageInsert) {
-        const op = cmd.ops[0];
-        if (op.type === OpType.array_insert) {
+        let op: any = cmd.ops[0];
+        if (op._type === OpType.array_insert) {
+            op = fromObject(OpArrayNone.prototype, op)
             const page = importPage(JSON.parse(cmd.data));
             api.pageInsert(this.__document, page, (op as ArrayOp).range.start)
         }
     }
     pageDelete(cmd: PageDelete) {
-        const op = cmd.ops[0];
-        if (op.type === OpType.array_remove) { // oss需要保存历史版本以undo
+        let op: any = cmd.ops[0];
+        if (op._type === OpType.array_remove) { // oss需要保存历史版本以undo
+            op = fromObject(OpArrayNone.prototype, op)
             api.pageDelete(this.__document, (op as ArrayOp).range.start)
         }
     }
     pageModify(cmd: PageModify) {
         // 参见consts.ts PAGE_ATTR_ID
-        const ops = cmd.ops;
-        if (ops.length === 1 && ops[0].type === OpType.id_set && cmd.value) {// 以pagelist为准
+        const ops: any[] = cmd.ops;
+        if (ops.length === 1 && ops[0]._type === OpType.id_set && cmd.value) {// 以pagelist为准
             const pageId = cmd.targets[0][0]
             api.pageModifyName(this.__document, pageId, cmd.value)
         }
@@ -206,8 +236,9 @@ export class CMDExecuter {
         const shape = importShape(cmd.data, this.__document)
         const parentId = cmd.targets[0][0];
         const page = this.__document.pagesMgr.getSync(pageId)
-        const op = cmd.ops[0]
-        if (page && op.type === OpType.shape_insert) { // 后续page加载后需要更新！
+        let op: any = cmd.ops[0]
+        if (page && op._type === OpType.shape_insert) { // 后续page加载后需要更新！
+            op = fromObject(OpShapeNone.prototype, op)
             const parent = page.getShape(parentId, true);
             if (parent && parent instanceof GroupShape) {
                 api.shapeInsert(page, parent, shape, (op as ShapeOp).index)
@@ -217,9 +248,10 @@ export class CMDExecuter {
     shapeDelete(cmd: ShapeDelete) {
         const pageId = cmd.blockId;
         const parentId = cmd.targets[0][0];
-        const op = cmd.ops[0]
+        let op: any = cmd.ops[0]
         const page = this.__document.pagesMgr.getSync(pageId)
-        if (page && op.type === OpType.shape_remove) {
+        if (page && op._type === OpType.shape_remove) {
+            op = fromObject(OpShapeNone.prototype, op)
             const parent = page.getShape(parentId, true);
             if (parent && parent instanceof GroupShape) {
                 api.shapeDelete(page, parent, (op as ShapeOp).index)
@@ -245,10 +277,11 @@ export class CMDExecuter {
     shapeModify(cmd: ShapeModify) {
         const pageId = cmd.blockId;
         const shapeId = cmd.targets[0][0];
-        const op = cmd.ops[0]
+        let op: any = cmd.ops[0]
         const page = this.__document.pagesMgr.getSync(pageId)
         const shape = page && page.getShape(shapeId, true);
-        if (page && shape && (op.type === OpType.id_set || op.type === OpType.id_remove)) {
+        if (page && shape && (op._type === OpType.id_set || op._type === OpType.id_remove)) {
+            op = fromObject(OpIdNone.prototype, op)
             const value = cmd.value;
             this._shapeModify(page, shape, op as IdOp, value);
         }
@@ -257,13 +290,14 @@ export class CMDExecuter {
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
         if (page) {
-            const ops = cmd.ops;
+            const ops: any[] = cmd.ops;
             const values = cmd.values;
             ops.forEach((op, index) => {
-                const shapeId = op.targetId[0];
+                const shapeId = op._targetId[0];
                 const shape = page.getShape(shapeId, true);
                 const value = values[index];
-                if (shape && (op.type === OpType.id_set || op.type === OpType.id_remove)) {
+                if (shape && (op._type === OpType.id_set || op._type === OpType.id_remove)) {
+                    op = fromObject(OpIdNone.prototype, op)
                     this._shapeModify(page, shape, op as IdOp, value);
                 }
             })
@@ -273,33 +307,33 @@ export class CMDExecuter {
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
         if (page) {
-            const op = cmd.ops[0]; // 正常是一个删除，一个插入
+            let op: any = cmd.ops[0]; // 正常是一个删除，一个插入
             // 如果有用户同时move一个对象，现在是错的！
             // ops.forEach((op, index) => {
-            //     if (op.type === OpType.array_remove) {
+            //     if (op._type === OpType.array_remove) {
             //     }
-            //     else if (op.type === OpType.array_insert) {
+            //     else if (op._type === OpType.array_insert) {
             //     }
             // })
         }
     }
     shapeCMDGroup(cmdGroup: ShapeCMDGroup) {
         cmdGroup.cmds.forEach((cmd) => {
-            switch (cmd.type) {
+            switch ((cmd as any)._type) {
                 case CMDTypes.shape_insert:
-                    this.shapeInsert(cmd as ShapeInsert);
+                    this.shapeInsert(fromObject(ShapeInsert.prototype, cmd));
                     break;
                 case CMDTypes.shape_delete:
-                    this.shapeDelete(cmd as ShapeDelete);
+                    this.shapeDelete(fromObject(ShapeDelete.prototype, cmd));
                     break;
                 case CMDTypes.shape_modify:
-                    this.shapeModify(cmd as ShapeModify);
+                    this.shapeModify(fromObject(ShapeModify.prototype, cmd));
                     break;
                 case CMDTypes.shape_batch_modify:
-                    this.shapeBatchModify(cmd as ShapeBatchModify);
+                    this.shapeBatchModify(fromObject(ShapeBatchModify.prototype, cmd));
                     break;
                 case CMDTypes.shape_move:
-                    this.shapeMove(cmd as ShapeMove);
+                    this.shapeMove(fromObject(ShapeMove.prototype, cmd));
                     break;
             }
         })

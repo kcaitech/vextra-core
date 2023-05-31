@@ -131,7 +131,7 @@ export class ShapeEditor {
         if (this.__shape.type !== ShapeType.Artboard) {
             addFill(this.__shape.style, fill);
         }
-        this.__repo.commit(new ShapeModifyInsert(this.__page.id, [this.__shape.id, FILLS_ID], this.__shape.style.fills.length - 1, FILLS_ATTR_ID.fill, JSON.stringify(exportFill(fill))));
+        this.__repo.commit(new ShapeArrayAttrInsert(this.__page.id, [this.__shape.id, FILLS_ID], this.__shape.style.fills.length - 1, FILLS_ATTR_ID.fill, JSON.stringify(exportFill(fill))));
     }
     public setFillColor(idx: number, color: Color) {
         this.__repo.start("setFillColor", {});
@@ -155,7 +155,7 @@ export class ShapeEditor {
         if (this.__shape.type !== ShapeType.Artboard) {
             this.__repo.start("deleteFill", {});
             deleteFillByIndex(this.__shape.style, idx);
-            this.__repo.commit(new ShapeModifyDelete(this.__page.id, [this.__shape.id, FILLS_ID], idx, 1));
+            this.__repo.commit(new ShapeArrayAttrDelete(this.__page.id, [this.__shape.id, FILLS_ID], idx, 1));
         }
     }
 
@@ -199,12 +199,12 @@ export class ShapeEditor {
     public deleteBorder(idx: number) {
         this.__repo.start("deleteBorder", {});
         deleteBorder(this.__shape.style, idx)
-        this.__repo.commit(new ShapeModifyDelete(this.__page.id, [this.__shape.id, BORDER_ID], idx, 1));
+        this.__repo.commit(new ShapeArrayAttrDelete(this.__page.id, [this.__shape.id, BORDER_ID], idx, 1));
     }
     public addBorder(border: Border) {
         this.__repo.start("addBorder", {});
         addBorder(this.__shape.style, border)
-        this.__repo.commit(new ShapeModifyInsert(this.__page.id, [this.__shape.id, BORDER_ID], this.__shape.style.borders.length - 1, JSON.stringify(exportBorder(border))));
+        this.__repo.commit(new ShapeArrayAttrInsert(this.__page.id, [this.__shape.id, BORDER_ID], this.__shape.style.borders.length - 1, JSON.stringify(exportBorder(border))));
     }
 
     // 容器自适应大小
@@ -285,7 +285,7 @@ export class ShapeEditor {
                             this.__repo.rollback();
                         }
                         else {
-                            this.__repo.commit(new ShapeMultiModify(page.id, modifys));
+                            this.__repo.commit(new ShapeBatchModify(page.id, modifys));
                         }
 
                     } else {
@@ -308,8 +308,8 @@ export class ShapeEditor {
                 const index = childs.findIndex(s => s.id === this.__shape.id);
                 if (index > -1) {
                     childs.splice(index, 1);
-                    this.__page.removeShape(this.__shape);
-                    this.__repo.commit(new ShapeDelete(this.__page.id, parent.id, index, 1));
+                    this.__page.onRemoveShape(this.__shape);
+                    this.__repo.commit(new ShapeDelete(this.__page.id, parent.id, this.__shape.id, index));
                 } else {
                     this.__repo.rollback();
                 }
