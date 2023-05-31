@@ -440,6 +440,19 @@ export class Repository extends Watchable(Object) implements IDataGruad {
         this.notify();
     }
 
+    commitRemote() {
+        if (this.__context.transact === undefined) {
+            throw new Error();
+        }
+        this.__context.cache.clear();
+        this.__trans.length = this.__index;
+        this.__trans.push(this.__context.transact);
+        this.__index++;
+        this.__context.transact = undefined;
+        this.__context.fireNotify();
+        this.notify();
+    }
+
     rollback() {
         if (this.__context.transact === undefined) {
             throw new Error();
