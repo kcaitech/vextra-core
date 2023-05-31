@@ -309,7 +309,7 @@ export class ShapeEditor {
                 if (index > -1) {
                     childs.splice(index, 1);
                     this.__page.onRemoveShape(this.__shape);
-                    this.__repo.commit(new ShapeDelete(this.__page.id, parent.id, index, 1));
+                    this.__repo.commit(new ShapeDelete(this.__page.id, parent.id, this.__shape.id, index));
                 } else {
                     this.__repo.rollback();
                 }

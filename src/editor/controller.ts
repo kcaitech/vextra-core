@@ -225,7 +225,7 @@ export class Controller {
                     this.__repo.rollback(); // 出错了！
                 }
                 else {
-                    this.__repo.commit(new ShapeInsert(page.id, saveParent.id, saveParent.childs.length - 1, shapeJson));
+                    this.__repo.commit(new ShapeInsert(page.id, saveParent.id, newShape.id, saveParent.childs.length - 1, shapeJson));
                 }
             } else {
                 this.__repo.rollback();
@@ -503,7 +503,8 @@ export class Controller {
                                 cur.parent.id,
                                 cur.shape.parent.id,
                                 cur.idx,
-                                (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id))
+                                (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id),
+                                cur.shape.id)
                         }
                         return pre;
                     }, new ShapeCMDGroup(page.id))

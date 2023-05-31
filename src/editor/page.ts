@@ -13,6 +13,7 @@ import { translateTo } from "./frame";
 import { PageModify, ShapeCMDGroup, ShapeInsert, ShapeMove } from "../coop/cmds";
 import { PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
 import { exportGroupShape, exportShapeFrame } from "../io/baseexport";
+import { uuid } from "../basic/uuid";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
@@ -75,7 +76,7 @@ export class PageEditor {
             // 往上调整width & height
 
             const cmd = new ShapeCMDGroup(this.__page.id);
-            cmd.addInsert(this.__page.id, savep.id, saveidx, JSON.stringify(exportGroupShape(gshape)))
+            cmd.addInsert(this.__page.id, savep.id, gshape.id, saveidx, JSON.stringify(exportGroupShape(gshape)))
 
             // 4、将GroupShape加入到save parent中
             savep.addChildAt(gshape, saveidx);
@@ -89,7 +90,7 @@ export class PageEditor {
                 // todo delete p if p is empty
                 // todo update p's frame
                 gshape.addChild(s);
-                cmd.addMove(this.__page.id, p.id, gshape.id, idx, gshape.childs.length - 1)
+                cmd.addMove(this.__page.id, p.id, gshape.id, idx, gshape.childs.length - 1, s.id)
                 if (p.childs.length > 0) {
                     updateFrame(p.childs[0])
                 }
@@ -152,13 +153,13 @@ export class PageEditor {
             }
             for (let len = shape.childs.length; len > 0; len--) {
                 const c = shape.childs[0];
-                cmd.addMove(this.__page.id, shape.id, savep.id, 0, idx)
+                cmd.addMove(this.__page.id, shape.id, savep.id, 0, idx, c.id)
                 shape.removeChildAt(0);
                 savep.addChildAt(c, idx);
                 childs.push(c);
                 idx++;
             }
-            cmd.addDelete(this.__page.id, savep.id, saveidx, 1)
+            cmd.addDelete(this.__page.id, savep.id, shape.id, saveidx)
             savep.removeChild(shape);
             this.__page.onRemoveShape(shape);
             // todo: update frame
@@ -173,7 +174,7 @@ export class PageEditor {
     private delete_inner(shape: Shape, cmd?: ShapeCMDGroup): boolean {
         const p = shape.parent as GroupShape;
         if (!p) return false;
-        if (cmd) cmd.addDelete(this.__page.id, p.id, p.childs.findIndex((v) => v.id === shape.id), 1)
+        if (cmd) cmd.addDelete(this.__page.id, p.id, shape.id, p.childs.findIndex((v) => v.id === shape.id))
         p.removeChild(shape);
         this.__page.onRemoveShape(shape);
         if (p.childs.length > 0) {
@@ -209,6 +210,7 @@ export class PageEditor {
         const xy = parent.frame2Page();
         shape.frame.x -= xy.x;
         shape.frame.y -= xy.y;
+        shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
 
         this.__repo.start("insertshape", {});
         try {
@@ -216,7 +218,7 @@ export class PageEditor {
             this.__page.onAddShape(shape);
             updateFrame(shape);
             shape = parent.childs[index];
-            this.__repo.commit(new ShapeInsert(this.__page.id, parent.id, index, JSON.stringify(exportShape(shape))));
+            this.__repo.commit(new ShapeInsert(this.__page.id, parent.id, shape.id, index, JSON.stringify(exportShape(shape))));
             return shape;
         } catch (e) {
             this.__repo.rollback();
@@ -253,7 +255,7 @@ export class PageEditor {
                     this.delete_inner(shape);
                     to = index > to ? to : to + 1;
                     this.insert(target, to, shape);
-                    this.__repo.commit(new ShapeMove(this.__page.id, parent.id, target.id, index, to));
+                    this.__repo.commit(new ShapeMove(this.__page.id, parent.id, target.id, index, to, shape.id));
                     return true;
                 }
                 catch (error) {
@@ -266,7 +268,7 @@ export class PageEditor {
 
                 this.delete_inner(shape);
                 this.insert(target, to, shape);
-                this.__repo.commit(new ShapeMove(this.__page.id, parent.id, target.id, index, to));
+                this.__repo.commit(new ShapeMove(this.__page.id, parent.id, target.id, index, to, shape.id));
                 return true;
             }
             catch (error) {
@@ -302,7 +304,7 @@ export class PageEditor {
                         if (offsetOverhalf) {
                             const wandererParent = wanderer.parent;
                             if (wandererParent && wandererParent.id !== host.id) {
-                                cmd.addMove(this.__page.id, wandererParent.id, host.id, (wandererParent as GroupShape).indexOfChild(wanderer), (host as GroupShape).childs.length);
+                                cmd.addMove(this.__page.id, wandererParent.id, host.id, (wandererParent as GroupShape).indexOfChild(wanderer), (host as GroupShape).childs.length, wanderer.id);
                                 (wandererParent as GroupShape).removeChild(wanderer);
                                 (host as Artboard).addChildAt(wanderer);
                             }
@@ -315,7 +317,7 @@ export class PageEditor {
                                 const childs = (hostParent as GroupShape).childs;
                                 const idx = childs.findIndex(i => i.id === host.id) + 1; // 列表是倒序!!!
                                 (hostParent as GroupShape).addChildAt(wanderer, idx);
-                                cmd.addMove(this.__page.id, wandererParent.id, hostParent.id, saveidx, idx);
+                                cmd.addMove(this.__page.id, wandererParent.id, hostParent.id, saveidx, idx, wanderer.id);
                             }
                         }
                     } else {
@@ -330,7 +332,7 @@ export class PageEditor {
                             idx = offsetOverhalf ? idx : idx + 1; // 列表是倒序!!!
                             (hostParent as GroupShape).addChildAt(wanderer, idx);
 
-                            cmd.addMove(this.__page.id, wandererParent.id, hostParent.id, saveidx, idx);
+                            cmd.addMove(this.__page.id, wandererParent.id, hostParent.id, saveidx, idx, wanderer.id);
 
                         }
                     }

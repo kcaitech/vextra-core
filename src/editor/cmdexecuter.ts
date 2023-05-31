@@ -187,7 +187,7 @@ export class CMDExecuter {
             })
         }
     }
-    shapeMove(cmd: ShapeMove) {
+    shapeMove(cmd: ShapeMove) { // TODO
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
         if (page) {
