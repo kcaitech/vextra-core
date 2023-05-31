@@ -5,7 +5,7 @@ import { Document, PageListItem } from "../data/document";
 import { Repository } from "../data/transact";
 import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape } from "../data/shape";
 import * as types from "../data/typesdefine"
-import { importGroupShape, IImportContext, importPage, importArtboard, importTextShape } from "../io/baseimport";
+import { importGroupShape, importPage, importArtboard, importTextShape } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"

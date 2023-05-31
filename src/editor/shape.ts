@@ -12,7 +12,7 @@ import { createHorizontalBox } from "../basic/utils";
 import { SpanAttr } from "../data/text";
 import { deleteText, insertText } from "./text";
 import { Page } from "../data/page";
-import { ShapeDelete, ShapeModify, ShapeModifyAttr, ShapeModifyDelete, ShapeModifyInsert, ShapeMultiModify, TextDelete, TextInsert, TextInsert2 } from "../coop/cmds";
+import { ShapeDelete, ShapeModify, ShapeArrayAttrDelete, ShapeArrayAttrInsert, ShapeBatchModify, TextDelete, TextInsert, TextInsert2 } from "../coop/cmds";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, SHAPE_ATTR_ID, TEXT_ID } from "./consts";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill } from "../io/baseexport";
 export class ShapeEditor {
