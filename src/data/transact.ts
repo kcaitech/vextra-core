@@ -2,7 +2,7 @@ import { ICMD } from 'coop/cmds';
 import { objectId, __objidkey } from '../basic/objectid';
 import { castNotifiable, IDataGruad, ISave4Restore, Notifiable } from './basic';
 import { Watchable } from './basic';
-import {CoopService} from "../coop/local";
+import {ICoopLocal} from "../coop/local";
 
 class TContext {
     public transact?: Transact;
@@ -368,7 +368,7 @@ export class Repository extends Watchable(Object) implements IDataGruad {
     private __index: number = 0;
     // private __selection: ISave4Restore;
 
-
+    private __coopLocal: ICoopLocal | null = null;
 
     constructor() {
         super();
@@ -428,7 +428,7 @@ export class Repository extends Watchable(Object) implements IDataGruad {
      *
      * @param cmd 最后打包成一个cmd，用于op，也可另外存
      */
-    commit(cmd: ICMD) {
+    _commit() {
         if (this.__context.transact === undefined) {
             throw new Error();
         }
@@ -437,34 +437,37 @@ export class Repository extends Watchable(Object) implements IDataGruad {
         this.__trans.push(this.__context.transact);
         this.__index++;
         this.__context.transact = undefined;
-        CoopService.commit(cmd);
-        CoopService.apply();
         this.__context.fireNotify();
         this.notify();
+    }
+
+    commit(cmd: ICMD) {
+        this._commit()
+        this.__coopLocal?.commit(cmd);
+        this.__coopLocal?.apply();
     }
 
     commitRemote() {
-        if (this.__context.transact === undefined) {
-            throw new Error();
-        }
-        this.__context.cache.clear();
-        this.__trans.length = this.__index;
-        this.__trans.push(this.__context.transact);
-        this.__index++;
-        this.__context.transact = undefined;
-        this.__context.fireNotify();
-        this.notify();
+        this._commit()
     }
 
-    rollback() {
+    _rollback() {
         if (this.__context.transact === undefined) {
             throw new Error();
         }
         this.__context.cache.clear();
         this.__context.transact.unexec(this.__context);
         this.__context.transact = undefined;
-        CoopService.apply();
         this.__context.fireNotify();
+    }
+
+    rollback() {
+        this._rollback();
+        this.__coopLocal?.apply();
+    }
+
+    rollbackRemote() {
+        this._rollback();
     }
 
     isInTransact() {
@@ -473,6 +476,10 @@ export class Repository extends Watchable(Object) implements IDataGruad {
 
     guard(data: any): any {
         return deepProxy(data, this.__ph);
+    }
+
+    setCoopLocal(coopLocal: ICoopLocal) {
+        this.__coopLocal = coopLocal;
     }
 }
 

@@ -22,3 +22,5 @@ export * from "./editor/shape"
 export * from "./editor/controller"
 
 export * from "./service/shapedirlist"
+
+export * from "./coop/local"
