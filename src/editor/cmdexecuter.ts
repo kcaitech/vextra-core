@@ -128,15 +128,17 @@ export class CMDExecuter {
         this.__repo = repo;
     }
 
-    exec(cmd: ICMD) {
+    exec(cmd: ICMD): boolean {
         this.__repo.start("", {});
         try {
             this._exec(cmd);
             this.__repo.commitRemote();
+            return true;
         }
         catch (e) {
             console.log("exec error:", e)
             this.__repo.rollbackRemote();
+            return false;
         }
     }
 
