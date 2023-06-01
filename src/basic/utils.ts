@@ -14,6 +14,8 @@ export function createHorizontalBox(points: [number, number][]) {
     return { top, bottom, left, right };
 }
 
-export function fromObject<T>(prototype: T, obj: Object): T {
-    return Object.assign(Object.create(prototype as any), obj);
+export function castObjectToClass<T>(obj: Object, prototype: T): T {
+    // return Object.assign(Object.create(prototype as any), obj);
+    Object.setPrototypeOf(obj, prototype as any);
+    return obj as T;
 }
