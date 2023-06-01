@@ -463,6 +463,7 @@ export class Repository extends Watchable(Object) implements IDataGruad {
 
     rollback() {
         this._rollback();
+        this.__coopLocal?.commitToServer();
         this.__coopLocal?.apply();
     }
 
