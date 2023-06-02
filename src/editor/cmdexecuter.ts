@@ -32,7 +32,7 @@ import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape } from
 import * as api from "./api"
 import { SHAPE_ATTR_ID } from "./consts";
 import { ArrayOp, IdOp, OpType, ShapeOp } from "../coop/ot/op";
-import { CMDTypes } from "../coop/cmds/typesdef";
+import { CMDType } from "../coop/cmds/typesdef";
 import { Repository } from "../data/transact";
 
 import { castObjectToClass } from "../basic/utils"
@@ -145,61 +145,61 @@ export class CMDExecuter {
     private _exec(cmd: ICMD) {
         cmd = castObjectToClass(cmd, BasicCMD.prototype)
         switch (cmd.type) {
-            case CMDTypes.page_insert:
+            case CMDType.page_insert:
                 this.pageInsert(castObjectToClass(cmd, PageInsert.prototype));
                 break;
-            case CMDTypes.page_delete:
+            case CMDType.page_delete:
                 this.pageDelete(castObjectToClass(cmd, PageDelete.prototype));
                 break;
-            case CMDTypes.page_modify:
+            case CMDType.page_modify:
                 this.pageModify(castObjectToClass(cmd, PageModify.prototype));
                 break;
-            case CMDTypes.page_move:
+            case CMDType.page_move:
                 this.pageMove(castObjectToClass(cmd, PageMove.prototype));
                 break;
-            case CMDTypes.shape_array_attr_insert:
+            case CMDType.shape_array_attr_insert:
                 this.shapeArrAttrInsert(castObjectToClass(cmd, ShapeArrayAttrInsert.prototype));
                 break;
-            case CMDTypes.shape_array_attr_modify:
+            case CMDType.shape_array_attr_modify:
                 this.shapeArrAttrModify(castObjectToClass(cmd, ShapeArrayAttrModify.prototype));
                 break;
-            case CMDTypes.shape_array_attr_move:
+            case CMDType.shape_array_attr_move:
                 this.shapeArrAttrMove(castObjectToClass(cmd, ShapeArrayAttrMove.prototype));
                 break;
-            case CMDTypes.shape_array_attr_delete:
+            case CMDType.shape_array_attr_delete:
                 this.shapeArrAttrDelete(castObjectToClass(cmd, ShapeArrayAttrDelete.prototype));
                 break;
-            case CMDTypes.shape_batch_modify:
+            case CMDType.shape_batch_modify:
                 this.shapeBatchModify(castObjectToClass(cmd, ShapeBatchModify.prototype));
                 break;
-            case CMDTypes.shape_cmd_group:
+            case CMDType.shape_cmd_group:
                 this.shapeCMDGroup(castObjectToClass(cmd, ShapeCMDGroup.prototype));
                 break;
-            case CMDTypes.text_delete:
+            case CMDType.text_delete:
                 this.textDelete(castObjectToClass(cmd, TextDelete.prototype));
                 break;
-            case CMDTypes.text_insert:
+            case CMDType.text_insert:
                 this.textInsert(castObjectToClass(cmd, TextInsert.prototype));
                 break;
-            case CMDTypes.text_insert2:
+            case CMDType.text_insert2:
                 this.textInsert2(castObjectToClass(cmd, TextInsert2.prototype));
                 break;
-            case CMDTypes.text_modify:
+            case CMDType.text_modify:
                 this.textModify(castObjectToClass(cmd, TextModify.prototype));
                 break;
-            case CMDTypes.text_move:
+            case CMDType.text_move:
                 this.textMove(castObjectToClass(cmd, TextMove.prototype));
                 break;
-            case CMDTypes.shape_delete:
+            case CMDType.shape_delete:
                 this.textDelete(castObjectToClass(cmd, TextDelete.prototype));
                 break;
-            case CMDTypes.shape_insert:
+            case CMDType.shape_insert:
                 this.shapeInsert(castObjectToClass(cmd, ShapeInsert.prototype));
                 break;
-            case CMDTypes.shape_modify:
+            case CMDType.shape_modify:
                 this.shapeModify(castObjectToClass(cmd, ShapeModify.prototype));
                 break;
-            case CMDTypes.shape_move:
+            case CMDType.shape_move:
                 this.shapeMove(castObjectToClass(cmd, ShapeMove.prototype));
                 break;
             default:
@@ -318,19 +318,19 @@ export class CMDExecuter {
     shapeCMDGroup(cmdGroup: ShapeCMDGroup) {
         cmdGroup.cmds.forEach((cmd) => {
             switch (castObjectToClass(cmd, BasicCMD.prototype).type) {
-                case CMDTypes.shape_insert:
+                case CMDType.shape_insert:
                     this.shapeInsert(castObjectToClass(cmd, ShapeInsert.prototype));
                     break;
-                case CMDTypes.shape_delete:
+                case CMDType.shape_delete:
                     this.shapeDelete(castObjectToClass(cmd, ShapeDelete.prototype));
                     break;
-                case CMDTypes.shape_modify:
+                case CMDType.shape_modify:
                     this.shapeModify(castObjectToClass(cmd, ShapeModify.prototype));
                     break;
-                case CMDTypes.shape_batch_modify:
+                case CMDType.shape_batch_modify:
                     this.shapeBatchModify(castObjectToClass(cmd, ShapeBatchModify.prototype));
                     break;
-                case CMDTypes.shape_move:
+                case CMDType.shape_move:
                     this.shapeMove(castObjectToClass(cmd, ShapeMove.prototype));
                     break;
             }
