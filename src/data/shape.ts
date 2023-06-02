@@ -451,6 +451,17 @@ export class RectShape extends PathShape implements classes.RectShape {
     setRadius(radius: RectRadius) {
         this.fixedRadius = radius;
     }
+    // setRadius(radius: number, idx?: number) {
+    //     radius = Math.min(this.frame.width / 2, this.frame.height / 2, radius);
+    //     if (idx) {
+    //         this.points[idx].cornerRadius = radius
+    //     } else {
+    //         const len = this.points.length;
+    //         for (let i = 0; i < len; i++) {
+    //             this.points[i].cornerRadius = radius;
+    //         }
+    //     }
+    // }
     getPath(offsetX: number, offsetY: number): Path;
     getPath(origin?: boolean): Path;
     getPath(arg1?: boolean | number, arg2?: number): Path {
@@ -481,13 +492,7 @@ export class RectShape extends PathShape implements classes.RectShape {
                 const adjTo = nextP.point;
                 const pt = nextP.point;
                 const x1 = adjFrom.x * width, y1 = adjFrom.y * height, x2 = adjTo.x * width, y2 = adjTo.y * height, tx = pt.x * width, ty = pt.y * height;
-                if (p.hasCurveFrom && nextP.hasCurveTo) {
-                    bezierCurveTo(x1, y1, x2, y2, tx, ty);
-                }
-                else if (p.hasCurveFrom && !nextP.hasCurveTo) {
-                    bezierCurveTo(x1, y1, x2, y2, tx, ty);
-                }
-                else if (!p.hasCurveFrom && nextP.hasCurveTo) {
+                if (p.hasCurveFrom || nextP.hasCurveTo) {
                     bezierCurveTo(x1, y1, x2, y2, tx, ty);
                 }
                 else if (!isClose) {
