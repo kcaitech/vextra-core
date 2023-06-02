@@ -63,7 +63,7 @@ import {OpIdNone} from "../coop/ot/idot";
 
 // shapearrayattr
 //  insert
-//  remove
+//  delete
 //  modify
 //  move
 
@@ -216,7 +216,7 @@ export class CMDExecuter {
     }
     pageDelete(cmd: PageDelete) {
         const op = castObjectToClass(cmd.ops[0], OpArrayNone.prototype);
-        if (op.type === OpType.array_remove) { // oss需要保存历史版本以undo
+        if (op.type === OpType.array_delete) { // oss需要保存历史版本以undo
             api.pageDelete(this.__document, op.range.start)
         }
     }
@@ -250,7 +250,7 @@ export class CMDExecuter {
         const parentId = cmd.targets[0][0];
         const op = castObjectToClass(cmd.ops[0], OpShapeNone.prototype);
         const page = this.__document.pagesMgr.getSync(pageId)
-        if (page && op.type === OpType.shape_remove) {
+        if (page && op.type === OpType.shape_delete) {
             const parent = page.getShape(parentId, true);
             if (parent && parent instanceof GroupShape) {
                 api.shapeDelete(page, parent, op.index)
@@ -279,7 +279,7 @@ export class CMDExecuter {
         const op = castObjectToClass(cmd.ops[0], OpIdNone.prototype);
         const page = this.__document.pagesMgr.getSync(pageId)
         const shape = page && page.getShape(shapeId, true);
-        if (page && shape && (op.type === OpType.id_set || op.type === OpType.id_remove)) {
+        if (page && shape && (op.type === OpType.id_set || op.type === OpType.id_delete)) {
             const value = cmd.value;
             this._shapeModify(page, shape, op, value);
         }
@@ -295,7 +295,7 @@ export class CMDExecuter {
                 const shapeId = op.targetId[0];
                 const shape = page.getShape(shapeId, true);
                 const value = values[index];
-                if (shape && (op.type === OpType.id_set || op.type === OpType.id_remove)) {
+                if (shape && (op.type === OpType.id_set || op.type === OpType.id_delete)) {
                     this._shapeModify(page, shape, op as IdOp, value);
                 }
             })
@@ -308,7 +308,7 @@ export class CMDExecuter {
             const op = castObjectToClass(cmd.ops[0], OpArrayNone.prototype); // 正常是一个删除，一个插入
             // 如果有用户同时move一个对象，现在是错的！
             // ops.forEach((op, index) => {
-            //     if (op.type === OpType.array_remove) {
+            //     if (op.type === OpType.array_delete) {
             //     }
             //     else if (op.type === OpType.array_insert) {
             //     }
