@@ -4,8 +4,8 @@
  */
 
 import * as impl from "../data/classes"
-import { BasicArray } from "../data/basic"
 import * as types from "../data/typesdefine"
+import { BasicArray } from "../data/basic"
 
 
 export interface IImportContext {

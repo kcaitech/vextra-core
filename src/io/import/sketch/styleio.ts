@@ -13,10 +13,7 @@ import {
 import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
 import { uuid } from "../../../basic/uuid";
-
-interface IJSON {
-    [key: string]: any
-}
+import { IJSON } from "./basic";
 
 export function importColor(data: IJSON): Color {
     // if (!data)
