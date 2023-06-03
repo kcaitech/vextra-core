@@ -1,14 +1,14 @@
-import { loadSchemas, mergeAllOf, orderSchemas } from "./basic"
+import { loadSchemas, mergeAllOf, orderSchemas } from "../../script/schema/basic"
 
 const fs = require("fs")
 const path = require("path")
-const { fileName2TypeName, extractRefFileName, indent, headTips, extractType } = require('./basic')
+const { fileName2TypeName, extractRefFileName, indent, headTips, extractType } = require("../../script/schema/basic")
 
 const schemaext = '.json'
-const typesext = '.ts'
-const schemadir = path.resolve('./')
-const outdir = path.resolve('../io/')
-const outfile = path.join(outdir, 'baseimport' + typesext)
+// const typesext = '.ts'
+// const schemadir = path.resolve('./')
+// const outdir = path.resolve('../io/')
+// const outfile = path.join(outdir, 'baseimport' + typesext)
 
 
 const handler: {[key: string]:(schema: any, className: string, attrname: string, level: number, filename: string, allschemas: Map<string, {
@@ -17,7 +17,7 @@ const handler: {[key: string]:(schema: any, className: string, attrname: string,
     className: string,
     filename: string,
     filepath: string
-}>) => string} = {}
+}>) => string} & { schemadir?: string } = {}
 handler['object'] = function (schema: any, className: string, attrname: string, level: number, filename: string, allschemas: Map<string, {
     schema: any,
     dependsOn: Set<string>,
@@ -37,7 +37,7 @@ handler['object'] = function (schema: any, className: string, attrname: string, 
     if (schema.allOf) {
         // ret += handler['allOf'](schema.allOf, className, attrname, level + 1)
         // ret += ' & '
-        mergeAllOf(schema.allOf, props, required, requiredArray, allschemas, schemadir)
+        mergeAllOf(schema.allOf, props, required, requiredArray, allschemas, handler.schemadir!)
     }
     if (schema.properties) {
         let keys = Object.keys(schema.properties)
@@ -224,7 +224,7 @@ handler['allOf'] = function (schema: any, className: string, attrname: string, l
         filename: string
     }>()
     const required = new Set<string>()
-    mergeAllOf(schema, props, required, [], allschemas, schemadir)
+    mergeAllOf(schema, props, required, [], allschemas, handler.schemadir!)
     let ret = ''
     props.forEach((v, k) => {
         ret += indent(level) + k + ': '
@@ -284,7 +284,8 @@ function importTypes(schema: any, className: string, attrname: string, level: nu
     return ret;
 }
 
-export function genimport() {
+export function genimport(schemadir: string, outfile: string, implpath: string, typedefs: string, arrayimpl?: string) {
+    handler.schemadir = schemadir;
     const all = loadSchemas(schemadir);
     const order = orderSchemas(all);
 
@@ -292,9 +293,9 @@ export function genimport() {
 
     if (fs.existsSync(outfile)) fs.rmSync(outfile)
     fs.appendFileSync(outfile, headTips);
-    fs.appendFileSync(outfile, 'import * as impl from "../data/classes"\n');
-    fs.appendFileSync(outfile, 'import { BasicArray } from "../data/basic"\n');
-    fs.appendFileSync(outfile, 'import * as types from "../data/typesdefine"\n\n');
+    fs.appendFileSync(outfile, `import * as impl from "${implpath}"\n`);
+    fs.appendFileSync(outfile, `import * as types from "${typedefs}"\n`);
+    if (arrayimpl) fs.appendFileSync(outfile, `import { BasicArray } from "${arrayimpl}"\n\n`);
     fs.appendFileSync(outfile,
         `
 export interface IImportContext {

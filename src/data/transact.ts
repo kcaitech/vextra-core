@@ -1,4 +1,4 @@
-import { ICMD } from 'coop/cmds';
+import { Cmd } from '../coop/data/classes';
 import { objectId, __objidkey } from '../basic/objectid';
 import { castNotifiable, IDataGruad, ISave4Restore, Notifiable } from './basic';
 import { Watchable } from './basic';
@@ -341,23 +341,6 @@ class Transact extends Array<Rec> {
     }
 }
 
-interface R {
-    local: { // local cmd
-        userid: string,
-        id: string, // 需要唯一
-        cmd: ICMD,
-        // ref: string, // userside id // post时提供
-        poststate: "none" | "posted" | "done"
-        savedata: any, // delete时需要, shape记录id,及加入到deletedshapes, 文本直接记录被删除的文本及属性
-    }
-    remote: { // local & remote cmd
-        userid: string,
-        id: string,
-        cmd: ICMD,
-        ref: string,
-        savedata: any, // 用于用户撤销操作，不需要传前端，需记录到数据库
-    }
-}
 // deletedshapes, 用于undo及op操作
 // 远程操作不需要记录transact, 但需要proxy. 有远程操作后, 之前的transact也不能直接undo了
 
@@ -441,7 +424,7 @@ export class Repository extends Watchable(Object) implements IDataGruad {
         this.notify();
     }
 
-    commit(cmd: ICMD) {
+    commit(cmd: Cmd) {
         this._commit()
         this.__coopLocal?.commit(cmd);
         this.__coopLocal?.apply();

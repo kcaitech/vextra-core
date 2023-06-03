@@ -40,7 +40,7 @@ export class Page extends GroupShape implements classes.Page {
     }
     onAddShape(shape: Shape) {
         // check 不可以重shape id
-        // if (this.shapes.has(shape.id)) throw new Error("The same shape id already exists")
+        if (this.shapes.has(shape.id)) throw new Error("The same shape id already exists")
 
         this.shapes.set(shape.id, shape);
         this.__allshapes.set(shape.id, new WeakRef(shape));
