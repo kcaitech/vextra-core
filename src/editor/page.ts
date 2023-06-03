@@ -10,7 +10,7 @@ import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo } from "./frame";
-import { PageModify, ShapeCMDGroup, ShapeInsert, ShapeMove } from "../coop/cmds";
+import { PageCmdModify, ShapeCmdGroup, ShapeCmdInsert, ShapeCmdMove } from "../coop/data/classes";
 import { PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
 import { exportGroupShape, exportShapeFrame } from "../io/baseexport";
 import { uuid } from "../basic/uuid";
@@ -75,8 +75,8 @@ export class PageEditor {
 
             // 往上调整width & height
 
-            const cmd = new ShapeCMDGroup(this.__page.id);
-            cmd.addInsert(this.__page.id, savep.id, gshape.id, saveidx, JSON.stringify(exportGroupShape(gshape)))
+            const cmd = ShapeCmdGroup.Make(this.__page.id);
+            cmd.addInsert(savep.id, gshape.id, saveidx, JSON.stringify(exportGroupShape(gshape)))
 
             // 4、将GroupShape加入到save parent中
             savep.addChildAt(gshape, saveidx);
@@ -90,7 +90,7 @@ export class PageEditor {
                 // todo delete p if p is empty
                 // todo update p's frame
                 gshape.addChild(s);
-                cmd.addMove(this.__page.id, p.id, gshape.id, idx, gshape.childs.length - 1, s.id)
+                cmd.addMove(p.id, gshape.id, idx, gshape.childs.length - 1, s.id)
                 if (p.childs.length > 0) {
                     updateFrame(p.childs[0])
                 }
@@ -135,7 +135,7 @@ export class PageEditor {
             const childs: Shape[] = [];
             // 设置到shape上的旋转、翻转会丢失
             // adjust frame
-            const cmd = new ShapeCMDGroup(this.__page.id);
+            const cmd = ShapeCmdGroup.Make(this.__page.id);
 
             for (let i = 0, len = shape.childs.length; i < len; i++) {
                 const c = shape.childs[i]
@@ -153,13 +153,13 @@ export class PageEditor {
             }
             for (let len = shape.childs.length; len > 0; len--) {
                 const c = shape.childs[0];
-                cmd.addMove(this.__page.id, shape.id, savep.id, 0, idx, c.id)
+                cmd.addMove(shape.id, savep.id, 0, idx, c.id)
                 shape.removeChildAt(0);
                 savep.addChildAt(c, idx);
                 childs.push(c);
                 idx++;
             }
-            cmd.addDelete(this.__page.id, savep.id, shape.id, saveidx)
+            cmd.addDelete(savep.id, shape.id, saveidx)
             savep.removeChild(shape);
             this.__page.onRemoveShape(shape);
             // todo: update frame
@@ -171,10 +171,10 @@ export class PageEditor {
         return false;
     }
 
-    private delete_inner(shape: Shape, cmd?: ShapeCMDGroup): boolean {
+    private delete_inner(shape: Shape, cmd?: ShapeCmdGroup): boolean {
         const p = shape.parent as GroupShape;
         if (!p) return false;
-        if (cmd) cmd.addDelete(this.__page.id, p.id, shape.id, p.childs.findIndex((v) => v.id === shape.id))
+        if (cmd) cmd.addDelete(p.id, shape.id, p.childs.findIndex((v) => v.id === shape.id))
         p.removeChild(shape);
         this.__page.onRemoveShape(shape);
         if (p.childs.length > 0) {
@@ -190,7 +190,7 @@ export class PageEditor {
         const savep = shape.parent as GroupShape;
         if (!savep) return false;
         try {
-            const cmd = new ShapeCMDGroup(this.__page.id)
+            const cmd = ShapeCmdGroup.Make(this.__page.id)
             if (this.delete_inner(shape, cmd)) {
                 this.__page.onRemoveShape(shape);
                 this.__repo.commit(cmd)
@@ -218,7 +218,7 @@ export class PageEditor {
             this.__page.onAddShape(shape);
             updateFrame(shape);
             shape = parent.childs[index];
-            this.__repo.commit(new ShapeInsert(this.__page.id, parent.id, shape.id, index, JSON.stringify(exportShape(shape))));
+            this.__repo.commit(ShapeCmdInsert.Make(this.__page.id, parent.id, shape.id, index, JSON.stringify(exportShape(shape))));
             return shape;
         } catch (e) {
             this.__repo.rollback();
@@ -255,7 +255,7 @@ export class PageEditor {
                     this.delete_inner(shape);
                     to = index > to ? to : to + 1;
                     this.insert(target, to, shape);
-                    this.__repo.commit(new ShapeMove(this.__page.id, parent.id, target.id, index, to, shape.id));
+                    this.__repo.commit(ShapeCmdMove.Make(this.__page.id, parent.id, shape.id, index, target.id, to));
                     return true;
                 }
                 catch (error) {
@@ -268,7 +268,7 @@ export class PageEditor {
 
                 this.delete_inner(shape);
                 this.insert(target, to, shape);
-                this.__repo.commit(new ShapeMove(this.__page.id, parent.id, target.id, index, to, shape.id));
+                this.__repo.commit(ShapeCmdMove.Make(this.__page.id, parent.id, shape.id, index, target.id, to));
                 return true;
             }
             catch (error) {
@@ -284,7 +284,7 @@ export class PageEditor {
         if (pageListItem) {
             pageListItem.name = name;
         }
-        this.__repo.commit(new PageModify(this.__document.id, this.__page.id, PAGE_ATTR_ID.name, name));
+        this.__repo.commit(PageCmdModify.Make(this.__document.id, this.__page.id, PAGE_ATTR_ID.name, name));
     }
 
     /**
@@ -296,7 +296,7 @@ export class PageEditor {
     shapeListDrag(wanderer: Shape, host: Shape, offsetOverhalf: boolean) {
         if (wanderer && host) {
             try {
-                const cmd = new ShapeCMDGroup(this.__page.id)
+                const cmd = ShapeCmdGroup.Make(this.__page.id)
                 const beforeXY = wanderer.frame2Page();
                 this.__repo.start('shapeLayerMove', {});
                 if (wanderer.id !== host.parent?.id) {
@@ -304,7 +304,7 @@ export class PageEditor {
                         if (offsetOverhalf) {
                             const wandererParent = wanderer.parent;
                             if (wandererParent && wandererParent.id !== host.id) {
-                                cmd.addMove(this.__page.id, wandererParent.id, host.id, (wandererParent as GroupShape).indexOfChild(wanderer), (host as GroupShape).childs.length, wanderer.id);
+                                cmd.addMove(wandererParent.id, host.id, (wandererParent as GroupShape).indexOfChild(wanderer), (host as GroupShape).childs.length, wanderer.id);
                                 (wandererParent as GroupShape).removeChild(wanderer);
                                 (host as Artboard).addChildAt(wanderer);
                             }
@@ -317,7 +317,7 @@ export class PageEditor {
                                 const childs = (hostParent as GroupShape).childs;
                                 const idx = childs.findIndex(i => i.id === host.id) + 1; // 列表是倒序!!!
                                 (hostParent as GroupShape).addChildAt(wanderer, idx);
-                                cmd.addMove(this.__page.id, wandererParent.id, hostParent.id, saveidx, idx, wanderer.id);
+                                cmd.addMove(wandererParent.id, hostParent.id, saveidx, idx, wanderer.id);
                             }
                         }
                     } else {
@@ -332,7 +332,7 @@ export class PageEditor {
                             idx = offsetOverhalf ? idx : idx + 1; // 列表是倒序!!!
                             (hostParent as GroupShape).addChildAt(wanderer, idx);
 
-                            cmd.addMove(this.__page.id, wandererParent.id, hostParent.id, saveidx, idx, wanderer.id);
+                            cmd.addMove(wandererParent.id, hostParent.id, saveidx, idx, wanderer.id);
 
                         }
                     }
@@ -341,10 +341,10 @@ export class PageEditor {
                 translateTo(wanderer, beforeXY.x, beforeXY.y);
                 const frame = wanderer.frame;
                 if (saveFrame.x !== frame.x || saveFrame.y !== frame.y) {
-                    cmd.addModify(this.__page.id, wanderer.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y }))
+                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y }))
                 }
                 if (saveFrame.width !== frame.width || saveFrame.height !== frame.height) {
-                    cmd.addModify(this.__page.id, wanderer.id, SHAPE_ATTR_ID.wh, JSON.stringify({ w: frame.width, h: frame.height }))
+                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.wh, JSON.stringify({ w: frame.width, h: frame.height }))
                 }
                 this.__repo.commit(cmd);
             } catch (error) {

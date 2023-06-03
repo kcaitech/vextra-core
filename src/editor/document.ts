@@ -7,7 +7,7 @@ import { v4 as uuid } from "uuid";
 import { exportPage } from "../io/baseexport";
 import { importPage } from "../io/baseimport";
 import { newDocument } from "./creator";
-import { PageDelete, PageInsert, PageMove } from "../coop/cmds";
+import { PageCmdDelete, PageCmdInsert, PageCmdMove } from "../coop/data/classes";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);
@@ -28,7 +28,7 @@ export class DocEditor {
             const index = pagesmgr.indexOfPage(id);
             const isSuccess = pagesmgr.deletePage(id);
             if (isSuccess) {
-                this.__repo.commit(new PageDelete(this.__document.id, index, 1));
+                this.__repo.commit(PageCmdDelete.Make(this.__document.id, index));
                 return true;
             } else {
                 this.__repo.rollback();
@@ -46,7 +46,7 @@ export class DocEditor {
         try {
             pagesmgr.insertPage(index, page);
             const np = exportPage(page);
-            this.__repo.commit(new PageInsert(this.__document.id, index, JSON.stringify(np)));
+            this.__repo.commit(PageCmdInsert.Make(this.__document.id, index, JSON.stringify(np)));
         } catch (error) {
             this.__repo.rollback();
         }
@@ -76,7 +76,7 @@ export class DocEditor {
                 this.__document.pagesList.splice(idx, 1);
                 this.__document.pagesList.splice(descend, 0, target);
             }
-            this.__repo.commit(new PageMove(this.__document.id, idx, descend));
+            this.__repo.commit(PageCmdMove.Make(this.__document.id, idx, descend));
         } catch (e) {
             this.__repo.rollback();
         }
@@ -95,7 +95,7 @@ export class DocEditor {
                 if (hostIdx > -1) {
                     hostIdx = offsetOverhalf ? hostIdx + 1 : hostIdx;
                     pages.splice(hostIdx, 0, wanderer);
-                    this.__repo.commit(new PageMove(this.__document.id, wandererIdx, hostIdx));
+                    this.__repo.commit(PageCmdMove.Make(this.__document.id, wandererIdx, hostIdx));
                 } else {
                     this.__repo.rollback();
                 }
