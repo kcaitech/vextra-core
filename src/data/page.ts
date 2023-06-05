@@ -29,7 +29,7 @@ export class Page extends GroupShape implements classes.Page {
         // this.onAddShape(this); // 不能add 自己
         childs.forEach((c) => this.onAddShape(c))
     }
-    onAddShape(shape: Shape) {
+    onAddShape(shape: Shape, recursive: boolean = true) {
         // check 不可以重shape id
         if (this.shapes.has(shape.id)) throw new Error("The same shape id already exists")
 
@@ -38,21 +38,19 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Artboard) {
             this.artboards.set(shape.id, shape as Artboard);
         }
-        if (shape instanceof GroupShape) {
+        if (recursive && shape instanceof GroupShape) {
             const childs = shape.childs;
             childs.forEach((c) => this.onAddShape(c))
         }
     }
-    onRemoveShape(shape: Shape) { // ot上要求被删除的对象也要能查找到
+    onRemoveShape(shape: Shape, recursive: boolean = true) { // ot上要求被删除的对象也要能查找到
         this.shapes.delete(shape.id);
         if (shape.type === ShapeType.Artboard) {
             this.artboards.delete(shape.id);
         }
-        const child = (shape as GroupShape).childs;
-        if (child && child.length) {
-            for (let i = 0; i < child.length; i++) {
-                this.onRemoveShape(child[i]);
-            }
+        if (recursive && shape instanceof GroupShape) {
+            const childs = shape.childs;
+            childs.forEach((c) => this.onRemoveShape(c))
         }
     }
     getShape(shapeId: string, containsDeleted?: boolean): Shape | undefined {
