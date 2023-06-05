@@ -27,7 +27,7 @@ export const FILLS_ATTR_ID = {
 
 export const TEXT_ID = "text"
 
-export const BORDER_ID = "text"
+export const BORDER_ID = "border"
 
 export const BORDER_ATTR_ID = {
     enable: "enable",
