@@ -112,7 +112,7 @@ export class PageEditor {
 
             // 往上调整width,height
             updateFrame(gshape)
-            this.__page.onAddShape(gshape);
+            this.__page.onAddShape(gshape, false);
 
             this.__repo.commit(cmd);
             return gshape;
