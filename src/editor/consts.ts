@@ -3,8 +3,8 @@ export const PAGE_ATTR_ID = {
 }
 
 export const SHAPE_ATTR_ID = {
-    xy: "xy", // frame x,y
-    wh: "wh", // frame width, height
+    frame_xy: "frame_xy", // frame x,y
+    frame_wh: "frame_wh", // frame width, height
     hflip: "hflip",
     vflip: "vflip",
     rotate: "rotate",
@@ -14,7 +14,6 @@ export const SHAPE_ATTR_ID = {
     resizingConstraint: "resizingConstraint",
     radius: "radius",
     backgroundColor: "backgroundColor",
-    fill: "fill",
 }
 
 export const FILLS_ID = "fills"
@@ -24,8 +23,6 @@ export const FILLS_ATTR_ID = {
     fill: "fill",
     color: "color"
 }
-
-export const TEXT_ID = "text"
 
 export const BORDER_ID = "border"
 

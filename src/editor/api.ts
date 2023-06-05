@@ -58,6 +58,12 @@ export function shapeModifyWH(shape: Shape, w: number, h: number) {
         updateFrame(shape);
     }
 }
+export function shapeModifyRotate(shape: Shape, rotate: number) {
+    if (rotate !== shape.rotation) {
+        shape.rotation = rotate;
+        updateFrame(shape);
+    }
+}
 
 export function fillInsert(shape: Shape, ) {
 

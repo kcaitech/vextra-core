@@ -1,8 +1,8 @@
 import { GroupShape, Shape, TextShape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { Repository } from "../data/transact";
-import { addFill, deleteFillByIndex, setFillColor, setFillEnabled } from "./fill";
-import { deleteBorder, addBorder, setBorderThickness, setBorderPosition, setBorderStyle, setBorderApexStyle, setBorderEnable, setBorderColor } from "./border";
+import { addFill, deleteFillAt, setFillColor, setFillEnabled } from "./fill";
+import { deleteBorderAt, addBorder, setBorderThickness, setBorderPosition, setBorderStyle, setBorderApexStyle, setBorderEnable, setBorderColor } from "./border";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
 import { RectRadius, ShapeType } from "../data/baseclasses";
@@ -50,7 +50,7 @@ export class ShapeEditor {
         translate(this.__shape, dx, dy, round);
         // })
         const frame = this.__shape.frame;
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y })));
+        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({ x: frame.x, y: frame.y })));
     }
     public translateTo(x: number, y: number) {
         this.__repo.start("translateTo", {});
@@ -58,7 +58,7 @@ export class ShapeEditor {
         translateTo(this.__shape, x, y);
         // })
         const frame = this.__shape.frame;
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y })));
+        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({ x: frame.x, y: frame.y })));
     }
     public expand(dw: number, dh: number) {
         this.__repo.start("expand", {});
@@ -66,7 +66,7 @@ export class ShapeEditor {
         expand(this.__shape, dw, dh);
         // })
         const frame = this.__shape.frame;
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.wh, JSON.stringify({ w: frame.width, h: frame.height })));
+        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_wh, JSON.stringify({ w: frame.width, h: frame.height })));
     }
     public expandTo(w: number, h: number) {
         this.__repo.start("expandTo", {});
@@ -74,7 +74,7 @@ export class ShapeEditor {
         expandTo(this.__shape, w, h);
         // })
         const frame = this.__shape.frame;
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.wh, JSON.stringify({ w: frame.width, h: frame.height })));
+        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_wh, JSON.stringify({ w: frame.width, h: frame.height })));
     }
 
     // flip
@@ -154,7 +154,7 @@ export class ShapeEditor {
     public deleteFill(idx: number) {
         if (this.__shape.type !== ShapeType.Artboard) {
             this.__repo.start("deleteFill", {});
-            deleteFillByIndex(this.__shape.style, idx);
+            deleteFillAt(this.__shape.style, idx);
             this.__repo.commit(ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, FILLS_ID, idx));
         }
     }
@@ -198,7 +198,7 @@ export class ShapeEditor {
     }
     public deleteBorder(idx: number) {
         this.__repo.start("deleteBorder", {});
-        deleteBorder(this.__shape.style, idx)
+        deleteBorderAt(this.__shape.style, idx)
         this.__repo.commit(ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, BORDER_ID, idx));
     }
     public addBorder(border: Border) {
@@ -261,10 +261,10 @@ export class ShapeEditor {
                         saveDatas.forEach((cur) => {
                             const frame = cur.shape.frame;
                             if (frame.x !== cur.x || frame.y !== cur.y) {
-                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y }))
+                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({ x: frame.x, y: frame.y }))
                             }
                             if (frame.width !== cur.w || frame.height !== cur.h) {
-                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.wh, JSON.stringify({ w: frame.width, h: frame.height }))
+                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_wh, JSON.stringify({ w: frame.width, h: frame.height }))
                             }
                             if (cur.shape.isFlippedHorizontal !== cur.hflip) {
                                 cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, JSON.stringify(cur.shape.isFlippedHorizontal))

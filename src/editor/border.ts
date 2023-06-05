@@ -34,11 +34,14 @@ export function setBorderApexStyle(style: Style, idx: number, apexStyle: MarkerT
     }
 }
 
-export function deleteBorder(style: Style, idx: number) {
+export function deleteBorderAt(style: Style, idx: number) {
     const borders = style.borders;
     borders.splice(idx, 1);
 }
 
 export function addBorder(style: Style, border: Border) {
     style.borders.push(border);
+}
+export function addBorderAt(style: Style, border: Border, index: number) {
+    style.borders.splice(index, 0, border);
 }

@@ -341,10 +341,10 @@ export class PageEditor {
                 translateTo(wanderer, beforeXY.x, beforeXY.y);
                 const frame = wanderer.frame;
                 if (saveFrame.x !== frame.x || saveFrame.y !== frame.y) {
-                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y }))
+                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({ x: frame.x, y: frame.y }))
                 }
                 if (saveFrame.width !== frame.width || saveFrame.height !== frame.height) {
-                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.wh, JSON.stringify({ w: frame.width, h: frame.height }))
+                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.frame_wh, JSON.stringify({ w: frame.width, h: frame.height }))
                 }
                 this.__repo.commit(cmd);
             } catch (error) {
