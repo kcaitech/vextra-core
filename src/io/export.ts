@@ -160,7 +160,7 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
     }
 }
 
-export function uploadExForm(document: Document, apiUrl: string, token: string, docId: string, cb: (successed: boolean, doc_id: string) => void) {
+export function uploadExForm(document: Document, apiUrl: string, token: string, docId: string, cb: (isSuccess: boolean, doc_id: string) => void) {
     exportExForm(document).then((data) => {
         const ws = new WebSocket(`${apiUrl}/documents/upload`);
         let finished = false;
