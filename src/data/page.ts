@@ -26,17 +26,8 @@ export class Page extends GroupShape implements classes.Page {
             boolOp,
             childs
         )
-        const mapping = (cs: Shape[]) => {
-            for (let i = cs.length - 1; i > -1; i--) {
-                const item = cs[i];
-                this.onAddShape(item);
-                const childs = item?.childs || [];
-                if (childs.length) {
-                    mapping(childs);
-                }
-            }
-        }
-        mapping(this.childs);
+        // this.onAddShape(this); // 不能add 自己
+        childs.forEach((c) => this.onAddShape(c))
     }
     onAddShape(shape: Shape) {
         // check 不可以重shape id
@@ -65,16 +56,23 @@ export class Page extends GroupShape implements classes.Page {
         }
     }
     getShape(shapeId: string, containsDeleted?: boolean): Shape | undefined {
+        let shape;
         if (containsDeleted) {
             const ref = this.__allshapes.get(shapeId);
-            return ref?.deref();
+            shape = ref?.deref();
         }
-        return this.shapes.get(shapeId);
+        else {
+            shape = this.shapes.get(shapeId);
+        }
+        if (!shape && shapeId === this.id) {
+            shape = this;
+        }
+        return shape;
     }
     get artboardList() {
         return Array.from(this.artboards.values());
     }
-    get flatShapes() {
-        return Array.from(this.shapes.values());
-    }
+    // get flatShapes() {
+    //     return Array.from(this.shapes.values());
+    // }
 }
