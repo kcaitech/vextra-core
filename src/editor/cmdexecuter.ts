@@ -31,7 +31,7 @@ import * as api from "./api"
 import { SHAPE_ATTR_ID } from "./consts";
 import { Repository } from "../data/transact";
 import { Cmd, CmdType, ArrayOpNone, ShapeOpNone, IdOpNone, ArrayOp, IdOp, OpType, ShapeOp } from "../coop/data/classes";
-import { TextCmdBatchModify } from "coop/data/basictypes";
+import { TextCmdBatchModify } from "../coop/data/basictypes";
 // 每个command 对应的api
 
 // page
