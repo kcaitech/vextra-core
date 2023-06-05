@@ -1,7 +1,10 @@
+import { Color } from "data/style";
 import { Document } from "../data/document";
 import { Page } from "../data/page";
-import { GroupShape, Shape } from "../data/shape";
+import { GroupShape, Shape, ShapeType } from "../data/shape";
 import { updateFrame } from "./utils";
+import { Artboard } from "data/artboard";
+import { setFillColor } from "./fill";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     document.insertPage(index, page)
@@ -64,6 +67,21 @@ export function shapeModifyRotate(shape: Shape, rotate: number) {
         updateFrame(shape);
     }
 }
+export function shapeModifyName(shape: Shape, name: string) {
+    shape.name = name;
+}
+export function shapeModifyHFlip(shape: Shape, hflip: boolean | undefined) {
+    shape.isFlippedHorizontal = hflip;
+}
+export function shapeModifyVFlip(shape: Shape, vflip: boolean | undefined) {
+    shape.isFlippedVertical = vflip;
+}
+
+export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
+    if (shape.type === ShapeType.Artboard) {
+        (shape as Artboard).setArtboardColor(color);
+    }
+}
 
 export function fillInsert(shape: Shape, ) {
 
@@ -74,8 +92,8 @@ export function fillDelete(shape: Shape) {
 export function fillMove(shape: Shape) {
 
 }
-export function fillModifyColor(shape: Shape) {
-
+export function fillModifyColor(shape: Shape, idx: number, color: Color) {
+    setFillColor(shape.style, idx, color);
 }
 
 export function borderInsert(shape: Shape) {

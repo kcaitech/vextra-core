@@ -37,18 +37,19 @@ import {
     importSymbolShape,
     importTextShape,
     importFill,
-    importBorder
+    importBorder,
+    importColor
 } from "../io/baseimport";
 import * as types from "../data/typesdefine"
 import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape } from "../data/classes";
 
 import * as api from "./api"
-import { BORDER_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
 import { Repository } from "../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../coop/data/classes";
-import { addFillAt, deleteFillAt } from "./fill";
+import { addFillAt, deleteFillAt, setFillColor, setFillEnable } from "./fill";
 import { ArrayOpInsert, ArrayOpRemove } from "coop/data/basictypes";
-import { addBorderAt, deleteBorderAt } from "./border";
+import { addBorderAt, deleteBorderAt, setBorderColor } from "./border";
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
@@ -266,6 +267,36 @@ export class CMDExecuter {
                 api.shapeModifyRotate(shape, rotate)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.name) {
+            if (op.type === OpType.IdSet && value) {
+                const name = value;
+                api.shapeModifyName(shape, name)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.hflip) {
+            if (op.type === OpType.IdSet && value) {
+                const hflip = JSON.parse(value)
+                api.shapeModifyHFlip(shape, hflip)
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyHFlip(shape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.vflip) {
+            if (op.type === OpType.IdSet && value) {
+                const vflip = JSON.parse(value)
+                api.shapeModifyVFlip(shape, vflip)
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyVFlip(shape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.backgroundColor) {
+            if (op.type === OpType.IdSet && value) {
+                const color = importColor(JSON.parse(value))
+                api.shapeModifyBackgroundColor(shape, color)
+            }
+        }
         // todo
     }
     shapeModify(cmd: ShapeCmdModify) {
@@ -361,10 +392,43 @@ export class CMDExecuter {
         if (!page || !shape) return;
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
-
+            const fillId = cmd.arrayAttrId;
+            // find fill
+            const fillIdx = shape.style.fills.findIndex((fill) => fill.id === fillId)
+            if (fillIdx < 0) return;
+            const opId = op.opId;
+            const value = cmd.value;
+            if (opId === FILLS_ATTR_ID.color) {
+                if (op.type === OpType.IdSet && value) {
+                    const color = importColor(JSON.parse(value))
+                    setFillColor(shape.style, fillIdx, color);
+                }
+            }
+            else if (opId === FILLS_ATTR_ID.enable) {
+                if (op.type === OpType.IdSet && value) {
+                    const enable = JSON.parse(value);
+                    setFillEnable(shape.style, fillIdx, enable)
+                }
+                else if (op.type === OpType.IdRemove) {
+                    setFillEnable(shape.style, fillIdx, false)
+                }
+            }
         }
         else if (arrayAttr === BORDER_ID) {
+            const borderId = cmd.arrayAttrId;
+            // find fill
+            const borderIdx = shape.style.borders.findIndex((border) => border.id === borderId)
+            if (borderIdx < 0) return;
 
+            const opId = op.opId;
+            const value = cmd.value;
+            if (opId === BORDER_ATTR_ID.color) {
+                if (op.type === OpType.IdSet && value) {
+                    const color = importColor(JSON.parse(value))
+                    setBorderColor(shape.style, borderIdx, color);
+                }
+            }
+            // todo
         }
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove) {

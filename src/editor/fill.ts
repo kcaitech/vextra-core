@@ -16,7 +16,11 @@ export function setFillColor(style: Style, idx: number, color: Color) {
     fill && (fill.color = color);
 }
 
-export function setFillEnabled(style: Style, idx: number) {
+export function toggleFillEnabled(style: Style, idx: number) {
     const fill: Fill = style.fills[idx];
     fill && (fill.isEnabled = !fill.isEnabled);
+}
+export function setFillEnable(style: Style, idx: number, enable: boolean) {
+    const fill: Fill = style.fills[idx];
+    if (fill) fill.isEnabled = enable;
 }

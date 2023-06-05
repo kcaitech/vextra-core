@@ -1,7 +1,7 @@
 import { GroupShape, Shape, TextShape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { Repository } from "../data/transact";
-import { addFill, deleteFillAt, setFillColor, setFillEnabled } from "./fill";
+import { addFill, deleteFillAt, setFillColor, toggleFillEnabled } from "./fill";
 import { deleteBorderAt, addBorder, setBorderThickness, setBorderPosition, setBorderStyle, setBorderApexStyle, setBorderEnable, setBorderColor } from "./border";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
@@ -24,11 +24,7 @@ export class ShapeEditor {
         this.__repo = repo;
         this.__page = page;
     }
-    // private repowrap(name: string, effect: () => void) {
-    //     this.__repo.start(name, {});
-    //     effect();
-    //     this.__repo.commit({});
-    // }
+
     public setName(name: string) {
         this.__repo.start('setName', {});
         this.__shape.setName(name);
@@ -46,33 +42,25 @@ export class ShapeEditor {
     }
     public translate(dx: number, dy: number, round: boolean = true) {
         this.__repo.start("translate", {});
-        // this.repowrap("translate", () => {
         translate(this.__shape, dx, dy, round);
-        // })
         const frame = this.__shape.frame;
         this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({ x: frame.x, y: frame.y })));
     }
     public translateTo(x: number, y: number) {
         this.__repo.start("translateTo", {});
-        // this.repowrap("translateTo", () => {
         translateTo(this.__shape, x, y);
-        // })
         const frame = this.__shape.frame;
         this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({ x: frame.x, y: frame.y })));
     }
     public expand(dw: number, dh: number) {
         this.__repo.start("expand", {});
-        // this.repowrap("expand", () => {
         expand(this.__shape, dw, dh);
-        // })
         const frame = this.__shape.frame;
         this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_wh, JSON.stringify({ w: frame.width, h: frame.height })));
     }
     public expandTo(w: number, h: number) {
         this.__repo.start("expandTo", {});
-        // this.repowrap("expandTo", () => {
         expandTo(this.__shape, w, h);
-        // })
         const frame = this.__shape.frame;
         this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_wh, JSON.stringify({ w: frame.width, h: frame.height })));
     }
@@ -80,48 +68,38 @@ export class ShapeEditor {
     // flip
     public flipH() {
         this.__repo.start("flipHorizontal", {});
-        // this.repowrap("flipHorizontal", () => {
         this.__shape.flipHorizontal();
         updateFrame(this.__shape);
-        // })
         this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.hflip, JSON.stringify(this.__shape.isFlippedHorizontal)));
     }
     public flipV() {
         this.__repo.start("flipVertical", {});
-        // this.repowrap("flipVertical", () => {
         this.__shape.flipVertical();
         updateFrame(this.__shape);
-        // })
         this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.vflip, JSON.stringify(this.__shape.isFlippedVertical)));
     }
     // resizingConstraint
     public setResizingConstraint(value: number) {
         this.__repo.start("setResizingConstraint", {});
-        // this.repowrap("setResizingConstraint", () => {
         this.__shape.setResizingConstraint(value);
-        // })
         this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.resizingConstraint, JSON.stringify(this.__shape.resizingConstraint)));
     }
     // rotation
     public rotate(deg: number) {
         this.__repo.start("rotate", {});
-        // this.repowrap("rotate", () => {
         deg = deg % 360;
         this.__shape.rotate(deg);
         updateFrame(this.__shape);
-        // })
         this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.rotate, JSON.stringify(this.__shape.rotation)));
     }
     // radius
     public setRadius(radius: RectRadius) {
         this.__repo.start("setRadius", {});
-        // this.repowrap("setRadius", () => {
         if (!(this.__shape.type === ShapeType.Rectangle)) {
             radius.rlb = radius.rrt = radius.rrb = 0;
         }
         this.__shape.setRadius(radius);
         // updateFrame(this.__shape);
-        // })
         this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.radius, JSON.stringify(radius)));
     }
 
@@ -131,7 +109,7 @@ export class ShapeEditor {
         if (this.__shape.type !== ShapeType.Artboard) {
             addFill(this.__shape.style, fill);
         }
-        this.__repo.commit(ShapeArrayAttrInsert.Make(this.__page.id, this.__shape.id, FILLS_ID, this.__shape.style.fills.length - 1, FILLS_ATTR_ID.fill, JSON.stringify(exportFill(fill))));
+        this.__repo.commit(ShapeArrayAttrInsert.Make(this.__page.id, this.__shape.id, FILLS_ID, this.__shape.style.fills.length - 1, FILLS_ID, JSON.stringify(exportFill(fill))));
     }
     public setFillColor(idx: number, color: Color) {
         this.__repo.start("setFillColor", {});
@@ -144,10 +122,10 @@ export class ShapeEditor {
         }
     }
 
-    public setFillEnable(idx: number) {
+    public toggleFillEnable(idx: number) {
         this.__repo.start("setFillEnable", {});
         if (this.__shape.type !== ShapeType.Artboard) {
-            setFillEnabled(this.__shape.style, idx);
+            toggleFillEnabled(this.__shape.style, idx);
         }
         this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, FILLS_ID, this.__shape.style.fills[idx].id, FILLS_ATTR_ID.enable, JSON.stringify(this.__shape.style.fills[idx].isEnabled)));
     }

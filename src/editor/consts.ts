@@ -20,7 +20,6 @@ export const FILLS_ID = "fills"
 
 export const FILLS_ATTR_ID = {
     enable: "enable",
-    fill: "fill",
     color: "color"
 }
 
