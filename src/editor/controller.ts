@@ -6,7 +6,7 @@ import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { newArtboard, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
-import { ShapeCMDGroup, ShapeInsert, ShapeBatchModify } from "../coop/cmds";
+import { ShapeCmdGroup, ShapeCmdInsert } from "../coop/data/classes";
 import { SHAPE_ATTR_ID } from "./consts";
 
 interface PageXY { // 页面坐标系的xy
@@ -225,7 +225,7 @@ export class Controller {
                     this.__repo.rollback(); // 出错了！
                 }
                 else {
-                    this.__repo.commit(new ShapeInsert(page.id, saveParent.id, newShape.id, saveParent.childs.length - 1, shapeJson));
+                    this.__repo.commit(ShapeCmdInsert.Make(page.id, saveParent.id, newShape.id, saveParent.childs.length - 1, shapeJson));
                 }
             } else {
                 this.__repo.rollback();
@@ -296,37 +296,32 @@ export class Controller {
         }
         const close = () => {
             if (status == Status.Fulfilled && saveDatas.length > 0) {
-
-                const modifys = saveDatas.reduce((pre: { targetId: string, attrId: string, value?: string | number | boolean }[], cur) => {
+                const page = saveDatas[0].shape.getPage();
+                const cmd = ShapeCmdGroup.Make(page?.id || '');
+                saveDatas.forEach((cur) => {
                     const frame = cur.shape.frame;
                     if (frame.x !== cur.x || frame.y !== cur.y) {
-                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.xy, value: JSON.stringify({ x: frame.x, y: frame.y }) };
-                        pre.push(op)
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y }))
                     }
                     if (frame.width !== cur.w || frame.height !== cur.h) {
-                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.wh, value: JSON.stringify({ w: frame.width, h: frame.height }) };
-                        pre.push(op)
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.wh, JSON.stringify({ w: frame.width, h: frame.height }))
                     }
                     if (cur.shape.isFlippedHorizontal !== cur.hflip) {
-                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.hflip, value: cur.shape.isFlippedHorizontal };
-                        pre.push(op)
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, JSON.stringify(cur.shape.isFlippedHorizontal))
                     }
                     if (cur.shape.isFlippedVertical !== cur.vflip) {
-                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.vflip, value: cur.shape.isFlippedVertical };
-                        pre.push(op)
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.vflip, JSON.stringify(cur.shape.isFlippedVertical))
                     }
                     if (cur.shape.rotation !== cur.rotate) {
-                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.rotate, value: cur.shape.rotation };
-                        pre.push(op)
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, JSON.stringify(cur.shape.rotation))
                     }
-                    return pre;
-                }, []);
-                const page = saveDatas[0].shape.getPage();
+                });
+                
                 if (!page) {
                     this.__repo.rollback();
                 }
                 else {
-                    this.__repo.commit(new ShapeBatchModify(page.id, modifys));
+                    this.__repo.commit(cmd);
                 }
             } else {
                 this.__repo.rollback();
@@ -382,37 +377,31 @@ export class Controller {
         }
         const close = () => {
             if (status == Status.Fulfilled && saveDatas.length > 0) {
-                const modifys = saveDatas.reduce((pre: { targetId: string, attrId: string, value?: string | number | boolean }[], cur) => {
+                const page = saveDatas[0].shape.getPage();
+                const cmd = ShapeCmdGroup.Make(page?.id || '');
+                saveDatas.forEach((cur) => {
                     const frame = cur.shape.frame;
                     if (frame.x !== cur.x || frame.y !== cur.y) {
-                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.xy, value: JSON.stringify({ x: frame.x, y: frame.y }) };
-                        pre.push(op)
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y }))
                     }
                     if (frame.width !== cur.w || frame.height !== cur.h) {
-                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.wh, value: JSON.stringify({ w: frame.width, h: frame.height }) };
-                        pre.push(op)
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.wh, JSON.stringify({ w: frame.width, h: frame.height }))
                     }
                     if (cur.shape.isFlippedHorizontal !== cur.hflip) {
-                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.hflip, value: cur.shape.isFlippedHorizontal };
-                        pre.push(op)
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, JSON.stringify(cur.shape.isFlippedHorizontal))
                     }
                     if (cur.shape.isFlippedVertical !== cur.vflip) {
-                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.vflip, value: cur.shape.isFlippedVertical };
-                        pre.push(op)
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.vflip, JSON.stringify(cur.shape.isFlippedVertical))
                     }
                     if (cur.shape.rotation !== cur.rotate) {
-                        const op = { targetId: cur.shape.id, attrId: SHAPE_ATTR_ID.rotate, value: cur.shape.rotation };
-                        pre.push(op)
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, JSON.stringify(cur.shape.rotation))
                     }
-                    return pre;
-                }, []);
-
-                const page = saveDatas[0].shape.getPage();
+                });
                 if (!page) {
                     this.__repo.rollback();
                 }
                 else {
-                    this.__repo.commit(new ShapeBatchModify(page.id, modifys));
+                    this.__repo.commit(cmd);
                 }
             } else {
                 this.__repo.rollback();
@@ -495,18 +484,18 @@ export class Controller {
                         if (frame.x !== cur.x || frame.y !== cur.y) {
                             const page = cur.shape.getPage();
 
-                            pre.addModify(page!.id, cur.shape.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y }))
+                            pre.addModify(cur.shape.id, SHAPE_ATTR_ID.xy, JSON.stringify({ x: frame.x, y: frame.y }))
                         }
                         if (cur.parent && cur.shape.parent && cur.parent.id !== cur.shape.parent.id) {
                             const page = cur.shape.getPage();
-                            pre.addMove(page!.id,
+                            pre.addMove(
                                 cur.parent.id,
                                 cur.shape.parent.id,
                                 cur.idx,
                                 (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id), cur.shape.id)
                         }
                         return pre;
-                    }, new ShapeCMDGroup(page.id))
+                    }, ShapeCmdGroup.Make(page.id))
 
                     this.__repo.commit(cmd);
                 }
