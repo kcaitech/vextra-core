@@ -166,7 +166,7 @@ export class CMDExecuter {
                 this.textMove(cmd as TextCmdMove);
                 break;
             case CmdType.ShapeDelete:
-                this.textDelete(cmd as TextCmdRemove);
+                this.shapeDelete(cmd as ShapeCmdRemove);
                 break;
             case CmdType.ShapeInsert:
                 this.shapeInsert(cmd as ShapeCmdInsert);
