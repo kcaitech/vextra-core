@@ -47,9 +47,9 @@ import * as api from "./api"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
 import { Repository } from "../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../coop/data/classes";
-import { addFillAt, deleteFillAt, setFillColor, setFillEnable } from "./fill";
+import { addFillAt, deleteFillAt, moveFill, setFillColor, setFillEnable } from "./fill";
 import { ArrayOpInsert, ArrayOpRemove } from "coop/data/basictypes";
-import { addBorderAt, deleteBorderAt, setBorderColor } from "./border";
+import { addBorderAt, deleteBorderAt, moveBorder, setBorderColor } from "./border";
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
@@ -298,6 +298,9 @@ export class CMDExecuter {
             }
         }
         // todo
+        else {
+            console.error("not implemented ", op)
+        }
     }
     shapeModify(cmd: ShapeCmdModify) {
         const pageId = cmd.blockId;
@@ -310,7 +313,7 @@ export class CMDExecuter {
             this._shapeModify(page, shape, op, value);
         }
     }
-    shapeMove(cmd: ShapeCmdMove) { // TODO
+    shapeMove(cmd: ShapeCmdMove) {
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
         if (page) {
@@ -429,6 +432,9 @@ export class CMDExecuter {
                 }
             }
             // todo
+            else {
+                console.error("not implemented ", op)
+            }
         }
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove) {
@@ -439,10 +445,16 @@ export class CMDExecuter {
         if (!page || !shape) return;
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
-
+            if (op.type === OpType.ArrayMove) {
+                const moveOp = op as ArrayOpMove;
+                moveFill(shape.style, moveOp.start, moveOp.start2)
+            }
         }
         else if (arrayAttr === BORDER_ID) {
-
+            if (op.type === OpType.ArrayMove) {
+                const moveOp = op as ArrayOpMove;
+                moveBorder(shape.style, moveOp.start, moveOp.start2)
+            }
         }
     }
 

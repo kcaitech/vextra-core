@@ -45,3 +45,7 @@ export function addBorder(style: Style, border: Border) {
 export function addBorderAt(style: Style, border: Border, index: number) {
     style.borders.splice(index, 0, border);
 }
+export function moveBorder(style: Style, idx: number, idx2: number) {
+    const border = style.borders.splice(idx, 1)[0];
+    if (border) style.borders.splice(idx2, 0, border);
+}
