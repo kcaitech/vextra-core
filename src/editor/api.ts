@@ -1,9 +1,13 @@
-import { Color } from "data/style";
+import { Color } from "../data/style";
 import { Document } from "../data/document";
 import { Page } from "../data/page";
 import { GroupShape, Shape, ShapeType } from "../data/shape";
-// import { updateFrame } from "./utils";
 import { Artboard } from "data/artboard";
+
+export { addFillAt, deleteFillAt, moveFill, setFillColor, setFillEnable } from "./fill";
+export { addBorderAt, deleteBorderAt, moveBorder, setBorderColor } from "./border";
+export { deleteText, insertText } from "./text";
+export { updateFrame } from "./utils";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     document.insertPage(index, page)

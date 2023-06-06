@@ -47,11 +47,7 @@ import * as api from "./api"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
 import { Repository } from "../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../coop/data/classes";
-import { addFillAt, deleteFillAt, moveFill, setFillColor, setFillEnable } from "./fill";
-import { ArrayOpInsert, ArrayOpRemove } from "coop/data/basictypes";
-import { addBorderAt, deleteBorderAt, moveBorder, setBorderColor } from "./border";
-import { deleteText, insertText } from "./text";
-import { updateFrame } from "./utils";
+import { ArrayOpInsert, ArrayOpRemove } from "../coop/data/basictypes";
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
@@ -193,7 +189,7 @@ export class CMDExecuter {
         const updated = new Set<string>();
         needUpdateFrame.forEach((shape) => {
             if (updated.has(shape.id)) return;
-            updateFrame(shape);
+            api.updateFrame(shape);
             updated.add(shape.id);
         })
     }
@@ -370,13 +366,13 @@ export class CMDExecuter {
         if (arrayAttr === FILLS_ID) {
             if (op.type === OpType.ArrayInsert) {
                 const fill = importFill(JSON.parse(cmd.data))
-                addFillAt(shape.style, fill, (op as ArrayOpInsert).start);
+                api.addFillAt(shape.style, fill, (op as ArrayOpInsert).start);
             }
         }
         else if (arrayAttr === BORDER_ID) {
             if (op.type === OpType.ArrayInsert) {
                 const border = importBorder(JSON.parse(cmd.data))
-                addBorderAt(shape.style, border, (op as ArrayOpInsert).start);
+                api.addBorderAt(shape.style, border, (op as ArrayOpInsert).start);
             }
         }
     }
@@ -389,12 +385,12 @@ export class CMDExecuter {
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op.type === OpType.ArrayRemove) {
-                deleteFillAt(shape.style, (op as ArrayOpRemove).start)
+                api.deleteFillAt(shape.style, (op as ArrayOpRemove).start)
             }
         }
         else if (arrayAttr === BORDER_ID) {
             if (op.type === OpType.ArrayRemove) {
-                deleteBorderAt(shape.style, (op as ArrayOpRemove).start)
+                api.deleteBorderAt(shape.style, (op as ArrayOpRemove).start)
             }
         }
     }
@@ -415,16 +411,16 @@ export class CMDExecuter {
             if (opId === FILLS_ATTR_ID.color) {
                 if (op.type === OpType.IdSet && value) {
                     const color = importColor(JSON.parse(value))
-                    setFillColor(shape.style, fillIdx, color);
+                    api.setFillColor(shape.style, fillIdx, color);
                 }
             }
             else if (opId === FILLS_ATTR_ID.enable) {
                 if (op.type === OpType.IdSet && value) {
                     const enable = JSON.parse(value);
-                    setFillEnable(shape.style, fillIdx, enable)
+                    api.setFillEnable(shape.style, fillIdx, enable)
                 }
                 else if (op.type === OpType.IdRemove) {
-                    setFillEnable(shape.style, fillIdx, false)
+                    api.setFillEnable(shape.style, fillIdx, false)
                 }
             }
         }
@@ -439,7 +435,7 @@ export class CMDExecuter {
             if (opId === BORDER_ATTR_ID.color) {
                 if (op.type === OpType.IdSet && value) {
                     const color = importColor(JSON.parse(value))
-                    setBorderColor(shape.style, borderIdx, color);
+                    api.setBorderColor(shape.style, borderIdx, color);
                 }
             }
             // todo
@@ -458,13 +454,13 @@ export class CMDExecuter {
         if (arrayAttr === FILLS_ID) {
             if (op.type === OpType.ArrayMove) {
                 const moveOp = op as ArrayOpMove;
-                moveFill(shape.style, moveOp.start, moveOp.start2)
+                api.moveFill(shape.style, moveOp.start, moveOp.start2)
             }
         }
         else if (arrayAttr === BORDER_ID) {
             if (op.type === OpType.ArrayMove) {
                 const moveOp = op as ArrayOpMove;
-                moveBorder(shape.style, moveOp.start, moveOp.start2)
+                api.moveBorder(shape.style, moveOp.start, moveOp.start2)
             }
         }
     }
@@ -475,7 +471,7 @@ export class CMDExecuter {
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
         if (!page || !shape || !(shape instanceof TextShape)) return;
-        insertText(shape, cmd.text, op.start)
+        api.insertText(shape, cmd.text, op.start)
     }
     textDelete(cmd: TextCmdRemove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
@@ -483,7 +479,7 @@ export class CMDExecuter {
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
         if (!page || !shape || !(shape instanceof TextShape)) return;
-        deleteText(shape, op.start, op.length);
+        api.deleteText(shape, op.start, op.length);
     }
     textModify(cmd: TextCmdModify) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);

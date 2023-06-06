@@ -144,13 +144,23 @@ export class PageEditor {
                 m1.multiAtLeft(m);
                 const target = m1.computeCoord(0, 0);
 
-                if (shape.rotation) c.rotate((c.rotation || 0) + shape.rotation);
-                if (shape.isFlippedHorizontal) c.flipHorizontal();
-                if (shape.isFlippedVertical) c.flipVertical();
+                if (shape.rotation) {
+                    c.rotate((c.rotation || 0) + shape.rotation);
+                    cmd.addModify(c.id, SHAPE_ATTR_ID.rotate, JSON.stringify(c.rotation))
+                }
+                if (shape.isFlippedHorizontal) {
+                    c.flipHorizontal();
+                    cmd.addModify(c.id, SHAPE_ATTR_ID.hflip, JSON.stringify(c.isFlippedHorizontal))
+                }
+                if (shape.isFlippedVertical) {
+                    c.flipVertical();
+                    cmd.addModify(c.id, SHAPE_ATTR_ID.vflip, JSON.stringify(c.isFlippedVertical))
+                }
                 const m2 = c.matrix2Parent();
                 const cur = m2.computeCoord(0, 0);
                 c.frame.x += target.x - cur.x;
                 c.frame.y += target.y - cur.y;
+                cmd.addModify(c.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({x: c.frame.x, y: c.frame.y}))
             }
             for (let len = shape.childs.length; len > 0; len--) {
                 const c = shape.childs[0];
