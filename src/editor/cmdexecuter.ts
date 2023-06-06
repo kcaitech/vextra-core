@@ -117,7 +117,7 @@ export class CMDExecuter {
         this.__repo.start("", {});
         try {
             this._exec(cmd);
-            this.__repo.commitRemote();
+            this.__repo.commitRemote(cmd);
             return true;
         }
         catch (e) {
