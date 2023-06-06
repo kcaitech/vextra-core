@@ -125,24 +125,13 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     addCommonAttr(shape);
     return shape;
 }
-
+// 后续需要传入字体、字号、颜色信息
 export function newTextShape(name: string, frame: ShapeFrame): TextShape {
     template_text_shape.id = uuid();
     template_text_shape.name = name // i18n
     frame.width = 120;
     frame.height = 40;
     const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
-    const style = newStyle();
     addCommonAttr(textshape);
-    textshape.style = style;
-    textshape.frame = frame;
-    const spans = new BasicArray<Span>();
-    const span = new Span(1);
-    spans.push(span);
-    const para = new Para('\n', spans);
-    const paras = new BasicArray<Para>();
-    paras.push(para);
-    const text = new Text(paras);
-    textshape.text = text;
     return textshape;
 }
