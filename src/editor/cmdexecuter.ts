@@ -41,7 +41,7 @@ import {
     importColor
 } from "../io/baseimport";
 import * as types from "../data/typesdefine"
-import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape } from "../data/classes";
+import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape, TextShape } from "../data/classes";
 
 import * as api from "./api"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
@@ -50,6 +50,7 @@ import { Cmd, CmdType, IdOp, OpType } from "../coop/data/classes";
 import { addFillAt, deleteFillAt, moveFill, setFillColor, setFillEnable } from "./fill";
 import { ArrayOpInsert, ArrayOpRemove } from "coop/data/basictypes";
 import { addBorderAt, deleteBorderAt, moveBorder, setBorderColor } from "./border";
+import { deleteText, insertText } from "./text";
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
@@ -463,23 +464,23 @@ export class CMDExecuter {
         const op = cmd.ops[0]
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape) return;
-        // todo
+        if (!page || !shape || !(shape instanceof TextShape)) return;
+        insertText(shape, cmd.text, op.start)
     }
     textDelete(cmd: TextCmdRemove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         const op = cmd.ops[0]
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape) return;
-        // todo
+        if (!page || !shape || !(shape instanceof TextShape)) return;
+        deleteText(shape, op.start, op.length);
     }
     textModify(cmd: TextCmdModify) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         const op = cmd.ops[0]
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape) return;
+        if (!page || !shape || !(shape instanceof TextShape)) return;
         // todo
     }
     textBatchModify(cmd: TextCmdBatchModify) {
@@ -492,7 +493,7 @@ export class CMDExecuter {
         const op = cmd.ops[0]
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape) return;
+        if (!page || !shape || !(shape instanceof TextShape)) return;
         // todo
     }
 }
