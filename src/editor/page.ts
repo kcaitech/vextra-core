@@ -108,6 +108,7 @@ export class PageEditor {
                 const cur = c.matrix2Parent().computeCoord(0, 0);
                 c.frame.x += target.x - cur.x - xy.x; // 新建的group没有变换，可以直接减（xy）
                 c.frame.y += target.y - cur.y - xy.y;
+                cmd.addModify(c.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({x: c.frame.x, y: c.frame.y}))
             }
 
             // 往上调整width,height

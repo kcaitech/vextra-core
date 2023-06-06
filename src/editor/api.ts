@@ -2,9 +2,8 @@ import { Color } from "data/style";
 import { Document } from "../data/document";
 import { Page } from "../data/page";
 import { GroupShape, Shape, ShapeType } from "../data/shape";
-import { updateFrame } from "./utils";
+// import { updateFrame } from "./utils";
 import { Artboard } from "data/artboard";
-import { setFillColor } from "./fill";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     document.insertPage(index, page)
@@ -24,47 +23,53 @@ export function pageMove(document: Document, fromIdx: number, toIdx: number) {
     }
 }
 
-export function shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number) {
+export function shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: Shape[]) {
     parent.addChildAt(shape, index);
     page.onAddShape(shape);
-    updateFrame(shape);
+    // updateFrame(shape);
+    needUpdateFrame.push(shape);
 }
-export function shapeDelete(page: Page, parent: GroupShape, index: number) {
+export function shapeDelete(page: Page, parent: GroupShape, index: number, needUpdateFrame: Shape[]) {
     const shape = parent.removeChildAt(index);
     if (shape) {
         page.onRemoveShape(shape);
         if (parent.childs.length > 0) {
-            updateFrame(parent.childs[0])
+            needUpdateFrame.push(parent.childs[0])
         }
     }
 }
-export function shapeMove(parent: GroupShape, index: number, parent2: GroupShape, index2: number) {
+export function shapeMove(parent: GroupShape, index: number, parent2: GroupShape, index2: number, needUpdateFrame: Shape[]) {
     const shape = parent.childs.splice(index, 1)[0]
     if (shape) {
         parent2.childs.splice(index2, 0, shape);
+        // updateFrame(shape)
+        needUpdateFrame.push(shape)
+        if (parent.id !== parent2.id && parent.childs.length > 0) {
+            needUpdateFrame.push(parent.childs[0])
+        }
     }
 }
 
-export function shapeModifyXY(shape: Shape, x: number, y: number) {
+export function shapeModifyXY(shape: Shape, x: number, y: number, needUpdateFrame: Shape[]) {
     const frame = shape.frame;
     if (x !== frame.x || y !== frame.y) {
         frame.x = x;
         frame.y = y;
-        updateFrame(shape);
+        needUpdateFrame.push(shape);
     }
 }
-export function shapeModifyWH(shape: Shape, w: number, h: number) {
+export function shapeModifyWH(shape: Shape, w: number, h: number, needUpdateFrame: Shape[]) {
     const frame = shape.frame;
     if (w !== frame.width || h !== frame.height) {
         frame.width = w;
         frame.height = h;
-        updateFrame(shape);
+        needUpdateFrame.push(shape);
     }
 }
-export function shapeModifyRotate(shape: Shape, rotate: number) {
+export function shapeModifyRotate(shape: Shape, rotate: number, needUpdateFrame: Shape[]) {
     if (rotate !== shape.rotation) {
         shape.rotation = rotate;
-        updateFrame(shape);
+        needUpdateFrame.push(shape);
     }
 }
 export function shapeModifyName(shape: Shape, name: string) {
@@ -81,30 +86,4 @@ export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
     if (shape.type === ShapeType.Artboard) {
         (shape as Artboard).setArtboardColor(color);
     }
-}
-
-export function fillInsert(shape: Shape, ) {
-
-}
-export function fillDelete(shape: Shape) {
-
-}
-export function fillMove(shape: Shape) {
-
-}
-export function fillModifyColor(shape: Shape, idx: number, color: Color) {
-    setFillColor(shape.style, idx, color);
-}
-
-export function borderInsert(shape: Shape) {
-
-}
-export function borderDelete(shape: Shape) {
-
-}
-export function borderMove(shape: Shape) {
-
-}
-export function borderModifyColor(shape: Shape) {
-
 }

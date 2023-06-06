@@ -15,7 +15,6 @@ import {
     Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, RectRadius, CurveMode, Span
 } from "../data/baseclasses";
 import { BasicArray } from "../data/basic";
-import { Para, Text } from "../data/text";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {

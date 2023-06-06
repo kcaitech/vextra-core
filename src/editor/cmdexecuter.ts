@@ -51,6 +51,7 @@ import { addFillAt, deleteFillAt, moveFill, setFillColor, setFillEnable } from "
 import { ArrayOpInsert, ArrayOpRemove } from "coop/data/basictypes";
 import { addBorderAt, deleteBorderAt, moveBorder, setBorderColor } from "./border";
 import { deleteText, insertText } from "./text";
+import { updateFrame } from "./utils";
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
@@ -128,6 +129,8 @@ export class CMDExecuter {
     }
 
     private _exec(cmd: Cmd) {
+        const needUpdateFrame: Shape[] = [];
+
         switch (cmd.type) {
             case CmdType.PageInsert:
                 this.pageInsert(cmd as PageCmdInsert);
@@ -154,7 +157,7 @@ export class CMDExecuter {
                 this.shapeArrAttrDelete(cmd as ShapeArrayAttrRemove);
                 break;
             case CmdType.ShapeCmdGroup:
-                this.shapeCMDGroup(cmd as ShapeCmdGroup);
+                this.shapeCMDGroup(cmd as ShapeCmdGroup, needUpdateFrame);
                 break;
             case CmdType.TextDelete:
                 this.textDelete(cmd as TextCmdRemove);
@@ -172,20 +175,27 @@ export class CMDExecuter {
                 this.textMove(cmd as TextCmdMove);
                 break;
             case CmdType.ShapeDelete:
-                this.shapeDelete(cmd as ShapeCmdRemove);
+                this.shapeDelete(cmd as ShapeCmdRemove, needUpdateFrame);
                 break;
             case CmdType.ShapeInsert:
-                this.shapeInsert(cmd as ShapeCmdInsert);
+                this.shapeInsert(cmd as ShapeCmdInsert, needUpdateFrame);
                 break;
             case CmdType.ShapeModify:
-                this.shapeModify(cmd as ShapeCmdModify);
+                this.shapeModify(cmd as ShapeCmdModify, needUpdateFrame);
                 break;
             case CmdType.ShapeMove:
-                this.shapeMove(cmd as ShapeCmdMove);
+                this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
                 break;
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
         }
+
+        const updated = new Set<string>();
+        needUpdateFrame.forEach((shape) => {
+            if (updated.has(shape.id)) return;
+            updateFrame(shape);
+            updated.add(shape.id);
+        })
     }
 
     pageInsert(cmd: PageCmdInsert) {
@@ -223,7 +233,7 @@ export class CMDExecuter {
         }
     }
 
-    shapeInsert(cmd: ShapeCmdInsert) {
+    shapeInsert(cmd: ShapeCmdInsert, needUpdateFrame: Shape[]) {
         const pageId = cmd.blockId;
         const shape = importShape(cmd.data, this.__document)
         const page = this.__document.pagesMgr.getSync(pageId)
@@ -232,11 +242,11 @@ export class CMDExecuter {
         if (page && op.type === OpType.ShapeInsert) { // 后续page加载后需要更新！
             const parent = page.getShape(parentId, true);
             if (parent && parent instanceof GroupShape) {
-                api.shapeInsert(page, parent, shape, op.index)
+                api.shapeInsert(page, parent, shape, op.index, needUpdateFrame)
             }
         }
     }
-    shapeDelete(cmd: ShapeCmdRemove) {
+    shapeDelete(cmd: ShapeCmdRemove, needUpdateFrame: Shape[]) {
         const pageId = cmd.blockId;
         const op = cmd.ops[0];
         const parentId = op.targetId[0]
@@ -244,28 +254,28 @@ export class CMDExecuter {
         if (page && op.type === OpType.ShapeRemove) {
             const parent = page.getShape(parentId, true);
             if (parent && parent instanceof GroupShape) {
-                api.shapeDelete(page, parent, op.index)
+                api.shapeDelete(page, parent, op.index, needUpdateFrame)
             }
         }
     }
-    private _shapeModify(page: Page, shape: Shape, op: IdOp, value: string | undefined) {
+    private _shapeModify(page: Page, shape: Shape, op: IdOp, value: string | undefined, needUpdateFrame: Shape[]) {
         const opId = op.opId;
         if (opId === SHAPE_ATTR_ID.frame_xy) {
             if (op.type === OpType.IdSet && value) {
                 const xy = JSON.parse(value)
-                api.shapeModifyXY(shape, xy.x, xy.y)
+                api.shapeModifyXY(shape, xy.x, xy.y, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.frame_wh) {
             if (op.type === OpType.IdSet && value) {
                 const wh = JSON.parse(value)
-                api.shapeModifyWH(shape, wh.w, wh.h)
+                api.shapeModifyWH(shape, wh.w, wh.h, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.rotate) {
             if (op.type === OpType.IdSet && value) {
                 const rotate = JSON.parse(value)
-                api.shapeModifyRotate(shape, rotate)
+                api.shapeModifyRotate(shape, rotate, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.name) {
@@ -303,7 +313,7 @@ export class CMDExecuter {
             console.error("not implemented ", op)
         }
     }
-    shapeModify(cmd: ShapeCmdModify) {
+    shapeModify(cmd: ShapeCmdModify, needUpdateFrame: Shape[]) {
         const pageId = cmd.blockId;
         const op = cmd.ops[0];
         const shapeId = op.targetId[0]
@@ -311,10 +321,10 @@ export class CMDExecuter {
         const shape = page && page.getShape(shapeId, true);
         if (page && shape && (op.type === OpType.IdSet || op.type === OpType.IdRemove)) {
             const value = cmd.value;
-            this._shapeModify(page, shape, op, value);
+            this._shapeModify(page, shape, op, value, needUpdateFrame);
         }
     }
-    shapeMove(cmd: ShapeCmdMove) {
+    shapeMove(cmd: ShapeCmdMove, needUpdateFrame: Shape[]) {
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
         if (page) {
@@ -326,25 +336,25 @@ export class CMDExecuter {
                 const parent = page.getShape(parentId, true);
                 const parent2 = page.getShape(parentId2, true);
                 if (parent && parent2) {
-                    api.shapeMove(parent as GroupShape, moveOp.index, parent2 as GroupShape, moveOp.index2)
+                    api.shapeMove(parent as GroupShape, moveOp.index, parent2 as GroupShape, moveOp.index2, needUpdateFrame)
                 }
             }
         }
     }
-    shapeCMDGroup(cmdGroup: ShapeCmdGroup) {
+    shapeCMDGroup(cmdGroup: ShapeCmdGroup, needUpdateFrame: Shape[]) {
         cmdGroup.cmds.forEach((cmd) => {
             switch (cmd.type) {
                 case CmdType.ShapeInsert:
-                    this.shapeInsert(cmd as ShapeCmdInsert);
+                    this.shapeInsert(cmd as ShapeCmdInsert, needUpdateFrame);
                     break;
                 case CmdType.ShapeDelete:
-                    this.shapeDelete(cmd as ShapeCmdRemove);
+                    this.shapeDelete(cmd as ShapeCmdRemove, needUpdateFrame);
                     break;
                 case CmdType.ShapeModify:
-                    this.shapeModify(cmd as ShapeCmdModify);
+                    this.shapeModify(cmd as ShapeCmdModify, needUpdateFrame);
                     break;
                 case CmdType.ShapeMove:
-                    this.shapeMove(cmd as ShapeCmdMove);
+                    this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
                     break;
             }
         })
