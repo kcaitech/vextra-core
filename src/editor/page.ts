@@ -106,9 +106,10 @@ export class PageEditor {
                 const r = realXY[i]
                 const target = m.computeCoord(r.x, r.y);
                 const cur = c.matrix2Parent().computeCoord(0, 0);
+                const origin = { x: c.frame.x, y: c.frame.y }
                 c.frame.x += target.x - cur.x - xy.x; // 新建的group没有变换，可以直接减（xy）
                 c.frame.y += target.y - cur.y - xy.y;
-                cmd.addModify(c.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({x: c.frame.x, y: c.frame.y}))
+                cmd.addModify(c.id, SHAPE_ATTR_ID.frame_xy, { x: c.frame.x, y: c.frame.y }, origin)
             }
 
             // 往上调整width,height
@@ -145,22 +146,26 @@ export class PageEditor {
                 const target = m1.computeCoord(0, 0);
 
                 if (shape.rotation) {
+                    const origin = c.rotation;
                     c.rotate((c.rotation || 0) + shape.rotation);
-                    cmd.addModify(c.id, SHAPE_ATTR_ID.rotate, JSON.stringify(c.rotation))
+                    cmd.addModify(c.id, SHAPE_ATTR_ID.rotate, c.rotation, origin)
                 }
                 if (shape.isFlippedHorizontal) {
+                    const origin = c.isFlippedHorizontal;
                     c.flipHorizontal();
-                    cmd.addModify(c.id, SHAPE_ATTR_ID.hflip, JSON.stringify(c.isFlippedHorizontal))
+                    cmd.addModify(c.id, SHAPE_ATTR_ID.hflip, c.isFlippedHorizontal, origin)
                 }
                 if (shape.isFlippedVertical) {
+                    const origin = c.isFlippedVertical;
                     c.flipVertical();
-                    cmd.addModify(c.id, SHAPE_ATTR_ID.vflip, JSON.stringify(c.isFlippedVertical))
+                    cmd.addModify(c.id, SHAPE_ATTR_ID.vflip, c.isFlippedVertical, origin)
                 }
                 const m2 = c.matrix2Parent();
                 const cur = m2.computeCoord(0, 0);
+                const origin = { x: c.frame.x, y: c.frame.y }
                 c.frame.x += target.x - cur.x;
                 c.frame.y += target.y - cur.y;
-                cmd.addModify(c.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({x: c.frame.x, y: c.frame.y}))
+                cmd.addModify(c.id, SHAPE_ATTR_ID.frame_xy, { x: c.frame.x, y: c.frame.y }, origin)
             }
             for (let len = shape.childs.length; len > 0; len--) {
                 const c = shape.childs[0];
@@ -290,12 +295,13 @@ export class PageEditor {
     }
     setName(name: string) {
         this.__repo.start("setName", {});
+        const origin = this.__page.name;
         this.__page.name = name;
         const pageListItem = this.__document.pagesList.find(p => p.id === this.__page.id);
         if (pageListItem) {
             pageListItem.name = name;
         }
-        this.__repo.commit(PageCmdModify.Make(this.__document.id, this.__page.id, PAGE_ATTR_ID.name, name));
+        this.__repo.commit(PageCmdModify.Make(this.__document.id, this.__page.id, PAGE_ATTR_ID.name, name, origin));
     }
 
     /**
@@ -352,10 +358,10 @@ export class PageEditor {
                 translateTo(wanderer, beforeXY.x, beforeXY.y);
                 const frame = wanderer.frame;
                 if (saveFrame.x !== frame.x || saveFrame.y !== frame.y) {
-                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({ x: frame.x, y: frame.y }))
+                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, { x: saveFrame.x, y: saveFrame.y })
                 }
                 if (saveFrame.width !== frame.width || saveFrame.height !== frame.height) {
-                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.frame_wh, JSON.stringify({ w: frame.width, h: frame.height }))
+                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.frame_wh, { w: frame.width, h: frame.height }, { w: saveFrame.width, h: saveFrame.height })
                 }
                 this.__repo.commit(cmd);
             } catch (error) {
