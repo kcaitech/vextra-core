@@ -9,7 +9,7 @@ const {
 
 import { Validator } from "../../script/schema/validate"
 
-const schemadir = path.resolve(".", "schema")
+const schemadir = path.resolve("./src/", "schema")
 const validate = new Validator(schemadir);
 
 import group_shape from "./group-shape.json"
