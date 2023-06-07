@@ -1,9 +1,9 @@
-import { Color } from "data/style";
+import { Color } from "../data/style";
 import { Document } from "../data/document";
 import { Page } from "../data/page";
 import { GroupShape, Shape, ShapeType } from "../data/shape";
 import { updateFrame } from "./utils";
-import { Artboard } from "data/artboard";
+import { Artboard } from "../data/artboard";
 import { setFillColor } from "./fill";
 
 export function pageInsert(document: Document, page: Page, index: number) {

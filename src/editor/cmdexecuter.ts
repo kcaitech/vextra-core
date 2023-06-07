@@ -48,7 +48,7 @@ import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE
 import { Repository } from "../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../coop/data/classes";
 import { addFillAt, deleteFillAt, moveFill, setFillColor, setFillEnable } from "./fill";
-import { ArrayOpInsert, ArrayOpRemove } from "coop/data/basictypes";
+import { ArrayOpInsert, ArrayOpRemove } from "../coop/data/basictypes";
 import { addBorderAt, deleteBorderAt, moveBorder, setBorderColor } from "./border";
 import { deleteText, insertText } from "./text";
 
