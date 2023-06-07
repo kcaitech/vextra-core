@@ -62,6 +62,9 @@
     "preset": "ts-jest",
     "transform": {
       "^.+\\.ts?$": "ts-jest"
-    }
+    },
+    "testPathIgnorePatterns": [
+        "<rootDir>/dist/"
+    ]
   }
 }
