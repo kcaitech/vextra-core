@@ -110,7 +110,7 @@ export class CMDExecuter {
     }
 
     exec(cmd: Cmd): boolean {
-        console.log("exec cmd:", cmd)
+        // console.log("exec cmd:", cmd)
         this.__repo.start("", {});
         try {
             this._exec(cmd);
