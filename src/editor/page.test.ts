@@ -1,6 +1,6 @@
 import * as chai from 'chai'
 import { BasicArray } from '../data/basic';
-import * as api from "./api"
+import * as api from "./cmdapi"
 
 const {
     equal, strictEqual, deepEqual, throws,
