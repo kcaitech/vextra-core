@@ -34,8 +34,9 @@ import {
     ShapeOpMove
 } from "../coop/data/classes";
 import { Document } from "../data/document"
-import { exportPage } from "../io/baseexport";
+import { exportBorder, exportFill, exportPage } from "../io/baseexport";
 import { exportShape } from "./utils";
+import { BORDER_ID, FILLS_ID } from "./consts";
 
 export class CMDReverter {
     private __document: Document;
@@ -141,12 +142,77 @@ export class CMDReverter {
     }
 
     shapeArrAttrInsert(cmd: ShapeArrayAttrInsert) {
+        const cmdop = cmd.ops[0];
+        let op;
+        if (cmdop.type === OpType.ArrayInsert) {
+            op = ArrayOpRemove.Make(cmdop.targetId, cmdop.start, cmdop.length)
+        } else {
+            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, cmdop.length)
+        }
+        return new ShapeArrayAttrRemove(CmdType.ShapeArrayAttrDelete, uuid(), cmd.blockId, [op], cmd.arrayAttrId);
     }
     shapeArrAttrModify(cmd: ShapeArrayAttrModify) {
+        const cmdop = cmd.ops[0];
+        let op;
+        if (cmdop.type === OpType.IdSet) {
+            op = IdOpRemove.Make(cmdop.targetId, cmdop.opId)
+        }
+        else if (cmdop.type === OpType.IdRemove) {
+            op = IdOpSet.Make(cmdop.targetId, cmdop.opId)
+        }
+        else {
+            op = IdOpNone.Make(cmdop.targetId, cmdop.opId)
+        }
+        const ret = new ShapeArrayAttrModify(CmdType.ShapeArrayAttrModify, uuid(), cmd.blockId, [op], cmd.attrId)
+        ret.value = cmd.origin;
+        ret.origin = cmd.value;
+        return ret;
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove) {
+        const cmdop = cmd.ops[0];
+        let op;
+        if (cmdop.type === OpType.ArrayMove) {
+            op = ArrayOpMove.Make(cmdop.targetId, (cmdop as ArrayOpMove).start2, cmdop.length, cmdop.start)
+        }
+        else {
+            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, cmdop.length)
+        }
+        return new ShapeArrayAttrMove(CmdType.ShapeArrayAttrMove, uuid(), cmd.blockId, [op]);
     }
     shapeArrAttrDelete(cmd: ShapeArrayAttrRemove) {
+        const cmdop = cmd.ops[0];
+        let op;
+        if (cmdop.type === OpType.ArrayRemove) {
+            op = ArrayOpInsert.Make(cmdop.targetId, cmdop.start, 1)
+        } else {
+            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, 1)
+        }
+        const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        const shapeId = op.targetId[0];
+        const shape = page && page.getShape(shapeId, true);
+        if (!shape) return;
+
+        const arrayAttr = cmd.arrayAttr;
+        const arrayAttrId = cmd.arrayAttrId;
+        let data;
+        if (arrayAttr === FILLS_ID) {
+            const fills = shape.style.fills;
+            const fill = fills.find((fill) => fill.id === arrayAttrId)
+            if (!fill) return;
+            data = exportFill(fill)
+        }
+        else if (arrayAttr === BORDER_ID) {
+            const borders = shape.style.borders;
+            const border = borders.find((border) => border.id === arrayAttrId)
+            if (!border) return;
+            data = exportBorder(border)
+        }
+        else {
+            // error
+            // return;
+            throw new Error("unknow arrayAttr:" + arrayAttr)
+        }
+        return new ShapeArrayAttrInsert(CmdType.ShapeArrayAttrInsert, uuid(), cmd.blockId, [op], arrayAttrId, JSON.stringify(data));
     }
 
     shapeCMDGroup(cmd: ShapeCmdGroup) {
@@ -183,7 +249,21 @@ export class CMDReverter {
         return new ShapeCmdRemove(CmdType.ShapeDelete, uuid(), cmd.blockId, [op]);
     }
     shapeModify(cmd: ShapeCmdModify) {
-        //
+        const cmdop = cmd.ops[0];
+        let op;
+        if (cmdop.type === OpType.IdSet) {
+            op = IdOpRemove.Make(cmdop.targetId, cmdop.opId)
+        }
+        else if (cmdop.type === OpType.IdRemove) {
+            op = IdOpSet.Make(cmdop.targetId, cmdop.opId)
+        }
+        else {
+            op = IdOpNone.Make(cmdop.targetId, cmdop.opId)
+        }
+        const ret = new ShapeCmdModify(CmdType.ShapeModify, uuid(), cmd.blockId, [op], cmd.attrId)
+        ret.value = cmd.origin;
+        ret.origin = cmd.value;
+        return ret;
     }
     shapeMove(cmd: ShapeCmdMove) {
         const cmdop = cmd.ops[0];

@@ -117,85 +117,130 @@ export class ShapeEditor {
 
     // fill
     public addFill(fill: Fill) {
-        this.__repo.start("addFill", {});
         if (this.__shape.type !== ShapeType.Artboard) {
+            this.__repo.start("addFill", {});
             addFill(this.__shape.style, fill);
+            this.__repo.commit(ShapeArrayAttrInsert.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, this.__shape.style.fills.length - 1, exportFill(fill)));
         }
-        this.__repo.commit(ShapeArrayAttrInsert.Make(this.__page.id, this.__shape.id, FILLS_ID, this.__shape.style.fills.length - 1, FILLS_ID, JSON.stringify(exportFill(fill))));
     }
     public setFillColor(idx: number, color: Color) {
-        this.__repo.start("setFillColor", {});
         if (this.__shape.type === ShapeType.Artboard) {
+            this.__repo.start("setFillColor", {});
             const origin = (this.__shape as Artboard).backgroundColor;
             (this.__shape as Artboard).setArtboardColor(color); // 画板的背景色不在shape的style中
             this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.backgroundColor, exportColor(color), origin));
         } else {
-            setFillColor(this.__shape.style, idx, color);
-            this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, FILLS_ID, this.__shape.style.fills[idx].id, FILLS_ATTR_ID.color, exportColor(color)));
+            const fill: Fill = this.__shape.fills[idx];
+            if (fill) {
+                this.__repo.start("setFillColor", {});
+                const origin = exportColor(fill.color)
+                setFillColor(this.__shape.style, idx, color);
+                const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, FILLS_ATTR_ID.color, exportColor(color), origin)
+                this.__repo.commit(cmd);
+            }
         }
     }
 
     public toggleFillEnable(idx: number) {
-        this.__repo.start("setFillEnable", {});
-        if (this.__shape.type !== ShapeType.Artboard) {
+        const fill = this.__shape.style.fills[idx];
+        if (this.__shape.type !== ShapeType.Artboard && fill) {
+            this.__repo.start("setFillEnable", {});
+            const origin = fill.isEnabled;
             toggleFillEnabled(this.__shape.style, idx);
+            const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, FILLS_ATTR_ID.enable, fill.isEnabled, origin)
+            this.__repo.commit(cmd);
         }
-        this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, FILLS_ID, this.__shape.style.fills[idx].id, FILLS_ATTR_ID.enable, JSON.stringify(this.__shape.style.fills[idx].isEnabled)));
     }
     public deleteFill(idx: number) {
-        if (this.__shape.type !== ShapeType.Artboard) {
+        const fill = this.__shape.style.fills[idx];
+        if (this.__shape.type !== ShapeType.Artboard && fill) {
             this.__repo.start("deleteFill", {});
             deleteFillAt(this.__shape.style, idx);
-            this.__repo.commit(ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, FILLS_ID, idx));
+            const cmd = ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, idx);
+            this.__repo.commit(cmd);
         }
     }
 
     // border
     public setBorderEnable(idx: number, isEnabled: boolean) {
-        this.__repo.start("setBorderEnable", {});
-        setBorderEnable(this.__shape.style, idx, isEnabled);
-        this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, this.__shape.style.borders[idx].id,
-            BORDER_ATTR_ID.enable, JSON.stringify(this.__shape.style.borders[idx].isEnabled)));
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            this.__repo.start("setBorderEnable", {});
+            const origin = border.isEnabled;
+            setBorderEnable(this.__shape.style, idx, isEnabled);
+            const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id, BORDER_ATTR_ID.enable, border.isEnabled, origin)
+            this.__repo.commit(cmd);
+        }
     }
     public setBorderColor(idx: number, color: Color) {
-        this.__repo.start("setBorderColor", {});
-        setBorderColor(this.__shape.style, idx, color);
-        this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, this.__shape.style.borders[idx].id,
-            BORDER_ATTR_ID.color, JSON.stringify(exportColor(color))));
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            this.__repo.start("setBorderColor", {});
+            const origin = exportColor(border.color);
+            setBorderColor(this.__shape.style, idx, color);
+            const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
+                BORDER_ATTR_ID.color, exportColor(color), origin)
+            this.__repo.commit(cmd);
+        }
     }
     public setBorderThickness(idx: number, thickness: number) {
-        this.__repo.start("setBorderThickness", {});
-        setBorderThickness(this.__shape.style, idx, thickness);
-        this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, this.__shape.style.borders[idx].id,
-            BORDER_ATTR_ID.thickness, JSON.stringify(thickness)));
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            this.__repo.start("setBorderThickness", {});
+            const origin = border.thickness;
+            setBorderThickness(this.__shape.style, idx, thickness);
+            this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
+                BORDER_ATTR_ID.thickness, thickness, origin));
+        }
     }
     public setBorderPosition(idx: number, position: BorderPosition) {
-        this.__repo.start("setBorderPosition", {});
-        setBorderPosition(this.__shape.style, idx, position);
-        this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, this.__shape.style.borders[idx].id,
-            BORDER_ATTR_ID.position, JSON.stringify(exportBorderPosition(position))));
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            this.__repo.start("setBorderPosition", {});
+            const origin = exportBorderPosition(border.position)
+            setBorderPosition(this.__shape.style, idx, position);
+            this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
+                BORDER_ATTR_ID.position, exportBorderPosition(position), origin));
+        }
     }
     public setBorderStyle(idx: number, borderStyle: BorderStyle) {
-        this.__repo.start("setBorderStyle", {});
-        setBorderStyle(this.__shape.style, idx, borderStyle);
-        this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, this.__shape.style.borders[idx].id,
-            BORDER_ATTR_ID.borderStyle, JSON.stringify(exportBorderStyle(borderStyle))));
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            this.__repo.start("setBorderStyle", {});
+            const origin = exportBorderStyle(border.borderStyle);
+            setBorderStyle(this.__shape.style, idx, borderStyle);
+            this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
+                BORDER_ATTR_ID.borderStyle, exportBorderStyle(borderStyle), origin));
+        }
     }
     public setBorderApexStyle(idx: number, apexStyle: MarkerType, isEnd: boolean) {
-        this.__repo.start("setBorderApexStyle", {});
-        setBorderApexStyle(this.__shape.style, idx, apexStyle, isEnd);
-        this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, this.__shape.style.borders[idx].id,
-            isEnd ? BORDER_ATTR_ID.endMarkerType : BORDER_ATTR_ID.startMarkerType, apexStyle));
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            this.__repo.start("setBorderApexStyle", {});
+            let origin;
+            if (isEnd) {
+                origin = border.endMarkerType
+            } else {
+                origin = border.startMarkerType
+            }
+            setBorderApexStyle(this.__shape.style, idx, apexStyle, isEnd);
+            this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
+                isEnd ? BORDER_ATTR_ID.endMarkerType : BORDER_ATTR_ID.startMarkerType, apexStyle, origin));
+        }
     }
     public deleteBorder(idx: number) {
-        this.__repo.start("deleteBorder", {});
-        deleteBorderAt(this.__shape.style, idx)
-        this.__repo.commit(ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, BORDER_ID, idx));
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            this.__repo.start("deleteBorder", {});
+            deleteBorderAt(this.__shape.style, idx)
+            this.__repo.commit(ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id, idx));
+        }
     }
     public addBorder(border: Border) {
         this.__repo.start("addBorder", {});
-        addBorder(this.__shape.style, border)
-        this.__repo.commit(ShapeArrayAttrInsert.Make(this.__page.id, this.__shape.id, BORDER_ID, this.__shape.style.borders.length - 1, JSON.stringify(exportBorder(border))));
+        addBorder(this.__shape.style, border);
+        const cmd = ShapeArrayAttrInsert.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id, this.__shape.style.borders.length - 1, exportBorder(border))
+        this.__repo.commit(cmd);
     }
 
     // 容器自适应大小
