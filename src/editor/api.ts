@@ -79,11 +79,13 @@ export function shapeModifyRotate(shape: Shape, rotate: number, needUpdateFrame:
 export function shapeModifyName(shape: Shape, name: string) {
     shape.name = name;
 }
-export function shapeModifyHFlip(shape: Shape, hflip: boolean | undefined) {
+export function shapeModifyHFlip(shape: Shape, hflip: boolean | undefined, needUpdateFrame: Shape[]) {
     shape.isFlippedHorizontal = hflip;
+    needUpdateFrame.push(shape);
 }
-export function shapeModifyVFlip(shape: Shape, vflip: boolean | undefined) {
+export function shapeModifyVFlip(shape: Shape, vflip: boolean | undefined, needUpdateFrame: Shape[]) {
     shape.isFlippedVertical = vflip;
+    needUpdateFrame.push(shape);
 }
 
 export function shapeModifyBackgroundColor(shape: Shape, color: Color) {

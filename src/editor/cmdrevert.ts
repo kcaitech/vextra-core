@@ -32,9 +32,9 @@ import {
     ShapeOpNone,
     ShapeOpRemove,
     ShapeOpMove
-} from "coop/data/classes";
+} from "../coop/data/classes";
 import { Document } from "../data/document"
-import { exportPage } from "io/baseexport";
+import { exportPage } from "../io/baseexport";
 import { exportShape } from "./utils";
 
 export class CMDReverter {
