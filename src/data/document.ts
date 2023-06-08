@@ -3,7 +3,7 @@ export { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
 import { Artboard } from "./artboard";
 import { SymbolShape } from "./shape";
-import { BasicArray, ResourceMgr, IDataGruad } from "./basic";
+import { BasicArray, ResourceMgr, IDataGuard } from "./basic";
 import { Style } from "./style";
 import { DataGuard } from "./notransact";
 
@@ -25,7 +25,7 @@ export class Document extends DocumentMeta {
         name: string,
         pagesList?: BasicArray<PageListItem>,
         // loader: IDataLoader,
-        guard?: IDataGruad
+        guard?: IDataGuard
     ) {
         super(name, pagesList ?? new BasicArray())
         this.__fid = fid;

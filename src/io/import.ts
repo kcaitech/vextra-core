@@ -3,7 +3,7 @@ import {Page} from "../data/page";
 import {ImageShape, SymbolRefShape, SymbolShape} from "../data/shape";
 import {IImportContext, importArtboard, importDocumentMeta, importPage, importSymbolShape} from "./baseimport";
 import * as types from "../data/typesdefine"
-import {IDataGruad} from "../data/basic";
+import {IDataGuard} from "../data/basic";
 import {Document, DocumentMeta} from "../data/document";
 import * as storage from "./storage";
 
@@ -99,7 +99,7 @@ export class DataLoader implements IDataLoader {
     }
 }
 
-export async function importDocument(storageOptions: storage.StorageOptions, documentPath: string, fid: string, versionId: string, gurad?: IDataGruad) {
+export async function importDocument(storageOptions: storage.StorageOptions, documentPath: string, fid: string, versionId: string, gurad?: IDataGuard) {
     const loader = new DataLoader(storageOptions, documentPath);
 
     const meta = await loader.loadDocumentMeta(new class implements IImportContext {

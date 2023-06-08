@@ -1,5 +1,5 @@
 
-import { BasicArray, IDataGruad } from "../../../data/basic";
+import { BasicArray, IDataGuard } from "../../../data/basic";
 import { Document, PageListItem } from "../../../data/document";
 import { LzData } from "../../lzdata";
 import { IJSON } from "./basic";
@@ -28,7 +28,7 @@ async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicA
     return pageList;
 }
 
-export async function importDocument(name: string, lzData: LzData, gurad: IDataGruad) {
+export async function importDocument(name: string, lzData: LzData, gurad: IDataGuard) {
     const data: IJSON = await lzData.loadJson('document.json');
     const pageIds = (data["pages"] || []).map((d: IJSON) => {
         const ref: string = d['_ref'];
