@@ -3,6 +3,7 @@ import { Document } from "../data/document";
 import { Page } from "../data/page";
 import { GroupShape, Shape, ShapeType } from "../data/shape";
 import { Artboard } from "../data/artboard";
+import { translateTo } from "./frame";
 
 export { addFillAt, deleteFillAt, moveFill, setFillColor, setFillEnable } from "./fill";
 export { addBorderAt, deleteBorderAt, moveBorder, setBorderColor } from "./border";
@@ -55,12 +56,8 @@ export function shapeMove(parent: GroupShape, index: number, parent2: GroupShape
 }
 
 export function shapeModifyXY(shape: Shape, x: number, y: number, needUpdateFrame: Shape[]) {
-    const frame = shape.frame;
-    if (x !== frame.x || y !== frame.y) {
-        frame.x = x;
-        frame.y = y;
-        needUpdateFrame.push(shape);
-    }
+    translateTo(shape, x, y)
+    needUpdateFrame.push(shape);
 }
 export function shapeModifyWH(shape: Shape, w: number, h: number, needUpdateFrame: Shape[]) {
     const frame = shape.frame;

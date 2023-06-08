@@ -45,31 +45,33 @@ export class ShapeEditor {
     }
     public translate(dx: number, dy: number, round: boolean = true) {
         this.__repo.start("translate", {});
-        const frame = this.__shape.frame;
+        const frame = this.__shape.frame2Page();
         const origin = { x: frame.x, y: frame.y }
         translate(this.__shape, dx, dy, round);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, origin));
+        const frame2 = this.__shape.frame2Page();
+        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, origin));
     }
     public translateTo(x: number, y: number) {
         this.__repo.start("translateTo", {});
-        const frame = this.__shape.frame;
+        const frame = this.__shape.frame2Page();
         const origin = { x: frame.x, y: frame.y }
         translateTo(this.__shape, x, y);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, origin));
+        const frame2 = this.__shape.frame2Page();
+        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, origin));
     }
     public expand(dw: number, dh: number) {
         this.__repo.start("expand", {});
         const frame = this.__shape.frame;
         const origin = { w: frame.width, h: frame.height }
         expand(this.__shape, dw, dh);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_wh, { w: frame.width, h: frame.height }, origin));
+        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.size, { w: frame.width, h: frame.height }, origin));
     }
     public expandTo(w: number, h: number) {
         this.__repo.start("expandTo", {});
         const frame = this.__shape.frame;
         const origin = { w: frame.width, h: frame.height }
         expandTo(this.__shape, w, h);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.frame_wh, { w: frame.width, h: frame.height }, origin));
+        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.size, { w: frame.width, h: frame.height }, origin));
     }
 
     // flip
@@ -260,13 +262,14 @@ export class ShapeEditor {
                         hflip: boolean | undefined,
                         vflip: boolean | undefined
                     }[] = childs.map((shape) => {
-                        const frame = shape.frame;
+                        const frame = shape.frame2Page();
+                        const frame2 = shape.frame;
                         return {
                             shape,
                             x: frame.x,
                             y: frame.y,
-                            w: frame.width,
-                            h: frame.height,
+                            w: frame2.width,
+                            h: frame2.height,
                             rotate: shape.rotation,
                             hflip: shape.isFlippedHorizontal,
                             vflip: shape.isFlippedVertical
@@ -295,12 +298,13 @@ export class ShapeEditor {
                         const page = saveDatas[0].shape.getPage();
                         const cmd = ShapeCmdGroup.Make(page?.id || '');
                         saveDatas.forEach((cur) => {
-                            const frame = cur.shape.frame;
+                            const frame = cur.shape.frame2Page();
+                            const frame2 = cur.shape.frame;
                             if (frame.x !== cur.x || frame.y !== cur.y) {
-                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
+                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                             }
-                            if (frame.width !== cur.w || frame.height !== cur.h) {
-                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_wh, { w: frame.width, h: frame.height }, { w: cur.w, h: cur.h })
+                            if (frame2.width !== cur.w || frame2.height !== cur.h) {
+                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: cur.w, h: cur.h })
                             }
                             if (cur.shape.isFlippedHorizontal !== cur.hflip) {
                                 cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, cur.shape.isFlippedHorizontal, cur.hflip)

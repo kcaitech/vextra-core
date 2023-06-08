@@ -6,7 +6,7 @@ import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { newArtboard, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
-import { ShapeCmdGroup, ShapeCmdInsert } from "../coop/data/classes";
+import { ShapeCmdGroup } from "../coop/data/classes";
 import { SHAPE_ATTR_ID } from "./consts";
 
 interface PageXY { // 页面坐标系的xy
@@ -225,7 +225,11 @@ export class Controller {
                     this.__repo.rollback(); // 出错了！
                 }
                 else {
-                    this.__repo.commit(ShapeCmdInsert.Make(page.id, saveParent.id, newShape.id, saveParent.childs.length - 1, shapeJson));
+                    const cmd = ShapeCmdGroup.Make(page.id);
+                    cmd.addInsert(saveParent.id, newShape.id, saveParent.childs.length -1, shapeJson);
+                    const frame = newShape.frame2Page();
+                    cmd.addModify(newShape.id, SHAPE_ATTR_ID.position, {x: frame.x, y: frame.y}, {x: frame.x, y: frame.y})
+                    this.__repo.commit(cmd);
                 }
             } else {
                 this.__repo.rollback();
@@ -251,13 +255,14 @@ export class Controller {
             hflip: boolean | undefined,
             vflip: boolean | undefined
         }[] = shapes.map((shape) => {
-            const frame = shape.frame;
+            const frame = shape.frame2Page();
+            const frame2 = shape.frame;
             return {
                 shape,
                 x: frame.x,
                 y: frame.y,
-                w: frame.width,
-                h: frame.height,
+                w: frame2.width,
+                h: frame2.height,
                 rotate: shape.rotation,
                 hflip: shape.isFlippedHorizontal,
                 vflip: shape.isFlippedVertical
@@ -299,12 +304,13 @@ export class Controller {
                 const page = saveDatas[0].shape.getPage();
                 const cmd = ShapeCmdGroup.Make(page?.id || '');
                 saveDatas.forEach((cur) => {
-                    const frame = cur.shape.frame;
+                    const frame = cur.shape.frame2Page();
                     if (frame.x !== cur.x || frame.y !== cur.y) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                     }
-                    if (frame.width !== cur.w || frame.height !== cur.h) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_wh, { w: frame.width, h: frame.height }, { w: cur.w, h: cur.h })
+                    const frame2 = cur.shape.frame;
+                    if (frame2.width !== cur.w || frame2.height !== cur.h) {
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: cur.w, h: cur.h })
                     }
                     if (cur.shape.isFlippedHorizontal !== cur.hflip) {
                         cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, cur.shape.isFlippedHorizontal, cur.hflip)
@@ -345,13 +351,14 @@ export class Controller {
             hflip: boolean | undefined,
             vflip: boolean | undefined
         }[] = [shape].map((shape) => {
-            const frame = shape.frame;
+            const frame = shape.frame2Page();
+            const frame2 = shape.frame;
             return {
                 shape,
                 x: frame.x,
                 y: frame.y,
-                w: frame.width,
-                h: frame.height,
+                w: frame2.width,
+                h: frame2.height,
                 rotate: shape.rotation,
                 hflip: shape.isFlippedHorizontal,
                 vflip: shape.isFlippedVertical
@@ -380,12 +387,13 @@ export class Controller {
                 const page = saveDatas[0].shape.getPage();
                 const cmd = ShapeCmdGroup.Make(page?.id || '');
                 saveDatas.forEach((cur) => {
-                    const frame = cur.shape.frame;
+                    const frame = cur.shape.frame2Page();
                     if (frame.x !== cur.x || frame.y !== cur.y) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                     }
-                    if (frame.width !== cur.w || frame.height !== cur.h) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_wh, { w: frame.width, h: frame.height }, { w: cur.w, h: cur.h })
+                    const frame2 = cur.shape.frame;
+                    if (frame2.width !== cur.w || frame2.height !== cur.h) {
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: cur.w, h: cur.h })
                     }
                     if (cur.shape.isFlippedHorizontal !== cur.hflip) {
                         cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, cur.shape.isFlippedHorizontal, cur.hflip)
@@ -411,7 +419,7 @@ export class Controller {
         return { execute, close }
     }
     // 图形位置移动
-    public asyncTransfer(s: Shape[]): AsyncTransfer {
+    public asyncTransfer(shapes: Shape[]): AsyncTransfer {
         if (this.__repo.transactCtx.transact) { // ???
             this.__repo.rollback();
         }
@@ -423,8 +431,8 @@ export class Controller {
             y: number,
             parent: Shape | undefined,
             idx: number
-        }[] = s.map((shape) => {
-            const frame = shape.frame;
+        }[] = shapes.map((shape) => {
+            const frame = shape.frame2Page();
             return {
                 shape,
                 x: frame.x,
@@ -438,7 +446,7 @@ export class Controller {
         })
 
         this.__repo.start("transfer", {});
-        const shapes: Shape[] = s;
+        // const shapes: Shape[] = s;
         let status: Status = Status.Pending;
         const migrate = (targetParent: Shape) => {
             status = Status.Pending;
@@ -478,23 +486,23 @@ export class Controller {
                     this.__repo.rollback();
                 }
                 else {
-
-                    const cmd = saveDatas.reduce((pre, cur) => {
-                        const frame = cur.shape.frame;
+                    const cmd = ShapeCmdGroup.Make(page.id);
+                    saveDatas.forEach((cur) => {
+                        const frame = cur.shape.frame2Page();
                         if (frame.x !== cur.x || frame.y !== cur.y) {
                             const page = cur.shape.getPage();
-                            pre.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
+                            cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                         }
                         if (cur.parent && cur.shape.parent && cur.parent.id !== cur.shape.parent.id) {
                             const page = cur.shape.getPage();
-                            pre.addMove(
+                            cmd.addMove(
                                 cur.parent.id,
                                 cur.shape.parent.id,
                                 cur.idx,
-                                (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id), cur.shape.id)
+                                (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id),
+                                cur.shape.id)
                         }
-                        return pre;
-                    }, ShapeCmdGroup.Make(page.id))
+                    })
 
                     this.__repo.commit(cmd);
                 }

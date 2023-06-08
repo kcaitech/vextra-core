@@ -10,9 +10,9 @@ import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo } from "./frame";
-import { PageCmdModify, ShapeCmdGroup, ShapeCmdInsert, ShapeCmdMove } from "../coop/data/classes";
+import { PageCmdModify, ShapeCmdGroup, ShapeCmdMove } from "../coop/data/classes";
 import { PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
-import { exportGroupShape, exportShapeFrame } from "../io/baseexport";
+import { exportGroupShape } from "../io/baseexport";
 import { uuid } from "../basic/uuid";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
@@ -106,10 +106,13 @@ export class PageEditor {
                 const r = realXY[i]
                 const target = m.computeCoord(r.x, r.y);
                 const cur = c.matrix2Parent().computeCoord(0, 0);
-                const origin = { x: c.frame.x, y: c.frame.y }
+
+                const frame = c.frame2Page();
+                const origin = { x: frame.x, y: frame.y }
                 c.frame.x += target.x - cur.x - xy.x; // 新建的group没有变换，可以直接减（xy）
                 c.frame.y += target.y - cur.y - xy.y;
-                cmd.addModify(c.id, SHAPE_ATTR_ID.frame_xy, { x: c.frame.x, y: c.frame.y }, origin)
+                const frame2 = c.frame2Page();
+                cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, origin)
             }
 
             // 往上调整width,height
@@ -162,10 +165,13 @@ export class PageEditor {
                 }
                 const m2 = c.matrix2Parent();
                 const cur = m2.computeCoord(0, 0);
-                const origin = { x: c.frame.x, y: c.frame.y }
+
+                const frame = c.frame2Page();
+                const origin = { x: frame.x, y: frame.y }
                 c.frame.x += target.x - cur.x;
                 c.frame.y += target.y - cur.y;
-                cmd.addModify(c.id, SHAPE_ATTR_ID.frame_xy, { x: c.frame.x, y: c.frame.y }, origin)
+                const frame2 = c.frame2Page();
+                cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, origin)
             }
             for (let len = shape.childs.length; len > 0; len--) {
                 const c = shape.childs[0];
@@ -234,7 +240,11 @@ export class PageEditor {
             this.__page.onAddShape(shape);
             updateFrame(shape);
             shape = parent.childs[index];
-            this.__repo.commit(ShapeCmdInsert.Make(this.__page.id, parent.id, shape.id, index, JSON.stringify(exportShape(shape))));
+            const cmd = ShapeCmdGroup.Make(this.__page.id);
+            cmd.addInsert(parent.id, shape.id, index, exportShape(shape)!);
+            const frame = shape.frame2Page();
+            cmd.addModify(shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: frame.x, y: frame.y })
+            this.__repo.commit(cmd);
             return shape;
         } catch (e) {
             this.__repo.rollback();
@@ -354,14 +364,18 @@ export class PageEditor {
                         }
                     }
                 }
-                const saveFrame = exportShapeFrame(wanderer.frame);
+                const saveFrame = wanderer.frame2Page();
+                saveFrame.width = wanderer.frame.width;
+                saveFrame.height = wanderer.frame.height;
+
                 translateTo(wanderer, beforeXY.x, beforeXY.y);
-                const frame = wanderer.frame;
+                const frame = wanderer.frame2Page();
                 if (saveFrame.x !== frame.x || saveFrame.y !== frame.y) {
-                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, { x: saveFrame.x, y: saveFrame.y })
+                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: saveFrame.x, y: saveFrame.y })
                 }
-                if (saveFrame.width !== frame.width || saveFrame.height !== frame.height) {
-                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.frame_wh, { w: frame.width, h: frame.height }, { w: saveFrame.width, h: saveFrame.height })
+                const frame2 = wanderer.frame;
+                if (saveFrame.width !== frame2.width || saveFrame.height !== frame2.height) {
+                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: saveFrame.width, h: saveFrame.height })
                 }
                 this.__repo.commit(cmd);
             } catch (error) {

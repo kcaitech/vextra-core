@@ -3,8 +3,8 @@ export const PAGE_ATTR_ID = {
 }
 
 export const SHAPE_ATTR_ID = {
-    frame_xy: "frame_xy", // frame x,y
-    frame_wh: "frame_wh", // frame width, height
+    position: "position", // 对象的位置，相对于根节点
+    size: "size", // 对象的大小
     hflip: "hflip",
     vflip: "vflip",
     rotate: "rotate",
