@@ -282,19 +282,19 @@ export class CMDExecuter {
         else if (opId === SHAPE_ATTR_ID.hflip) {
             if (op.type === OpType.IdSet && value) {
                 const hflip = JSON.parse(value)
-                api.shapeModifyHFlip(shape, hflip)
+                api.shapeModifyHFlip(shape, hflip, needUpdateFrame)
             }
             else if (op.type === OpType.IdRemove) {
-                api.shapeModifyHFlip(shape, undefined)
+                api.shapeModifyHFlip(shape, undefined, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.vflip) {
             if (op.type === OpType.IdSet && value) {
                 const vflip = JSON.parse(value)
-                api.shapeModifyVFlip(shape, vflip)
+                api.shapeModifyVFlip(shape, vflip, needUpdateFrame)
             }
             else if (op.type === OpType.IdRemove) {
-                api.shapeModifyVFlip(shape, undefined)
+                api.shapeModifyVFlip(shape, undefined, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.backgroundColor) {

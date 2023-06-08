@@ -28,7 +28,7 @@ export class DocEditor {
             const index = pagesmgr.indexOfPage(id);
             const isSuccess = pagesmgr.deletePage(id);
             if (isSuccess) {
-                this.__repo.commit(PageCmdDelete.Make(this.__document.id, index));
+                this.__repo.commit(PageCmdDelete.Make(this.__document.id, id, index));
                 return true;
             } else {
                 this.__repo.rollback();
@@ -46,7 +46,7 @@ export class DocEditor {
         try {
             pagesmgr.insertPage(index, page);
             const np = exportPage(page);
-            this.__repo.commit(PageCmdInsert.Make(this.__document.id, index, JSON.stringify(np)));
+            this.__repo.commit(PageCmdInsert.Make(this.__document.id, index, np.id, JSON.stringify(np)));
         } catch (error) {
             this.__repo.rollback();
         }

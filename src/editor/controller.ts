@@ -301,22 +301,22 @@ export class Controller {
                 saveDatas.forEach((cur) => {
                     const frame = cur.shape.frame;
                     if (frame.x !== cur.x || frame.y !== cur.y) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({ x: frame.x, y: frame.y }))
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                     }
                     if (frame.width !== cur.w || frame.height !== cur.h) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_wh, JSON.stringify({ w: frame.width, h: frame.height }))
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_wh, { w: frame.width, h: frame.height }, { w: cur.w, h: cur.h })
                     }
                     if (cur.shape.isFlippedHorizontal !== cur.hflip) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, JSON.stringify(cur.shape.isFlippedHorizontal))
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, cur.shape.isFlippedHorizontal, cur.hflip)
                     }
                     if (cur.shape.isFlippedVertical !== cur.vflip) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.vflip, JSON.stringify(cur.shape.isFlippedVertical))
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.vflip, cur.shape.isFlippedVertical, cur.vflip)
                     }
                     if (cur.shape.rotation !== cur.rotate) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, JSON.stringify(cur.shape.rotation))
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, cur.shape.rotation, cur.rotate)
                     }
                 });
-                
+
                 if (!page) {
                     this.__repo.rollback();
                 }
@@ -382,19 +382,19 @@ export class Controller {
                 saveDatas.forEach((cur) => {
                     const frame = cur.shape.frame;
                     if (frame.x !== cur.x || frame.y !== cur.y) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({ x: frame.x, y: frame.y }))
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                     }
                     if (frame.width !== cur.w || frame.height !== cur.h) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_wh, JSON.stringify({ w: frame.width, h: frame.height }))
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_wh, { w: frame.width, h: frame.height }, { w: cur.w, h: cur.h })
                     }
                     if (cur.shape.isFlippedHorizontal !== cur.hflip) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, JSON.stringify(cur.shape.isFlippedHorizontal))
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, cur.shape.isFlippedHorizontal, cur.hflip)
                     }
                     if (cur.shape.isFlippedVertical !== cur.vflip) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.vflip, JSON.stringify(cur.shape.isFlippedVertical))
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.vflip, cur.shape.isFlippedVertical, cur.vflip)
                     }
                     if (cur.shape.rotation !== cur.rotate) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, JSON.stringify(cur.shape.rotation))
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, cur.shape.rotation, cur.rotate)
                     }
                 });
                 if (!page) {
@@ -483,8 +483,7 @@ export class Controller {
                         const frame = cur.shape.frame;
                         if (frame.x !== cur.x || frame.y !== cur.y) {
                             const page = cur.shape.getPage();
-
-                            pre.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, JSON.stringify({ x: frame.x, y: frame.y }))
+                            pre.addModify(cur.shape.id, SHAPE_ATTR_ID.frame_xy, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                         }
                         if (cur.parent && cur.shape.parent && cur.parent.id !== cur.shape.parent.id) {
                             const page = cur.shape.getPage();
