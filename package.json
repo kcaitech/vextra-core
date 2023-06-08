@@ -14,7 +14,9 @@
     "dev": "webpack --config ./webpack.config.js",
     "build": "cross-env NODE_ENV='production' webpack --config ./webpack.config.js",
     "lint": "vue-cli-service lint",
-    "test": "jest"
+    "test": "jest",
+    "coop-server": "tsc src/coop/server.ts --outDir dist/coop --downlevelIteration && node dist/coop/server.js",
+    "coop-server-1": "node dist/coop/server.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.329.0",
