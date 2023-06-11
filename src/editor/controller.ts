@@ -226,9 +226,9 @@ export class Controller {
                 }
                 else {
                     const cmd = ShapeCmdGroup.Make(page.id);
-                    cmd.addInsert(saveParent.id, newShape.id, saveParent.childs.length -1, shapeJson);
+                    cmd.addInsert(saveParent.id, newShape.id, saveParent.childs.length - 1, shapeJson);
                     const frame = newShape.frame2Page();
-                    cmd.addModify(newShape.id, SHAPE_ATTR_ID.position, {x: frame.x, y: frame.y}, {x: frame.x, y: frame.y})
+                    cmd.addModify(newShape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: frame.x, y: frame.y })
                     this.__repo.commit(cmd);
                 }
             } else {
@@ -304,10 +304,6 @@ export class Controller {
                 const page = saveDatas[0].shape.getPage();
                 const cmd = ShapeCmdGroup.Make(page?.id || '');
                 saveDatas.forEach((cur) => {
-                    const frame = cur.shape.frame2Page();
-                    if (frame.x !== cur.x || frame.y !== cur.y) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
-                    }
                     const frame2 = cur.shape.frame;
                     if (frame2.width !== cur.w || frame2.height !== cur.h) {
                         cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: cur.w, h: cur.h })
@@ -320,6 +316,10 @@ export class Controller {
                     }
                     if (cur.shape.rotation !== cur.rotate) {
                         cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, cur.shape.rotation, cur.rotate)
+                    }
+                    const frame = cur.shape.frame2Page();
+                    if (frame.x !== cur.x || frame.y !== cur.y) {
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                     }
                 });
 
@@ -387,10 +387,6 @@ export class Controller {
                 const page = saveDatas[0].shape.getPage();
                 const cmd = ShapeCmdGroup.Make(page?.id || '');
                 saveDatas.forEach((cur) => {
-                    const frame = cur.shape.frame2Page();
-                    if (frame.x !== cur.x || frame.y !== cur.y) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
-                    }
                     const frame2 = cur.shape.frame;
                     if (frame2.width !== cur.w || frame2.height !== cur.h) {
                         cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: cur.w, h: cur.h })
@@ -403,6 +399,10 @@ export class Controller {
                     }
                     if (cur.shape.rotation !== cur.rotate) {
                         cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, cur.shape.rotation, cur.rotate)
+                    }
+                    const frame = cur.shape.frame2Page();
+                    if (frame.x !== cur.x || frame.y !== cur.y) {
+                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                     }
                 });
                 if (!page) {
@@ -488,11 +488,6 @@ export class Controller {
                 else {
                     const cmd = ShapeCmdGroup.Make(page.id);
                     saveDatas.forEach((cur) => {
-                        const frame = cur.shape.frame2Page();
-                        if (frame.x !== cur.x || frame.y !== cur.y) {
-                            const page = cur.shape.getPage();
-                            cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
-                        }
                         if (cur.parent && cur.shape.parent && cur.parent.id !== cur.shape.parent.id) {
                             const page = cur.shape.getPage();
                             cmd.addMove(
@@ -501,6 +496,11 @@ export class Controller {
                                 cur.idx,
                                 (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id),
                                 cur.shape.id)
+                        }
+                        const frame = cur.shape.frame2Page();
+                        if (frame.x !== cur.x || frame.y !== cur.y) {
+                            const page = cur.shape.getPage();
+                            cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                         }
                     })
 

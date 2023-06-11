@@ -300,9 +300,6 @@ export class ShapeEditor {
                         saveDatas.forEach((cur) => {
                             const frame = cur.shape.frame2Page();
                             const frame2 = cur.shape.frame;
-                            if (frame.x !== cur.x || frame.y !== cur.y) {
-                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
-                            }
                             if (frame2.width !== cur.w || frame2.height !== cur.h) {
                                 cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: cur.w, h: cur.h })
                             }
@@ -314,6 +311,9 @@ export class ShapeEditor {
                             }
                             if (cur.shape.rotation !== cur.rotate) {
                                 cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, cur.shape.rotation, cur.rotate)
+                            }
+                            if (frame.x !== cur.x || frame.y !== cur.y) {
+                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
                             }
                         });
 

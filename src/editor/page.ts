@@ -107,12 +107,12 @@ export class PageEditor {
                 const target = m.computeCoord(r.x, r.y);
                 const cur = c.matrix2Parent().computeCoord(0, 0);
 
-                const frame = c.frame2Page();
-                const origin = { x: frame.x, y: frame.y }
+                // const frame = c.frame2Page();
+                // const origin = { x: frame.x, y: frame.y }
                 c.frame.x += target.x - cur.x - xy.x; // 新建的group没有变换，可以直接减（xy）
                 c.frame.y += target.y - cur.y - xy.y;
                 const frame2 = c.frame2Page();
-                cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, origin)
+                cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, { x: frame2.x, y: frame2.y })
             }
 
             // 往上调整width,height
@@ -166,12 +166,12 @@ export class PageEditor {
                 const m2 = c.matrix2Parent();
                 const cur = m2.computeCoord(0, 0);
 
-                const frame = c.frame2Page();
-                const origin = { x: frame.x, y: frame.y }
+                // const frame = c.frame2Page();
+                // const origin = { x: frame.x, y: frame.y }
                 c.frame.x += target.x - cur.x;
                 c.frame.y += target.y - cur.y;
                 const frame2 = c.frame2Page();
-                cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, origin)
+                cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, { x: frame2.x, y: frame2.y })
             }
             for (let len = shape.childs.length; len > 0; len--) {
                 const c = shape.childs[0];
