@@ -348,9 +348,6 @@ export class Repository extends Watchable(Object) implements IDataGuard {
     private __ph: ProxyHandler;
     private __trans: Transact[] = [];
     private __index: number = 0;
-    // private __selection: ISave4Restore;
-    private __commitListener: ((cmd: Cmd, isRemote: boolean) => void)[] = [];
-    private __rollbackListener: ((isRemote: boolean) => void)[] = [];
 
     constructor() {
         super();
@@ -423,20 +420,8 @@ export class Repository extends Watchable(Object) implements IDataGuard {
         this.notify();
     }
 
-    commit(cmd: Cmd) {
+    commit() {
         this._commit()
-        // this.__coopLocal?.commit(cmd);
-        // this.__coopLocal?.apply();
-        this.__commitListener.forEach((l) => {
-            l(cmd, false);
-        })
-    }
-
-    commitRemote(cmd: Cmd) {
-        this._commit()
-        this.__commitListener.forEach((l) => {
-            l(cmd, true);
-        })
     }
 
     _rollback() {
@@ -451,18 +436,6 @@ export class Repository extends Watchable(Object) implements IDataGuard {
 
     rollback() {
         this._rollback();
-        // this.__coopLocal?.commitToServer();
-        // this.__coopLocal?.apply();
-        this.__rollbackListener.forEach((l) => {
-            l(false);
-        })
-    }
-
-    rollbackRemote() {
-        this._rollback();
-        this.__rollbackListener.forEach((l) => {
-            l(true);
-        })
     }
 
     isInTransact() {
@@ -471,27 +444,6 @@ export class Repository extends Watchable(Object) implements IDataGuard {
 
     guard(data: any): any {
         return deepProxy(data, this.__ph);
-    }
-
-    onCommit(listener: (cmd: Cmd, isRemote: boolean) => void) {
-        const _listeners = this.__commitListener;
-        _listeners.push(listener);
-        return {
-            stop() {
-                const idx = _listeners.indexOf(listener);
-                if (idx >= 0) _listeners.splice(idx, 1);
-            }
-        }
-    }
-    onRollback(listener: (isRemote: boolean) => void) {
-        const _listeners = this.__rollbackListener;
-        _listeners.push(listener);
-        return {
-            stop() {
-                const idx = _listeners.indexOf(listener);
-                if (idx >= 0) _listeners.splice(idx, 1);
-            }
-        }
     }
 }
 

@@ -15,6 +15,7 @@ export * from "./io/export"
 export * from "./io/lzdata"
 
 // editor
+export * from "./editor/cooprepo"
 export * from "./editor"
 export * from "./editor/document"
 export * from "./editor/page"
