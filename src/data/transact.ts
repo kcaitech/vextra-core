@@ -1,4 +1,3 @@
-import { Cmd } from '../coop/data/classes';
 import { objectId, __objidkey } from '../basic/objectid';
 import { castNotifiable, IDataGuard, ISave4Restore, Notifiable } from './basic';
 import { Watchable } from './basic';
