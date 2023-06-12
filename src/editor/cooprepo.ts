@@ -38,19 +38,23 @@ export class CoopRepository {
         return this.__repo.isInTransact();
     }
 
-    execRemote(cmd: Cmd) {
-        console.log("exec remote:", cmd)
-        if (this.__cmdexec.exec(cmd, true)) {
+    private _exec(cmd: Cmd, isRemote: boolean) {
+        if (this.__cmdexec.exec(cmd, isRemote)) {
             this.__allcmds.push(cmd);
             this.__commitListener.forEach((l) => {
-                l(cmd, true);
+                l(cmd, isRemote);
             })
         }
         else {
             this.__rollbackListener.forEach((l) => {
-                l(true);
+                l(isRemote);
             })
         }
+    }
+
+    execRemote(cmd: Cmd) {
+        console.log("exec remote:", cmd)
+        this._exec(cmd, true);
     }
 
     undo() {
@@ -63,7 +67,7 @@ export class CoopRepository {
 
         const revertCmd = this.__cmdrevert.revert(undoCmd)
         if (revertCmd) {
-            this.__cmdexec.exec(revertCmd, false)
+            this._exec(revertCmd, false);
         }
     }
 
@@ -74,7 +78,7 @@ export class CoopRepository {
         const redoCmd = this.__localcmds[this.__index];
         this.__index++;
         if (redoCmd) {
-            this.__cmdexec.exec(redoCmd, false)
+            this._exec(redoCmd, false);
         }
     }
     canUndo() {
