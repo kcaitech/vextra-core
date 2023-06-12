@@ -259,6 +259,9 @@ class Rec {
     get propertyKey() {
         return this.__propertyKey;
     }
+    get value() {
+        return this.__value;
+    }
 }
 
 class ArrayRec extends Rec {
