@@ -255,10 +255,16 @@ export class CMDExecuter {
     }
     private _shapeModify(page: Page, shape: Shape, op: IdOp, value: string | undefined, needUpdateFrame: Shape[]) {
         const opId = op.opId;
-        if (opId === SHAPE_ATTR_ID.position) {
+        if (opId === SHAPE_ATTR_ID.x) {
             if (op.type === OpType.IdSet && value) {
-                const xy = JSON.parse(value)
-                api.shapeModifyXY(shape, xy.x, xy.y, needUpdateFrame)
+                const x = JSON.parse(value)
+                api.shapeModifyX(shape, x, needUpdateFrame)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.y) {
+            if (op.type === OpType.IdSet && value) {
+                const y = JSON.parse(value)
+                api.shapeModifyY(shape, y, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.size) {

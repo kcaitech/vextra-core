@@ -227,8 +227,8 @@ export class Controller {
                 else {
                     const cmd = ShapeCmdGroup.Make(page.id);
                     cmd.addInsert(saveParent.id, newShape.id, saveParent.childs.length - 1, shapeJson);
-                    const frame = newShape.frame2Page();
-                    cmd.addModify(newShape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: frame.x, y: frame.y })
+                    // const frame = newShape.frame2Page();
+                    // cmd.addModify(newShape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: frame.x, y: frame.y })
                     this.__repo.commit(cmd);
                 }
             } else {
@@ -247,8 +247,8 @@ export class Controller {
         // 保存可能修改到的属性
         const saveDatas: {
             shape: Shape,
-            x: number,
-            y: number,
+            // x: number,
+            // y: number,
             w: number,
             h: number,
             rotate: number | undefined,
@@ -259,8 +259,8 @@ export class Controller {
             const frame2 = shape.frame;
             return {
                 shape,
-                x: frame.x,
-                y: frame.y,
+                // x: frame.x,
+                // y: frame.y,
                 w: frame2.width,
                 h: frame2.height,
                 rotate: shape.rotation,
@@ -317,10 +317,10 @@ export class Controller {
                     if (cur.shape.rotation !== cur.rotate) {
                         cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, cur.shape.rotation, cur.rotate)
                     }
-                    const frame = cur.shape.frame2Page();
-                    if (frame.x !== cur.x || frame.y !== cur.y) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
-                    }
+                    // const frame = cur.shape.frame2Page();
+                    // if (frame.x !== cur.x || frame.y !== cur.y) {
+                    //     cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
+                    // }
                 });
 
                 if (!page) {
@@ -343,8 +343,8 @@ export class Controller {
         // 保存可能修改到的属性
         const saveDatas: {
             shape: Shape,
-            x: number,
-            y: number,
+            // x: number,
+            // y: number,
             w: number,
             h: number,
             rotate: number | undefined,
@@ -355,8 +355,8 @@ export class Controller {
             const frame2 = shape.frame;
             return {
                 shape,
-                x: frame.x,
-                y: frame.y,
+                // x: frame.x,
+                // y: frame.y,
                 w: frame2.width,
                 h: frame2.height,
                 rotate: shape.rotation,
@@ -400,10 +400,10 @@ export class Controller {
                     if (cur.shape.rotation !== cur.rotate) {
                         cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, cur.shape.rotation, cur.rotate)
                     }
-                    const frame = cur.shape.frame2Page();
-                    if (frame.x !== cur.x || frame.y !== cur.y) {
-                        cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
-                    }
+                    // const frame = cur.shape.frame2Page();
+                    // if (frame.x !== cur.x || frame.y !== cur.y) {
+                    //     cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
+                    // }
                 });
                 if (!page) {
                     this.__repo.rollback();
@@ -427,16 +427,16 @@ export class Controller {
         // 保存可能修改到的属性
         const saveDatas: {
             shape: Shape,
-            x: number,
-            y: number,
+            // x: number,
+            // y: number,
             parent: Shape | undefined,
             idx: number
         }[] = shapes.map((shape) => {
-            const frame = shape.frame2Page();
+            // const frame = shape.frame2Page();
             return {
                 shape,
-                x: frame.x,
-                y: frame.y,
+                // x: frame.x,
+                // y: frame.y,
                 parent: shape.parent,
                 idx: (() => {
                     if (shape.parent) return (shape.parent as GroupShape).childs.findIndex((v) => v.id === shape.id)
@@ -497,11 +497,11 @@ export class Controller {
                                 (cur.shape.parent as GroupShape).childs.findIndex((v) => v.id === cur.shape.id),
                                 cur.shape.id)
                         }
-                        const frame = cur.shape.frame2Page();
-                        if (frame.x !== cur.x || frame.y !== cur.y) {
-                            const page = cur.shape.getPage();
-                            cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
-                        }
+                        // const frame = cur.shape.frame2Page();
+                        // if (frame.x !== cur.x || frame.y !== cur.y) {
+                        //     const page = cur.shape.getPage();
+                        //     cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
+                        // }
                     })
 
                     this.__repo.commit(cmd);

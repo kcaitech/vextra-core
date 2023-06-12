@@ -55,15 +55,24 @@ export function shapeMove(parent: GroupShape, index: number, parent2: GroupShape
     }
 }
 
-export function shapeModifyXY(shape: Shape, x: number, y: number, needUpdateFrame: Shape[]) {
-    translateTo(shape, x, y)
-    needUpdateFrame.push(shape);
-    // const frame = shape.frame;
-    // if (x !== frame.x || y !== frame.y) {
-    //     frame.x = x;
-    //     frame.y = y;
-    //     needUpdateFrame.push(shape);
-    // }
+export function shapeModifyX(shape: Shape, x: number, needUpdateFrame: Shape[]) {
+    // translateTo(shape, x, y)
+    // needUpdateFrame.push(shape);
+    const frame = shape.frame;
+    if (x !== frame.x) {
+        frame.x = x;
+        needUpdateFrame.push(shape);
+    }
+}
+export function shapeModifyY(shape: Shape, y: number, needUpdateFrame: Shape[]) {
+    // translateTo(shape, x, y)
+    // needUpdateFrame.push(shape);
+    const frame = shape.frame;
+    if (y !== frame.y) {
+        // frame.x = x;
+        frame.y = y;
+        needUpdateFrame.push(shape);
+    }
 }
 export function shapeModifyWH(shape: Shape, w: number, h: number, needUpdateFrame: Shape[]) {
     const frame = shape.frame;

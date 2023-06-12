@@ -111,8 +111,8 @@ export class PageEditor {
                 // const origin = { x: frame.x, y: frame.y }
                 c.frame.x += target.x - cur.x - xy.x; // 新建的group没有变换，可以直接减（xy）
                 c.frame.y += target.y - cur.y - xy.y;
-                const frame2 = c.frame2Page();
-                cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, { x: frame2.x, y: frame2.y })
+                // const frame2 = c.frame2Page();
+                // cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, { x: frame2.x, y: frame2.y })
             }
 
             // 往上调整width,height
@@ -171,8 +171,8 @@ export class PageEditor {
                 // const origin = { x: frame.x, y: frame.y }
                 c.frame.x += target.x - cur.x;
                 c.frame.y += target.y - cur.y;
-                const frame2 = c.frame2Page();
-                cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, { x: frame2.x, y: frame2.y })
+                // const frame2 = c.frame2Page();
+                // cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, { x: frame2.x, y: frame2.y })
             }
             for (let len = shape.childs.length; len > 0; len--) {
                 const c = shape.childs[0];
@@ -245,8 +245,8 @@ export class PageEditor {
             shape = parent.childs[index];
             const cmd = ShapeCmdGroup.Make(this.__page.id);
             cmd.addInsert(parent.id, shape.id, index, exportShape(shape)!);
-            const frame = shape.frame2Page();
-            cmd.addModify(shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: frame.x, y: frame.y })
+            // const frame = shape.frame2Page();
+            // cmd.addModify(shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: frame.x, y: frame.y })
             this.__repo.commit(cmd);
             return shape;
         } catch (e) {
@@ -375,10 +375,10 @@ export class PageEditor {
                 saveFrame.height = wanderer.frame.height;
 
                 translateTo(wanderer, beforeXY.x, beforeXY.y);
-                const frame = wanderer.frame2Page();
-                if (saveFrame.x !== frame.x || saveFrame.y !== frame.y) {
-                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: saveFrame.x, y: saveFrame.y })
-                }
+                // const frame = wanderer.frame2Page();
+                // if (saveFrame.x !== frame.x || saveFrame.y !== frame.y) {
+                //     cmd.addModify(wanderer.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: saveFrame.x, y: saveFrame.y })
+                // }
                 const frame2 = wanderer.frame;
                 if (saveFrame.width !== frame2.width || saveFrame.height !== frame2.height) {
                     cmd.addModify(wanderer.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: saveFrame.width, h: saveFrame.height })

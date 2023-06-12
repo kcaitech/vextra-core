@@ -49,7 +49,7 @@ export class ShapeEditor {
         const origin = { x: frame.x, y: frame.y }
         translate(this.__shape, dx, dy, round);
         const frame2 = this.__shape.frame2Page();
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, origin));
+        this.__repo.commit(ShapeCmdGroup.Make(this.__page.id));
     }
     public translateTo(x: number, y: number) {
         this.__repo.start("translateTo", {});
@@ -57,7 +57,7 @@ export class ShapeEditor {
         const origin = { x: frame.x, y: frame.y }
         translateTo(this.__shape, x, y);
         const frame2 = this.__shape.frame2Page();
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, origin));
+        this.__repo.commit(ShapeCmdGroup.Make(this.__page.id));
     }
     public expand(dw: number, dh: number) {
         this.__repo.start("expand", {});
@@ -254,20 +254,20 @@ export class ShapeEditor {
                     // 保存可能修改到的属性
                     const saveDatas: {
                         shape: Shape,
-                        x: number,
-                        y: number,
+                        // x: number,
+                        // y: number,
                         w: number,
                         h: number,
                         rotate: number | undefined,
                         hflip: boolean | undefined,
                         vflip: boolean | undefined
                     }[] = childs.map((shape) => {
-                        const frame = shape.frame2Page();
+                        // const frame = shape.frame2Page();
                         const frame2 = shape.frame;
                         return {
                             shape,
-                            x: frame.x,
-                            y: frame.y,
+                            // x: frame.x,
+                            // y: frame.y,
                             w: frame2.width,
                             h: frame2.height,
                             rotate: shape.rotation,
@@ -298,7 +298,7 @@ export class ShapeEditor {
                         const page = saveDatas[0].shape.getPage();
                         const cmd = ShapeCmdGroup.Make(page?.id || '');
                         saveDatas.forEach((cur) => {
-                            const frame = cur.shape.frame2Page();
+                            // const frame = cur.shape.frame2Page();
                             const frame2 = cur.shape.frame;
                             if (frame2.width !== cur.w || frame2.height !== cur.h) {
                                 cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: cur.w, h: cur.h })
@@ -312,9 +312,9 @@ export class ShapeEditor {
                             if (cur.shape.rotation !== cur.rotate) {
                                 cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, cur.shape.rotation, cur.rotate)
                             }
-                            if (frame.x !== cur.x || frame.y !== cur.y) {
-                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
-                            }
+                            // if (frame.x !== cur.x || frame.y !== cur.y) {
+                            //     cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
+                            // }
                         });
 
                         if (!page) {

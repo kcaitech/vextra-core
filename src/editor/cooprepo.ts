@@ -1,8 +1,10 @@
-import { Cmd } from "../coop/data/classes";
+import { Shape, ShapeFrame } from "../data/shape";
+import { Cmd, CmdType, ShapeCmdGroup, ShapeCmdInsert, ShapeCmdModify, ShapeCmdMove, ShapeCmdRemove } from "../coop/data/classes";
 import { Document } from "../data/document";
 import { Repository } from "../data/transact";
 import { CMDExecuter } from "./cmdexecuter";
 import { CMDReverter } from "./cmdrevert";
+import { SHAPE_ATTR_ID } from "./consts";
 
 export class CoopRepository {
     private __repo: Repository;
@@ -44,11 +46,13 @@ export class CoopRepository {
             this.__commitListener.forEach((l) => {
                 l(cmd, isRemote);
             })
+            return true;
         }
         else {
             this.__rollbackListener.forEach((l) => {
                 l(isRemote);
             })
+            return false;
         }
     }
 
@@ -61,13 +65,13 @@ export class CoopRepository {
         if (!this.canUndo()) {
             return;
         }
-        this.__index--;
-        const undoCmd = this.__localcmds[this.__index];
+        const undoCmd = this.__localcmds[this.__index - 1];
         // 这里需要变换
-
         const revertCmd = this.__cmdrevert.revert(undoCmd)
         if (revertCmd) {
-            this._exec(revertCmd, false);
+            if (this._exec(revertCmd, false)) {
+                this.__index--;
+            }
         }
     }
 
@@ -76,9 +80,10 @@ export class CoopRepository {
             return;
         }
         const redoCmd = this.__localcmds[this.__index];
-        this.__index++;
         if (redoCmd) {
-            this._exec(redoCmd, false);
+            if (this._exec(redoCmd, false)) {
+                this.__index++;
+            }
         }
     }
     canUndo() {
@@ -93,8 +98,35 @@ export class CoopRepository {
     commit(cmd: Cmd, isRemote: boolean = false) {
         // 
         const transact = this.__repo.transactCtx.transact;
+        if (transact === undefined) {
+            throw new Error();
+        }
         // collect position cmd
         // todo
+        if (cmd.type === CmdType.ShapeCmdGroup ||
+            cmd.type === CmdType.ShapeDelete ||
+            cmd.type === CmdType.ShapeInsert ||
+            cmd.type === CmdType.ShapeModify ||
+            cmd.type === CmdType.ShapeMove) {
+            transact.forEach((rec) => {
+                if (rec.target instanceof ShapeFrame) {
+                    if (rec.propertyKey === 'x' || rec.propertyKey === 'y') {
+                        if (!(cmd instanceof ShapeCmdGroup)) {
+                            const t = ShapeCmdGroup.Make(cmd.blockId)
+                            t.cmds.push(cmd as (ShapeCmdInsert | ShapeCmdModify | ShapeCmdMove | ShapeCmdRemove))
+                            cmd = t;
+                        }
+                        const shape = (rec.target as any).__parent as Shape;
+                        if (rec.propertyKey === 'x') {
+                            (cmd as ShapeCmdGroup).addModify(shape.id, SHAPE_ATTR_ID.x, shape.frame.x, rec.value)
+                        }
+                        else {
+                            (cmd as ShapeCmdGroup).addModify(shape.id, SHAPE_ATTR_ID.y, shape.frame.y, rec.value)
+                        }
+                    }
+                }
+            })
+        }
         this.__repo.commit()
         if (!isRemote) {
             this.__localcmds.length = this.__index;
