@@ -1,6 +1,5 @@
 import { Page } from "../data/page";
 import { Document } from "../data/document";
-import { Repository } from "../data/transact";
 import { PageListItem } from "../data/typesdefine";
 import { newPage } from "./creator";
 import { v4 as uuid } from "uuid";
@@ -8,15 +7,17 @@ import { exportPage } from "../io/baseexport";
 import { importPage } from "../io/baseimport";
 import { newDocument } from "./creator";
 import { PageCmdDelete, PageCmdInsert, PageCmdMove } from "../coop/data/classes";
+import { CoopRepository } from "./cooprepo";
+import { Repository } from "../data/transact";
 
 export function createDocument(documentName: string, repo: Repository): Document {
     return newDocument(documentName, repo);
 }
 
 export class DocEditor {
-    private __repo: Repository;
+    private __repo: CoopRepository;
     private __document: Document;
-    constructor(document: Document, repo: Repository) {
+    constructor(document: Document, repo: CoopRepository) {
         this.__repo = repo;
         this.__document = document;
     }
@@ -35,6 +36,7 @@ export class DocEditor {
                 return false;
             }
         } catch (error) {
+            console.log(error)
             this.__repo.rollback();
         }
         return true;
@@ -48,6 +50,7 @@ export class DocEditor {
             const np = exportPage(page);
             this.__repo.commit(PageCmdInsert.Make(this.__document.id, index, np.id, JSON.stringify(np)));
         } catch (error) {
+            console.log(error)
             this.__repo.rollback();
         }
         return true;
@@ -78,6 +81,7 @@ export class DocEditor {
             }
             this.__repo.commit(PageCmdMove.Make(this.__document.id, idx, descend));
         } catch (e) {
+            console.log(e)
             this.__repo.rollback();
         }
         return true;
@@ -103,6 +107,7 @@ export class DocEditor {
                 this.__repo.rollback();
             }
         } catch (error) {
+            console.log(error)
             this.__repo.rollback();
         }
     }

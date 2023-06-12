@@ -19,6 +19,7 @@ import { ShapeCmdGroup } from '../coop/data/shapecmd';
 import { exportPage, exportRectShape } from '../io/baseexport';
 import { CMDExecuter } from './cmdexecuter';
 import { Cmd } from '../coop/data/classes';
+import { CoopRepository } from './cooprepo';
 
 function createTestDocument() {
     const repo = new Repository()
@@ -34,6 +35,7 @@ function createTestDocument() {
 test("group", () => {
     const repo = new Repository()
     const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const cooprepo = new CoopRepository(document, repo)
     const page = newPage("Page1");
 
     const pagesMgr = document.pagesMgr;
@@ -57,12 +59,12 @@ test("group", () => {
         api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
         cmd.addInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
         needUpdateFrame.forEach((shape) => { api.updateFrame(shape) })
-        repo.commit(cmd);
+        repo.commit();
     }
 
-    const editor = new PageEditor(repo, page, document)
+    const editor = new PageEditor(cooprepo, page, document)
     let _cmd: Cmd | undefined;
-    repo.onCommit((cmd) => {
+    cooprepo.onCommit((cmd) => {
         _cmd = cmd;
     })
     chai.assert.isNotNull(_cmd)

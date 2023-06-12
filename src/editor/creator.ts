@@ -2,7 +2,6 @@ import { v4 as uuid } from "uuid";
 import { Page } from "../data/page";
 import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
-import { Repository } from "../data/transact";
 import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape } from "../data/shape";
 import * as types from "../data/typesdefine"
 import { importGroupShape, importPage, importArtboard, importTextShape } from "../io/baseimport";
@@ -15,6 +14,7 @@ import {
     Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, RectRadius, CurveMode, Span
 } from "../data/baseclasses";
 import { BasicArray } from "../data/basic";
+import { Repository } from "../data/transact";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {

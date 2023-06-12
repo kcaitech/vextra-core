@@ -1,6 +1,5 @@
 import { Shape, GroupShape } from "../data/shape";
 import { Artboard } from "../data/artboard";
-import { Repository } from "../data/transact";
 import { ShapeEditor } from "./shape";
 import { exportShape, updateFrame } from "./utils";
 import { ShapeType } from "../data/typesdefine";
@@ -14,6 +13,7 @@ import { PageCmdModify, ShapeCmdGroup, ShapeCmdMove } from "../coop/data/classes
 import { PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
 import { exportGroupShape } from "../io/baseexport";
 import { uuid } from "../basic/uuid";
+import { CoopRepository } from "./cooprepo";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
@@ -23,10 +23,10 @@ function expandBounds(bounds: { left: number, top: number, right: number, bottom
 }
 
 export class PageEditor {
-    private __repo: Repository;
+    private __repo: CoopRepository;
     private __page: Page;
     private __document: Document;
-    constructor(repo: Repository, page: Page, document: Document) {
+    constructor(repo: CoopRepository, page: Page, document: Document) {
         this.__repo = repo;
         this.__page = page;
         this.__document = document;
@@ -123,6 +123,7 @@ export class PageEditor {
             return gshape;
         }
         catch (e) {
+            console.log(e)
             this.__repo.rollback();
         }
         return false;
@@ -188,6 +189,7 @@ export class PageEditor {
             this.__repo.commit(cmd);
             return childs;
         } catch (e) {
+            console.log(e)
             this.__repo.rollback();
         }
         return false;
@@ -222,6 +224,7 @@ export class PageEditor {
                 this.__repo.rollback();
             }
         } catch (e) {
+            console.log(e)
             this.__repo.rollback();
         }
         return false;
@@ -247,6 +250,7 @@ export class PageEditor {
             this.__repo.commit(cmd);
             return shape;
         } catch (e) {
+            console.log(e)
             this.__repo.rollback();
             return false;
         }
@@ -285,6 +289,7 @@ export class PageEditor {
                     return true;
                 }
                 catch (error) {
+                    console.log(error)
                     this.__repo.rollback();
                 }
             }
@@ -298,6 +303,7 @@ export class PageEditor {
                 return true;
             }
             catch (error) {
+                console.log(error)
                 this.__repo.rollback();
             }
         }
@@ -379,6 +385,7 @@ export class PageEditor {
                 }
                 this.__repo.commit(cmd);
             } catch (error) {
+                console.log(error)
                 this.__repo.rollback();
             }
         }

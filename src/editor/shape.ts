@@ -1,6 +1,5 @@
 import { GroupShape, Shape, TextShape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
-import { Repository } from "../data/transact";
 import { addFill, deleteFillAt, setFillColor, toggleFillEnabled } from "./fill";
 import { deleteBorderAt, addBorder, setBorderThickness, setBorderPosition, setBorderStyle, setBorderApexStyle, setBorderEnable, setBorderColor } from "./border";
 import { expand, expandTo, translate, translateTo } from "./frame";
@@ -15,11 +14,12 @@ import { Page } from "../data/page";
 import { ShapeCmdRemove, ShapeCmdModify, ShapeArrayAttrRemove, ShapeArrayAttrInsert, TextCmdRemove, TextCmdInsert, ShapeCmdGroup, ShapeArrayAttrModify } from "../coop/data/classes";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, SHAPE_ATTR_ID } from "./consts";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill } from "../io/baseexport";
+import { CoopRepository } from "./cooprepo";
 export class ShapeEditor {
     private __shape: Shape;
-    private __repo: Repository;
+    private __repo: CoopRepository;
     private __page: Page;
-    constructor(shape: Shape, page: Page, repo: Repository) {
+    constructor(shape: Shape, page: Page, repo: CoopRepository) {
         this.__shape = shape;
         this.__repo = repo;
         this.__page = page;
@@ -384,6 +384,7 @@ export class ShapeEditor {
             this.__repo.commit(TextCmdRemove.Make(this.__page.id, this.__shape.id, index, count));
             return true;
         } catch (error) {
+            console.log(error)
             this.__repo.rollback();
         }
         return false;
@@ -400,6 +401,7 @@ export class ShapeEditor {
             this.__repo.commit(cmd);
             return true;
         } catch (error) {
+            console.log(error)
             this.__repo.rollback();
         }
         return false;

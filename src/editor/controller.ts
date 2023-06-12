@@ -1,4 +1,3 @@
-import { Repository } from "../data/transact";
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
 import { Shape, GroupShape } from "../data/shape";
 import { exportShape, updateFrame } from "./utils";
@@ -8,6 +7,7 @@ import { newArtboard, newLineShape, newOvalShape, newRectShape, newTextShape } f
 import { Page } from "../data/page";
 import { ShapeCmdGroup } from "../coop/data/classes";
 import { SHAPE_ATTR_ID } from "./consts";
+import { CoopRepository } from "./cooprepo";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -123,8 +123,8 @@ function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end
 
 // 处理异步编辑
 export class Controller {
-    private __repo: Repository;
-    constructor(repo: Repository) {
+    private __repo: CoopRepository;
+    constructor(repo: CoopRepository) {
         this.__repo = repo;
     }
     create(type: ShapeType, name: string, frame: ShapeFrame): Shape {
