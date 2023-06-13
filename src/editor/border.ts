@@ -22,7 +22,6 @@ export function setBorderThickness(style: Style, idx: number, thickness: number)
 export function setBorderPosition(style: Style, idx: number, position: BorderPosition) {
     style.borders[idx].position = position;
 }
-
 export function setBorderStyle(style: Style, idx: number, borderStyle: BorderStyle) {
     style.borders[idx].borderStyle = borderStyle;
 }

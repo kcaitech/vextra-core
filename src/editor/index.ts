@@ -53,7 +53,7 @@ export class Editor {
         return pe.editor4Shape(shape);
     }
     controller(): Controller {
-        const e = new Controller(this.m_repo);
+        const e = new Controller(this.m_repo, this.data);
         return e;
     }
 

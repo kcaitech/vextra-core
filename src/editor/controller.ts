@@ -1,14 +1,16 @@
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
 import { Shape, GroupShape } from "../data/shape";
-import { exportShape, updateFrame } from "./utils";
+import { exportShape, updateFrame, getFormatFromBase64 } from "./utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
-import { newArtboard, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
+import { newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
 import { ShapeCmdGroup } from "../coop/data/classes";
 import { SHAPE_ATTR_ID } from "./consts";
 import { CoopRepository } from "./cooprepo";
-
+import { v4 } from "uuid";
+import { Document } from "../data/document";
+import { ResourceMgr } from "../data/basic";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -63,6 +65,7 @@ export interface AsyncLineAction {
 }
 export interface AsyncCreator {
     init: (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame) => Shape | undefined;
+    init_media: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: { buff: Uint8Array, base64: string }) => Shape | undefined;
     setFrame: (point: PageXY) => void;
     setFrameByWheel: (point: PageXY) => void;
     close: () => undefined;
@@ -118,22 +121,23 @@ function singleHdl(shape: Shape, type: CtrlElementType, start: PageXY, end: Page
     }
 }
 // 单个图形处理(编组对象)
-function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
-}
-
+function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') { }
 // 处理异步编辑
 export class Controller {
     private __repo: CoopRepository;
-    constructor(repo: CoopRepository) {
+    private __document: Document | undefined;
+    constructor(repo: CoopRepository, document?: Document) {
         this.__repo = repo;
+        this.__document = document;
     }
-    create(type: ShapeType, name: string, frame: ShapeFrame): Shape {
+    create(type: ShapeType, name: string, frame: ShapeFrame, ref?: string, mediasMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>): Shape {
         switch (type) {
             case ShapeType.Artboard: return newArtboard(name, frame);
             case ShapeType.Rectangle: return newRectShape(name, frame);
             case ShapeType.Oval: return newOvalShape(name, frame);
             case ShapeType.Line: return newLineShape(name, frame);
             case ShapeType.Text: return newTextShape(name, frame);
+            case ShapeType.Image: return newImageShape(name, frame, ref, mediasMgr);
             default: return newRectShape(name, frame);
         }
     }
@@ -161,6 +165,25 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
             return newShape
+        }
+        const init_media = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: { buff: Uint8Array, base64: string }): Shape | undefined => {
+            status = Status.Pending;
+            if (this.__document) { // media文件处理
+                const format = getFormatFromBase64(media.base64);
+                const ref = `${v4()}.${format}`;
+                this.__document.mediasMgr.add(ref, media);
+                const shape = this.create(ShapeType.Image, name, frame, ref, this.__document.mediasMgr);
+                const xy = parent.frame2Page();
+                shape.frame.x -= xy.x;
+                shape.frame.y -= xy.y;
+                parent.addChildAt(shape);
+                page.addShape(shape);
+                updateFrame(shape);
+                newShape = parent.childs.at(-1);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+                return newShape
+            }
         }
         const setFrame = (point: PageXY) => {
             if (!newShape) return;
@@ -236,7 +259,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { init, setFrame, setFrameByWheel, close }
+        return { init, init_media, setFrame, setFrameByWheel, close }
     }
     // 图形编辑，适用于基础控点、控边的异步编辑
     public asyncRectEditor(shapes: Shape[]): AsyncBaseAction {
