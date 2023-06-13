@@ -116,9 +116,7 @@ function singleHdl(shape: Shape, type: CtrlElementType, start: PageXY, end: Page
     }
 }
 // 单个图形处理(编组对象)
-function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
-
-}
+function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') { }
 // 处理异步编辑
 export class Controller {
     private __repo: Repository;
