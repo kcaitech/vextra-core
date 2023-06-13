@@ -14,7 +14,6 @@ import {
     TextCmdRemove,
     TextCmdInsert,
     TextCmdModify,
-    TextCmdBatchModify,
     TextCmdMove,
     ShapeCmdRemove,
     ShapeCmdInsert,
@@ -32,12 +31,15 @@ import {
     ShapeOpNone,
     ShapeOpRemove,
     ShapeOpMove,
-    ArrayOpAttr
+    ArrayOpAttr,
+    TextCmdGroup
 } from "../coop/data/classes";
 import { Document } from "../data/document"
 import { exportBorder, exportFill, exportPage } from "../io/baseexport";
 import { exportShape } from "./utils";
 import { BORDER_ID, FILLS_ID } from "./consts";
+import { Span } from "../data/text";
+import { importSpan } from "../io/baseimport";
 
 export class CMDReverter {
     private __document: Document;
@@ -71,10 +73,10 @@ export class CMDReverter {
                 return this.textInsert(cmd as TextCmdInsert);
             case CmdType.TextModify:
                 return this.textModify(cmd as TextCmdModify);
-            case CmdType.TextBatchModify:
-                return this.textBatchModify(cmd as TextCmdBatchModify);
             case CmdType.TextMove:
                 return this.textMove(cmd as TextCmdMove);
+            case CmdType.TextCmdGroup:
+                return this.textCmdGroup(cmd as TextCmdGroup);
             case CmdType.ShapeDelete:
                 return this.shapeDelete(cmd as ShapeCmdRemove);
             case CmdType.ShapeInsert:
@@ -278,27 +280,77 @@ export class CMDReverter {
     }
 
     textDelete(cmd: TextCmdRemove) {
-        // 删除了的文本需要保存起来？还有属性？
+        const op = cmd.ops[0];
+        const origin = JSON.parse(cmd.origin!) as { text: string, spans: Span[] };
+        origin.spans = origin.spans.map((span) => importSpan(span))
+        if (op.type !== OpType.ArrayRemove) {
+            return new TextCmdInsert(CmdType.TextInsert, uuid(), cmd.blockId, [op], origin.text);
+        }
 
+        const shapeId = op.targetId[0];
+        if (origin.spans.length <= 1) {
+            return TextCmdInsert.Make(cmd.blockId, shapeId, op.start, origin.text); // todo attr
+        }
+
+        const batchInsert = TextCmdGroup.Make(cmd.blockId);
+        for (let i = 0, j = 0; i < origin.text.length;) {
+            if (j >= origin.spans.length) {
+                const text = origin.text.slice(i);
+                const span = origin.spans.at(-1); // todo attr
+                batchInsert.addInsert(shapeId, op.start + i, text)
+                break;
+            }
+            else {
+                const span = origin.spans[j]; // todo attr
+                const text = origin.text.slice(i, i + span.length);
+                batchInsert.addInsert(shapeId, op.start + i, text)
+                i += span.length;
+                j++;
+            }
+        }
+        return cmd;
     }
-    textInsert(cmd: TextCmdInsert) {
-        const ops = cmd.ops;
-        if (ops.length === 2) {
-            // 先删除再插入
+    textInsert(cmd: TextCmdInsert): TextCmdRemove {
+        const op = cmd.ops[0];
+        if (op.type === OpType.ArrayInsert) {
+            const removeOp = ArrayOpRemove.Make(op.targetId, op.start, cmd.text.length);
+            const ret = new TextCmdRemove(CmdType.TextDelete, uuid(), cmd.blockId, [removeOp]);
+            ret.origin = JSON.stringify({ text: cmd.text, spans: [] });
+            return ret;
         }
         else {
-            // 仅插入
+            const ret = new TextCmdRemove(CmdType.TextDelete, uuid(), cmd.blockId, [op]);
+            ret.origin = JSON.stringify({ text: cmd.text, spans: [] });
+            return ret;
         }
     }
-    textModify(cmd: TextCmdModify) {
+    textModify(cmd: TextCmdModify): TextCmdModify {
         const ret = new TextCmdModify(CmdType.TextModify, uuid(), cmd.blockId, cmd.ops, cmd.attrId)
         ret.value = cmd.origin;
         ret.origin = cmd.value;
         return ret;
     }
-    textBatchModify(cmd: TextCmdBatchModify) {
-    }
-    textMove(cmd: TextCmdMove) {
 
+    textMove(cmd: TextCmdMove): TextCmdMove {
+        throw new Error("Not implemented")
+    }
+    textCmdGroup(cmd: TextCmdGroup): TextCmdGroup {
+        const revert = cmd.cmds.map((cmd) => {
+            switch (cmd.type) {
+                case CmdType.TextInsert:
+                    return this.textInsert(cmd as TextCmdInsert);
+                case CmdType.TextDelete:
+                    return this.textDelete(cmd as TextCmdRemove);
+                case CmdType.TextModify:
+                    return this.textModify(cmd as TextCmdModify);
+                case CmdType.TextMove:
+                    return this.textMove(cmd as TextCmdMove);
+                default:
+                    throw new Error("unknow cmd type: " + cmd.type)
+            }
+        });
+        const ret = TextCmdGroup.Make(cmd.blockId)
+        ret.cmds.push(...revert);
+        return ret;
     }
 }

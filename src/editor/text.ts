@@ -263,7 +263,7 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
             count--; // 不能删除最后一个回车
             isDel0A = false;
         }
-        const savetext = para.text.slice(index, count);
+        const savetext = para.text.slice(index, index + count);
         para.text = para.text.slice(0, index) + para.text.slice(index + count);
         const delspans = _deleteSpan(para.spans, index, count);
 

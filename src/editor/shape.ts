@@ -11,7 +11,7 @@ import { createHorizontalBox } from "../basic/utils";
 import { SpanAttr } from "../data/text";
 import { deleteText, insertText } from "./text";
 import { Page } from "../data/page";
-import { ShapeCmdRemove, ShapeCmdModify, ShapeArrayAttrRemove, ShapeArrayAttrInsert, TextCmdRemove, TextCmdInsert, ShapeCmdGroup, ShapeArrayAttrModify } from "../coop/data/classes";
+import { ShapeCmdRemove, ShapeCmdModify, ShapeArrayAttrRemove, ShapeArrayAttrInsert, TextCmdRemove, TextCmdInsert, ShapeCmdGroup, ShapeArrayAttrModify, TextCmdGroup } from "../coop/data/classes";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, SHAPE_ATTR_ID } from "./consts";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill } from "../io/baseexport";
 import { CoopRepository } from "./cooprepo";
@@ -371,32 +371,49 @@ export class ShapeEditor {
         return this.insertText2(text, index, 0, attr);
     }
 
-    public deleteText(index: number, count: number): boolean {
-        if (!(this.__shape instanceof TextShape)) return false;
+    public deleteText(index: number, count: number): number {
+        if (!(this.__shape instanceof TextShape)) return 0;
         if (index < 0) {
             count += index;
             index = 0;
         }
-        if (count <= 0) return false;
+        if (count <= 0) return 0;
         try {
             this.__repo.start("deleteText", {});
-            deleteText(this.__shape, index, count);
-            this.__repo.commit(TextCmdRemove.Make(this.__page.id, this.__shape.id, index, count));
-            return true;
+            const deleted = deleteText(this.__shape, index, count);
+            if (!deleted) {
+                this.__repo.rollback();
+                return 0;
+            }
+            else {
+                count = deleted.text.length;
+                this.__repo.commit(TextCmdRemove.Make(this.__page.id, this.__shape.id, index, count, deleted));
+                return count;
+            }
         } catch (error) {
             console.log(error)
             this.__repo.rollback();
         }
-        return false;
+        return 0;
     }
 
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): boolean {
         if (!(this.__shape instanceof TextShape)) return false;
         try {
             this.__repo.start("insertText", {});
-            if (del > 0) deleteText(this.__shape, index, del);
-            insertText(this.__shape, text, index, attr);
-            const cmd = TextCmdInsert.Make(this.__page.id, this.__shape.id, index, del, text)
+            let cmd;
+            if (del > 0) {
+                cmd = TextCmdGroup.Make(this.__page.id);
+                const origin = deleteText(this.__shape, index, del);
+                if (origin) cmd.addRemove(this.__shape.id, index, del, origin);
+                insertText(this.__shape, text, index, attr);
+                cmd.addInsert(this.__shape.id, index, text);
+            }
+            else {
+
+                insertText(this.__shape, text, index, attr);
+                cmd = TextCmdInsert.Make(this.__page.id, this.__shape.id, index, text)
+            }
 
             this.__repo.commit(cmd);
             return true;

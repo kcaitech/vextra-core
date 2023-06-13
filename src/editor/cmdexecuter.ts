@@ -10,7 +10,7 @@ import {
     TextCmdModify,
     TextCmdRemove,
     TextCmdInsert,
-    TextCmdBatchModify,
+    TextCmdGroup,
     ShapeArrayAttrInsert,
     ShapeArrayAttrRemove,
     ShapeArrayAttrModify,
@@ -163,8 +163,8 @@ export class CMDExecuter {
             case CmdType.TextModify:
                 this.textModify(cmd as TextCmdModify);
                 break;
-            case CmdType.TextBatchModify:
-                this.textBatchModify(cmd as TextCmdBatchModify);
+            case CmdType.TextCmdGroup:
+                this.textCmdGroup(cmd as TextCmdGroup);
                 break;
             case CmdType.TextMove:
                 this.textMove(cmd as TextCmdMove);
@@ -494,9 +494,22 @@ export class CMDExecuter {
         if (!page || !shape || !(shape instanceof TextShape)) return;
         // todo
     }
-    textBatchModify(cmd: TextCmdBatchModify) {
+    textCmdGroup(cmd: TextCmdGroup) {
         cmd.cmds.forEach((cmd) => {
-            this.textModify(cmd);
+            switch (cmd.type) {
+                case CmdType.TextInsert:
+                    this.textInsert(cmd as TextCmdInsert);
+                    break;
+                case CmdType.TextDelete:
+                    this.textDelete(cmd as TextCmdRemove);
+                    break;
+                case CmdType.TextModify:
+                    this.textModify(cmd as TextCmdModify);
+                    break;
+                case CmdType.TextMove:
+                    this.textMove(cmd as TextCmdMove);
+                    break;
+            }
         })
     }
     textMove(cmd: TextCmdMove) {
