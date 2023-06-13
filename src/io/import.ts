@@ -6,6 +6,7 @@ import * as types from "../data/typesdefine"
 import {IDataGuard} from "../data/basic";
 import {Document, DocumentMeta} from "../data/document";
 import * as storage from "./storage";
+import { base64ToDataUrl } from "../editor/utils";
 
 interface IJSON {
     [key: string]: any
@@ -87,15 +88,18 @@ export class DataLoader implements IDataLoader {
 
         let url = '';
         const ext = id.substring(id.lastIndexOf('.') + 1);
-        if (ext == "png") {
-            url = "data:image/png;base64," + base64;
-        } else if (ext == "gif") {
-            url = "data:image/gif;base64," + base64;
+        if (ext === 'png') {
+            url = base64ToDataUrl('png', base64);
+        } else if (ext === 'gif') {
+            url = base64ToDataUrl('gif', base64);
+        } else if (ext === 'svg') {
+            url = base64ToDataUrl('svg', base64);
+        } else if (ext === 'jpeg') {
+            url = base64ToDataUrl('jpeg', base64);
         } else {
-            console.log("imageExt", ext);
+            console.log('imageExt', ext);
         }
-
-        return {buff: buffer, base64: url}
+        return { buff: buffer, base64: url }
     }
 }
 

@@ -1,0 +1,49 @@
+{
+    "description": "comment",
+    "type": "object",
+    "properties": {
+        "pageId": {
+            "type": "string",
+            "default": ""
+        },
+        "id": {
+            "type": "string",
+            "default": "uuid"
+        },
+        "frame": {
+            "$ref": "./shape-frame.json"
+        },
+        "user": {
+            "$ref": "./user-info.json"
+        },
+        "createAt": {
+            "type": "string",
+            "default": ""
+        },
+        "content": {
+            "type": "string",
+            "default": ""
+        },
+        "parasiticBody": {
+            "$ref": "./shape.json"
+        },
+        "parentId": {
+            "type": "string",
+            "default": ""
+        },
+        "rootId": {
+            "type": "string",
+            "default": ""
+        }
+    },
+    "required": [
+        "pageId",
+        "id",
+        "frame",
+        "user",
+        "createAt",
+        "content",
+        "parasiticBody"
+    ],
+    "additionalProperties": false
+}

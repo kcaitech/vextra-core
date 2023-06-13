@@ -51,6 +51,25 @@ import {
     Basic, BasicArray
     } from "./basic"
 /**
+ * user infomation 
+ */
+export class UserInfo extends Basic {
+    typeId = 'user-info'
+    userId: string
+    userNickname: string
+    avatar: string
+    constructor(
+        userId: string,
+        userNickname: string,
+        avatar: string
+    ) {
+        super()
+        this.userId = userId
+        this.userNickname = userNickname
+        this.avatar = avatar
+    }
+}
+/**
  * text 
  */
 export class Text extends Basic {
@@ -498,6 +517,39 @@ export class ContextSettings extends Basic {
         super()
         this.blenMode = blenMode
         this.opacity = opacity
+    }
+}
+/**
+ * comment 
+ */
+export class Comment extends Basic {
+    typeId = 'comment'
+    pageId: string
+    id: string
+    frame: ShapeFrame
+    user: UserInfo
+    createAt: string
+    content: string
+    parasiticBody: Shape
+    parentId?: string
+    rootId?: string
+    constructor(
+        pageId: string,
+        id: string,
+        frame: ShapeFrame,
+        user: UserInfo,
+        createAt: string,
+        content: string,
+        parasiticBody: Shape
+    ) {
+        super()
+        this.pageId = pageId
+        this.id = id
+        this.frame = frame
+        this.user = user
+        this.createAt = createAt
+        this.content = content
+        this.parasiticBody = parasiticBody
     }
 }
 /**

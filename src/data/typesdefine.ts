@@ -8,6 +8,12 @@ export enum WindingRule {
     NonZero = 'non-zero',
     EvenOdd = 'even-odd',
 }
+/* user infomation */
+export type UserInfo = {
+    userId: string
+    userNickname: string
+    avatar: string
+}
 /* text */
 export type Text = {
     paras: Para[]
@@ -287,6 +293,18 @@ export enum CurveMode {
 export type ContextSettings = {
     blenMode: BlendMode
     opacity: number
+}
+/* comment */
+export type Comment = {
+    pageId: string
+    id: string
+    frame: ShapeFrame
+    user: UserInfo
+    createAt: string
+    content: string
+    parasiticBody: Shape
+    parentId?: string
+    rootId?: string
 }
 /* color */
 export type Color = {

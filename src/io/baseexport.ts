@@ -13,6 +13,16 @@ export interface IExportContext {
 export function exportWindingRule(source: types.WindingRule, ctx?: IExportContext): types.WindingRule {
     return source
 }
+/* user infomation */
+export function exportUserInfo(ctx: IExportContext, source: types.UserInfo): types.UserInfo {
+    const ret = {
+        userId: source.userId,
+        userNickname: source.userNickname,
+        avatar: source.avatar,
+    }
+    ctx.afterExport(source)
+    return ret
+}
 /* text */
 export function exportText(source: types.Text, ctx?: IExportContext): types.Text {
     const ret = {
@@ -400,6 +410,22 @@ export function exportContextSettings(source: types.ContextSettings, ctx?: IExpo
         opacity: source.opacity,
     }
     if (ctx) ctx.afterExport(source)
+    return ret
+}
+/* comment */
+export function exportComment(ctx: IExportContext, source: types.Comment): types.Comment {
+    const ret = {
+        pageId: source.pageId,
+        id: source.id,
+        frame: exportShapeFrame(ctx, source.frame),
+        user: exportUserInfo(ctx, source.user),
+        createAt: source.createAt,
+        content: source.content,
+        parasiticBody: exportShape(ctx, source.parasiticBody),
+        parentId: source.parentId,
+        rootId: source.rootId,
+    }
+    ctx.afterExport(source)
     return ret
 }
 /* color */
