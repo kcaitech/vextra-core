@@ -2,7 +2,7 @@ import { GroupShape, Shape, TextShape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { Repository } from "../data/transact";
 import { addFill, deleteFillByIndex, setFillColor, setFillEnabled } from "./fill";
-import { setBorder, deleteBorder, addBorder, setBorderThickness, setBorderPosition, setBorderStyle, setBorderApexStyle } from "./border";
+import { deleteBorder, addBorder, setBorderThickness, setBorderPosition, setBorderStyle, setBorderApexStyle, setBorderEnable, setBorderColor } from "./border";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
 import { RectRadius, ShapeType } from "../data/baseclasses";
@@ -134,9 +134,14 @@ export class ShapeEditor {
     }
 
     // border
-    public setBorder(idx: number, options: { color: Color, isEnabled: boolean }) {
-        this.__repo.start("setBorder", {});
-        setBorder(this.__shape.style, idx, options);
+    public setBorderEnable(idx: number, isEnabled: boolean) {
+        this.__repo.start("setBorderEnable", {});
+        setBorderEnable(this.__shape.style, idx, isEnabled);
+        this.__repo.commit({});
+    }
+    public setBorderColor(idx: number, color: Color) {
+        this.__repo.start("setBorderColor", {});
+        setBorderColor(this.__shape.style, idx, color);
         this.__repo.commit({});
     }
     public setBorderThickness(idx: number, thickness: number) {
