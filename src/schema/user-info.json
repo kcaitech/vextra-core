@@ -1,0 +1,24 @@
+{
+    "description": "user infomation",
+    "type": "object",
+    "properties": {
+        "userId": {
+            "type": "string",
+            "default": ""
+        },
+        "userNickname": {
+            "type": "string",
+            "default": "anonymous"
+        },
+        "avatar": {
+            "type": "string",
+            "default": ""
+        }
+    },
+    "required": [
+        "userId",
+        "userNickname",
+        "avatar"
+    ],
+    "additionalProperties": false
+}
