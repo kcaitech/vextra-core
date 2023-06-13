@@ -697,7 +697,7 @@ export function importPage(ctx: IImportContext, source: types.Page): impl.Page {
         importStyle(ctx, source.style),
         importBoolOp(ctx, source.boolOp),
         (() => {
-            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.SymbolShape)>()
+            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.SymbolShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
                 const r = (() => {
 
@@ -724,6 +724,12 @@ export function importPage(ctx: IImportContext, source: types.Page): impl.Page {
                     }
                     if (source.childs[i].typeId == 'text-shape') {
                         return importTextShape(ctx, source.childs[i] as types.TextShape)
+                    }
+                    if (source.childs[i].typeId == 'oval-shape') {
+                        return importOvalShape(ctx, source.childs[i] as types.OvalShape)
+                    }
+                    if (source.childs[i].typeId == 'line-shape') {
+                        return importLineShape(ctx, source.childs[i] as types.LineShape)
                     }
                     if (source.childs[i].typeId == 'artboard') {
                         return importArtboard(ctx, source.childs[i] as types.Artboard)

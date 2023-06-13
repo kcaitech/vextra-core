@@ -750,6 +750,12 @@ export function exportPage(ctx: IExportContext, source: types.Page): types.Page 
                     if (source.childs[i].typeId == 'text-shape') {
                         return exportTextShape(ctx, source.childs[i] as types.TextShape)
                     }
+                    if (source.childs[i].typeId == 'oval-shape') {
+                        return exportOvalShape(ctx, source.childs[i] as types.OvalShape)
+                    }
+                    if (source.childs[i].typeId == 'line-shape') {
+                        return exportLineShape(ctx, source.childs[i] as types.LineShape)
+                    }
                     if (source.childs[i].typeId == 'artboard') {
                         return exportArtboard(ctx, source.childs[i] as types.Artboard)
                     }
