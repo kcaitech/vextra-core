@@ -16,13 +16,13 @@ export function importWindingRule(source: types.WindingRule, ctx?: IImportContex
     return source
 }
 /* user infomation */
-export function importUserInfo(ctx: IImportContext, source: types.UserInfo): impl.UserInfo {
+export function importUserInfo(source: types.UserInfo, ctx?: IImportContext): impl.UserInfo {
     const ret: impl.UserInfo = new impl.UserInfo (
         source.userId,
         source.userNickname,
         source.avatar
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* text */
@@ -408,19 +408,19 @@ export function importContextSettings(source: types.ContextSettings, ctx?: IImpo
     return ret
 }
 /* comment */
-export function importComment(ctx: IImportContext, source: types.Comment): impl.Comment {
+export function importComment(source: types.Comment, ctx?: IImportContext): impl.Comment {
     const ret: impl.Comment = new impl.Comment (
         source.pageId,
         source.id,
-        importShapeFrame(ctx, source.frame),
-        importUserInfo(ctx, source.user),
+        importShapeFrame(source.frame, ctx),
+        importUserInfo(source.user, ctx),
         source.createAt,
         source.content,
-        importShape(ctx, source.parasiticBody)
+        importShape(source.parasiticBody, ctx)
     )
     ret.parentId = source.parentId
     ret.rootId = source.rootId
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* color */

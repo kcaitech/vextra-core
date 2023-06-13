@@ -14,13 +14,13 @@ export function exportWindingRule(source: types.WindingRule, ctx?: IExportContex
     return source
 }
 /* user infomation */
-export function exportUserInfo(ctx: IExportContext, source: types.UserInfo): types.UserInfo {
+export function exportUserInfo(source: types.UserInfo, ctx?: IExportContext): types.UserInfo {
     const ret = {
         userId: source.userId,
         userNickname: source.userNickname,
         avatar: source.avatar,
     }
-    ctx.afterExport(source)
+    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* text */
@@ -413,19 +413,19 @@ export function exportContextSettings(source: types.ContextSettings, ctx?: IExpo
     return ret
 }
 /* comment */
-export function exportComment(ctx: IExportContext, source: types.Comment): types.Comment {
+export function exportComment(source: types.Comment, ctx?: IExportContext): types.Comment {
     const ret = {
         pageId: source.pageId,
         id: source.id,
-        frame: exportShapeFrame(ctx, source.frame),
-        user: exportUserInfo(ctx, source.user),
+        frame: exportShapeFrame(source.frame, ctx),
+        user: exportUserInfo(source.user, ctx),
         createAt: source.createAt,
         content: source.content,
-        parasiticBody: exportShape(ctx, source.parasiticBody),
+        parasiticBody: exportShape(source.parasiticBody, ctx),
         parentId: source.parentId,
         rootId: source.rootId,
     }
-    ctx.afterExport(source)
+    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* color */
