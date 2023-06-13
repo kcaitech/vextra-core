@@ -3,7 +3,7 @@ import { Page } from "../data/page";
 import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
 import { Repository } from "../data/transact";
-import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape } from "../data/shape";
+import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape } from "../data/shape";
 import * as types from "../data/typesdefine"
 import { importGroupShape, IImportContext, importPage, importArtboard, importTextShape } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
@@ -12,10 +12,12 @@ import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import {
     Blur, Point2D, BorderOptions, ContextSettings, CurvePoint,
-    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, RectRadius, CurveMode, Span
+    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, RectRadius, CurveMode, Span, UserInfo
 } from "../data/baseclasses";
 import { BasicArray } from "../data/basic";
 import { Para, Text } from "../data/text";
+import { Comment } from "../data/comment";
+import { ResourceMgr } from "../data/basic";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 const noeffectCtx = new class implements IImportContext {
     afterImport(_: any): void { }
@@ -148,4 +150,19 @@ export function newTextShape(name: string, frame: ShapeFrame): TextShape {
     const text = new Text(paras);
     textshape.text = text;
     return textshape;
+}
+export function newComment(user: UserInfo, createAt: string, pageId: string, frame: ShapeFrame, content: string, parasiticBody: Shape, rootId?: string, parentId?: string): Comment {
+    const id = uuid();
+    const comment = new Comment(pageId, id, frame, user, createAt, content, parasiticBody, rootId, parentId);
+    return comment;
+}
+export function newImageShape(name: string, frame: ShapeFrame, ref?: string, mediasMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>): ImageShape {
+    const id = uuid();
+    const style = newStyle();
+    const img = new ImageShape(id, name, types.ShapeType.Image, frame, style, types.BoolOp.None, ref || '');
+    if (mediasMgr) {
+        img.setImageMgr(mediasMgr);
+    }
+    addCommonAttr(img);
+    return img;
 }
