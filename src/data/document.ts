@@ -78,6 +78,10 @@ export class Document extends DocumentMeta {
         this.pagesList.splice(index, 1);
         return true;
     }
+    getPageItemAt(index: number): PageListItem | undefined {
+        if (index < 0 || index >= this.pagesList.length) return;
+        return this.pagesList[index];
+    }
     indexOfPage(pageOrId: Page | string): number {
         const id = typeof pageOrId === 'string' ? pageOrId : pageOrId.id;
         return this.pagesList.findIndex(p => p.id === id);

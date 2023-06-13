@@ -4,6 +4,7 @@ import { Watchable } from './basic';
 
 class TContext {
     public transact?: Transact;
+    public settrap: boolean = false;
     public cache: Map<number, Set<PropertyKey>> = new Map();
     private __notifys: Map<number, Notifiable> = new Map();
     public optiNotify: boolean = true;
@@ -58,7 +59,11 @@ class ProxyHandler {
         }
         else if (this.__context.transact === undefined) {
             throw new Error("NOT inside transact!");
-        } else if (target instanceof Array) {
+        }
+        else if (this.__context.settrap) {
+            throw new Error("inside trap!");
+        }
+        else if (target instanceof Array) {
             if (propertyKey === "length") {
                 if (target.length > value) {
                     for (let i = value, len = target.length; i < len; i++) {
@@ -129,25 +134,28 @@ class ProxyHandler {
     }
     deleteProperty(target: object, propertyKey: PropertyKey) {
         let needNotify = false;
-        if (this.__context.transact === undefined) {
-            if (propertyKey.toString().startsWith("__")) {
-                // do nothing
-            } else {
-                throw new Error("NOT inside transact!");
-            }
-        } else if (target instanceof Array) {
-            const propInt: number = Number.parseInt(propertyKey.toString());
-            const propIsInt = Number.isInteger(propInt) && propInt.toString() == propertyKey;
-            if ((propIsInt || !propertyKey.toString().startsWith('__'))) {
-                needNotify = true;
-                if (!swapCached(this.__context, target, propertyKey)) {
-                    const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
-                    this.__context.transact.push(r);
-                }
-                // todo length
-            }
+        if (propertyKey.toString().startsWith("__")) {
+            // do nothing
         }
-        else if (!propertyKey.toString().startsWith('__')) {
+        else if (this.__context.transact === undefined) {
+            throw new Error("NOT inside transact!");
+        }
+        else if (this.__context.settrap) {
+            throw new Error("inside trap!");
+        }
+        // else if (target instanceof Array) {
+        //     const propInt: number = Number.parseInt(propertyKey.toString());
+        //     const propIsInt = Number.isInteger(propInt) && propInt.toString() == propertyKey;
+        //     if ((propIsInt || !propertyKey.toString().startsWith('__'))) {
+        //         needNotify = true;
+        //         if (!swapCached(this.__context, target, propertyKey)) {
+        //             const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
+        //             this.__context.transact.push(r);
+        //         }
+        //         // todo length
+        //     }
+        // }
+        else { // if (!propertyKey.toString().startsWith('__')) {
             needNotify = true;
             if (!swapCached(this.__context, target, propertyKey)) {
                 const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
@@ -169,10 +177,14 @@ class ProxyHandler {
         }
         if (target instanceof Map && typeof val == 'function') {
             if (propertyKey == 'set' || propertyKey == 'delete') { // 只对Map对象的set、delete操作做get二级处理
-                if (this.__context.transact !== undefined) { // 二级处理中有对底层数据的修改，所以应该在事务内进行
-                    return Reflect.get(this.sub(this.__context, target), propertyKey);
-                } else {
+                if (this.__context.transact === undefined) { // 二级处理中有对底层数据的修改，所以应该在事务内进行
                     throw new Error("NOT inside transact!");
+                }
+                else if (this.__context.settrap) {
+                    throw new Error("inside trap!");
+                }
+                else {
+                    return Reflect.get(this.sub(this.__context, target), propertyKey);
                 }
             }
             return val.bind(target);
@@ -351,11 +363,12 @@ export class Repository extends Watchable(Object) implements IDataGuard {
     private __trans: Transact[] = [];
     private __index: number = 0;
 
-    constructor() {
+    constructor(settrap: boolean = false) {
         super();
         // this.__selection = selection;
         this.__context = new TContext();
         this.__ph = new ProxyHandler(this.__context);
+        this.__context.settrap = settrap;
     }
     get transactCtx() {
         return this.__context;
