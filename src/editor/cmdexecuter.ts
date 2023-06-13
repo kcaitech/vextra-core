@@ -44,7 +44,7 @@ import {
 import * as types from "../data/typesdefine"
 import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape, TextShape } from "../data/classes";
 
-import * as api from "./cmdapi"
+import * as api from "./basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
 import { Repository } from "../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../coop/data/classes";
