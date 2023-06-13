@@ -9,13 +9,17 @@ import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
-import { translateTo } from "./frame";
-
+import { translateTo, translate } from "./frame";
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
     else if (x > bounds.right) bounds.right = x;
     if (y < bounds.top) bounds.top = y;
     else if (y > bounds.bottom) bounds.bottom = y;
+}
+export interface PositonAdjust {
+    target: Shape
+    transX: number
+    transY: number
 }
 
 export class PageEditor {
@@ -298,6 +302,18 @@ export class PageEditor {
             } catch (error) {
                 this.__repo.rollback();
             }
+        }
+    }
+    arrange(pas: PositonAdjust[]) {
+        try {
+            this.__repo.start('arrange', {});
+            for (let i = 0; i < pas.length; i++) {
+                const action = pas[i];
+                translate(action.target, action.transX, action.transY)
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
         }
     }
     editor4Shape(shape: Shape): ShapeEditor {
