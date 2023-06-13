@@ -3,7 +3,6 @@ import { Document } from "../data/document";
 import { Page } from "../data/page";
 import { GroupShape, Shape, ShapeType } from "../data/shape";
 import { Artboard } from "../data/artboard";
-import { translateTo } from "./frame";
 
 export { addFillAt, deleteFillAt, moveFill, setFillColor, setFillEnable } from "./fill";
 export { addBorderAt, deleteBorderAt, moveBorder, setBorderColor } from "./border";

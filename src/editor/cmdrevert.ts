@@ -31,7 +31,8 @@ import {
     ShapeOpInsert,
     ShapeOpNone,
     ShapeOpRemove,
-    ShapeOpMove
+    ShapeOpMove,
+    ArrayOpAttr
 } from "../coop/data/classes";
 import { Document } from "../data/document"
 import { exportBorder, exportFill, exportPage } from "../io/baseexport";
@@ -277,10 +278,23 @@ export class CMDReverter {
     }
 
     textDelete(cmd: TextCmdRemove) {
+        // 删除了的文本需要保存起来？还有属性？
+
     }
     textInsert(cmd: TextCmdInsert) {
+        const ops = cmd.ops;
+        if (ops.length === 2) {
+            // 先删除再插入
+        }
+        else {
+            // 仅插入
+        }
     }
     textModify(cmd: TextCmdModify) {
+        const ret = new TextCmdModify(CmdType.TextModify, uuid(), cmd.blockId, cmd.ops, cmd.attrId)
+        ret.value = cmd.origin;
+        ret.origin = cmd.value;
+        return ret;
     }
     textBatchModify(cmd: TextCmdBatchModify) {
     }
