@@ -90,7 +90,7 @@ export class CMDReverter {
         }
     }
 
-    pageInsert(cmd: PageCmdInsert) {
+    pageInsert(cmd: PageCmdInsert): PageCmdDelete {
         const cmdop = cmd.ops[0];
         // const index = this.__document.pagesList.findIndex((item) => item.id === cmd.pageId) // 不可以，cmd是需要变换的
         let op;
@@ -101,7 +101,7 @@ export class CMDReverter {
         }
         return new PageCmdDelete(CmdType.PageDelete, uuid(), cmd.blockId, [op], cmd.pageId);
     }
-    pageDelete(cmd: PageCmdDelete) {
+    pageDelete(cmd: PageCmdDelete): PageCmdInsert {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ArrayRemove) {
@@ -110,12 +110,12 @@ export class CMDReverter {
             op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, 1)
         }
         const page = this.__document.pagesMgr.getSync(cmd.pageId);
-        if (!page) return;
+        if (!page) throw new Error("page not found: " + cmd.pageId);
 
         const data = JSON.stringify(exportPage(page))
         return new PageCmdInsert(CmdType.PageInsert, uuid(), cmd.blockId, [op], page.id, data);
     }
-    pageModify(cmd: PageCmdModify) {
+    pageModify(cmd: PageCmdModify): PageCmdModify {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.IdSet) {
@@ -132,7 +132,7 @@ export class CMDReverter {
         ret.origin = cmd.value;
         return ret;
     }
-    pageMove(cmd: PageCmdMove) {
+    pageMove(cmd: PageCmdMove): PageCmdMove {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ArrayMove) {
@@ -144,7 +144,7 @@ export class CMDReverter {
         return new PageCmdMove(CmdType.PageMove, uuid(), cmd.blockId, [op]);
     }
 
-    shapeArrAttrInsert(cmd: ShapeArrayAttrInsert) {
+    shapeArrAttrInsert(cmd: ShapeArrayAttrInsert): ShapeArrayAttrRemove {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ArrayInsert) {
@@ -154,7 +154,7 @@ export class CMDReverter {
         }
         return new ShapeArrayAttrRemove(CmdType.ShapeArrayAttrDelete, uuid(), cmd.blockId, [op], cmd.arrayAttrId);
     }
-    shapeArrAttrModify(cmd: ShapeArrayAttrModify) {
+    shapeArrAttrModify(cmd: ShapeArrayAttrModify): ShapeArrayAttrModify {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.IdSet) {
@@ -171,7 +171,7 @@ export class CMDReverter {
         ret.origin = cmd.value;
         return ret;
     }
-    shapeArrAttrMove(cmd: ShapeArrayAttrMove) {
+    shapeArrAttrMove(cmd: ShapeArrayAttrMove): ShapeArrayAttrMove {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ArrayMove) {
@@ -182,7 +182,7 @@ export class CMDReverter {
         }
         return new ShapeArrayAttrMove(CmdType.ShapeArrayAttrMove, uuid(), cmd.blockId, [op]);
     }
-    shapeArrAttrDelete(cmd: ShapeArrayAttrRemove) {
+    shapeArrAttrDelete(cmd: ShapeArrayAttrRemove): ShapeArrayAttrInsert {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ArrayRemove) {
@@ -193,7 +193,7 @@ export class CMDReverter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         const shapeId = op.targetId[0];
         const shape = page && page.getShape(shapeId, true);
-        if (!shape) return;
+        if (!shape) throw new Error("shape not found: " + shapeId);
 
         const arrayAttr = cmd.arrayAttr;
         const arrayAttrId = cmd.arrayAttrId;
@@ -201,13 +201,13 @@ export class CMDReverter {
         if (arrayAttr === FILLS_ID) {
             const fills = shape.style.fills;
             const fill = fills.find((fill) => fill.id === arrayAttrId)
-            if (!fill) return;
+            if (!fill) throw new Error("fill not found: " + arrayAttrId);
             data = exportFill(fill)
         }
         else if (arrayAttr === BORDER_ID) {
             const borders = shape.style.borders;
             const border = borders.find((border) => border.id === arrayAttrId)
-            if (!border) return;
+            if (!border) throw new Error("border not found: " + arrayAttrId);
             data = exportBorder(border)
         }
         else {
@@ -218,7 +218,7 @@ export class CMDReverter {
         return new ShapeArrayAttrInsert(CmdType.ShapeArrayAttrInsert, uuid(), cmd.blockId, [op], arrayAttrId, JSON.stringify(data));
     }
 
-    shapeCMDGroup(cmd: ShapeCmdGroup) {
+    shapeCMDGroup(cmd: ShapeCmdGroup): ShapeCmdGroup {
         const ret = ShapeCmdGroup.Make(cmd.blockId);
         cmd.cmds.reverse().forEach((cmd) => {
             const r = this.revert(cmd);
@@ -226,7 +226,7 @@ export class CMDReverter {
         })
         return ret;
     }
-    shapeDelete(cmd: ShapeCmdRemove) {
+    shapeDelete(cmd: ShapeCmdRemove): ShapeCmdInsert {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ShapeRemove) {
@@ -236,12 +236,12 @@ export class CMDReverter {
         }
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         const shape = page && page.getShape(cmdop.shapeId, true);
-        if (!shape) return;
+        if (!shape) throw new Error("page not found: " + cmd.blockId);
 
         const data = JSON.stringify(exportShape(shape))
         return new ShapeCmdInsert(CmdType.ShapeInsert, uuid(), cmd.blockId, [op], data);
     }
-    shapeInsert(cmd: ShapeCmdInsert) {
+    shapeInsert(cmd: ShapeCmdInsert): ShapeCmdRemove {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ShapeInsert) {
@@ -251,7 +251,7 @@ export class CMDReverter {
         }
         return new ShapeCmdRemove(CmdType.ShapeDelete, uuid(), cmd.blockId, [op]);
     }
-    shapeModify(cmd: ShapeCmdModify) {
+    shapeModify(cmd: ShapeCmdModify): ShapeCmdModify {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.IdSet || cmdop.type === OpType.IdRemove) {
@@ -265,7 +265,7 @@ export class CMDReverter {
         ret.origin = cmd.value;
         return ret;
     }
-    shapeMove(cmd: ShapeCmdMove) {
+    shapeMove(cmd: ShapeCmdMove): ShapeCmdMove {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ShapeMove) {
@@ -279,7 +279,7 @@ export class CMDReverter {
         return new ShapeCmdMove(CmdType.ShapeMove, uuid(), cmd.blockId, [op]);
     }
 
-    textDelete(cmd: TextCmdRemove) {
+    textDelete(cmd: TextCmdRemove): TextCmdInsert | TextCmdGroup {
         const op = cmd.ops[0];
         const origin = JSON.parse(cmd.origin!) as { text: string, spans: Span[] };
         origin.spans = origin.spans.map((span) => importSpan(span))
@@ -292,23 +292,23 @@ export class CMDReverter {
             return TextCmdInsert.Make(cmd.blockId, shapeId, op.start, origin.text); // todo attr
         }
 
-        const batchInsert = TextCmdGroup.Make(cmd.blockId);
+        const cmdgroup = TextCmdGroup.Make(cmd.blockId);
         for (let i = 0, j = 0; i < origin.text.length;) {
             if (j >= origin.spans.length) {
                 const text = origin.text.slice(i);
                 const span = origin.spans.at(-1); // todo attr
-                batchInsert.addInsert(shapeId, op.start + i, text)
+                cmdgroup.addInsert(shapeId, op.start + i, text)
                 break;
             }
             else {
                 const span = origin.spans[j]; // todo attr
                 const text = origin.text.slice(i, i + span.length);
-                batchInsert.addInsert(shapeId, op.start + i, text)
+                cmdgroup.addInsert(shapeId, op.start + i, text)
                 i += span.length;
                 j++;
             }
         }
-        return cmd;
+        return cmdgroup;
     }
     textInsert(cmd: TextCmdInsert): TextCmdRemove {
         const op = cmd.ops[0];
@@ -330,27 +330,43 @@ export class CMDReverter {
         ret.origin = cmd.value;
         return ret;
     }
-
     textMove(cmd: TextCmdMove): TextCmdMove {
-        throw new Error("Not implemented")
+        const op = cmd.ops[0];
+        if (op.type === OpType.ArrayMove) {
+            const moveop = op as ArrayOpMove;
+            const shapeId = op.targetId[0];
+            return TextCmdMove.Make(cmd.blockId, shapeId, moveop.start2, moveop.length, moveop.start);
+        }
+        else {
+            const shapeId = op.targetId[0];
+            return new TextCmdMove(CmdType.TextMove, uuid(), cmd.blockId, [op]);
+        }
     }
     textCmdGroup(cmd: TextCmdGroup): TextCmdGroup {
-        const revert = cmd.cmds.map((cmd) => {
+        const ret = TextCmdGroup.Make(cmd.blockId);
+        const revert = ret.cmds;
+        cmd.cmds.forEach((cmd) => {
             switch (cmd.type) {
                 case CmdType.TextInsert:
-                    return this.textInsert(cmd as TextCmdInsert);
-                case CmdType.TextDelete:
-                    return this.textDelete(cmd as TextCmdRemove);
+                    revert.push(this.textInsert(cmd as TextCmdInsert));
+                    break;
+                case CmdType.TextDelete: {
+                    const ret = this.textDelete(cmd as TextCmdRemove);
+                    if (ret instanceof TextCmdGroup) {
+                        revert.push(...ret.cmds);
+                    }
+                    else {
+                        revert.push(ret);
+                    }
+                }
                 case CmdType.TextModify:
-                    return this.textModify(cmd as TextCmdModify);
+                    revert.push(this.textModify(cmd as TextCmdModify));
                 case CmdType.TextMove:
-                    return this.textMove(cmd as TextCmdMove);
+                    revert.push(this.textMove(cmd as TextCmdMove));
                 default:
                     throw new Error("unknow cmd type: " + cmd.type)
             }
         });
-        const ret = TextCmdGroup.Make(cmd.blockId)
-        ret.cmds.push(...revert);
         return ret;
     }
 }

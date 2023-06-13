@@ -19,7 +19,8 @@ import {
     TextCmdMove,
     ArrayOpMove,
     ShapeOpMove,
-    IdOpSet
+    IdOpSet,
+    ShapeOpRemove
 } from "../coop/data/classes";
 import { Document } from "../data/document";
 import {
@@ -203,6 +204,10 @@ export class CMDExecuter {
     pageDelete(cmd: PageCmdDelete) {
         const op = cmd.ops[0];
         if (op.type === OpType.ArrayRemove) { // oss需要保存历史版本以undo
+            // check
+            const item = this.__document.pagesList[op.start];
+            if (item && item.id !== cmd.pageId) throw new Error("page id not equals: " + item.id + " " + cmd.pageId)
+
             api.pageDelete(this.__document, op.start)
         }
     }
@@ -249,6 +254,12 @@ export class CMDExecuter {
         if (page && op.type === OpType.ShapeRemove) {
             const parent = page.getShape(parentId, true);
             if (parent && parent instanceof GroupShape) {
+                // check
+                const shapeop = op as ShapeOpRemove;
+                const shapeid = shapeop.shapeId;
+                const shape = parent.childs[op.index];
+                if (shape && shape.id !== shapeid) throw new Error("shape id not equals: " + shape.id + " " + shapeid);
+
                 api.shapeDelete(page, parent, op.index, needUpdateFrame)
             }
         }
