@@ -25,12 +25,12 @@ export function setBorderPosition(style: Style, idx: number, position: BorderPos
 export function setBorderStyle(style: Style, idx: number, borderStyle: BorderStyle) {
     style.borders[idx].borderStyle = borderStyle;
 }
-export function setBorderApexStyle(style: Style, idx: number, apexStyle: MarkerType, isEnd: boolean) {
-    if (isEnd) {
-        style.borders[idx].endMarkerType = apexStyle;
-    } else {
-        style.borders[idx].startMarkerType = apexStyle;
-    }
+export function setBorderStartMarkerType(style: Style, idx: number, type: MarkerType) {
+    style.borders[idx].startMarkerType = type;
+}
+
+export function setBorderEndMarkerType(style: Style, idx: number, type: MarkerType) {
+    style.borders[idx].endMarkerType = type;
 }
 
 export function deleteBorderAt(style: Style, idx: number) {

@@ -39,10 +39,13 @@ import {
     importTextShape,
     importFill,
     importBorder,
-    importColor
+    importColor,
+    importBorderPosition,
+    importBorderStyle,
+    importRectRadius
 } from "../io/baseimport";
 import * as types from "../data/typesdefine"
-import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape, TextShape } from "../data/classes";
+import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape, TextShape, RectShape } from "../data/classes";
 
 import * as api from "./basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
@@ -110,9 +113,11 @@ export class CMDExecuter {
         this.__repo = repo;
     }
 
-    exec(cmd: Cmd, isRemote: boolean = true): boolean {
+    exec(cmd: Cmd): boolean {
         this.__repo.start("", {});
+        const save = this.__repo.transactCtx.settrap;
         try {
+            this.__repo.transactCtx.settrap = false;
             this._exec(cmd);
             this.__repo.commit();
             return true;
@@ -122,10 +127,13 @@ export class CMDExecuter {
             this.__repo.rollback();
             return false;
         }
+        finally {
+            this.__repo.transactCtx.settrap = save;
+        }
     }
 
     private _exec(cmd: Cmd) {
-        const needUpdateFrame: Shape[] = [];
+        const needUpdateFrame: { shape: Shape, page: Page }[] = [];
 
         switch (cmd.type) {
             case CmdType.PageInsert:
@@ -187,10 +195,10 @@ export class CMDExecuter {
         }
 
         const updated = new Set<string>();
-        needUpdateFrame.forEach((shape) => {
-            if (updated.has(shape.id)) return;
-            api.updateFrame(shape);
-            updated.add(shape.id);
+        needUpdateFrame.forEach((item) => {
+            if (updated.has(item.shape.id)) return;
+            api.updateFrame(item.page, item.shape, api);
+            updated.add(item.shape.id);
         })
     }
 
@@ -233,7 +241,7 @@ export class CMDExecuter {
         }
     }
 
-    shapeInsert(cmd: ShapeCmdInsert, needUpdateFrame: Shape[]) {
+    shapeInsert(cmd: ShapeCmdInsert, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const pageId = cmd.blockId;
         const shape = importShape(cmd.data, this.__document)
         const page = this.__document.pagesMgr.getSync(pageId)
@@ -246,7 +254,7 @@ export class CMDExecuter {
             }
         }
     }
-    shapeDelete(cmd: ShapeCmdRemove, needUpdateFrame: Shape[]) {
+    shapeDelete(cmd: ShapeCmdRemove, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const pageId = cmd.blockId;
         const op = cmd.ops[0];
         const parentId = op.targetId[0]
@@ -264,30 +272,30 @@ export class CMDExecuter {
             }
         }
     }
-    private _shapeModify(page: Page, shape: Shape, op: IdOp, value: string | undefined, needUpdateFrame: Shape[]) {
+    private _shapeModify(page: Page, shape: Shape, op: IdOp, value: string | undefined, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const opId = op.opId;
         if (opId === SHAPE_ATTR_ID.x) {
             if (op.type === OpType.IdSet && value) {
                 const x = JSON.parse(value)
-                api.shapeModifyX(shape, x, needUpdateFrame)
+                api.shapeModifyX(page, shape, x, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.y) {
             if (op.type === OpType.IdSet && value) {
                 const y = JSON.parse(value)
-                api.shapeModifyY(shape, y, needUpdateFrame)
+                api.shapeModifyY(page, shape, y, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.size) {
             if (op.type === OpType.IdSet && value) {
                 const wh = JSON.parse(value)
-                api.shapeModifyWH(shape, wh.w, wh.h, needUpdateFrame)
+                api.shapeModifyWH(page, shape, wh.w, wh.h, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.rotate) {
             if (op.type === OpType.IdSet && value) {
                 const rotate = JSON.parse(value)
-                api.shapeModifyRotate(shape, rotate, needUpdateFrame)
+                api.shapeModifyRotate(page, shape, rotate, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.name) {
@@ -299,19 +307,37 @@ export class CMDExecuter {
         else if (opId === SHAPE_ATTR_ID.hflip) {
             if (op.type === OpType.IdSet && value) {
                 const hflip = JSON.parse(value)
-                api.shapeModifyHFlip(shape, hflip, needUpdateFrame)
+                api.shapeModifyHFlip(page, shape, hflip, needUpdateFrame)
             }
             else if (op.type === OpType.IdRemove) {
-                api.shapeModifyHFlip(shape, undefined, needUpdateFrame)
+                api.shapeModifyHFlip(page, shape, undefined, needUpdateFrame)
             }
         }
         else if (opId === SHAPE_ATTR_ID.vflip) {
             if (op.type === OpType.IdSet && value) {
                 const vflip = JSON.parse(value)
-                api.shapeModifyVFlip(shape, vflip, needUpdateFrame)
+                api.shapeModifyVFlip(page, shape, vflip, needUpdateFrame)
             }
             else if (op.type === OpType.IdRemove) {
-                api.shapeModifyVFlip(shape, undefined, needUpdateFrame)
+                api.shapeModifyVFlip(page, shape, undefined, needUpdateFrame)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.visible) {
+            if (op.type === OpType.IdSet && value) {
+                const isVisible = JSON.parse(value)
+                api.shapeModifyVisible(shape, isVisible);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyVisible(shape, false)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.lock) {
+            if (op.type === OpType.IdSet && value) {
+                const isLock = JSON.parse(value)
+                api.shapeModifyLock(shape, isLock);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyLock(shape, false)
             }
         }
         else if (opId === SHAPE_ATTR_ID.backgroundColor) {
@@ -320,12 +346,24 @@ export class CMDExecuter {
                 api.shapeModifyBackgroundColor(shape, color)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.resizingConstraint) {
+            if (op.type === OpType.IdSet && value) {
+                const v = JSON.parse(value);
+                api.shapeModifyResizingConstraint(shape, v)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.radius) {
+            if (op.type === OpType.IdSet && value) {
+                const v = importRectRadius(JSON.parse(value));
+                api.shapeModifyRadius(shape as RectShape, v)
+            }
+        }
         // todo
         else {
             console.error("not implemented ", op)
         }
     }
-    shapeModify(cmd: ShapeCmdModify, needUpdateFrame: Shape[]) {
+    shapeModify(cmd: ShapeCmdModify, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const pageId = cmd.blockId;
         const op = cmd.ops[0];
         const shapeId = op.targetId[0]
@@ -336,7 +374,7 @@ export class CMDExecuter {
             this._shapeModify(page, shape, op, value, needUpdateFrame);
         }
     }
-    shapeMove(cmd: ShapeCmdMove, needUpdateFrame: Shape[]) {
+    shapeMove(cmd: ShapeCmdMove, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
         if (page) {
@@ -348,12 +386,12 @@ export class CMDExecuter {
                 const parent = page.getShape(parentId, true);
                 const parent2 = page.getShape(parentId2, true);
                 if (parent && parent2) {
-                    api.shapeMove(parent as GroupShape, moveOp.index, parent2 as GroupShape, moveOp.index2, needUpdateFrame)
+                    api.shapeMove(page, parent as GroupShape, moveOp.index, parent2 as GroupShape, moveOp.index2, needUpdateFrame)
                 }
             }
         }
     }
-    shapeCMDGroup(cmdGroup: ShapeCmdGroup, needUpdateFrame: Shape[]) {
+    shapeCMDGroup(cmdGroup: ShapeCmdGroup, needUpdateFrame: { shape: Shape, page: Page }[]) {
         cmdGroup.cmds.forEach((cmd) => {
             switch (cmd.type) {
                 case CmdType.ShapeInsert:
@@ -452,6 +490,46 @@ export class CMDExecuter {
                 if (op.type === OpType.IdSet && value) {
                     const color = importColor(JSON.parse(value))
                     api.setBorderColor(shape.style, borderIdx, color);
+                }
+            }
+            else if (opId === BORDER_ATTR_ID.enable) {
+                if (op.type === OpType.IdSet && value) {
+                    const enable = JSON.parse(value);
+                    api.setBorderEnable(shape.style, borderIdx, enable)
+                }
+                else if (op.type === OpType.IdRemove) {
+                    api.setBorderEnable(shape.style, borderIdx, false)
+                }
+            }
+            else if (opId === BORDER_ATTR_ID.thickness) {
+                if (op.type === OpType.IdSet && value) {
+                    const thickness = JSON.parse(value);
+                    api.setBorderThickness(shape.style, borderIdx, thickness)
+                }
+                else if (op.type === OpType.IdRemove) {
+                    api.setBorderThickness(shape.style, borderIdx, 0)
+                }
+            }
+            else if (opId === BORDER_ATTR_ID.position) {
+                if (op.type === OpType.IdSet && value) {
+                    const position = importBorderPosition(JSON.parse(value));
+                    api.setBorderPosition(shape.style, borderIdx, position)
+                }
+            }
+            else if (opId === BORDER_ATTR_ID.borderStyle) {
+                if (op.type === OpType.IdSet && value) {
+                    const style = importBorderStyle(JSON.parse(value));
+                    api.setBorderStyle(shape.style, borderIdx, style)
+                }
+            }
+            else if (opId === BORDER_ATTR_ID.startMarkerType) {
+                if (op.type === OpType.IdSet && value) {
+                    api.setBorderStartMarkerType(shape.style, borderIdx, value as any)
+                }
+            }
+            else if (opId === BORDER_ATTR_ID.endMarkerType) {
+                if (op.type === OpType.IdSet && value) {
+                    api.setBorderEndMarkerType(shape.style, borderIdx, value as any)
                 }
             }
             // todo

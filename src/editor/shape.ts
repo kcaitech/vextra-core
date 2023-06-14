@@ -1,19 +1,12 @@
-import { GroupShape, Shape, TextShape } from "../data/shape";
+import { GroupShape, RectShape, Shape, TextShape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
-import { addFill, deleteFillAt, setFillColor, toggleFillEnabled } from "./fill";
-import { deleteBorderAt, addBorder, setBorderThickness, setBorderPosition, setBorderStyle, setBorderApexStyle, setBorderEnable, setBorderColor } from "./border";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
 import { RectRadius, ShapeType } from "../data/baseclasses";
-import { updateFrame } from "./utils";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { SpanAttr } from "../data/text";
-import { deleteText, insertText } from "./text";
 import { Page } from "../data/page";
-import { ShapeCmdRemove, ShapeCmdModify, ShapeArrayAttrRemove, ShapeArrayAttrInsert, TextCmdRemove, TextCmdInsert, ShapeCmdGroup, ShapeArrayAttrModify, TextCmdGroup } from "../coop/data/classes";
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, SHAPE_ATTR_ID } from "./consts";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill } from "../io/baseexport";
 import { CoopRepository } from "./cooprepo";
 export class ShapeEditor {
     private __shape: Shape;
@@ -26,119 +19,129 @@ export class ShapeEditor {
     }
 
     public setName(name: string) {
-        this.__repo.start('setName', {});
-        const origin = this.__shape.name;
-        this.__shape.setName(name);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.name, name, origin));
+        const api = this.__repo.start('setName', {});
+        api.shapeModifyName(this.__page, this.__shape, name)
+        // const origin = this.__shape.name;
+        // this.__shape.setName(name);
+        this.__repo.commit();
     }
     public toggleVisible() {
-        this.__repo.start('toggleVisible', {});
-        const origin = this.__shape.isVisible;
-        this.__shape.toggleVisible();
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.visible, this.__shape.isVisible, origin));
+        const api = this.__repo.start('toggleVisible', {});
+        // const origin = this.__shape.isVisible;
+        // this.__shape.toggleVisible();
+        api.shapeModifyVisible(this.__page, this.__shape, !this.__shape.isVisible)
+        this.__repo.commit();
     }
     public toggleLock() {
-        this.__repo.start('toggleLock', {});
-        const origin = this.__shape.isLocked;
-        this.__shape.toggleLock();
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.lock, this.__shape.isLocked, origin));
+        const api = this.__repo.start('toggleLock', {});
+        // const origin = this.__shape.isLocked;
+        // this.__shape.toggleLock();
+        api.shapeModifyLock(this.__page, this.__shape, !this.__shape.isLocked);
+        this.__repo.commit();
     }
     public translate(dx: number, dy: number, round: boolean = true) {
-        this.__repo.start("translate", {});
-        const frame = this.__shape.frame2Page();
-        const origin = { x: frame.x, y: frame.y }
-        translate(this.__shape, dx, dy, round);
-        const frame2 = this.__shape.frame2Page();
-        this.__repo.commit(ShapeCmdGroup.Make(this.__page.id));
+        const api = this.__repo.start("translate", {});
+        // const frame = this.__shape.frame2Page();
+        // const origin = { x: frame.x, y: frame.y }
+        translate(api, this.__page, this.__shape, dx, dy, round);
+        // const frame2 = this.__shape.frame2Page();
+        this.__repo.commit();
     }
     public translateTo(x: number, y: number) {
-        this.__repo.start("translateTo", {});
-        const frame = this.__shape.frame2Page();
-        const origin = { x: frame.x, y: frame.y }
-        translateTo(this.__shape, x, y);
-        const frame2 = this.__shape.frame2Page();
-        this.__repo.commit(ShapeCmdGroup.Make(this.__page.id));
+        const api = this.__repo.start("translateTo", {});
+        // const frame = this.__shape.frame2Page();
+        // const origin = { x: frame.x, y: frame.y }
+        translateTo(api, this.__page, this.__shape, x, y);
+        // const frame2 = this.__shape.frame2Page();
+        this.__repo.commit();
     }
     public expand(dw: number, dh: number) {
-        this.__repo.start("expand", {});
-        const frame = this.__shape.frame;
-        const origin = { w: frame.width, h: frame.height }
-        expand(this.__shape, dw, dh);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.size, { w: frame.width, h: frame.height }, origin));
+        const api = this.__repo.start("expand", {});
+        // const frame = this.__shape.frame;
+        // const origin = { w: frame.width, h: frame.height }
+        expand(api, this.__page, this.__shape, dw, dh);
+        this.__repo.commit();
     }
     public expandTo(w: number, h: number) {
-        this.__repo.start("expandTo", {});
-        const frame = this.__shape.frame;
-        const origin = { w: frame.width, h: frame.height }
-        expandTo(this.__shape, w, h);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.size, { w: frame.width, h: frame.height }, origin));
+        const api = this.__repo.start("expandTo", {});
+        // const frame = this.__shape.frame;
+        // const origin = { w: frame.width, h: frame.height }
+        expandTo(api, this.__page, this.__shape, w, h);
+        this.__repo.commit();
     }
 
     // flip
     public flipH() {
-        this.__repo.start("flipHorizontal", {});
-        const origin = this.__shape.isFlippedHorizontal;
-        this.__shape.flipHorizontal();
-        updateFrame(this.__shape);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.hflip, this.__shape.isFlippedHorizontal, origin));
+        const api = this.__repo.start("flipHorizontal", {});
+        // const origin = this.__shape.isFlippedHorizontal;
+        // this.__shape.flipHorizontal();
+        api.shapeModifyHFlip(this.__page, this.__shape, !this.__shape.isFlippedHorizontal)
+        // updateFrame(this.__shape);
+        this.__repo.commit();
     }
     public flipV() {
-        this.__repo.start("flipVertical", {});
-        const origin = this.__shape.isFlippedVertical;
-        this.__shape.flipVertical();
-        updateFrame(this.__shape);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.vflip, this.__shape.isFlippedVertical, origin));
+        const api = this.__repo.start("flipVertical", {});
+        // const origin = this.__shape.isFlippedVertical;
+        // this.__shape.flipVertical();
+        // updateFrame(this.__shape);
+        api.shapeModifyVFlip(this.__page, this.__shape, !this.__shape.isFlippedVertical)
+        this.__repo.commit();
     }
     // resizingConstraint
     public setResizingConstraint(value: number) {
-        this.__repo.start("setResizingConstraint", {});
-        const origin = this.__shape.resizingConstraint;
-        this.__shape.setResizingConstraint(value);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.resizingConstraint, this.__shape.resizingConstraint, origin));
+        const api = this.__repo.start("setResizingConstraint", {});
+        // const origin = this.__shape.resizingConstraint;
+        api.shapeModifyResizingConstraint(this.__page, this.__shape, value);
+        this.__repo.commit();
     }
     // rotation
     public rotate(deg: number) {
-        this.__repo.start("rotate", {});
+        const api = this.__repo.start("rotate", {});
         deg = deg % 360;
-        const origin = this.__shape.rotation;
-        this.__shape.rotate(deg);
-        updateFrame(this.__shape);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.rotate, this.__shape.rotation, origin));
+        // const origin = this.__shape.rotation;
+        // this.__shape.rotate(deg);
+        api.shapeModifyRotate(this.__page, this.__shape, deg)
+        // updateFrame(this.__shape);
+        this.__repo.commit();
     }
     // radius
     public setRadius(radius: RectRadius) {
-        this.__repo.start("setRadius", {});
-        if (!(this.__shape.type === ShapeType.Rectangle)) {
-            radius.rlb = radius.rrt = radius.rrb = 0;
-        }
-        const origin = this.__shape.fixedRadius;
-        this.__shape.setRadius(radius);
+        if (!(this.__shape instanceof RectShape)) return;
+        const api = this.__repo.start("setRadius", {});
+        // if (!(this.__shape.type === ShapeType.Rectangle)) {
+        //     radius.rlb = radius.rrt = radius.rrb = 0;
+        // }
+        // const origin = this.__shape.fixedRadius;
+        api.shapeModifyRadius(this.__page, this.__shape ,radius);
         // updateFrame(this.__shape);
-        this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.radius, radius, origin));
+        this.__repo.commit();
     }
 
     // fill
     public addFill(fill: Fill) {
         if (this.__shape.type !== ShapeType.Artboard) {
-            this.__repo.start("addFill", {});
-            addFill(this.__shape.style, fill);
-            this.__repo.commit(ShapeArrayAttrInsert.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, this.__shape.style.fills.length - 1, exportFill(fill)));
+            const api = this.__repo.start("addFill", {});
+            api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length)
+            // addFill(this.__shape.style, fill);
+            this.__repo.commit();
         }
     }
     public setFillColor(idx: number, color: Color) {
         if (this.__shape.type === ShapeType.Artboard) {
-            this.__repo.start("setFillColor", {});
-            const origin = (this.__shape as Artboard).backgroundColor;
-            (this.__shape as Artboard).setArtboardColor(color); // 画板的背景色不在shape的style中
-            this.__repo.commit(ShapeCmdModify.Make(this.__page.id, this.__shape.id, SHAPE_ATTR_ID.backgroundColor, exportColor(color), origin));
+            const api = this.__repo.start("setFillColor", {});
+            // const origin = (this.__shape as Artboard).backgroundColor;
+            // (this.__shape as Artboard).setArtboardColor(color); // 画板的背景色不在shape的style中
+            api.artboardModifyBackgroundColor(this.__page, this.__shape as Artboard, color);
+            this.__repo.commit();
         } else {
             const fill: Fill = this.__shape.fills[idx];
             if (fill) {
-                this.__repo.start("setFillColor", {});
-                const origin = exportColor(fill.color)
-                setFillColor(this.__shape.style, idx, color);
-                const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, FILLS_ATTR_ID.color, exportColor(color), origin)
-                this.__repo.commit(cmd);
+                const api = this.__repo.start("setFillColor", {});
+                api.setFillColor(this.__page, this.__shape, idx, color)
+                // const origin = exportColor(fill.color)
+                // setFillColor(this.__shape.style, idx, color);
+                // const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, FILLS_ATTR_ID.color, exportColor(color), origin)
+                this.__repo.commit();
             }
         }
     }
@@ -146,20 +149,22 @@ export class ShapeEditor {
     public toggleFillEnable(idx: number) {
         const fill = this.__shape.style.fills[idx];
         if (this.__shape.type !== ShapeType.Artboard && fill) {
-            this.__repo.start("setFillEnable", {});
-            const origin = fill.isEnabled;
-            toggleFillEnabled(this.__shape.style, idx);
-            const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, FILLS_ATTR_ID.enable, fill.isEnabled, origin)
-            this.__repo.commit(cmd);
+            const api = this.__repo.start("setFillEnable", {});
+            api.setFillEnable(this.__page, this.__shape, idx, !fill.isEnabled)
+            // const origin = fill.isEnabled;
+            // toggleFillEnabled(this.__shape.style, idx);
+            // const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, FILLS_ATTR_ID.enable, fill.isEnabled, origin)
+            this.__repo.commit();
         }
     }
     public deleteFill(idx: number) {
         const fill = this.__shape.style.fills[idx];
         if (this.__shape.type !== ShapeType.Artboard && fill) {
-            this.__repo.start("deleteFill", {});
-            deleteFillAt(this.__shape.style, idx);
-            const cmd = ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, idx, exportFill(fill));
-            this.__repo.commit(cmd);
+            const api = this.__repo.start("deleteFill", {});
+            api.deleteFillAt(this.__page, this.__shape, idx);
+            // deleteFillAt(this.__shape.style, idx);
+            // const cmd = ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, idx, exportFill(fill));
+            this.__repo.commit();
         }
     }
 
@@ -167,82 +172,83 @@ export class ShapeEditor {
     public setBorderEnable(idx: number, isEnabled: boolean) {
         const border = this.__shape.style.borders[idx];
         if (border) {
-            this.__repo.start("setBorderEnable", {});
-            const origin = border.isEnabled;
-            setBorderEnable(this.__shape.style, idx, isEnabled);
-            const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id, BORDER_ATTR_ID.enable, border.isEnabled, origin)
-            this.__repo.commit(cmd);
+            const api = this.__repo.start("setBorderEnable", {});
+            api.setBorderEnable(this.__page, this.__shape, idx, isEnabled);
+            // const origin = border.isEnabled;
+            // setBorderEnable(this.__shape.style, idx, isEnabled);
+            // const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id, BORDER_ATTR_ID.enable, border.isEnabled, origin)
+            this.__repo.commit();
         }
     }
     public setBorderColor(idx: number, color: Color) {
         const border = this.__shape.style.borders[idx];
         if (border) {
-            this.__repo.start("setBorderColor", {});
-            const origin = exportColor(border.color);
-            setBorderColor(this.__shape.style, idx, color);
-            const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
-                BORDER_ATTR_ID.color, exportColor(color), origin)
-            this.__repo.commit(cmd);
+            const api = this.__repo.start("setBorderColor", {});
+            api.setBorderColor(this.__page, this.__shape, idx, color);
+            // const origin = exportColor(border.color);
+            // setBorderColor(this.__shape.style, idx, color);
+            // const cmd = ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
+            //     BORDER_ATTR_ID.color, exportColor(color), origin)
+            this.__repo.commit();
         }
     }
     public setBorderThickness(idx: number, thickness: number) {
         const border = this.__shape.style.borders[idx];
         if (border) {
-            this.__repo.start("setBorderThickness", {});
-            const origin = border.thickness;
-            setBorderThickness(this.__shape.style, idx, thickness);
-            this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
-                BORDER_ATTR_ID.thickness, thickness, origin));
+            const api = this.__repo.start("setBorderThickness", {});
+            // const origin = border.thickness;
+            // setBorderThickness(this.__shape.style, idx, thickness);
+            api.setBorderThickness(this.__page, this.__shape, idx, thickness);
+            this.__repo.commit();
         }
     }
     public setBorderPosition(idx: number, position: BorderPosition) {
         const border = this.__shape.style.borders[idx];
         if (border) {
-            this.__repo.start("setBorderPosition", {});
-            const origin = exportBorderPosition(border.position)
-            setBorderPosition(this.__shape.style, idx, position);
-            this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
-                BORDER_ATTR_ID.position, exportBorderPosition(position), origin));
+            const api = this.__repo.start("setBorderPosition", {});
+            // const origin = exportBorderPosition(border.position)
+            api.setBorderPosition(this.__page, this.__shape, idx, position);
+            this.__repo.commit();
         }
     }
     public setBorderStyle(idx: number, borderStyle: BorderStyle) {
         const border = this.__shape.style.borders[idx];
         if (border) {
-            this.__repo.start("setBorderStyle", {});
-            const origin = exportBorderStyle(border.borderStyle);
-            setBorderStyle(this.__shape.style, idx, borderStyle);
-            this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
-                BORDER_ATTR_ID.borderStyle, exportBorderStyle(borderStyle), origin));
+            const api = this.__repo.start("setBorderStyle", {});
+            // const origin = exportBorderStyle(border.borderStyle);
+            api.setBorderStyle(this.__page, this.__shape, idx, borderStyle);
+            this.__repo.commit();
         }
     }
     public setBorderApexStyle(idx: number, apexStyle: MarkerType, isEnd: boolean) {
         const border = this.__shape.style.borders[idx];
         if (border) {
-            this.__repo.start("setBorderApexStyle", {});
-            let origin;
+            const api = this.__repo.start("setBorderApexStyle", {});
+            // let origin;
             if (isEnd) {
-                origin = border.endMarkerType
+                api.setBorderEndMarkerType(this.__page, this.__shape, idx, apexStyle)
+                // origin = border.endMarkerType
             } else {
-                origin = border.startMarkerType
+                api.setBorderStartMarkerType(this.__page, this.__shape, idx, apexStyle)
+                // origin = border.startMarkerType
             }
-            setBorderApexStyle(this.__shape.style, idx, apexStyle, isEnd);
-            this.__repo.commit(ShapeArrayAttrModify.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id,
-                isEnd ? BORDER_ATTR_ID.endMarkerType : BORDER_ATTR_ID.startMarkerType, apexStyle, origin));
+            // setBorderApexStyle(this.__shape.style, idx, apexStyle, isEnd);
+            this.__repo.commit();
         }
     }
     public deleteBorder(idx: number) {
         const border = this.__shape.style.borders[idx];
         if (border) {
-            this.__repo.start("deleteBorder", {});
-            deleteBorderAt(this.__shape.style, idx)
-            this.__repo.commit(ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id, idx, exportBorder(border)));
+            const api = this.__repo.start("deleteBorder", {});
+            api.deleteBorderAt(this.__page, this.__shape, idx)
+            this.__repo.commit();
         }
     }
     public addBorder(border: Border) {
-        this.__repo.start("addBorder", {});
-        addBorder(this.__shape.style, border);
-        const cmd = ShapeArrayAttrInsert.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id, this.__shape.style.borders.length - 1, exportBorder(border))
-        this.__repo.commit(cmd);
+        const api = this.__repo.start("addBorder", {});
+        api.addBorderAt(this.__page, this.__shape, border, this.__shape.style.borders.length);
+        // const cmd = ShapeArrayAttrInsert.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id, this.__shape.style.borders.length - 1, exportBorder(border))
+        this.__repo.commit();
     }
 
     // 容器自适应大小
@@ -251,31 +257,7 @@ export class ShapeEditor {
             const childs = (this.__shape as Artboard).childs;
             if (childs.length) {
                 try {
-                    // 保存可能修改到的属性
-                    const saveDatas: {
-                        shape: Shape,
-                        // x: number,
-                        // y: number,
-                        w: number,
-                        h: number,
-                        rotate: number | undefined,
-                        hflip: boolean | undefined,
-                        vflip: boolean | undefined
-                    }[] = childs.map((shape) => {
-                        // const frame = shape.frame2Page();
-                        const frame2 = shape.frame;
-                        return {
-                            shape,
-                            // x: frame.x,
-                            // y: frame.y,
-                            w: frame2.width,
-                            h: frame2.height,
-                            rotate: shape.rotation,
-                            hflip: shape.isFlippedHorizontal,
-                            vflip: shape.isFlippedVertical
-                        }
-                    })
-                    this.__repo.start("adapt", {});
+                    const api = this.__repo.start("adapt", {});
                     const __points: [number, number][] = [];
                     childs.forEach(p => {
                         const { x, y, width, height } = p.frame2Page();
@@ -291,38 +273,13 @@ export class ShapeEditor {
                     if (box) {
                         const { x: ox, y: oy } = this.__shape.frame2Page();
                         const { dx, dy } = { dx: ox - box.left, dy: oy - box.top };
-                        for (let i = 0; i < childs.length; i++) { translate(childs[i], dx, dy) };
-                        expandTo(this.__shape, box.right - box.left, box.bottom - box.top);
-                        translateTo(this.__shape, box.left, box.top);
+                        for (let i = 0; i < childs.length; i++) { translate(api, this.__page, childs[i], dx, dy) };
+                        expandTo(api, this.__page, this.__shape, box.right - box.left, box.bottom - box.top);
+                        translateTo(api, this.__page, this.__shape, box.left, box.top);
 
-                        const page = saveDatas[0].shape.getPage();
-                        const cmd = ShapeCmdGroup.Make(page?.id || '');
-                        saveDatas.forEach((cur) => {
-                            // const frame = cur.shape.frame2Page();
-                            const frame2 = cur.shape.frame;
-                            if (frame2.width !== cur.w || frame2.height !== cur.h) {
-                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: cur.w, h: cur.h })
-                            }
-                            if (cur.shape.isFlippedHorizontal !== cur.hflip) {
-                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.hflip, cur.shape.isFlippedHorizontal, cur.hflip)
-                            }
-                            if (cur.shape.isFlippedVertical !== cur.vflip) {
-                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.vflip, cur.shape.isFlippedVertical, cur.vflip)
-                            }
-                            if (cur.shape.rotation !== cur.rotate) {
-                                cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.rotate, cur.shape.rotation, cur.rotate)
-                            }
-                            // if (frame.x !== cur.x || frame.y !== cur.y) {
-                            //     cmd.addModify(cur.shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: cur.x, y: cur.y })
-                            // }
-                        });
 
-                        if (!page) {
-                            this.__repo.rollback();
-                        }
-                        else {
-                            this.__repo.commit(cmd);
-                        }
+                        this.__repo.commit();
+
 
                     } else {
                         this.__repo.rollback();
@@ -336,25 +293,22 @@ export class ShapeEditor {
     }
     // 删除图层
     public delete() {
-        try {
-            this.__repo.start("deleteShape", {});
-            const parent = this.__shape.parent;
-            if (parent) {
-                const childs = (parent as GroupShape).childs;
-                const index = childs.findIndex(s => s.id === this.__shape.id);
-                if (index > -1) {
-                    childs.splice(index, 1);
-                    this.__page.onRemoveShape(this.__shape);
-                    this.__repo.commit(ShapeCmdRemove.Make(this.__page.id, parent.id, this.__shape.id, index));
-                } else {
+        const parent = this.__shape.parent as GroupShape;
+        if (parent) {
+            const childs = (parent as GroupShape).childs;
+            const index = childs.findIndex(s => s.id === this.__shape.id);
+            if (index >= 0) {
+                try {
+                    const api = this.__repo.start("deleteShape", {});
+                    api.shapeDelete(this.__page, parent, index)
+                    // childs.splice(index, 1);
+                    // this.__page.onRemoveShape(this.__shape);
+                    this.__repo.commit();
+                } catch (error) {
                     this.__repo.rollback();
+                    throw new Error(`${error}`);
                 }
-            } else {
-                this.__repo.rollback();
             }
-        } catch (error) {
-            this.__repo.rollback();
-            throw new Error(`${error}`);
         }
     }
     // public insertText(text: string, index: number, attr?: SpanAttr) {
@@ -379,15 +333,15 @@ export class ShapeEditor {
         }
         if (count <= 0) return 0;
         try {
-            this.__repo.start("deleteText", {});
-            const deleted = deleteText(this.__shape, index, count);
+            const api = this.__repo.start("deleteText", {});
+            const deleted = api.deleteText(this.__page, this.__shape, index, count);
             if (!deleted) {
                 this.__repo.rollback();
                 return 0;
             }
             else {
                 count = deleted.text.length;
-                this.__repo.commit(TextCmdRemove.Make(this.__page.id, this.__shape.id, index, count, deleted));
+                this.__repo.commit();
                 return count;
             }
         } catch (error) {
@@ -400,22 +354,22 @@ export class ShapeEditor {
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): boolean {
         if (!(this.__shape instanceof TextShape)) return false;
         try {
-            this.__repo.start("insertText", {});
-            let cmd;
+            const api = this.__repo.start("insertText", {});
+            // let cmd;
             if (del > 0) {
-                cmd = TextCmdGroup.Make(this.__page.id);
-                const origin = deleteText(this.__shape, index, del);
-                if (origin) cmd.addRemove(this.__shape.id, index, del, origin);
-                insertText(this.__shape, text, index, attr);
-                cmd.addInsert(this.__shape.id, index, text);
+                // cmd = TextCmdGroup.Make(this.__page.id);
+                const origin = api.deleteText(this.__page, this.__shape, index, del);
+                // if (origin) cmd.addRemove(this.__shape.id, index, del, origin);
+                api.insertText(this.__page, this.__shape, index, text, attr);
+                // cmd.addInsert(this.__shape.id, index, text);
             }
             else {
 
-                insertText(this.__shape, text, index, attr);
-                cmd = TextCmdInsert.Make(this.__page.id, this.__shape.id, index, text)
+                api.insertText(this.__page, this.__shape, index, text, attr);
+                // cmd = TextCmdInsert.Make(this.__page.id, this.__shape.id, index, text)
             }
 
-            this.__repo.commit(cmd);
+            this.__repo.commit();
             return true;
         } catch (error) {
             console.log(error)
@@ -436,15 +390,15 @@ export class ShapeEditor {
         this.__composingDel = del;
         this.__composingAttr = attr;
 
-        this.__repo.start("composingInput", {});
-        if (del > 0) deleteText(this.__shape, index, del);
+        const api = this.__repo.start("composingInput", {});
+        if (del > 0) api.deleteText(this.__page, this.__shape, index, del);
     }
     public composingInputUpdate(text: string): boolean {
         if (!(this.__shape instanceof TextShape)) return false;
         this.__repo.rollback();
-        this.__repo.start("composingInput", {});
-        if (this.__composingDel > 0) deleteText(this.__shape, this.__composingIndex, this.__composingDel);
-        if (text.length > 0) insertText(this.__shape, text, this.__composingIndex, this.__composingAttr);
+        const api = this.__repo.start("composingInput", {});
+        if (this.__composingDel > 0) api.deleteText(this.__page, this.__shape, this.__composingIndex, this.__composingDel);
+        if (text.length > 0) api.insertText(this.__page, this.__shape, this.__composingIndex, text, this.__composingAttr);
         this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
         return true;
     }

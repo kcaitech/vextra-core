@@ -6,7 +6,6 @@ import { v4 as uuid } from "uuid";
 import { exportPage } from "../io/baseexport";
 import { importPage } from "../io/baseimport";
 import { newDocument } from "./creator";
-import { PageCmdDelete, PageCmdInsert, PageCmdMove } from "../coop/data/classes";
 import { CoopRepository } from "./cooprepo";
 import { Repository } from "../data/transact";
 
@@ -23,18 +22,13 @@ export class DocEditor {
     }
     // 删除页面
     delete(id: string): boolean {
-        this.__repo.start('deletepage', {});
         const pagesmgr = this.__document;
+        const index = pagesmgr.indexOfPage(id);
+        if (index < 0) return false;
+        const api = this.__repo.start('deletepage', {});
         try {
-            const index = pagesmgr.indexOfPage(id);
-            const isSuccess = pagesmgr.deletePage(id);
-            if (isSuccess) {
-                this.__repo.commit(PageCmdDelete.Make(this.__document.id, id, index));
-                return true;
-            } else {
-                this.__repo.rollback();
-                return false;
-            }
+            api.pageDelete(this.__document, index);
+            this.__repo.commit();
         } catch (error) {
             console.log(error)
             this.__repo.rollback();
@@ -43,12 +37,10 @@ export class DocEditor {
     }
     // 插入页面
     insert(index: number, page: Page): boolean {
-        this.__repo.start('insertpage', {});
-        const pagesmgr = this.__document;
+        const api = this.__repo.start('insertpage', {});
         try {
-            pagesmgr.insertPage(index, page);
-            const np = exportPage(page);
-            this.__repo.commit(PageCmdInsert.Make(this.__document.id, index, np.id, JSON.stringify(np)));
+            api.pageInsert(this.__document, page, index);
+            this.__repo.commit();
         } catch (error) {
             console.log(error)
             this.__repo.rollback();
@@ -69,17 +61,15 @@ export class DocEditor {
     }
     // 移动页面
     move(page: PageListItem, to: number): boolean {
-        this.__repo.start('pagemove', {});
+        const api = this.__repo.start('pagemove', {});
         try {
             const pagesmgr = this.__document.pagesMgr;
-            const target = pagesmgr.getPageMetaById(page.id);
             const idx = pagesmgr.getPageIndexById(page.id);
-            const descend = idx > to ? to : to - 1;
-            if (to !== idx && target) {
-                this.__document.pagesList.splice(idx, 1);
-                this.__document.pagesList.splice(descend, 0, target);
+            const descend = idx >= to ? to : to + 1;
+            if (to !== idx) {
+                api.pageMove(this.__document, idx, descend)
             }
-            this.__repo.commit(PageCmdMove.Make(this.__document.id, idx, descend));
+            this.__repo.commit();
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
@@ -89,23 +79,15 @@ export class DocEditor {
     // 页面列表拖拽
     pageListDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
         const pages = this.__document.pagesList;
+        const wandererIdx = pages.findIndex(i => i.id === wandererId);
+        let hostIdx = pages.findIndex(i => i.id === hostId);
+        if (wandererIdx < 0 || hostIdx < 0) return;
         try {
-            this.__repo.start('pagemove', {});
-            const wandererIdx = pages.findIndex(i => i.id === wandererId);
-            if (wandererIdx > -1) {
-                const wanderer = pages[wandererIdx];
-                pages.splice(wandererIdx, 1);
-                let hostIdx = pages.findIndex(i => i.id === hostId);
-                if (hostIdx > -1) {
-                    hostIdx = offsetOverhalf ? hostIdx + 1 : hostIdx;
-                    pages.splice(hostIdx, 0, wanderer);
-                    this.__repo.commit(PageCmdMove.Make(this.__document.id, wandererIdx, hostIdx));
-                } else {
-                    this.__repo.rollback();
-                }
-            } else {
-                this.__repo.rollback();
-            }
+            const api = this.__repo.start('pagemove', {});
+            hostIdx = offsetOverhalf ? hostIdx + 1 : hostIdx;
+            if (wandererIdx <= hostIdx) hostIdx--;
+            api.pageMove(this.__document, wandererIdx, hostIdx);
+            this.__repo.commit();
         } catch (error) {
             console.log(error)
             this.__repo.rollback();

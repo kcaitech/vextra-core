@@ -1,7 +1,5 @@
 import { Shape, GroupShape } from "../data/shape";
-import { Artboard } from "../data/artboard";
 import { ShapeEditor } from "./shape";
-import { exportShape, updateFrame } from "./utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { Page } from "../data/page";
@@ -9,11 +7,9 @@ import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo } from "./frame";
-import { PageCmdModify, ShapeCmdGroup, ShapeCmdMove } from "../coop/data/classes";
-import { PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
-import { exportGroupShape } from "../io/baseexport";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./cooprepo";
+import { Api } from "./api";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
@@ -34,12 +30,12 @@ export class PageEditor {
     group(shapes: Shape[], groupname: string): false | GroupShape { // todo 传入的shape需要提前排好序
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
+        const fshape = shapes[0];
+        const savep = fshape.parent as GroupShape;
 
-        this.__repo.start("group", {});
+        const api = this.__repo.start("group", {});
         try {
             // 0、save shapes[0].parent？最外层shape？位置？
-            const fshape = shapes[0];
-            const savep = fshape.parent as GroupShape;
 
             const saveidx = savep.indexOfChild(fshape);
             // 1、新建一个GroupShape
@@ -75,27 +71,26 @@ export class PageEditor {
 
             // 往上调整width & height
 
-            const cmd = ShapeCmdGroup.Make(this.__page.id);
-            cmd.addInsert(savep.id, gshape.id, saveidx, JSON.stringify(exportGroupShape(gshape)))
-
             // 4、将GroupShape加入到save parent中
-            savep.addChildAt(gshape, saveidx);
+            // savep.addChildAt(gshape, saveidx);
+            api.shapeInsert(this.__page, savep, gshape, saveidx)
             // 2、将shapes里对象从parent中退出
             // 3、将shapes里对象插入新建的GroupShape
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
                 const p = s.parent as GroupShape;
                 const idx = p.indexOfChild(s);
-                p.removeChild(s);
+                // p.removeChild(s);
                 // todo delete p if p is empty
                 // todo update p's frame
-                gshape.addChild(s);
-                cmd.addMove(p.id, gshape.id, idx, gshape.childs.length - 1, s.id)
+                // gshape.addChild(s);
+                api.shapeMove(this.__page, p, idx, gshape, gshape.childs.length);
+                // cmd.addMove(p.id, gshape.id, idx, gshape.childs.length - 1, s.id)
                 if (p.childs.length > 0) {
-                    updateFrame(p.childs[0])
+                    // updateFrame(p.childs[0])
                 }
                 else {
-                    this.delete_inner(p, cmd)
+                    this.delete_inner(this.__page, p, api)
                 }
             }
 
@@ -109,17 +104,19 @@ export class PageEditor {
 
                 // const frame = c.frame2Page();
                 // const origin = { x: frame.x, y: frame.y }
-                c.frame.x += target.x - cur.x - xy.x; // 新建的group没有变换，可以直接减（xy）
-                c.frame.y += target.y - cur.y - xy.y;
+                // c.frame.x += target.x - cur.x - xy.x; // 新建的group没有变换，可以直接减（xy）
+                // c.frame.y += target.y - cur.y - xy.y;
+                api.shapeModifyX(this.__page, c, c.frame.x + target.x - cur.x - xy.x);
+                api.shapeModifyY(this.__page, c, c.frame.y + target.y - cur.y - xy.y)
                 // const frame2 = c.frame2Page();
                 // cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, { x: frame2.x, y: frame2.y })
             }
 
             // 往上调整width,height
-            updateFrame(gshape)
-            this.__page.onAddShape(gshape, false);
+            // updateFrame(gshape)
+            // this.__page.onAddShape(gshape, false);
 
-            this.__repo.commit(cmd);
+            this.__repo.commit();
             return gshape;
         }
         catch (e) {
@@ -131,8 +128,7 @@ export class PageEditor {
 
     ungroup(shape: GroupShape): false | Shape[] {
         if (!shape.parent) return false;
-
-        this.__repo.start("", {});
+        const api = this.__repo.start("", {});
         try {
             const savep = shape.parent as GroupShape;
             let idx = savep.indexOfChild(shape);
@@ -141,7 +137,7 @@ export class PageEditor {
             const childs: Shape[] = [];
             // 设置到shape上的旋转、翻转会丢失
             // adjust frame
-            const cmd = ShapeCmdGroup.Make(this.__page.id);
+            // const cmd = ShapeCmdGroup.Make(this.__page.id);
 
             for (let i = 0, len = shape.childs.length; i < len; i++) {
                 const c = shape.childs[i]
@@ -150,43 +146,51 @@ export class PageEditor {
                 const target = m1.computeCoord(0, 0);
 
                 if (shape.rotation) {
-                    const origin = c.rotation;
-                    c.rotate((c.rotation || 0) + shape.rotation);
-                    cmd.addModify(c.id, SHAPE_ATTR_ID.rotate, c.rotation, origin)
+                    // const origin = c.rotation;
+                    api.shapeModifyRotate(this.__page, c, (c.rotation || 0) + shape.rotation)
+                    // c.rotate((c.rotation || 0) + shape.rotation);
+                    // cmd.addModify(c.id, SHAPE_ATTR_ID.rotate, c.rotation, origin)
                 }
                 if (shape.isFlippedHorizontal) {
-                    const origin = c.isFlippedHorizontal;
-                    c.flipHorizontal();
-                    cmd.addModify(c.id, SHAPE_ATTR_ID.hflip, c.isFlippedHorizontal, origin)
+                    api.shapeModifyHFlip(this.__page, c, !c.isFlippedHorizontal)
+                    // const origin = c.isFlippedHorizontal;
+                    // c.flipHorizontal();
+                    // cmd.addModify(c.id, SHAPE_ATTR_ID.hflip, c.isFlippedHorizontal, origin)
                 }
                 if (shape.isFlippedVertical) {
-                    const origin = c.isFlippedVertical;
-                    c.flipVertical();
-                    cmd.addModify(c.id, SHAPE_ATTR_ID.vflip, c.isFlippedVertical, origin)
+                    api.shapeModifyVFlip(this.__page, c, !c.isFlippedVertical)
+                    // const origin = c.isFlippedVertical;
+                    // c.flipVertical();
+                    // cmd.addModify(c.id, SHAPE_ATTR_ID.vflip, c.isFlippedVertical, origin)
                 }
                 const m2 = c.matrix2Parent();
                 const cur = m2.computeCoord(0, 0);
 
                 // const frame = c.frame2Page();
                 // const origin = { x: frame.x, y: frame.y }
-                c.frame.x += target.x - cur.x;
-                c.frame.y += target.y - cur.y;
+
+                api.shapeModifyX(this.__page, c, c.frame.x + target.x - cur.x);
+                api.shapeModifyY(this.__page, c, c.frame.y + target.y - cur.y);
+                // c.frame.x += target.x - cur.x;
+                // c.frame.y += target.y - cur.y;
                 // const frame2 = c.frame2Page();
                 // cmd.addModify(c.id, SHAPE_ATTR_ID.position, { x: frame2.x, y: frame2.y }, { x: frame2.x, y: frame2.y })
             }
             for (let len = shape.childs.length; len > 0; len--) {
                 const c = shape.childs[0];
-                cmd.addMove(shape.id, savep.id, 0, idx, c.id)
-                shape.removeChildAt(0);
-                savep.addChildAt(c, idx);
-                childs.push(c);
+                api.shapeMove(this.__page, shape, 0, savep, idx)
+                // cmd.addMove(shape.id, savep.id, 0, idx, c.id)
+                // shape.removeChildAt(0);
+                // savep.addChildAt(c, idx);
                 idx++;
+                childs.push(c);
             }
-            cmd.addDelete(savep.id, shape.id, saveidx)
-            savep.removeChild(shape);
-            this.__page.onRemoveShape(shape);
+            // cmd.addDelete(savep.id, shape.id, saveidx)
+            // savep.removeChild(shape);
+            // this.__page.onRemoveShape(shape);
+            api.shapeDelete(this.__page, savep, saveidx + childs.length)
             // todo: update frame
-            this.__repo.commit(cmd);
+            this.__repo.commit();
             return childs;
         } catch (e) {
             console.log(e)
@@ -195,29 +199,30 @@ export class PageEditor {
         return false;
     }
 
-    private delete_inner(shape: Shape, cmd?: ShapeCmdGroup): boolean {
+    private delete_inner(page: Page, shape: Shape, api: Api): boolean {
         const p = shape.parent as GroupShape;
         if (!p) return false;
-        if (cmd) cmd.addDelete(p.id, shape.id, p.childs.findIndex((v) => v.id === shape.id))
-        p.removeChild(shape);
-        this.__page.onRemoveShape(shape);
+        // if (cmd) cmd.addDelete(p.id, shape.id, p.childs.findIndex((v) => v.id === shape.id))
+        api.shapeDelete(page, p, p.indexOfChild(shape))
+        // p.removeChild(shape);
+        // this.__page.onRemoveShape(shape);
         if (p.childs.length > 0) {
-            updateFrame(p.childs[0])
+            // updateFrame(p.childs[0])
         }
         else {
-            this.delete_inner(p, cmd)
+            this.delete_inner(page, p, api)
         }
         return true;
     }
     delete(shape: Shape): boolean {
-        this.__repo.start("delete", {});
+        const page = shape.getPage() as Page;
+        if (!page) return false;
         const savep = shape.parent as GroupShape;
         if (!savep) return false;
+        const api = this.__repo.start("delete", {});
         try {
-            const cmd = ShapeCmdGroup.Make(this.__page.id)
-            if (this.delete_inner(shape, cmd)) {
-                this.__page.onRemoveShape(shape);
-                this.__repo.commit(cmd)
+            if (this.delete_inner(page, shape, api)) {
+                this.__repo.commit()
                 return true;
             }
             else {
@@ -237,17 +242,18 @@ export class PageEditor {
         shape.frame.y -= xy.y;
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
 
-        this.__repo.start("insertshape", {});
+        const api = this.__repo.start("insertshape", {});
         try {
-            parent.addChildAt(shape, index);
-            this.__page.onAddShape(shape);
-            updateFrame(shape);
-            shape = parent.childs[index];
-            const cmd = ShapeCmdGroup.Make(this.__page.id);
-            cmd.addInsert(parent.id, shape.id, index, exportShape(shape)!);
+            api.shapeInsert(this.__page, parent, shape, index);
+            // parent.addChildAt(shape, index);
+            // this.__page.onAddShape(shape);
+            // updateFrame(shape);
+            // shape = parent.childs[index];
+            // const cmd = ShapeCmdGroup.Make(this.__page.id);
+            // cmd.addInsert(parent.id, shape.id, index, exportShape(shape)!);
             // const frame = shape.frame2Page();
             // cmd.addModify(shape.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: frame.x, y: frame.y })
-            this.__repo.commit(cmd);
+            this.__repo.commit();
             return shape;
         } catch (e) {
             console.log(e)
@@ -277,29 +283,15 @@ export class PageEditor {
         const index = parent.childs.length - parent.indexOfChild(shape) - 1;
         if (index < 0) return false;
 
-        if (target.id === parent.id) {
-            // 同一个group内，从index移动到index等于无操作
-            if (to !== index && (to + 1) !== index) { // 还是在原来位置
-                this.__repo.start("move", {});
-                try {
-                    this.delete_inner(shape);
-                    to = index > to ? to : to + 1;
-                    this.insert(target, to, shape);
-                    this.__repo.commit(ShapeCmdMove.Make(this.__page.id, parent.id, shape.id, index, target.id, to));
-                    return true;
-                }
-                catch (error) {
-                    console.log(error)
-                    this.__repo.rollback();
-                }
-            }
-        } else {
-            this.__repo.start("move", {});
+        // 同一个group内，从index移动到index等于无操作
+        if (target.id !== parent.id || to !== index && (to + 1) !== index) { // 还是在原来位置
+            const api = this.__repo.start("move", {});
             try {
-
-                this.delete_inner(shape);
-                this.insert(target, to, shape);
-                this.__repo.commit(ShapeCmdMove.Make(this.__page.id, parent.id, shape.id, index, target.id, to));
+                if (target.id === parent.id) to = index >= to ? to : to + 1;
+                api.shapeMove(this.__page, parent, index, target, to)
+                // this.delete_inner(shape);
+                // this.insert(target, to, shape);
+                this.__repo.commit();
                 return true;
             }
             catch (error) {
@@ -307,17 +299,19 @@ export class PageEditor {
                 this.__repo.rollback();
             }
         }
+
         return false;
     }
     setName(name: string) {
-        this.__repo.start("setName", {});
-        const origin = this.__page.name;
-        this.__page.name = name;
-        const pageListItem = this.__document.pagesList.find(p => p.id === this.__page.id);
-        if (pageListItem) {
-            pageListItem.name = name;
-        }
-        this.__repo.commit(PageCmdModify.Make(this.__document.id, this.__page.id, PAGE_ATTR_ID.name, name, origin));
+        const api = this.__repo.start("setName", {});
+        api.pageModifyName(this.__document, this.__page.id, name)
+        // const origin = this.__page.name;
+        // this.__page.name = name;
+        // const pageListItem = this.__document.pagesList.find(p => p.id === this.__page.id);
+        // if (pageListItem) {
+        //     pageListItem.name = name;
+        // }
+        this.__repo.commit();
     }
 
     /**
@@ -327,68 +321,70 @@ export class PageEditor {
      * @returns 
      */
     shapeListDrag(wanderer: Shape, host: Shape, offsetOverhalf: boolean) {
-        if (wanderer && host) {
-            try {
-                const cmd = ShapeCmdGroup.Make(this.__page.id)
-                const beforeXY = wanderer.frame2Page();
-                this.__repo.start('shapeLayerMove', {});
-                if (wanderer.id !== host.parent?.id) {
-                    if (host.type === ShapeType.Artboard) {
-                        if (offsetOverhalf) {
-                            const wandererParent = wanderer.parent;
-                            if (wandererParent && wandererParent.id !== host.id) {
-                                cmd.addMove(wandererParent.id, host.id, (wandererParent as GroupShape).indexOfChild(wanderer), (host as GroupShape).childs.length, wanderer.id);
-                                (wandererParent as GroupShape).removeChild(wanderer);
-                                (host as Artboard).addChildAt(wanderer);
-                            }
-                        } else {
-                            const hostParent = host.parent;
-                            const wandererParent = wanderer.parent;
-                            if (hostParent && wandererParent) {
-                                const saveidx = (wandererParent as GroupShape).indexOfChild(wanderer);
-                                (wandererParent as GroupShape).removeChild(wanderer);
-                                const childs = (hostParent as GroupShape).childs;
-                                const idx = childs.findIndex(i => i.id === host.id) + 1; // 列表是倒序!!!
-                                (hostParent as GroupShape).addChildAt(wanderer, idx);
-                                cmd.addMove(wandererParent.id, hostParent.id, saveidx, idx, wanderer.id);
-                            }
+        if (!wanderer || !host) return;
+        try {
+            // const cmd = ShapeCmdGroup.Make(this.__page.id)
+            const beforeXY = wanderer.frame2Page();
+            const api = this.__repo.start('shapeLayerMove', {});
+            if (wanderer.id !== host.parent?.id) {
+                if (host.type === ShapeType.Artboard) {
+                    if (offsetOverhalf) {
+                        const wandererParent = wanderer.parent as GroupShape;
+                        if (wandererParent && wandererParent.id !== host.id) {
+                            // cmd.addMove(wandererParent.id, host.id, (wandererParent as GroupShape).indexOfChild(wanderer), (host as GroupShape).childs.length, wanderer.id);
+                            api.shapeMove(this.__page, wandererParent, wandererParent.indexOfChild(wanderer), host as GroupShape, (host as GroupShape).childs.length);
+                            // (wandererParent as GroupShape).removeChild(wanderer);
+                            // (host as Artboard).addChildAt(wanderer);
                         }
                     } else {
-                        const hostParent = host.parent;
-                        const wandererParent = wanderer.parent;
+                        const hostParent = host.parent as GroupShape;
+                        const wandererParent = wanderer.parent as GroupShape;
                         if (hostParent && wandererParent) {
-                            const saveidx = (wandererParent as GroupShape).indexOfChild(wanderer);
-
-                            (wandererParent as GroupShape).removeChild(wanderer);
-                            const childs = (hostParent as GroupShape).childs;
-                            let idx = childs.findIndex(i => i.id === host.id);
-                            idx = offsetOverhalf ? idx : idx + 1; // 列表是倒序!!!
-                            (hostParent as GroupShape).addChildAt(wanderer, idx);
-
-                            cmd.addMove(wandererParent.id, hostParent.id, saveidx, idx, wanderer.id);
-
+                            const saveidx = (wandererParent).indexOfChild(wanderer);
+                            // (wandererParent as GroupShape).removeChild(wanderer);
+                            const childs = (hostParent).childs;
+                            const idx = childs.findIndex(i => i.id === host.id) + 1; // 列表是倒序!!!
+                            // (hostParent as GroupShape).addChildAt(wanderer, idx);
+                            // cmd.addMove(wandererParent.id, hostParent.id, saveidx, idx, wanderer.id);
+                            api.shapeMove(this.__page, wandererParent, saveidx, hostParent, idx);
                         }
                     }
-                }
-                const saveFrame = wanderer.frame2Page();
-                saveFrame.width = wanderer.frame.width;
-                saveFrame.height = wanderer.frame.height;
+                } else {
+                    const hostParent = host.parent as GroupShape;
+                    const wandererParent = wanderer.parent as GroupShape;
+                    if (hostParent && wandererParent) {
+                        const saveidx = (wandererParent).indexOfChild(wanderer);
 
-                translateTo(wanderer, beforeXY.x, beforeXY.y);
-                // const frame = wanderer.frame2Page();
-                // if (saveFrame.x !== frame.x || saveFrame.y !== frame.y) {
-                //     cmd.addModify(wanderer.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: saveFrame.x, y: saveFrame.y })
-                // }
-                const frame2 = wanderer.frame;
-                if (saveFrame.width !== frame2.width || saveFrame.height !== frame2.height) {
-                    cmd.addModify(wanderer.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: saveFrame.width, h: saveFrame.height })
+                        // (wandererParent).removeChild(wanderer);
+                        const childs = (hostParent).childs;
+                        let idx = childs.findIndex(i => i.id === host.id);
+                        idx = offsetOverhalf ? idx : idx + 1; // 列表是倒序!!!
+                        // (hostParent as GroupShape).addChildAt(wanderer, idx);
+
+                        // cmd.addMove(wandererParent.id, hostParent.id, saveidx, idx, wanderer.id);
+                        api.shapeMove(this.__page, wandererParent, saveidx, hostParent, idx);
+                    }
                 }
-                this.__repo.commit(cmd);
-            } catch (error) {
-                console.log(error)
-                this.__repo.rollback();
             }
+            // const saveFrame = wanderer.frame2Page();
+            // saveFrame.width = wanderer.frame.width;
+            // saveFrame.height = wanderer.frame.height;
+
+            translateTo(api, this.__page, wanderer, beforeXY.x, beforeXY.y);
+            // const frame = wanderer.frame2Page();
+            // if (saveFrame.x !== frame.x || saveFrame.y !== frame.y) {
+            //     cmd.addModify(wanderer.id, SHAPE_ATTR_ID.position, { x: frame.x, y: frame.y }, { x: saveFrame.x, y: saveFrame.y })
+            // }
+            // const frame2 = wanderer.frame;
+            // if (saveFrame.width !== frame2.width || saveFrame.height !== frame2.height) {
+            //     cmd.addModify(wanderer.id, SHAPE_ATTR_ID.size, { w: frame2.width, h: frame2.height }, { w: saveFrame.width, h: saveFrame.height })
+            // }
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
         }
+
     }
     editor4Shape(shape: Shape): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo);

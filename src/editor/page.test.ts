@@ -20,6 +20,7 @@ import { exportPage, exportRectShape } from '../io/baseexport';
 import { CMDExecuter } from './cmdexecuter';
 import { Cmd } from '../coop/data/classes';
 import { CoopRepository } from './cooprepo';
+import { Page } from 'data/page';
 
 function createTestDocument() {
     const repo = new Repository()
@@ -35,21 +36,21 @@ function createTestDocument() {
 test("group", () => {
     const repo = new Repository()
     const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
-    const cooprepo = new CoopRepository(document, repo)
+
     const page = newPage("Page1");
 
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
 
-    const shape1 = newRectShape("rect1", new ShapeFrame(0, 0, 100, 100))
-    const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
-    const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
-    const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
-
+    
     {
+        const shape1 = newRectShape("rect1", new ShapeFrame(0, 0, 100, 100))
+        const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
+        const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
+        const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
         const cmd = ShapeCmdGroup.Make(page.id);
         repo.start("add shape", {});
-        const needUpdateFrame: Shape[] = [];
+        const needUpdateFrame: {shape: Shape, page: Page}[] = [];
         api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
         cmd.addInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
         api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
@@ -58,10 +59,11 @@ test("group", () => {
         cmd.addInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
         api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
         cmd.addInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
-        needUpdateFrame.forEach((shape) => { api.updateFrame(shape) })
+        needUpdateFrame.forEach((item) => { api.updateFrame(item.page, item.page, api) })
         repo.commit();
     }
 
+    const cooprepo = new CoopRepository(document, repo)
     const editor = new PageEditor(cooprepo, page, document)
     let _cmd: Cmd | undefined;
     cooprepo.onCommit((cmd) => {
@@ -69,7 +71,7 @@ test("group", () => {
     })
     chai.assert.isNotNull(_cmd)
 
-    const ret = editor.group([shape2, shape3], "group")
+    const ret = editor.group([page.childs[1], page.childs[2]], "group")
     chai.assert.isObject(ret)
 
     const origin = JSON.stringify(exportPage(page))

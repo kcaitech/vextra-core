@@ -32,7 +32,6 @@ export const BORDER_ATTR_ID = {
     thickness: "thickness",
     position: "position",
     borderStyle: "borderStyle",
-    borderApexStyle: "borderApexStyle",
     startMarkerType: "startMarkerType",
     endMarkerType: "endMarkerType"
 }
