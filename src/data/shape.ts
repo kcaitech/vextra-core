@@ -147,6 +147,9 @@ export class Shape extends Watchable(classes.Shape) {
     toggleLock() {
         this.isLocked = !this.isLocked;
     }
+    setShapesConstrainerProportions(val: boolean) {
+        this.constrainerProportions = val;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {

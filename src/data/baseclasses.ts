@@ -169,6 +169,7 @@ export class Shape extends Basic {
     resizingConstraint?: number
     resizingType?: ResizeType
     rotation?: number
+    constrainerProportions?: boolean
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean

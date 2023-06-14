@@ -88,6 +88,7 @@ export type Shape = {
     resizingConstraint?: number
     resizingType?: ResizeType
     rotation?: number
+    constrainerProportions?: boolean
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean

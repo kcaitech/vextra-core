@@ -141,6 +141,7 @@ export function importShape(ctx: IImportContext, source: types.Shape): impl.Shap
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -531,6 +532,7 @@ export function importTextShape(ctx: IImportContext, source: types.TextShape): i
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -558,6 +560,7 @@ export function importSymbolRefShape(ctx: IImportContext, source: types.SymbolRe
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -611,6 +614,7 @@ export function importPathShape(ctx: IImportContext, source: types.PathShape): i
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -648,6 +652,7 @@ export function importRectShape(ctx: IImportContext, source: types.RectShape): i
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -753,6 +758,7 @@ export function importPage(ctx: IImportContext, source: types.Page): impl.Page {
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -789,6 +795,7 @@ export function importOvalShape(ctx: IImportContext, source: types.OvalShape): i
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -824,6 +831,7 @@ export function importLineShape(ctx: IImportContext, source: types.LineShape): i
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -851,6 +859,7 @@ export function importImageShape(ctx: IImportContext, source: types.ImageShape):
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -911,6 +920,7 @@ export function importGroupShape(ctx: IImportContext, source: types.GroupShape):
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -971,6 +981,7 @@ export function importSymbolShape(ctx: IImportContext, source: types.SymbolShape
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -1031,6 +1042,7 @@ export function importFlattenShape(ctx: IImportContext, source: types.FlattenSha
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -1091,6 +1103,7 @@ export function importArtboard(ctx: IImportContext, source: types.Artboard): imp
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
@@ -1121,6 +1134,7 @@ export function importArtboardRef(ctx: IImportContext, source: types.ArtboardRef
     ret.resizingConstraint = source.resizingConstraint
     ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
     ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
