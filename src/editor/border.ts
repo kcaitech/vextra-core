@@ -34,8 +34,7 @@ export function setBorderApexStyle(style: Style, idx: number, apexStyle: MarkerT
 }
 
 export function deleteBorderAt(style: Style, idx: number) {
-    const borders = style.borders;
-    borders.splice(idx, 1);
+    return style.borders.splice(idx, 1)[0];
 }
 
 export function addBorder(style: Style, border: Border) {

@@ -8,7 +8,7 @@ export function addFillAt(style: Style, fill: Fill, index: number) {
     style.fills.splice(index, 0, fill);
 }
 export function deleteFillAt(style: Style, idx: number) {
-    style.fills.splice(idx, 1);
+    return style.fills.splice(idx, 1)[0];
 }
 export function moveFill(style: Style, idx: number, idx2: number) {
     const fill = style.fills.splice(idx, 1)[0];

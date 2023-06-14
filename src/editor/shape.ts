@@ -158,7 +158,7 @@ export class ShapeEditor {
         if (this.__shape.type !== ShapeType.Artboard && fill) {
             this.__repo.start("deleteFill", {});
             deleteFillAt(this.__shape.style, idx);
-            const cmd = ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, idx);
+            const cmd = ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, FILLS_ID, fill.id, idx, exportFill(fill));
             this.__repo.commit(cmd);
         }
     }
@@ -235,7 +235,7 @@ export class ShapeEditor {
         if (border) {
             this.__repo.start("deleteBorder", {});
             deleteBorderAt(this.__shape.style, idx)
-            this.__repo.commit(ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id, idx));
+            this.__repo.commit(ShapeArrayAttrRemove.Make(this.__page.id, this.__shape.id, BORDER_ID, border.id, idx, exportBorder(border)));
         }
     }
     public addBorder(border: Border) {

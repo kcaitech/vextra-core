@@ -190,32 +190,12 @@ export class CMDReverter {
         } else {
             op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, 1)
         }
-        const page = this.__document.pagesMgr.getSync(cmd.blockId);
-        const shapeId = op.targetId[0];
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) throw new Error("shape not found: " + shapeId);
 
-        const arrayAttr = cmd.arrayAttr;
+        if (!cmd.origin) throw new Error("cmd origin not exist")
+
         const arrayAttrId = cmd.arrayAttrId;
-        let data;
-        if (arrayAttr === FILLS_ID) {
-            const fills = shape.style.fills;
-            const fill = fills.find((fill) => fill.id === arrayAttrId)
-            if (!fill) throw new Error("fill not found: " + arrayAttrId);
-            data = exportFill(fill)
-        }
-        else if (arrayAttr === BORDER_ID) {
-            const borders = shape.style.borders;
-            const border = borders.find((border) => border.id === arrayAttrId)
-            if (!border) throw new Error("border not found: " + arrayAttrId);
-            data = exportBorder(border)
-        }
-        else {
-            // error
-            // return;
-            throw new Error("unknow arrayAttr:" + arrayAttr)
-        }
-        return new ShapeArrayAttrInsert(CmdType.ShapeArrayAttrInsert, uuid(), cmd.blockId, [op], arrayAttrId, JSON.stringify(data));
+
+        return new ShapeArrayAttrInsert(CmdType.ShapeArrayAttrInsert, uuid(), cmd.blockId, [op], arrayAttrId, cmd.origin);
     }
 
     shapeCMDGroup(cmd: ShapeCmdGroup): ShapeCmdGroup {

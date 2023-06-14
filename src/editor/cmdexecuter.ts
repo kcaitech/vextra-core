@@ -498,11 +498,12 @@ export class CMDExecuter {
         api.deleteText(shape, op.start, op.length);
     }
     textModify(cmd: TextCmdModify) {
-        const page = this.__document.pagesMgr.getSync(cmd.blockId);
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
-        const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape || !(shape instanceof TextShape)) return;
+        throw new Error("not implemented")
+        // const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        // const op = cmd.ops[0]
+        // const shapeId = op.targetId[0]
+        // const shape = page && page.getShape(shapeId, true);
+        // if (!page || !shape || !(shape instanceof TextShape)) return;
         // todo
     }
     textCmdGroup(cmd: TextCmdGroup) {
@@ -524,11 +525,12 @@ export class CMDExecuter {
         })
     }
     textMove(cmd: TextCmdMove) {
-        const page = this.__document.pagesMgr.getSync(cmd.blockId);
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
-        const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape || !(shape instanceof TextShape)) return;
+        throw new Error("not implemented")
+        // const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        // const op = cmd.ops[0]
+        // const shapeId = op.targetId[0]
+        // const shape = page && page.getShape(shapeId, true);
+        // if (!page || !shape || !(shape instanceof TextShape)) return;
         // todo
     }
 }

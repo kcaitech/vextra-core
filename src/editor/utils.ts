@@ -140,7 +140,7 @@ export function updateFrame(shape: Shape) {
     updateFrameWH(shape);
 }
 
-export function exportShape(shape: Shape): string | undefined {
+export function exportShape(shape: Shape): string {
     switch (shape.type) {
         case ShapeType.Artboard: return JSON.stringify(exportArtboard(shape as Artboard))
         case ShapeType.Image: return JSON.stringify(exportImageShape(shape as ImageShape)) // todo
@@ -151,6 +151,7 @@ export function exportShape(shape: Shape): string | undefined {
         case ShapeType.SymbolRef: return JSON.stringify(exportSymbolRefShape(shape as SymbolRefShape))
         case ShapeType.Symbol: return JSON.stringify(exportSymbolShape(shape as SymbolShape))
         case ShapeType.Text: return JSON.stringify(exportTextShape(shape as TextShape))
+        default: throw new Error("unknow shape type: " + shape.type)
     }
 }
 export function getFormatFromBase64(base64: string) {
