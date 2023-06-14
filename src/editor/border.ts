@@ -1,7 +1,7 @@
 import { Color, Border, BorderPosition, Style, BorderStyle, MarkerType } from "../data/style";
 // 边框
 export function addBorder(style: Style, border: Border) {
-    style.borders.push(border);
+    style.borders.unshift(border);
 }
 export function setBorderColor(
     style: Style,
@@ -38,4 +38,15 @@ export function setBorderApexStyle(style: Style, idx: number, apexStyle: MarkerT
 export function deleteBorder(style: Style, idx: number) {
     const borders = style.borders;
     borders.splice(idx, 1);
+}
+export function replaceBorders(style: Style, borders: Border[]) {
+    style.borders.length = 0;
+    for (let i = 0; i < borders.length; i++) {
+        const b_sim = borders[i];
+        const { isEnabled, fillType, color, contextSettings, position, thickness, borderStyle,
+            startMarkerType, endMarkerType } = b_sim;
+        const _b = new Border(isEnabled, fillType, color, contextSettings, position, thickness, borderStyle,
+            startMarkerType, endMarkerType)
+        style.borders.push(_b);
+    }
 }

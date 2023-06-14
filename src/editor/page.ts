@@ -10,8 +10,9 @@ import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
-import { Color, Fill } from "../data/baseclasses";
+import { Color, Fill, Border } from "../data/baseclasses";
 import { setFillColor, setFillEnabled, addFill, deleteFillByIndex, replaceFills } from "./fill";
+import { addBorder, setBorderEnable, setBorderColor, deleteBorder, replaceBorders } from "./border";
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
     else if (x > bounds.right) bounds.right = x;
@@ -62,6 +63,28 @@ export interface FillDeleteAction {
 export interface FillsReplaceAction {
     target: Shape
     value: Fill[]
+}
+export interface BorderColorAction {
+    target: Shape
+    index: number
+    value: Color
+}
+export interface BorderEnableAction {
+    target: Shape
+    index: number
+    value: boolean
+}
+export interface BorderAddAction {
+    target: Shape
+    value: Border
+}
+export interface BorderDeleteAction {
+    target: Shape
+    index: number
+}
+export interface BordersReplaceAction {
+    target: Shape
+    value: Border[]
 }
 export class PageEditor {
     private __repo: Repository;
@@ -409,6 +432,8 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
+    // fills
     setShapesFillColor(actions: FillColorAction[]) {
         try {
             this.__repo.start('setShapesFillColor', {});
@@ -463,6 +488,67 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 replaceFills(target.style, value);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    //boders 
+    setShapesBorderColor(actions: BorderColorAction[]) {
+        try {
+            this.__repo.start('setShapesBorderColor', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                setBorderColor(target.style, index, value);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderEnabled(actions: BorderEnableAction[]) {
+        try {
+            this.__repo.start('setShapesBorderEnabled', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                setBorderEnable(target.style, index, value);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesAddBorder(actions: BorderAddAction[]) {
+        try {
+            this.__repo.start('shapesAddBorder', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                addBorder(target.style, value);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesDeleteBorder(actions: BorderDeleteAction[]) {
+        try {
+            this.__repo.start('shapesDeleteBorder', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index } = actions[i];
+                deleteBorder(target.style, index);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesBordersUnify(actions: BordersReplaceAction[]) {
+        try {
+            this.__repo.start('shapesBordersUnify', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                replaceBorders(target.style, value);
             }
             this.__repo.commit({});
         } catch (error) {
