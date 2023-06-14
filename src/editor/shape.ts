@@ -61,7 +61,11 @@ export class ShapeEditor {
             expandTo(this.__shape, w, h);
         })
     }
-
+    public setConstrainerProportions(val: boolean) {
+        this.__repo.start("setConstrainerProportions", {});
+        this.__shape.constrainerProportions = val;
+        this.__repo.commit({});
+    }
     // flip
     public flipH() {
         this.repowrap("flipHorizontal", () => {

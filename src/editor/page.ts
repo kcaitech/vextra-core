@@ -9,7 +9,7 @@ import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
-import { translateTo, translate } from "./frame";
+import { translateTo, translate, expand } from "./frame";
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
     else if (x > bounds.right) bounds.right = x;
@@ -20,6 +20,23 @@ export interface PositonAdjust {
     target: Shape
     transX: number
     transY: number
+}
+export interface ConstrainerProportionsAction {
+    target: Shape
+    value: boolean
+}
+export interface FrameAdjust {
+    target: Shape
+    widthExtend: number
+    heightExtend: number
+}
+export interface RotateAdjust {
+    target: Shape
+    value: number
+}
+export interface FlipAction {
+    target: Shape
+    direction: 'horizontal' | 'vertical'
 }
 
 export class PageEditor {
@@ -304,12 +321,64 @@ export class PageEditor {
             }
         }
     }
-    arrange(pas: PositonAdjust[]) {
+    arrange(actions: PositonAdjust[]) {
         try {
             this.__repo.start('arrange', {});
-            for (let i = 0; i < pas.length; i++) {
-                const action = pas[i];
+            for (let i = 0; i < actions.length; i++) {
+                const action = actions[i];
                 translate(action.target, action.transX, action.transY)
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesConstrainerProportions(actions: ConstrainerProportionsAction[]) {
+        try {
+            this.__repo.start('setShapesConstrainerProportions', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                target.setShapesConstrainerProportions(value);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFrame(actions: FrameAdjust[]) {
+        try {
+            this.__repo.start('setShapesFrame', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, widthExtend, heightExtend } = actions[i];
+                expand(target, widthExtend, heightExtend);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesRotate(actions: RotateAdjust[]) {
+        try {
+            this.__repo.start('RotateAdjust', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                target.rotate(value);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesFlip(actions: FlipAction[]) {
+        try {
+            this.__repo.start('shapesFlip', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, direction } = actions[i];
+                if (direction === 'horizontal') {
+                    target.flipHorizontal();
+                } else if (direction === 'vertical') {
+                    target.flipVertical();
+                }
             }
             this.__repo.commit({});
         } catch (error) {

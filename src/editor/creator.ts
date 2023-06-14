@@ -27,6 +27,7 @@ export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
     shape.isVisible = true;
     shape.isLocked = false;
+    shape.constrainerProportions = false;
 }
 
 export function newDocument(documentName: string, repo: Repository): Document {
