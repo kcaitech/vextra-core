@@ -10,6 +10,8 @@ import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
+import { Color, Fill } from "../data/baseclasses";
+import { setFillColor, setFillEnabled, addFill, deleteFillByIndex, replaceFills } from "./fill";
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
     else if (x > bounds.right) bounds.right = x;
@@ -39,6 +41,28 @@ export interface FlipAction {
     direction: 'horizontal' | 'vertical'
 }
 
+export interface FillColorAction {
+    target: Shape
+    index: number
+    value: Color
+}
+export interface FillEnableAction {
+    target: Shape
+    index: number
+    value: boolean
+}
+export interface FillAddAction {
+    target: Shape
+    value: Fill
+}
+export interface FillDeleteAction {
+    target: Shape
+    index: number
+}
+export interface FillsReplaceAction {
+    target: Shape
+    value: Fill[]
+}
 export class PageEditor {
     private __repo: Repository;
     private __page: Page;
@@ -379,6 +403,66 @@ export class PageEditor {
                 } else if (direction === 'vertical') {
                     target.flipVertical();
                 }
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFillColor(actions: FillColorAction[]) {
+        try {
+            this.__repo.start('setShapesFillColor', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                setFillColor(target.style, index, value);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFillEnabled(actions: FillEnableAction[]) {
+        try {
+            this.__repo.start('setShapesFillEnabled', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                setFillEnabled(target.style, index, value);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesAddFill(actions: FillAddAction[]) {
+        try {
+            this.__repo.start('shapesAddFill', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                addFill(target.style, value);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesDeleteFill(actions: FillDeleteAction[]) {
+        try {
+            this.__repo.start('shapesDeleteFill', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index } = actions[i];
+                deleteFillByIndex(target.style, index);
+            }
+            this.__repo.commit({});
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesFillsUnify(actions: FillsReplaceAction[]) {
+        try {
+            this.__repo.start('shapesFillsUnify', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                replaceFills(target.style, value);
             }
             this.__repo.commit({});
         } catch (error) {

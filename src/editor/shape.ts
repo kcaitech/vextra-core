@@ -122,10 +122,10 @@ export class ShapeEditor {
         this.__repo.commit({});
     }
 
-    public setFillEnable(idx: number) {
+    public setFillEnable(idx: number, value: boolean) {
         this.__repo.start("setFillEnable", {});
         if (this.__shape.type !== ShapeType.Artboard) {
-            setFillEnabled(this.__shape.style, idx);
+            setFillEnabled(this.__shape.style, idx, value);
         }
         this.__repo.commit({});
     }
