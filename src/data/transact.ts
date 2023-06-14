@@ -460,6 +460,9 @@ export class Repository extends Watchable(Object) implements IDataGuard {
     guard(data: any): any {
         return deepProxy(data, this.__ph);
     }
+    isGuarded(data: any): boolean {
+        return typeof data === 'object' && isProxy(data);
+    }
 }
 
 function deepProxy(data: any, h: ProxyHandler): any {
