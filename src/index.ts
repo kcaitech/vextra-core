@@ -1,6 +1,5 @@
 export * from "./basic/matrix"
 export * from "./basic/objectid"
-export * from "./basic/utils"
 
 // data
 export * from "./data/basic"
@@ -13,6 +12,7 @@ export * from "./io"
 export * from "./io/import"
 export * from "./io/export"
 export * from "./io/lzdata"
+export * from "./io/cilpboard"
 
 // editor
 export * from "./editor"

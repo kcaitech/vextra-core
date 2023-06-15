@@ -956,7 +956,7 @@ export class ImageShape extends Shape {
  */
 export class GroupShape extends Shape {
     typeId = 'group-shape'
-    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape) >
+    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape) >
     constructor(
         id: string,
         name: string,
@@ -964,7 +964,7 @@ export class GroupShape extends Shape {
         frame: ShapeFrame,
         style: Style,
         boolOp: BoolOp,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape) >
     ) {
         super(
             id,
@@ -989,7 +989,7 @@ export class SymbolShape extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         boolOp: BoolOp,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape) >
     ) {
         super(
             id,
@@ -1014,7 +1014,7 @@ export class FlattenShape extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         boolOp: BoolOp,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape) >
     ) {
         super(
             id,
@@ -1042,7 +1042,7 @@ export class Artboard extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         boolOp: BoolOp,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape) >
     ) {
         super(
             id,

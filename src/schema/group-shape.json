@@ -1,0 +1,52 @@
+{
+    "description": "group shape",
+    "type": "object",
+    "properties": {
+        "childs": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {
+                        "$ref": "#"
+                    },
+                    {
+                        "$ref": "./shape.json"
+                    },
+                    {
+                        "$ref": "./flatten-shape.json"
+                    },
+                    {
+                        "$ref": "./image-shape.json"
+                    },
+                    {
+                        "$ref": "./path-shape.json"
+                    },
+                    {
+                        "$ref": "./rect-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-ref-shape.json"
+                    },
+                    {
+                        "$ref": "./text-shape.json"
+                    },
+                    {
+                        "$ref": "./oval-shape.json"
+                    },
+                    {
+                        "$ref": "./line-shape.json"
+                    }
+                ]
+            }
+        }
+    },
+    "required": [
+        "childs"
+    ],
+    "allOf": [
+        {
+            "$ref": "./shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

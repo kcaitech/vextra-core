@@ -449,7 +449,7 @@ export type ImageShape = Shape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)[]
+    childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape)[]
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
