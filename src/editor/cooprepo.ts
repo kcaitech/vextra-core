@@ -59,7 +59,6 @@ export class CoopRepository {
     }
 
     execRemote(cmd: Cmd) {
-        console.log("exec remote:", cmd)
         this._exec(cmd, true);
     }
 
