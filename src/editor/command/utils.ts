@@ -158,22 +158,3 @@ export function exportShape(shape: Shape): string {
         default: throw new Error("unknow shape type: " + shape.type)
     }
 }
-export function getFormatFromBase64(base64: string) {
-    const fileheader = new Map([
-        ['data:image/svg+xml', 'svg'],
-        ['data:image/gif', 'gif'],
-        ['data:image/jpeg', 'jpeg'],
-        ['data:image/png', 'png'],
-    ])
-    const header = base64.substring(0, base64.indexOf(';'));
-    return fileheader.get(header);
-}
-export function base64ToDataUrl(format: string, base64: string) {
-    const de_fileheader = new Map([
-        ['svg', `data:image/svg+xml;base64,${base64}`,],
-        ['gif', `data:image/gif;base64,${base64}`],
-        ['jpeg', `data:image/jpeg;base64,${base64}`],
-        ['png', `data:image/png;base64,${base64}`]
-    ])
-    return de_fileheader.get(format) || '';
-}
