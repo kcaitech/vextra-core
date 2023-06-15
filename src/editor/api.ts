@@ -18,7 +18,7 @@ import { ShapeArrayAttrRemove } from "../coop/data/classes";
 import { ShapeArrayAttrModify } from "../coop/data/classes";
 import { Span, SpanAttr } from "../data/text";
 import { cmdmerge } from "./cmdmerge";
-import { RectShape } from "../data/typesdefine";
+import { RectShape } from "../data/classes";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -109,9 +109,8 @@ export class Api {
             this.cmds.push(cmd);
         }
     }
-    private checkGuarded(obj: Object) {
-        // 不太行！
-        // if (!this.repo.isGuarded(obj)) throw new Error("data not guraded " + JSON.stringify(obj)) // 未进入事务的数据不需要走api编辑
+    private checkShapeAtPage(page: Page, obj: Shape) {
+        if (!page.getShape(obj.id)) throw new Error("shape not inside page")
     }
 
     pageInsert(document: Document, page: Page, index: number) {
@@ -181,7 +180,7 @@ export class Api {
         });
     }
     shapeModifyX(page: Page, shape: Shape, x: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const frame = shape.frame;
         if (x !== frame.x) {
             this.__trap(() => {
@@ -193,7 +192,7 @@ export class Api {
         }
     }
     shapeModifyY(page: Page, shape: Shape, y: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const frame = shape.frame;
         if (y !== frame.y) {
             this.__trap(() => {
@@ -205,7 +204,7 @@ export class Api {
         }
     }
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const frame = shape.frame;
         if (w !== frame.width || h !== frame.height) {
             this.__trap(() => {
@@ -218,7 +217,7 @@ export class Api {
         }
     }
     shapeModifyRotate(page: Page, shape: Shape, rotate: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         if (rotate !== shape.rotation) {
             this.__trap(() => {
                 const save = shape.rotation;
@@ -229,7 +228,7 @@ export class Api {
         }
     }
     shapeModifyName(page: Page, shape: Shape, name: string) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.name;
             shape.name = name;
@@ -237,7 +236,7 @@ export class Api {
         })
     }
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.isVisible;
             shape.isVisible = isVisible;
@@ -245,7 +244,7 @@ export class Api {
         })
     }
     shapeModifyLock(page: Page, shape: Shape, isLocked: boolean) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.isLocked;
             shape.isLocked = isLocked;
@@ -253,7 +252,7 @@ export class Api {
         })
     }
     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.isFlippedHorizontal;
             shape.isFlippedHorizontal = hflip;
@@ -262,7 +261,7 @@ export class Api {
         })
     }
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.isFlippedVertical;
             shape.isFlippedVertical = vflip;
@@ -271,7 +270,7 @@ export class Api {
         })
     }
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.resizingConstraint;
             shape.setResizingConstraint(resizingConstraint);
@@ -279,7 +278,7 @@ export class Api {
         })
     }
     shapeModifyRadius(page: Page, shape: RectShape, radius: RectRadius) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.fixedRadius;
             shape.fixedRadius = radius;
@@ -287,7 +286,7 @@ export class Api {
         })
     }
     artboardModifyBackgroundColor(page: Page, shape: Artboard, color: Color) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.backgroundColor;
             shape.setArtboardColor(color);
@@ -295,35 +294,35 @@ export class Api {
         })
     }
     addFillAt(page: Page, shape: Shape, fill: Fill, index: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             basicapi.addFillAt(shape.style, fill, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, FILLS_ID, fill.id, index, exportFill(fill)))
         })
     }
     addBorderAt(page: Page, shape: Shape, border: Border, index: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             basicapi.addBorderAt(shape.style, border, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, BORDER_ID, border.id, index, exportBorder(border)))
         })
     }
     deleteFillAt(page: Page, shape: Shape, index: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const fill = basicapi.deleteFillAt(shape.style, index);
             if (fill) this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, FILLS_ID, fill.id, index, exportFill(fill)));
         })
     }
     deleteBorderAt(page: Page, shape: Shape, index: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const border = basicapi.deleteBorderAt(shape.style, index);
             if (border) this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, BORDER_ID, border.id, index, exportBorder(border)));
         })
     }
     setFillColor(page: Page, shape: Shape, idx: number, color: Color) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const fill: Fill = shape.style.fills[idx];
         if (fill) {
             this.__trap(() => {
@@ -334,7 +333,7 @@ export class Api {
         }
     }
     setFillEnable(page: Page, shape: Shape, idx: number, isEnable: boolean) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const fill: Fill = shape.style.fills[idx];
         if (fill) {
             this.__trap(() => {
@@ -345,7 +344,7 @@ export class Api {
         }
     }
     setBorderColor(page: Page, shape: Shape, idx: number, color: Color) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
@@ -356,7 +355,7 @@ export class Api {
         }
     }
     setBorderEnable(page: Page, shape: Shape, idx: number, isEnable: boolean) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
@@ -367,7 +366,7 @@ export class Api {
         }
     }
     setBorderThickness(page: Page, shape: Shape, idx: number, thickness: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
@@ -378,7 +377,7 @@ export class Api {
         }
     }
     setBorderPosition(page: Page, shape: Shape, idx: number, position: BorderPosition) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
@@ -389,7 +388,7 @@ export class Api {
         }
     }
     setBorderStyle(page: Page, shape: Shape, idx: number, borderStyle: BorderStyle) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
@@ -400,7 +399,7 @@ export class Api {
         }
     }
     setBorderStartMarkerType(page: Page, shape: Shape, idx: number, type: MarkerType) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
@@ -411,7 +410,7 @@ export class Api {
         }
     }
     setBorderEndMarkerType(page: Page, shape: Shape, idx: number, type: MarkerType) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
@@ -422,7 +421,7 @@ export class Api {
         }
     }
     moveFill(page: Page, shape: Shape, idx: number, idx2: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const fill = shape.style.fills.splice(idx, 1)[0];
             if (fill) {
@@ -432,7 +431,7 @@ export class Api {
         })
     }
     moveBorder(page: Page, shape: Shape, idx: number, idx2: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const border = shape.style.borders.splice(idx, 1)[0];
             if (border) {
@@ -442,14 +441,14 @@ export class Api {
         })
     }
     insertText(page: Page, shape: TextShape, idx: number, text: string, attr?: SpanAttr) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             basicapi.insertText(shape, text, idx, attr)
             this.addCmd(TextCmdInsert.Make(page.id, shape.id, idx, text))
         })
     }
     deleteText(page: Page, shape: TextShape, idx: number, len: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         let del: { text: string, spans: Span[] } | undefined;
         this.__trap(() => {
             del = basicapi.deleteText(shape, idx, len)
@@ -458,11 +457,11 @@ export class Api {
         return del;
     }
     formatText(page: Page, shape: TextShape, idx: number, len: number, attr: SpanAttr) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         throw new Error("not implemented")
     }
     moveText(page: Page, shape: TextShape, idx: number, len: number, idx2: number) {
-        this.checkGuarded(shape);
+        this.checkShapeAtPage(page, shape);
         throw new Error("not implemented")
     }
 }

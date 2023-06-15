@@ -159,9 +159,6 @@ export class Controller {
             shape.frame.x -= xy.x;
             shape.frame.y -= xy.y;
             api.shapeInsert(page, parent, shape, parent.childs.length)
-            // parent.addChildAt(shape);
-            // page.onAddShape(shape);
-            // updateFrame(shape);
             newShape = shape; // parent.childs.at(-1);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -179,9 +176,6 @@ export class Controller {
                 shape.frame.x -= xy.x;
                 shape.frame.y -= xy.y;
                 api.shapeInsert(page, parent, shape, parent.childs.length)
-                // parent.addChildAt(shape);
-                // page.addShape(shape);
-                // updateFrame(shape);
                 newShape = shape; // parent.childs.at(-1);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -196,23 +190,19 @@ export class Controller {
                 const { x: px, y: py } = point;
                 if (newShape.isFlippedHorizontal) {
                     if ((px - sx) > 0) {
-                        // newShape.flipHorizontal();
                         api.shapeModifyHFlip(savepage, newShape, !newShape.isFlippedHorizontal)
                     }
                 } else {
                     if ((px - sx) < 0) {
-                        // newShape.flipHorizontal()
                         api.shapeModifyHFlip(savepage, newShape, !newShape.isFlippedHorizontal)
                     }
                 }
                 if (newShape.isFlippedVertical) {
                     if ((py - sy) > 0) {
-                        // newShape.flipVertical();
                         api.shapeModifyVFlip(savepage, newShape, !newShape.isFlippedVertical)
                     }
                 } else {
                     if ((py - sy) < 0) {
-                        // newShape.flipVertical();
                         api.shapeModifyVFlip(savepage, newShape, !newShape.isFlippedVertical)
                     }
                 }
@@ -316,7 +306,6 @@ export class Controller {
             if (shape.isLocked) return;
             if (actionType === 'rotate') {
                 const newDeg = (shape.rotation || 0) + deg;
-                // shape.rotate(newDeg);
                 api.shapeModifyRotate(page, shape, newDeg);
             } else {
                 if (type === CtrlElementType.LineStart) {
@@ -344,7 +333,6 @@ export class Controller {
             this.__repo.rollback();
         }
         const api = this.__repo.start("transfer", {});
-        // const shapes: Shape[] = s;
         let status: Status = Status.Pending;
         const migrate = (targetParent: GroupShape) => {
             status = Status.Pending;
@@ -353,8 +341,6 @@ export class Controller {
                 const origin: GroupShape = shape.parent as GroupShape;
                 const { x, y } = shape.frame2Page();
                 api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length)
-                // origin.removeChild(shape);
-                // targetParent.addChild(shape);
                 translateTo(api, page, shape, x, y);
             }
             this.__repo.transactCtx.fireNotify();

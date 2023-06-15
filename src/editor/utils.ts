@@ -9,23 +9,16 @@ export function setFrame(page: Page, shape: Shape, x: number, y: number, w: numb
     let changed = false;
     if (x !== frame.x) {
         api.shapeModifyX(page, shape, x)
-        // frame.x = x;
         changed = true;
     }
     if (y !== frame.y) {
         api.shapeModifyY(page, shape, y)
-        // frame.y = y;
         changed = true;
     }
     if (w !== frame.width || h !== frame.height) {
         api.shapeModifyWH(page, shape, w, h)
-        // frame.width = w;
         changed = true;
     }
-    // if (h !== frame.height) {
-    //     frame.height = h;
-    //     changed = true;
-    // }
     return changed;
 }
 
@@ -41,8 +34,6 @@ function updateFrameXY(page: Page, shape: Shape, api: UpdateFrameApi) {
         if (p && !(p instanceof Artboard)) {
             api.shapeModifyX(page, shape, shape.frame.x + deltaX)
             api.shapeModifyY(page, shape, shape.frame.y + deltaY)
-            // shape.frame.x += deltaX;
-            // shape.frame.y += deltaY; // 现在在父级坐标系
 
             if (p.isNoTransform()) {
                 if (deltaX > 0) api.shapeModifyX(page, p, p.frame.x - deltaX); // p.frame.x -= deltaX;
@@ -55,16 +46,12 @@ function updateFrameXY(page: Page, shape: Shape, api: UpdateFrameApi) {
                 const cur = m.computeCoord(0, 0);
                 const dx = target.x - cur.x;
                 const dy = target.y - cur.y;
-                // p.frame.x += dx;
-                // p.frame.y += dy;
                 api.shapeModifyX(page, p, p.frame.x + dx)
                 api.shapeModifyY(page, p, p.frame.y + dy)
             }
 
             p.childs.forEach((c: Shape) => {
                 if (c.id === shape.id) return;
-                // c.frame.x += deltaX;
-                // c.frame.y += deltaY;
                 api.shapeModifyX(page, c, c.frame.x + deltaX)
                 api.shapeModifyY(page, c, c.frame.y + deltaY)
             })
@@ -136,9 +123,6 @@ function updateFrameWH(page: Page, shape: Shape, api: UpdateFrameApi) {
         if (changed && (Math.abs(l) > float_accuracy || Math.abs(t) > float_accuracy)) { // 仅在对象被删除后要更新？
             for (let i = 0; i < cc; i++) {
                 const c = pg.childs[i];
-                // const cf = c.frame;
-                // cf.x = cf.x - l;
-                // cf.y = cf.y - t;
                 api.shapeModifyX(page, c, c.frame.x - l)
                 api.shapeModifyY(page, c, c.frame.y - t)
             }
