@@ -6,7 +6,7 @@ import * as types from "../data/typesdefine"
 import {IDataGuard} from "../data/basic";
 import {Document, DocumentMeta} from "../data/document";
 import * as storage from "./storage";
-import { base64ToDataUrl } from "../editor/utils";
+import { base64ToDataUrl } from "../basic/utils";
 
 interface IJSON {
     [key: string]: any
