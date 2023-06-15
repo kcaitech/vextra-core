@@ -4,6 +4,7 @@ import { Repository } from "../../data/transact";
 import { CMDExecuter } from "./executer";
 import { CMDReverter } from "./reverter";
 import { Api } from "./recordapi";
+import { Page } from "data/page";
 
 export class CoopRepository {
     private __repo: Repository;
@@ -22,6 +23,10 @@ export class CoopRepository {
         this.__cmdrevert = new CMDReverter(document);
         this.__cmdexec = new CMDExecuter(document, repo);
         this.__api = new Api(repo);
+
+        document.pagesMgr.setUpdater((data: Page) => {
+            this.updateLazyData(data.id);
+        })
     }
 
     /**
@@ -40,6 +45,12 @@ export class CoopRepository {
 
     isInTransact(): boolean {
         return this.__repo.isInTransact();
+    }
+
+    private updateLazyData(blockId: string) {
+        this.__allcmds.forEach((cmd) => {
+            if (cmd.blockId === blockId) this.__cmdexec.exec(cmd)
+        })
     }
 
     private _exec(cmd: Cmd, isRemote: boolean) {
