@@ -1,4 +1,4 @@
-import { Color, Border, BorderPosition, Style, BorderStyle, MarkerType } from "../data/style";
+import { Color, Border, BorderPosition, Style, BorderStyle, MarkerType } from "../../data/style";
 // 边框
 export function setBorderColor(
     style: Style,

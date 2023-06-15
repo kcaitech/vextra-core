@@ -1,8 +1,8 @@
-import { Color } from "../data/style";
-import { Document } from "../data/document";
-import { Page } from "../data/page";
-import { GroupShape, RectRadius, RectShape, Shape, ShapeType } from "../data/shape";
-import { Artboard } from "../data/artboard";
+import { Color } from "../../data/style";
+import { Document } from "../../data/document";
+import { Page } from "../../data/page";
+import { GroupShape, RectRadius, RectShape, Shape, ShapeType } from "../../data/shape";
+import { Artboard } from "../../data/artboard";
 
 export { addFillAt, deleteFillAt, moveFill, setFillColor, setFillEnable } from "./fill";
 export {
@@ -18,7 +18,7 @@ export {
     setBorderEndMarkerType
 } from "./border";
 export { deleteText, insertText } from "./text";
-export { updateFrame } from "./utils";
+export { updateFrame } from "../utils";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     document.insertPage(index, page)

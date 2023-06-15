@@ -1,7 +1,7 @@
-import { Color } from "../data/baseclasses";
-import { BasicArray } from "../data/basic";
-import { TextShape } from "../data/shape";
-import { Para, Span, SpanAttr } from "../data/text";
+import { Color } from "../../data/baseclasses";
+import { BasicArray } from "../../data/basic";
+import { TextShape } from "../../data/shape";
+import { Para, Span, SpanAttr } from "../../data/text";
 
 function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (attr.color) {

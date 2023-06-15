@@ -1,4 +1,4 @@
-import { Color, Fill, Style } from "../data/style";
+import { Color, Fill, Style } from "../../data/style";
 
 // 填充
 export function addFill(style: Style, fill: Fill) {
