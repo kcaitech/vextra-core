@@ -1,8 +1,18 @@
 import { Page } from "data/page";
 import { Matrix } from "../basic/matrix";
 import { Shape } from "../data/shape";
-import { UpdateFrameApi, setFrame } from "./utils";
-export function translateTo(api: UpdateFrameApi, page: Page, shape: Shape, x: number, y: number) {
+import { setFrame } from "./utils";
+
+export interface Api {
+    shapeModifyX(page: Page, shape: Shape, x: number): void;
+    shapeModifyY(page: Page, shape: Shape, y: number): void;
+    shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
+    shapeModifyRotate(page: Page, shape: Shape, rotate: number): void;
+    shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined): void;
+    shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined): void;
+}
+
+export function translateTo(api: Api, page: Page, shape: Shape, x: number, y: number) {
     const p = shape.parent;
     if (!p) return;
     const m1 = p.matrix2Page();
@@ -16,7 +26,7 @@ export function translateTo(api: UpdateFrameApi, page: Page, shape: Shape, x: nu
     // if (changed) updateFrame(shape);
 }
 
-export function translate(api: UpdateFrameApi, page: Page, shape: Shape, dx: number, dy: number, round: boolean = true) {
+export function translate(api: Api, page: Page, shape: Shape, dx: number, dy: number, round: boolean = true) {
     const xy = shape.frame2Page();
     let x = xy.x + dx;
     let y = xy.y + dy;
@@ -27,7 +37,7 @@ export function translate(api: UpdateFrameApi, page: Page, shape: Shape, dx: num
     translateTo(api, page, shape, xy.x + dx, xy.y + dy);
 }
 
-export function expandTo(api: UpdateFrameApi, page: Page, shape: Shape, w: number, h: number) {
+export function expandTo(api: Api, page: Page, shape: Shape, w: number, h: number) {
     const frame = shape.frame;
 
     let changed = false;
@@ -58,7 +68,7 @@ export function expandTo(api: UpdateFrameApi, page: Page, shape: Shape, w: numbe
     // if (changed) updateFrame(shape);
 }
 
-export function expand(api: UpdateFrameApi, page: Page, shape: Shape, dw: number, dh: number, round: boolean = true) {
+export function expand(api: Api, page: Page, shape: Shape, dw: number, dh: number, round: boolean = true) {
     const frame = shape.frame;
     let w = frame.width + dw;
     let h = frame.height + dh;
@@ -69,7 +79,7 @@ export function expand(api: UpdateFrameApi, page: Page, shape: Shape, dw: number
     expandTo(api, page, shape, frame.width + dw, frame.height + dh);
 }
 
-export function adjustLT2(api: UpdateFrameApi, page: Page, shape: Shape, x: number, y: number) {
+export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: number) {
     const p = shape.parent;
     if (!p) return;
     const frame = shape.frame;
@@ -108,16 +118,16 @@ export function adjustLT2(api: UpdateFrameApi, page: Page, shape: Shape, x: numb
     h = wh.y;
 
     if (w < 0) {
-        shape.flipHorizontal();
+        api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
-            shape.rotate(360 - shape.rotation);
+            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         w = -w;
     }
     if (h < 0) {
-        shape.flipVertical();
+        api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical)
         if (shape.rotation) {
-            shape.rotate(360 - shape.rotation);
+            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         h = -h;
     }
@@ -139,7 +149,7 @@ export function adjustLT2(api: UpdateFrameApi, page: Page, shape: Shape, x: numb
     const changed = setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
     // if (changed) updateFrame(shape);
 }
-export function adjustLB2(api: UpdateFrameApi, page: Page, shape: Shape, x: number, y: number) { // 左下角
+export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: number) { // 左下角
     const p = shape.parent;
     if (!p) return;
     // 需要满足右上(rt)不动
@@ -161,17 +171,17 @@ export function adjustLB2(api: UpdateFrameApi, page: Page, shape: Shape, x: numb
     w = (savert.x - target.x + m.m01 * h) / m.m00;
     // 宽度将要成为负数
     if (w < 0) {
-        shape.flipHorizontal();
+        api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
-            shape.rotate(360 - shape.rotation);
+            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         w = -w;
     }
     // 宽度将要成为负数
     if (h < 0) {
-        shape.flipVertical();
+        api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical)
         if (shape.rotation) {
-            shape.rotate(360 - shape.rotation);
+            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         h = -h;
     }
@@ -194,7 +204,7 @@ export function adjustLB2(api: UpdateFrameApi, page: Page, shape: Shape, x: numb
     const changed = setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
     // if (changed) updateFrame(shape);
 }
-export function adjustRT2(api: UpdateFrameApi, page: Page, shape: Shape, x: number, y: number) { // 右上角
+export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: number) { // 右上角
     const p = shape.parent;
     if (!p) return;
     // 需要满足左下(lb)不动
@@ -213,17 +223,19 @@ export function adjustRT2(api: UpdateFrameApi, page: Page, shape: Shape, x: numb
     const m = matrix2parent;
     h = (m.m00 * (savelb.y - target.y) - m.m10 * (savelb.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01)
     w = (target.x - savelb.x + m.m01 * h) / m.m00;
+    // 宽度将要成为负数
     if (w < 0) {
-        shape.flipHorizontal();
+        api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
-            shape.rotate(360 - shape.rotation);
+            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         w = -w;
     }
+    // 宽度将要成为负数
     if (h < 0) {
-        shape.flipVertical();
+        api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical)
         if (shape.rotation) {
-            shape.rotate(360 - shape.rotation);
+            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         h = -h;
     }
@@ -247,7 +259,7 @@ export function adjustRT2(api: UpdateFrameApi, page: Page, shape: Shape, x: numb
     const changed = setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
     // if (changed) updateFrame(shape);
 }
-export function adjustRB2(api: UpdateFrameApi, page: Page, shape: Shape, x: number, y: number) {
+export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number) {
     const p = shape.parent;
     if (!p) return;
     // 需要满足左下(lt)不动
@@ -265,17 +277,19 @@ export function adjustRB2(api: UpdateFrameApi, page: Page, shape: Shape, x: numb
     const m = matrix2parent;
     h = -(m.m00 * (savelt.y - target.y) - m.m10 * (savelt.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01)
     w = (target.x - savelt.x + m.m01 * -h) / m.m00;
+    // 宽度将要成为负数
     if (w < 0) {
-        shape.flipHorizontal();
+        api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
-            shape.rotate(360 - shape.rotation);
+            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         w = -w;
     }
+    // 宽度将要成为负数
     if (h < 0) {
-        shape.flipVertical();
+        api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical)
         if (shape.rotation) {
-            shape.rotate(360 - shape.rotation);
+            api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
         h = -h;
     }

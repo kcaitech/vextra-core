@@ -106,13 +106,13 @@ export class CoopRepository {
         }
         const cmd = this.__api.commit();
         this.__repo.commit()
-        // if (!isRemote) {
-            this.__localcmds.length = this.__index;
-            const l = cmd as (Cmd & { index: number })
-            l.index = this.__allcmds.length;
-            this.__localcmds.push(l);
-            this.__index++;
-        // }
+
+        this.__localcmds.length = this.__index;
+        const l = cmd as (Cmd & { index: number })
+        l.index = this.__allcmds.length;
+        this.__localcmds.push(l);
+        this.__index++;
+
         this.__allcmds.push(cmd);
 
         this.__commitListener.forEach((l) => {

@@ -92,10 +92,10 @@ export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, ne
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     }
 }
-export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
+export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     if (rotate !== shape.rotation) {
         shape.rotation = rotate;
-        needUpdateFrame.push({ shape, page });
+        if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     }
 }
 export function shapeModifyName(shape: Shape, name: string) {
@@ -107,13 +107,13 @@ export function shapeModifyVisible(shape: Shape, isVisible: boolean) {
 export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     shape.isLocked = isLocked;
 }
-export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined, needUpdateFrame: { shape: Shape, page: Page }[]) {
+export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     shape.isFlippedHorizontal = hflip;
-    needUpdateFrame.push({ shape, page });
+    if (needUpdateFrame) needUpdateFrame.push({ shape, page });
 }
-export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined, needUpdateFrame: { shape: Shape, page: Page }[]) {
+export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     shape.isFlippedVertical = vflip;
-    needUpdateFrame.push({ shape, page });
+    if (needUpdateFrame) needUpdateFrame.push({ shape, page });
 }
 export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: number) {
     shape.setResizingConstraint(resizingConstraint);
