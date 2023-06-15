@@ -4,7 +4,7 @@ import { Artboard } from "../../data/artboard";
 import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, RectShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../../data/shape";
 import { Page } from "../../data/page";
 
-export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: UpdateFrameApi): boolean {
+export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
     let changed = false;
     if (x !== frame.x) {
@@ -24,7 +24,7 @@ export function setFrame(page: Page, shape: Shape, x: number, y: number, w: numb
 
 const float_accuracy = 1e-7;
 
-function __updateShapeFrame(page: Page, shape: Shape, api: UpdateFrameApi): boolean {
+function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
     const p: Shape | undefined = shape.parent;
     if (!p || (p instanceof Artboard)) return false;
 
@@ -131,25 +131,13 @@ function __updateShapeFrame(page: Page, shape: Shape, api: UpdateFrameApi): bool
     return xychanged || whchanged;
 }
 
-export interface UpdateFrameApi {
+interface Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
     shapeModifyY(page: Page, shape: Shape, y: number): void;
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
 }
 
-// /**
-//  * @deprecated
-//  * @param page 
-//  * @param shape 
-//  * @param api 
-//  */
-// export function updateFrame(page: Page, shape: Shape, api: UpdateFrameApi) {
-//     // updateFrameXY(page, shape, api);
-//     // updateFrameWH(page, shape, api);
-//     updateShapesFrame(page, [shape], api)
-// }
-
-export function updateShapesFrame(page: Page, shapes: Shape[], api: UpdateFrameApi) {
+export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
     type Node = { shape: Shape, updated: boolean, childs: Node[], changed: boolean, needupdate: boolean }
     const updatetree: Map<string, Node> = new Map();
     shapes.forEach((s) => {
@@ -208,18 +196,18 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: UpdateFrameA
     }
 }
 
-export function exportShape(shape: Shape): string {
+export function exportShape(shape: Shape): Object {
     switch (shape.type) {
-        case ShapeType.Artboard: return JSON.stringify(exportArtboard(shape as Artboard))
-        case ShapeType.Image: return JSON.stringify(exportImageShape(shape as ImageShape)) // todo
-        case ShapeType.Line: return JSON.stringify(exportLineShape(shape as LineShape))
-        case ShapeType.Oval: return JSON.stringify(exportOvalShape(shape as OvalShape))
-        case ShapeType.Path: return JSON.stringify(exportPathShape(shape as PathShape))
-        case ShapeType.Rectangle: return JSON.stringify(exportRectShape(shape as RectShape))
-        case ShapeType.SymbolRef: return JSON.stringify(exportSymbolRefShape(shape as SymbolRefShape))
-        case ShapeType.Symbol: return JSON.stringify(exportSymbolShape(shape as SymbolShape))
-        case ShapeType.Text: return JSON.stringify(exportTextShape(shape as TextShape))
-        case ShapeType.Group: return JSON.stringify(exportGroupShape(shape as GroupShape))
+        case ShapeType.Artboard: return (exportArtboard(shape as Artboard))
+        case ShapeType.Image: return (exportImageShape(shape as ImageShape)) // todo 图片？？
+        case ShapeType.Line: return (exportLineShape(shape as LineShape))
+        case ShapeType.Oval: return (exportOvalShape(shape as OvalShape))
+        case ShapeType.Path: return (exportPathShape(shape as PathShape))
+        case ShapeType.Rectangle: return (exportRectShape(shape as RectShape))
+        case ShapeType.SymbolRef: return (exportSymbolRefShape(shape as SymbolRefShape))
+        case ShapeType.Symbol: return (exportSymbolShape(shape as SymbolShape))
+        case ShapeType.Text: return (exportTextShape(shape as TextShape))
+        case ShapeType.Group: return (exportGroupShape(shape as GroupShape))
         default: throw new Error("unknow shape type: " + shape.type)
     }
 }
