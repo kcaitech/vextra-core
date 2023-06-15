@@ -1,7 +1,9 @@
 import { Color, Border, BorderPosition, Style, BorderStyle, MarkerType } from "../data/style";
 // 边框
 export function addBorder(style: Style, border: Border) {
-    style.borders.unshift(border);
+    const { isEnabled, color, contextSettings, fillType, position, thickness, borderStyle, endMarkerType, startMarkerType } = border;
+    const _b = new Border(isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, endMarkerType, startMarkerType);
+    style.borders.unshift(_b);
 }
 export function setBorderColor(
     style: Style,
@@ -40,7 +42,7 @@ export function deleteBorder(style: Style, idx: number) {
     borders.splice(idx, 1);
 }
 export function replaceBorders(style: Style, borders: Border[]) {
-    style.borders.length = 0;
+    style.borders.splice(0, style.borders.length);
     for (let i = 0; i < borders.length; i++) {
         const b_sim = borders[i];
         const { isEnabled, fillType, color, contextSettings, position, thickness, borderStyle,
