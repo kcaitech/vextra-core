@@ -35,7 +35,7 @@ import {
 } from "../../coop/data/classes";
 import { Document } from "../../data/document"
 import { exportPage } from "../../io/baseexport";
-import { exportShape } from "../utils";
+import { exportShape } from "./utils";
 import { Span } from "../../data/text";
 import { importSpan } from "../../io/baseimport";
 

@@ -3,7 +3,7 @@ import { DataGuard } from '../data/notransact';
 import { ShapeFrame } from '../data/shape';
 import { newPage, newRectShape } from './creator';
 import { adjustLB2, adjustLT2, adjustRB2, adjustRT2 } from './frame';
-import { updateFrame } from './utils';
+import { updateFrame } from './command/utils';
 import * as api from './basicapi'
 
 const {

@@ -18,7 +18,6 @@ export {
     setBorderEndMarkerType
 } from "./border";
 export { deleteText, insertText } from "./text";
-export { updateFrame } from "../utils";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     document.insertPage(index, page)

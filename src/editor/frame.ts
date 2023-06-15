@@ -1,7 +1,6 @@
 import { Page } from "data/page";
 import { Matrix } from "../basic/matrix";
 import { Shape } from "../data/shape";
-import { setFrame } from "./utils";
 
 export interface Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
@@ -10,6 +9,24 @@ export interface Api {
     shapeModifyRotate(page: Page, shape: Shape, rotate: number): void;
     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined): void;
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined): void;
+}
+
+function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
+    const frame = shape.frame;
+    let changed = false;
+    if (x !== frame.x) {
+        api.shapeModifyX(page, shape, x)
+        changed = true;
+    }
+    if (y !== frame.y) {
+        api.shapeModifyY(page, shape, y)
+        changed = true;
+    }
+    if (w !== frame.width || h !== frame.height) {
+        api.shapeModifyWH(page, shape, w, h)
+        changed = true;
+    }
+    return changed;
 }
 
 export function translateTo(api: Api, page: Page, shape: Shape, x: number, y: number) {
