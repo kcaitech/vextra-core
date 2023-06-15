@@ -26,5 +26,4 @@ export function replaceFills(style: Style, fills: Fill[]) {
         const _f = new Fill(isEnabled, fillType, color, contextSettings);
         style.fills.push(_f);
     }
-    console.log('replace');
 }

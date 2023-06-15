@@ -19,70 +19,71 @@ function expandBounds(bounds: { left: number, top: number, right: number, bottom
     if (y < bounds.top) bounds.top = y;
     else if (y > bounds.bottom) bounds.bottom = y;
 }
-export interface PositonAdjust {
+// 用于批量操作的单个操作类型
+export interface PositonAdjust { // 涉及属性：frame.x、frame.y
     target: Shape
     transX: number
     transY: number
 }
-export interface ConstrainerProportionsAction {
+export interface ConstrainerProportionsAction { // constrainerProportions
     target: Shape
     value: boolean
 }
-export interface FrameAdjust {
+export interface FrameAdjust { // frame.width、frame.height
     target: Shape
     widthExtend: number
     heightExtend: number
 }
-export interface RotateAdjust {
+export interface RotateAdjust { // rotation
     target: Shape
     value: number
 }
-export interface FlipAction {
+export interface FlipAction { // isFlippedHorizontal、isFlippedVertical
     target: Shape
     direction: 'horizontal' | 'vertical'
 }
 
-export interface FillColorAction {
+export interface FillColorAction { // fill.color
     target: Shape
     index: number
     value: Color
 }
-export interface FillEnableAction {
+export interface FillEnableAction { // fill.Enabled
     target: Shape
     index: number
     value: boolean
 }
-export interface FillAddAction {
+export interface FillAddAction { // style.fills
     target: Shape
     value: Fill
 }
-export interface FillDeleteAction {
+export interface FillDeleteAction { // style.fills
     target: Shape
     index: number
 }
-export interface FillsReplaceAction {
+export interface FillsReplaceAction { // style.fills
     target: Shape
     value: Fill[]
 }
-export interface BorderColorAction {
+export interface BorderColorAction { // border.color
     target: Shape
     index: number
     value: Color
 }
-export interface BorderEnableAction {
+export interface BorderEnableAction { // border.Enabled
     target: Shape
     index: number
     value: boolean
 }
-export interface BorderAddAction {
+export interface BorderAddAction { // style.borders
     target: Shape
     value: Border
 }
-export interface BorderDeleteAction {
+export interface BorderDeleteAction { // style.borders
     target: Shape
     index: number
 }
-export interface BordersReplaceAction {
+export interface BordersReplaceAction { // style.borders
     target: Shape
     value: Border[]
 }
