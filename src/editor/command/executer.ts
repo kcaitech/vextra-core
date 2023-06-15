@@ -52,6 +52,7 @@ import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
 import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
+import { updateFrame } from "./utils";
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
@@ -197,7 +198,7 @@ export class CMDExecuter {
         const updated = new Set<string>();
         needUpdateFrame.forEach((item) => {
             if (updated.has(item.shape.id)) return;
-            api.updateFrame(item.page, item.shape, api);
+            updateFrame(item.page, item.shape, api);
             updated.add(item.shape.id);
         })
     }
