@@ -21,7 +21,7 @@ import { CMDExecuter } from './command/executer';
 import { Cmd } from '../coop/data/classes';
 import { CoopRepository } from './command/cooprepo';
 import { Page } from 'data/page';
-import { updateFrame } from './command/utils';
+import { updateShapesFrame } from './command/utils';
 
 function createTestDocument() {
     const repo = new Repository()
@@ -60,7 +60,11 @@ test("group", () => {
         cmd.addInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
         api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
         cmd.addInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
-        needUpdateFrame.forEach((item) => { updateFrame(item.page, item.page, api) })
+        if (needUpdateFrame.length > 0) {
+            const page = needUpdateFrame[0].page;
+            const shapes = needUpdateFrame.map((v) => v.shape);
+            updateShapesFrame(page, shapes, api)
+        }
         repo.commit();
     }
 

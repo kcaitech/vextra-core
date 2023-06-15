@@ -22,51 +22,50 @@ export function setFrame(page: Page, shape: Shape, x: number, y: number, w: numb
     return changed;
 }
 
-function updateFrameXY(page: Page, shape: Shape, api: UpdateFrameApi) {
-    const realFrame = shape.boundingBox();
-    const p: Shape | undefined = shape.parent;
+const float_accuracy = 1e-7;
 
-    if (realFrame.x < 0 || realFrame.y < 0) {
+function __updateShapeFrame(page: Page, shape: Shape, api: UpdateFrameApi): boolean {
+    const p: Shape | undefined = shape.parent;
+    if (!p || (p instanceof Artboard)) return false;
+
+    const cf = shape.boundingBox();
+    let xychanged = false;
+    for (; ;) { // update xy
+        if (cf.x >= 0 && cf.y >= 0) break;
         // 向上调整x,y
-        let deltaX = realFrame.x < 0 ? -realFrame.x : 0;
-        let deltaY = realFrame.y < 0 ? -realFrame.y : 0;
+        let deltaX = cf.x < 0 ? -cf.x : 0;
+        let deltaY = cf.y < 0 ? -cf.y : 0;
 
-        if (p && !(p instanceof Artboard)) {
-            api.shapeModifyX(page, shape, shape.frame.x + deltaX)
-            api.shapeModifyY(page, shape, shape.frame.y + deltaY)
+        api.shapeModifyX(page, shape, shape.frame.x + deltaX)
+        api.shapeModifyY(page, shape, shape.frame.y + deltaY)
 
-            if (p.isNoTransform()) {
-                if (deltaX > 0) api.shapeModifyX(page, p, p.frame.x - deltaX); // p.frame.x -= deltaX;
-                if (deltaY > 0) api.shapeModifyY(page, p, p.frame.y - deltaY); // p.frame.y -= deltaY
-            } else {
-                const m = p.matrix2Parent();
-                const x1 = -deltaX;
-                const y1 = -deltaY;
-                const target = m.computeCoord(x1, y1);
-                const cur = m.computeCoord(0, 0);
-                const dx = target.x - cur.x;
-                const dy = target.y - cur.y;
-                api.shapeModifyX(page, p, p.frame.x + dx)
-                api.shapeModifyY(page, p, p.frame.y + dy)
-            }
-
-            p.childs.forEach((c: Shape) => {
-                if (c.id === shape.id) return;
-                api.shapeModifyX(page, c, c.frame.x + deltaX)
-                api.shapeModifyY(page, c, c.frame.y + deltaY)
-            })
-
-            updateFrameXY(page, p, api);
+        if (p.isNoTransform()) {
+            if (deltaX > 0) api.shapeModifyX(page, p, p.frame.x - deltaX); // p.frame.x -= deltaX;
+            if (deltaY > 0) api.shapeModifyY(page, p, p.frame.y - deltaY); // p.frame.y -= deltaY
+        } else {
+            const m = p.matrix2Parent();
+            const x1 = -deltaX;
+            const y1 = -deltaY;
+            const target = m.computeCoord(x1, y1);
+            const cur = m.computeCoord(0, 0);
+            const dx = target.x - cur.x;
+            const dy = target.y - cur.y;
+            api.shapeModifyX(page, p, p.frame.x + dx)
+            api.shapeModifyY(page, p, p.frame.y + dy)
         }
+
+        p.childs.forEach((c: Shape) => {
+            if (c.id === shape.id) return;
+            api.shapeModifyX(page, c, c.frame.x + deltaX)
+            api.shapeModifyY(page, c, c.frame.y + deltaY)
+        })
+        xychanged = true;
+        break;
     }
-}
 
-function updateFrameWH(page: Page, shape: Shape, api: UpdateFrameApi) {
-    const float_accuracy = 1e-7;
-
-    const p: Shape | undefined = shape.parent;
-    // // 更新parent的frame
-    if (p && !(p instanceof Artboard)) {
+    let whchanged = false;
+    for (; ;) {
+        // // 更新parent的frame
         const pg = p as GroupShape;
         const pf = p.frame;
         const cc = pg.childs.length;
@@ -83,9 +82,8 @@ function updateFrameWH(page: Page, shape: Shape, api: UpdateFrameApi) {
             b = Math.max(cb, b);
         }
         // 
-        let changed = false;
         if (p.isNoTransform()) {
-            changed = setFrame(page, p, pf.x + l, pf.y + t, r - l, b - t, api);
+            whchanged = setFrame(page, p, pf.x + l, pf.y + t, r - l, b - t, api);
         } else {
             const m = p.matrix2Parent();
 
@@ -117,19 +115,20 @@ function updateFrameWH(page: Page, shape: Shape, api: UpdateFrameApi) {
                 dy += target.y - cur.y;
             }
 
-            changed = setFrame(page, p, pf.x + dx, pf.y + dy, w, h, api)
+            whchanged = setFrame(page, p, pf.x + dx, pf.y + dy, w, h, api)
         }
 
-        if (changed && (Math.abs(l) > float_accuracy || Math.abs(t) > float_accuracy)) { // 仅在对象被删除后要更新？
+        if (whchanged && (Math.abs(l) > float_accuracy || Math.abs(t) > float_accuracy)) { // 仅在对象被删除后要更新？
             for (let i = 0; i < cc; i++) {
                 const c = pg.childs[i];
                 api.shapeModifyX(page, c, c.frame.x - l)
                 api.shapeModifyY(page, c, c.frame.y - t)
             }
         }
-
-        if (changed) updateFrameWH(page, p, api);
+        break;
     }
+
+    return xychanged || whchanged;
 }
 
 export interface UpdateFrameApi {
@@ -138,9 +137,75 @@ export interface UpdateFrameApi {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
 }
 
-export function updateFrame(page: Page, shape: Shape, api: UpdateFrameApi) {
-    updateFrameXY(page, shape, api);
-    updateFrameWH(page, shape, api);
+// /**
+//  * @deprecated
+//  * @param page 
+//  * @param shape 
+//  * @param api 
+//  */
+// export function updateFrame(page: Page, shape: Shape, api: UpdateFrameApi) {
+//     // updateFrameXY(page, shape, api);
+//     // updateFrameWH(page, shape, api);
+//     updateShapesFrame(page, [shape], api)
+// }
+
+export function updateShapesFrame(page: Page, shapes: Shape[], api: UpdateFrameApi) {
+    type Node = { shape: Shape, updated: boolean, childs: Node[], changed: boolean, needupdate: boolean }
+    const updatetree: Map<string, Node> = new Map();
+    shapes.forEach((s) => {
+        let n: Node | undefined = updatetree.get(s.id);
+        if (n) {
+            n.needupdate = true;
+            return;
+        }
+        n = { shape: s, updated: false, childs: [], changed: false, needupdate: true }
+        updatetree.set(s.id, n);
+
+        let p = s.parent;
+        while (p) {
+            let pn: Node | undefined = updatetree.get(p.id);
+            if (pn) {
+                pn.childs.push(n);
+            }
+            else {
+                pn = { shape: p, updated: false, childs: [n], changed: false, needupdate: false }
+                updatetree.set(p.id, pn);
+            }
+            n = pn;
+            p = p.parent;
+        }
+    });
+
+    const root: Node | undefined = updatetree.get(page.id);
+    if (!root) throw new Error("")
+
+    while (updatetree.size > 0 && !root.updated) {
+        // get first node of childs is empty or all updated!
+        let next = root;
+        while (next) {
+            if (next.childs.length === 0) break;
+            const childAllUpdated = ((childs) => {
+                for (let i = 0; i < childs.length; i++) {
+                    if (!childs[i].updated) {
+                        next = childs[i]; // 下一个未更新的子节点
+                        return false;
+                    }
+                }
+                return true;
+            })(next.childs);
+            if (childAllUpdated) break;
+            // continue
+        }
+        const needupdate = next.needupdate || ((childs) => {
+            for (let i = 0; i < childs.length; i++) {
+                if (childs[i].changed) return true;
+            }
+            return false;
+        })(next.childs)
+        const changed = needupdate && __updateShapeFrame(page, next.shape, api);
+        next.updated = true;
+        next.changed = changed;
+    }
 }
 
 export function exportShape(shape: Shape): string {

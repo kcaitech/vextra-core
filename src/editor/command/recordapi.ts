@@ -8,7 +8,7 @@ import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exp
 import { PageCmdModify } from "../../coop/data/classes";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
 import { GroupShape, RectRadius, Shape, TextShape } from "../../data/shape";
-import { exportShape, updateFrame } from "./utils";
+import { exportShape, updateShapesFrame } from "./utils";
 import { ShapeCmdMove } from "../../coop/data/classes";
 import { ShapeCmdModify } from "../../coop/data/classes";
 import { Artboard } from "../../data/artboard";
@@ -33,9 +33,10 @@ export class Api {
     }
     commit(): Cmd {
         if (this.needUpdateFrame.length > 0) {
-            // todo 需要优化
             const update = this.needUpdateFrame.slice(0);
-            update.forEach((item) => updateFrame(item.page, item.shape, this))
+            const page = update[0].page;
+            const shapes = update.map((v) => v.shape);
+            updateShapesFrame(page, shapes, this)
         }
         this.needUpdateFrame.length = 0;
         // group cmds

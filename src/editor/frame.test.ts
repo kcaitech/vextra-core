@@ -3,7 +3,7 @@ import { DataGuard } from '../data/notransact';
 import { ShapeFrame } from '../data/shape';
 import { newPage, newRectShape } from './creator';
 import { adjustLB2, adjustLT2, adjustRB2, adjustRT2 } from './frame';
-import { updateFrame } from './command/utils';
+import { updateShapesFrame } from './command/utils';
 import * as api from './basicapi'
 
 const {
@@ -38,7 +38,7 @@ test("lt", () => {
     const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
     shape.rotate(30);
     page.addChild(shape);
-    updateFrame(page, shape, api);
+    updateShapesFrame(page, [shape], api);
 
     const dx = 1, dy = 1;
     const frame = shape.frame2Page();
@@ -48,7 +48,7 @@ test("lt", () => {
     const save_rb = shape.matrix2Page().computeCoord(shape.frame.width, shape.frame.height)
 
     adjustLT2(api, page, shape, x, y);
-    updateFrame(page, shape, api);
+    updateShapesFrame(page, [shape], api);
 
     const m2p = shape.matrix2Page();
     const lt = m2p.computeCoord(0, 0);
@@ -67,7 +67,7 @@ test("lb", () => {
     const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
     shape.rotate(30);
     page.addChild(shape);
-    updateFrame(page, shape, api);
+    updateShapesFrame(page, [shape], api);
 
     const dx = 1, dy = 1;
     const m = shape.matrix2Page();
@@ -78,7 +78,7 @@ test("lb", () => {
     const save_rt = m.computeCoord(shape.frame.width, 0)
 
     adjustLB2(api, page, shape, x, y);
-    updateFrame(page, shape, api);
+    updateShapesFrame(page, [shape], api);
 
     // debug
     const m2p = shape.matrix2Page();
@@ -98,7 +98,7 @@ test("rb", () => {
     const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
     shape.rotate(30);
     page.addChild(shape);
-    updateFrame(page, shape, api);
+    updateShapesFrame(page, [shape], api);
 
     const dx = 1, dy = 1;
     const frame = shape.frame2Page();
@@ -109,7 +109,7 @@ test("rb", () => {
     const __saveLT = __m2p.computeCoord(0, 0)
 
     adjustRB2(api, page, shape, x, y);
-    updateFrame(page, shape, api);
+    updateShapesFrame(page, [shape], api);
 
     // debug
     const m = shape.matrix2Page();
@@ -130,7 +130,7 @@ test("rt", () => {
     const shape = newRectShape("Rect", new ShapeFrame(0, 0, 100, 100));
     shape.rotate(30);
     page.addChild(shape);
-    updateFrame(page, shape, api);
+    updateShapesFrame(page, [shape], api);
 
     const dx = 1, dy = 1;
     const m = shape.matrix2Page();
@@ -142,7 +142,7 @@ test("rt", () => {
     const __saveLB = __m2p.computeCoord(0, shape.frame.height)
 
     adjustRT2(api, page, shape, x, y);
-    updateFrame(page, shape, api);
+    updateShapesFrame(page, [shape], api);
 
     // debug
     const m2p = shape.matrix2Page();
