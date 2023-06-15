@@ -8,7 +8,7 @@ import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
 import { RectRadius, ShapeType } from "../data/baseclasses";
 import { updateFrame } from "./utils";
 import { Artboard } from "../data/artboard";
-import { createHorizontalBox } from "../basic/utils";
+import { createHorizontalBox } from "./utils";
 import { SpanAttr } from "../data/text";
 import { deleteText, insertText } from "./text";
 import { Page } from "../data/page";

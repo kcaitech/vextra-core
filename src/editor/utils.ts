@@ -1,8 +1,8 @@
-import { exportArtboard, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape } from "../io/baseexport";
+import { exportArtboard, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape, IExportContext } from "../io/baseexport";
+import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext } from "io/baseimport";
 import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
 import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, RectShape, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
-
 export function setFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
     let changed = false;
     if (x !== frame.x) {
@@ -157,4 +157,18 @@ export function base64ToDataUrl(format: string, base64: string) {
         ['png', `data:image/png;base64,${base64}`]
     ])
     return de_fileheader.get(format) || '';
+}
+export function createHorizontalBox(points: [number, number][]) {
+    if (points.length < 4) return;
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+        xs.push(points[i][0]);
+        ys.push(points[i][1]);
+    }
+    const top = Math.min(...ys);
+    const bottom = Math.max(...ys);
+    const left = Math.min(...xs);
+    const right = Math.max(...xs);
+    return { top, bottom, left, right };
 }
