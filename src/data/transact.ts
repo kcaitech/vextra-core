@@ -362,13 +362,15 @@ export class Repository extends Watchable(Object) implements IDataGuard {
     private __ph: ProxyHandler;
     private __trans: Transact[] = [];
     private __index: number = 0;
+    private __needundo: boolean;
 
-    constructor(settrap: boolean = false) {
+    constructor(props?: {settrap?: boolean, needundo?: boolean}) {
         super();
         // this.__selection = selection;
         this.__context = new TContext();
         this.__ph = new ProxyHandler(this.__context);
-        this.__context.settrap = settrap;
+        this.__context.settrap = props ? (props.settrap ?? false) : false; // default false
+        this.__needundo = props ? (props.needundo ?? true) : true; // default true
     }
     get transactCtx() {
         return this.__context;
@@ -428,8 +430,10 @@ export class Repository extends Watchable(Object) implements IDataGuard {
         }
         this.__context.cache.clear();
         this.__trans.length = this.__index;
-        this.__trans.push(this.__context.transact);
-        this.__index++;
+        if (this.__needundo) {
+            this.__trans.push(this.__context.transact);
+            this.__index++;
+        }
         this.__context.transact = undefined;
         this.__context.fireNotify();
         this.notify();

@@ -86,6 +86,7 @@ const TIME_OUT = 1000 * 60 // 1分钟
 export class ResourceMgr<T> extends Watchable(Object) {
     private __resource = new Map<string, T>()
     private __loader?: (id: string) => Promise<T>
+    private __updater?: (data: T) => void;
     private __guard?: IDataGuard;
     private __loading: Map<string, {
         id: string,
@@ -135,12 +136,16 @@ export class ResourceMgr<T> extends Watchable(Object) {
     setLoader(loader?: (id: string) => Promise<T>) {
         this.__loader = loader;
     }
+    setUpdater(updater: (data: T) => void) {
+        this.__updater = updater;
+    }
     getSync(id: string): T | undefined {
         return this.__resource.get(id)
     }
     add(id: string, r: T) {
         r = this.__guard && this.__guard.guard(r) || r
         this.__resource.set(id, r);
+        if (this.__updater) this.__updater(r);
         this.notify();
         return r;
     }
