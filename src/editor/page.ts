@@ -8,8 +8,8 @@ import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } 
 import { Document } from "../data/document";
 import { translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
-import { CoopRepository } from "./cooprepo";
-import { Api } from "./api";
+import { CoopRepository } from "./command/cooprepo";
+import { Api } from "./command/recordapi";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;

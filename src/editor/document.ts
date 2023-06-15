@@ -6,7 +6,7 @@ import { v4 as uuid } from "uuid";
 import { exportPage } from "../io/baseexport";
 import { importPage } from "../io/baseimport";
 import { newDocument } from "./creator";
-import { CoopRepository } from "./cooprepo";
+import { CoopRepository } from "./command/cooprepo";
 import { Repository } from "../data/transact";
 
 export function createDocument(documentName: string, repo: Repository): Document {

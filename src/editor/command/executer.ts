@@ -21,8 +21,8 @@ import {
     ShapeOpMove,
     IdOpSet,
     ShapeOpRemove
-} from "../coop/data/classes";
-import { Document } from "../data/document";
+} from "../../coop/data/classes";
+import { Document } from "../../data/document";
 import {
     IImportContext,
     importFlattenShape,
@@ -43,15 +43,15 @@ import {
     importBorderPosition,
     importBorderStyle,
     importRectRadius
-} from "../io/baseimport";
-import * as types from "../data/typesdefine"
-import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape, TextShape, RectShape } from "../data/classes";
+} from "../../io/baseimport";
+import * as types from "../../data/typesdefine"
+import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape, TextShape, RectShape } from "../../data/classes";
 
-import * as api from "./basicapi"
+import * as api from "../basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
-import { Repository } from "../data/transact";
-import { Cmd, CmdType, IdOp, OpType } from "../coop/data/classes";
-import { ArrayOpInsert, ArrayOpRemove } from "../coop/data/basictypes";
+import { Repository } from "../../data/transact";
+import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
+import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);

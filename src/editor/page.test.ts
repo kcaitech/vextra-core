@@ -17,9 +17,9 @@ import { ShapeFrame } from '../data/baseclasses';
 import { Shape } from '../data/shape';
 import { ShapeCmdGroup } from '../coop/data/shapecmd';
 import { exportPage, exportRectShape } from '../io/baseexport';
-import { CMDExecuter } from './cmdexecuter';
+import { CMDExecuter } from './command/executer';
 import { Cmd } from '../coop/data/classes';
-import { CoopRepository } from './cooprepo';
+import { CoopRepository } from './command/cooprepo';
 import { Page } from 'data/page';
 
 function createTestDocument() {

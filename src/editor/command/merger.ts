@@ -1,5 +1,5 @@
-import { arrayEquals } from "../coop/data/basic";
-import { Cmd, CmdType, IdOpNone, IdOpRemove, IdOpSet, OpType, PageCmdModify, ShapeArrayAttrModify, ShapeCmdModify } from "../coop/data/classes";
+import { arrayEquals } from "../../coop/data/basic";
+import { Cmd, CmdType, IdOpNone, IdOpRemove, IdOpSet, OpType, PageCmdModify, ShapeArrayAttrModify, ShapeCmdModify } from "../../coop/data/classes";
 
 enum MERGE_STATE {
     CONTINUE = 0,

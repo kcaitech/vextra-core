@@ -7,7 +7,7 @@ import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { SpanAttr } from "../data/text";
 import { Page } from "../data/page";
-import { CoopRepository } from "./cooprepo";
+import { CoopRepository } from "./command/cooprepo";
 export class ShapeEditor {
     private __shape: Shape;
     private __repo: CoopRepository;

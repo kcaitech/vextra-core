@@ -5,11 +5,11 @@ import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
-import { CoopRepository } from "./cooprepo";
+import { CoopRepository } from "./command/cooprepo";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { ResourceMgr } from "../data/basic";
-import { Api } from "./api";
+import { Api } from "./command/recordapi";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number

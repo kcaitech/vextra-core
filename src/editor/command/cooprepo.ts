@@ -1,9 +1,9 @@
-import { Cmd } from "../coop/data/classes";
-import { Document } from "../data/document";
-import { Repository } from "../data/transact";
-import { CMDExecuter } from "./cmdexecuter";
-import { CMDReverter } from "./cmdrevert";
-import { Api } from "./api";
+import { Cmd } from "../../coop/data/classes";
+import { Document } from "../../data/document";
+import { Repository } from "../../data/transact";
+import { CMDExecuter } from "./executer";
+import { CMDReverter } from "./reverter";
+import { Api } from "./recordapi";
 
 export class CoopRepository {
     private __repo: Repository;

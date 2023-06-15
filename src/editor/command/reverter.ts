@@ -1,4 +1,4 @@
-import { uuid } from "../basic/uuid";
+import { uuid } from "../../basic/uuid";
 import {
     Cmd,
     CmdType,
@@ -31,15 +31,13 @@ import {
     ShapeOpNone,
     ShapeOpRemove,
     ShapeOpMove,
-    ArrayOpAttr,
     TextCmdGroup
-} from "../coop/data/classes";
-import { Document } from "../data/document"
-import { exportBorder, exportFill, exportPage } from "../io/baseexport";
-import { exportShape } from "./utils";
-import { BORDER_ID, FILLS_ID } from "./consts";
-import { Span } from "../data/text";
-import { importSpan } from "../io/baseimport";
+} from "../../coop/data/classes";
+import { Document } from "../../data/document"
+import { exportPage } from "../../io/baseexport";
+import { exportShape } from "../utils";
+import { Span } from "../../data/text";
+import { importSpan } from "../../io/baseimport";
 
 export class CMDReverter {
     private __document: Document;
