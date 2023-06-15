@@ -2,7 +2,7 @@ import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, ex
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
 import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, RectShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../../data/shape";
-import { Page } from "data/page";
+import { Page } from "../../data/page";
 
 export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: UpdateFrameApi): boolean {
     const frame = shape.frame;
