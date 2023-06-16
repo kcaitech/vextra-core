@@ -45,7 +45,7 @@ import {
     importRectRadius
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
-import { ImageShape, SymbolRefShape, ArtboardRef, GroupShape, Page, Shape, TextShape, RectShape } from "../../data/classes";
+import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape } from "../../data/classes";
 
 import * as api from "../basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
@@ -62,8 +62,12 @@ function importShape(data: string, document: Document) {
                 obj.setImageMgr(document.mediasMgr)
             } else if (obj instanceof SymbolRefShape) {
                 obj.setSymbolMgr(document.symbolsMgr)
-            } else if (obj instanceof ArtboardRef) {
-                obj.setArtboardMgr(document.artboardMgr)
+            // } else if (obj instanceof ArtboardRef) {
+            //     obj.setArtboardMgr(document.artboardMgr)
+            } else if (obj instanceof Artboard) {
+                document.artboardMgr.add(obj.id, obj);
+            } else if (obj instanceof SymbolShape) {
+                document.symbolsMgr.add(obj.id, obj);
             }
         }
     }
