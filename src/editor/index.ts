@@ -1,12 +1,12 @@
 import { Document } from "../data/document";
 import { Page } from "../data/page";
 import { Shape } from "../data/shape";
-import { Repository } from "../data/transact";
 import { ISave4Restore } from "../data/basic";
 import { DocEditor } from "./document";
 import { PageEditor } from "./page";
 import { ShapeEditor } from "./shape";
 import { Controller } from "./controller";
+import { CoopRepository } from "./command/cooprepo";
 
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";
@@ -14,12 +14,12 @@ export { PageEditor } from "./page";
 export class Editor {
     private m_data: Document;
     // private m_selection: Selection;
-    private m_repo: Repository;
+    private m_repo: CoopRepository;
     // private m_shadows: ShapeNaviShadowMgr | undefined;
     private m_docEditor: DocEditor | undefined;
     private m_pageEditors: Map<string, PageEditor> = new Map();
 
-    constructor(data: Document, repo: Repository, selection: ISave4Restore) {
+    constructor(data: Document, repo: CoopRepository, selection: ISave4Restore) {
         this.m_data = data;
         // this.m_selection = selection;
         this.m_repo = repo;
@@ -27,7 +27,7 @@ export class Editor {
 
     editor4Doc(): DocEditor {
         if (this.m_docEditor === undefined) {
-            this.m_docEditor = new DocEditor(this.m_data, this.m_repo as Repository);
+            this.m_docEditor = new DocEditor(this.m_data, this.m_repo);
         }
         return this.m_docEditor;
     }
@@ -37,7 +37,7 @@ export class Editor {
         if (e) {
             return e;
         }
-        e = new PageEditor(this.m_repo as Repository, page, this.m_data);
+        e = new PageEditor(this.m_repo, page, this.m_data);
         this.m_pageEditors.set(page.id, e);
         return e;
     }
@@ -53,7 +53,7 @@ export class Editor {
         return pe.editor4Shape(shape);
     }
     controller(): Controller {
-        const e = new Controller(this.m_repo as Repository, this.data);
+        const e = new Controller(this.m_repo, this.data);
         return e;
     }
 

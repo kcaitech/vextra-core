@@ -6,9 +6,9 @@ export interface PositonAdjust {
     transX: number
     transY: number
 }
-export function arrange(pas: PositonAdjust[]) {
-    for (let i = 0; i < pas.length; i++) {
-        const action = pas[i];
-        translate(action.target, action.transX, action.transY)
-    }
-}
+// export function arrange(pas: PositonAdjust[]) {
+//     for (let i = 0; i < pas.length; i++) {
+//         const action = pas[i];
+//         translate(action.target, action.transX, action.transY)
+//     }
+// }

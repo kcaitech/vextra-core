@@ -2,10 +2,9 @@ import { v4 as uuid } from "uuid";
 import { Page } from "../data/page";
 import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
-import { Repository } from "../data/transact";
 import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape } from "../data/shape";
 import * as types from "../data/typesdefine"
-import { importGroupShape, IImportContext, importPage, importArtboard, importTextShape } from "../io/baseimport";
+import { importGroupShape, importPage, importArtboard, importTextShape } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
@@ -15,13 +14,10 @@ import {
     Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, RectRadius, CurveMode, Span, UserInfo
 } from "../data/baseclasses";
 import { BasicArray } from "../data/basic";
-import { Para, Text } from "../data/text";
+import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-const noeffectCtx = new class implements IImportContext {
-    afterImport(_: any): void { }
-}
 
 export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
@@ -40,13 +36,13 @@ export function newDocument(documentName: string, repo: Repository): Document {
 export function newPage(name: string): Page {
     templage_page.id = uuid();
     templage_page.name = name;
-    return importPage(noeffectCtx, templage_page as types.Page);
+    return importPage(templage_page as types.Page);
 }
 
 export function newGroupShape(name: string): GroupShape {
     template_group_shape.id = uuid();
     template_group_shape.name = name // i18n
-    const group = importGroupShape(noeffectCtx, template_group_shape as types.GroupShape);
+    const group = importGroupShape(template_group_shape as types.GroupShape);
     addCommonAttr(group)
     return group;
 }
@@ -58,7 +54,7 @@ export function newStyle(): Style {
     const borders = new BasicArray<Border>();
     const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 216, 216, 216);
-    const fill = new Fill(true, FillType.SolidColor, fillColor, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
     const fills = new BasicArray<Fill>();
     const innerShadows = new BasicArray<Shadow>();
     const shadows = new BasicArray<Shadow>();
@@ -71,10 +67,10 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     template_artboard.id = uuid();
     template_artboard.name = name;
     template_artboard.frame = frame;
-    const artboard = importArtboard(noeffectCtx, template_artboard as types.Artboard);
+    const artboard = importArtboard(template_artboard as types.Artboard);
     const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 255, 255, 255);
-    const fill = new Fill(true, FillType.SolidColor, fillColor, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
     artboard.style.fills.push(fill);
     artboard.hasBackgroundColor = true;
     artboard.isVisible = true;
@@ -131,11 +127,12 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     addCommonAttr(shape);
     return shape;
 }
-
+// 后续需要传入字体、字号、颜色信息
 export function newTextShape(name: string, frame: ShapeFrame, content?: string): TextShape {
     template_text_shape.id = uuid();
     template_text_shape.name = name;
-    const textshape: TextShape = importTextShape(noeffectCtx, template_text_shape as types.TextShape);
+    // 后续需要传入字体、字号、颜色信息
+    const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
     textshape.frame = frame;
     addCommonAttr(textshape);
     textshape.text.paras[0].text = content || "\n";
