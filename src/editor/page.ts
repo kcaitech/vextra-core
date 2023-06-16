@@ -253,12 +253,13 @@ export class PageEditor {
         return false;
     }
     // 插入成功，返回插入的shape
-    insert(parent: GroupShape, index: number, shape: Shape): Shape | false {
+    insert(parent: GroupShape, index: number, shape: Shape, adjust = false): Shape | false {
         // adjust shape frame refer to parent
-        const xy = parent.frame2Page();
-        shape.frame.x -= xy.x;
-        shape.frame.y -= xy.y;
-
+        if (!adjust) {
+            const xy = parent.frame2Page();
+            shape.frame.x -= xy.x;
+            shape.frame.y -= xy.y;
+        }
         this.__repo.start("insertshape", {});
         try {
             parent.addChildAt(shape, index);
