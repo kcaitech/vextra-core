@@ -64,6 +64,7 @@ export interface AsyncLineAction {
 export interface AsyncCreator {
     init: (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame) => Shape | undefined;
     init_media: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: { buff: Uint8Array, base64: string }) => Shape | undefined;
+    init_text: (page: Page, parent: GroupShape, frame: ShapeFrame, content: string) => Shape | undefined;
     setFrame: (point: PageXY) => void;
     setFrameByWheel: (point: PageXY) => void;
     close: () => undefined;
@@ -181,6 +182,31 @@ export class Controller {
                 return newShape
             }
         }
+        const init_text = (page: Page, parent: GroupShape, frame: ShapeFrame, content: string): Shape | undefined => {
+            status = Status.Pending;
+            if (this.__document) {
+                let name = content;
+                if (content.length > 19) {
+                    name = name.slice(0, 19) + '...';
+                }
+                const _cs = content.split("\n");
+                if (_cs.length) {
+                    frame.height = _cs.length * 12 || 18;
+                    frame.width = Math.max(..._cs.map(i => i.length)) * 12;
+                }
+                const shape = newTextShape(name, frame, content);
+                const xy = parent.frame2Page();
+                shape.frame.x -= xy.x;
+                shape.frame.y -= xy.y;
+                parent.addChildAt(shape);
+                page.addShape(shape);
+                updateFrame(shape);
+                newShape = parent.childs.at(-1);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+                return newShape
+            }
+        }
         const setFrame = (point: PageXY) => {
             if (!newShape) return;
             status = Status.Pending;
@@ -244,7 +270,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { init, init_media, setFrame, setFrameByWheel, close }
+        return { init, init_media, init_text, setFrame, setFrameByWheel, close }
     }
     // 图形编辑，适用于基础控点、控边的异步编辑
     public asyncRectEditor(shapes: Shape[]): AsyncBaseAction {

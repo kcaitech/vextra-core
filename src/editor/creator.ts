@@ -132,24 +132,13 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     return shape;
 }
 
-export function newTextShape(name: string, frame: ShapeFrame): TextShape {
+export function newTextShape(name: string, frame: ShapeFrame, content?: string): TextShape {
     template_text_shape.id = uuid();
-    template_text_shape.name = name // i18n
-    frame.width = 120;
-    frame.height = 40;
+    template_text_shape.name = name;
     const textshape: TextShape = importTextShape(noeffectCtx, template_text_shape as types.TextShape);
-    const style = newStyle();
-    addCommonAttr(textshape);
-    textshape.style = style;
     textshape.frame = frame;
-    const spans = new BasicArray<Span>();
-    const span = new Span(1);
-    spans.push(span);
-    const para = new Para('\n', spans);
-    const paras = new BasicArray<Para>();
-    paras.push(para);
-    const text = new Text(paras);
-    textshape.text = text;
+    addCommonAttr(textshape);
+    textshape.text.paras[0].text = content || "\n";
     return textshape;
 }
 export function newComment(user: UserInfo, createAt: string, pageId: string, frame: ShapeFrame, content: string, parasiticBody: Shape, rootId?: string, parentId?: string): Comment {
