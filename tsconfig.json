@@ -11,9 +11,11 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "declaration": true,
     "declarationMap": false,
-    "sourceMap": true,
-    "baseUrl": ".",
+    "sourceMap": false,
+    "baseUrl": "src",
+    "outDir": "dist",
     "types": [
       "jest",
       "node"
@@ -28,12 +30,13 @@
     ]
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     "tests/**/*.ts",
-    "tests/**/*.tsx" ],
+    "tests/**/*.tsx"
+  ],
   "exclude": [
     "node_modules",
-    "**/*.js",
+    "**/*.js"
   ]
 }

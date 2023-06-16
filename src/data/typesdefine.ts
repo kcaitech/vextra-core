@@ -210,6 +210,7 @@ export enum GradientType {
 }
 /* fill */
 export type Fill = {
+    id: string
     isEnabled: boolean
     fillType: FillType
     color: Color
@@ -265,6 +266,11 @@ export type Ellipse = {
     cy: number
     rx: number
     ry: number
+}
+/* document syms */
+export type DocumentSyms = {
+    pageId: string
+    symbols: string[]
 }
 /* document meta */
 export type DocumentMeta = {
@@ -323,6 +329,7 @@ export type ColorControls = {
 }
 /* border */
 export type Border = {
+    id: string
     isEnabled: boolean
     fillType: FillType
     color: Color
@@ -434,7 +441,7 @@ export type TextAttr = ParaAttr & {
 }
 /* page */
 export type Page = Shape & {
-    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape)[]
+    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape)[]
 }
 /* oval shape */
 export type OvalShape = PathShape & {
@@ -449,7 +456,7 @@ export type ImageShape = Shape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape)[]
+    childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape)[]
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
@@ -462,8 +469,4 @@ export type Artboard = GroupShape & {
     hasBackgroundColor?: boolean
     includeBackgroundColorInExport?: boolean
     backgroundColor?: Color
-}
-/* artboard ref shape */
-export type ArtboardRef = Shape & {
-    refId: string
 }

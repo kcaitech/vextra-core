@@ -15,6 +15,12 @@ export class Shape extends Watchable(classes.Shape) {
         return new Path();
     }
 
+    getPage(): Shape | undefined {
+        let p: Shape | undefined = this;
+        while (p && p.type !== ShapeType.Page) p = p.parent;
+        return p;
+    }
+
     get parent(): Shape | undefined {
         let p = this.__parent;
         while (p && !(p instanceof Shape)) p = p.parent
@@ -179,16 +185,19 @@ export class GroupShape extends Shape implements classes.GroupShape {
     // appendChilds(childs: Shape[]) {
     //     this.childs.push(...childs)
     // }
-    removeChild(shape: Shape) {
+    removeChild(shape: Shape): boolean {
         const idx = this.indexOfChild(shape);
         if (idx >= 0) {
             this.childs.splice(idx, 1);
         }
+        return idx >= 0;
     }
-    removeChildAt(idx: number) {
+    removeChildAt(idx: number): Shape | undefined {
         if (idx >= 0) {
-            this.childs.splice(idx, 1);
+            const del = this.childs.splice(idx, 1);
+            if (del.length > 0) return del[0];
         }
+        return undefined;
     }
     addChild(child: Shape) {
         this.childs.push(child);

@@ -376,18 +376,21 @@ export class Gradient extends Basic {
  */
 export class Fill extends Basic {
     typeId = 'fill'
+    id: string
     isEnabled: boolean
     fillType: FillType
     color: Color
     contextSettings: ContextSettings
     gradient?: Gradient
     constructor(
+        id: string,
         isEnabled: boolean,
         fillType: FillType,
         color: Color,
         contextSettings: ContextSettings
     ) {
         super()
+        this.id = id
         this.isEnabled = isEnabled
         this.fillType = fillType
         this.color = color
@@ -452,6 +455,22 @@ export class Ellipse extends Basic {
         this.cy = cy
         this.rx = rx
         this.ry = ry
+    }
+}
+/**
+ * document syms 
+ */
+export class DocumentSyms extends Basic {
+    typeId = 'document-syms'
+    pageId: string
+    symbols: BasicArray<string >
+    constructor(
+        pageId: string,
+        symbols: BasicArray<string >
+    ) {
+        super()
+        this.pageId = pageId
+        this.symbols = symbols
     }
 }
 /**
@@ -602,6 +621,7 @@ export class ColorControls extends Basic {
  */
 export class Border extends Basic {
     typeId = 'border'
+    id: string
     isEnabled: boolean
     fillType: FillType
     color: Color
@@ -613,6 +633,7 @@ export class Border extends Basic {
     startMarkerType: MarkerType
     endMarkerType: MarkerType
     constructor(
+        id: string,
         isEnabled: boolean,
         fillType: FillType,
         color: Color,
@@ -624,6 +645,7 @@ export class Border extends Basic {
         endMarkerType: MarkerType
     ) {
         super()
+        this.id = id
         this.isEnabled = isEnabled
         this.fillType = fillType
         this.color = color
@@ -851,7 +873,7 @@ export class TextAttr extends ParaAttr {
  */
 export class Page extends Shape {
     typeId = 'page'
-    childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape) >
+    childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape) >
     constructor(
         id: string,
         name: string,
@@ -859,7 +881,7 @@ export class Page extends Shape {
         frame: ShapeFrame,
         style: Style,
         boolOp: BoolOp,
-        childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape) >
+        childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape) >
     ) {
         super(
             id,
@@ -956,7 +978,7 @@ export class ImageShape extends Shape {
  */
 export class GroupShape extends Shape {
     typeId = 'group-shape'
-    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape) >
+    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
     constructor(
         id: string,
         name: string,
@@ -964,7 +986,7 @@ export class GroupShape extends Shape {
         frame: ShapeFrame,
         style: Style,
         boolOp: BoolOp,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
     ) {
         super(
             id,
@@ -989,7 +1011,7 @@ export class SymbolShape extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         boolOp: BoolOp,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
     ) {
         super(
             id,
@@ -1014,7 +1036,7 @@ export class FlattenShape extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         boolOp: BoolOp,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
     ) {
         super(
             id,
@@ -1042,7 +1064,7 @@ export class Artboard extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         boolOp: BoolOp,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
     ) {
         super(
             id,
@@ -1053,31 +1075,5 @@ export class Artboard extends GroupShape {
             boolOp,
             childs
         )
-    }
-}
-/**
- * artboard ref shape 
- */
-export class ArtboardRef extends Shape {
-    typeId = 'artboard-ref'
-    refId: string
-    constructor(
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style,
-        boolOp: BoolOp,
-        refId: string
-    ) {
-        super(
-            id,
-            name,
-            type,
-            frame,
-            style,
-            boolOp
-        )
-        this.refId = refId
     }
 }

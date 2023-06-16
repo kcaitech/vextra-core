@@ -1,0 +1,57 @@
+{
+    "description": "border",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 36,
+            "default": "$uuid"
+        },
+        "isEnabled": {
+            "type": "boolean",
+            "default": false
+        },
+        "fillType": {
+            "$ref": "./fill-type.json"
+        },
+        "color": {
+            "$ref": "./color.json"
+        },
+        "contextSettings": {
+            "$ref": "./context-settings.json"
+        },
+        "position": {
+            "$ref": "./border-position.json"
+        },
+        "thickness": {
+            "type": "number",
+            "default": 1
+        },
+        "gradient": {
+            "$ref": "./gradient.json"
+        },
+        "borderStyle": {
+            "$ref": "./border-style.json"
+        },
+        "startMarkerType": {
+            "$ref": "./marker-type.json"
+        },
+        "endMarkerType": {
+            "$ref": "./marker-type.json"
+        }
+    },
+    "required": [
+        "id",
+        "isEnabled",
+        "fillType",
+        "color",
+        "contextSettings",
+        "position",
+        "thickness",
+        "borderStyle",
+        "startMarkerType",
+        "endMarkerType"
+    ],
+    "additionalProperties": false
+}

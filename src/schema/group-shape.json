@@ -31,10 +31,13 @@
                         "$ref": "./text-shape.json"
                     },
                     {
-                        "$ref": "./oval-shape.json"
+                        "$ref": "./artboard.json"
                     },
                     {
                         "$ref": "./line-shape.json"
+                    },
+                    {
+                        "$ref": "./oval-shape.json"
                     }
                 ]
             }

@@ -41,6 +41,12 @@
                     },
                     {
                         "$ref": "./symbol-shape.json"
+                    },
+                    {
+                        "$ref": "./line-shape.json"
+                    },
+                    {
+                        "$ref": "./oval-shape.json"
                     }
                 ]
             }

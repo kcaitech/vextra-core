@@ -15,6 +15,7 @@ export * from "./io/lzdata"
 export * from "./io/cilpboard"
 
 // editor
+export * from "./editor/command/cooprepo"
 export * from "./editor"
 export * from "./editor/document"
 export * from "./editor/page"
@@ -22,3 +23,6 @@ export * from "./editor/shape"
 export * from "./editor/controller"
 
 export * from "./service/shapedirlist"
+export * from "./service/taskmgr"
+
+export * from "./coop/local"

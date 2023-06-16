@@ -4,79 +4,79 @@
  */
 
 import * as impl from "../data/classes"
-import { BasicArray } from "../data/basic"
 import * as types from "../data/typesdefine"
+import { BasicArray } from "../data/basic"
 
 
 export interface IImportContext {
     afterImport(obj: any): void
 }
 /* winding rule */
-export function importWindingRule(ctx: IImportContext, source: types.WindingRule): impl.WindingRule {
+export function importWindingRule(source: types.WindingRule, ctx?: IImportContext): impl.WindingRule {
     return source
 }
 /* user infomation */
-export function importUserInfo(ctx: IImportContext, source: types.UserInfo): impl.UserInfo {
+export function importUserInfo(source: types.UserInfo, ctx?: IImportContext): impl.UserInfo {
     const ret: impl.UserInfo = new impl.UserInfo (
         source.userId,
         source.userNickname,
         source.avatar
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* text */
-export function importText(ctx: IImportContext, source: types.Text): impl.Text {
+export function importText(source: types.Text, ctx?: IImportContext): impl.Text {
     const ret: impl.Text = new impl.Text (
         (() => {
             const ret = new BasicArray<impl.Para>()
             for (let i = 0, len = source.paras.length; i < len; i++) {
-                const r = importPara(ctx, source.paras[i])
+                const r = importPara(source.paras[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })()
     )
-    ret.attr = source.attr && importTextAttr(ctx, source.attr)
-    ctx.afterImport(ret)
+    ret.attr = source.attr && importTextAttr(source.attr, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* text vertical alignment */
-export function importTextVerAlign(ctx: IImportContext, source: types.TextVerAlign): impl.TextVerAlign {
+export function importTextVerAlign(source: types.TextVerAlign, ctx?: IImportContext): impl.TextVerAlign {
     return source
 }
 /* text orientation */
-export function importTextOrientation(ctx: IImportContext, source: types.TextOrientation): impl.TextOrientation {
+export function importTextOrientation(source: types.TextOrientation, ctx?: IImportContext): impl.TextOrientation {
     return source
 }
 /* text horizontal alignment */
-export function importTextHorAlign(ctx: IImportContext, source: types.TextHorAlign): impl.TextHorAlign {
+export function importTextHorAlign(source: types.TextHorAlign, ctx?: IImportContext): impl.TextHorAlign {
     return source
 }
 /* text behaviour */
-export function importTextBehaviour(ctx: IImportContext, source: types.TextBehaviour): impl.TextBehaviour {
+export function importTextBehaviour(source: types.TextBehaviour, ctx?: IImportContext): impl.TextBehaviour {
     return source
 }
 /* style */
-export function importStyle(ctx: IImportContext, source: types.Style): impl.Style {
+export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
     const ret: impl.Style = new impl.Style (
         source.miterLimit,
-        importWindingRule(ctx, source.windingRule),
-        importBlur(ctx, source.blur),
-        importBorderOptions(ctx, source.borderOptions),
+        importWindingRule(source.windingRule, ctx),
+        importBlur(source.blur, ctx),
+        importBorderOptions(source.borderOptions, ctx),
         (() => {
             const ret = new BasicArray<impl.Border>()
             for (let i = 0, len = source.borders.length; i < len; i++) {
-                const r = importBorder(ctx, source.borders[i])
+                const r = importBorder(source.borders[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        importContextSettings(ctx, source.contextSettings),
+        importContextSettings(source.contextSettings, ctx),
         (() => {
             const ret = new BasicArray<impl.Fill>()
             for (let i = 0, len = source.fills.length; i < len; i++) {
-                const r = importFill(ctx, source.fills[i])
+                const r = importFill(source.fills[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -84,7 +84,7 @@ export function importStyle(ctx: IImportContext, source: types.Style): impl.Styl
         (() => {
             const ret = new BasicArray<impl.Shadow>()
             for (let i = 0, len = source.innerShadows.length; i < len; i++) {
-                const r = importShadow(ctx, source.innerShadows[i])
+                const r = importShadow(source.innerShadows[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -92,228 +92,229 @@ export function importStyle(ctx: IImportContext, source: types.Style): impl.Styl
         (() => {
             const ret = new BasicArray<impl.Shadow>()
             for (let i = 0, len = source.shadows.length; i < len; i++) {
-                const r = importShadow(ctx, source.shadows[i])
+                const r = importShadow(source.shadows[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })()
     )
-    ret.colorControls = source.colorControls && importColorControls(ctx, source.colorControls)
-    ctx.afterImport(ret)
+    ret.colorControls = source.colorControls && importColorControls(source.colorControls, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* stop */
-export function importStop(ctx: IImportContext, source: types.Stop): impl.Stop {
+export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
     const ret: impl.Stop = new impl.Stop (
         source.position
     )
-    ret.color = source.color && importColor(ctx, source.color)
-    ctx.afterImport(ret)
+    ret.color = source.color && importColor(source.color, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* span attr */
-export function importSpanAttr(ctx: IImportContext, source: types.SpanAttr): impl.SpanAttr {
+export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): impl.SpanAttr {
     const ret: impl.SpanAttr = new impl.SpanAttr (
     )
     ret.fontName = source.fontName
     ret.fontSize = source.fontSize
-    ret.color = source.color && importColor(ctx, source.color)
-    ctx.afterImport(ret)
+    ret.color = source.color && importColor(source.color, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* shape */
-export function importShape(ctx: IImportContext, source: types.Shape): impl.Shape {
+export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp)
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx)
     )
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* shape types */
-export function importShapeType(ctx: IImportContext, source: types.ShapeType): impl.ShapeType {
+export function importShapeType(source: types.ShapeType, ctx?: IImportContext): impl.ShapeType {
     return source
 }
 /* shape frame
  * x,y为parent坐标系里的点
  * width,height为当前shape的坐标空间大小 */
-export function importShapeFrame(ctx: IImportContext, source: types.ShapeFrame): impl.ShapeFrame {
+export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext): impl.ShapeFrame {
     const ret: impl.ShapeFrame = new impl.ShapeFrame (
         source.x,
         source.y,
         source.width,
         source.height
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* shadow */
-export function importShadow(ctx: IImportContext, source: types.Shadow): impl.Shadow {
+export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.Shadow {
     const ret: impl.Shadow = new impl.Shadow (
         source.isEnabled,
         source.blurRadius,
-        importColor(ctx, source.color),
-        importGraphicsContextSettings(ctx, source.contextSettings),
+        importColor(source.color, ctx),
+        importGraphicsContextSettings(source.contextSettings, ctx),
         source.offsetX,
         source.offsetY,
         source.spread
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* resize type */
-export function importResizeType(ctx: IImportContext, source: types.ResizeType): impl.ResizeType {
+export function importResizeType(source: types.ResizeType, ctx?: IImportContext): impl.ResizeType {
     return source
 }
 /* rect radius */
-export function importRectRadius(ctx: IImportContext, source: types.RectRadius): impl.RectRadius {
+export function importRectRadius(source: types.RectRadius, ctx?: IImportContext): impl.RectRadius {
     const ret: impl.RectRadius = new impl.RectRadius (
         source.rlt,
         source.rrt,
         source.rrb,
         source.rlb
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* point 2d */
-export function importPoint2D(ctx: IImportContext, source: types.Point2D): impl.Point2D {
+export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl.Point2D {
     const ret: impl.Point2D = new impl.Point2D (
         source.x,
         source.y
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* para */
-export function importPara(ctx: IImportContext, source: types.Para): impl.Para {
+export function importPara(source: types.Para, ctx?: IImportContext): impl.Para {
     const ret: impl.Para = new impl.Para (
         source.text,
         (() => {
             const ret = new BasicArray<impl.Span>()
             for (let i = 0, len = source.spans.length; i < len; i++) {
-                const r = importSpan(ctx, source.spans[i])
+                const r = importSpan(source.spans[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })()
     )
-    ret.attr = source.attr && importParaAttr(ctx, source.attr)
-    ctx.afterImport(ret)
+    ret.attr = source.attr && importParaAttr(source.attr, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* page list item */
-export function importPageListItem(ctx: IImportContext, source: types.PageListItem): impl.PageListItem {
+export function importPageListItem(source: types.PageListItem, ctx?: IImportContext): impl.PageListItem {
     const ret: impl.PageListItem = new impl.PageListItem (
         source.id,
         source.name
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* override list item */
-export function importOverrideItem(ctx: IImportContext, source: types.OverrideItem): impl.OverrideItem {
+export function importOverrideItem(source: types.OverrideItem, ctx?: IImportContext): impl.OverrideItem {
     const ret: impl.OverrideItem = new impl.OverrideItem (
         source.id
     )
     ret.value = source.value && (() => {
 
         if (source.value.typeId == 'style') {
-            return importStyle(ctx, source.value as types.Style)
+            return importStyle(source.value as types.Style, ctx)
         }
     })()
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* marker type */
-export function importMarkerType(ctx: IImportContext, source: types.MarkerType): impl.MarkerType {
+export function importMarkerType(source: types.MarkerType, ctx?: IImportContext): impl.MarkerType {
     return source
 }
 /* line join style */
-export function importLineJoinStyle(ctx: IImportContext, source: types.LineJoinStyle): impl.LineJoinStyle {
+export function importLineJoinStyle(source: types.LineJoinStyle, ctx?: IImportContext): impl.LineJoinStyle {
     return source
 }
 /* line cap style */
-export function importLineCapStyle(ctx: IImportContext, source: types.LineCapStyle): impl.LineCapStyle {
+export function importLineCapStyle(source: types.LineCapStyle, ctx?: IImportContext): impl.LineCapStyle {
     return source
 }
 /* graphics contex settings */
-export function importGraphicsContextSettings(ctx: IImportContext, source: types.GraphicsContextSettings): impl.GraphicsContextSettings {
+export function importGraphicsContextSettings(source: types.GraphicsContextSettings, ctx?: IImportContext): impl.GraphicsContextSettings {
     const ret: impl.GraphicsContextSettings = new impl.GraphicsContextSettings (
-        importBlendMode(ctx, source.blendMode),
+        importBlendMode(source.blendMode, ctx),
         source.opacity
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* gradient */
-export function importGradient(ctx: IImportContext, source: types.Gradient): impl.Gradient {
+export function importGradient(source: types.Gradient, ctx?: IImportContext): impl.Gradient {
     const ret: impl.Gradient = new impl.Gradient (
         source.elipseLength,
-        importPoint2D(ctx, source.from),
-        importPoint2D(ctx, source.to),
-        importGradientType(ctx, source.gradientType),
+        importPoint2D(source.from, ctx),
+        importPoint2D(source.to, ctx),
+        importGradientType(source.gradientType, ctx),
         (() => {
             const ret = new BasicArray<impl.Stop>()
             for (let i = 0, len = source.stops.length; i < len; i++) {
-                const r = importStop(ctx, source.stops[i])
+                const r = importStop(source.stops[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })()
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* gradient type */
-export function importGradientType(ctx: IImportContext, source: types.GradientType): impl.GradientType {
+export function importGradientType(source: types.GradientType, ctx?: IImportContext): impl.GradientType {
     return source
 }
 /* fill */
-export function importFill(ctx: IImportContext, source: types.Fill): impl.Fill {
+export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
     const ret: impl.Fill = new impl.Fill (
+        source.id,
         source.isEnabled,
-        importFillType(ctx, source.fillType),
-        importColor(ctx, source.color),
-        importContextSettings(ctx, source.contextSettings)
+        importFillType(source.fillType, ctx),
+        importColor(source.color, ctx),
+        importContextSettings(source.contextSettings, ctx)
     )
-    ret.gradient = source.gradient && importGradient(ctx, source.gradient)
-    ctx.afterImport(ret)
+    ret.gradient = source.gradient && importGradient(source.gradient, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* fill types */
-export function importFillType(ctx: IImportContext, source: types.FillType): impl.FillType {
+export function importFillType(source: types.FillType, ctx?: IImportContext): impl.FillType {
     return source
 }
 /* visible scale type */
-export function importExportVisibleScaleType(ctx: IImportContext, source: types.ExportVisibleScaleType): impl.ExportVisibleScaleType {
+export function importExportVisibleScaleType(source: types.ExportVisibleScaleType, ctx?: IImportContext): impl.ExportVisibleScaleType {
     return source
 }
 /* export options */
-export function importExportOptions(ctx: IImportContext, source: types.ExportOptions): impl.ExportOptions {
+export function importExportOptions(source: types.ExportOptions, ctx?: IImportContext): impl.ExportOptions {
     const ret: impl.ExportOptions = new impl.ExportOptions (
         (() => {
             const ret = new BasicArray<impl.ExportFormat>()
             for (let i = 0, len = source.exportFormats.length; i < len; i++) {
-                const r = importExportFormat(ctx, source.exportFormats[i])
+                const r = importExportFormat(source.exportFormats[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -329,113 +330,129 @@ export function importExportOptions(ctx: IImportContext, source: types.ExportOpt
         source.childOptions,
         source.shouldTrim
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* export format */
-export function importExportFormat(ctx: IImportContext, source: types.ExportFormat): impl.ExportFormat {
+export function importExportFormat(source: types.ExportFormat, ctx?: IImportContext): impl.ExportFormat {
     const ret: impl.ExportFormat = new impl.ExportFormat (
     )
     ret.absoluteSize = source.absoluteSize
-    ret.fileFormat = source.fileFormat && importExportFileFormat(ctx, source.fileFormat)
+    ret.fileFormat = source.fileFormat && importExportFileFormat(source.fileFormat, ctx)
     ret.name = source.name
-    ret.namingScheme = source.namingScheme && importExportFormatNameingScheme(ctx, source.namingScheme)
+    ret.namingScheme = source.namingScheme && importExportFormatNameingScheme(source.namingScheme, ctx)
     ret.scale = source.scale
-    ret.visibleScaleType = source.visibleScaleType && importExportVisibleScaleType(ctx, source.visibleScaleType)
-    ctx.afterImport(ret)
+    ret.visibleScaleType = source.visibleScaleType && importExportVisibleScaleType(source.visibleScaleType, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* export format nameing scheme */
-export function importExportFormatNameingScheme(ctx: IImportContext, source: types.ExportFormatNameingScheme): impl.ExportFormatNameingScheme {
+export function importExportFormatNameingScheme(source: types.ExportFormatNameingScheme, ctx?: IImportContext): impl.ExportFormatNameingScheme {
     return source
 }
 /* export file format */
-export function importExportFileFormat(ctx: IImportContext, source: types.ExportFileFormat): impl.ExportFileFormat {
+export function importExportFileFormat(source: types.ExportFileFormat, ctx?: IImportContext): impl.ExportFileFormat {
     return source
 }
 /* ellipse attributes */
-export function importEllipse(ctx: IImportContext, source: types.Ellipse): impl.Ellipse {
+export function importEllipse(source: types.Ellipse, ctx?: IImportContext): impl.Ellipse {
     const ret: impl.Ellipse = new impl.Ellipse (
         source.cx,
         source.cy,
         source.rx,
         source.ry
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
-/* document meta */
-export function importDocumentMeta(ctx: IImportContext, source: types.DocumentMeta): impl.DocumentMeta {
-    const ret: impl.DocumentMeta = new impl.DocumentMeta (
-        source.name,
+/* document syms */
+export function importDocumentSyms(source: types.DocumentSyms, ctx?: IImportContext): impl.DocumentSyms {
+    const ret: impl.DocumentSyms = new impl.DocumentSyms (
+        source.pageId,
         (() => {
-            const ret = new BasicArray<impl.PageListItem>()
-            for (let i = 0, len = source.pagesList.length; i < len; i++) {
-                const r = importPageListItem(ctx, source.pagesList[i])
+            const ret = new BasicArray<string>()
+            for (let i = 0, len = source.symbols.length; i < len; i++) {
+                const r = source.symbols[i]
                 if (r) ret.push(r)
             }
             return ret
         })()
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
+    return ret
+}
+/* document meta */
+export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
+    const ret: impl.DocumentMeta = new impl.DocumentMeta (
+        source.name,
+        (() => {
+            const ret = new BasicArray<impl.PageListItem>()
+            for (let i = 0, len = source.pagesList.length; i < len; i++) {
+                const r = importPageListItem(source.pagesList[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* curve point */
-export function importCurvePoint(ctx: IImportContext, source: types.CurvePoint): impl.CurvePoint {
+export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext): impl.CurvePoint {
     const ret: impl.CurvePoint = new impl.CurvePoint (
         source.cornerRadius,
-        importPoint2D(ctx, source.curveFrom),
-        importPoint2D(ctx, source.curveTo),
+        importPoint2D(source.curveFrom, ctx),
+        importPoint2D(source.curveTo, ctx),
         source.hasCurveFrom,
         source.hasCurveTo,
-        importCurveMode(ctx, source.curveMode),
-        importPoint2D(ctx, source.point)
+        importCurveMode(source.curveMode, ctx),
+        importPoint2D(source.point, ctx)
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* curve mode */
-export function importCurveMode(ctx: IImportContext, source: types.CurveMode): impl.CurveMode {
+export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): impl.CurveMode {
     return source
 }
 /* context settings */
-export function importContextSettings(ctx: IImportContext, source: types.ContextSettings): impl.ContextSettings {
+export function importContextSettings(source: types.ContextSettings, ctx?: IImportContext): impl.ContextSettings {
     const ret: impl.ContextSettings = new impl.ContextSettings (
-        importBlendMode(ctx, source.blenMode),
+        importBlendMode(source.blenMode, ctx),
         source.opacity
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* comment */
-export function importComment(ctx: IImportContext, source: types.Comment): impl.Comment {
+export function importComment(source: types.Comment, ctx?: IImportContext): impl.Comment {
     const ret: impl.Comment = new impl.Comment (
         source.pageId,
         source.id,
-        importShapeFrame(ctx, source.frame),
-        importUserInfo(ctx, source.user),
+        importShapeFrame(source.frame, ctx),
+        importUserInfo(source.user, ctx),
         source.createAt,
         source.content,
-        importShape(ctx, source.parasiticBody)
+        importShape(source.parasiticBody, ctx)
     )
     ret.parentId = source.parentId
     ret.rootId = source.rootId
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* color */
-export function importColor(ctx: IImportContext, source: types.Color): impl.Color {
+export function importColor(source: types.Color, ctx?: IImportContext): impl.Color {
     const ret: impl.Color = new impl.Color (
         source.alpha,
         source.red,
         source.green,
         source.blue
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* color controls */
-export function importColorControls(ctx: IImportContext, source: types.ColorControls): impl.ColorControls {
+export function importColorControls(source: types.ColorControls, ctx?: IImportContext): impl.ColorControls {
     const ret: impl.ColorControls = new impl.ColorControls (
         source.isEnabled,
         source.brightness,
@@ -443,111 +460,112 @@ export function importColorControls(ctx: IImportContext, source: types.ColorCont
         source.hue,
         source.saturation
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* border */
-export function importBorder(ctx: IImportContext, source: types.Border): impl.Border {
+export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
     const ret: impl.Border = new impl.Border (
+        source.id,
         source.isEnabled,
-        importFillType(ctx, source.fillType),
-        importColor(ctx, source.color),
-        importContextSettings(ctx, source.contextSettings),
-        importBorderPosition(ctx, source.position),
+        importFillType(source.fillType, ctx),
+        importColor(source.color, ctx),
+        importContextSettings(source.contextSettings, ctx),
+        importBorderPosition(source.position, ctx),
         source.thickness,
-        importBorderStyle(ctx, source.borderStyle),
-        importMarkerType(ctx, source.startMarkerType),
-        importMarkerType(ctx, source.endMarkerType)
+        importBorderStyle(source.borderStyle, ctx),
+        importMarkerType(source.startMarkerType, ctx),
+        importMarkerType(source.endMarkerType, ctx)
     )
-    ret.gradient = source.gradient && importGradient(ctx, source.gradient)
-    ctx.afterImport(ret)
+    ret.gradient = source.gradient && importGradient(source.gradient, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* border style */
-export function importBorderStyle(ctx: IImportContext, source: types.BorderStyle): impl.BorderStyle {
+export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContext): impl.BorderStyle {
     const ret: impl.BorderStyle = new impl.BorderStyle (
         source.length,
         source.gap
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* border position */
-export function importBorderPosition(ctx: IImportContext, source: types.BorderPosition): impl.BorderPosition {
+export function importBorderPosition(source: types.BorderPosition, ctx?: IImportContext): impl.BorderPosition {
     return source
 }
 /* border options */
-export function importBorderOptions(ctx: IImportContext, source: types.BorderOptions): impl.BorderOptions {
+export function importBorderOptions(source: types.BorderOptions, ctx?: IImportContext): impl.BorderOptions {
     const ret: impl.BorderOptions = new impl.BorderOptions (
         source.isEnabled,
-        importLineCapStyle(ctx, source.lineCapStyle),
-        importLineJoinStyle(ctx, source.lineJoinStyle)
+        importLineCapStyle(source.lineCapStyle, ctx),
+        importLineJoinStyle(source.lineJoinStyle, ctx)
     )
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* bool op types */
-export function importBoolOp(ctx: IImportContext, source: types.BoolOp): impl.BoolOp {
+export function importBoolOp(source: types.BoolOp, ctx?: IImportContext): impl.BoolOp {
     return source
 }
 /* blur */
-export function importBlur(ctx: IImportContext, source: types.Blur): impl.Blur {
+export function importBlur(source: types.Blur, ctx?: IImportContext): impl.Blur {
     const ret: impl.Blur = new impl.Blur (
         source.isEnabled,
-        importPoint2D(ctx, source.center),
+        importPoint2D(source.center, ctx),
         source.saturation,
-        importBlurType(ctx, source.type)
+        importBlurType(source.type, ctx)
     )
     ret.motionAngle = source.motionAngle
     ret.radius = source.radius
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* blur types */
-export function importBlurType(ctx: IImportContext, source: types.BlurType): impl.BlurType {
+export function importBlurType(source: types.BlurType, ctx?: IImportContext): impl.BlurType {
     return source
 }
 /* blend mode */
-export function importBlendMode(ctx: IImportContext, source: types.BlendMode): impl.BlendMode {
+export function importBlendMode(source: types.BlendMode, ctx?: IImportContext): impl.BlendMode {
     return source
 }
 /* text shape */
-export function importTextShape(ctx: IImportContext, source: types.TextShape): impl.TextShape {
+export function importTextShape(source: types.TextShape, ctx?: IImportContext): impl.TextShape {
     const ret: impl.TextShape = new impl.TextShape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
-        importText(ctx, source.text)
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
+        importText(source.text, ctx)
     )
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* symbol ref shape */
-export function importSymbolRefShape(ctx: IImportContext, source: types.SymbolRefShape): impl.SymbolRefShape {
+export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
     const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         source.refId
     )
     ret.isFixedToViewport = source.isFixedToViewport
@@ -555,10 +573,10 @@ export function importSymbolRefShape(ctx: IImportContext, source: types.SymbolRe
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
@@ -567,38 +585,38 @@ export function importSymbolRefShape(ctx: IImportContext, source: types.SymbolRe
     ret.overrides = source.overrides && (() => {
         const ret = new BasicArray<impl.OverrideItem>()
         for (let i = 0, len = source.overrides.length; i < len; i++) {
-            const r = importOverrideItem(ctx, source.overrides[i])
+            const r = importOverrideItem(source.overrides[i], ctx)
             if (r) ret.push(r)
         }
         return ret
     })()
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* span attr */
-export function importSpan(ctx: IImportContext, source: types.Span): impl.Span {
+export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span {
     const ret: impl.Span = new impl.Span (
         source.length
     )
     ret.fontName = source.fontName
     ret.fontSize = source.fontSize
-    ret.color = source.color && importColor(ctx, source.color)
-    ctx.afterImport(ret)
+    ret.color = source.color && importColor(source.color, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* path shape */
-export function importPathShape(ctx: IImportContext, source: types.PathShape): impl.PathShape {
+export function importPathShape(source: types.PathShape, ctx?: IImportContext): impl.PathShape {
     const ret: impl.PathShape = new impl.PathShape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = importCurvePoint(ctx, source.points[i])
+                const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -609,37 +627,37 @@ export function importPathShape(ctx: IImportContext, source: types.PathShape): i
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     ret.isClosed = source.isClosed
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* rect shape */
-export function importRectShape(ctx: IImportContext, source: types.RectShape): impl.RectShape {
+export function importRectShape(source: types.RectShape, ctx?: IImportContext): impl.RectShape {
     const ret: impl.RectShape = new impl.RectShape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = importCurvePoint(ctx, source.points[i])
+                const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        importRectRadius(ctx, source.fixedRadius)
+        importRectRadius(source.fixedRadius, ctx)
     )
     ret.isClosed = source.isClosed
     ret.isFixedToViewport = source.isFixedToViewport
@@ -647,100 +665,106 @@ export function importRectShape(ctx: IImportContext, source: types.RectShape): i
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* span attr */
-export function importParaAttr(ctx: IImportContext, source: types.ParaAttr): impl.ParaAttr {
+export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): impl.ParaAttr {
     const ret: impl.ParaAttr = new impl.ParaAttr (
     )
     ret.fontName = source.fontName
     ret.fontSize = source.fontSize
-    ret.color = source.color && importColor(ctx, source.color)
-    ret.alignment = source.alignment && importTextHorAlign(ctx, source.alignment)
+    ret.color = source.color && importColor(source.color, ctx)
+    ret.alignment = source.alignment && importTextHorAlign(source.alignment, ctx)
     ret.paraSpacing = source.paraSpacing
     ret.kerning = source.kerning
     ret.minimumLineHeight = source.minimumLineHeight
     ret.maximumLineHeight = source.maximumLineHeight
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* text attr */
-export function importTextAttr(ctx: IImportContext, source: types.TextAttr): impl.TextAttr {
+export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): impl.TextAttr {
     const ret: impl.TextAttr = new impl.TextAttr (
     )
-    ret.alignment = source.alignment && importTextHorAlign(ctx, source.alignment)
+    ret.alignment = source.alignment && importTextHorAlign(source.alignment, ctx)
     ret.paraSpacing = source.paraSpacing
     ret.kerning = source.kerning
     ret.minimumLineHeight = source.minimumLineHeight
     ret.maximumLineHeight = source.maximumLineHeight
     ret.fontName = source.fontName
     ret.fontSize = source.fontSize
-    ret.color = source.color && importColor(ctx, source.color)
-    ret.verAlign = source.verAlign && importTextVerAlign(ctx, source.verAlign)
-    ret.orientation = source.orientation && importTextOrientation(ctx, source.orientation)
-    ret.textBehaviour = source.textBehaviour && importTextBehaviour(ctx, source.textBehaviour)
-    ctx.afterImport(ret)
+    ret.color = source.color && importColor(source.color, ctx)
+    ret.verAlign = source.verAlign && importTextVerAlign(source.verAlign, ctx)
+    ret.orientation = source.orientation && importTextOrientation(source.orientation, ctx)
+    ret.textBehaviour = source.textBehaviour && importTextBehaviour(source.textBehaviour, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* page */
-export function importPage(ctx: IImportContext, source: types.Page): impl.Page {
+export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
     const ret: impl.Page = new impl.Page (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         (() => {
-            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.SymbolShape)>()
+            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.SymbolShape | impl.LineShape | impl.OvalShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
                 const r = (() => {
 
                     if (source.childs[i].typeId == 'shape') {
-                        return importShape(ctx, source.childs[i] as types.Shape)
+                        return importShape(source.childs[i] as types.Shape, ctx)
                     }
                     if (source.childs[i].typeId == 'flatten-shape') {
-                        return importFlattenShape(ctx, source.childs[i] as types.FlattenShape)
+                        return importFlattenShape(source.childs[i] as types.FlattenShape, ctx)
                     }
                     if (source.childs[i].typeId == 'group-shape') {
-                        return importGroupShape(ctx, source.childs[i] as types.GroupShape)
+                        return importGroupShape(source.childs[i] as types.GroupShape, ctx)
                     }
                     if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(ctx, source.childs[i] as types.ImageShape)
+                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
                     }
                     if (source.childs[i].typeId == 'path-shape') {
-                        return importPathShape(ctx, source.childs[i] as types.PathShape)
+                        return importPathShape(source.childs[i] as types.PathShape, ctx)
                     }
                     if (source.childs[i].typeId == 'rect-shape') {
-                        return importRectShape(ctx, source.childs[i] as types.RectShape)
+                        return importRectShape(source.childs[i] as types.RectShape, ctx)
                     }
                     if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(ctx, source.childs[i] as types.SymbolRefShape)
+                        return importSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
                     }
                     if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(ctx, source.childs[i] as types.TextShape)
+                        return importTextShape(source.childs[i] as types.TextShape, ctx)
                     }
                     if (source.childs[i].typeId == 'oval-shape') {
-                        return importOvalShape(ctx, source.childs[i] as types.OvalShape)
+                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
                     if (source.childs[i].typeId == 'line-shape') {
-                        return importLineShape(ctx, source.childs[i] as types.LineShape)
+                        return importLineShape(source.childs[i] as types.LineShape, ctx)
                     }
                     if (source.childs[i].typeId == 'artboard') {
-                        return importArtboard(ctx, source.childs[i] as types.Artboard)
+                        return importArtboard(source.childs[i] as types.Artboard, ctx)
                     }
                     if (source.childs[i].typeId == 'symbol-shape') {
-                        return importSymbolShape(ctx, source.childs[i] as types.SymbolShape)
+                        return importSymbolShape(source.childs[i] as types.SymbolShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'line-shape') {
+                        return importLineShape(source.childs[i] as types.LineShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'oval-shape') {
+                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -753,36 +777,36 @@ export function importPage(ctx: IImportContext, source: types.Page): impl.Page {
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* oval shape */
-export function importOvalShape(ctx: IImportContext, source: types.OvalShape): impl.OvalShape {
+export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
     const ret: impl.OvalShape = new impl.OvalShape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = importCurvePoint(ctx, source.points[i])
+                const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        importEllipse(ctx, source.ellipse)
+        importEllipse(source.ellipse, ctx)
     )
     ret.isClosed = source.isClosed
     ret.isFixedToViewport = source.isFixedToViewport
@@ -790,31 +814,31 @@ export function importOvalShape(ctx: IImportContext, source: types.OvalShape): i
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* line shape */
-export function importLineShape(ctx: IImportContext, source: types.LineShape): impl.LineShape {
+export function importLineShape(source: types.LineShape, ctx?: IImportContext): impl.LineShape {
     const ret: impl.LineShape = new impl.LineShape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = importCurvePoint(ctx, source.points[i])
+                const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -826,27 +850,27 @@ export function importLineShape(ctx: IImportContext, source: types.LineShape): i
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* image shape */
-export function importImageShape(ctx: IImportContext, source: types.ImageShape): impl.ImageShape {
+export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
     const ret: impl.ImageShape = new impl.ImageShape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         source.imageRef
     )
     ret.isFixedToViewport = source.isFixedToViewport
@@ -854,61 +878,64 @@ export function importImageShape(ctx: IImportContext, source: types.ImageShape):
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* group shape */
-export function importGroupShape(ctx: IImportContext, source: types.GroupShape): impl.GroupShape {
+export function importGroupShape(source: types.GroupShape, ctx?: IImportContext): impl.GroupShape {
     const ret: impl.GroupShape = new impl.GroupShape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
                 const r = (() => {
 
                     if (source.childs[i].typeId == 'group-shape') {
-                        return importGroupShape(ctx, source.childs[i] as types.GroupShape)
+                        return importGroupShape(source.childs[i] as types.GroupShape, ctx)
                     }
                     if (source.childs[i].typeId == 'shape') {
-                        return importShape(ctx, source.childs[i] as types.Shape)
+                        return importShape(source.childs[i] as types.Shape, ctx)
                     }
                     if (source.childs[i].typeId == 'flatten-shape') {
-                        return importFlattenShape(ctx, source.childs[i] as types.FlattenShape)
+                        return importFlattenShape(source.childs[i] as types.FlattenShape, ctx)
                     }
                     if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(ctx, source.childs[i] as types.ImageShape)
+                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
                     }
                     if (source.childs[i].typeId == 'path-shape') {
-                        return importPathShape(ctx, source.childs[i] as types.PathShape)
+                        return importPathShape(source.childs[i] as types.PathShape, ctx)
                     }
                     if (source.childs[i].typeId == 'rect-shape') {
-                        return importRectShape(ctx, source.childs[i] as types.RectShape)
+                        return importRectShape(source.childs[i] as types.RectShape, ctx)
                     }
                     if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(ctx, source.childs[i] as types.SymbolRefShape)
+                        return importSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
                     }
                     if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(ctx, source.childs[i] as types.TextShape)
+                        return importTextShape(source.childs[i] as types.TextShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return importOvalShape(ctx, source.childs[i] as types.OvalShape)
+                    if (source.childs[i].typeId == 'artboard') {
+                        return importArtboard(source.childs[i] as types.Artboard, ctx)
                     }
                     if (source.childs[i].typeId == 'line-shape') {
-                        return importLineShape(ctx, source.childs[i] as types.LineShape)
+                        return importLineShape(source.childs[i] as types.LineShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'oval-shape') {
+                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -921,61 +948,64 @@ export function importGroupShape(ctx: IImportContext, source: types.GroupShape):
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* symbol shape */
-export function importSymbolShape(ctx: IImportContext, source: types.SymbolShape): impl.SymbolShape {
+export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
     const ret: impl.SymbolShape = new impl.SymbolShape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
                 const r = (() => {
 
                     if (source.childs[i].typeId == 'group-shape') {
-                        return importGroupShape(ctx, source.childs[i] as types.GroupShape)
+                        return importGroupShape(source.childs[i] as types.GroupShape, ctx)
                     }
                     if (source.childs[i].typeId == 'shape') {
-                        return importShape(ctx, source.childs[i] as types.Shape)
+                        return importShape(source.childs[i] as types.Shape, ctx)
                     }
                     if (source.childs[i].typeId == 'flatten-shape') {
-                        return importFlattenShape(ctx, source.childs[i] as types.FlattenShape)
+                        return importFlattenShape(source.childs[i] as types.FlattenShape, ctx)
                     }
                     if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(ctx, source.childs[i] as types.ImageShape)
+                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
                     }
                     if (source.childs[i].typeId == 'path-shape') {
-                        return importPathShape(ctx, source.childs[i] as types.PathShape)
+                        return importPathShape(source.childs[i] as types.PathShape, ctx)
                     }
                     if (source.childs[i].typeId == 'rect-shape') {
-                        return importRectShape(ctx, source.childs[i] as types.RectShape)
+                        return importRectShape(source.childs[i] as types.RectShape, ctx)
                     }
                     if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(ctx, source.childs[i] as types.SymbolRefShape)
+                        return importSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
                     }
                     if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(ctx, source.childs[i] as types.TextShape)
+                        return importTextShape(source.childs[i] as types.TextShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return importOvalShape(ctx, source.childs[i] as types.OvalShape)
+                    if (source.childs[i].typeId == 'artboard') {
+                        return importArtboard(source.childs[i] as types.Artboard, ctx)
                     }
                     if (source.childs[i].typeId == 'line-shape') {
-                        return importLineShape(ctx, source.childs[i] as types.LineShape)
+                        return importLineShape(source.childs[i] as types.LineShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'oval-shape') {
+                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -988,61 +1018,64 @@ export function importSymbolShape(ctx: IImportContext, source: types.SymbolShape
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* flatten shape */
-export function importFlattenShape(ctx: IImportContext, source: types.FlattenShape): impl.FlattenShape {
+export function importFlattenShape(source: types.FlattenShape, ctx?: IImportContext): impl.FlattenShape {
     const ret: impl.FlattenShape = new impl.FlattenShape (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
                 const r = (() => {
 
                     if (source.childs[i].typeId == 'group-shape') {
-                        return importGroupShape(ctx, source.childs[i] as types.GroupShape)
+                        return importGroupShape(source.childs[i] as types.GroupShape, ctx)
                     }
                     if (source.childs[i].typeId == 'shape') {
-                        return importShape(ctx, source.childs[i] as types.Shape)
+                        return importShape(source.childs[i] as types.Shape, ctx)
                     }
                     if (source.childs[i].typeId == 'flatten-shape') {
-                        return importFlattenShape(ctx, source.childs[i] as types.FlattenShape)
+                        return importFlattenShape(source.childs[i] as types.FlattenShape, ctx)
                     }
                     if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(ctx, source.childs[i] as types.ImageShape)
+                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
                     }
                     if (source.childs[i].typeId == 'path-shape') {
-                        return importPathShape(ctx, source.childs[i] as types.PathShape)
+                        return importPathShape(source.childs[i] as types.PathShape, ctx)
                     }
                     if (source.childs[i].typeId == 'rect-shape') {
-                        return importRectShape(ctx, source.childs[i] as types.RectShape)
+                        return importRectShape(source.childs[i] as types.RectShape, ctx)
                     }
                     if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(ctx, source.childs[i] as types.SymbolRefShape)
+                        return importSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
                     }
                     if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(ctx, source.childs[i] as types.TextShape)
+                        return importTextShape(source.childs[i] as types.TextShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return importOvalShape(ctx, source.childs[i] as types.OvalShape)
+                    if (source.childs[i].typeId == 'artboard') {
+                        return importArtboard(source.childs[i] as types.Artboard, ctx)
                     }
                     if (source.childs[i].typeId == 'line-shape') {
-                        return importLineShape(ctx, source.childs[i] as types.LineShape)
+                        return importLineShape(source.childs[i] as types.LineShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'oval-shape') {
+                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1055,61 +1088,64 @@ export function importFlattenShape(ctx: IImportContext, source: types.FlattenSha
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
 /* artboard shape */
-export function importArtboard(ctx: IImportContext, source: types.Artboard): impl.Artboard {
+export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     const ret: impl.Artboard = new impl.Artboard (
         source.id,
         source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        importBoolOp(source.boolOp, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
                 const r = (() => {
 
                     if (source.childs[i].typeId == 'group-shape') {
-                        return importGroupShape(ctx, source.childs[i] as types.GroupShape)
+                        return importGroupShape(source.childs[i] as types.GroupShape, ctx)
                     }
                     if (source.childs[i].typeId == 'shape') {
-                        return importShape(ctx, source.childs[i] as types.Shape)
+                        return importShape(source.childs[i] as types.Shape, ctx)
                     }
                     if (source.childs[i].typeId == 'flatten-shape') {
-                        return importFlattenShape(ctx, source.childs[i] as types.FlattenShape)
+                        return importFlattenShape(source.childs[i] as types.FlattenShape, ctx)
                     }
                     if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(ctx, source.childs[i] as types.ImageShape)
+                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
                     }
                     if (source.childs[i].typeId == 'path-shape') {
-                        return importPathShape(ctx, source.childs[i] as types.PathShape)
+                        return importPathShape(source.childs[i] as types.PathShape, ctx)
                     }
                     if (source.childs[i].typeId == 'rect-shape') {
-                        return importRectShape(ctx, source.childs[i] as types.RectShape)
+                        return importRectShape(source.childs[i] as types.RectShape, ctx)
                     }
                     if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(ctx, source.childs[i] as types.SymbolRefShape)
+                        return importSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
                     }
                     if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(ctx, source.childs[i] as types.TextShape)
+                        return importTextShape(source.childs[i] as types.TextShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return importOvalShape(ctx, source.childs[i] as types.OvalShape)
+                    if (source.childs[i].typeId == 'artboard') {
+                        return importArtboard(source.childs[i] as types.Artboard, ctx)
                     }
                     if (source.childs[i].typeId == 'line-shape') {
-                        return importLineShape(ctx, source.childs[i] as types.LineShape)
+                        return importLineShape(source.childs[i] as types.LineShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'oval-shape') {
+                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1122,10 +1158,10 @@ export function importArtboard(ctx: IImportContext, source: types.Artboard): imp
     ret.isFlippedVertical = source.isFlippedVertical
     ret.isLocked = source.isLocked
     ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
     ret.nameIsFixed = source.nameIsFixed
     ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
     ret.rotation = source.rotation
     ret.constrainerProportions = source.constrainerProportions
     ret.clippingMaskMode = source.clippingMaskMode
@@ -1133,35 +1169,7 @@ export function importArtboard(ctx: IImportContext, source: types.Artboard): imp
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     ret.hasBackgroundColor = source.hasBackgroundColor
     ret.includeBackgroundColorInExport = source.includeBackgroundColorInExport
-    ret.backgroundColor = source.backgroundColor && importColor(ctx, source.backgroundColor)
-    ctx.afterImport(ret)
-    return ret
-}
-/* artboard ref shape */
-export function importArtboardRef(ctx: IImportContext, source: types.ArtboardRef): impl.ArtboardRef {
-    const ret: impl.ArtboardRef = new impl.ArtboardRef (
-        source.id,
-        source.name,
-        importShapeType(ctx, source.type),
-        importShapeFrame(ctx, source.frame),
-        importStyle(ctx, source.style),
-        importBoolOp(ctx, source.boolOp),
-        source.refId
-    )
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(ctx, source.exportOptions)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(ctx, source.resizingType)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ctx.afterImport(ret)
+    ret.backgroundColor = source.backgroundColor && importColor(source.backgroundColor, ctx)
+    if (ctx) ctx.afterImport(ret)
     return ret
 }
