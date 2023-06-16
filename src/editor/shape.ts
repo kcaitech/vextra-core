@@ -86,7 +86,7 @@ export class ShapeEditor {
     public setRadius(radius: RectRadius) {
         if (!(this.__shape instanceof RectShape)) return;
         const api = this.__repo.start("setRadius", {});
-        api.shapeModifyRadius(this.__page, this.__shape ,radius);
+        api.shapeModifyRadius(this.__page, this.__shape, radius);
         this.__repo.commit();
     }
 
@@ -114,8 +114,8 @@ export class ShapeEditor {
     }
 
     public setFillEnable(idx: number, value: boolean) {
-        const api = this.__repo.start("setFillEnable", {});
         if (this.__shape.type !== ShapeType.Artboard) {
+            const api = this.__repo.start("setFillEnable", {});
             api.setFillEnable(this.__page, this.__shape, idx, value);
             this.__repo.commit();
         }
