@@ -1,0 +1,20 @@
+{
+    "description": "document syms",
+    "type": "object",
+    "properties": {
+        "pageId": {
+            "type": "string"
+        },
+        "symbols": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "pageId",
+        "symbols"
+    ],
+    "additionalProperties": false
+}

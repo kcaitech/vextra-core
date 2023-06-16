@@ -114,7 +114,7 @@ export class ResourceMgr<T> extends Watchable(Object) {
             }
             this.__loading.set(id, loading);
         }
-        else if (loading.timeout < Date.now()) {
+        else if (loading.timeout > Date.now()) {
             return new Promise<T | undefined>((resolve, reject) => {
                 loading?.resolves.push(resolve)
                 loading?.rejects.push(reject)

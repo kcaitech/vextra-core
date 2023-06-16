@@ -457,6 +457,22 @@ export class Ellipse extends Basic {
     }
 }
 /**
+ * document syms 
+ */
+export class DocumentSyms extends Basic {
+    typeId = 'document-syms'
+    pageId: string
+    symbols: BasicArray<string >
+    constructor(
+        pageId: string,
+        symbols: BasicArray<string >
+    ) {
+        super()
+        this.pageId = pageId
+        this.symbols = symbols
+    }
+}
+/**
  * document meta 
  */
 export class DocumentMeta extends Basic {
@@ -1058,31 +1074,5 @@ export class Artboard extends GroupShape {
             boolOp,
             childs
         )
-    }
-}
-/**
- * artboard ref shape 
- */
-export class ArtboardRef extends Shape {
-    typeId = 'artboard-ref'
-    refId: string
-    constructor(
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style,
-        boolOp: BoolOp,
-        refId: string
-    ) {
-        super(
-            id,
-            name,
-            type,
-            frame,
-            style,
-            boolOp
-        )
-        this.refId = refId
     }
 }

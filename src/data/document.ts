@@ -1,5 +1,5 @@
 import { DocumentMeta, PageListItem } from "./baseclasses";
-export { DocumentMeta, PageListItem } from "./baseclasses";
+export { DocumentMeta, PageListItem, DocumentSyms } from "./baseclasses";
 import { Page } from "./page";
 import { Artboard } from "./artboard";
 import { SymbolShape } from "./shape";

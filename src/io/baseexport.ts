@@ -369,6 +369,22 @@ export function exportEllipse(source: types.Ellipse, ctx?: IExportContext): type
     if (ctx) ctx.afterExport(source)
     return ret
 }
+/* document syms */
+export function exportDocumentSyms(source: types.DocumentSyms, ctx?: IExportContext): types.DocumentSyms {
+    const ret = {
+        pageId: source.pageId,
+        symbols: (() => {
+            const ret = []
+            for (let i = 0, len = source.symbols.length; i < len; i++) {
+                const r = source.symbols[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+    }
+    if (ctx) ctx.afterExport(source)
+    return ret
+}
 /* document meta */
 export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportContext): types.DocumentMeta {
     const ret = {
@@ -1176,34 +1192,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
         hasBackgroundColor: source.hasBackgroundColor,
         includeBackgroundColorInExport: source.includeBackgroundColorInExport,
         backgroundColor: source.backgroundColor && exportColor(source.backgroundColor, ctx),
-    }
-    if (ctx) ctx.afterExport(source)
-    return ret
-}
-/* artboard ref shape */
-export function exportArtboardRef(source: types.ArtboardRef, ctx?: IExportContext): types.ArtboardRef {
-    const ret = {
-        typeId: source.typeId,
-        id: source.id,
-        name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
-        isFixedToViewport: source.isFixedToViewport,
-        isFlippedHorizontal: source.isFlippedHorizontal,
-        isFlippedVertical: source.isFlippedVertical,
-        isLocked: source.isLocked,
-        isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
-        nameIsFixed: source.nameIsFixed,
-        resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
-        rotation: source.rotation,
-        clippingMaskMode: source.clippingMaskMode,
-        hasClippingMask: source.hasClippingMask,
-        shouldBreakMaskChain: source.shouldBreakMaskChain,
-        refId: source.refId,
     }
     if (ctx) ctx.afterExport(source)
     return ret

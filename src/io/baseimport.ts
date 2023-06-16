@@ -364,6 +364,22 @@ export function importEllipse(source: types.Ellipse, ctx?: IImportContext): impl
     if (ctx) ctx.afterImport(ret)
     return ret
 }
+/* document syms */
+export function importDocumentSyms(source: types.DocumentSyms, ctx?: IImportContext): impl.DocumentSyms {
+    const ret: impl.DocumentSyms = new impl.DocumentSyms (
+        source.pageId,
+        (() => {
+            const ret = new BasicArray<string>()
+            for (let i = 0, len = source.symbols.length; i < len; i++) {
+                const r = source.symbols[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
+    if (ctx) ctx.afterImport(ret)
+    return ret
+}
 /* document meta */
 export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
     const ret: impl.DocumentMeta = new impl.DocumentMeta (
@@ -1135,33 +1151,6 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     ret.hasBackgroundColor = source.hasBackgroundColor
     ret.includeBackgroundColorInExport = source.includeBackgroundColorInExport
     ret.backgroundColor = source.backgroundColor && importColor(source.backgroundColor, ctx)
-    if (ctx) ctx.afterImport(ret)
-    return ret
-}
-/* artboard ref shape */
-export function importArtboardRef(source: types.ArtboardRef, ctx?: IImportContext): impl.ArtboardRef {
-    const ret: impl.ArtboardRef = new impl.ArtboardRef (
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
-        source.refId
-    )
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }

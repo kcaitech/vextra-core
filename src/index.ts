@@ -23,5 +23,6 @@ export * from "./editor/shape"
 export * from "./editor/controller"
 
 export * from "./service/shapedirlist"
+export * from "./service/taskmgr"
 
 export * from "./coop/local"

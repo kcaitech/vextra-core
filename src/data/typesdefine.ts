@@ -266,6 +266,11 @@ export type Ellipse = {
     rx: number
     ry: number
 }
+/* document syms */
+export type DocumentSyms = {
+    pageId: string
+    symbols: string[]
+}
 /* document meta */
 export type DocumentMeta = {
     name: string
@@ -463,8 +468,4 @@ export type Artboard = GroupShape & {
     hasBackgroundColor?: boolean
     includeBackgroundColorInExport?: boolean
     backgroundColor?: Color
-}
-/* artboard ref shape */
-export type ArtboardRef = Shape & {
-    refId: string
 }
