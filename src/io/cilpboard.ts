@@ -3,6 +3,7 @@ import { RectShape } from "../data/typesdefine";
 import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, IExportContext } from "./baseexport";
 import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext } from "./baseimport";
 import * as types from "../data/typesdefine";
+import { v4 } from "uuid";
 
 class ExfContext implements IExportContext {
     afterExport(obj: any): void {
@@ -59,7 +60,14 @@ export function export_shape(shapes: Shape[]) {
     }
     return result;
 }
-// 导入图形
-export function import_shape(shapes: Shape[]) {
-
+// 从剪切板导入图形
+export function import_shape(source: { index: number, content: types.Shape }[]) {
+    const result: Shape[] = []
+    for (let i = 0; i < source.length; i++) {
+        const _s = source[i];
+        _s.content.id = v4();
+        const r = importRectShape(noeffectCtx, _s.content as types.RectShape);
+        result.push(r);
+    }
+    return result;
 }
