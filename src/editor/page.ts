@@ -265,6 +265,7 @@ export class PageEditor {
         try {
             api.shapeInsert(this.__page, parent, shape, index);
             this.__repo.commit();
+            shape = parent[index]; // 需要把proxy代理之后的shape返回，否则无法触发notify
             return shape;
         } catch (e) {
             console.log(e)

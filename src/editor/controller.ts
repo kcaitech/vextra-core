@@ -160,7 +160,7 @@ export class Controller {
             shape.frame.x -= xy.x;
             shape.frame.y -= xy.y;
             api.shapeInsert(page, parent, shape, parent.childs.length)
-            newShape = shape; // parent.childs.at(-1);
+            newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
             return newShape
@@ -177,7 +177,7 @@ export class Controller {
                 shape.frame.x -= xy.x;
                 shape.frame.y -= xy.y;
                 api.shapeInsert(page, parent, shape, parent.childs.length)
-                newShape = shape; // parent.childs.at(-1);
+                newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
