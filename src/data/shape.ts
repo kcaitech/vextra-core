@@ -23,9 +23,7 @@ export class Shape extends Watchable(classes.Shape) {
 
     get parent(): Shape | undefined {
         let p = this.__parent;
-        while (p && !(p instanceof Shape)) {
-            p = p.parent;
-        }
+        while (p && !(p instanceof Shape)) p = p.parent;
         return p;
     }
 
