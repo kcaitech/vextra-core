@@ -7,7 +7,7 @@ export class Page extends GroupShape implements classes.Page {
     typeId = 'page';
     artboards: BasicMap<string, Artboard> = new BasicMap();
     shapes: BasicMap<string, Shape> = new BasicMap();
-    __allshapes: Map<string, WeakRef<Shape> > = new Map(); // 包含被删除的
+    __allshapes: Map<string, WeakRef<Shape>> = new Map(); // 包含被删除的
     constructor(
         id: string,
         name: string,
@@ -70,7 +70,4 @@ export class Page extends GroupShape implements classes.Page {
     get artboardList() {
         return Array.from(this.artboards.values());
     }
-    // get flatShapes() {
-    //     return Array.from(this.shapes.values());
-    // }
 }

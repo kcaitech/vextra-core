@@ -364,7 +364,7 @@ export class Repository extends Watchable(Object) implements IDataGuard {
     private __index: number = 0;
     private __needundo: boolean;
 
-    constructor(props?: {settrap?: boolean, needundo?: boolean}) {
+    constructor(props?: { settrap?: boolean, needundo?: boolean }) {
         super();
         // this.__selection = selection;
         this.__context = new TContext();
