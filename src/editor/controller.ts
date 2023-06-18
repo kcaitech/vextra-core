@@ -144,9 +144,6 @@ export class Controller {
     }
     // 创建自定义frame的图形
     public asyncCreator(mousedownOnPage: PageXY): AsyncCreator {
-        if (this.__repo.transactCtx.transact) {
-            this.__repo.rollback();
-        }
         const anchor: PageXY = mousedownOnPage;
         const api = this.__repo.start("createshape", {});
         let status: Status = Status.Pending;
@@ -273,10 +270,6 @@ export class Controller {
     }
     // 图形编辑，适用于基础控点、控边的异步编辑
     public asyncRectEditor(shapes: Shape[], page: Page): AsyncBaseAction {
-        if (this.__repo.transactCtx.transact) {
-            this.__repo.rollback();
-        }
-
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
         const execute = (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => {
@@ -353,9 +346,6 @@ export class Controller {
     }
     // 图形位置移动
     public asyncTransfer(shapes: Shape[], page: Page): AsyncTransfer {
-        if (this.__repo.transactCtx.transact) { // ???
-            this.__repo.rollback();
-        }
         const api = this.__repo.start("transfer", {});
         let status: Status = Status.Pending;
         const migrate = (targetParent: GroupShape) => {

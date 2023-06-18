@@ -252,20 +252,19 @@ export class PageEditor {
         return false;
     }
     // 插入成功，返回插入的shape
-    insert(parent: GroupShape, index: number, shape: Shape, adjust = false): Shape | false {
+    insert(parent: GroupShape, index: number, shape: Shape, adjusted = false): Shape | false {
         // adjust shape frame refer to parent
-        if (!adjust) {
+        if (!adjusted) {
             const xy = parent.frame2Page();
             shape.frame.x -= xy.x;
             shape.frame.y -= xy.y;
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
-
         const api = this.__repo.start("insertshape", {});
         try {
             api.shapeInsert(this.__page, parent, shape, index);
+            shape = parent.childs[index]; // 需要把proxy代理之后的shape返回，否则无法触发notify
             this.__repo.commit();
-            shape = parent[index]; // 需要把proxy代理之后的shape返回，否则无法触发notify
             return shape;
         } catch (e) {
             console.log(e)
