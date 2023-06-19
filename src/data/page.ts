@@ -5,7 +5,7 @@ import { BasicArray, BasicMap } from "./basic";
 import { Artboard } from "./artboard";
 export class Page extends GroupShape implements classes.Page {
     typeId = 'page';
-    artboards: BasicMap<string, Artboard> = new BasicMap();
+    artboards: Map<string, Artboard> = new Map();
     shapes: Map<string, Shape> = new Map();
     __allshapes: Map<string, WeakRef<Shape>> = new Map(); // 包含被删除的
     constructor(
@@ -31,8 +31,7 @@ export class Page extends GroupShape implements classes.Page {
     }
     onAddShape(shape: Shape, recursive: boolean = true) {
         // check 不可以重shape id
-        if (this.shapes.has(shape.id)) throw new Error("The same shape id already exists")
-
+        if (this.shapes.has(shape.id)) throw new Error("The same shape id already exists");
         this.shapes.set(shape.id, shape);
         this.__allshapes.set(shape.id, new WeakRef(shape));
         if (shape.type === ShapeType.Artboard) {
