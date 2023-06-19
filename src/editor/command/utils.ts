@@ -172,17 +172,16 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
         let next = root;
         while (next) {
             if (next.childs.length === 0) break;
-            const childAllUpdated = ((childs) => {
-                for (let i = 0; i < childs.length; i++) {
-                    if (!childs[i].updated) {
-                        next = childs[i]; // 下一个未更新的子节点
-                        return false;
-                    }
+            let nextchild;
+            for (let i = 0, len = next.childs.length; i < len; i++) {
+                const child = next.childs[i];
+                if (!child.updated) {
+                    nextchild = child; // 下一个未更新的子节点
+                    break;
                 }
-                return true;
-            })(next.childs);
-            if (childAllUpdated) break;
-            // continue
+            }
+            if (!nextchild) break;
+            next = nextchild;
         }
         const needupdate = next.needupdate || ((childs) => {
             for (let i = 0; i < childs.length; i++) {
