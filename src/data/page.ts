@@ -6,7 +6,7 @@ import { Artboard } from "./artboard";
 export class Page extends GroupShape implements classes.Page {
     typeId = 'page';
     artboards: BasicMap<string, Artboard> = new BasicMap();
-    shapes: BasicMap<string, Shape> = new BasicMap();
+    shapes: Map<string, Shape> = new Map();
     __allshapes: Map<string, WeakRef<Shape>> = new Map(); // 包含被删除的
     constructor(
         id: string,

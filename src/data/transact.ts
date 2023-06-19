@@ -1,5 +1,5 @@
 import { objectId, __objidkey } from '../basic/objectid';
-import { castNotifiable, IDataGuard, ISave4Restore, Notifiable } from './basic';
+import { BasicMap, castNotifiable, IDataGuard, ISave4Restore, Notifiable } from './basic';
 import { Watchable } from './basic';
 
 class TContext {
@@ -476,14 +476,15 @@ function deepProxy(data: any, h: ProxyHandler): any {
     const stack: any[] = [data];
     while (stack.length > 0) {
         const d = stack.pop();
-
         if (d instanceof Map) {
             d.forEach((v, k, m) => {
                 if (k.startsWith("__")) {
                     // donothing
                 }
                 else if (typeof (v) === 'object') { // 还有array set map
-                    v.__parent = d;
+                    if (d instanceof BasicMap) { // 当一个map对象为BasicMap对象时，其才能成为自身values集元素的__parent;
+                        v.__parent = d;
+                    }
                     if (!isProxy(v)) {
                         m.set(k, new Proxy(v, h));
                         stack.push(v);

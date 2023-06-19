@@ -528,7 +528,8 @@ export class RectShape extends PathShape implements classes.RectShape {
                     closePath();
                 }
             }
-        } else {
+        }
+        else {
             const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
             const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
             const w = this.frame.width;
