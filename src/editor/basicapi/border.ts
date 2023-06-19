@@ -1,3 +1,4 @@
+import { v4 } from "uuid";
 import { Color, Border, BorderPosition, Style, BorderStyle, MarkerType } from "../../data/style";
 // 边框
 export function setBorderColor(
@@ -35,6 +36,14 @@ export function setBorderEndMarkerType(style: Style, idx: number, type: MarkerTy
 
 export function deleteBorderAt(style: Style, idx: number) {
     return style.borders.splice(idx, 1)[0];
+}
+/**
+ * @param idx 开始删的位置
+ * @param strength 删除的个数
+ * @returns 被删除的元素
+ */
+export function deleteBorders(style: Style, idx: number, strength: number) {
+    return style.borders.splice(idx, strength);
 }
 
 export function addBorder(style: Style, border: Border) {

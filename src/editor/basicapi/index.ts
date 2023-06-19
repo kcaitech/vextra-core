@@ -4,7 +4,7 @@ import { Page } from "../../data/page";
 import { GroupShape, RectRadius, RectShape, Shape, ShapeType } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 
-export { addFillAt, deleteFillAt, moveFill, setFillColor, setFillEnable } from "./fill";
+export { addFillAt, deleteFillAt, deleteFills, moveFill, setFillColor, setFillEnable } from "./fill";
 export {
     addBorderAt,
     deleteBorderAt,
@@ -15,7 +15,8 @@ export {
     setBorderPosition,
     setBorderStyle,
     setBorderStartMarkerType,
-    setBorderEndMarkerType
+    setBorderEndMarkerType,
+    deleteBorders
 } from "./border";
 export { deleteText, insertText } from "./text";
 

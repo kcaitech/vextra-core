@@ -9,6 +9,14 @@ export function addFillAt(style: Style, fill: Fill, index: number) {
 export function deleteFillAt(style: Style, idx: number) {
     return style.fills.splice(idx, 1)[0];
 }
+/**
+ * @param idx 开始删的位置
+ * @param strength 删除的个数
+ * @returns 被删除的元素
+ */
+export function deleteFills(style: Style, idx: number, strength: number) {
+    return style.fills.splice(idx, strength);
+}
 export function moveFill(style: Style, idx: number, idx2: number) {
     const fill = style.fills.splice(idx, 1)[0];
     if (fill) style.fills.splice(idx2, 0, fill);

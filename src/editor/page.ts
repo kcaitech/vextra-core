@@ -11,6 +11,7 @@ import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { Border, Color, Fill } from "../data/classes";
+import { v4 } from "uuid";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
@@ -366,7 +367,7 @@ export class PageEditor {
             const api = this.__repo.start('arrange', {});
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                translate(api, this.__page, action.target, action.transX, action.transY)
+                translate(api, this.__page, action.target, action.transX, action.transY);
             }
             this.__repo.commit();
         } catch (error) {
@@ -402,7 +403,7 @@ export class PageEditor {
             const api = this.__repo.start('RotateAdjust', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.shapeModifyRotate(this.__page, target, value)
+                api.shapeModifyRotate(this.__page, target, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -415,10 +416,135 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, direction } = actions[i];
                 if (direction === 'horizontal') {
-                    api.shapeModifyHFlip(this.__page, target, !target.isFlippedHorizontal)
+                    api.shapeModifyHFlip(this.__page, target, !target.isFlippedHorizontal);
                 } else if (direction === 'vertical') {
-                    api.shapeModifyVFlip(this.__page, target, !target.isFlippedVertical)
+                    api.shapeModifyVFlip(this.__page, target, !target.isFlippedVertical);
                 }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFillColor(actions: FillColorAction[]) {
+        try {
+            const api = this.__repo.start('setShapesFillColor', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setFillColor(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFillEnabled(actions: FillEnableAction[]) {
+        try {
+            const api = this.__repo.start('setShapesFillEnabled', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setFillEnable(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesAddFill(actions: FillAddAction[]) {
+        try {
+            const api = this.__repo.start('shapesAddFill', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addFillAt(this.__page, target, value, target.style.fills.length);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesDeleteFill(actions: FillDeleteAction[]) {
+        try {
+            const api = this.__repo.start('shapesDeleteFill', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index } = actions[i];
+                api.deleteFillAt(this.__page, target, index);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesFillsUnify(actions: FillsReplaceAction[]) {
+        try {
+            const api = this.__repo.start('shapesFillsUnify', {}); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                // 先清空再填入
+                api.deleteFills(this.__page, target, 0, target.style.fills.length); // 清空
+                api.addFills(this.__page, target, value); // 填入新的值
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+            // throw new Error(`${error}`);
+        }
+    }
+    //boders 
+    setShapesBorderColor(actions: BorderColorAction[]) {
+        try {
+            const api = this.__repo.start('setShapesBorderColor', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setBorderColor(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderEnabled(actions: BorderEnableAction[]) {
+        try {
+            const api = this.__repo.start('setShapesBorderEnabled', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setBorderEnable(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesAddBorder(actions: BorderAddAction[]) {
+        try {
+            const api = this.__repo.start('shapesAddBorder', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addBorderAt(this.__page, target, value, target.style.borders.length);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesDeleteBorder(actions: BorderDeleteAction[]) {
+        try {
+            const api = this.__repo.start('shapesDeleteBorder', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index } = actions[i];
+                api.deleteBorderAt(this.__page, target, index);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesBordersUnify(actions: BordersReplaceAction[]) {
+        try {
+            const api = this.__repo.start('shapesBordersUnify', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.deleteBorders(this.__page, target, 0, target.style.borders.length);
+                api.addBorders(this.__page, target, value);
             }
             this.__repo.commit();
         } catch (error) {
