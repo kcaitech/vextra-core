@@ -4,7 +4,11 @@ import { Repository } from "../../data/transact";
 import { CMDExecuter } from "./executer";
 import { CMDReverter } from "./reverter";
 import { Api } from "./recordapi";
-import { Page } from "data/page";
+import { Page } from "../../data/page";
+import { uuid } from "../../basic/uuid";
+import { ShapeArrayAttrGroup } from "../../coop/data/classes";
+import { ShapeCmdGroup } from "../../coop/data/classes";
+import { TextCmdGroup } from "../../coop/data/classes";
 
 export class CoopRepository {
     private __repo: Repository;
@@ -93,6 +97,16 @@ export class CoopRepository {
         }
         const redoCmd = this.__localcmds[this.__index];
         if (redoCmd) {
+            const unitId = uuid();
+            if (redoCmd instanceof ShapeArrayAttrGroup ||
+                redoCmd instanceof ShapeCmdGroup ||
+                redoCmd instanceof TextCmdGroup) {
+                redoCmd.setUnitId(unitId);
+            }
+            else {
+                redoCmd.unitId = unitId;
+            }
+
             if (this._exec(redoCmd, false)) {
                 this.__index++;
             }

@@ -6,6 +6,7 @@ import {
     PageCmdDelete,
     PageCmdModify,
     PageCmdMove,
+    ShapeArrayAttrGroup,
     ShapeArrayAttrInsert,
     ShapeArrayAttrModify,
     ShapeArrayAttrMove,
@@ -55,6 +56,8 @@ export class CMDReverter {
                 return this.pageModify(cmd as PageCmdModify);
             case CmdType.PageMove:
                 return this.pageMove(cmd as PageCmdMove);
+            case CmdType.ShapeArrayAttrGroup:
+                return this.shapeArrAttrCMDGroup(cmd as ShapeArrayAttrGroup);
             case CmdType.ShapeArrayAttrInsert:
                 return this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
             case CmdType.ShapeArrayAttrModify:
@@ -142,6 +145,14 @@ export class CMDReverter {
         return new PageCmdMove(CmdType.PageMove, uuid(), cmd.blockId, [op]);
     }
 
+    shapeArrAttrCMDGroup(cmd: ShapeArrayAttrGroup): ShapeArrayAttrGroup {
+        const ret = ShapeArrayAttrGroup.Make(cmd.blockId);
+        cmd.cmds.reverse().forEach((cmd) => {
+            const r = this.revert(cmd);
+            if (r) ret.cmds.push(r as any)
+        })
+        return ret;
+    }
     shapeArrAttrInsert(cmd: ShapeArrayAttrInsert): ShapeArrayAttrRemove {
         const cmdop = cmd.ops[0];
         let op;
@@ -195,7 +206,6 @@ export class CMDReverter {
 
         return new ShapeArrayAttrInsert(CmdType.ShapeArrayAttrInsert, uuid(), cmd.blockId, [op], arrayAttrId, cmd.origin);
     }
-
     shapeCMDGroup(cmd: ShapeCmdGroup): ShapeCmdGroup {
         const ret = ShapeCmdGroup.Make(cmd.blockId);
         cmd.cmds.reverse().forEach((cmd) => {

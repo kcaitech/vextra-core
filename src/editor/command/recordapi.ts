@@ -1,4 +1,8 @@
-import { Cmd, CmdType, PageCmdDelete, PageCmdMove, ShapeArrayAttrMove, ShapeCmdGroup, ShapeCmdInsert, ShapeCmdRemove, TextCmdGroup, TextCmdInsert, TextCmdRemove } from "../../coop/data/classes";
+import {
+    Cmd, CmdType, PageCmdDelete, PageCmdMove, ShapeArrayAttrMove,
+    ShapeCmdGroup, ShapeCmdInsert, ShapeCmdRemove,
+    TextCmdGroup, TextCmdInsert, TextCmdRemove, ShapeArrayAttrGroup
+} from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
@@ -41,8 +45,6 @@ export class Api {
         this.needUpdateFrame.length = 0;
         // group cmds
         if (this.cmds.length <= 1) return this.cmds[0];
-        console.log('cmds', this.cmds);
-
         // check group type
         const first = this.cmds[0];
         switch (first.type) {
@@ -56,6 +58,11 @@ export class Api {
             case CmdType.ShapeModify:
             case CmdType.ShapeMove:
                 return this.groupShape(first.blockId);
+            case CmdType.ShapeArrayAttrDelete:
+            case CmdType.ShapeArrayAttrInsert:
+            case CmdType.ShapeArrayAttrModify:
+            case CmdType.ShapeArrayAttrMove:
+                return this.groupAttr(first.blockId);
             default:
                 throw new Error("unknow cmd group type:" + first.type)
         }
@@ -90,6 +97,23 @@ export class Api {
                     group.cmds.push(c as any);
                     break;
                 default: throw new Error("unknow shape group type:" + c.type)
+            }
+        })
+        return group;
+    }
+    private groupAttr(blockId: string): Cmd {
+        const group = ShapeArrayAttrGroup.Make(blockId);
+        this.cmds.forEach((c) => {
+            if (c.blockId !== blockId) throw new Error("blockid not equal");
+            c.unitId = group.unitId;
+            switch (c.type) {
+                case CmdType.ShapeArrayAttrDelete:
+                case CmdType.ShapeArrayAttrInsert:
+                case CmdType.ShapeArrayAttrModify:
+                case CmdType.ShapeArrayAttrMove:
+                    group.cmds.push(c as any);
+                    break;
+                default: throw new Error("unknow shape group type:" + c.type);
             }
         })
         return group;
