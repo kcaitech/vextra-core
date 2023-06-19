@@ -83,7 +83,7 @@ export class CoopRepository {
         }
         const undoCmd = this.__localcmds[this.__index - 1];
         // 这里需要变换
-        const revertCmd = this.__cmdrevert.revert(undoCmd)
+        const revertCmd = this.__cmdrevert.revert(undoCmd);
         if (revertCmd) {
             if (this._exec(revertCmd, false)) {
                 this.__index--;

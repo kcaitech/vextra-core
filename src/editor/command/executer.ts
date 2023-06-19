@@ -493,12 +493,13 @@ export class CMDExecuter {
         if (arrayAttr === FILLS_ID) {
             const fillId = cmd.arrayAttrId;
             // find fill
-            const fillIdx = shape.style.fills.findIndex((fill) => fill.id === fillId);            
+            const fillIdx = shape.style.fills.findIndex((fill) => fill.id === fillId);
             if (fillIdx < 0) return;
             const opId = op.opId;
             const value = cmd.value;
             if (opId === FILLS_ATTR_ID.color) {
-                if (op.type === OpType.IdSet && value) {
+                if (!value) return;
+                if (op.type === OpType.IdRemove || op.type === OpType.IdSet) {
                     const color = importColor(JSON.parse(value))
                     api.setFillColor(shape.style, fillIdx, color);
                 }
