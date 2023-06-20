@@ -23,7 +23,6 @@ import {
     ArrayOpRemove,
     ArrayOpNone,
     ArrayOpInsert,
-    ArrayOpMove,
     IdOpNone,
     IdOpSet,
     IdOpRemove,
@@ -131,15 +130,18 @@ export class CMDReverter {
         return ret;
     }
     pageMove(cmd: PageCmdMove): PageCmdMove {
-        const cmdop = cmd.ops[0];
-        let op;
-        if (cmdop.type === OpType.ArrayMove) {
-            op = ArrayOpMove.Make(cmdop.targetId, (cmdop as ArrayOpMove).start2, cmdop.length, cmdop.start)
+        const cmdop0 = cmd.ops[0] as ArrayOpRemove;
+        const cmdop1 = cmd.ops[1] as ArrayOpInsert;
+        let op0, op1;
+        if (cmdop0.type === OpType.ArrayRemove && cmdop1.type === OpType.ArrayInsert) {
+            op0 = ArrayOpRemove.Make(cmdop1.targetId, cmdop1.start, cmdop1.length)
+            op1 = ArrayOpInsert.Make(cmdop0.targetId, cmdop0.start, cmdop0.length)
         }
         else {
-            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, cmdop.length)
+            op0 = ArrayOpNone.Make(cmdop1.targetId, cmdop1.start, cmdop1.length)
+            op1 = ArrayOpNone.Make(cmdop0.targetId, cmdop0.start, cmdop0.length)
         }
-        return new PageCmdMove(CmdType.PageMove, uuid(), cmd.blockId, [op]);
+        return new PageCmdMove(CmdType.PageMove, uuid(), cmd.blockId, [op0, op1]);
     }
 
     shapeArrAttrInsert(cmd: ShapeArrayAttrInsert): ShapeArrayAttrRemove {
@@ -170,15 +172,18 @@ export class CMDReverter {
         return ret;
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove): ShapeArrayAttrMove {
-        const cmdop = cmd.ops[0];
-        let op;
-        if (cmdop.type === OpType.ArrayMove) {
-            op = ArrayOpMove.Make(cmdop.targetId, (cmdop as ArrayOpMove).start2, cmdop.length, cmdop.start)
+        const cmdop0 = cmd.ops[0] as ArrayOpRemove;
+        const cmdop1 = cmd.ops[1] as ArrayOpInsert;
+        let op0, op1;
+        if (cmdop0.type === OpType.ArrayRemove && cmdop1.type === OpType.ArrayInsert) {
+            op0 = ArrayOpRemove.Make(cmdop1.targetId, cmdop1.start, cmdop1.length)
+            op1 = ArrayOpInsert.Make(cmdop0.targetId, cmdop0.start, cmdop0.length)
         }
         else {
-            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, cmdop.length)
+            op0 = ArrayOpNone.Make(cmdop1.targetId, cmdop1.start, cmdop1.length)
+            op1 = ArrayOpNone.Make(cmdop0.targetId, cmdop0.start, cmdop0.length)
         }
-        return new ShapeArrayAttrMove(CmdType.ShapeArrayAttrMove, uuid(), cmd.blockId, [op]);
+        return new ShapeArrayAttrMove(CmdType.ShapeArrayAttrMove, uuid(), cmd.blockId, [op0, op1]);
     }
     shapeArrAttrDelete(cmd: ShapeArrayAttrRemove): ShapeArrayAttrInsert {
         const cmdop = cmd.ops[0];
@@ -309,15 +314,13 @@ export class CMDReverter {
         return ret;
     }
     textMove(cmd: TextCmdMove): TextCmdMove {
-        const op = cmd.ops[0];
-        if (op.type === OpType.ArrayMove) {
-            const moveop = op as ArrayOpMove;
-            const shapeId = op.targetId[0];
-            return TextCmdMove.Make(cmd.blockId, shapeId, moveop.start2, moveop.length, moveop.start);
+        const op0 = cmd.ops[0] as ArrayOpRemove;
+        const op1 = cmd.ops[1] as ArrayOpInsert;
+        if (op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
+            return TextCmdMove.Make(cmd.blockId, op0.targetId[0], op1.start, op0.length, op0.start);
         }
         else {
-            const shapeId = op.targetId[0];
-            return new TextCmdMove(CmdType.TextMove, uuid(), cmd.blockId, [op]);
+            return new TextCmdMove(CmdType.TextMove, uuid(), cmd.blockId, [op0, op1]);
         }
     }
     textCmdGroup(cmd: TextCmdGroup): TextCmdGroup {

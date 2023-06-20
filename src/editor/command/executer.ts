@@ -17,7 +17,6 @@ import {
     ShapeArrayAttrMove,
     PageCmdMove,
     TextCmdMove,
-    ArrayOpMove,
     ShapeOpMove,
     IdOpSet,
     ShapeOpRemove
@@ -238,10 +237,10 @@ export class CMDExecuter {
         }
     }
     pageMove(cmd: PageCmdMove) {
-        const op = cmd.ops[0];
-        if (op && op.type === OpType.ArrayMove) {
-            const moveOp = op as ArrayOpMove;
-            api.pageMove(this.__document, moveOp.start, moveOp.start2);
+        const op0 = cmd.ops[0] as ArrayOpRemove;
+        const op1 = cmd.ops[1] as ArrayOpInsert;
+        if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
+            api.pageMove(this.__document, op0.start, op1.start);
         }
     }
 
@@ -553,21 +552,20 @@ export class CMDExecuter {
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
+        const op0 = cmd.ops[0] as ArrayOpRemove
+        const op1 = cmd.ops[1] as ArrayOpInsert
+        const shapeId = op0.targetId[0]
         const shape = page && page.getShape(shapeId, true);
         if (!page || !shape) return;
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
-            if (op.type === OpType.ArrayMove) {
-                const moveOp = op as ArrayOpMove;
-                api.moveFill(shape.style, moveOp.start, moveOp.start2)
+            if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
+                api.moveFill(shape.style, op0.start, op1.start)
             }
         }
         else if (arrayAttr === BORDER_ID) {
-            if (op.type === OpType.ArrayMove) {
-                const moveOp = op as ArrayOpMove;
-                api.moveBorder(shape.style, moveOp.start, moveOp.start2)
+            if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
+                api.moveBorder(shape.style, op0.start, op1.start)
             }
         }
     }
