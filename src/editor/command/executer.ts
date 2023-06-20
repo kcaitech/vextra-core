@@ -51,7 +51,7 @@ import * as types from "../../data/typesdefine"
 import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Text, SpanAttr } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
 import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
@@ -625,13 +625,33 @@ export class CMDExecuter {
         api.deleteText(shape, op.start, op.length);
     }
     textModify(cmd: TextCmdModify) {
-        throw new Error("not implemented")
-        // const page = this.__document.pagesMgr.getSync(cmd.blockId);
-        // const op = cmd.ops[0]
-        // const shapeId = op.targetId[0]
-        // const shape = page && page.getShape(shapeId, true);
-        // if (!page || !shape || !(shape instanceof TextShape)) return;
-        // todo
+        const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        const op = cmd.ops[0]
+        const shapeId = op.targetId[0]
+        const shape = page && page.getShape(shapeId, true);
+        if (!page || !shape || !(shape instanceof TextShape)) return;
+        const attrId = cmd.attrId
+        const value = cmd.value;
+        if (attrId === TEXT_ATTR_ID.color) {
+            if (op.type === OpType.ArrayAttr && value) {
+                const color = importColor(JSON.parse(value))
+                api.textModifyColor(shape, op.start, op.length, color)
+            }
+            // TODO remove value??
+        }
+        else if (attrId === TEXT_ATTR_ID.fontName) {
+            if (op.type === OpType.ArrayAttr && value) {
+                api.textModifyFontName(shape, op.start, op.length, value)
+            }
+            // TODO remove value??
+        }
+        else if (attrId === TEXT_ATTR_ID.fontSize) {
+            if (op.type === OpType.ArrayAttr && value) {
+                const fontSize = JSON.parse(value);
+                api.textModifyFontSize(shape, op.start, op.length, fontSize)
+            }
+            // TODO remove value??
+        }
     }
     textCmdGroup(cmd: TextCmdGroup) {
         cmd.cmds.forEach((cmd) => {

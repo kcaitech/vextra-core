@@ -91,35 +91,53 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
 }
 
 function mergeSpanAttr(span: Span, attr: SpanAttr) {
-    if (attr.color) {
+    let changed = false;
+    if (attr.color && (!span.color ||
+        attr.color.alpha !== span.color.alpha ||
+        attr.color.red !== span.color.red ||
+        attr.color.green !== span.color.green ||
+        attr.color.blue !== span.color.blue)) {
         span.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
+        changed = true;
     }
-    if (attr.fontName) {
+    if (attr.fontName && (!span.fontName || attr.fontName !== span.fontName)) {
         span.fontName = attr.fontName;
+        changed = true;
     }
-    if (attr.fontSize) {
+    if (attr.fontSize && (!span.fontSize || attr.fontSize !== span.fontSize)) {
         span.fontSize = attr.fontSize;
+        changed = true;
     }
+    return changed;
 }
 
-function mergeParaAttr(para: Para, attr: ParaAttr) {
+function mergeParaAttr(para: Para, attr: ParaAttr): boolean {
     if (!para.attr) {
         para.attr = importParaAttr(attr); // deep clone
-        return;
+        return true;
     }
-    _mergeParaAttr(para.attr, attr);
+    return _mergeParaAttr(para.attr, attr);
 }
 
-function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr) {
-    if (attr.color) {
+function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
+    let changed = false;
+    if (attr.color && (!paraAttr.color ||
+        attr.color.alpha !== paraAttr.color.alpha ||
+        attr.color.red !== paraAttr.color.red ||
+        attr.color.green !== paraAttr.color.green ||
+        attr.color.blue !== paraAttr.color.blue)) {
         paraAttr.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
+        changed = true;
     }
-    if (attr.fontName) {
+    if (attr.fontName && (!paraAttr.fontName || attr.fontName !== paraAttr.fontName)) {
         paraAttr.fontName = attr.fontName;
+        changed = true;
     }
-    if (attr.fontSize) {
+    if (attr.fontSize && (!paraAttr.fontSize || attr.fontSize !== paraAttr.fontSize)) {
         paraAttr.fontSize = attr.fontSize;
+        changed = true;
     }
+    return changed;
 }
 
 function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
@@ -274,7 +292,8 @@ export function insertComplexText(shape: TextShape, text: Text, index: number) {
     insertTextParas(shape, text.paras, index);
 }
 
-function __formatTextSpan(spans: Span[], spanIndex: number, index: number, length: number, attr: SpanAttr) {
+function __formatTextSpan(spans: Span[], spanIndex: number, index: number, length: number, attr: SpanAttr): Span[] {
+    const ret: Span[] = [];
     while (length > 0 && spanIndex < spans.length) {
         const span = spans[spanIndex];
         if (index > 0) {
@@ -296,6 +315,12 @@ function __formatTextSpan(spans: Span[], spanIndex: number, index: number, lengt
             continue;
         }
         // index === 0 && span.length <= length
+
+        // save origin
+        const span1 = new Span(span.length);
+        mergeSpanAttr(span1, span);
+        ret.push(span1);
+
         mergeSpanAttr(span, attr);
         length -= span.length;
         if (spanIndex > 0 && !isDiffSpanAttr(span, spans[spanIndex - 1])) { // merge same span
@@ -307,26 +332,38 @@ function __formatTextSpan(spans: Span[], spanIndex: number, index: number, lengt
         spanIndex++;
         continue;
     }
+    return ret;
 }
 
-function _formatTextSpan(spans: Span[], index: number, length: number, attr: SpanAttr) {
+function _formatTextSpan(spans: Span[], index: number, length: number, attr: SpanAttr): Span[] {
     // 定位到span
     for (let i = 0, len = spans.length; i < len; i++) {
         const span = spans[i];
         if (index < span.length) {
-            __formatTextSpan(spans, i, index, length, attr);
-            break;
+            return __formatTextSpan(spans, i, index, length, attr);
         }
         else {
             index -= span.length;
         }
     }
+    return [];
 }
 
-function _formatText(paraArray: Para[], paraIndex: number, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+function _formatText(paraArray: Para[], paraIndex: number, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
+    const ret: { spans: Span[], paras: (ParaAttr & { length: number })[] } = { spans: [], paras: [] };
     while (length > 0 && paraIndex < paraArray.length) {
         const para = paraArray[index];
-        if (props.paraAttr) mergeParaAttr(para, props.paraAttr);
+        if (props.paraAttr) {
+            // save origin
+            const para1 = new ParaAttr();
+            if (para.attr) _mergeParaAttr(para1, para.attr);
+            const end = Math.min(para.length, index + length);
+            const origin: ParaAttr & { length: number } = para1 as ParaAttr & { length: number };
+            origin.length = end - index;
+            ret.paras.push(origin);
+
+            mergeParaAttr(para, props.paraAttr);
+        }
 
         if (props.attr) {
             _formatTextSpan(para.spans, index, length, props.attr)
@@ -336,21 +373,22 @@ function _formatText(paraArray: Para[], paraIndex: number, index: number, length
         index = 0;
         paraIndex++;
     }
+    return ret;
 }
 
-export function formatText(shape: TextShape, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+export function formatText(shape: TextShape, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
     const shapetext = shape.text;
     const paras = shapetext.paras;
     for (let i = 0, len = paras.length; i < len; i++) {
         const p = paras[i];
         if (index < p.length) {
-            _formatText(paras, i, index, length, props);
-            break;
+            return _formatText(paras, i, index, length, props);
         }
         else {
             index -= p.length;
         }
     }
+    return { spans: [], paras: [] };
 }
 
 function _getText(paraArray: Para[], paraIndex: number, index: number, length: number) {

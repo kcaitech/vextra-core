@@ -10,7 +10,7 @@ import { Document } from "../../data/document";
 import { PageCmdInsert } from "../../coop/data/classes";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportRectRadius } from "../../io/baseexport";
 import { PageCmdModify } from "../../coop/data/classes";
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, RectRadius, Shape, TextShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { ShapeCmdMove } from "../../coop/data/classes";
@@ -551,13 +551,36 @@ export class Api {
         })
         return del;
     }
-    // formatText(page: Page, shape: TextShape, idx: number, len: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
-    //     this.checkShapeAtPage(page, shape);
-    //     this.__trap(() => {
-    //         basicapi.formatText(shape, idx, len, props)
-    //         this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, len, ))
-    //     })
-    // }
+    textModifyColor(page: Page, shape: TextShape, idx: number, len: number, color: Color) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.textModifyColor(shape, idx, len, color);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.color, color, m.color));
+                idx += m.length;
+            })
+        })
+    }
+    textModifyFontName(page: Page, shape: TextShape, idx: number, len: number, fontname: string) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.textModifyFontName(shape, idx, len, fontname);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontName, fontname, m.fontName));
+                idx += m.length;
+            })
+        })
+    }
+    textModifyFontSize(page: Page, shape: TextShape, idx: number, len: number, fontsize: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.textModifyFontSize(shape, idx, len, fontsize);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.color, fontsize, m.fontSize));
+                idx += m.length;
+            })
+        })
+    }
     moveText(page: Page, shape: TextShape, idx: number, len: number, idx2: number) {
         this.checkShapeAtPage(page, shape);
         throw new Error("not implemented")

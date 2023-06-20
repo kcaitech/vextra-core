@@ -1,8 +1,10 @@
 import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
-import { GroupShape, RectRadius, RectShape, Shape, ShapeType } from "../../data/shape";
+import { GroupShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
+import { formatText } from "./text";
+import { SpanAttr } from "../../data/classes";
 
 export * from "./fill";
 export * from "./border";
@@ -116,4 +118,38 @@ export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
     if (shape.type === ShapeType.Artboard) {
         (shape as Artboard).setArtboardColor(color);
     }
+}
+
+export function textModifyColor(shape: TextShape, idx: number, len: number, color: Color) {
+    const attr = new SpanAttr();
+    attr.color = color;
+    const ret = formatText(shape, idx, len, { attr });
+    const spans = ret.spans;
+    const origin: { color: Color | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ color: span.color, length: span.length })
+    })
+    return origin;
+}
+export function textModifyFontName(shape: TextShape, idx: number, len: number, fontname: string) {
+    const attr = new SpanAttr();
+    attr.fontName = fontname;
+    const ret = formatText(shape, idx, len, { attr })
+    const spans = ret.spans;
+    const origin: { fontName: string | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ fontName: span.fontName, length: span.length })
+    })
+    return origin;
+}
+export function textModifyFontSize(shape: TextShape, idx: number, len: number, fontsize: number) {
+    const attr = new SpanAttr();
+    attr.fontSize = fontsize;
+    const ret = formatText(shape, idx, len, { attr })
+    const spans = ret.spans;
+    const origin: { fontSize: number | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ fontSize: span.fontSize, length: span.length })
+    })
+    return origin;
 }
