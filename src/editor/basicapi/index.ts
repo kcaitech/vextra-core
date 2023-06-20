@@ -4,21 +4,9 @@ import { Page } from "../../data/page";
 import { GroupShape, RectRadius, RectShape, Shape, ShapeType } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 
-export { addFillAt, deleteFillAt, deleteFills, moveFill, setFillColor, setFillEnable } from "./fill";
-export {
-    addBorderAt,
-    deleteBorderAt,
-    moveBorder,
-    setBorderColor,
-    setBorderEnable,
-    setBorderThickness,
-    setBorderPosition,
-    setBorderStyle,
-    setBorderStartMarkerType,
-    setBorderEndMarkerType,
-    deleteBorders
-} from "./border";
-export { deleteText, insertText } from "./text";
+export * from "./fill";
+export * from "./border";
+export * from "./text";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     document.insertPage(index, page)

@@ -43,10 +43,12 @@ import {
     importColor,
     importBorderPosition,
     importBorderStyle,
-    importRectRadius
+    importRectRadius,
+    importText,
+    importSpanAttr
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
-import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape } from "../../data/classes";
+import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Text, SpanAttr } from "../../data/classes";
 
 import * as api from "../basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
@@ -600,7 +602,19 @@ export class CMDExecuter {
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
         if (!page || !shape || !(shape instanceof TextShape)) return;
-        api.insertText(shape, cmd.text, op.start)
+        const text = cmd.parseText();
+        if (text.type === "simple") {
+            let attr;
+            if (text.attr) attr = importSpanAttr(text.attr);
+            api.insertSimpleText(shape, text.text as string, op.start, { attr })
+        }
+        else if (text.type === "complex") {
+            const _text = importText(text.text as types.Text);
+            api.insertComplexText(shape, _text, op.start)
+        }
+        else {
+            throw new Error("unknow text insert type: " + cmd.text)
+        }
     }
     textDelete(cmd: TextCmdRemove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);

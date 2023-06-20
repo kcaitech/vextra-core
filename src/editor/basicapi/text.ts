@@ -1,7 +1,8 @@
+import { importParaAttr, importTextAttr } from "../../io/baseimport";
 import { Color } from "../../data/baseclasses";
 import { BasicArray } from "../../data/basic";
 import { TextShape } from "../../data/shape";
-import { Para, Span, SpanAttr } from "../../data/text";
+import { Para, Span, SpanAttr, ParaAttr, Text, TextAttr } from "../../data/text";
 
 function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (attr.color) {
@@ -101,7 +102,29 @@ function mergeSpanAttr(span: Span, attr: SpanAttr) {
     }
 }
 
-function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: string, index: number, attr?: SpanAttr) {
+function mergeParaAttr(para: Para, attr: ParaAttr) {
+    if (!para.attr) {
+        para.attr = importParaAttr(attr); // deep clone
+        return;
+    }
+    _mergeParaAttr(para.attr, attr);
+}
+
+function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr) {
+    if (attr.color) {
+        paraAttr.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
+    }
+    if (attr.fontName) {
+        paraAttr.fontName = attr.fontName;
+    }
+    if (attr.fontSize) {
+        paraAttr.fontSize = attr.fontSize;
+    }
+}
+
+function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+    const attr = props && props.attr;
+    const paraAttr = props && props.paraAttr;
     let newParaIndex = text.indexOf('\n');
     if (newParaIndex < 0) {
         __insertText(para, text, index, attr);
@@ -125,6 +148,7 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             if (attr) mergeSpanAttr(span, attr);
             const _spans = new BasicArray<Span>(span);
             const _para = new Para(_text, _spans);
+            if (paraAttr) mergeParaAttr(_para, paraAttr);
             paraArray.splice(paraIndex, 0, _para);
             paraIndex++;
             // index 继续0
@@ -159,12 +183,14 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
                 idx -= span.length;
             }
             spans[spans.length - 1].length++; // '\n'
+            if (paraAttr) mergeParaAttr(para, paraAttr);
             const _para = new Para(_text, _spans);
             paraArray.splice(paraIndex + 1, 0, _para);
             para = _para;
             index = 0;
         }
         else { // 回车前插入回车
+            if (paraAttr) mergeParaAttr(para, paraAttr);
             // new para
             const _text = '\n';
             const span = new Span(1);
@@ -189,18 +215,18 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
     }
 }
 
-export function insertText(shape: TextShape, text: string, index: number, attr?: SpanAttr) {
+export function insertSimpleText(shape: TextShape, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
     // 定位index
     const shapetext = shape.text;
     const paras = shapetext.paras;
     for (let i = 0, len = paras.length; i < len; i++) {
         const p = paras[i];
         if (index < p.length) {
-            _insertText(paras, i, p, text, index, attr);
+            _insertText(paras, i, p, text, index, props);
             break;
         }
         else if (i === len - 1) {
-            _insertText(paras, i, p, text, p.length - 1, attr);
+            _insertText(paras, i, p, text, p.length - 1, props);
             break;
         }
         else {
@@ -209,8 +235,215 @@ export function insertText(shape: TextShape, text: string, index: number, attr?:
     }
 }
 
-function _deleteSpan(spans: Span[], index: number, count: number): Span[] {
-    const delspans: Span[] = [];
+function insertTextParas(shape: TextShape, paras: Para[], index: number) { // 复制粘贴，undo remove，cmd怎么处理？
+    if (paras.length === 0) return;
+
+    for (let i = 0, len = paras.length; i < len; i++) {
+        const para = paras[i];
+        const spans = para.spans;
+        let idx = 0;
+        for (let j = 0, spanlen = spans.length; j < spanlen; j++) {
+            const span = spans[j];
+            const text = para.text.slice(idx, idx + span.length);
+            insertSimpleText(shape, text, index + idx, { attr: span, paraAttr: para.attr });
+            idx += span.length;
+        }
+        if (idx < para.length) {
+            const text = para.text.slice(idx);
+            insertSimpleText(shape, text, index + idx);
+        }
+        index += para.length;
+    }
+}
+
+function mergeTextAttr(text: Text, attr: TextAttr) {
+    if (!text.attr) {
+        text.attr = importTextAttr(attr);
+        return;
+    }
+    _mergeParaAttr(text.attr, attr);
+    if (attr.verAlign) text.attr.verAlign = attr.verAlign;
+    if (attr.orientation) text.attr.orientation = attr.orientation;
+    if (attr.textBehaviour) text.attr.textBehaviour = attr.textBehaviour;
+}
+
+export function insertComplexText(shape: TextShape, text: Text, index: number) {
+    if (shape.text.length === 1 && text.attr) { // empty
+        mergeTextAttr(shape.text, text.attr);
+    }
+    insertTextParas(shape, text.paras, index);
+}
+
+function __formatTextSpan(spans: Span[], spanIndex: number, index: number, length: number, attr: SpanAttr) {
+    while (length > 0 && spanIndex < spans.length) {
+        const span = spans[spanIndex];
+        if (index > 0) {
+            // split span
+            const span1 = new Span(span.length - index);
+            mergeSpanAttr(span1, span);
+            span.length = index;
+            spans.splice(spanIndex + 1, 0, span1);
+            index = 0;
+            spanIndex++;
+            continue;
+        }
+        if (length < span.length) {
+            // split span
+            const span1 = new Span(span.length - length);
+            mergeSpanAttr(span1, span);
+            span.length = length;
+            spans.splice(spanIndex + 1, 0, span1);
+            continue;
+        }
+        // index === 0 && span.length <= length
+        mergeSpanAttr(span, attr);
+        length -= span.length;
+        if (spanIndex > 0 && !isDiffSpanAttr(span, spans[spanIndex - 1])) { // merge same span
+            const preSpan = spans[spanIndex - 1];
+            preSpan.length += span.length;
+            spans.splice(spanIndex, 1);
+            continue;
+        }
+        spanIndex++;
+        continue;
+    }
+}
+
+function _formatTextSpan(spans: Span[], index: number, length: number, attr: SpanAttr) {
+    // 定位到span
+    for (let i = 0, len = spans.length; i < len; i++) {
+        const span = spans[i];
+        if (index < span.length) {
+            __formatTextSpan(spans, i, index, length, attr);
+            break;
+        }
+        else {
+            index -= span.length;
+        }
+    }
+}
+
+function _formatText(paraArray: Para[], paraIndex: number, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+    while (length > 0 && paraIndex < paraArray.length) {
+        const para = paraArray[index];
+        if (props.paraAttr) mergeParaAttr(para, props.paraAttr);
+
+        if (props.attr) {
+            _formatTextSpan(para.spans, index, length, props.attr)
+        }
+
+        length -= para.length - index;
+        index = 0;
+        paraIndex++;
+    }
+}
+
+export function formatText(shape: TextShape, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+    const shapetext = shape.text;
+    const paras = shapetext.paras;
+    for (let i = 0, len = paras.length; i < len; i++) {
+        const p = paras[i];
+        if (index < p.length) {
+            _formatText(paras, i, index, length, props);
+            break;
+        }
+        else {
+            index -= p.length;
+        }
+    }
+}
+
+function _getText(paraArray: Para[], paraIndex: number, index: number, length: number) {
+    let text = '';
+    while (length > 0 && paraIndex < paraArray.length) {
+        const para = paraArray[index];
+        const end = Math.min(para.length, index + length);
+        text += para.text.slice(index, end);
+        length -= end - index;
+        index = 0;
+    }
+    return text;
+}
+
+export function getText(shape: TextShape, index: number, length: number): string {
+    const shapetext = shape.text;
+    const paras = shapetext.paras;
+    for (let i = 0, len = paras.length; i < len; i++) {
+        const p = paras[i];
+        if (index < p.length) {
+            return _getText(paras, i, index, length);
+        }
+        else {
+            index -= p.length;
+        }
+    }
+    return '';
+}
+
+function __getTextSpan(spans: Span[], spanIndex: number, index: number, length: number, retspans: Span[]) {
+    while (length > 0 && spanIndex < spans.length) {
+        const span = spans[spanIndex];
+        const end = Math.min(span.length, index + length);
+        const span1 = new Span(end - index);
+        mergeSpanAttr(span1, span);
+        retspans.push(span1);
+        length -= end - index;
+        index = 0;
+        spanIndex++;
+    }
+}
+
+function _getTextSpan(spans: Span[], index: number, length: number, retspans: Span[]) {
+    // 定位到span
+    for (let i = 0, len = spans.length; i < len; i++) {
+        const span = spans[i];
+        if (index < span.length) {
+            __getTextSpan(spans, i, index, length, retspans);
+            break;
+        }
+        else {
+            index -= span.length;
+        }
+    }
+}
+
+function _getTextPara(paraArray: Para[], paraIndex: number, index: number, length: number, text: Text) {
+    while (length > 0 && paraIndex < paraArray.length) {
+        const para = paraArray[index];
+        const end = Math.min(para.length, index + length);
+        const _text = para.text.slice(index, end);
+
+        const para1 = new Para(_text, new BasicArray<Span>());
+        mergeParaAttr(para1, para);
+        text.paras.push(para1);
+
+        _getTextSpan(para.spans, index, length, para1.spans);
+
+        length -= end - index;
+        index = 0;
+    }
+    return text;
+}
+
+export function getTextText(shape: TextShape, index: number, length: number): Text { // 带格式
+    const text = new Text(new BasicArray<Para>());
+    const shapetext = shape.text;
+    const paras = shapetext.paras;
+    for (let i = 0, len = paras.length; i < len; i++) {
+        const p = paras[i];
+        if (index < p.length) {
+            _getTextPara(paras, i, index, length, text);
+            break;
+        }
+        else {
+            index -= p.length;
+        }
+    }
+    return text;
+}
+
+function _deleteSpan(spans: Span[], index: number, count: number): BasicArray<Span> {
+    const delspans: BasicArray<Span> = new BasicArray();
     const saveCount = count;
     for (let i = 0, len = spans.length; i < len && count > 0;) {
         const span = spans[i];
@@ -255,7 +488,7 @@ function mergePara(para: Para, nextpara: Para) {
     }
 }
 
-function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: number, count: number): { text: string, spans: Span[] } {
+function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: number, count: number): Text {
 
     if (index + count <= para.length) { // 处理当前段就行
         let isDel0A = (index + count) === para.length;
@@ -275,21 +508,29 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
             paraArray.splice(paraIndex + 1, 1);
             mergePara(para, nextpara);
         }
-        return { text: savetext, spans: delspans };
+        const para1 = new Para(savetext, delspans);
+        mergeParaAttr(para1, para);
+        const ret = new Text(new BasicArray<Para>());
+        ret.paras.push(para1);
+        return ret;
     }
 
-    let deltext = "";
-    let delspans: Span[] = [];
+    const ret = new Text(new BasicArray<Para>());
+    // let deltext = "";
+    // let delspans: Span[] = [];
     let needMerge = -1;
     if (index > 0) { // 第一段
         needMerge = paraIndex;
         const savelen = para.length;
-        deltext += para.text.slice(index);
+        const deltext = para.text.slice(index);
         para.text = para.text.slice(0, index);
-        delspans.push(..._deleteSpan(para.spans, index, count));
+        const delspans = _deleteSpan(para.spans, index, count);
         count -= savelen - para.length;
         index = 0;
         paraIndex++;
+        const para1 = new Para(deltext, delspans);
+        mergeParaAttr(para1, para);
+        ret.paras.push(para1);
     }
 
     let len = paraArray.length;
@@ -297,12 +538,15 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
     while (count > 0 && paraIndex < len) {
         const para = paraArray[paraIndex];
         if (count >= para.length) {
-            deltext += para.text;
-            delspans.push(...para.spans);
+            const deltext = para.text;
+            const delspans = para.spans.slice(0) as BasicArray<Span>;
             paraArray.splice(paraIndex, 1);
             count -= para.length;
             len--;
             // paraIndex 不变
+            const para1 = new Para(deltext, delspans);
+            mergeParaAttr(para1, para);
+            ret.paras.push(para1);
             continue;
         }
         break;
@@ -311,10 +555,14 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
     // 最后一段
     if (count > 0 && paraIndex < len) {
         para = paraArray[paraIndex];
-        deltext += para.text.slice(0, count);
+        const deltext = para.text.slice(0, count);
         para.text = para.text.slice(count);
-        delspans.push(..._deleteSpan(para.spans, 0, count));
+        const delspans = _deleteSpan(para.spans, 0, count);
         count -= para.text.length;
+
+        const para1 = new Para(deltext, delspans);
+        mergeParaAttr(para1, para);
+        ret.paras.push(para1);
     }
 
     if (needMerge >= 0) {
@@ -332,10 +580,10 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
             mergePara(para, nextpara);
         }
     }
-    return { text: deltext, spans: delspans };
+    return ret;
 }
 
-export function deleteText(shape: TextShape, index: number, count: number): { text: string, spans: Span[] } | undefined { // 返回删除的text及span属性
+export function deleteText(shape: TextShape, index: number, count: number): Text | undefined { // 返回删除的text及属性
     if (index < 0) {
         count += index;
         index = 0;
@@ -346,11 +594,12 @@ export function deleteText(shape: TextShape, index: number, count: number): { te
     for (let i = 0, len = paras.length; i < len; i++) {
         let p = paras[i];
         if (index < p.length) {
-            return _deleteText(paras, i, p, index, count);
+            const text = _deleteText(paras, i, p, index, count);
+            if (shapetext.attr) mergeTextAttr(text, shapetext.attr)
+            return text;
         }
         else {
             index -= p.length;
         }
     }
 }
-

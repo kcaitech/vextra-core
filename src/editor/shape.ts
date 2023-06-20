@@ -269,7 +269,7 @@ export class ShapeEditor {
                 return 0;
             }
             else {
-                count = deleted.text.length;
+                count = deleted.length;
                 this.__repo.commit();
                 return count;
             }
@@ -286,10 +286,10 @@ export class ShapeEditor {
             const api = this.__repo.start("insertText", {});
             if (del > 0) {
                 const origin = api.deleteText(this.__page, this.__shape, index, del);
-                api.insertText(this.__page, this.__shape, index, text, attr);
+                api.insertSimpleText(this.__page, this.__shape, index, text, attr);
             }
             else {
-                api.insertText(this.__page, this.__shape, index, text, attr);
+                api.insertSimpleText(this.__page, this.__shape, index, text, attr);
             }
             this.__repo.commit();
             return true;
@@ -320,7 +320,7 @@ export class ShapeEditor {
         this.__repo.rollback();
         const api = this.__repo.start("composingInput", {});
         if (this.__composingDel > 0) api.deleteText(this.__page, this.__shape, this.__composingIndex, this.__composingDel);
-        if (text.length > 0) api.insertText(this.__page, this.__shape, this.__composingIndex, text, this.__composingAttr);
+        if (text.length > 0) api.insertSimpleText(this.__page, this.__shape, this.__composingIndex, text, this.__composingAttr);
         this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
         return true;
     }
