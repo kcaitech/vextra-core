@@ -477,13 +477,17 @@ function deepProxy(data: any, h: ProxyHandler): any {
     while (stack.length > 0) {
         const d = stack.pop();
         if (d instanceof Map) {
+            let parent: any = undefined;
+            if (d instanceof BasicMap) { // 当一个map对象为BasicMap对象时，其才能成为自身values集元素的__parent;
+                parent = d;
+            }
             d.forEach((v, k, m) => {
                 if (k.startsWith("__")) {
                     // donothing
                 }
                 else if (typeof (v) === 'object') { // 还有array set map
-                    if (d instanceof BasicMap) { // 当一个map对象为BasicMap对象时，其才能成为自身values集元素的__parent;
-                        v.__parent = d;
+                    if (parent) {
+                        v.__parent = parent;
                     }
                     if (!isProxy(v)) {
                         m.set(k, new Proxy(v, h));
