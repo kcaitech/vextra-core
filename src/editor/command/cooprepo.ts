@@ -85,6 +85,15 @@ export class CoopRepository {
         // 这里需要变换
         const revertCmd = this.__cmdrevert.revert(undoCmd);
         if (revertCmd) {
+            const unitId = uuid();
+            if (revertCmd instanceof ShapeArrayAttrGroup ||
+                revertCmd instanceof ShapeCmdGroup ||
+                revertCmd instanceof TextCmdGroup) {
+                revertCmd.setUnitId(unitId);
+            }
+            else {
+                revertCmd.unitId = unitId;
+            }
             if (this._exec(revertCmd, false)) {
                 this.__index--;
             }
