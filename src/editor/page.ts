@@ -1,7 +1,6 @@
-import { Shape, GroupShape } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame } from "../data/shape";
 import { ShapeEditor } from "./shape";
-import { ShapeType } from "../data/typesdefine";
-import { ShapeFrame } from "../data/shape";
+import { BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
@@ -10,8 +9,7 @@ import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, Color, Fill } from "../data/classes";
-import { v4 } from "uuid";
+import { Border, BorderStyle, Color, Fill } from "../data/classes";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
@@ -86,6 +84,21 @@ export interface BorderDeleteAction { // style.borders
 export interface BordersReplaceAction { // style.borders
     target: Shape
     value: Border[]
+}
+export interface BorderPositionAction {
+    target: Shape
+    index: number
+    value: BorderPosition
+}
+export interface BorderThicknessAction {
+    target: Shape
+    index: number
+    value: number
+}
+export interface BorderStyleAction {
+    target: Shape
+    index: number
+    value: BorderStyle
 }
 export class PageEditor {
     private __repo: CoopRepository;
@@ -564,6 +577,42 @@ export class PageEditor {
                 const { target, value } = actions[i];
                 api.deleteBorders(this.__page, target, 0, target.style.borders.length);
                 api.addBorders(this.__page, target, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderPosition(actions: BorderPositionAction[]) {
+        try {
+            const api = this.__repo.start('setShapesBorderPosition', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setBorderPosition(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderThickness(actions: BorderThicknessAction[]) {
+        try {
+            const api = this.__repo.start('setShapesBorderThickness', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setBorderThickness(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderStyle(actions: BorderStyleAction[]) {
+        try {
+            const api = this.__repo.start('setShapesBorderStyle', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setBorderStyle(this.__page, target, index, value);
             }
             this.__repo.commit();
         } catch (error) {

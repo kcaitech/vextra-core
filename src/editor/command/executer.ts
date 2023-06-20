@@ -498,9 +498,8 @@ export class CMDExecuter {
             const opId = op.opId;
             const value = cmd.value;
             if (opId === FILLS_ATTR_ID.color) {
-                if (!value) return;
-                if (op.type === OpType.IdRemove || op.type === OpType.IdSet) {
-                    const color = importColor(JSON.parse(value))
+                if (op.type === OpType.IdSet && value) {
+                    const color = importColor(JSON.parse(value));
                     api.setFillColor(shape.style, fillIdx, color);
                 }
             }

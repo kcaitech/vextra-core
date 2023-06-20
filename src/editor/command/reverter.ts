@@ -166,11 +166,8 @@ export class CMDReverter {
     shapeArrAttrModify(cmd: ShapeArrayAttrModify): ShapeArrayAttrModify {
         const cmdop = cmd.ops[0];
         let op;
-        if (cmdop.type === OpType.IdSet) {
-            op = IdOpRemove.Make(cmdop.targetId, cmdop.opId)
-        }
-        else if (cmdop.type === OpType.IdRemove) {
-            op = IdOpSet.Make(cmdop.targetId, cmdop.opId)
+        if (cmdop.type === OpType.IdSet || cmdop.type === OpType.IdRemove) {
+            op = cmd.origin ? IdOpSet.Make(cmdop.targetId, cmdop.opId) : IdOpRemove.Make(cmdop.targetId, cmdop.opId);
         }
         else {
             op = IdOpNone.Make(cmdop.targetId, cmdop.opId)
