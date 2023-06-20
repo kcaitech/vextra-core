@@ -1,6 +1,6 @@
 import { GroupShape, ImageShape, Shape, ShapeType, SymbolRefShape, SymbolShape } from "../data/shape";
-import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape } from "./baseexport";
-import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape } from "./baseimport";
+import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape } from "./baseexport";
+import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape } from "./baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
@@ -37,9 +37,12 @@ export function export_shape(shapes: Shape[]) {
             r.content = exportImageShape(shape as unknown as types.ImageShape);
         } else if (type === ShapeType.Text) {
             r.content = exportTextShape(shape as unknown as types.TextShape);
+        } else if (type === ShapeType.Path) {
+            r.content = exportPathShape(shape as unknown as types.PathShape);
         } else if (type === ShapeType.Artboard) {
             r.content = exportArtboard(shape as unknown as types.Artboard);
         }
+        
         const parent = shape.parent;
         if (parent) {
             const childs = (parent as GroupShape).childs;
@@ -60,8 +63,8 @@ export function import_shape(document: Document, source: { index: number, conten
                 obj.setImageMgr(document.mediasMgr)
             } else if (obj instanceof SymbolRefShape) {
                 obj.setSymbolMgr(document.symbolsMgr)
-            // } else if (obj instanceof ArtboardRef) {
-            //     obj.setArtboardMgr(document.artboardMgr)
+                // } else if (obj instanceof ArtboardRef) {
+                //     obj.setArtboardMgr(document.artboardMgr)
             } else if (obj instanceof Artboard) {
                 document.artboardMgr.add(obj.id, obj);
             } else if (obj instanceof SymbolShape) {
@@ -86,6 +89,8 @@ export function import_shape(document: Document, source: { index: number, conten
                 r = importImageShape(_s.content as types.ImageShape, ctx);
             } else if (type === ShapeType.Text) {
                 r = importTextShape(_s.content as types.TextShape);
+            } else if (type === ShapeType.Path) {
+                r = importPathShape(_s.content as types.PathShape);
             } else if (type === ShapeType.Artboard) {
                 const childs = (_s.content as GroupShape).childs;
                 if (childs && childs.length) {
