@@ -264,11 +264,12 @@ export class PageEditor {
                 if (!savep) return false;
                 this.delete_inner(page, shape, api)
             } catch (error) {
-                console.log(error);
-                continue;
+                this.__repo.rollback();
+                return false;
             }
         }
         this.__repo.commit();
+        return true;
     }
     // 插入成功，返回插入的shape
     insert(parent: GroupShape, index: number, shape: Shape, adjusted = false): Shape | false {
