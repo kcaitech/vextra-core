@@ -1,4 +1,8 @@
-import { Cmd, CmdType, PageCmdDelete, PageCmdMove, ShapeArrayAttrMove, ShapeCmdGroup, ShapeCmdInsert, ShapeCmdRemove, TextCmdGroup, TextCmdInsert, TextCmdRemove } from "../../coop/data/classes";
+import {
+    Cmd, CmdType, PageCmdDelete, PageCmdMove, ShapeArrayAttrMove,
+    ShapeCmdGroup, ShapeCmdInsert, ShapeCmdRemove,
+    TextCmdGroup, TextCmdInsert, TextCmdRemove, ShapeArrayAttrGroup
+} from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
@@ -41,7 +45,6 @@ export class Api {
         this.needUpdateFrame.length = 0;
         // group cmds
         if (this.cmds.length <= 1) return this.cmds[0];
-
         // check group type
         const first = this.cmds[0];
         switch (first.type) {
@@ -55,6 +58,11 @@ export class Api {
             case CmdType.ShapeModify:
             case CmdType.ShapeMove:
                 return this.groupShape(first.blockId);
+            case CmdType.ShapeArrayAttrDelete:
+            case CmdType.ShapeArrayAttrInsert:
+            case CmdType.ShapeArrayAttrModify:
+            case CmdType.ShapeArrayAttrMove:
+                return this.groupAttr(first.blockId);
             default:
                 throw new Error("unknow cmd group type:" + first.type)
         }
@@ -93,7 +101,23 @@ export class Api {
         })
         return group;
     }
-
+    private groupAttr(blockId: string): Cmd {
+        const group = ShapeArrayAttrGroup.Make(blockId);
+        this.cmds.forEach((c) => {
+            if (c.blockId !== blockId) throw new Error("blockid not equal");
+            c.unitId = group.unitId;
+            switch (c.type) {
+                case CmdType.ShapeArrayAttrDelete:
+                case CmdType.ShapeArrayAttrInsert:
+                case CmdType.ShapeArrayAttrModify:
+                case CmdType.ShapeArrayAttrMove:
+                    group.cmds.push(c as any);
+                    break;
+                default: throw new Error("unknow shape group type:" + c.type);
+            }
+        })
+        return group;
+    }
     private __trap(f: () => void) {
         const save = this.repo.transactCtx.settrap;
         this.repo.transactCtx.settrap = false;
@@ -304,6 +328,7 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.backgroundColor, exportColor(color), save && exportColor(save)))
         })
     }
+    // 添加一次fill
     addFillAt(page: Page, shape: Shape, fill: Fill, index: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
@@ -311,6 +336,18 @@ export class Api {
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, FILLS_ID, fill.id, index, exportFill(fill)))
         })
     }
+    // 添加多次fill
+    addFills(page: Page, shape: Shape, fills: Fill[]) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            for (let i = 0; i < fills.length; i++) {
+                const fill = fills[i];
+                basicapi.addFillAt(shape.style, fill, i);
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, FILLS_ID, fill.id, i, exportFill(fill)));
+            }
+        })
+    }
+    // 添加一条border
     addBorderAt(page: Page, shape: Shape, border: Border, index: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
@@ -318,6 +355,18 @@ export class Api {
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, BORDER_ID, border.id, index, exportBorder(border)))
         })
     }
+    // 添加多条border
+    addBorders(page: Page, shape: Shape, borders: Border[]) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            for (let i = 0; i < borders.length; i++) {
+                const border = borders[i];
+                basicapi.addBorderAt(shape.style, border, i);
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, BORDER_ID, border.id, i, exportFill(border)));
+            }
+        })
+    }
+    // 删除一次fill
     deleteFillAt(page: Page, shape: Shape, index: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
@@ -325,12 +374,40 @@ export class Api {
             if (fill) this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, FILLS_ID, fill.id, index, exportFill(fill)));
         })
     }
+    // 批量删除fill
+    deleteFills(page: Page, shape: Shape, index: number, strength: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const fills = basicapi.deleteFills(shape.style, index, strength);
+            if (fills && fills.length) {
+                for (let i = 0; i < fills.length; i++) {
+                    const fill = fills[i];
+                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, FILLS_ID, fill.id, i, exportFill(fill)));
+                }
+            }
+        })
+    }
+    // 删除一次border
     deleteBorderAt(page: Page, shape: Shape, index: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const border = basicapi.deleteBorderAt(shape.style, index);
             if (border) this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, BORDER_ID, border.id, index, exportBorder(border)));
         })
+    }
+    // 批量删除border
+    deleteBorders(page: Page, shape: Shape, index: number, strength: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const borders = basicapi.deleteBorders(shape.style, index, strength);
+            if (borders && borders.length) {
+                for (let i = 0; i < borders.length; i++) {
+                    const border = borders[i];
+                    this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, BORDER_ID, border.id, i, exportFill(border)));
+                }
+            }
+        })
+
     }
     setFillColor(page: Page, shape: Shape, idx: number, color: Color) {
         this.checkShapeAtPage(page, shape);

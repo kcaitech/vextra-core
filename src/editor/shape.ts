@@ -94,7 +94,7 @@ export class ShapeEditor {
     public addFill(fill: Fill) {
         if (this.__shape.type !== ShapeType.Artboard) {
             const api = this.__repo.start("addFill", {});
-            api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length)
+            api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length);
             this.__repo.commit();
         }
     }
@@ -104,7 +104,7 @@ export class ShapeEditor {
             api.artboardModifyBackgroundColor(this.__page, this.__shape as Artboard, color);
             this.__repo.commit();
         } else {
-            const fill: Fill = this.__shape.fills[idx];
+            const fill: Fill = this.__shape.style.fills[idx];
             if (fill) {
                 const api = this.__repo.start("setFillColor", {});
                 api.setFillColor(this.__page, this.__shape, idx, color)

@@ -15,6 +15,7 @@ import {
     ShapeArrayAttrRemove,
     ShapeArrayAttrModify,
     ShapeArrayAttrMove,
+    ShapeArrayAttrGroup,
     PageCmdMove,
     TextCmdMove,
     ShapeOpMove,
@@ -61,8 +62,8 @@ function importShape(data: string, document: Document) {
                 obj.setImageMgr(document.mediasMgr)
             } else if (obj instanceof SymbolRefShape) {
                 obj.setSymbolMgr(document.symbolsMgr)
-            // } else if (obj instanceof ArtboardRef) {
-            //     obj.setArtboardMgr(document.artboardMgr)
+                // } else if (obj instanceof ArtboardRef) {
+                //     obj.setArtboardMgr(document.artboardMgr)
             } else if (obj instanceof Artboard) {
                 document.artboardMgr.add(obj.id, obj);
             } else if (obj instanceof SymbolShape) {
@@ -138,7 +139,6 @@ export class CMDExecuter {
 
     private _exec(cmd: Cmd) {
         const needUpdateFrame: { shape: Shape, page: Page }[] = [];
-
         switch (cmd.type) {
             case CmdType.PageInsert:
                 this.pageInsert(cmd as PageCmdInsert);
@@ -151,6 +151,9 @@ export class CMDExecuter {
                 break;
             case CmdType.PageMove:
                 this.pageMove(cmd as PageCmdMove);
+                break;
+            case CmdType.ShapeArrayAttrGroup:
+                this.shapeArrayAttrCMDGroup(cmd as ShapeArrayAttrGroup);
                 break;
             case CmdType.ShapeArrayAttrInsert:
                 this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
@@ -422,6 +425,25 @@ export class CMDExecuter {
         })
     }
 
+    shapeArrayAttrCMDGroup(cmdGroup: ShapeArrayAttrGroup) {
+        cmdGroup.cmds.forEach((cmd) => {
+            switch (cmd.type) {
+                case CmdType.ShapeArrayAttrInsert:
+                    this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
+                    break;
+                case CmdType.ShapeArrayAttrDelete:
+                    this.shapeArrAttrDelete(cmd as ShapeArrayAttrInsert);
+                    break;
+                case CmdType.ShapeArrayAttrModify:
+                    this.shapeArrAttrModify(cmd as ShapeArrayAttrModify);
+                    break;
+                case CmdType.ShapeArrayAttrMove:
+                    this.shapeArrAttrMove(cmd as ShapeArrayAttrMove);
+                    break;
+            }
+        })
+    }
+
     shapeArrAttrInsert(cmd: ShapeArrayAttrInsert) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         const op = cmd.ops[0]
@@ -470,13 +492,13 @@ export class CMDExecuter {
         if (arrayAttr === FILLS_ID) {
             const fillId = cmd.arrayAttrId;
             // find fill
-            const fillIdx = shape.style.fills.findIndex((fill) => fill.id === fillId)
+            const fillIdx = shape.style.fills.findIndex((fill) => fill.id === fillId);
             if (fillIdx < 0) return;
             const opId = op.opId;
             const value = cmd.value;
             if (opId === FILLS_ATTR_ID.color) {
                 if (op.type === OpType.IdSet && value) {
-                    const color = importColor(JSON.parse(value))
+                    const color = importColor(JSON.parse(value));
                     api.setFillColor(shape.style, fillIdx, color);
                 }
             }

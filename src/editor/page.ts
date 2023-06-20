@@ -1,7 +1,6 @@
-import { Shape, GroupShape } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame } from "../data/shape";
 import { ShapeEditor } from "./shape";
-import { ShapeType } from "../data/typesdefine";
-import { ShapeFrame } from "../data/shape";
+import { BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
 import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
@@ -10,7 +9,7 @@ import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, Color, Fill } from "../data/classes";
+import { Border, BorderStyle, Color, Fill } from "../data/classes";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
@@ -85,6 +84,21 @@ export interface BorderDeleteAction { // style.borders
 export interface BordersReplaceAction { // style.borders
     target: Shape
     value: Border[]
+}
+export interface BorderPositionAction {
+    target: Shape
+    index: number
+    value: BorderPosition
+}
+export interface BorderThicknessAction {
+    target: Shape
+    index: number
+    value: number
+}
+export interface BorderStyleAction {
+    target: Shape
+    index: number
+    value: BorderStyle
 }
 export class PageEditor {
     private __repo: CoopRepository;
@@ -251,21 +265,39 @@ export class PageEditor {
         }
         return false;
     }
+    // 批量删除
+    delete_batch(shapes: Shape[]) {
+        const api = this.__repo.start("deleteBatch", {});
+        for (let i = 0; i < shapes.length; i++) {
+            try {
+                const shape = shapes[i];
+                const page = shape.getPage() as Page;
+                if (!page) return false;
+                const savep = shape.parent as GroupShape;
+                if (!savep) return false;
+                this.delete_inner(page, shape, api)
+            } catch (error) {
+                this.__repo.rollback();
+                return false;
+            }
+        }
+        this.__repo.commit();
+        return true;
+    }
     // 插入成功，返回插入的shape
-    insert(parent: GroupShape, index: number, shape: Shape, adjust = false): Shape | false {
+    insert(parent: GroupShape, index: number, shape: Shape, adjusted = false): Shape | false {
         // adjust shape frame refer to parent
-        if (!adjust) {
+        if (!adjusted) {
             const xy = parent.frame2Page();
             shape.frame.x -= xy.x;
             shape.frame.y -= xy.y;
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
-
         const api = this.__repo.start("insertshape", {});
         try {
             api.shapeInsert(this.__page, parent, shape, index);
+            shape = parent.childs[index]; // 需要把proxy代理之后的shape返回，否则无法触发notify
             this.__repo.commit();
-            shape = parent[index]; // 需要把proxy代理之后的shape返回，否则无法触发notify
             return shape;
         } catch (e) {
             console.log(e)
@@ -367,7 +399,7 @@ export class PageEditor {
             const api = this.__repo.start('arrange', {});
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
-                translate(api, this.__page, action.target, action.transX, action.transY)
+                translate(api, this.__page, action.target, action.transX, action.transY);
             }
             this.__repo.commit();
         } catch (error) {
@@ -403,7 +435,7 @@ export class PageEditor {
             const api = this.__repo.start('RotateAdjust', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.shapeModifyRotate(this.__page, target, value)
+                api.shapeModifyRotate(this.__page, target, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -416,10 +448,171 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, direction } = actions[i];
                 if (direction === 'horizontal') {
-                    api.shapeModifyHFlip(this.__page, target, !target.isFlippedHorizontal)
+                    api.shapeModifyHFlip(this.__page, target, !target.isFlippedHorizontal);
                 } else if (direction === 'vertical') {
-                    api.shapeModifyVFlip(this.__page, target, !target.isFlippedVertical)
+                    api.shapeModifyVFlip(this.__page, target, !target.isFlippedVertical);
                 }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFillColor(actions: FillColorAction[]) {
+        try {
+            const api = this.__repo.start('setShapesFillColor', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setFillColor(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFillEnabled(actions: FillEnableAction[]) {
+        try {
+            const api = this.__repo.start('setShapesFillEnabled', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setFillEnable(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesAddFill(actions: FillAddAction[]) {
+        try {
+            const api = this.__repo.start('shapesAddFill', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addFillAt(this.__page, target, value, target.style.fills.length);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesDeleteFill(actions: FillDeleteAction[]) {
+        try {
+            const api = this.__repo.start('shapesDeleteFill', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index } = actions[i];
+                api.deleteFillAt(this.__page, target, index);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesFillsUnify(actions: FillsReplaceAction[]) {
+        try {
+            const api = this.__repo.start('shapesFillsUnify', {}); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                // 先清空再填入
+                api.deleteFills(this.__page, target, 0, target.style.fills.length); // 清空
+                api.addFills(this.__page, target, value); // 填入新的值
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+            // throw new Error(`${error}`);
+        }
+    }
+    //boders 
+    setShapesBorderColor(actions: BorderColorAction[]) {
+        try {
+            const api = this.__repo.start('setShapesBorderColor', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setBorderColor(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderEnabled(actions: BorderEnableAction[]) {
+        try {
+            const api = this.__repo.start('setShapesBorderEnabled', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setBorderEnable(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesAddBorder(actions: BorderAddAction[]) {
+        try {
+            const api = this.__repo.start('shapesAddBorder', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addBorderAt(this.__page, target, value, target.style.borders.length);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesDeleteBorder(actions: BorderDeleteAction[]) {
+        try {
+            const api = this.__repo.start('shapesDeleteBorder', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index } = actions[i];
+                api.deleteBorderAt(this.__page, target, index);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesBordersUnify(actions: BordersReplaceAction[]) {
+        try {
+            const api = this.__repo.start('shapesBordersUnify', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.deleteBorders(this.__page, target, 0, target.style.borders.length);
+                api.addBorders(this.__page, target, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderPosition(actions: BorderPositionAction[]) {
+        try {
+            const api = this.__repo.start('setShapesBorderPosition', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setBorderPosition(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderThickness(actions: BorderThicknessAction[]) {
+        try {
+            const api = this.__repo.start('setShapesBorderThickness', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setBorderThickness(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesBorderStyle(actions: BorderStyleAction[]) {
+        try {
+            const api = this.__repo.start('setShapesBorderStyle', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setBorderStyle(this.__page, target, index, value);
             }
             this.__repo.commit();
         } catch (error) {

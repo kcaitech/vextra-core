@@ -4,7 +4,11 @@ import { Repository } from "../../data/transact";
 import { CMDExecuter } from "./executer";
 import { CMDReverter } from "./reverter";
 import { Api } from "./recordapi";
-import { Page } from "data/page";
+import { Page } from "../../data/page";
+import { uuid } from "../../basic/uuid";
+import { ShapeArrayAttrGroup } from "../../coop/data/classes";
+import { ShapeCmdGroup } from "../../coop/data/classes";
+import { TextCmdGroup } from "../../coop/data/classes";
 
 export class CoopRepository {
     private __repo: Repository;
@@ -79,8 +83,17 @@ export class CoopRepository {
         }
         const undoCmd = this.__localcmds[this.__index - 1];
         // 这里需要变换
-        const revertCmd = this.__cmdrevert.revert(undoCmd)
+        const revertCmd = this.__cmdrevert.revert(undoCmd);
         if (revertCmd) {
+            const unitId = uuid();
+            if (revertCmd instanceof ShapeArrayAttrGroup ||
+                revertCmd instanceof ShapeCmdGroup ||
+                revertCmd instanceof TextCmdGroup) {
+                revertCmd.setUnitId(unitId);
+            }
+            else {
+                revertCmd.unitId = unitId;
+            }
             if (this._exec(revertCmd, false)) {
                 this.__index--;
             }
@@ -93,6 +106,16 @@ export class CoopRepository {
         }
         const redoCmd = this.__localcmds[this.__index];
         if (redoCmd) {
+            const unitId = uuid();
+            if (redoCmd instanceof ShapeArrayAttrGroup ||
+                redoCmd instanceof ShapeCmdGroup ||
+                redoCmd instanceof TextCmdGroup) {
+                redoCmd.setUnitId(unitId);
+            }
+            else {
+                redoCmd.unitId = unitId;
+            }
+
             if (this._exec(redoCmd, false)) {
                 this.__index++;
             }
