@@ -22,6 +22,24 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     }
 }
 
+export class SpanAttrSetter extends SpanAttr {
+    fontNameIsSet: boolean = false;
+    fontSizeIsSet: boolean = false;
+    colorIsSet: boolean = false;
+}
+
+export class ParaAttrSetter extends ParaAttr {
+    fontNameIsSet: boolean = false;
+    fontSizeIsSet: boolean = false;
+    colorIsSet: boolean = false;
+
+    alignmentIsSet: boolean = false;
+    paraSpacingIsSet: boolean = false;
+    kerningIsSet: boolean = false;
+    minimumLineHeightIsSet: boolean = false;
+    maximumLineHeightIsSet: boolean = false;
+}
+
 export class Span extends SpanAttr implements classes.Span {
     typeId = 'span'
     length: number
