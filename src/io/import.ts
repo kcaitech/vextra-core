@@ -118,7 +118,7 @@ export async function importDocument(storageOptions: storage.StorageOptions, doc
         }
     }, '');
 
-    const document = new Document(fid, versionId, meta.name, meta.pagesList, gurad);
+    const document = new Document(meta.id, versionId, meta.name, meta.pagesList, gurad);
     const ctx = new class implements IImportContext {
         afterImport(obj: any): void {
             if (obj instanceof ImageShape) {

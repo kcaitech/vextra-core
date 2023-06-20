@@ -1,0 +1,28 @@
+{
+    "description": "document meta",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 36,
+            "default": "$uuid"
+        },
+        "name": {
+            "type": "string",
+            "default": "Page"
+        },
+        "pagesList": {
+            "type": "array",
+            "items": {
+                "$ref": "./page-list-item.json"
+            }
+        }
+    },
+    "required": [
+        "id",
+        "name",
+        "pagesList"
+    ],
+    "additionalProperties": false
+}

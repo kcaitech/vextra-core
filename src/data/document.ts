@@ -15,20 +15,18 @@ export class Document extends DocumentMeta {
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
     // private __loader: IDataLoader;
     // private __guard?: IDataGruad;
-    private __fid: string;
     private __versionId: string;
     private __name: string;
 
     constructor(
-        fid: string,
+        id: string,
         versionId: string,
         name: string,
         pagesList?: BasicArray<PageListItem>,
         // loader: IDataLoader,
         guard?: IDataGuard
     ) {
-        super(name, pagesList ?? new BasicArray())
-        this.__fid = fid;
+        super(id, name, pagesList ?? new BasicArray())
         this.__versionId = versionId;
         this.__name = name;
         this.__pages = new ResourceMgr<Page>(guard);
@@ -38,9 +36,6 @@ export class Document extends DocumentMeta {
         this.__styles = new ResourceMgr<Style>();
         if (!guard) guard = new DataGuard();
         return guard.guard(this);
-    }
-    get id() {
-        return this.__fid;
     }
     get pagesMgr() {
         return this.__pages;

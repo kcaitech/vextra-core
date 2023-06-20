@@ -478,13 +478,16 @@ export class DocumentSyms extends Basic {
  */
 export class DocumentMeta extends Basic {
     typeId = 'document-meta'
+    id: string
     name: string
     pagesList: BasicArray<PageListItem >
     constructor(
+        id: string,
         name: string,
         pagesList: BasicArray<PageListItem >
     ) {
         super()
+        this.id = id
         this.name = name
         this.pagesList = pagesList
     }

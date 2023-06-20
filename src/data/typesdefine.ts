@@ -274,6 +274,7 @@ export type DocumentSyms = {
 }
 /* document meta */
 export type DocumentMeta = {
+    id: string
     name: string
     pagesList: PageListItem[]
 }

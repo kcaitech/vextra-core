@@ -384,6 +384,7 @@ export function importDocumentSyms(source: types.DocumentSyms, ctx?: IImportCont
 /* document meta */
 export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
     const ret: impl.DocumentMeta = new impl.DocumentMeta (
+        source.id,
         source.name,
         (() => {
             const ret = new BasicArray<impl.PageListItem>()

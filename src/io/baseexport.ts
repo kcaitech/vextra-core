@@ -389,6 +389,7 @@ export function exportDocumentSyms(source: types.DocumentSyms, ctx?: IExportCont
 /* document meta */
 export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportContext): types.DocumentMeta {
     const ret = {
+        id: source.id,
         name: source.name,
         pagesList: (() => {
             const ret = []
