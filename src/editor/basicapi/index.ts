@@ -4,7 +4,7 @@ import { Page } from "../../data/page";
 import { GroupShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import { formatText } from "./text";
-import { SpanAttr } from "../../data/classes";
+import { SpanAttr, SpanAttrSetter } from "../../data/classes";
 
 export * from "./fill";
 export * from "./border";
@@ -120,9 +120,10 @@ export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
     }
 }
 
-export function textModifyColor(shape: TextShape, idx: number, len: number, color: Color) {
-    const attr = new SpanAttr();
+export function textModifyColor(shape: TextShape, idx: number, len: number, color: Color | undefined) {
+    const attr = new SpanAttrSetter();
     attr.color = color;
+    attr.colorIsSet = true;
     const ret = formatText(shape, idx, len, { attr });
     const spans = ret.spans;
     const origin: { color: Color | undefined, length: number }[] = [];
@@ -131,9 +132,10 @@ export function textModifyColor(shape: TextShape, idx: number, len: number, colo
     })
     return origin;
 }
-export function textModifyFontName(shape: TextShape, idx: number, len: number, fontname: string) {
-    const attr = new SpanAttr();
+export function textModifyFontName(shape: TextShape, idx: number, len: number, fontname: string | undefined) {
+    const attr = new SpanAttrSetter();
     attr.fontName = fontname;
+    attr.fontNameIsSet = true;
     const ret = formatText(shape, idx, len, { attr })
     const spans = ret.spans;
     const origin: { fontName: string | undefined, length: number }[] = [];
@@ -142,9 +144,10 @@ export function textModifyFontName(shape: TextShape, idx: number, len: number, f
     })
     return origin;
 }
-export function textModifyFontSize(shape: TextShape, idx: number, len: number, fontsize: number) {
-    const attr = new SpanAttr();
+export function textModifyFontSize(shape: TextShape, idx: number, len: number, fontsize: number | undefined) {
+    const attr = new SpanAttrSetter();
     attr.fontSize = fontsize;
+    attr.fontSizeIsSet = true;
     const ret = formatText(shape, idx, len, { attr })
     const spans = ret.spans;
     const origin: { fontSize: number | undefined, length: number }[] = [];

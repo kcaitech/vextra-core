@@ -2,7 +2,7 @@ import { importParaAttr, importTextAttr } from "../../io/baseimport";
 import { Color } from "../../data/baseclasses";
 import { BasicArray } from "../../data/basic";
 import { TextShape } from "../../data/shape";
-import { Para, Span, SpanAttr, ParaAttr, Text, TextAttr } from "../../data/text";
+import { Para, Span, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter } from "../../data/text";
 
 function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (attr.color) {
@@ -91,23 +91,42 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
 }
 
 function mergeSpanAttr(span: Span, attr: SpanAttr) {
+    const attrIsSetter = attr instanceof SpanAttrSetter;
     let changed = false;
-    if (attr.color && (!span.color ||
-        attr.color.alpha !== span.color.alpha ||
-        attr.color.red !== span.color.red ||
-        attr.color.green !== span.color.green ||
-        attr.color.blue !== span.color.blue)) {
-        span.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
+    if (attr.color) {
+        if (!span.color ||
+            attr.color.alpha !== span.color.alpha ||
+            attr.color.red !== span.color.red ||
+            attr.color.green !== span.color.green ||
+            attr.color.blue !== span.color.blue) {
+            span.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
+            changed = true;
+        }
+    } else if (attrIsSetter && span.color) {
+        span.color = undefined;
         changed = true;
     }
-    if (attr.fontName && (!span.fontName || attr.fontName !== span.fontName)) {
-        span.fontName = attr.fontName;
+
+    if (attr.fontName) {
+        if (!span.fontName || attr.fontName !== span.fontName) {
+            span.fontName = attr.fontName;
+            changed = true;
+        }
+    } else if (attrIsSetter && span.fontName) {
+        span.fontName = undefined;
         changed = true;
     }
-    if (attr.fontSize && (!span.fontSize || attr.fontSize !== span.fontSize)) {
-        span.fontSize = attr.fontSize;
+
+    if (attr.fontSize) {
+        if (!span.fontSize || attr.fontSize !== span.fontSize) {
+            span.fontSize = attr.fontSize;
+            changed = true;
+        }
+    } else if (attrIsSetter && span.fontSize) {
+        span.fontSize = undefined;
         changed = true;
     }
+
     return changed;
 }
 
@@ -120,21 +139,39 @@ function mergeParaAttr(para: Para, attr: ParaAttr): boolean {
 }
 
 function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
+    const attrIsSetter = attr instanceof ParaAttrSetter;
     let changed = false;
-    if (attr.color && (!paraAttr.color ||
-        attr.color.alpha !== paraAttr.color.alpha ||
-        attr.color.red !== paraAttr.color.red ||
-        attr.color.green !== paraAttr.color.green ||
-        attr.color.blue !== paraAttr.color.blue)) {
-        paraAttr.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
+    if (attr.color) {
+        if (!paraAttr.color ||
+            attr.color.alpha !== paraAttr.color.alpha ||
+            attr.color.red !== paraAttr.color.red ||
+            attr.color.green !== paraAttr.color.green ||
+            attr.color.blue !== paraAttr.color.blue) {
+            paraAttr.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
+            changed = true;
+        }
+    } else if (attrIsSetter && paraAttr.color) {
+        paraAttr.color = undefined;
         changed = true;
     }
-    if (attr.fontName && (!paraAttr.fontName || attr.fontName !== paraAttr.fontName)) {
-        paraAttr.fontName = attr.fontName;
+
+    if (attr.fontName) {
+        if (!paraAttr.fontName || attr.fontName !== paraAttr.fontName) {
+            paraAttr.fontName = attr.fontName;
+            changed = true;
+        }
+    } else if (attrIsSetter && paraAttr.fontName) {
+        paraAttr.fontName = undefined;
         changed = true;
     }
-    if (attr.fontSize && (!paraAttr.fontSize || attr.fontSize !== paraAttr.fontSize)) {
-        paraAttr.fontSize = attr.fontSize;
+
+    if (attr.fontSize) {
+        if (!paraAttr.fontSize || attr.fontSize !== paraAttr.fontSize) {
+            paraAttr.fontSize = attr.fontSize;
+            changed = true;
+        }
+    } else if (attrIsSetter && paraAttr.fontSize) {
+        paraAttr.fontSize = undefined;
         changed = true;
     }
     return changed;
@@ -349,7 +386,7 @@ function _formatTextSpan(spans: Span[], index: number, length: number, attr: Spa
     return [];
 }
 
-function _formatText(paraArray: Para[], paraIndex: number, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
+function _formatText(paraArray: Para[], paraIndex: number, index: number, length: number, props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
     const ret: { spans: Span[], paras: (ParaAttr & { length: number })[] } = { spans: [], paras: [] };
     while (length > 0 && paraIndex < paraArray.length) {
         const para = paraArray[index];
@@ -376,7 +413,7 @@ function _formatText(paraArray: Para[], paraIndex: number, index: number, length
     return ret;
 }
 
-export function formatText(shape: TextShape, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
+export function formatText(shape: TextShape, index: number, length: number, props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
     const shapetext = shape.text;
     const paras = shapetext.paras;
     for (let i = 0, len = paras.length; i < len; i++) {

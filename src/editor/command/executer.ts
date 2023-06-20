@@ -48,7 +48,7 @@ import {
     importSpanAttr
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
-import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Text, SpanAttr } from "../../data/classes";
+import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Text, SpanAttr, Color } from "../../data/classes";
 
 import * as api from "../basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
@@ -633,24 +633,21 @@ export class CMDExecuter {
         const attrId = cmd.attrId
         const value = cmd.value;
         if (attrId === TEXT_ATTR_ID.color) {
-            if (op.type === OpType.ArrayAttr && value) {
-                const color = importColor(JSON.parse(value))
+            if (op.type === OpType.ArrayAttr) {
+                const color = (value && importColor(JSON.parse(value))) as Color | undefined;
                 api.textModifyColor(shape, op.start, op.length, color)
             }
-            // TODO remove value??
         }
         else if (attrId === TEXT_ATTR_ID.fontName) {
-            if (op.type === OpType.ArrayAttr && value) {
+            if (op.type === OpType.ArrayAttr) {
                 api.textModifyFontName(shape, op.start, op.length, value)
             }
-            // TODO remove value??
         }
         else if (attrId === TEXT_ATTR_ID.fontSize) {
-            if (op.type === OpType.ArrayAttr && value) {
-                const fontSize = JSON.parse(value);
+            if (op.type === OpType.ArrayAttr) {
+                const fontSize = value && JSON.parse(value);
                 api.textModifyFontSize(shape, op.start, op.length, fontSize)
             }
-            // TODO remove value??
         }
     }
     textCmdGroup(cmd: TextCmdGroup) {

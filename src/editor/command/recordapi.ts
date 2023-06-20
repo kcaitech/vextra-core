@@ -20,7 +20,7 @@ import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "..
 import { ShapeArrayAttrInsert } from "../../coop/data/classes";
 import { ShapeArrayAttrRemove } from "../../coop/data/classes";
 import { ShapeArrayAttrModify } from "../../coop/data/classes";
-import { ParaAttr, Span, SpanAttr, Text } from "../../data/text";
+import { SpanAttr, Text } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 
