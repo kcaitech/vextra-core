@@ -252,6 +252,24 @@ export class PageEditor {
         }
         return false;
     }
+    // 批量删除
+    delete_batch(shapes: Shape[]) {
+        const api = this.__repo.start("deleteBatch", {});
+        for (let i = 0; i < shapes.length; i++) {
+            try {
+                const shape = shapes[i];
+                const page = shape.getPage() as Page;
+                if (!page) return false;
+                const savep = shape.parent as GroupShape;
+                if (!savep) return false;
+                this.delete_inner(page, shape, api)
+            } catch (error) {
+                console.log(error);
+                continue;
+            }
+        }
+        this.__repo.commit();
+    }
     // 插入成功，返回插入的shape
     insert(parent: GroupShape, index: number, shape: Shape, adjusted = false): Shape | false {
         // adjust shape frame refer to parent
