@@ -3,11 +3,10 @@ export { DocumentMeta, PageListItem, DocumentSyms } from "./baseclasses";
 import { Page } from "./page";
 import { Artboard } from "./artboard";
 import { SymbolShape } from "./shape";
-import { BasicArray, ResourceMgr, IDataGuard } from "./basic";
+import { BasicArray, ResourceMgr, IDataGuard, Watchable } from "./basic";
 import { Style } from "./style";
 import { DataGuard } from "./notransact";
-
-export class Document extends DocumentMeta {
+export class Document extends Watchable(DocumentMeta) {
     private __pages: ResourceMgr<Page>;
     private __artboards: ResourceMgr<Artboard>;
     private __symbols: ResourceMgr<SymbolShape>

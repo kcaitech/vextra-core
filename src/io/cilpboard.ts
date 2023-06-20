@@ -1,6 +1,6 @@
 import { GroupShape, ImageShape, Shape, ShapeType, SymbolRefShape, SymbolShape } from "../data/shape";
-import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape } from "./baseexport";
-import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape } from "./baseimport";
+import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape } from "./baseexport";
+import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape } from "./baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
@@ -41,8 +41,9 @@ export function export_shape(shapes: Shape[]) {
             r.content = exportPathShape(shape as unknown as types.PathShape);
         } else if (type === ShapeType.Artboard) {
             r.content = exportArtboard(shape as unknown as types.Artboard);
+        } else if (type === ShapeType.Group) {
+            r.content = exportGroupShape(shape as unknown as types.GroupShape);
         }
-        
         const parent = shape.parent;
         if (parent) {
             const childs = (parent as GroupShape).childs;
@@ -97,6 +98,12 @@ export function import_shape(document: Document, source: { index: number, conten
                     set_childs_id(childs);
                 }
                 r = importArtboard(_s.content as types.Artboard, ctx);
+            } else if (type === ShapeType.Group) {
+                const childs = (_s.content as GroupShape).childs;
+                if (childs && childs.length) {
+                    set_childs_id(childs);
+                }
+                r = importGroupShape(_s.content as types.GroupShape);
             }
             if (r) {
                 result.push(r);
