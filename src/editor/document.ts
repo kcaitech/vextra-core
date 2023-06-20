@@ -93,4 +93,10 @@ export class DocEditor {
             this.__repo.rollback();
         }
     }
+    // 新增页面
+    insertPage(name: string, index: number) {
+        const page = newPage(name);
+        const result = this.insert(index, page);
+        if (result) return page;
+    }
 }
