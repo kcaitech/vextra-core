@@ -1,12 +1,13 @@
 import { Document } from "../data/document";
 import { Page } from "../data/page";
-import { Shape } from "../data/shape";
+import { Shape, TextShape } from "../data/shape";
 import { ISave4Restore } from "../data/basic";
 import { DocEditor } from "./document";
 import { PageEditor } from "./page";
 import { ShapeEditor } from "./shape";
 import { Controller } from "./controller";
 import { CoopRepository } from "./command/cooprepo";
+import { TextShapeEditor } from "./textshape";
 
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";
@@ -51,6 +52,17 @@ export class Editor {
         if (!p) throw Error("shape has not parent Page!")
         const pe = this.editor4Page(p as Page);
         return pe.editor4Shape(shape);
+    }
+
+    editor4TextShape(shape: TextShape): TextShapeEditor {
+        // get page
+        let p: Shape | undefined = shape;
+        while (p && (!(p instanceof Page))) {
+            p = p.parent;
+        }
+        if (!p) throw Error("shape has not parent Page!")
+        const pe = this.editor4Page(p as Page);
+        return pe.editor4TextShape(shape);
     }
     controller(): Controller {
         const e = new Controller(this.m_repo, this.data);
