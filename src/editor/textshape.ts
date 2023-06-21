@@ -7,7 +7,7 @@ export class TextShapeEditor extends ShapeEditor {
         super(shape, page, repo);
     }
     get shape(): TextShape {
-        return this.shape as TextShape;
+        return this.__shape as TextShape;
     }
 
     public insertText(text: string, index: number, attr?: SpanAttr): boolean {
