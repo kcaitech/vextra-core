@@ -20,6 +20,7 @@ export * from "./editor"
 export * from "./editor/document"
 export * from "./editor/page"
 export * from "./editor/shape"
+export * from "./editor/textshape"
 export * from "./editor/controller"
 
 export * from "./service/shapedirlist"
