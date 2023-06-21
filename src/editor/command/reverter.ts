@@ -281,7 +281,7 @@ export class CMDReverter {
     textInsert(cmd: TextCmdInsert): TextCmdRemove {
         const op = cmd.ops[0];
         if (op.type === OpType.ArrayInsert) {
-            const removeOp = ArrayOpRemove.Make(op.targetId, op.start, cmd.text.length);
+            const removeOp = ArrayOpRemove.Make(op.targetId, op.start, op.length);
             const ret = new TextCmdRemove(CmdType.TextDelete, uuid(), cmd.blockId, [removeOp]);
             ret.origin = cmd.text;
             return ret;

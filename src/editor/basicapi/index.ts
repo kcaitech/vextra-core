@@ -4,7 +4,7 @@ import { Page } from "../../data/page";
 import { GroupShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import { formatText } from "./text";
-import { SpanAttr, SpanAttrSetter } from "../../data/classes";
+import { SpanAttrSetter } from "../../data/classes";
 
 export * from "./fill";
 export * from "./border";

@@ -1,4 +1,3 @@
-import { v4 } from "uuid";
 import { Color, Border, BorderPosition, Style, BorderStyle, MarkerType } from "../../data/style";
 // 边框
 export function setBorderColor(

@@ -290,7 +290,7 @@ export function insertSimpleText(shape: TextShape, text: string, index: number, 
     }
 }
 
-function insertTextParas(shape: TextShape, paras: Para[], index: number) { // 复制粘贴，undo remove，cmd怎么处理？
+function insertTextParas(shape: TextShape, paras: Para[], index: number) {
     if (paras.length === 0) return;
 
     for (let i = 0, len = paras.length; i < len; i++) {
@@ -564,13 +564,20 @@ function mergePara(para: Para, nextpara: Para) {
 }
 
 function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: number, count: number): Text {
+    // fix count
+    if (count > 0 &&
+        paraIndex === (paraArray.length - 1) &&
+        (index + count) >= para.length) {
+        count = para.length - index - 1; // 不能删除最后一个回车
+    }
 
     if (index + count <= para.length) { // 处理当前段就行
+        // fix count
         let isDel0A = (index + count) === para.length;
-        if (isDel0A && paraIndex === (paraArray.length - 1)) {
-            count--; // 不能删除最后一个回车
-            isDel0A = false;
-        }
+        // if (isDel0A && paraIndex === (paraArray.length - 1)) {
+        //     count--; // 不能删除最后一个回车
+        //     isDel0A = false;
+        // }
         const savetext = para.text.slice(index, index + count);
         para.text = para.text.slice(0, index) + para.text.slice(index + count);
         const delspans = _deleteSpan(para.spans, index, count);
@@ -594,7 +601,7 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
     // let deltext = "";
     // let delspans: Span[] = [];
     let needMerge = -1;
-    if (index > 0) { // 第一段
+    if (index > 0) { // 第一段 // 这里至少有多段
         needMerge = paraIndex;
         const savelen = para.length;
         const deltext = para.text.slice(index);
@@ -610,7 +617,7 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
 
     let len = paraArray.length;
     // 整段删除
-    while (count > 0 && paraIndex < len) {
+    while (count > 0 && paraIndex < len && len > 1) { // 不能删除光
         const para = paraArray[paraIndex];
         if (count >= para.length) {
             const deltext = para.text;
@@ -625,6 +632,14 @@ function _deleteText(paraArray: Para[], paraIndex: number, para: Para, index: nu
             continue;
         }
         break;
+    }
+
+    // fix count
+    para = paraArray[paraIndex];
+    if (count > 0 &&
+        paraIndex === (paraArray.length - 1) &&
+        (index + count) >= para.length) {
+        count = para.length - index - 1; // 不能删除最后一个回车
     }
 
     // 最后一段
