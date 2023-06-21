@@ -210,19 +210,19 @@ export class CMDExecuter {
 
     pageInsert(cmd: PageCmdInsert) {
         const op = cmd.ops[0];
-        if (op.type === OpType.ArrayInsert) {
+        if (op.type === OpType.ShapeInsert) {
             const page = importPage(JSON.parse(cmd.data));
-            api.pageInsert(this.__document, page, op.start)
+            api.pageInsert(this.__document, page, op.index)
         }
     }
     pageDelete(cmd: PageCmdDelete) {
         const op = cmd.ops[0];
-        if (op.type === OpType.ArrayRemove) { // oss需要保存历史版本以undo
+        if (op.type === OpType.ShapeRemove) { // oss需要保存历史版本以undo
             // check
-            const item = this.__document.pagesList[op.start];
+            const item = this.__document.pagesList[op.index];
             if (item && item.id !== cmd.pageId) throw new Error("page id not equals: " + item.id + " " + cmd.pageId)
 
-            api.pageDelete(this.__document, op.start)
+            api.pageDelete(this.__document, op.index)
         }
     }
     pageModify(cmd: PageCmdModify) {
@@ -240,10 +240,9 @@ export class CMDExecuter {
         }
     }
     pageMove(cmd: PageCmdMove) {
-        const op0 = cmd.ops[0] as ArrayOpRemove;
-        const op1 = cmd.ops[1] as ArrayOpInsert;
-        if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
-            api.pageMove(this.__document, op0.start, op1.start);
+        const op = cmd.ops[0] as ShapeOpMove;
+        if (op && op.type === OpType.ShapeMove) {
+            api.pageMove(this.__document, op.index, op.index2);
         }
     }
 

@@ -163,11 +163,11 @@ export class Api {
             this.addCmd(PageCmdModify.Make(document.id, item.id, PAGE_ATTR_ID.name, name, save))
         }
     }
-    pageMove(document: Document, fromIdx: number, toIdx: number) {
+    pageMove(document: Document, pageId: string,  fromIdx: number, toIdx: number) {
         this.__trap(() => {
             basicapi.pageMove(document, fromIdx, toIdx);
         })
-        this.addCmd(PageCmdMove.Make(document.id, fromIdx, toIdx))
+        this.addCmd(PageCmdMove.Make(document.id, pageId, fromIdx, toIdx))
     }
 
     shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number) {

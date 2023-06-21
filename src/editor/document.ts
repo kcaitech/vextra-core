@@ -67,7 +67,7 @@ export class DocEditor {
             const idx = pagesmgr.getPageIndexById(page.id);
             const descend = idx >= to ? to : to + 1;
             if (to !== idx) {
-                api.pageMove(this.__document, idx, descend)
+                api.pageMove(this.__document, page.id, idx, descend)
             }
             this.__repo.commit();
         } catch (e) {
@@ -86,7 +86,7 @@ export class DocEditor {
             const api = this.__repo.start('pagemove', {});
             hostIdx = offsetOverhalf ? hostIdx + 1 : hostIdx;
             if (wandererIdx <= hostIdx) hostIdx--;
-            api.pageMove(this.__document, wandererIdx, hostIdx);
+            api.pageMove(this.__document, wandererId, wandererIdx, hostIdx);
             this.__repo.commit();
         } catch (error) {
             console.log(error)

@@ -92,22 +92,21 @@ export class CMDReverter {
 
     pageInsert(cmd: PageCmdInsert): PageCmdDelete {
         const cmdop = cmd.ops[0];
-        // const index = this.__document.pagesList.findIndex((item) => item.id === cmd.pageId) // 不可以，cmd是需要变换的
         let op;
-        if (cmdop.type === OpType.ArrayInsert) {
-            op = ArrayOpRemove.Make(cmdop.targetId, cmdop.start, cmdop.length)
+        if (cmdop.type === OpType.ShapeInsert) {
+            op = ShapeOpInsert.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         } else {
-            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, cmdop.length)
+            op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         }
         return new PageCmdDelete(CmdType.PageDelete, uuid(), cmd.blockId, [op], cmd.pageId);
     }
     pageDelete(cmd: PageCmdDelete): PageCmdInsert {
         const cmdop = cmd.ops[0];
         let op;
-        if (cmdop.type === OpType.ArrayRemove) {
-            op = ArrayOpInsert.Make(cmdop.targetId, cmdop.start, 1)
+        if (cmdop.type === OpType.ShapeRemove) {
+            op = ShapeOpRemove.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         } else {
-            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, 1)
+            op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         }
         const page = this.__document.pagesMgr.getSync(cmd.pageId);
         if (!page) throw new Error("page not found: " + cmd.pageId);
@@ -133,18 +132,15 @@ export class CMDReverter {
         return ret;
     }
     pageMove(cmd: PageCmdMove): PageCmdMove {
-        const cmdop0 = cmd.ops[0] as ArrayOpRemove;
-        const cmdop1 = cmd.ops[1] as ArrayOpInsert;
-        let op0, op1;
-        if (cmdop0.type === OpType.ArrayRemove && cmdop1.type === OpType.ArrayInsert) {
-            op0 = ArrayOpRemove.Make(cmdop1.targetId, cmdop1.start, cmdop1.length)
-            op1 = ArrayOpInsert.Make(cmdop0.targetId, cmdop0.start, cmdop0.length)
+        const cmdop = cmd.ops[0] as ShapeOpMove;
+        let op;
+        if (cmdop.type === OpType.ShapeMove) {
+            op = ShapeOpRemove.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         }
         else {
-            op0 = ArrayOpNone.Make(cmdop1.targetId, cmdop1.start, cmdop1.length)
-            op1 = ArrayOpNone.Make(cmdop0.targetId, cmdop0.start, cmdop0.length)
+            op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         }
-        return new PageCmdMove(CmdType.PageMove, uuid(), cmd.blockId, [op0, op1]);
+        return new PageCmdMove(CmdType.PageMove, uuid(), cmd.blockId, [op]);
     }
 
     shapeArrAttrCMDGroup(cmd: ShapeArrayAttrGroup): ShapeArrayAttrGroup {
