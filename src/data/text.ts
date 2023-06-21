@@ -3,6 +3,7 @@ import { Basic, BasicArray } from "./basic";
 
 export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation, ParaAttr, TextAttr } from "./baseclasses";
 import * as classes from "./baseclasses"
+import { deleteText, formatText, getText, getTextText, insertComplexText, insertSimpleText } from "./textfun";
 
 export class SpanAttr extends Basic implements classes.SpanAttr {
     typeId = 'span-attr'
@@ -117,6 +118,22 @@ export class Text extends Basic implements classes.Text {
             return count + p.length;
         }, 0);
     }
-    // getText(index: number, count: number): { text: string, spans: Span[] } {
-    // }
+    getText(index: number, count: number): string {
+        return getText(this, index, count);
+    }
+    getTextWithFormat(index: number, count: number): Text {
+        return getTextText(this, index, count);
+    }
+    insertText(text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+        insertSimpleText(this, text, index, props);
+    }
+    insertFormatText(text: Text, index: number) {
+        insertComplexText(this, text, index);
+    }
+    formatText(index: number, length: number, props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
+        return formatText(this, index, length, props)
+    }
+    deleteText(index: number, count: number): Text | undefined {
+        return deleteText(this, index, count);
+    }
 }
