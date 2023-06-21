@@ -267,46 +267,29 @@ export class CMDReverter {
 
     textDelete(cmd: TextCmdRemove): TextCmdInsert | TextCmdGroup {
         const op = cmd.ops[0];
-        const origin = JSON.parse(cmd.origin!) as { text: string, spans: Span[] };
-        origin.spans = origin.spans.map((span) => importSpan(span))
         if (op.type !== OpType.ArrayRemove) {
-            return new TextCmdInsert(CmdType.TextInsert, uuid(), cmd.blockId, [op], origin.text);
+            return new TextCmdInsert(CmdType.TextInsert, uuid(), cmd.blockId, [op], cmd.origin!);
         }
-
-        const shapeId = op.targetId[0];
-        if (origin.spans.length <= 1) {
-            return TextCmdInsert.Make(cmd.blockId, shapeId, op.start, origin.text); // todo attr
-        }
-
-        const cmdgroup = TextCmdGroup.Make(cmd.blockId);
-        for (let i = 0, j = 0; i < origin.text.length;) {
-            if (j >= origin.spans.length) {
-                const text = origin.text.slice(i);
-                const span = origin.spans.at(-1); // todo attr
-                cmdgroup.addInsert(shapeId, op.start + i, text)
-                break;
+        else {
+            const origin = cmd.parseOrigin();
+            if (!origin) {
+                throw new Error("text remove cmd has not origin")
             }
-            else {
-                const span = origin.spans[j]; // todo attr
-                const text = origin.text.slice(i, i + span.length);
-                cmdgroup.addInsert(shapeId, op.start + i, text)
-                i += span.length;
-                j++;
-            }
+            const shapeId = op.targetId[0];
+            return TextCmdInsert.Make(cmd.blockId, shapeId, op.start, origin.length, origin);
         }
-        return cmdgroup;
     }
     textInsert(cmd: TextCmdInsert): TextCmdRemove {
         const op = cmd.ops[0];
         if (op.type === OpType.ArrayInsert) {
-            const removeOp = ArrayOpRemove.Make(op.targetId, op.start, cmd.text.length);
+            const removeOp = ArrayOpRemove.Make(op.targetId, op.start, op.length);
             const ret = new TextCmdRemove(CmdType.TextDelete, uuid(), cmd.blockId, [removeOp]);
-            ret.origin = JSON.stringify({ text: cmd.text, spans: [] });
+            ret.origin = cmd.text;
             return ret;
         }
         else {
             const ret = new TextCmdRemove(CmdType.TextDelete, uuid(), cmd.blockId, [op]);
-            ret.origin = JSON.stringify({ text: cmd.text, spans: [] });
+            ret.origin = cmd.text;
             return ret;
         }
     }

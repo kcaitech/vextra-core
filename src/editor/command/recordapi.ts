@@ -1,7 +1,7 @@
 import {
     Cmd, CmdType, PageCmdDelete, PageCmdMove, ShapeArrayAttrMove,
     ShapeCmdGroup, ShapeCmdInsert, ShapeCmdRemove,
-    TextCmdGroup, TextCmdInsert, TextCmdRemove, ShapeArrayAttrGroup
+    TextCmdGroup, TextCmdInsert, TextCmdModify, TextCmdRemove, ShapeArrayAttrGroup
 } from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
@@ -10,7 +10,7 @@ import { Document } from "../../data/document";
 import { PageCmdInsert } from "../../coop/data/classes";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportRectRadius } from "../../io/baseexport";
 import { PageCmdModify } from "../../coop/data/classes";
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, RectRadius, Shape, TextShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { ShapeCmdMove } from "../../coop/data/classes";
@@ -20,7 +20,7 @@ import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "..
 import { ShapeArrayAttrInsert } from "../../coop/data/classes";
 import { ShapeArrayAttrRemove } from "../../coop/data/classes";
 import { ShapeArrayAttrModify } from "../../coop/data/classes";
-import { Span, SpanAttr } from "../../data/text";
+import { SpanAttr, Text } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 
@@ -528,25 +528,58 @@ export class Api {
             }
         })
     }
-    insertText(page: Page, shape: TextShape, idx: number, text: string, attr?: SpanAttr) {
+    insertSimpleText(page: Page, shape: TextShape, idx: number, text: string, attr?: SpanAttr) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            basicapi.insertText(shape, text, idx, attr)
-            this.addCmd(TextCmdInsert.Make(page.id, shape.id, idx, text))
+            basicapi.insertSimpleText(shape, text, idx, { attr })
+            this.addCmd(TextCmdInsert.Make(page.id, shape.id, idx, text.length, { type: "simple", text, attr, length: text.length}))
+        })
+    }
+    insertComplexText(page: Page, shape: TextShape, idx: number, text: Text) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            basicapi.insertComplexText(shape, text, idx)
+            this.addCmd(TextCmdInsert.Make(page.id, shape.id, idx, text.length, { type: "complex", text, length: text.length }))
         })
     }
     deleteText(page: Page, shape: TextShape, idx: number, len: number) {
         this.checkShapeAtPage(page, shape);
-        let del: { text: string, spans: Span[] } | undefined;
+        let del: Text | undefined;
         this.__trap(() => {
             del = basicapi.deleteText(shape, idx, len)
-            if (del) this.addCmd(TextCmdRemove.Make(page.id, shape.id, idx, del.text.length, del))
+            if (del) this.addCmd(TextCmdRemove.Make(page.id, shape.id, idx, del.length, { type: "complex", text: del, length: del.length }))
         })
         return del;
     }
-    formatText(page: Page, shape: TextShape, idx: number, len: number, attr: SpanAttr) {
+    textModifyColor(page: Page, shape: TextShape, idx: number, len: number, color: Color) {
         this.checkShapeAtPage(page, shape);
-        throw new Error("not implemented")
+        this.__trap(() => {
+            const ret = basicapi.textModifyColor(shape, idx, len, color);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.color, color, m.color));
+                idx += m.length;
+            })
+        })
+    }
+    textModifyFontName(page: Page, shape: TextShape, idx: number, len: number, fontname: string) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.textModifyFontName(shape, idx, len, fontname);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontName, fontname, m.fontName));
+                idx += m.length;
+            })
+        })
+    }
+    textModifyFontSize(page: Page, shape: TextShape, idx: number, len: number, fontsize: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.textModifyFontSize(shape, idx, len, fontsize);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.color, fontsize, m.fontSize));
+                idx += m.length;
+            })
+        })
     }
     moveText(page: Page, shape: TextShape, idx: number, len: number, idx2: number) {
         this.checkShapeAtPage(page, shape);

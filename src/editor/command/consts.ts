@@ -36,3 +36,10 @@ export const BORDER_ATTR_ID = {
     startMarkerType: "startMarkerType",
     endMarkerType: "endMarkerType"
 }
+
+export const TEXT_ATTR_ID = {
+    color: "color",
+    fontSize: "fontSize",
+    fontName: "fontName",
+
+}

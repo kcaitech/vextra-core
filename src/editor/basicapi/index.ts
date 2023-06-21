@@ -1,24 +1,12 @@
 import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
-import { GroupShape, RectRadius, RectShape, Shape, ShapeType } from "../../data/shape";
+import { GroupShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
+import { ParaAttr, SpanAttr, SpanAttrSetter, Text } from "../../data/classes";
 
-export { addFillAt, deleteFillAt, deleteFills, moveFill, setFillColor, setFillEnable } from "./fill";
-export {
-    addBorderAt,
-    deleteBorderAt,
-    moveBorder,
-    setBorderColor,
-    setBorderEnable,
-    setBorderThickness,
-    setBorderPosition,
-    setBorderStyle,
-    setBorderStartMarkerType,
-    setBorderEndMarkerType,
-    deleteBorders
-} from "./border";
-export { deleteText, insertText } from "./text";
+export * from "./fill";
+export * from "./border";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     document.insertPage(index, page)
@@ -128,4 +116,50 @@ export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
     if (shape.type === ShapeType.Artboard) {
         (shape as Artboard).setArtboardColor(color);
     }
+}
+
+export function insertSimpleText(shape: TextShape, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+    shape.text.insertText(text, index, props)
+}
+export function insertComplexText(shape: TextShape, text: Text, index: number) {
+    shape.text.insertFormatText(text, index);
+}
+export function deleteText(shape: TextShape, index: number, count: number): Text | undefined {
+    return shape.text.deleteText(index, count);
+}
+export function textModifyColor(shape: TextShape, idx: number, len: number, color: Color | undefined) {
+    const attr = new SpanAttrSetter();
+    attr.color = color;
+    attr.colorIsSet = true;
+    const ret = shape.text.formatText(idx, len, { attr })
+    const spans = ret.spans;
+    const origin: { color: Color | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ color: span.color, length: span.length })
+    })
+    return origin;
+}
+export function textModifyFontName(shape: TextShape, idx: number, len: number, fontname: string | undefined) {
+    const attr = new SpanAttrSetter();
+    attr.fontName = fontname;
+    attr.fontNameIsSet = true;
+    const ret = shape.text.formatText(idx, len, { attr })
+    const spans = ret.spans;
+    const origin: { fontName: string | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ fontName: span.fontName, length: span.length })
+    })
+    return origin;
+}
+export function textModifyFontSize(shape: TextShape, idx: number, len: number, fontsize: number | undefined) {
+    const attr = new SpanAttrSetter();
+    attr.fontSize = fontsize;
+    attr.fontSizeIsSet = true;
+    const ret = shape.text.formatText(idx, len, { attr })
+    const spans = ret.spans;
+    const origin: { fontSize: number | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ fontSize: span.fontSize, length: span.length })
+    })
+    return origin;
 }
