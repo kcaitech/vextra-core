@@ -1,4 +1,4 @@
-import { Shape, GroupShape, ShapeFrame } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame, TextShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import { BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
@@ -10,6 +10,7 @@ import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { Border, BorderStyle, Color, Fill } from "../data/classes";
+import { TextShapeEditor } from "./textshape";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
@@ -621,5 +622,8 @@ export class PageEditor {
     }
     editor4Shape(shape: Shape): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo);
+    }
+    editor4TextShape(shape: TextShape): TextShapeEditor {
+        return new TextShapeEditor(shape, this.__page, this.__repo);
     }
 }
