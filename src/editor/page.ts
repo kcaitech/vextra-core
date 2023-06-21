@@ -343,7 +343,7 @@ export class PageEditor {
     }
     setName(name: string) {
         const api = this.__repo.start("setName", {});
-        api.pageModifyName(this.__document, this.__page.id, name)
+        api.pageModifyName(this.__document, this.__page.id, name);
         this.__repo.commit();
     }
 

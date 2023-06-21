@@ -1,25 +1,21 @@
 import {
-    Cmd, CmdType, PageCmdDelete, PageCmdMove, ShapeArrayAttrMove,
-    ShapeCmdGroup, ShapeCmdInsert, ShapeCmdRemove,
-    TextCmdGroup, TextCmdInsert, TextCmdRemove, ShapeArrayAttrGroup
+    Cmd, CmdType,
+    PageCmdInsert, PageCmdModify, PageCmdMove, PageCmdDelete,
+    ShapeArrayAttrMove, ShapeArrayAttrGroup, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
+    ShapeCmdGroup, ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
+    TextCmdGroup, TextCmdInsert, TextCmdRemove,
 } from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { PageCmdInsert } from "../../coop/data/classes";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportRectRadius } from "../../io/baseexport";
-import { PageCmdModify } from "../../coop/data/classes";
+import { } from "../../coop/data/classes";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID } from "./consts";
 import { GroupShape, RectRadius, Shape, TextShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
-import { ShapeCmdMove } from "../../coop/data/classes";
-import { ShapeCmdModify } from "../../coop/data/classes";
 import { Artboard } from "../../data/artboard";
 import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "../../data/style";
-import { ShapeArrayAttrInsert } from "../../coop/data/classes";
-import { ShapeArrayAttrRemove } from "../../coop/data/classes";
-import { ShapeArrayAttrModify } from "../../coop/data/classes";
 import { Span, SpanAttr } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
@@ -43,8 +39,9 @@ export class Api {
             updateShapesFrame(page, shapes, this)
         }
         this.needUpdateFrame.length = 0;
-        // group cmds
         if (this.cmds.length <= 1) return this.cmds[0];
+
+        // group cmds
         // check group type
         const first = this.cmds[0];
         switch (first.type) {
