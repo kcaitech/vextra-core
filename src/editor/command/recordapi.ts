@@ -362,7 +362,7 @@ export class Api {
             for (let i = 0; i < borders.length; i++) {
                 const border = borders[i];
                 basicapi.addBorderAt(shape.style, border, i);
-                this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, BORDER_ID, border.id, i, exportFill(border)));
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, BORDER_ID, border.id, i, exportBorder(border)));
             }
         })
     }
@@ -403,7 +403,7 @@ export class Api {
             if (borders && borders.length) {
                 for (let i = 0; i < borders.length; i++) {
                     const border = borders[i];
-                    this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, BORDER_ID, border.id, i, exportFill(border)));
+                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, BORDER_ID, border.id, index, exportBorder(border)));
                 }
             }
         })
