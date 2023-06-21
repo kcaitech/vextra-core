@@ -3,12 +3,10 @@ import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
-import { formatText } from "./text";
-import { SpanAttrSetter } from "../../data/classes";
+import { ParaAttr, SpanAttr, SpanAttrSetter, Text } from "../../data/classes";
 
 export * from "./fill";
 export * from "./border";
-export * from "./text";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     document.insertPage(index, page)
@@ -120,11 +118,20 @@ export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
     }
 }
 
+export function insertSimpleText(shape: TextShape, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+    shape.text.insertText(text, index, props)
+}
+export function insertComplexText(shape: TextShape, text: Text, index: number) {
+    shape.text.insertFormatText(text, index);
+}
+export function deleteText(shape: TextShape, index: number, count: number): Text | undefined {
+    return shape.text.deleteText(index, count);
+}
 export function textModifyColor(shape: TextShape, idx: number, len: number, color: Color | undefined) {
     const attr = new SpanAttrSetter();
     attr.color = color;
     attr.colorIsSet = true;
-    const ret = formatText(shape, idx, len, { attr });
+    const ret = shape.text.formatText(idx, len, { attr })
     const spans = ret.spans;
     const origin: { color: Color | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -136,7 +143,7 @@ export function textModifyFontName(shape: TextShape, idx: number, len: number, f
     const attr = new SpanAttrSetter();
     attr.fontName = fontname;
     attr.fontNameIsSet = true;
-    const ret = formatText(shape, idx, len, { attr })
+    const ret = shape.text.formatText(idx, len, { attr })
     const spans = ret.spans;
     const origin: { fontName: string | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -148,7 +155,7 @@ export function textModifyFontSize(shape: TextShape, idx: number, len: number, f
     const attr = new SpanAttrSetter();
     attr.fontSize = fontsize;
     attr.fontSizeIsSet = true;
-    const ret = formatText(shape, idx, len, { attr })
+    const ret = shape.text.formatText(idx, len, { attr })
     const spans = ret.spans;
     const origin: { fontSize: number | undefined, length: number }[] = [];
     spans.forEach((span) => {
