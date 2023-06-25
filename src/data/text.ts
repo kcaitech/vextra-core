@@ -1,9 +1,10 @@
-import { Color, ParaAttr, TextAttr } from "./baseclasses";
+import { Color, ParaAttr, TextAttr, TextBehaviour, TextVerAlign } from "./baseclasses";
 import { Basic, BasicArray } from "./basic";
 
 export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation, ParaAttr, TextAttr } from "./baseclasses";
 import * as classes from "./baseclasses"
 import { deleteText, formatText, getText, getTextText, insertComplexText, insertSimpleText } from "./textfun";
+import { MeasureFun, TextLayout, layoutText, locateCursor, locateRange, locateText } from "./textlayout";
 
 export class SpanAttr extends Basic implements classes.SpanAttr {
     typeId = 'span-attr'
@@ -83,6 +84,11 @@ export class Text extends Basic implements classes.Text {
     typeId = 'text'
     paras: BasicArray<Para>
     attr?: TextAttr
+    private __layout?: TextLayout;
+    private __layoutWidth: number = 0;
+    private __layoutHeight: number = 0;
+    private __measure: MeasureFun = (code: number, font: string) => undefined;
+
     constructor(
         paras: BasicArray<Para>
     ) {
@@ -125,15 +131,80 @@ export class Text extends Basic implements classes.Text {
         return getTextText(this, index, count);
     }
     insertText(text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+        this.reLayout(); // todo
         insertSimpleText(this, text, index, props);
     }
     insertFormatText(text: Text, index: number) {
+        this.reLayout(); // todo
         insertComplexText(this, text, index);
     }
     formatText(index: number, length: number, props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
+        this.reLayout(); // todo
         return formatText(this, index, length, props)
     }
     deleteText(index: number, count: number): Text | undefined {
+        this.reLayout(); // todo
         return deleteText(this, index, count);
+    }
+
+    setMeasureFun(measure: MeasureFun) {
+        if (this.__measure !== measure) {
+            this.__measure = measure;
+            this.reLayout();
+        }
+    }
+
+    updateSize(w: number, h: number) {
+        const layoutWidth = ((b: TextBehaviour) => {
+            switch (b) {
+                case TextBehaviour.Flexible: return Number.MAX_VALUE;
+                case TextBehaviour.Fixed: return w;
+                case TextBehaviour.FixWidthAndHeight: return w;
+            }
+            // return Number.MAX_VALUE
+        })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+        if (this.__layoutWidth !== layoutWidth) {
+            this.__layoutHeight = h;
+            this.__layoutWidth = layoutWidth;
+            this.reLayout();
+        }
+        else if (this.__layoutHeight !== h && this.__layout) {
+            const vAlign = this.attr?.verAlign ?? TextVerAlign.Top;
+            const yOffset: number = ((align: TextVerAlign) => {
+                switch (align) {
+                    case TextVerAlign.Top: return 0;
+                    case TextVerAlign.Middle: return (h - this.__layout.contentHeight) / 2;
+                    case TextVerAlign.Bottom: return h - this.__layout.contentHeight;
+                }
+            })(vAlign);
+            this.__layout.yOffset = yOffset;
+        }
+        this.__layoutHeight = h;
+    }
+
+    private reLayout() {
+        this.__layout = undefined;
+    }
+
+    getLayout() {
+        if (this.__layout) return this.__layout;
+        this.__layout = layoutText(this, this.__layoutWidth, this.__layoutHeight, this.__measure);
+        return this.__layout;
+    }
+    locateText(x: number, y: number): { index: number, before: boolean } {
+        return locateText(this.getLayout(), x, y);
+    }
+    locateCursor(index: number, cursorAtBefore: boolean): { x: number, y: number }[] {
+        return locateCursor(this.getLayout(), index, cursorAtBefore);
+    }
+    locateRange(start: number, end: number): { x: number, y: number }[] {
+        return locateRange(this.getLayout(), start, end);
+    }
+
+    getContentWidth(): number {
+        return this.getLayout().contentWidth;
+    }
+    getContentHeight(): number {
+        return this.getLayout().contentHeight;
     }
 }
