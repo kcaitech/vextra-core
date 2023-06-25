@@ -547,7 +547,7 @@ export class CMDExecuter {
             }
             else if (opId === BORDER_ATTR_ID.position) {
                 if (op.type === OpType.IdSet && value) {
-                    const position = importBorderPosition(JSON.parse(value));
+                    const position = importBorderPosition(value as any);
                     api.setBorderPosition(shape.style, borderIdx, position)
                 }
             }
