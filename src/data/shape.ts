@@ -203,8 +203,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
         this.childs.push(child);
     }
     addChildAt(child: Shape, idx?: number) {
-        let index = idx;
-        if (!index) index = this.childs.length;
+        const index = idx !== undefined ? idx : this.childs.length
         this.childs.splice(index, 0, child);
     }
     indexOfChild(shape: Shape): number {
