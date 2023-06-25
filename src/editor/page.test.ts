@@ -272,8 +272,8 @@ test("insert", () => {
     const now = JSON.stringify(exportPage(page))
     chai.assert.equal(origin, now)
 })
-test("setName", () => {
-    const repo = new Repository()
+test("setName", async () => {
+    const repo = new Repository();
     const page = newPage("Page1");
     const pageList = new BasicArray<PageListItem>();
     const pitem = new PageListItem(page.id, page.name);
@@ -282,24 +282,27 @@ test("setName", () => {
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
 
-    const cooprepo = new CoopRepository(document, repo)
+    const cooprepo = new CoopRepository(document, repo);
     const executer = new CMDExecuter(document, repo);
     let _cmd: Cmd | undefined;
-    cooprepo.onCommit((cmd) => { _cmd = cmd });
+    cooprepo.onCommit((cmd) => {
+        _cmd = cmd;
+    });
 
-    const editor = new PageEditor(cooprepo, page, document);
+    const _p = await pagesMgr.get(page.id);
+    chai.assert.isObject(_p);
+    const editor = new PageEditor(cooprepo, _p!, document);
     const new_name = "-page-";
     editor.setName(new_name);
-    pagesMgr.get(page.id).then(p => {
-        if (p) {
-            console.log('name', p.name);
-            chai.assert.isTrue(p.name === new_name);
-        }
-    })
-    // chai.assert.isObject(_cmd)
-    // const origin = JSON.stringify(exportPage(page))
-    // repo.undo();
-    // executer.exec(_cmd!);
-    // const now = JSON.stringify(exportPage(page))
-    // chai.assert.equal(origin, now)
+
+    const __p = await pagesMgr.get(page.id);
+    chai.assert.isObject(__p);
+    chai.assert.equal(__p!.name, new_name);
+
+    chai.assert.isObject(_cmd);
+    const origin = JSON.stringify(exportPage(page));
+    repo.undo();
+    executer.exec(_cmd!);
+    const now = JSON.stringify(exportPage(page));
+    chai.assert.equal(origin, now);
 })

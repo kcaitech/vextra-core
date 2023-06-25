@@ -21,7 +21,7 @@ export function moveFill(style: Style, idx: number, idx2: number) {
     const fill = style.fills.splice(idx, 1)[0];
     if (fill) style.fills.splice(idx2, 0, fill);
 }
-export function setFillColor(style: Style, idx: number, color: Color) {
+export function setFillColor(style: Style, idx: number, color: Color) {    
     const fill: Fill = style.fills[idx];
     fill && (fill.color = color);
 }

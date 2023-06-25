@@ -150,15 +150,20 @@ export class Api {
             this.addCmd(PageCmdDelete.Make(document.id, item.id, index))
         }
     }
-    pageModifyName(document: Document, pageId: string, name: string) {
+    async pageModifyName(document: Document, pageId: string, name: string) {
         const item = document.pagesList.find(p => p.id === pageId);
-        if (item) {
-            const save = item.name;
-            this.__trap(() => {
-                item.name = name;
-            })
-            this.addCmd(PageCmdModify.Make(document.id, item.id, PAGE_ATTR_ID.name, name, save))
+        if (!item) return;
+        const s_name = item.name;
+        const save = this.repo.transactCtx.settrap;
+        this.repo.transactCtx.settrap = false;
+        try {
+            item.name = name;
+            const source = await document.pagesMgr.get(pageId);
+            source && (source.name = name);
+        } finally {
+            this.repo.transactCtx.settrap = save;
         }
+        this.addCmd(PageCmdModify.Make(document.id, item.id, PAGE_ATTR_ID.name, name, s_name));
     }
     pageMove(document: Document, fromIdx: number, toIdx: number) {
         this.__trap(() => {
