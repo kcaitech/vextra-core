@@ -158,4 +158,17 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    public setTextBehaviour(textBehaviour: TextBehaviour) {
+        const api = this.__repo.start("setTextBehaviour", {});
+        try {
+            api.shapeModifyTextBehaviour(this.__page, this.shape, textBehaviour)
+            this.fixFrameByTextBehaviour(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
 }
