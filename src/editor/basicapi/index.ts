@@ -3,7 +3,7 @@ import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
-import { ParaAttr, SpanAttr, SpanAttrSetter, Text, TextAttr, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
+import { ParaAttr, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 
 export * from "./fill";
 export * from "./border";
