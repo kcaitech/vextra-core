@@ -157,6 +157,11 @@ export class Shape extends Watchable(classes.Shape) {
     setShapesConstrainerProportions(val: boolean) {
         this.constrainerProportions = val;
     }
+
+    setFrameSize(w: number, h: number) {
+        this.frame.width = w;
+        this.frame.height = h;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -748,9 +753,13 @@ export class TextShape extends Shape implements classes.TextShape {
         this.text.setMeasureFun(measure);
     }
 
-    public notify(...args: any[]): void {
+    // public notify(...args: any[]): void {
+    //     this.text.updateSize(this.frame.width, this.frame.height)
+    //     super.notify(...args);
+    // }
+    setFrameSize(w: number, h: number) {
+        super.setFrameSize(w, h);
         this.text.updateSize(this.frame.width, this.frame.height)
-        super.notify(...args);
     }
 }
 

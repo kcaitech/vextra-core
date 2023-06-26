@@ -1,4 +1,4 @@
-import { Color, ParaAttr, TextAttr, TextBehaviour, TextVerAlign } from "./baseclasses";
+import { Color, ParaAttr, TextAttr, TextBehaviour, TextHorAlign, TextVerAlign } from "./baseclasses";
 import { Basic, BasicArray } from "./basic";
 
 export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation, ParaAttr, TextAttr } from "./baseclasses";
@@ -86,7 +86,8 @@ export class Text extends Basic implements classes.Text {
     attr?: TextAttr
     private __layout?: TextLayout;
     private __layoutWidth: number = 0;
-    private __layoutHeight: number = 0;
+    private __frameWidth: number = 0;
+    private __frameHeight: number = 0;
     private __measure: MeasureFun = (code: number, font: string) => undefined;
 
     constructor(
@@ -164,11 +165,11 @@ export class Text extends Basic implements classes.Text {
             // return Number.MAX_VALUE
         })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
         if (this.__layoutWidth !== layoutWidth) {
-            this.__layoutHeight = h;
+            this.__frameHeight = h;
             this.__layoutWidth = layoutWidth;
             this.reLayout();
         }
-        else if (this.__layoutHeight !== h && this.__layout) {
+        else if (this.__frameHeight !== h && this.__layout) {
             const vAlign = this.attr?.verAlign ?? TextVerAlign.Top;
             const yOffset: number = ((align: TextVerAlign) => {
                 switch (align) {
@@ -179,7 +180,8 @@ export class Text extends Basic implements classes.Text {
             })(vAlign);
             this.__layout.yOffset = yOffset;
         }
-        this.__layoutHeight = h;
+        this.__frameWidth = w;
+        this.__frameHeight = h;
     }
 
     private reLayout() {
@@ -188,7 +190,7 @@ export class Text extends Basic implements classes.Text {
 
     getLayout() {
         if (this.__layout) return this.__layout;
-        this.__layout = layoutText(this, this.__layoutWidth, this.__layoutHeight, this.__measure);
+        this.__layout = layoutText(this, this.__layoutWidth, this.__frameHeight, this.__measure);
         return this.__layout;
     }
     locateText(x: number, y: number): { index: number, before: boolean } {
@@ -206,5 +208,53 @@ export class Text extends Basic implements classes.Text {
     }
     getContentHeight(): number {
         return this.getLayout().contentHeight;
+    }
+
+    setTextBehaviour(textBehaviour: TextBehaviour) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.textBehaviour = textBehaviour;
+        // 宽度变化时要重排
+        const layoutWidth = ((b: TextBehaviour) => {
+            switch (b) {
+                case TextBehaviour.Flexible: return Number.MAX_VALUE;
+                case TextBehaviour.Fixed: return this.__frameWidth;
+                case TextBehaviour.FixWidthAndHeight: return this.__frameWidth;
+            }
+            // return Number.MAX_VALUE
+        })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+        if (this.__layoutWidth !== layoutWidth) {
+            this.__layoutWidth = layoutWidth;
+            this.reLayout();
+        }
+    }
+    setTextVerAlign(verAlign: TextVerAlign) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.verAlign = verAlign;
+        if (this.__layout) {
+            const vAlign = this.attr?.verAlign ?? TextVerAlign.Top;
+            const yOffset: number = ((align: TextVerAlign) => {
+                switch (align) {
+                    case TextVerAlign.Top: return 0;
+                    case TextVerAlign.Middle: return (this.__frameHeight - this.__layout.contentHeight) / 2;
+                    case TextVerAlign.Bottom: return this.__frameHeight - this.__layout.contentHeight;
+                }
+            })(vAlign);
+            this.__layout.yOffset = yOffset;
+        }
+    }
+    setTextHorAlign(horAlign: TextHorAlign) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.alignment = horAlign;
+        // todo
+    }
+    setMinLineHeight(minLineHeight: number) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.minimumLineHeight = minLineHeight;
+        this.reLayout(); // todo
+    }
+    setMaxLineHeight(maxLineHeight: number) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.maximumLineHeight = maxLineHeight;
+        this.reLayout(); // todo
     }
 }
