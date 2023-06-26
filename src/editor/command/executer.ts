@@ -70,6 +70,8 @@ function importShape(data: string, document: Document) {
                 document.artboardMgr.add(obj.id, obj);
             } else if (obj instanceof SymbolShape) {
                 document.symbolsMgr.add(obj.id, obj);
+            } else if (obj instanceof TextShape) {
+                obj.setMeasureFun(document.measureFun);
             }
         }
     }
