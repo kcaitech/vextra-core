@@ -425,11 +425,47 @@ export class CMDExecuter {
         }
         else if (opId === SHAPE_ATTR_ID.textBehaviour) {
             if (op.type === OpType.IdSet && value) {
-                const textBehaviour = JSON.parse(value) as types.TextBehaviour
+                const textBehaviour = value as types.TextBehaviour
                 api.shapeModifyTextBehaviour(page, shape as TextShape, textBehaviour);
             }
             else if (op.type === OpType.IdRemove) {
                 api.shapeModifyTextBehaviour(page, shape as TextShape, types.TextBehaviour.Flexible)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.textVerAlign) {
+            if (op.type === OpType.IdSet && value) {
+                const textVerAlign = value as types.TextVerAlign
+                api.shapeModifyTextVerAlign(shape as TextShape, textVerAlign);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyTextVerAlign(shape as TextShape, types.TextVerAlign.Top)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.textHorAlign) {
+            if (op.type === OpType.IdSet && value) {
+                const textHorAlign = value as types.TextHorAlign
+                api.shapeModifyTextHorAlign(shape as TextShape, textHorAlign);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyTextHorAlign(shape as TextShape, types.TextHorAlign.Left)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.textMaxLineheight) {
+            if (op.type === OpType.IdSet && value) {
+                const textMaxLineheight = JSON.parse(value) as number;
+                api.shapeModifyTextMaxLineHeight(shape as TextShape, textMaxLineheight);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyTextMaxLineHeight(shape as TextShape, 0)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.textMinLineheight) {
+            if (op.type === OpType.IdSet && value) {
+                const textMinLineheight = JSON.parse(value) as number
+                api.shapeModifyTextMinLineHeight(shape as TextShape, textMinLineheight);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyTextMinLineHeight(shape as TextShape, 0)
             }
         }
         // todo

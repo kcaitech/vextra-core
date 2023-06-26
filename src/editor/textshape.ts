@@ -1,4 +1,4 @@
-import { Color, Page, SpanAttr, Text, TextBehaviour, TextShape } from "../data/classes";
+import { Color, Page, SpanAttr, Text, TextBehaviour, TextHorAlign, TextShape, TextVerAlign } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
@@ -15,7 +15,7 @@ export class TextShapeEditor extends ShapeEditor {
         return this.insertText2(text, index, 0, attr);
     }
 
-    private fixFrameByTextBehaviour(api: Api) {
+    private fixFrameByLayout(api: Api) {
         const textBehaviour = this.shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
         switch (textBehaviour) {
             case TextBehaviour.FixWidthAndHeight: break;
@@ -47,7 +47,7 @@ export class TextShapeEditor extends ShapeEditor {
                 this.__repo.rollback();
                 return 0;
             }
-            this.fixFrameByTextBehaviour(api);
+            this.fixFrameByLayout(api);
             count = deleted.length;
             this.__repo.commit();
             return count;
@@ -64,7 +64,7 @@ export class TextShapeEditor extends ShapeEditor {
         try {
             if (del > 0) api.deleteText(this.__page, this.shape, index, del);
             api.insertSimpleText(this.__page, this.shape, index, text, attr);
-            this.fixFrameByTextBehaviour(api);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -79,7 +79,7 @@ export class TextShapeEditor extends ShapeEditor {
         try {
             if (del > 0) api.deleteText(this.__page, this.shape, index, del);
             api.insertComplexText(this.__page, this.shape, index, text);
-            this.fixFrameByTextBehaviour(api);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -136,7 +136,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextFontName", {});
         try {
             api.textModifyFontName(this.__page, this.shape, index, len, fontName)
-            this.fixFrameByTextBehaviour(api);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -149,7 +149,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextFontSize", {});
         try {
             api.textModifyFontSize(this.__page, this.shape, index, len, fontSize)
-            this.fixFrameByTextBehaviour(api);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -162,7 +162,57 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextBehaviour", {});
         try {
             api.shapeModifyTextBehaviour(this.__page, this.shape, textBehaviour)
-            this.fixFrameByTextBehaviour(api);
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextVerAlign(verAlign: TextVerAlign) {
+        const api = this.__repo.start("setTextVerAlign", {});
+        try {
+            api.shapeModifyTextVerAlign(this.__page, this.shape, verAlign)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextHorAlign(horAlign: TextHorAlign) {
+        const api = this.__repo.start("setTextHorAlign", {});
+        try {
+            api.shapeModifyTextHorAlign(this.__page, this.shape, horAlign)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setMinLineHeight(minLineHeight: number) {
+        const api = this.__repo.start("setMinLineHeight", {});
+        try {
+            api.shapeModifyTextMinLineHeight(this.__page, this.shape, minLineHeight)
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setMaxLineHeight(maxLineHeight: number) {
+        const api = this.__repo.start("setMaxLineHeight", {});
+        try {
+            api.shapeModifyTextMaxLineHeight(this.__page, this.shape, maxLineHeight)
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {

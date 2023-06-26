@@ -3,7 +3,7 @@ import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
-import { ParaAttr, SpanAttr, SpanAttrSetter, Text, TextAttr, TextBehaviour } from "../../data/classes";
+import { ParaAttr, SpanAttr, SpanAttrSetter, Text, TextAttr, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 
 export * from "./fill";
 export * from "./border";
@@ -75,8 +75,9 @@ export function shapeModifyY(page: Page, shape: Shape, y: number, needUpdateFram
 export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const frame = shape.frame;
     if (w !== frame.width || h !== frame.height) {
-        frame.width = w;
-        frame.height = h;
+        // frame.width = w;
+        // frame.height = h;
+        shape.setFrameSize(w, h);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     }
 }
@@ -170,7 +171,38 @@ export function shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehav
         if (!text.attr || !text.attr.textBehaviour || text.attr.textBehaviour === TextBehaviour.Flexible) return TextBehaviour.Flexible;
     }
     const origin = text.attr?.textBehaviour;
-    if (!text.attr) text.attr = new TextAttr();
-    text.attr.textBehaviour = textBehaviour;
+    text.setTextBehaviour(textBehaviour);
     return origin ?? TextBehaviour.Flexible;
+}
+export function shapeModifyTextVerAlign(shape: TextShape, verAlign: TextVerAlign) {
+    const text = shape.text;
+    if (verAlign === TextVerAlign.Top) {
+        // default
+        if (!text.attr || !text.attr.verAlign || text.attr.verAlign === TextVerAlign.Top) return TextVerAlign.Top;
+    }
+    const origin = text.attr?.verAlign;
+    text.setTextVerAlign(verAlign);
+    return origin ?? TextVerAlign.Top;
+}
+export function shapeModifyTextHorAlign(shape: TextShape, horAlign: TextHorAlign) {
+    const text = shape.text;
+    if (horAlign === TextHorAlign.Left) {
+        // default
+        if (!text.attr || !text.attr.alignment || text.attr.alignment === TextHorAlign.Left) return TextHorAlign.Left;
+    }
+    const origin = text.attr?.alignment;
+    text.setTextHorAlign(horAlign);
+    return origin ?? TextHorAlign.Left;
+}
+export function shapeModifyTextMinLineHeight(shape: TextShape, minLineheight: number) {
+    const text = shape.text;
+    const origin = text.attr?.minimumLineHeight;
+    text.setMinLineHeight(minLineheight);
+    return origin ?? 0;
+}
+export function shapeModifyTextMaxLineHeight(shape: TextShape, maxLineheight: number) {
+    const text = shape.text;
+    const origin = text.attr?.maximumLineHeight;
+    text.setMaxLineHeight(maxLineheight);
+    return origin ?? 0;
 }

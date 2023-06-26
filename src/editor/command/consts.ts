@@ -16,7 +16,11 @@ export const SHAPE_ATTR_ID = {
     resizingConstraint: "resizingConstraint",
     radius: "radius",
     backgroundColor: "backgroundColor",
-    textBehaviour: "textBehaviour"
+    textBehaviour: "textBehaviour",
+    textVerAlign: "textVerAlign",
+    textHorAlign: "textHorAlign",
+    textMinLineheight: "textMinLineheight",
+    textMaxLineheight: "textMaxLineheight",
 }
 
 export const FILLS_ID = "fills"

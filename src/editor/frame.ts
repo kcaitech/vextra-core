@@ -13,6 +13,25 @@ export interface Api {
     shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour): void;
 }
 
+function fixFrameByLayout(api: Api, page: Page, shape: TextShape) {
+    const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    switch (textBehaviour) {
+        case TextBehaviour.FixWidthAndHeight: break;
+        case TextBehaviour.Fixed:
+            {
+                const layout = shape.getLayout();
+                api.shapeModifyWH(page, shape, shape.frame.width, layout.contentHeight);
+                break;
+            }
+        case TextBehaviour.Flexible:
+            {
+                const layout = shape.getLayout();
+                api.shapeModifyWH(page, shape, layout.contentWidth, layout.contentHeight);
+                break;
+            }
+    }
+}
+
 function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
     let changed = false;
@@ -37,8 +56,12 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
                     api.shapeModifyTextBehaviour(page, shape, TextBehaviour.Fixed);
                 }
             }
+            api.shapeModifyWH(page, shape, w, h)
+            fixFrameByLayout(api, page, shape);
         }
-        api.shapeModifyWH(page, shape, w, h)
+        else {
+            api.shapeModifyWH(page, shape, w, h)
+        }
         changed = true;
     }
     return changed;

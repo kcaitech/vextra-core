@@ -31,7 +31,8 @@ import {
     ShapeOpNone,
     ShapeOpRemove,
     ShapeOpMove,
-    TextCmdGroup
+    TextCmdGroup,
+    CmdGroup
 } from "../../coop/data/classes";
 import { Document } from "../../data/document"
 import { exportPage } from "../../io/baseexport";
@@ -85,6 +86,8 @@ export class CMDReverter {
                 return this.shapeModify(cmd as ShapeCmdModify);
             case CmdType.ShapeMove:
                 return this.shapeMove(cmd as ShapeCmdMove);
+            case CmdType.Group:
+                return this.cmdGroup(cmd as CmdGroup);
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
         }
@@ -330,6 +333,49 @@ export class CMDReverter {
                     revert.push(this.textModify(cmd as TextCmdModify));
                 case CmdType.TextMove:
                     revert.push(this.textMove(cmd as TextCmdMove));
+                default:
+                    throw new Error("unknow cmd type: " + cmd.type)
+            }
+        });
+        return ret;
+    }
+    cmdGroup(cmd: CmdGroup): CmdGroup {
+        const ret = CmdGroup.Make(cmd.blockId);
+        const revert = ret.cmds;
+        cmd.cmds.forEach((cmd) => {
+            switch (cmd.type) {
+                case CmdType.TextInsert:
+                    revert.push(this.textInsert(cmd as TextCmdInsert));
+                    break;
+                case CmdType.TextDelete: {
+                    const ret = this.textDelete(cmd as TextCmdRemove);
+                    if (ret instanceof TextCmdGroup) {
+                        revert.push(...ret.cmds);
+                    }
+                    else {
+                        revert.push(ret);
+                    }
+                    break;
+                }
+                case CmdType.TextModify:
+                    revert.push(this.textModify(cmd as TextCmdModify));
+                    break;
+                case CmdType.TextMove:
+                    revert.push(this.textMove(cmd as TextCmdMove));
+                    break;
+                case CmdType.ShapeDelete:
+                case CmdType.ShapeInsert:
+                case CmdType.ShapeModify:
+                case CmdType.ShapeMove:
+                case CmdType.ShapeArrayAttrDelete:
+                case CmdType.ShapeArrayAttrInsert:
+                case CmdType.ShapeArrayAttrModify:
+                case CmdType.ShapeArrayAttrMove:
+                    {
+                        const r = this.revert(cmd);
+                        if (r) ret.cmds.push(r as any)
+                        break;
+                    }
                 default:
                     throw new Error("unknow cmd type: " + cmd.type)
             }
