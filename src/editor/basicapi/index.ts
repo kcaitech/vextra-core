@@ -3,7 +3,7 @@ import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
-import { ParaAttr, SpanAttr, SpanAttrSetter, Text } from "../../data/classes";
+import { ParaAttr, SpanAttr, SpanAttrSetter, Text, TextAttr, TextBehaviour } from "../../data/classes";
 
 export * from "./fill";
 export * from "./border";
@@ -162,4 +162,15 @@ export function textModifyFontSize(shape: TextShape, idx: number, len: number, f
         origin.push({ fontSize: span.fontSize, length: span.length })
     })
     return origin;
+}
+export function shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour) {
+    const text = shape.text;
+    if (textBehaviour === TextBehaviour.Flexible) {
+        // default
+        if (!text.attr || !text.attr.textBehaviour || text.attr.textBehaviour === TextBehaviour.Flexible) return TextBehaviour.Flexible;
+    }
+    const origin = text.attr?.textBehaviour;
+    if (!text.attr) text.attr = new TextAttr();
+    text.attr.textBehaviour = textBehaviour;
+    return origin ?? TextBehaviour.Flexible;
 }

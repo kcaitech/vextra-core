@@ -55,6 +55,7 @@ import { Repository } from "../../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
 import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
 import { updateShapesFrame } from "./utils";
+import { CmdGroup } from "../../coop/data/cmdgroup";
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
@@ -201,6 +202,9 @@ export class CMDExecuter {
             case CmdType.ShapeMove:
                 this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
                 break;
+            case CmdType.Group:
+                this.cmdGroup(cmd as CmdGroup, needUpdateFrame);
+                break;
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
         }
@@ -210,6 +214,49 @@ export class CMDExecuter {
             const shapes = needUpdateFrame.map((v) => v.shape);
             updateShapesFrame(page, shapes, api)
         }
+    }
+
+    cmdGroup(cmdGroup: CmdGroup, needUpdateFrame: { shape: Shape, page: Page }[]) {
+        cmdGroup.cmds.forEach((cmd) => {
+            switch (cmd.type) {
+                case CmdType.ShapeInsert:
+                    this.shapeInsert(cmd as ShapeCmdInsert, needUpdateFrame);
+                    break;
+                case CmdType.ShapeDelete:
+                    this.shapeDelete(cmd as ShapeCmdRemove, needUpdateFrame);
+                    break;
+                case CmdType.ShapeModify:
+                    this.shapeModify(cmd as ShapeCmdModify, needUpdateFrame);
+                    break;
+                case CmdType.ShapeMove:
+                    this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
+                    break;
+                case CmdType.ShapeArrayAttrInsert:
+                    this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
+                    break;
+                case CmdType.ShapeArrayAttrDelete:
+                    this.shapeArrAttrDelete(cmd as ShapeArrayAttrInsert);
+                    break;
+                case CmdType.ShapeArrayAttrModify:
+                    this.shapeArrAttrModify(cmd as ShapeArrayAttrModify);
+                    break;
+                case CmdType.ShapeArrayAttrMove:
+                    this.shapeArrAttrMove(cmd as ShapeArrayAttrMove);
+                    break;
+                case CmdType.TextInsert:
+                    this.textInsert(cmd as TextCmdInsert);
+                    break;
+                case CmdType.TextDelete:
+                    this.textDelete(cmd as TextCmdRemove);
+                    break;
+                case CmdType.TextModify:
+                    this.textModify(cmd as TextCmdModify);
+                    break;
+                case CmdType.TextMove:
+                    this.textMove(cmd as TextCmdMove);
+                    break;
+            }
+        })
     }
 
     pageInsert(cmd: PageCmdInsert) {
@@ -376,6 +423,15 @@ export class CMDExecuter {
                 api.shapeModifyConstrainerProportions(shape, false)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.textBehaviour) {
+            if (op.type === OpType.IdSet && value) {
+                const textBehaviour = JSON.parse(value) as types.TextBehaviour
+                api.shapeModifyTextBehaviour(page, shape as TextShape, textBehaviour);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyTextBehaviour(page, shape as TextShape, types.TextBehaviour.Flexible)
+            }
+        }
         // todo
         else {
             console.error("not implemented ", op)
@@ -424,6 +480,7 @@ export class CMDExecuter {
                 case CmdType.ShapeMove:
                     this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
                     break;
+
             }
         })
     }

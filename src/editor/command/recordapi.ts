@@ -20,9 +20,10 @@ import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "..
 import { ShapeArrayAttrInsert } from "../../coop/data/classes";
 import { ShapeArrayAttrRemove } from "../../coop/data/classes";
 import { ShapeArrayAttrModify } from "../../coop/data/classes";
-import { SpanAttr, Text } from "../../data/text";
+import { SpanAttr, Text, TextBehaviour } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
+import { CmdGroup } from "../../coop/data/cmdgroup";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -47,25 +48,32 @@ export class Api {
         if (this.cmds.length <= 1) return this.cmds[0];
         // check group type
         const first = this.cmds[0];
-        switch (first.type) {
-            case CmdType.TextDelete:
-            case CmdType.TextInsert:
-            case CmdType.TextModify:
-            case CmdType.TextMove:
-                return this.groupText(first.blockId);
-            case CmdType.ShapeDelete:
-            case CmdType.ShapeInsert:
-            case CmdType.ShapeModify:
-            case CmdType.ShapeMove:
-                return this.groupShape(first.blockId);
-            case CmdType.ShapeArrayAttrDelete:
-            case CmdType.ShapeArrayAttrInsert:
-            case CmdType.ShapeArrayAttrModify:
-            case CmdType.ShapeArrayAttrMove:
-                return this.groupAttr(first.blockId);
-            default:
-                throw new Error("unknow cmd group type:" + first.type)
-        }
+        return this.groupCmd(first.blockId);
+    }
+    private groupCmd(blockId: string): Cmd {
+        const group = CmdGroup.Make(blockId);
+        this.cmds.forEach((c) => {
+            if (c.blockId !== blockId) throw new Error("blockid not equal");
+            c.unitId = group.unitId;
+            switch (c.type) {
+                case CmdType.TextDelete:
+                case CmdType.TextInsert:
+                case CmdType.TextModify:
+                case CmdType.TextMove:
+                case CmdType.ShapeDelete:
+                case CmdType.ShapeInsert:
+                case CmdType.ShapeModify:
+                case CmdType.ShapeMove:
+                case CmdType.ShapeArrayAttrDelete:
+                case CmdType.ShapeArrayAttrInsert:
+                case CmdType.ShapeArrayAttrModify:
+                case CmdType.ShapeArrayAttrMove:
+                    group.cmds.push(c as any);
+                    break;
+                default: throw new Error("unknow group type:" + c.type)
+            }
+        })
+        return group;
     }
     private groupText(blockId: string): Cmd {
         const group = TextCmdGroup.Make(blockId);
@@ -163,7 +171,7 @@ export class Api {
             this.addCmd(PageCmdModify.Make(document.id, item.id, PAGE_ATTR_ID.name, name, save))
         }
     }
-    pageMove(document: Document, pageId: string,  fromIdx: number, toIdx: number) {
+    pageMove(document: Document, pageId: string, fromIdx: number, toIdx: number) {
         this.__trap(() => {
             basicapi.pageMove(document, fromIdx, toIdx);
         })
@@ -532,7 +540,7 @@ export class Api {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             basicapi.insertSimpleText(shape, text, idx, { attr })
-            this.addCmd(TextCmdInsert.Make(page.id, shape.id, idx, text.length, { type: "simple", text, attr, length: text.length}))
+            this.addCmd(TextCmdInsert.Make(page.id, shape.id, idx, text.length, { type: "simple", text, attr, length: text.length }))
         })
     }
     insertComplexText(page: Page, shape: TextShape, idx: number, text: Text) {
@@ -584,5 +592,14 @@ export class Api {
     moveText(page: Page, shape: TextShape, idx: number, len: number, idx2: number) {
         this.checkShapeAtPage(page, shape);
         throw new Error("not implemented")
+    }
+    shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextBehaviour(page, shape, textBehaviour);
+            if (ret !== textBehaviour) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textBehaviour, textBehaviour, ret));
+            }
+        })
     }
 }

@@ -1,5 +1,6 @@
-import { Color, Page, SpanAttr, Text, TextShape } from "../data/classes";
+import { Color, Page, SpanAttr, Text, TextBehaviour, TextShape } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
+import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
 
 export class TextShapeEditor extends ShapeEditor {
@@ -14,7 +15,26 @@ export class TextShapeEditor extends ShapeEditor {
         return this.insertText2(text, index, 0, attr);
     }
 
-    public deleteText(index: number, count: number): number {
+    private fixFrameByTextBehaviour(api: Api) {
+        const textBehaviour = this.shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+        switch (textBehaviour) {
+            case TextBehaviour.FixWidthAndHeight: break;
+            case TextBehaviour.Fixed:
+                {
+                    const layout = this.shape.getLayout();
+                    api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, layout.contentHeight);
+                    break;
+                }
+            case TextBehaviour.Flexible:
+                {
+                    const layout = this.shape.getLayout();
+                    api.shapeModifyWH(this.__page, this.shape, layout.contentWidth, layout.contentHeight);
+                    break;
+                }
+        }
+    }
+
+    public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape
         if (index < 0) {
             count += index;
             index = 0;
@@ -26,11 +46,12 @@ export class TextShapeEditor extends ShapeEditor {
             if (!deleted) {
                 this.__repo.rollback();
                 return 0;
-            } else {
-                count = deleted.length;
-                this.__repo.commit();
-                return count;
             }
+            this.fixFrameByTextBehaviour(api);
+            count = deleted.length;
+            this.__repo.commit();
+            return count;
+
         } catch (error) {
             console.log(error)
             this.__repo.rollback();
@@ -43,6 +64,7 @@ export class TextShapeEditor extends ShapeEditor {
         try {
             if (del > 0) api.deleteText(this.__page, this.shape, index, del);
             api.insertSimpleText(this.__page, this.shape, index, text, attr);
+            this.fixFrameByTextBehaviour(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -57,6 +79,7 @@ export class TextShapeEditor extends ShapeEditor {
         try {
             if (del > 0) api.deleteText(this.__page, this.shape, index, del);
             api.insertComplexText(this.__page, this.shape, index, text);
+            this.fixFrameByTextBehaviour(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -113,6 +136,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextFontName", {});
         try {
             api.textModifyFontName(this.__page, this.shape, index, len, fontName)
+            this.fixFrameByTextBehaviour(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -125,6 +149,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextFontSize", {});
         try {
             api.textModifyFontSize(this.__page, this.shape, index, len, fontSize)
+            this.fixFrameByTextBehaviour(api);
             this.__repo.commit();
             return true;
         } catch (error) {

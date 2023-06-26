@@ -16,6 +16,7 @@ export const SHAPE_ATTR_ID = {
     resizingConstraint: "resizingConstraint",
     radius: "radius",
     backgroundColor: "backgroundColor",
+    textBehaviour: "textBehaviour"
 }
 
 export const FILLS_ID = "fills"
@@ -40,6 +41,5 @@ export const BORDER_ATTR_ID = {
 export const TEXT_ATTR_ID = {
     color: "color",
     fontSize: "fontSize",
-    fontName: "fontName",
-
+    fontName: "fontName"
 }
