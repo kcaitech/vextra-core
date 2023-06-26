@@ -1,7 +1,7 @@
 import { BoolOp, FlattenShape, GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
-import { BasicArray, BasicMap } from "./basic";
+import { BasicArray } from "./basic";
 import { Artboard } from "./artboard";
 export class Page extends GroupShape implements classes.Page {
     typeId = 'page';
@@ -55,8 +55,11 @@ export class Page extends GroupShape implements classes.Page {
     getShape(shapeId: string, containsDeleted?: boolean): Shape | undefined {
         let shape;
         if (containsDeleted) {
-            const ref = this.__allshapes.get(shapeId);
-            shape = ref?.deref();
+            shape = this.shapes.get(shapeId);
+            if (!shape) {
+                const ref = this.__allshapes.get(shapeId);
+                shape = ref?.deref();
+            }
         }
         else {
             shape = this.shapes.get(shapeId);

@@ -184,7 +184,7 @@ class ProxyHandler {
                     throw new Error("inside trap!");
                 }
                 else {
-                    return Reflect.get(this.sub(this.__context, target), propertyKey);
+                    return Reflect.get(this.sub(this.__context, target, this), propertyKey);
                 }
             }
             return val.bind(target);
@@ -201,13 +201,17 @@ class ProxyHandler {
         // }
         return val;
     }
-    sub(_con: TContext, target: Map<any, any>) {
+    sub(_con: TContext, target: Map<any, any>, h: ProxyHandler) {
         return {
             set(key: any, value: any) {
                 const set_inner = Map.prototype.set.bind(target);
+                if (!isProxy(value)) {
+                    value = deepProxy(value, h)
+                }
                 set_inner(key, value);
                 const r = new Rec(target, 'set', { isContentExist: true, content: value });
                 _con.transact?.push(r);
+                return value;
             },
             delete(key: any) {
                 const get = Map.prototype.get.bind(target);
