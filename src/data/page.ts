@@ -1,7 +1,7 @@
 import { BoolOp, FlattenShape, GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
-import { BasicArray, BasicMap } from "./basic";
+import { BasicArray } from "./basic";
 import { Artboard } from "./artboard";
 export class Page extends GroupShape implements classes.Page {
     typeId = 'page';

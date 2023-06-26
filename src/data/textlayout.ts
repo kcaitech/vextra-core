@@ -1,7 +1,6 @@
 import { Text } from "./text";
-import { Para, Span, SpanAttr, TextBehaviour, TextHorAlign, TextVerAlign } from "./text";
+import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
 import { BasicArray } from "./basic"
-import { ShapeFrame } from "./classes";
 
 export interface IGraphy {
     char: string,

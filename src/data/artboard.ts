@@ -1,7 +1,7 @@
 import { BoolOp, FlattenShape, GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
 import { Color, Style } from "./style";
 import * as classes from "./baseclasses";
-import { BasicArray, ResourceMgr } from "./basic";
+import { BasicArray } from "./basic";
 import { Path } from "./path";
 export class Artboard extends GroupShape implements classes.Artboard {
     typeId = 'artboard';
