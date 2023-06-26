@@ -137,7 +137,11 @@ export class Controller {
             case ShapeType.Rectangle: return newRectShape(name, frame);
             case ShapeType.Oval: return newOvalShape(name, frame);
             case ShapeType.Line: return newLineShape(name, frame);
-            case ShapeType.Text: return newTextShape(name, frame, this.__document.measureFun);
+            case ShapeType.Text: {
+                const shape = newTextShape(name, this.__document.measureFun);
+                shape.frame = frame;
+                return shape;
+            }
             case ShapeType.Image: return newImageShape(name, frame, ref, mediasMgr);
             default: return newRectShape(name, frame);
         }
@@ -187,15 +191,15 @@ export class Controller {
                 if (content.length > 19) {
                     name = name.slice(0, 19) + '...';
                 }
-                const _cs = content.split("\n");
-                if (_cs.length) {
-                    frame.height = _cs.length * 12 || 18;
-                    frame.width = Math.max(..._cs.map(i => i.length)) * 12;
-                }
-                const shape = newTextShape(name, frame, this.__document.measureFun, content);
+                const shape = newTextShape(name, this.__document.measureFun);
+                shape.text.insertText(content, 0);
                 const xy = parent.frame2Page();
-                shape.frame.x -= xy.x;
-                shape.frame.y -= xy.y;
+                shape.frame.x = frame.x - xy.x;
+                shape.frame.y = frame.y - xy.y;
+                const layout = shape.getLayout();
+                shape.frame.width = layout.contentWidth;
+                shape.frame.height = layout.contentHeight;
+
                 api.shapeInsert(page, parent, shape, parent.childs.length)
                 newShape = parent.childs.at(-1);
                 this.__repo.transactCtx.fireNotify();
