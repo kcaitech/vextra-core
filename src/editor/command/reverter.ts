@@ -37,8 +37,6 @@ import {
 import { Document } from "../../data/document"
 import { exportPage } from "../../io/baseexport";
 import { exportShape } from "./utils";
-import { Span } from "../../data/text";
-import { importSpan } from "../../io/baseimport";
 
 export class CMDReverter {
     private __document: Document;

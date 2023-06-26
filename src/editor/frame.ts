@@ -13,7 +13,7 @@ export interface Api {
     shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour): void;
 }
 
-function fixFrameByLayout(api: Api, page: Page, shape: TextShape) {
+function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShape) {
     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     switch (textBehaviour) {
         case TextBehaviour.FixWidthAndHeight: break;
@@ -57,7 +57,7 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
                 }
             }
             api.shapeModifyWH(page, shape, w, h)
-            fixFrameByLayout(api, page, shape);
+            fixTextShapeFrameByLayout(api, page, shape);
         }
         else {
             api.shapeModifyWH(page, shape, w, h)
