@@ -129,15 +129,13 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     return shape;
 }
 // 后续需要传入字体、字号、颜色信息
-export function newTextShape(name: string, frame: ShapeFrame, measureFun: MeasureFun, content?: string): TextShape {
+export function newTextShape(name: string, measureFun: MeasureFun): TextShape {
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
     const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
-    textshape.frame = frame;
     textshape.setMeasureFun(measureFun);
     addCommonAttr(textshape);
-    textshape.text.paras[0].text = content || "\n";
     return textshape;
 }
 export function newComment(user: UserInfo, createAt: string, pageId: string, frame: ShapeFrame, content: string, parasiticBody: Shape, rootId?: string, parentId?: string): Comment {
