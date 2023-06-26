@@ -110,7 +110,7 @@ export class PageEditor {
         this.__page = page;
         this.__document = document;
     }
-    group(shapes: Shape[], groupname: string): false | GroupShape { // todo 传入的shape需要提前排好序
+    group(shapes: Shape[], groupname: string): false | GroupShape { // shapes中元素index越小层级越高，即在图形列表的位置最高
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
@@ -118,9 +118,8 @@ export class PageEditor {
 
         const api = this.__repo.start("group", {});
         try {
-            // 0、save shapes[0].parent？最外层shape？位置？
-
-            const saveidx = savep.indexOfChild(fshape);
+            // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
+            const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
             const gshape = newGroupShape(groupname);
             // 计算frame
@@ -152,22 +151,23 @@ export class PageEditor {
             gshape.frame.x = xy.x;
             gshape.frame.y = xy.y;
 
-            // 往上调整width & height
-
-            // 4、将GroupShape加入到save parent中
+            // 4、将GroupShape加入到save parent(层级最高图形的parent)中
             api.shapeInsert(this.__page, savep, gshape, saveidx)
+
             // 2、将shapes里对象从parent中退出
-            // 3、将shapes里对象插入新建的GroupShape
+            // 3、将shapes里的对象从原本parent下移入新建的GroupShape
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
                 const p = s.parent as GroupShape;
                 const idx = p.indexOfChild(s);
-                api.shapeMove(this.__page, p, idx, gshape, gshape.childs.length);
+                api.shapeMove(this.__page, p, idx, gshape, 0); // 层级低的放前面
+
                 if (p.childs.length <= 0) {
                     this.delete_inner(this.__page, p, api)
                 }
             }
 
+            // 往上调整width & height
             // update childs frame
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const c = shapes[i]
