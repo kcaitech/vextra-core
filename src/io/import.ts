@@ -1,12 +1,13 @@
 import { Artboard } from "../data/artboard";
 import { Page } from "../data/page";
-import { ImageShape, SymbolRefShape, SymbolShape } from "../data/shape";
+import { ImageShape, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
 import { IImportContext, importDocumentMeta, importDocumentSyms, importPage } from "./baseimport";
 import * as types from "../data/typesdefine"
 import { IDataGuard, ResourceMgr } from "../data/basic";
 import { Document, DocumentMeta, DocumentSyms } from "../data/document";
 import * as storage from "./storage";
 import { base64ToDataUrl } from "../basic/utils";
+import { MeasureFun } from "../data/textlayout";
 
 interface IJSON {
     [key: string]: any
@@ -109,7 +110,7 @@ export class DataLoader implements IDataLoader {
     }
 }
 
-export async function importDocument(storageOptions: storage.StorageOptions, documentPath: string, fid: string, versionId: string, gurad?: IDataGuard) {
+export async function importDocument(storageOptions: storage.StorageOptions, documentPath: string, fid: string, versionId: string, gurad: IDataGuard, measureFun: MeasureFun) {
     const loader = new DataLoader(storageOptions, documentPath);
 
     const meta = await loader.loadDocumentMeta(new class implements IImportContext {
@@ -118,7 +119,7 @@ export async function importDocument(storageOptions: storage.StorageOptions, doc
         }
     }, '');
 
-    const document = new Document(meta.id, versionId, meta.name, meta.pagesList, gurad);
+    const document = new Document(meta.id, versionId, meta.name, meta.pagesList, gurad, measureFun);
     const ctx = new class implements IImportContext {
         afterImport(obj: any): void {
             if (obj instanceof ImageShape) {
@@ -131,6 +132,8 @@ export async function importDocument(storageOptions: storage.StorageOptions, doc
                 document.artboardMgr.add(obj.id, obj);
             } else if (obj instanceof SymbolShape) {
                 document.symbolsMgr.add(obj.id, obj);
+            } else if (obj instanceof TextShape) {
+                obj.setMeasureFun(measureFun);
             }
         }
     }

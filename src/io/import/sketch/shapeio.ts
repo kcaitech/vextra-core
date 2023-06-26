@@ -288,6 +288,7 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun): Te
     // const isClosed = data['isClosed'];
     const shape = new TextShape(id, name, ShapeType.Text, frame, style, booleanOperation, text);
     importShapePropertys(shape, data);
+    shape.setMeasureFun(ctx.measureFun);
     return shape;
 }
 
