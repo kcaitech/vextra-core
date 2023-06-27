@@ -2,6 +2,7 @@ import { Color, Page, SpanAttr, Text, TextBehaviour, TextHorAlign, TextShape, Te
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
+import { fixTextShapeFrameByLayout } from "./utils";
 
 export class TextShapeEditor extends ShapeEditor {
     constructor(shape: TextShape, page: Page, repo: CoopRepository) {
@@ -16,22 +17,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     private fixFrameByLayout(api: Api) {
-        const textBehaviour = this.shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-        switch (textBehaviour) {
-            case TextBehaviour.FixWidthAndHeight: break;
-            case TextBehaviour.Fixed:
-                {
-                    const layout = this.shape.getLayout();
-                    api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, layout.contentHeight);
-                    break;
-                }
-            case TextBehaviour.Flexible:
-                {
-                    const layout = this.shape.getLayout();
-                    api.shapeModifyWH(this.__page, this.shape, layout.contentWidth, layout.contentHeight);
-                    break;
-                }
-        }
+        fixTextShapeFrameByLayout(api, this.__page, this.shape)
     }
 
     public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape

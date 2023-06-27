@@ -2,6 +2,7 @@ import { Page } from "data/page";
 import { Matrix } from "../basic/matrix";
 import { Shape, TextShape } from "../data/shape";
 import { TextBehaviour } from "../data/typesdefine";
+import { fixTextShapeFrameByLayout } from "./utils";
 
 export interface Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
@@ -11,25 +12,6 @@ export interface Api {
     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined): void;
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined): void;
     shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour): void;
-}
-
-function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShape) {
-    const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-    switch (textBehaviour) {
-        case TextBehaviour.FixWidthAndHeight: break;
-        case TextBehaviour.Fixed:
-            {
-                const layout = shape.getLayout();
-                api.shapeModifyWH(page, shape, shape.frame.width, layout.contentHeight);
-                break;
-            }
-        case TextBehaviour.Flexible:
-            {
-                const layout = shape.getLayout();
-                api.shapeModifyWH(page, shape, layout.contentWidth, layout.contentHeight);
-                break;
-            }
-    }
 }
 
 function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
