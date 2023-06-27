@@ -240,7 +240,13 @@ export class ShapeEditor {
             if (index >= 0) {
                 try {
                     const api = this.__repo.start("deleteShape", {});
-                    api.shapeDelete(this.__page, parent, index)
+                    api.shapeDelete(this.__page, parent, index);
+                    // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
+                    if (!parent.childs.length && parent.type === ShapeType.Group) {
+                        const _p = parent.parent;
+                        const _idx = (_p as GroupShape).childs.findIndex(c => c.id === parent.id);
+                        api.shapeDelete(this.__page, (_p as GroupShape), _idx);
+                    }
                     this.__repo.commit();
                 } catch (error) {
                     this.__repo.rollback();

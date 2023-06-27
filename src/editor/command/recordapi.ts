@@ -163,7 +163,7 @@ export class Api {
             this.addCmd(PageCmdModify.Make(document.id, item.id, PAGE_ATTR_ID.name, name, save))
         }
     }
-    pageMove(document: Document, pageId: string,  fromIdx: number, toIdx: number) {
+    pageMove(document: Document, pageId: string, fromIdx: number, toIdx: number) {
         this.__trap(() => {
             basicapi.pageMove(document, fromIdx, toIdx);
         })
@@ -193,7 +193,7 @@ export class Api {
     }
     shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number) {
         this.__trap(() => {
-            const shape = parent.childs.splice(index, 1)[0]
+            const shape = parent.childs.splice(index, 1)[0];
             if (shape) {
                 parent2.childs.splice(index2, 0, shape);
                 this.needUpdateFrame.push({ page, shape })
@@ -532,7 +532,7 @@ export class Api {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             basicapi.insertSimpleText(shape, text, idx, { attr })
-            this.addCmd(TextCmdInsert.Make(page.id, shape.id, idx, text.length, { type: "simple", text, attr, length: text.length}))
+            this.addCmd(TextCmdInsert.Make(page.id, shape.id, idx, text.length, { type: "simple", text, attr, length: text.length }))
         })
     }
     insertComplexText(page: Page, shape: TextShape, idx: number, text: Text) {

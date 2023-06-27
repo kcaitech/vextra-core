@@ -254,6 +254,9 @@ export class PageEditor {
         const api = this.__repo.start("delete", {});
         try {
             if (this.delete_inner(page, shape, api)) {
+                if (!savep.childs.length) {
+                    this.delete_inner(page, savep, api);
+                }
                 this.__repo.commit()
                 return true;
             }
@@ -277,6 +280,9 @@ export class PageEditor {
                 const savep = shape.parent as GroupShape;
                 if (!savep) return false;
                 this.delete_inner(page, shape, api)
+                if (!savep.childs.length) {
+                    this.delete_inner(page, savep, api);
+                }
             } catch (error) {
                 this.__repo.rollback();
                 return false;
@@ -385,6 +391,9 @@ export class PageEditor {
                         let idx = childs.findIndex(i => i.id === host.id);
                         idx = offsetOverhalf ? idx : idx + 1; // 列表是倒序!!!
                         api.shapeMove(this.__page, wandererParent, saveidx, hostParent, idx);
+                        if (!wandererParent.childs.length && wandererParent.type === ShapeType.Group) {
+                            this.delete_inner(this.__page, wandererParent, api)
+                        }
                     }
                 }
             }
