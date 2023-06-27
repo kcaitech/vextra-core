@@ -29,12 +29,12 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("deleteText", {});
         try {
             const deleted = api.deleteText(this.__page, this.shape, index, count);
-            if (!deleted) {
+            count = deleted ? deleted.length : count;
+            if (count <= 0) {
                 this.__repo.rollback();
                 return 0;
             }
             this.fixFrameByLayout(api);
-            count = deleted.length;
             this.__repo.commit();
             return count;
 

@@ -556,7 +556,7 @@ export class Api {
         let del: Text | undefined;
         this.__trap(() => {
             del = basicapi.deleteText(shape, idx, len)
-            if (del) this.addCmd(TextCmdRemove.Make(page.id, shape.id, idx, del.length, { type: "complex", text: exportText(del), length: del.length }))
+            if (del && del.length > 0) this.addCmd(TextCmdRemove.Make(page.id, shape.id, idx, del.length, { type: "complex", text: exportText(del), length: del.length }))
         })
         return del;
     }
