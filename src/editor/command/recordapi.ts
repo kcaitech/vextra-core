@@ -8,7 +8,7 @@ import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import { PageCmdInsert } from "../../coop/data/classes";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportRectRadius } from "../../io/baseexport";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportRectRadius, exportText } from "../../io/baseexport";
 import { PageCmdModify } from "../../coop/data/classes";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, RectRadius, Shape, TextShape } from "../../data/shape";
@@ -556,7 +556,7 @@ export class Api {
         let del: Text | undefined;
         this.__trap(() => {
             del = basicapi.deleteText(shape, idx, len)
-            if (del) this.addCmd(TextCmdRemove.Make(page.id, shape.id, idx, del.length, { type: "complex", text: del, length: del.length }))
+            if (del) this.addCmd(TextCmdRemove.Make(page.id, shape.id, idx, del.length, { type: "complex", text: exportText(del), length: del.length }))
         })
         return del;
     }
