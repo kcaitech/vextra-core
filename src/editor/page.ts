@@ -135,7 +135,7 @@ export class PageEditor {
             const firstXY = boundsArr[0]
             const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
 
-            boundsArr.reduce((pre, cur, idx, arr) => {
+            boundsArr.reduce((pre, cur) => {
                 expandBounds(pre, cur.x, cur.y);
                 expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
                 return pre;
