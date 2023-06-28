@@ -162,14 +162,16 @@ export function layoutAtFormat(text: Text,
     }
 
     // todo 先做到段落重排
-    const needUpdateCount = parasLayout.length - paras.length + 1;
-    for (let j = 0; i < parascount && j < needUpdateCount; j++, i++) {
+    // const needUpdateCount = parasLayout.length - paras.length + 1;
+    len += index;
+    for (let len2 = parasLayout.length;len >= 0 && i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = layoutPara(para, layoutWidth, measure);
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
         parasLayout.splice(i, 1, paraLayout);
+        len -= para.length;
     }
 
     // 继续更新para
