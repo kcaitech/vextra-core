@@ -7,6 +7,7 @@ export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, 
 import { ShapeType, BoolOp, CurvePoint, OverrideItem, ShapeFrame, RectRadius } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
+import { MeasureFun, TextLayout } from "./textlayout";
 export class Shape extends Watchable(classes.Shape) {
 
     getPath(offsetX: number, offsetY: number): Path;
@@ -156,6 +157,11 @@ export class Shape extends Watchable(classes.Shape) {
     setShapesConstrainerProportions(val: boolean) {
         this.constrainerProportions = val;
     }
+
+    setFrameSize(w: number, h: number) {
+        this.frame.width = w;
+        this.frame.height = h;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -203,8 +209,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
         this.childs.push(child);
     }
     addChildAt(child: Shape, idx?: number) {
-        let index = idx;
-        if (!index) index = this.childs.length;
+        const index = idx ?? this.childs.length;
         this.childs.splice(index, 0, child);
     }
     indexOfChild(shape: Shape): number {
@@ -719,6 +724,7 @@ export class TextShape extends Shape implements classes.TextShape {
             boolOp
         )
         this.text = text
+        text.updateSize(frame.width, frame.height);
     }
 
     getPath(offsetX: number, offsetY: number): Path;
@@ -739,16 +745,21 @@ export class TextShape extends Shape implements classes.TextShape {
         return new Path(path);
     }
 
-    private __layout: any;
-    getLayout<L>(layouter: (shape: TextShape) => L): L {
-        if (this.__layout) return this.__layout as L;
-        this.__layout = layouter(this);
-        return this.__layout as L;
+    getLayout(): TextLayout {
+        return this.text.getLayout();
     }
 
-    public notify(...args: any[]): void {
-        super.notify(...args);
-        this.__layout = undefined;
+    setMeasureFun(measure: MeasureFun) {
+        this.text.setMeasureFun(measure);
+    }
+
+    // public notify(...args: any[]): void {
+    //     this.text.updateSize(this.frame.width, this.frame.height)
+    //     super.notify(...args);
+    // }
+    setFrameSize(w: number, h: number) {
+        super.setFrameSize(w, h);
+        this.text.updateSize(this.frame.width, this.frame.height)
     }
 }
 

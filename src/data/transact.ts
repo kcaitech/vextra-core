@@ -54,7 +54,7 @@ class ProxyHandler {
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
         let needNotify = false;
         let ignore = false;
-        if (typeof propertyKey === 'string' && propertyKey.startsWith('__')) {
+        if (propertyKey.toString().startsWith('__')) {
             ignore = true;
         }
         else if (this.__context.transact === undefined) {
@@ -82,35 +82,35 @@ class ProxyHandler {
                     }
                 }
             } else {
-                const propInt: number = Number.parseInt(propertyKey.toString());
-                const propIsInt = Number.isInteger(propInt) && propInt.toString() == propertyKey;
-                if ((propIsInt || !propertyKey.toString().startsWith('__'))) {
-                    needNotify = true;
-                    if (!swapCached(this.__context, target, propertyKey)) {
-                        const saveLen = target.length;
-                        const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
-                        this.__context.transact.push(r);
+                // const propInt: number = Number.parseInt(propertyKey.toString());
+                // const propIsInt = Number.isInteger(propInt) && propInt.toString() == propertyKey;
+                // if ((propIsInt || !propertyKey.toString().startsWith('__'))) {
+                needNotify = true;
+                if (!swapCached(this.__context, target, propertyKey)) {
+                    const saveLen = target.length;
+                    const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
+                    this.__context.transact.push(r);
 
-                        if (!ignore) {
-                            if (typeof value === 'object') value.__parent = target;
-                            value = deepProxy(value, this);
-                        }
-
-                        const ret = Reflect.set(target, propertyKey, value, receiver);
-                        if (needNotify) {
-                            // target.notify();
-                            this.__context.addNotify(castNotifiable(target));
-                        }
-                        // length, 设置完数据后array会自动增长长度，绕过了proxy
-                        if (saveLen !== target.length) {
-                            if (!swapCached(this.__context, target, "length")) {
-                                const r = new Rec(target, "length", saveLen);
-                                this.__context.transact.push(r);
-                            }
-                        }
-                        return ret;
+                    if (!ignore) {
+                        if (typeof value === 'object') value.__parent = target;
+                        value = deepProxy(value, this);
                     }
+
+                    const ret = Reflect.set(target, propertyKey, value, receiver);
+                    if (needNotify) {
+                        // target.notify();
+                        this.__context.addNotify(castNotifiable(target));
+                    }
+                    // length, 设置完数据后array会自动增长长度，绕过了proxy
+                    if (saveLen !== target.length) {
+                        if (!swapCached(this.__context, target, "length")) {
+                            const r = new Rec(target, "length", saveLen);
+                            this.__context.transact.push(r);
+                        }
+                    }
+                    return ret;
                 }
+                // }
             }
         } else {
             needNotify = true;

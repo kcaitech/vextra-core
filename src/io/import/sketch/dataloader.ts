@@ -1,3 +1,4 @@
+import { MeasureFun } from "data/textlayout";
 import { Document, Page, Shape, SymbolShape } from "../../../data/classes";
 import { IJSON, LzData } from "../../lzdata";
 import { LoadContext } from "./basic";
@@ -51,12 +52,12 @@ export class DataLoader {
     private __remote: LzData;
     private __document: Document;
     private __handler: {[ket: string]: (ctx: LoadContext, data: IJSON)=> Shape} = {}
-    constructor(lzdata: LzData, document: Document) {
+    constructor(lzdata: LzData, document: Document, measureFun: MeasureFun) {
         this.__remote = lzdata;
         this.__document = document;
 
         const symbolsSet = new Map<string, SymbolShape>()
-        const ctx: LoadContext = new LoadContext();
+        const ctx: LoadContext = new LoadContext(measureFun);
 
         const importer = this.importer = this.importer.bind(this)
         this.__handler['rectangle'] = (ctx: LoadContext, data: IJSON) => importRectShape(ctx, data, importer)

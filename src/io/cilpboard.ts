@@ -1,4 +1,4 @@
-import { GroupShape, ImageShape, Shape, ShapeType, SymbolRefShape, SymbolShape } from "../data/shape";
+import { GroupShape, ImageShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
 import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape } from "./baseexport";
 import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape } from "./baseimport";
 import * as types from "../data/typesdefine";
@@ -70,6 +70,8 @@ export function import_shape(document: Document, source: { index: number, conten
                 document.artboardMgr.add(obj.id, obj);
             } else if (obj instanceof SymbolShape) {
                 document.symbolsMgr.add(obj.id, obj);
+            } else if (obj instanceof TextShape) {
+                obj.setMeasureFun(document.measureFun);
             }
         }
     }
