@@ -25,7 +25,7 @@ import { updateShapesFrame } from './command/utils';
 
 function createTestDocument() {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo, () => undefined);
     const page = newPage("Page1");
 
     const pagesMgr = document.pagesMgr;
@@ -36,7 +36,7 @@ function createTestDocument() {
 
 test("group", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo, () => undefined);
 
     const page = newPage("Page1");
 

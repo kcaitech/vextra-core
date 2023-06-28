@@ -8,9 +8,10 @@ import { importPage } from "../io/baseimport";
 import { newDocument } from "./creator";
 import { CoopRepository } from "./command/cooprepo";
 import { Repository } from "../data/transact";
+import { MeasureFun } from "../data/textlayout";
 
-export function createDocument(documentName: string, repo: Repository): Document {
-    return newDocument(documentName, repo);
+export function createDocument(documentName: string, repo: Repository,  measureFun: MeasureFun): Document {
+    return newDocument(documentName, repo, measureFun);
 }
 
 export class DocEditor {

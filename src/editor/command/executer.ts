@@ -47,7 +47,7 @@ import {
     importSpanAttr
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
-import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Text, SpanAttr, Color } from "../../data/classes";
+import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Color } from "../../data/classes";
 
 import * as api from "../basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
@@ -55,6 +55,7 @@ import { Repository } from "../../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
 import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
 import { updateShapesFrame } from "./utils";
+import { CmdGroup } from "../../coop/data/cmdgroup";
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
@@ -70,6 +71,8 @@ function importShape(data: string, document: Document) {
                 document.artboardMgr.add(obj.id, obj);
             } else if (obj instanceof SymbolShape) {
                 document.symbolsMgr.add(obj.id, obj);
+            } else if (obj instanceof TextShape) {
+                obj.setMeasureFun(document.measureFun);
             }
         }
     }
@@ -199,6 +202,9 @@ export class CMDExecuter {
             case CmdType.ShapeMove:
                 this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
                 break;
+            case CmdType.Group:
+                this.cmdGroup(cmd as CmdGroup, needUpdateFrame);
+                break;
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
         }
@@ -208,6 +214,49 @@ export class CMDExecuter {
             const shapes = needUpdateFrame.map((v) => v.shape);
             updateShapesFrame(page, shapes, api)
         }
+    }
+
+    cmdGroup(cmdGroup: CmdGroup, needUpdateFrame: { shape: Shape, page: Page }[]) {
+        cmdGroup.cmds.forEach((cmd) => {
+            switch (cmd.type) {
+                case CmdType.ShapeInsert:
+                    this.shapeInsert(cmd as ShapeCmdInsert, needUpdateFrame);
+                    break;
+                case CmdType.ShapeDelete:
+                    this.shapeDelete(cmd as ShapeCmdRemove, needUpdateFrame);
+                    break;
+                case CmdType.ShapeModify:
+                    this.shapeModify(cmd as ShapeCmdModify, needUpdateFrame);
+                    break;
+                case CmdType.ShapeMove:
+                    this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
+                    break;
+                case CmdType.ShapeArrayAttrInsert:
+                    this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
+                    break;
+                case CmdType.ShapeArrayAttrDelete:
+                    this.shapeArrAttrDelete(cmd as ShapeArrayAttrInsert);
+                    break;
+                case CmdType.ShapeArrayAttrModify:
+                    this.shapeArrAttrModify(cmd as ShapeArrayAttrModify);
+                    break;
+                case CmdType.ShapeArrayAttrMove:
+                    this.shapeArrAttrMove(cmd as ShapeArrayAttrMove);
+                    break;
+                case CmdType.TextInsert:
+                    this.textInsert(cmd as TextCmdInsert);
+                    break;
+                case CmdType.TextDelete:
+                    this.textDelete(cmd as TextCmdRemove);
+                    break;
+                case CmdType.TextModify:
+                    this.textModify(cmd as TextCmdModify);
+                    break;
+                case CmdType.TextMove:
+                    this.textMove(cmd as TextCmdMove);
+                    break;
+            }
+        })
     }
 
     pageInsert(cmd: PageCmdInsert) {
@@ -374,6 +423,51 @@ export class CMDExecuter {
                 api.shapeModifyConstrainerProportions(shape, false)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.textBehaviour) {
+            if (op.type === OpType.IdSet && value) {
+                const textBehaviour = value as types.TextBehaviour
+                api.shapeModifyTextBehaviour(page, shape as TextShape, textBehaviour);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyTextBehaviour(page, shape as TextShape, types.TextBehaviour.Flexible)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.textVerAlign) {
+            if (op.type === OpType.IdSet && value) {
+                const textVerAlign = value as types.TextVerAlign
+                api.shapeModifyTextVerAlign(shape as TextShape, textVerAlign);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyTextVerAlign(shape as TextShape, types.TextVerAlign.Top)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.textHorAlign) {
+            if (op.type === OpType.IdSet && value) {
+                const textHorAlign = value as types.TextHorAlign
+                api.shapeModifyTextHorAlign(shape as TextShape, textHorAlign);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyTextHorAlign(shape as TextShape, types.TextHorAlign.Left)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.textMaxLineheight) {
+            if (op.type === OpType.IdSet && value) {
+                const textMaxLineheight = JSON.parse(value) as number;
+                api.shapeModifyTextMaxLineHeight(shape as TextShape, textMaxLineheight);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyTextMaxLineHeight(shape as TextShape, 0)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.textMinLineheight) {
+            if (op.type === OpType.IdSet && value) {
+                const textMinLineheight = JSON.parse(value) as number
+                api.shapeModifyTextMinLineHeight(shape as TextShape, textMinLineheight);
+            }
+            else if (op.type === OpType.IdRemove) {
+                api.shapeModifyTextMinLineHeight(shape as TextShape, 0)
+            }
+        }
         // todo
         else {
             console.error("not implemented ", op)
@@ -422,6 +516,7 @@ export class CMDExecuter {
                 case CmdType.ShapeMove:
                     this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
                     break;
+
             }
         })
     }
@@ -547,7 +642,7 @@ export class CMDExecuter {
             }
             else if (opId === BORDER_ATTR_ID.position) {
                 if (op.type === OpType.IdSet && value) {
-                    const position = importBorderPosition(JSON.parse(value));
+                    const position = importBorderPosition(value as any);
                     api.setBorderPosition(shape.style, borderIdx, position)
                 }
             }

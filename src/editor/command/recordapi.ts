@@ -8,7 +8,7 @@ import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import { PageCmdInsert } from "../../coop/data/classes";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportRectRadius } from "../../io/baseexport";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportRectRadius, exportText } from "../../io/baseexport";
 import { PageCmdModify } from "../../coop/data/classes";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, RectRadius, Shape, TextShape } from "../../data/shape";
@@ -20,9 +20,10 @@ import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "..
 import { ShapeArrayAttrInsert } from "../../coop/data/classes";
 import { ShapeArrayAttrRemove } from "../../coop/data/classes";
 import { ShapeArrayAttrModify } from "../../coop/data/classes";
-import { SpanAttr, Text } from "../../data/text";
+import { SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
+import { CmdGroup } from "../../coop/data/cmdgroup";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -47,25 +48,32 @@ export class Api {
         if (this.cmds.length <= 1) return this.cmds[0];
         // check group type
         const first = this.cmds[0];
-        switch (first.type) {
-            case CmdType.TextDelete:
-            case CmdType.TextInsert:
-            case CmdType.TextModify:
-            case CmdType.TextMove:
-                return this.groupText(first.blockId);
-            case CmdType.ShapeDelete:
-            case CmdType.ShapeInsert:
-            case CmdType.ShapeModify:
-            case CmdType.ShapeMove:
-                return this.groupShape(first.blockId);
-            case CmdType.ShapeArrayAttrDelete:
-            case CmdType.ShapeArrayAttrInsert:
-            case CmdType.ShapeArrayAttrModify:
-            case CmdType.ShapeArrayAttrMove:
-                return this.groupAttr(first.blockId);
-            default:
-                throw new Error("unknow cmd group type:" + first.type)
-        }
+        return this.groupCmd(first.blockId);
+    }
+    private groupCmd(blockId: string): Cmd {
+        const group = CmdGroup.Make(blockId);
+        this.cmds.forEach((c) => {
+            if (c.blockId !== blockId) throw new Error("blockid not equal");
+            c.unitId = group.unitId;
+            switch (c.type) {
+                case CmdType.TextDelete:
+                case CmdType.TextInsert:
+                case CmdType.TextModify:
+                case CmdType.TextMove:
+                case CmdType.ShapeDelete:
+                case CmdType.ShapeInsert:
+                case CmdType.ShapeModify:
+                case CmdType.ShapeMove:
+                case CmdType.ShapeArrayAttrDelete:
+                case CmdType.ShapeArrayAttrInsert:
+                case CmdType.ShapeArrayAttrModify:
+                case CmdType.ShapeArrayAttrMove:
+                    group.cmds.push(c as any);
+                    break;
+                default: throw new Error("unknow group type:" + c.type)
+            }
+        })
+        return group;
     }
     private groupText(blockId: string): Cmd {
         const group = TextCmdGroup.Make(blockId);
@@ -234,8 +242,9 @@ export class Api {
         if (w !== frame.width || h !== frame.height) {
             this.__trap(() => {
                 const save = { w: frame.width, h: frame.height }
-                frame.width = w;
-                frame.height = h;
+                // frame.width = w;
+                // frame.height = h;
+                shape.setFrameSize(w, h);
                 this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.size, { w, h }, save))
                 this.needUpdateFrame.push({ page, shape });
             })
@@ -547,7 +556,7 @@ export class Api {
         let del: Text | undefined;
         this.__trap(() => {
             del = basicapi.deleteText(shape, idx, len)
-            if (del) this.addCmd(TextCmdRemove.Make(page.id, shape.id, idx, del.length, { type: "complex", text: del, length: del.length }))
+            if (del && del.length > 0) this.addCmd(TextCmdRemove.Make(page.id, shape.id, idx, del.length, { type: "complex", text: exportText(del), length: del.length }))
         })
         return del;
     }
@@ -584,5 +593,50 @@ export class Api {
     moveText(page: Page, shape: TextShape, idx: number, len: number, idx2: number) {
         this.checkShapeAtPage(page, shape);
         throw new Error("not implemented")
+    }
+    shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextBehaviour(page, shape, textBehaviour);
+            if (ret !== textBehaviour) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textBehaviour, textBehaviour, ret));
+            }
+        })
+    }
+    shapeModifyTextVerAlign(page: Page, shape: TextShape, verAlign: TextVerAlign) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextVerAlign(shape, verAlign);
+            if (ret !== verAlign) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textVerAlign, verAlign, ret));
+            }
+        })
+    }
+    shapeModifyTextHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextHorAlign(shape, horAlign);
+            if (ret !== horAlign) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textHorAlign, horAlign, ret));
+            }
+        })
+    }
+    shapeModifyTextMinLineHeight(page: Page, shape: TextShape, minLineheight: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextMinLineHeight(shape, minLineheight);
+            if (ret !== minLineheight) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textMinLineheight, minLineheight, ret));
+            }
+        })
+    }
+    shapeModifyTextMaxLineHeight(page: Page, shape: TextShape, maxLineheight: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextMaxLineHeight(shape, maxLineheight);
+            if (ret !== maxLineheight) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textMaxLineheight, maxLineheight, ret));
+            }
+        })
     }
 }

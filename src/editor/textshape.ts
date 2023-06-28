@@ -1,6 +1,8 @@
-import { Color, Page, SpanAttr, Text, TextShape } from "../data/classes";
+import { Color, Page, SpanAttr, Text, TextBehaviour, TextHorAlign, TextShape, TextVerAlign } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
+import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
+import { fixTextShapeFrameByLayout } from "./utils";
 
 export class TextShapeEditor extends ShapeEditor {
     constructor(shape: TextShape, page: Page, repo: CoopRepository) {
@@ -14,7 +16,11 @@ export class TextShapeEditor extends ShapeEditor {
         return this.insertText2(text, index, 0, attr);
     }
 
-    public deleteText(index: number, count: number): number {
+    private fixFrameByLayout(api: Api) {
+        fixTextShapeFrameByLayout(api, this.__page, this.shape)
+    }
+
+    public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape
         if (index < 0) {
             count += index;
             index = 0;
@@ -23,14 +29,15 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("deleteText", {});
         try {
             const deleted = api.deleteText(this.__page, this.shape, index, count);
-            if (!deleted) {
+            count = deleted ? deleted.length : count;
+            if (count <= 0) {
                 this.__repo.rollback();
                 return 0;
-            } else {
-                count = deleted.length;
-                this.__repo.commit();
-                return count;
             }
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return count;
+
         } catch (error) {
             console.log(error)
             this.__repo.rollback();
@@ -43,6 +50,7 @@ export class TextShapeEditor extends ShapeEditor {
         try {
             if (del > 0) api.deleteText(this.__page, this.shape, index, del);
             api.insertSimpleText(this.__page, this.shape, index, text, attr);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -57,6 +65,7 @@ export class TextShapeEditor extends ShapeEditor {
         try {
             if (del > 0) api.deleteText(this.__page, this.shape, index, del);
             api.insertComplexText(this.__page, this.shape, index, text);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -84,6 +93,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("composingInput", {});
         if (this.__composingDel > 0) api.deleteText(this.__page, this.shape, this.__composingIndex, this.__composingDel);
         if (text.length > 0) api.insertSimpleText(this.__page, this.shape, this.__composingIndex, text, this.__composingAttr);
+        this.fixFrameByLayout(api);
         this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
         return true;
     }
@@ -113,6 +123,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextFontName", {});
         try {
             api.textModifyFontName(this.__page, this.shape, index, len, fontName)
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -125,6 +136,70 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextFontSize", {});
         try {
             api.textModifyFontSize(this.__page, this.shape, index, len, fontSize)
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextBehaviour(textBehaviour: TextBehaviour) {
+        const api = this.__repo.start("setTextBehaviour", {});
+        try {
+            api.shapeModifyTextBehaviour(this.__page, this.shape, textBehaviour)
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextVerAlign(verAlign: TextVerAlign) {
+        const api = this.__repo.start("setTextVerAlign", {});
+        try {
+            api.shapeModifyTextVerAlign(this.__page, this.shape, verAlign)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextHorAlign(horAlign: TextHorAlign) {
+        const api = this.__repo.start("setTextHorAlign", {});
+        try {
+            api.shapeModifyTextHorAlign(this.__page, this.shape, horAlign)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setMinLineHeight(minLineHeight: number) {
+        const api = this.__repo.start("setMinLineHeight", {});
+        try {
+            api.shapeModifyTextMinLineHeight(this.__page, this.shape, minLineHeight)
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setMaxLineHeight(maxLineHeight: number) {
+        const api = this.__repo.start("setMaxLineHeight", {});
+        try {
+            api.shapeModifyTextMaxLineHeight(this.__page, this.shape, maxLineHeight)
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {

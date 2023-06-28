@@ -1,6 +1,8 @@
 import { Page } from "data/page";
 import { Matrix } from "../basic/matrix";
-import { Shape } from "../data/shape";
+import { Shape, TextShape } from "../data/shape";
+import { TextBehaviour } from "../data/typesdefine";
+import { fixTextShapeFrameByLayout } from "./utils";
 
 export interface Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
@@ -9,6 +11,7 @@ export interface Api {
     shapeModifyRotate(page: Page, shape: Shape, rotate: number): void;
     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined): void;
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined): void;
+    shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour): void;
 }
 
 function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
@@ -23,7 +26,24 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
         changed = true;
     }
     if (w !== frame.width || h !== frame.height) {
-        api.shapeModifyWH(page, shape, w, h)
+        if (shape instanceof TextShape) {
+            const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+            if (h !== frame.height) {
+                if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
+                    api.shapeModifyTextBehaviour(page, shape, TextBehaviour.FixWidthAndHeight);
+                }
+            }
+            else {
+                if (textBehaviour === TextBehaviour.Flexible) {
+                    api.shapeModifyTextBehaviour(page, shape, TextBehaviour.Fixed);
+                }
+            }
+            api.shapeModifyWH(page, shape, w, h)
+            fixTextShapeFrameByLayout(api, page, shape);
+        }
+        else {
+            api.shapeModifyWH(page, shape, w, h)
+        }
         changed = true;
     }
     return changed;

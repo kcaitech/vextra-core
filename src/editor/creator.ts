@@ -17,6 +17,7 @@ import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
+import { MeasureFun } from "../data/textlayout";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {
@@ -26,10 +27,10 @@ export function addCommonAttr(shape: Shape) {
     shape.constrainerProportions = false;
 }
 
-export function newDocument(documentName: string, repo: Repository): Document {
+export function newDocument(documentName: string, repo: Repository, measureFun: MeasureFun): Document {
     const dId = uuid();
     const pageList = new BasicArray<PageListItem>();
-    const document = new Document(dId, '', documentName, pageList, repo);
+    const document = new Document(dId, '', documentName, pageList, repo, measureFun);
     return document;
 }
 
@@ -128,14 +129,13 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     return shape;
 }
 // 后续需要传入字体、字号、颜色信息
-export function newTextShape(name: string, frame: ShapeFrame, content?: string): TextShape {
+export function newTextShape(name: string, measureFun: MeasureFun): TextShape {
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
     const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
-    textshape.frame = frame;
+    textshape.setMeasureFun(measureFun);
     addCommonAttr(textshape);
-    textshape.text.paras[0].text = content || "\n";
     return textshape;
 }
 export function newComment(user: UserInfo, createAt: string, pageId: string, frame: ShapeFrame, content: string, parasiticBody: Shape, rootId?: string, parentId?: string): Comment {

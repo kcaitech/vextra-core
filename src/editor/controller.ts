@@ -126,8 +126,8 @@ function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end
 // 处理异步编辑
 export class Controller {
     private __repo: CoopRepository;
-    private __document: Document | undefined;
-    constructor(repo: CoopRepository, document?: Document) {
+    private __document: Document;
+    constructor(repo: CoopRepository, document: Document) {
         this.__repo = repo;
         this.__document = document;
     }
@@ -137,7 +137,11 @@ export class Controller {
             case ShapeType.Rectangle: return newRectShape(name, frame);
             case ShapeType.Oval: return newOvalShape(name, frame);
             case ShapeType.Line: return newLineShape(name, frame);
-            case ShapeType.Text: return newTextShape(name, frame);
+            case ShapeType.Text: {
+                const shape = newTextShape(name, this.__document.measureFun);
+                shape.frame = frame;
+                return shape;
+            }
             case ShapeType.Image: return newImageShape(name, frame, ref, mediasMgr);
             default: return newRectShape(name, frame);
         }
@@ -187,15 +191,15 @@ export class Controller {
                 if (content.length > 19) {
                     name = name.slice(0, 19) + '...';
                 }
-                const _cs = content.split("\n");
-                if (_cs.length) {
-                    frame.height = _cs.length * 12 || 18;
-                    frame.width = Math.max(..._cs.map(i => i.length)) * 12;
-                }
-                const shape = newTextShape(name, frame, content);
+                const shape = newTextShape(name, this.__document.measureFun);
+                shape.text.insertText(content, 0);
                 const xy = parent.frame2Page();
-                shape.frame.x -= xy.x;
-                shape.frame.y -= xy.y;
+                shape.frame.x = frame.x - xy.x;
+                shape.frame.y = frame.y - xy.y;
+                const layout = shape.getLayout();
+                shape.frame.width = layout.contentWidth;
+                shape.frame.height = layout.contentHeight;
+
                 api.shapeInsert(page, parent, shape, parent.childs.length)
                 newShape = parent.childs.at(-1);
                 this.__repo.transactCtx.fireNotify();
