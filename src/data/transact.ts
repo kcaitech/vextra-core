@@ -205,13 +205,13 @@ class ProxyHandler {
         return {
             set(key: any, value: any) {
                 const set_inner = Map.prototype.set.bind(target);
+                // set经过代理的对象
                 if (!isProxy(value)) {
                     value = deepProxy(value, h)
                 }
                 set_inner(key, value);
                 const r = new Rec(target, 'set', { isContentExist: true, content: value });
                 _con.transact?.push(r);
-                return value;
             },
             delete(key: any) {
                 const get = Map.prototype.get.bind(target);
