@@ -104,9 +104,9 @@ export function layoutAtDelete(text: Text,
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
         parasLayout.splice(i, 1, paraLayout);
         i++;
-    }
-    for (let j = 1; j < needUpdateCount; j++) {
-        parasLayout.splice(i + 1, 1);
+        for (let j = 1; j < needUpdateCount; j++) {
+            parasLayout.splice(i, 1);
+        }
     }
 
     // 继续更新para
