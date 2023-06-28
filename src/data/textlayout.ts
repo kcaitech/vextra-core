@@ -246,12 +246,12 @@ export function layoutPara(para: Para, layoutWidth: number, measure: MeasureFun)
     let paraHeight = 0;
     let graphCount = 0;
     const lines = layouts.map((line) => {
-        let lineHeight = pAttr && pAttr.minimumLineHeight || 0;
-        if (pAttr && pAttr.maximumLineHeight === pAttr.minimumLineHeight) {
-            lineHeight = pAttr.minimumLineHeight || 0;
+        let lineHeight = line.maxFontSize;
+        if (pAttr && pAttr.maximumLineHeight != undefined) {
+            lineHeight = Math.min(pAttr.maximumLineHeight, lineHeight)
         }
-        else {
-            lineHeight = line.maxFontSize;
+        if (pAttr && pAttr.minimumLineHeight != undefined) {
+            lineHeight = Math.max(pAttr.minimumLineHeight, lineHeight);
         }
         const y = paraHeight;
         paraHeight += lineHeight;
