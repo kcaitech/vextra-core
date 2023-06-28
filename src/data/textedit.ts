@@ -1,29 +1,6 @@
-import { importParaAttr, importTextAttr } from "../io/baseimport";
-import { Color } from "./baseclasses";
 import { BasicArray } from "./basic";
-import { Para, Span, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter } from "./text";
-
-function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
-    if (attr.color) {
-        if (!span.color) return true;
-        // compare color
-        const c1 = attr.color;
-        const c2 = span.color;
-        if (c1.alpha !== c2.alpha || c1.red != c2.red || c1.green !== c2.green || c1.blue !== c2.blue) {
-            return true;
-        }
-    }
-    else if (span.color) {
-        return true;
-    }
-    if (attr.fontName !== attr.fontName) {
-        return true;
-    }
-    if (attr.fontSize !== attr.fontSize) {
-        return true;
-    }
-    return false;
-}
+import { Para, Span, SpanAttr, ParaAttr, Text, SpanAttrSetter, ParaAttrSetter } from "./text";
+import { _mergeParaAttr, isDiffSpanAttr, mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 
 function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) {
     const spans = para.spans;
@@ -87,93 +64,6 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
         }
         idx -= span.length;
     }
-}
-
-function mergeSpanAttr(span: Span, attr: SpanAttr) {
-    const attrIsSetter = attr instanceof SpanAttrSetter;
-    let changed = false;
-    if (attr.color) {
-        if (!span.color ||
-            attr.color.alpha !== span.color.alpha ||
-            attr.color.red !== span.color.red ||
-            attr.color.green !== span.color.green ||
-            attr.color.blue !== span.color.blue) {
-            span.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
-            changed = true;
-        }
-    } else if (attrIsSetter && span.color) {
-        span.color = undefined;
-        changed = true;
-    }
-
-    if (attr.fontName) {
-        if (!span.fontName || attr.fontName !== span.fontName) {
-            span.fontName = attr.fontName;
-            changed = true;
-        }
-    } else if (attrIsSetter && span.fontName) {
-        span.fontName = undefined;
-        changed = true;
-    }
-
-    if (attr.fontSize) {
-        if (!span.fontSize || attr.fontSize !== span.fontSize) {
-            span.fontSize = attr.fontSize;
-            changed = true;
-        }
-    } else if (attrIsSetter && span.fontSize) {
-        span.fontSize = undefined;
-        changed = true;
-    }
-
-    return changed;
-}
-
-function mergeParaAttr(para: Para, attr: ParaAttr): boolean {
-    if (!para.attr) {
-        para.attr = importParaAttr(attr); // deep clone
-        return true;
-    }
-    return _mergeParaAttr(para.attr, attr);
-}
-
-function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
-    const attrIsSetter = attr instanceof ParaAttrSetter;
-    let changed = false;
-    if (attr.color) {
-        if (!paraAttr.color ||
-            attr.color.alpha !== paraAttr.color.alpha ||
-            attr.color.red !== paraAttr.color.red ||
-            attr.color.green !== paraAttr.color.green ||
-            attr.color.blue !== paraAttr.color.blue) {
-            paraAttr.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
-            changed = true;
-        }
-    } else if (attrIsSetter && paraAttr.color) {
-        paraAttr.color = undefined;
-        changed = true;
-    }
-
-    if (attr.fontName) {
-        if (!paraAttr.fontName || attr.fontName !== paraAttr.fontName) {
-            paraAttr.fontName = attr.fontName;
-            changed = true;
-        }
-    } else if (attrIsSetter && paraAttr.fontName) {
-        paraAttr.fontName = undefined;
-        changed = true;
-    }
-
-    if (attr.fontSize) {
-        if (!paraAttr.fontSize || attr.fontSize !== paraAttr.fontSize) {
-            paraAttr.fontSize = attr.fontSize;
-            changed = true;
-        }
-    } else if (attrIsSetter && paraAttr.fontSize) {
-        paraAttr.fontSize = undefined;
-        changed = true;
-    }
-    return changed;
 }
 
 function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
@@ -310,17 +200,6 @@ function insertTextParas(shapetext: Text, paras: Para[], index: number) {
     }
 }
 
-function mergeTextAttr(text: Text, attr: TextAttr) {
-    if (!text.attr) {
-        text.attr = importTextAttr(attr);
-        return;
-    }
-    _mergeParaAttr(text.attr, attr);
-    if (attr.verAlign) text.attr.verAlign = attr.verAlign;
-    if (attr.orientation) text.attr.orientation = attr.orientation;
-    if (attr.textBehaviour) text.attr.textBehaviour = attr.textBehaviour;
-}
-
 export function insertComplexText(shapetext: Text, text: Text, index: number) {
     if (shapetext.length === 1 && text.attr) { // empty
         mergeTextAttr(shapetext, text.attr);
@@ -425,95 +304,6 @@ export function formatText(shapetext: Text, index: number, length: number, props
         }
     }
     return { spans: [], paras: [] };
-}
-
-function _getText(paraArray: Para[], paraIndex: number, index: number, length: number) {
-    let text = '';
-    while (length > 0 && paraIndex < paraArray.length) {
-        const para = paraArray[index];
-        const end = Math.min(para.length, index + length);
-        text += para.text.slice(index, end);
-        length -= end - index;
-        index = 0;
-    }
-    return text;
-}
-
-export function getText(shapetext: Text, index: number, length: number): string {
-    // const shapetext = shape.text;
-    const paras = shapetext.paras;
-    for (let i = 0, len = paras.length; i < len; i++) {
-        const p = paras[i];
-        if (index < p.length) {
-            return _getText(paras, i, index, length);
-        }
-        else {
-            index -= p.length;
-        }
-    }
-    return '';
-}
-
-function __getTextSpan(spans: Span[], spanIndex: number, index: number, length: number, retspans: Span[]) {
-    while (length > 0 && spanIndex < spans.length) {
-        const span = spans[spanIndex];
-        const end = Math.min(span.length, index + length);
-        const span1 = new Span(end - index);
-        mergeSpanAttr(span1, span);
-        retspans.push(span1);
-        length -= end - index;
-        index = 0;
-        spanIndex++;
-    }
-}
-
-function _getTextSpan(spans: Span[], index: number, length: number, retspans: Span[]) {
-    // 定位到span
-    for (let i = 0, len = spans.length; i < len; i++) {
-        const span = spans[i];
-        if (index < span.length) {
-            __getTextSpan(spans, i, index, length, retspans);
-            break;
-        }
-        else {
-            index -= span.length;
-        }
-    }
-}
-
-function _getTextPara(paraArray: Para[], paraIndex: number, index: number, length: number, text: Text) {
-    while (length > 0 && paraIndex < paraArray.length) {
-        const para = paraArray[index];
-        const end = Math.min(para.length, index + length);
-        const _text = para.text.slice(index, end);
-
-        const para1 = new Para(_text, new BasicArray<Span>());
-        mergeParaAttr(para1, para);
-        text.paras.push(para1);
-
-        _getTextSpan(para.spans, index, length, para1.spans);
-
-        length -= end - index;
-        index = 0;
-    }
-    return text;
-}
-
-export function getTextText(shapetext: Text, index: number, length: number): Text { // 带格式
-    const text = new Text(new BasicArray<Para>());
-    // const shapetext = shape.text;
-    const paras = shapetext.paras;
-    for (let i = 0, len = paras.length; i < len; i++) {
-        const p = paras[i];
-        if (index < p.length) {
-            _getTextPara(paras, i, index, length, text);
-            break;
-        }
-        else {
-            index -= p.length;
-        }
-    }
-    return text;
 }
 
 function _deleteSpan(spans: Span[], index: number, count: number): BasicArray<Span> {

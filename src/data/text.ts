@@ -3,8 +3,11 @@ import { Basic, BasicArray } from "./basic";
 
 export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation, ParaAttr, TextAttr } from "./baseclasses";
 import * as classes from "./baseclasses"
-import { deleteText, formatText, getText, getTextText, insertComplexText, insertSimpleText } from "./textfun";
-import { MeasureFun, TextLayout, layoutText, locateCursor, locateRange, locateText } from "./textlayout";
+import { deleteText, formatText, insertComplexText, insertSimpleText } from "./textedit";
+import { MeasureFun, TextLayout, layoutText } from "./textlayout";
+import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
+import { getText, getTextText } from "./textread";
+import { locateCursor, locateRange, locateText } from "./textlocate";
 
 export class SpanAttr extends Basic implements classes.SpanAttr {
     typeId = 'span-attr'
@@ -132,20 +135,26 @@ export class Text extends Basic implements classes.Text {
         return getTextText(this, index, count);
     }
     insertText(text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
-        this.reLayout(); // todo
+        // this.reLayout(); // todo
         insertSimpleText(this, text, index, props);
+        if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, text.length, this.__layout);
     }
     insertFormatText(text: Text, index: number) {
-        this.reLayout(); // todo
+        // this.reLayout(); // todo
         insertComplexText(this, text, index);
+        if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, text.length, this.__layout);
     }
     formatText(index: number, length: number, props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
-        this.reLayout(); // todo
-        return formatText(this, index, length, props)
+        // this.reLayout(); // todo
+        const ret = formatText(this, index, length, props)
+        if (this.__layout) this.__layout = layoutAtFormat(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, length, this.__layout, props);
+        return ret;
     }
     deleteText(index: number, count: number): Text | undefined {
-        this.reLayout(); // todo
-        return deleteText(this, index, count);
+        // this.reLayout(); // todo
+        const ret = deleteText(this, index, count);
+        if (this.__layout) this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, count, this.__layout);
+        return ret;
     }
 
     setMeasureFun(measure: MeasureFun) {
