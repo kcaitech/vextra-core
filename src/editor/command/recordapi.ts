@@ -157,7 +157,7 @@ export class Api {
             this.addCmd(PageCmdDelete.Make(document.id, item.id, index))
         }
     }
-    async pageModifyName(document: Document, pageId: string, name: string) {
+    pageModifyName(document: Document, pageId: string, name: string) {
         const item = document.pagesList.find(p => p.id === pageId);
         if (!item) return;
         const s_name = item.name;
@@ -165,8 +165,6 @@ export class Api {
         this.repo.transactCtx.settrap = false;
         try {
             item.name = name;
-            const source = await document.pagesMgr.get(pageId);
-            source && (source.name = name);
         } finally {
             this.repo.transactCtx.settrap = save;
         }

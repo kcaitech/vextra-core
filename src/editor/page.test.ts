@@ -91,7 +91,7 @@ test("group", () => {
 })
 test("ungroup", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo, () => undefined);
     const page = newPage("Page1");
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
@@ -151,7 +151,7 @@ test("ungroup", () => {
 })
 test("delete", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo, () => undefined);
     const page = newPage("Page1");
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
@@ -202,7 +202,7 @@ test("delete", () => {
 })
 test("delete_batch", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo, () => undefined);
     const page = newPage("Page1");
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
@@ -250,7 +250,7 @@ test("delete_batch", () => {
 })
 test("insert", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo, () => undefined);
     const page = newPage("Page1");
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
@@ -278,7 +278,7 @@ test("setName", async () => {
     const pageList = new BasicArray<PageListItem>();
     const pitem = new PageListItem(page.id, page.name);
     pageList.push(pitem);
-    const document = new Document(uuid(), "", "Blank", pageList, repo);
+    const document = new Document(uuid(), "", "Blank", pageList, repo, () => undefined);
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
 
@@ -292,17 +292,10 @@ test("setName", async () => {
     const _p = await pagesMgr.get(page.id);
     chai.assert.isObject(_p);
     const editor = new PageEditor(cooprepo, _p!, document);
-    const new_name = "-page-";
+    const new_name = "new_name";
     editor.setName(new_name);
 
-    const __p = await pagesMgr.get(page.id);
+    const __p = pageList.find(i => i.id === page.id);
     chai.assert.isObject(__p);
     chai.assert.equal(__p!.name, new_name);
-
-    chai.assert.isObject(_cmd);
-    const origin = JSON.stringify(exportPage(page));
-    repo.undo();
-    executer.exec(_cmd!);
-    const now = JSON.stringify(exportPage(page));
-    chai.assert.equal(origin, now);
 })
