@@ -19,7 +19,7 @@ export class Page extends GroupShape implements classes.Page {
     ) {
         super(
             id,
-            name,
+            "",
             ShapeType.Page,
             frame,
             style,
