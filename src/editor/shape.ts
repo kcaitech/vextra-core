@@ -7,6 +7,7 @@ import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
+import { Matrix } from "basic/matrix";
 export class ShapeEditor {
     protected __shape: Shape;
     protected __repo: CoopRepository;
@@ -204,20 +205,27 @@ export class ShapeEditor {
                     const api = this.__repo.start("adapt", {});
                     const __points: [number, number][] = [];
                     childs.forEach(p => {
-                        const { x, y, width, height } = p.frame2Page();
-                        const _ps: [number, number][] = [
-                            [x, y],
-                            [x + width, y],
-                            [x + width, y + height],
-                            [x, y + height]
+                        const { width, height } = p.frame;
+                        let _ps: [number, number][] = [
+                            [0, 0],
+                            [width, 0],
+                            [width, height],
+                            [0, height]
                         ]
+                        const m = p.matrix2Page();
+                        _ps = _ps.map(p => {
+                            const np = m.computeCoord(p[0], p[1]);
+                            return [np.x, np.y];
+                        })
                         __points.push(..._ps);
                     })
                     const box = createHorizontalBox(__points);
                     if (box) {
                         const { x: ox, y: oy } = this.__shape.frame2Page();
                         const { dx, dy } = { dx: ox - box.left, dy: oy - box.top };
-                        for (let i = 0; i < childs.length; i++) { translate(api, this.__page, childs[i], dx, dy) };
+                        for (let i = 0; i < childs.length; i++) {
+                            translate(api, this.__page, childs[i], dx, dy);
+                        }
                         expandTo(api, this.__page, this.__shape, box.right - box.left, box.bottom - box.top);
                         translateTo(api, this.__page, this.__shape, box.left, box.top);
                         this.__repo.commit();
