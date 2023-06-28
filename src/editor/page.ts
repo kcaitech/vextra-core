@@ -348,9 +348,9 @@ export class PageEditor {
         }
         return false;
     }
-    async setName(name: string) {
+    setName(name: string) {
         const api = this.__repo.start("setName", {});
-        await api.pageModifyName(this.__document, this.__page.id, name);
+        api.pageModifyName(this.__document, this.__page.id, name);
         this.__repo.commit();
     }
 
