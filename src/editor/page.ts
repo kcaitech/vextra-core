@@ -391,6 +391,7 @@ export class PageEditor {
                         let idx = childs.findIndex(i => i.id === host.id);
                         idx = offsetOverhalf ? idx : idx + 1; // 列表是倒序!!!
                         api.shapeMove(this.__page, wandererParent, saveidx, hostParent, idx);
+                         // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
                         if (!wandererParent.childs.length && wandererParent.type === ShapeType.Group) {
                             this.delete_inner(this.__page, wandererParent, api)
                         }
