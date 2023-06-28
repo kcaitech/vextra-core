@@ -310,7 +310,7 @@ export function formatText(shapetext: Text, index: number, length: number, props
 function _deleteSpan(spans: Span[], index: number, count: number): BasicArray<Span> {
     const delspans: BasicArray<Span> = new BasicArray();
     const saveCount = count;
-    for (let i = 0, len = spans.length; i < len && count > 0;) {
+    for (let i = 0; i < spans.length && count > 0;) {
         const span = spans[i];
         if (index < span.length) {
             if (index === 0 && count >= span.length) {
