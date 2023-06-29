@@ -300,7 +300,6 @@ export class PageEditor {
             shape.frame.y -= xy.y;
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
-        if (shape instanceof TextShape) shape.setMeasureFun(this.__document.measureFun);
         const api = this.__repo.start("insertshape", {});
         try {
             api.shapeInsert(this.__page, parent, shape, index);
