@@ -698,7 +698,8 @@ export class LineShape extends PathShape implements classes.LineShape {
         let path: any[] = []
         path = [
             ["M", x, y],
-            ["l", x + w, y + h]
+            ["l", x + w, y + h],
+            ["z"]
         ]
         return new Path(path);
     }
