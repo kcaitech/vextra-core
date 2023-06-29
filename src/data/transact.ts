@@ -1,5 +1,5 @@
 import { objectId, __objidkey } from '../basic/objectid';
-import { BasicMap, castNotifiable, IDataGuard, ISave4Restore, Notifiable } from './basic';
+import { Basic, castNotifiable, IDataGuard, ISave4Restore, Notifiable } from './basic';
 import { Watchable } from './basic';
 
 class TContext {
@@ -480,19 +480,17 @@ function deepProxy(data: any, h: ProxyHandler): any {
     const stack: any[] = [data];
     while (stack.length > 0) {
         const d = stack.pop();
+        let parent: any = undefined;
+        if (d instanceof Basic) { // 当一个map对象为BasicMap对象时，其才能成为自身values集元素的__parent;
+            parent = d;
+        }
         if (d instanceof Map) {
-            let parent: any = undefined;
-            if (d instanceof BasicMap) { // 当一个map对象为BasicMap对象时，其才能成为自身values集元素的__parent;
-                parent = d;
-            }
             d.forEach((v, k, m) => {
-                if (k.startsWith("__")) {
+                if (k.toString().startsWith("__")) {
                     // donothing
                 }
                 else if (typeof (v) === 'object') { // 还有array set map
-                    if (parent) {
-                        v.__parent = parent;
-                    }
+                    if (parent)  v.__parent = parent;
                     if (!isProxy(v)) {
                         m.set(k, new Proxy(v, h));
                         stack.push(v);
@@ -503,11 +501,11 @@ function deepProxy(data: any, h: ProxyHandler): any {
         else {
             for (const k in d) {
                 const v = Reflect.get(d, k);
-                if (k.startsWith("__")) {
+                if (k.toString().startsWith("__")) {
                     // donothing
                 }
                 else if (typeof (v) === 'object') { // 还有array set map
-                    v.__parent = d;
+                    if (parent)  v.__parent = parent;
                     if (!isProxy(v)) {
                         const p = new Proxy(v, h);
                         Reflect.set(d, k, p);
