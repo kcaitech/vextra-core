@@ -50,6 +50,26 @@ export function adjustLinesVertical(lines: LineArray, align: TextVerAlign) {
 
 export type MeasureFun = (code: number, font: string) => TextMetrics | undefined;
 
+function isNewLineCharCode(code: number) {
+    // U+0009: Horizontal tab
+    // U+000A: Line feed
+    // U+000B: Vertical tab
+    // U+000C: Form feed
+    // U+000D: Carriage return
+    // U+0020: Space
+    // U+00A0: Non-breaking space
+    // U+2028: Line separator
+    // U+2029: Paragraph separator
+    switch (code) {
+        case 0x0A:
+        case 0x0D:
+        case 0x2028:
+        case 0x2029:
+            return true;
+    }
+    return false;
+}
+
 export function layoutLines(para: Para, width: number, measure: MeasureFun): LineArray {
     let spans = para.spans;
     let spansCount = spans.length;
@@ -97,7 +117,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
         }
 
         const c = text.charCodeAt(textIdx);
-        if (c === 0x0A) {
+        if (isNewLineCharCode(c)) {
             // '\n'
             if (!graphArray) {
                 graphArray = new GraphArray();
@@ -126,6 +146,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
             graphArray = undefined; //new GraphArray();
             lineArray.push(line);
             line = new Line();
+            curX = startX;
             if (preSpanIdx === spanIdx || spanIdx >= spansCount) {
                 line.maxFontSize = span.fontSize ?? 0;
             }
