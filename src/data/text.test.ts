@@ -47,3 +47,23 @@ test("format", () => {
     assert.exists(para.spans[1].color);
     assert.notExists(para.spans[2].color)
 })
+
+test("edit1", () => {
+    const text = newText("input text");
+    const attr = new SpanAttrSetter();
+    attr.color = new Color(1, 1, 1, 1);
+    text.formatText(1, 1, { attr });
+    // check
+    text.insertText('1', 2);
+    // check
+    assert.equal(text.paras.length, 1);
+    const para = text.paras[0];
+    assert.equal(para.spans.length, 3);
+    assert.equal(para.spans[0].length, 1);
+    assert.equal(para.spans[1].length, 2);
+    assert.equal(para.spans[2].length, para.length - 3);
+
+    assert.notExists(para.spans[0].color);
+    assert.exists(para.spans[1].color);
+    assert.notExists(para.spans[2].color)
+})
