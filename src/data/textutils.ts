@@ -36,7 +36,7 @@ export function mergeSpanAttr(span: Span, attr: SpanAttr) {
             span.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
             changed = true;
         }
-    } else if (attrIsSetter && span.color) {
+    } else if (attrIsSetter && (attr as SpanAttrSetter).colorIsSet && span.color) {
         span.color = undefined;
         changed = true;
     }
@@ -46,7 +46,7 @@ export function mergeSpanAttr(span: Span, attr: SpanAttr) {
             span.fontName = attr.fontName;
             changed = true;
         }
-    } else if (attrIsSetter && span.fontName) {
+    } else if (attrIsSetter && (attr as SpanAttrSetter).fontNameIsSet && span.fontName) {
         span.fontName = undefined;
         changed = true;
     }
@@ -56,7 +56,7 @@ export function mergeSpanAttr(span: Span, attr: SpanAttr) {
             span.fontSize = attr.fontSize;
             changed = true;
         }
-    } else if (attrIsSetter && span.fontSize) {
+    } else if (attrIsSetter && (attr as SpanAttrSetter).fontSizeIsSet && span.fontSize) {
         span.fontSize = undefined;
         changed = true;
     }
@@ -64,15 +64,24 @@ export function mergeSpanAttr(span: Span, attr: SpanAttr) {
     return changed;
 }
 
-export function mergeParaAttr(para: Para, attr: ParaAttr): boolean {
-    if (!para.attr) {
-        para.attr = importParaAttr(attr); // deep clone
-        return true;
+export function mergeParaAttr(para: Para | ParaAttr, attr: Para | ParaAttr): boolean {
+    const _attr = attr instanceof ParaAttr ? attr : attr.attr;
+    if (para instanceof Para) {
+        if (!para.attr) {
+            if (_attr) para.attr = importParaAttr(_attr); // deep clone
+            return !!_attr;
+        }
+        else if (_attr) {
+            return _mergeParaAttr(para.attr, attr);
+        }
     }
-    return _mergeParaAttr(para.attr, attr);
+    else if (_attr) {
+        return _mergeParaAttr(para, attr);
+    }
+    return false;
 }
 
-export function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
+function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
     const attrIsSetter = attr instanceof ParaAttrSetter;
     let changed = false;
     if (attr.color) {
@@ -84,7 +93,7 @@ export function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
             paraAttr.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
             changed = true;
         }
-    } else if (attrIsSetter && paraAttr.color) {
+    } else if (attrIsSetter && (attr as ParaAttrSetter).colorIsSet && paraAttr.color) {
         paraAttr.color = undefined;
         changed = true;
     }
@@ -94,7 +103,7 @@ export function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
             paraAttr.fontName = attr.fontName;
             changed = true;
         }
-    } else if (attrIsSetter && paraAttr.fontName) {
+    } else if (attrIsSetter && (attr as ParaAttrSetter).fontNameIsSet && paraAttr.fontName) {
         paraAttr.fontName = undefined;
         changed = true;
     }
@@ -104,8 +113,48 @@ export function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
             paraAttr.fontSize = attr.fontSize;
             changed = true;
         }
-    } else if (attrIsSetter && paraAttr.fontSize) {
+    } else if (attrIsSetter && (attr as ParaAttrSetter).fontNameIsSet && paraAttr.fontSize) {
         paraAttr.fontSize = undefined;
+        changed = true;
+    }
+
+    if (attr.minimumLineHeight != undefined) {
+        if (paraAttr.minimumLineHeight == undefined || paraAttr.minimumLineHeight !== attr.minimumLineHeight) {
+            paraAttr.minimumLineHeight = paraAttr.minimumLineHeight;
+            changed = true;
+        }
+    } else if (attrIsSetter && (attr as ParaAttrSetter).minimumLineHeightIsSet && paraAttr.minimumLineHeight) {
+        paraAttr.minimumLineHeight = undefined;
+        changed = true;
+    }
+
+    if (attr.maximumLineHeight != undefined) {
+        if (paraAttr.maximumLineHeight == undefined || paraAttr.maximumLineHeight !== attr.maximumLineHeight) {
+            paraAttr.maximumLineHeight = paraAttr.maximumLineHeight;
+            changed = true;
+        }
+    } else if (attrIsSetter && (attr as ParaAttrSetter).maximumLineHeightIsSet && paraAttr.maximumLineHeight) {
+        paraAttr.maximumLineHeight = undefined;
+        changed = true;
+    }
+
+    if (attr.paraSpacing != undefined) {
+        if (paraAttr.paraSpacing == undefined || paraAttr.paraSpacing !== attr.paraSpacing) {
+            paraAttr.paraSpacing = paraAttr.paraSpacing;
+            changed = true;
+        }
+    } else if (attrIsSetter && (attr as ParaAttrSetter).paraSpacingIsSet && paraAttr.paraSpacing) {
+        paraAttr.paraSpacing = undefined;
+        changed = true;
+    }
+
+    if (attr.kerning != undefined) {
+        if (paraAttr.kerning == undefined || paraAttr.kerning !== attr.kerning) {
+            paraAttr.kerning = paraAttr.kerning;
+            changed = true;
+        }
+    } else if (attrIsSetter && (attr as ParaAttrSetter).kerningIsSet && paraAttr.kerning) {
+        paraAttr.kerning = undefined;
         changed = true;
     }
     return changed;

@@ -86,8 +86,14 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
         if (spanIdx >= spansCount) spanIdx = spansCount - 1; // fix
 
         if (preSpanIdx !== spanIdx) {
+            preSpanIdx = spanIdx;
             span = spans[spanIdx];
             font = "normal " + span.fontSize + "px " + span.fontName;
+        }
+
+        if (span.length === 0 && spanIdx < spansCount - 1) { // 不是最后一个空的span
+            spanIdx++;
+            continue;
         }
 
         const c = text.charCodeAt(textIdx);
@@ -123,8 +129,6 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
             if (preSpanIdx === spanIdx || spanIdx >= spansCount) {
                 line.maxFontSize = span.fontSize ?? 0;
             }
-
-            preSpanIdx = spanIdx;
             continue;
         }
         const m = measure(c, font);
@@ -225,7 +229,6 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
                 graphArray = undefined;
             }
         }
-        preSpanIdx = spanIdx;
     }
 
     if (graphArray && graphArray.length > 0) {
