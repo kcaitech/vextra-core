@@ -314,7 +314,7 @@ function _formatTextSpan(spans: Span[], index: number, length: number, attr: Spa
 function _formatText(paraArray: Para[], paraIndex: number, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
     const ret: { spans: Span[], paras: (ParaAttr & { length: number })[] } = { spans: [], paras: [] };
     while (length > 0 && paraIndex < paraArray.length) {
-        const para = paraArray[index];
+        const para = paraArray[paraIndex];
         if (props.paraAttr) {
             // save origin
             const para1 = new ParaAttr();
