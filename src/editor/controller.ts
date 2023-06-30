@@ -263,7 +263,7 @@ export class Controller {
         }
 
         const close = () => {
-            if (status == Status.Fulfilled && newShape) {
+            if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();

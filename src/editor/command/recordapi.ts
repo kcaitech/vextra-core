@@ -31,7 +31,10 @@ export class Api {
         this.cmds.length = 0;
         this.needUpdateFrame.length = 0;
     }
-    commit(): Cmd {
+    isNeedCommit(): boolean {
+        return this.cmds.length > 0;
+    }
+    commit(): Cmd | undefined {
         if (this.needUpdateFrame.length > 0) {
             const update = this.needUpdateFrame.slice(0);
             const page = update[0].page;
