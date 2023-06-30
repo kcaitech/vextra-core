@@ -340,7 +340,7 @@ export class CMDReverter {
     cmdGroup(cmd: CmdGroup): CmdGroup {
         const ret = CmdGroup.Make(cmd.blockId);
         const revert = ret.cmds;
-        cmd.cmds.forEach((cmd) => {
+        cmd.cmds.reverse().forEach((cmd) => {
             switch (cmd.type) {
                 case CmdType.TextInsert:
                     revert.push(this.textInsert(cmd as TextCmdInsert));
