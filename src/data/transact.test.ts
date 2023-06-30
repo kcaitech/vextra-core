@@ -27,13 +27,13 @@ test("map", () => {
     }
 
     repo.undo();
-    // assert.equal(map.size, 3);
+    assert.equal(map.size, 3);
     for (let i = 0; i < 3; i++) {
         assert.equal(map.get(i), i)
     }
 
     repo.redo();
-    // assert.equal(map.size, 4);
+    assert.equal(map.size, 4);
     for (let i = 0; i < 4; i++) {
         assert.equal(map.get(i), i)
     }
@@ -41,7 +41,7 @@ test("map", () => {
     repo.start("", {});
     tmap.set(4, 4);
     repo.rollback();
-    // assert.equal(map.size, 4);
+    assert.equal(map.size, 4);
     for (let i = 0; i < 4; i++) {
         assert.equal(map.get(i), i)
     }
