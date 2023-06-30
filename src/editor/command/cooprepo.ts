@@ -95,7 +95,14 @@ export class CoopRepository {
             else {
                 revertCmd.unitId = unitId;
             }
-            for (const h of this.__undoRedoListener) revertCmd = h(revertCmd, oldCmdId) as any ?? revertCmd;
+            for (const h of this.__undoRedoListener) {
+                const newCmd = h(revertCmd, oldCmdId)
+                if (newCmd === undefined) {
+                    console.log("undo变换失败")
+                    return
+                }
+                revertCmd = newCmd as any
+            }
             if (this._exec(revertCmd, false)) {
                 this.__index--;
             }
@@ -118,7 +125,14 @@ export class CoopRepository {
             else {
                 redoCmd.unitId = unitId;
             }
-            for (const h of this.__undoRedoListener) redoCmd = h(redoCmd, oldCmdId) as any ?? redoCmd;
+            for (const h of this.__undoRedoListener) {
+                const newCmd = h(redoCmd, oldCmdId)
+                if (newCmd === undefined) {
+                    console.log("redo变换失败")
+                    return
+                }
+                redoCmd = newCmd as any
+            }
             if (this._exec(redoCmd, false)) {
                 this.__index++;
             }
