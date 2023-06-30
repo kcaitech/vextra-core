@@ -479,99 +479,99 @@ export class RectShape extends PathShape implements classes.RectShape {
     //         }
     //     }
     // }
-    getPath(offsetX: number, offsetY: number): Path;
-    getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
-        const len = this.points.length;
-        let path: any[] = [];
-        if (len > 0) {
-            const offsetX = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-            const offsetY = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
-            const width = this.frame.width;
-            const height = this.frame.height;
-            const bezierCurveTo = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number) => {
-                path.push(["C", offsetX + x1, offsetY + y1, offsetX + x2, offsetY + y2, offsetX + tx, offsetY + ty]);
-            }
-            const moveTo = (x: number, y: number) => {
-                path.push(["M", offsetX + x, offsetY + y]);
-            }
-            const lineTo = (x: number, y: number) => {
-                path.push(["L", offsetX + x, offsetY + y])
-            }
-            const closePath = () => {
-                path.push(["Z"]);
-            }
-            const p = this.points[0];
-            const pt = p.point;
-            moveTo(pt.x * width, pt.y * height);
-            const curv2Point = (p: CurvePoint, nextP: CurvePoint, isClose?: boolean) => {
-                const adjFrom = p.curveFrom;
-                const adjTo = nextP.point;
-                const pt = nextP.point;
-                const x1 = adjFrom.x * width, y1 = adjFrom.y * height, x2 = adjTo.x * width, y2 = adjTo.y * height, tx = pt.x * width, ty = pt.y * height;
-                if (p.hasCurveFrom || nextP.hasCurveTo) {
-                    bezierCurveTo(x1, y1, x2, y2, tx, ty);
-                }
-                else if (!isClose) {
-                    lineTo(tx, ty);
-                }
-                else {
-                    closePath();
-                }
-            }
-            for (let i = 0; i < len - 1; i++) {
-                const p = this.points[i];
-                const nextP = this.points[i + 1];
-                curv2Point(p, nextP);
-            }
-            if (this.isClosed) {
-                if (len > 1) {
-                    const firstP = this.points[0];
-                    const lastP = this.points[len - 1];
-                    curv2Point(lastP, firstP, true);
-                } else {
-                    closePath();
-                }
-            }
-        }
-        else {
-            const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-            const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
-            const w = this.frame.width;
-            const h = this.frame.height;
-            let { rrb, rrt, rlb, rlt } = this.fixedRadius;
+    // getPath(offsetX: number, offsetY: number): Path;
+    // getPath(origin?: boolean): Path;
+    // getPath(arg1?: boolean | number, arg2?: number): Path {
+    //     const len = this.points.length;
+    //     let path: any[] = [];
+    //     if (len > 0) {
+    //         const offsetX = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
+    //         const offsetY = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
+    //         const width = this.frame.width;
+    //         const height = this.frame.height;
+    //         const bezierCurveTo = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number) => {
+    //             path.push(["C", offsetX + x1, offsetY + y1, offsetX + x2, offsetY + y2, offsetX + tx, offsetY + ty]);
+    //         }
+    //         const moveTo = (x: number, y: number) => {
+    //             path.push(["M", offsetX + x, offsetY + y]);
+    //         }
+    //         const lineTo = (x: number, y: number) => {
+    //             path.push(["L", offsetX + x, offsetY + y])
+    //         }
+    //         const closePath = () => {
+    //             path.push(["Z"]);
+    //         }
+    //         const p = this.points[0];
+    //         const pt = p.point;
+    //         moveTo(pt.x * width, pt.y * height);
+    //         const curv2Point = (p: CurvePoint, nextP: CurvePoint, isClose?: boolean) => {
+    //             const adjFrom = p.curveFrom;
+    //             const adjTo = nextP.point;
+    //             const pt = nextP.point;
+    //             const x1 = adjFrom.x * width, y1 = adjFrom.y * height, x2 = adjTo.x * width, y2 = adjTo.y * height, tx = pt.x * width, ty = pt.y * height;
+    //             if (p.hasCurveFrom || nextP.hasCurveTo) {
+    //                 bezierCurveTo(x1, y1, x2, y2, tx, ty);
+    //             }
+    //             else if (!isClose) {
+    //                 lineTo(tx, ty);
+    //             }
+    //             else {
+    //                 closePath();
+    //             }
+    //         }
+    //         for (let i = 0; i < len - 1; i++) {
+    //             const p = this.points[i];
+    //             const nextP = this.points[i + 1];
+    //             curv2Point(p, nextP);
+    //         }
+    //         if (this.isClosed) {
+    //             if (len > 1) {
+    //                 const firstP = this.points[0];
+    //                 const lastP = this.points[len - 1];
+    //                 curv2Point(lastP, firstP, true);
+    //             } else {
+    //                 closePath();
+    //             }
+    //         }
+    //     }
+    //     else {
+    //         const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
+    //         const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
+    //         const w = this.frame.width;
+    //         const h = this.frame.height;
+    //         let { rrb, rrt, rlb, rlt } = this.fixedRadius;
 
-            if (rrb || rrt || rlb || rlt) {
-                // fit round
-                const maxround = Math.min(w, h) / 2;
-                if (rrb > maxround) rrb = maxround;
-                if (rrt > maxround) rrt = maxround;
-                if (rlb > maxround) rlb = maxround;
-                if (rlt > maxround) rlt = maxround;
-                path = [
-                    ["M", x + rlt, y],
-                    ["l", w - rlt - rrt, 0],
-                    ["a", rrt, rrt, 0, 0, 1, rrt, rrt],
-                    ["l", 0, h - rrt - rrb],
-                    ["a", rrb, rrb, 0, 0, 1, -rrb, rrb],
-                    ["l", rrb + rlb - w, 0],
-                    ["a", rlb, rlb, 0, 0, 1, -rlb, -rlb],
-                    ["l", 0, rlb + rlt - h],
-                    ["a", rlt, rlt, 0, 0, 1, rlt, -rlt],
-                    ["z"]
-                ]
-            } else {
-                path = [
-                    ["M", x, y],
-                    ["l", w, 0],
-                    ["l", 0, h],
-                    ["l", -w, 0],
-                    ["z"]
-                ]
-            }
-        }
-        return new Path(path);
-    }
+    //         if (rrb || rrt || rlb || rlt) {
+    //             // fit round
+    //             const maxround = Math.min(w, h) / 2;
+    //             if (rrb > maxround) rrb = maxround;
+    //             if (rrt > maxround) rrt = maxround;
+    //             if (rlb > maxround) rlb = maxround;
+    //             if (rlt > maxround) rlt = maxround;
+    //             path = [
+    //                 ["M", x + rlt, y],
+    //                 ["l", w - rlt - rrt, 0],
+    //                 ["a", rrt, rrt, 0, 0, 1, rrt, rrt],
+    //                 ["l", 0, h - rrt - rrb],
+    //                 ["a", rrb, rrb, 0, 0, 1, -rrb, rrb],
+    //                 ["l", rrb + rlb - w, 0],
+    //                 ["a", rlb, rlb, 0, 0, 1, -rlb, -rlb],
+    //                 ["l", 0, rlb + rlt - h],
+    //                 ["a", rlt, rlt, 0, 0, 1, rlt, -rlt],
+    //                 ["z"]
+    //             ]
+    //         } else {
+    //             path = [
+    //                 ["M", x, y],
+    //                 ["l", w, 0],
+    //                 ["l", 0, h],
+    //                 ["l", -w, 0],
+    //                 ["z"]
+    //             ]
+    //         }
+    //     }
+    //     return new Path(path);
+    // }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {
@@ -602,68 +602,68 @@ export class OvalShape extends PathShape implements classes.OvalShape {
         this.points = points;
         this.isClosed = true;
     }
-    getPath(offsetX: number, offsetY: number): Path;
-    getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
-        const offsetX = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-        const offsetY = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
-        const width = this.frame.width;
-        const height = this.frame.height;
-        let path: any[] = [];
-        const bezierCurveTo = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number) => {
-            path.push(["C", offsetX + x1, offsetY + y1, offsetX + x2, offsetY + y2, offsetX + tx, offsetY + ty]);
-        }
-        const moveTo = (x: number, y: number) => {
-            path.push(["M", offsetX + x, offsetY + y]);
-        }
-        const lineTo = (x: number, y: number) => {
-            path.push(["L", offsetX + x, offsetY + y])
-        }
-        const closePath = () => {
-            path.push(["Z"]);
-        }
-        const pc = this.points.length;
-        if (pc > 0) {
-            const p = this.points[0];
-            const pt = p.point;
-            moveTo(pt.x * width, pt.y * height);
-        }
-        const curv2Point = (p: CurvePoint, nextP: CurvePoint, isClose?: boolean) => {
-            const adjFrom = p.curveFrom;
-            const adjTo = nextP.curveTo;
-            const pt = nextP.point;
-            const x1 = adjFrom.x * width, y1 = adjFrom.y * height, x2 = adjTo.x * width, y2 = adjTo.y * height, tx = pt.x * width, ty = pt.y * height;
-            if (p.hasCurveFrom && nextP.hasCurveTo) {
-                bezierCurveTo(x1, y1, x2, y2, tx, ty);
-            }
-            else if (p.hasCurveFrom && !nextP.hasCurveTo) {
-                bezierCurveTo(x1, y1, x2, y2, tx, ty);
-            }
-            else if (!p.hasCurveFrom && nextP.hasCurveTo) {
-                bezierCurveTo(x1, y1, x2, y2, tx, ty);
-            }
-            else if (!isClose) {
-                const pt = nextP.point;
-                lineTo(pt.x * width, pt.y * height);
-            }
-            else {
-                closePath();
-            }
-        }
-        for (let i = 0; i < pc - 1; i++) {
-            const p = this.points[i];
-            const nextP = this.points[i + 1];
-            curv2Point(p, nextP);
-        }
-        if (pc > 1) {
-            const firstP = this.points[0];
-            const lastP = this.points[pc - 1];
-            curv2Point(lastP, firstP, true);
-        } else {
-            closePath();
-        }
-        return new Path(path);
-    }
+    // getPath(offsetX: number, offsetY: number): Path;
+    // getPath(origin?: boolean): Path;
+    // getPath(arg1?: boolean | number, arg2?: number): Path {
+    //     const offsetX = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
+    //     const offsetY = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
+    //     const width = this.frame.width;
+    //     const height = this.frame.height;
+    //     let path: any[] = [];
+    //     const bezierCurveTo = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number) => {
+    //         path.push(["C", offsetX + x1, offsetY + y1, offsetX + x2, offsetY + y2, offsetX + tx, offsetY + ty]);
+    //     }
+    //     const moveTo = (x: number, y: number) => {
+    //         path.push(["M", offsetX + x, offsetY + y]);
+    //     }
+    //     const lineTo = (x: number, y: number) => {
+    //         path.push(["L", offsetX + x, offsetY + y])
+    //     }
+    //     const closePath = () => {
+    //         path.push(["Z"]);
+    //     }
+    //     const pc = this.points.length;
+    //     if (pc > 0) {
+    //         const p = this.points[0];
+    //         const pt = p.point;
+    //         moveTo(pt.x * width, pt.y * height);
+    //     }
+    //     const curv2Point = (p: CurvePoint, nextP: CurvePoint, isClose?: boolean) => {
+    //         const adjFrom = p.curveFrom;
+    //         const adjTo = nextP.curveTo;
+    //         const pt = nextP.point;
+    //         const x1 = adjFrom.x * width, y1 = adjFrom.y * height, x2 = adjTo.x * width, y2 = adjTo.y * height, tx = pt.x * width, ty = pt.y * height;
+    //         if (p.hasCurveFrom && nextP.hasCurveTo) {
+    //             bezierCurveTo(x1, y1, x2, y2, tx, ty);
+    //         }
+    //         else if (p.hasCurveFrom && !nextP.hasCurveTo) {
+    //             bezierCurveTo(x1, y1, x2, y2, tx, ty);
+    //         }
+    //         else if (!p.hasCurveFrom && nextP.hasCurveTo) {
+    //             bezierCurveTo(x1, y1, x2, y2, tx, ty);
+    //         }
+    //         else if (!isClose) {
+    //             const pt = nextP.point;
+    //             lineTo(pt.x * width, pt.y * height);
+    //         }
+    //         else {
+    //             closePath();
+    //         }
+    //     }
+    //     for (let i = 0; i < pc - 1; i++) {
+    //         const p = this.points[i];
+    //         const nextP = this.points[i + 1];
+    //         curv2Point(p, nextP);
+    //     }
+    //     if (pc > 1) {
+    //         const firstP = this.points[0];
+    //         const lastP = this.points[pc - 1];
+    //         curv2Point(lastP, firstP, true);
+    //     } else {
+    //         closePath();
+    //     }
+    //     return new Path(path);
+    // }
 }
 
 export class LineShape extends PathShape implements classes.LineShape {
@@ -688,20 +688,20 @@ export class LineShape extends PathShape implements classes.LineShape {
         )
     }
 
-    getPath(offsetX: number, offsetY: number): Path;
-    getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
-        const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-        const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
-        const w = this.frame.width;
-        const h = this.frame.height;
-        let path: any[] = []
-        path = [
-            ["M", x, y],
-            ["l", x + w, y + h]
-        ]
-        return new Path(path);
-    }
+    // getPath(offsetX: number, offsetY: number): Path;
+    // getPath(origin?: boolean): Path;
+    // getPath(arg1?: boolean | number, arg2?: number): Path {
+    //     const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
+    //     const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
+    //     const w = this.frame.width;
+    //     const h = this.frame.height;
+    //     let path: any[] = []
+    //     path = [
+    //         ["M", x, y],
+    //         ["l", x + w, y + h]
+    //     ]
+    //     return new Path(path);
+    // }
 }
 export class TextShape extends Shape implements classes.TextShape {
     typeId = 'text-shape'
