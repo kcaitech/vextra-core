@@ -14,30 +14,30 @@ class NodeData<T extends DirItem> {
     }
 }
 
-class NodeType<T extends DirItem> extends Node<NodeData<T> > {
+class NodeType<T extends DirItem> extends Node<NodeData<T>> {
     constructor(data: T, fold: boolean = true) {
         super(new NodeData(data, fold));
     }
 }
 
 export class FoldDirIter<T extends DirItem> {
-    private __iter: Iter<NodeData<T> >;
-    constructor(iter: Iter<NodeData<T> >) {
+    private __iter: Iter<NodeData<T>>;
+    constructor(iter: Iter<NodeData<T>>) {
         this.__iter = iter;
     }
     hasNext(): boolean {
         return this.__iter.hasNext();
     }
-    next(): {data: T, fold: boolean} {
+    next(): { data: T, fold: boolean } {
         const d = this.__iter.next();
-        return { data: d.data, fold: d.fold}
+        return { data: d.data, fold: d.fold }
     }
 }
 
 export class FoldDirTree<T extends DirItem> {
 
-    private __dirtree: DirTree<NodeData<T> >;
-    private __id2node: Map<string, NodeType<T> > = new Map();
+    private __dirtree: DirTree<NodeData<T>>;
+    private __id2node: Map<string, NodeType<T>> = new Map();
     private __saveFoldedDirState: boolean;
     private __saveUnfolds: Set<string> = new Set();
     private __revertChilds: boolean = true;
@@ -70,9 +70,9 @@ export class FoldDirTree<T extends DirItem> {
         return new FoldDirIter<T>(this.__dirtree.iterAt(index));
     }
 
-    at(index: number): {data: T, fold: boolean} | undefined {
+    at(index: number): { data: T, fold: boolean } | undefined {
         const n = this.__dirtree.nodeAt(index);
-        if (n) return { data: n.__data.data, fold: n.__data.fold}
+        if (n) return { data: n.__data.data, fold: n.__data.fold }
         return undefined;
     }
 
@@ -87,15 +87,15 @@ export class FoldDirTree<T extends DirItem> {
         return (node && node.__data.fold) ?? true; // 默认是折叠的
     }
 
-    private __addIdMap(p: NodeType<T>) {
-        if (p && p.__count > 1) {
-            const childs = p.__childs as NodeType<T>[]
-            childs.forEach((c) => {
-                this.__id2node.set(c.__data.data.id, c);
-                this.__addIdMap(c);
-            })
-        }
-    }
+    // private __addIdMap(p: NodeType<T>) {
+    //     if (p && p.__count > 1) {
+    //         const childs = p.__childs as NodeType<T>[]
+    //         childs.forEach((c) => {
+    //             this.__id2node.set(c.__data.data.id, c);
+    //             this.__addIdMap(c);
+    //         })
+    //     }
+    // }
 
     private __fold(node: NodeType<T>, data: T): boolean {
         const n = new NodeType(data, true);
@@ -136,7 +136,11 @@ export class FoldDirTree<T extends DirItem> {
         const arr = childs.map((c) => new NodeData(c))
         if (this.__revertChilds) arr.reverse()
         const ret = this.__dirtree.insertArr(node, 0, arr);
-        ret.forEach((n) => this.__id2node.set(n.__data.data.id, n))
+        ret.forEach((n) => {
+            const old = this.__id2node.get(n.__data.data.id);
+            if (old) this.__dirtree.del(old);
+            this.__id2node.set(n.__data.data.id, n)
+        })
         node.__data.fold = false;
         if (this.__saveFoldedDirState) {
             this.__saveUnfolds.add(data.id)
@@ -177,6 +181,8 @@ export class FoldDirTree<T extends DirItem> {
         const node = new NodeData(data);
         const n = this.__dirtree.insert(pnode, index, node);
         if (n) {
+            const old = this.__id2node.get(data.id);
+            if (old) this.__dirtree.del(old);
             this.__id2node.set(data.id, n);
             if (this.__saveFoldedDirState && this.__saveUnfolds.has(data.id)) {
                 this.__unfold(n, data);
@@ -197,13 +203,47 @@ export class FoldDirTree<T extends DirItem> {
         return false;
     }
 
-    childsOf(data: T): {data: T, fold: boolean}[] {
+    childsOf(data: T): { data: T, fold: boolean }[] {
         const n = this.__id2node.get(data.id);
         if (n && n.__childs) {
             return n.__childs.map((v) => {
-                return {data: v.__data.data, fold: v.__data.fold}
+                return { data: v.__data.data, fold: v.__data.fold }
             })
         }
         return [];
+    }
+
+    updateChilds(data: T) {
+        if (!data.childs) return;
+
+        const node = this.__id2node.get(data.id);
+        if (!node || node.__data.fold) return; // 折叠的
+
+        const shapechilds = this.__revertChilds ? data.childs.slice(0).reverse() : data.childs; // reverse
+        const childs = node.__childs || [];
+
+        // compare
+        let i = 0;
+        const slen = shapechilds.length;
+        for (; i < slen && i < childs.length; i++) {
+            const shapechild = shapechilds[i]
+            const nodechild = childs[i]
+            if (shapechild.id !== nodechild.__data.data.id) {
+                this.delete(shapechild as T)
+                this.insert(data, i, shapechild as T);
+            }
+        }
+        for (let j = i; j < childs.length; j++) {
+            const nodechild = childs[j]
+            const old = this.__id2node.get(nodechild.__data.data.id);
+            if (old !== nodechild) throw new Error("shape list wrong");
+            this.__id2node.delete(nodechild.__data.data.id);
+            this.__dirtree.del(nodechild)
+        }
+        for (let j = i; j < slen; j++) {
+            const shapechild = shapechilds[j]
+            this.delete(shapechild as T)
+            this.insert(data, j, shapechild as T);
+        }
     }
 }
