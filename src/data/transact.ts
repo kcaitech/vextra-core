@@ -1,6 +1,7 @@
 import { objectId, __objidkey } from '../basic/objectid';
 import { Basic, castNotifiable, IDataGuard, ISave4Restore, Notifiable } from './basic';
 import { Watchable } from './basic';
+// map 对象record
 interface MapRec {
     isContentExist: boolean // 元素是否在map对象身上
     key: any // 键
