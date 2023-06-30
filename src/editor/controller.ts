@@ -263,7 +263,7 @@ export class Controller {
         }
 
         const close = () => {
-            if (status == Status.Fulfilled && newShape) {
+            if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();
@@ -305,7 +305,7 @@ export class Controller {
             status = Status.Fulfilled;
         }
         const close = () => {
-            if (status == Status.Fulfilled) {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();
@@ -339,7 +339,7 @@ export class Controller {
             status = Status.Fulfilled;
         }
         const close = () => {
-            if (status == Status.Fulfilled) {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();
@@ -383,7 +383,7 @@ export class Controller {
             status = Status.Fulfilled;
         }
         const close = () => {
-            if (status == Status.Fulfilled) {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();

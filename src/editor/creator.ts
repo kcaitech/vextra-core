@@ -111,8 +111,8 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
 
 export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const style = newStyle();
-    const sPoint = new CurvePoint(0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.None, new Point2D(1, 0));
-    const ePoint = new CurvePoint(0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.None, new Point2D(0, 1));
+    const sPoint = new CurvePoint(0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(0, 0));
+    const ePoint = new CurvePoint(0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const id = uuid();
     const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, types.BoolOp.None, curvePoint);
