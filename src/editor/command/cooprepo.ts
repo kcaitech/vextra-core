@@ -9,6 +9,7 @@ import { uuid } from "../../basic/uuid";
 import { ShapeArrayAttrGroup } from "../../coop/data/classes";
 import { ShapeCmdGroup } from "../../coop/data/classes";
 import { TextCmdGroup } from "../../coop/data/classes";
+import {cmdClone} from "../../coop/util";
 
 export class CoopRepository {
     private __repo: Repository;
@@ -113,7 +114,7 @@ export class CoopRepository {
         if (!this.canRedo()) {
             return;
         }
-        let redoCmd = this.__localcmds[this.__index];
+        let redoCmd = cmdClone(this.__localcmds[this.__index]);
         const oldCmdId = redoCmd.unitId;
         if (redoCmd) {
             const unitId = uuid();
