@@ -1,4 +1,4 @@
-import { Cmd } from "../../coop/data/classes";
+import { Cmd, CmdGroup } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 import { Repository } from "../../data/transact";
 import { CMDExecuter } from "./executer";
@@ -86,7 +86,8 @@ export class CoopRepository {
         const revertCmd = this.__cmdrevert.revert(undoCmd);
         if (revertCmd) {
             const unitId = uuid();
-            if (revertCmd instanceof ShapeArrayAttrGroup ||
+            if (revertCmd instanceof CmdGroup ||
+                revertCmd instanceof ShapeArrayAttrGroup ||
                 revertCmd instanceof ShapeCmdGroup ||
                 revertCmd instanceof TextCmdGroup) {
                 revertCmd.setUnitId(unitId);
@@ -107,7 +108,8 @@ export class CoopRepository {
         const redoCmd = this.__localcmds[this.__index];
         if (redoCmd) {
             const unitId = uuid();
-            if (redoCmd instanceof ShapeArrayAttrGroup ||
+            if (redoCmd instanceof CmdGroup ||
+                redoCmd instanceof ShapeArrayAttrGroup ||
                 redoCmd instanceof ShapeCmdGroup ||
                 redoCmd instanceof TextCmdGroup) {
                 redoCmd.setUnitId(unitId);

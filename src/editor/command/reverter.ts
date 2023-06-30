@@ -146,7 +146,7 @@ export class CMDReverter {
 
     shapeArrAttrCMDGroup(cmd: ShapeArrayAttrGroup): ShapeArrayAttrGroup {
         const ret = ShapeArrayAttrGroup.Make(cmd.blockId);
-        cmd.cmds.reverse().forEach((cmd) => {
+        cmd.cmds.slice(0).reverse().forEach((cmd) => {
             const r = this.revert(cmd);
             if (r) ret.cmds.push(r as any)
         })
@@ -207,7 +207,7 @@ export class CMDReverter {
     }
     shapeCMDGroup(cmd: ShapeCmdGroup): ShapeCmdGroup {
         const ret = ShapeCmdGroup.Make(cmd.blockId);
-        cmd.cmds.reverse().forEach((cmd) => {
+        cmd.cmds.slice(0).reverse().forEach((cmd) => {
             const r = this.revert(cmd);
             if (r) ret.cmds.push(r as any)
         })
@@ -340,7 +340,7 @@ export class CMDReverter {
     cmdGroup(cmd: CmdGroup): CmdGroup {
         const ret = CmdGroup.Make(cmd.blockId);
         const revert = ret.cmds;
-        cmd.cmds.reverse().forEach((cmd) => {
+        cmd.cmds.slice(0).reverse().forEach((cmd) => {
             switch (cmd.type) {
                 case CmdType.TextInsert:
                     revert.push(this.textInsert(cmd as TextCmdInsert));
