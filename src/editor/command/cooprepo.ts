@@ -16,6 +16,7 @@ export class CoopRepository {
     private __cmdexec: CMDExecuter;
     private __commitListener: ((cmd: Cmd, isRemote: boolean) => void)[] = [];
     private __rollbackListener: ((isRemote: boolean) => void)[] = [];
+    private __undoRedoListener: ((newCmd: Cmd, oldCmdId: string) => Cmd | undefined)[] = [];
     private __allcmds: Cmd[] = [];
     private __localcmds: (Cmd & { index: number })[] = [];
     private __index: number = 0;
@@ -82,8 +83,8 @@ export class CoopRepository {
             return;
         }
         const undoCmd = this.__localcmds[this.__index - 1];
-        // 这里需要变换
-        const revertCmd = this.__cmdrevert.revert(undoCmd);
+        const oldCmdId = undoCmd.unitId;
+        let revertCmd = this.__cmdrevert.revert(undoCmd);
         if (revertCmd) {
             const unitId = uuid();
             if (revertCmd instanceof ShapeArrayAttrGroup ||
@@ -94,6 +95,7 @@ export class CoopRepository {
             else {
                 revertCmd.unitId = unitId;
             }
+            for (const h of this.__undoRedoListener) revertCmd = h(revertCmd, oldCmdId) as any ?? revertCmd;
             if (this._exec(revertCmd, false)) {
                 this.__index--;
             }
@@ -104,7 +106,8 @@ export class CoopRepository {
         if (!this.canRedo()) {
             return;
         }
-        const redoCmd = this.__localcmds[this.__index];
+        let redoCmd = this.__localcmds[this.__index];
+        const oldCmdId = redoCmd.unitId;
         if (redoCmd) {
             const unitId = uuid();
             if (redoCmd instanceof ShapeArrayAttrGroup ||
@@ -115,7 +118,7 @@ export class CoopRepository {
             else {
                 redoCmd.unitId = unitId;
             }
-
+            for (const h of this.__undoRedoListener) redoCmd = h(redoCmd, oldCmdId) as any ?? redoCmd;
             if (this._exec(redoCmd, false)) {
                 this.__index++;
             }
@@ -172,6 +175,16 @@ export class CoopRepository {
     }
     onRollback(listener: (isRemote: boolean) => void) {
         const _listeners = this.__rollbackListener;
+        _listeners.push(listener);
+        return {
+            stop() {
+                const idx = _listeners.indexOf(listener);
+                if (idx >= 0) _listeners.splice(idx, 1);
+            }
+        }
+    }
+    onUndoRedo(listener: (newCmd: Cmd, oldCmdId: string) => Cmd | undefined) {
+        const _listeners = this.__undoRedoListener;
         _listeners.push(listener);
         return {
             stop() {
