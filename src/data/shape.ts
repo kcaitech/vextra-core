@@ -33,12 +33,16 @@ export class Shape extends Watchable(classes.Shape) {
      * @returns 
      */
     realXY(): { x: number, y: number, width: number, height: number } {
-        return this.frame2Page();
+        return this.frame2Root();
     }
 
-    frame2Page(): ShapeFrame {
+    /**
+     * root: page 往上一级
+     * @returns 
+     */
+    frame2Root(): ShapeFrame {
         const frame = this.frame;
-        const m = this.matrix2Page();
+        const m = this.matrix2Root();
         const lt = m.computeCoord(0, 0);
         const rb = m.computeCoord(frame.width, frame.height);
         return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
@@ -53,7 +57,11 @@ export class Shape extends Watchable(classes.Shape) {
         return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
     }
 
-    matrix2Page() {
+    /**
+     * root: page 往上一级
+     * @returns 
+     */
+    matrix2Root() {
         let s: Shape | undefined = this;
         let m = new Matrix();
         while (s) {

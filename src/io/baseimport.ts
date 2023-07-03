@@ -401,6 +401,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
 /* curve point */
 export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext): impl.CurvePoint {
     const ret: impl.CurvePoint = new impl.CurvePoint (
+        source.id,
         source.cornerRadius,
         importPoint2D(source.curveFrom, ctx),
         importPoint2D(source.curveTo, ctx),
