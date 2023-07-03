@@ -45,5 +45,14 @@ export const BORDER_ATTR_ID = {
 export const TEXT_ATTR_ID = {
     color: "color",
     fontSize: "fontSize",
-    fontName: "fontName"
+    fontName: "fontName",
+    kerning: "kerning",
+}
+
+export const POINTS_ID = "points"
+
+export const POINTS_ATTR_ID = {
+    from: "from",
+    to: "to",
+    point: "point",
 }
