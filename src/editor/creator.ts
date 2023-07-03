@@ -84,10 +84,10 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
     const radius = new RectRadius(0, 0, 0, 0);
-    const p1 = new CurvePoint(0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0)); // lt
-    const p2 = new CurvePoint(0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.Straight, new Point2D(1, 0)); // rt
-    const p3 = new CurvePoint(0, new Point2D(1, 1), new Point2D(1, 1), false, false, CurveMode.Straight, new Point2D(1, 1)); // rb
-    const p4 = new CurvePoint(0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
+    const p1 = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0)); // lt
+    const p2 = new CurvePoint(uuid(), 0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.Straight, new Point2D(1, 0)); // rt
+    const p3 = new CurvePoint(uuid(), 0, new Point2D(1, 1), new Point2D(1, 1), false, false, CurveMode.Straight, new Point2D(1, 1)); // rb
+    const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
     curvePoint.push(p1, p2, p3, p4);
     const shape = new RectShape(id, name, types.ShapeType.Rectangle, frame, style, types.BoolOp.None, curvePoint, radius);
     addCommonAttr(shape);
@@ -99,10 +99,10 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
     const ellipse = new Ellipse(79.5, 76, 79, 75.5);
-    const p1 = new CurvePoint(0, new Point2D(0.7761423749, 1), new Point2D(0.2238576251, 1), true, true, CurveMode.Mirrored, new Point2D(0.5, 1));
-    const p2 = new CurvePoint(0, new Point2D(1, 0.2238576251), new Point2D(1, 0.7761423749), true, true, CurveMode.Mirrored, new Point2D(1, 0.5));
-    const p3 = new CurvePoint(0, new Point2D(0.2238576251, 0), new Point2D(0.7761423749, 0), true, true, CurveMode.Mirrored, new Point2D(0.5, 0));
-    const p4 = new CurvePoint(0, new Point2D(0, 0.7761423749), new Point2D(0, 0.2238576251), true, true, CurveMode.Mirrored, new Point2D(0, 0.5));
+    const p1 = new CurvePoint(uuid(), 0, new Point2D(0.7761423749, 1), new Point2D(0.2238576251, 1), true, true, CurveMode.Mirrored, new Point2D(0.5, 1));
+    const p2 = new CurvePoint(uuid(), 0, new Point2D(1, 0.2238576251), new Point2D(1, 0.7761423749), true, true, CurveMode.Mirrored, new Point2D(1, 0.5));
+    const p3 = new CurvePoint(uuid(), 0, new Point2D(0.2238576251, 0), new Point2D(0.7761423749, 0), true, true, CurveMode.Mirrored, new Point2D(0.5, 0));
+    const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 0.7761423749), new Point2D(0, 0.2238576251), true, true, CurveMode.Mirrored, new Point2D(0, 0.5));
     curvePoint.push(p1, p2, p3, p4);
     const shape = new OvalShape(id, name, types.ShapeType.Oval, frame, style, types.BoolOp.None, curvePoint, ellipse);
     addCommonAttr(shape);
@@ -111,8 +111,8 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
 
 export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const style = newStyle();
-    const sPoint = new CurvePoint(0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.None, new Point2D(1, 0));
-    const ePoint = new CurvePoint(0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.None, new Point2D(0, 1));
+    const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(0, 0));
+    const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const id = uuid();
     const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, types.BoolOp.None, curvePoint);

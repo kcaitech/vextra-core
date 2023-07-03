@@ -9,9 +9,9 @@ import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportRectRadius, exportText } from "../../io/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
-import { GroupShape, RectRadius, Shape, TextShape } from "../../data/shape";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportRectRadius, exportText } from "../../io/baseexport";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { GroupShape, RectRadius, Shape, TextShape, PathShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Artboard } from "../../data/artboard";
 import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "../../data/style";
@@ -19,6 +19,7 @@ import { SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../..
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
+import { Point2D } from "data/typesdefine";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -31,7 +32,10 @@ export class Api {
         this.cmds.length = 0;
         this.needUpdateFrame.length = 0;
     }
-    commit(): Cmd {
+    isNeedCommit(): boolean {
+        return this.cmds.length > 0;
+    }
+    commit(): Cmd | undefined {
         if (this.needUpdateFrame.length > 0) {
             const update = this.needUpdateFrame.slice(0);
             const page = update[0].page;
@@ -326,6 +330,36 @@ export class Api {
             const save = shape.fixedRadius;
             shape.fixedRadius = radius;
             this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.radius, exportRectRadius(radius), exportRectRadius(save)))
+        })
+    }
+    shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const p = shape.points[index];
+            const origin = exportPoint2D(p.point);
+            p.point.x = point.x;
+            p.point.y = point.y;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, shape.id, POINTS_ID, p.id, POINTS_ATTR_ID.point, exportPoint2D(point), origin))
+        })
+    }
+    shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const p = shape.points[index];
+            const origin = exportPoint2D(p.curveFrom);
+            p.curveFrom.x = point.x;
+            p.curveFrom.y = point.y;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, shape.id, POINTS_ID, p.id, POINTS_ATTR_ID.from, exportPoint2D(point), origin))
+        })
+    }
+    shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const p = shape.points[index];
+            const origin = exportPoint2D(p.curveTo);
+            p.curveTo.x = point.x;
+            p.curveTo.y = point.y;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, shape.id, POINTS_ID, p.id, POINTS_ATTR_ID.to, exportPoint2D(point), origin))
         })
     }
     artboardModifyBackgroundColor(page: Page, shape: Artboard, color: Color) {

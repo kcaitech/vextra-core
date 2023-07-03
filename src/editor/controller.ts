@@ -91,28 +91,28 @@ function singleHdl(api: Api, page: Page, shape: Shape, type: CtrlElementType, st
         } else if (type === CtrlElementType.RectLB) {
             adjustLB2(api, page, shape, end.x, end.y);
         } else if (type === CtrlElementType.RectTop) {
-            const m = shape.matrix2Page();
+            const m = shape.matrix2Root();
             const p1 = m.inverseCoord(start.x, start.y);
             const p2 = m.inverseCoord(end.x, end.y);
             const dy = p2.y - p1.y;
             const { x, y } = m.computeCoord(0, dy);
             adjustLT2(api, page, shape, x, y);
         } else if (type === CtrlElementType.RectRight) {
-            const m = shape.matrix2Page();
+            const m = shape.matrix2Root();
             const p1 = m.inverseCoord(start.x, start.y);
             const p2 = m.inverseCoord(end.x, end.y);
             const dx = p2.x - p1.x;
             const { x, y } = m.computeCoord(shape.frame.width + dx, 0);
             adjustRT2(api, page, shape, x, y);
         } else if (type === CtrlElementType.RectBottom) {
-            const m = shape.matrix2Page();
+            const m = shape.matrix2Root();
             const p1 = m.inverseCoord(start.x, start.y);
             const p2 = m.inverseCoord(end.x, end.y);
             const dy = p2.y - p1.y;
             const { x, y } = m.computeCoord(shape.frame.width, shape.frame.height + dy);
             adjustRB2(api, page, shape, x, y);
         } else if (type === CtrlElementType.RectLeft) {
-            const m = shape.matrix2Page();
+            const m = shape.matrix2Root();
             const p1 = m.inverseCoord(start.x, start.y);
             const p2 = m.inverseCoord(end.x, end.y);
             const dx = p2.x - p1.x;
@@ -122,7 +122,9 @@ function singleHdl(api: Api, page: Page, shape: Shape, type: CtrlElementType, st
     }
 }
 // 单个图形处理(编组对象)
-function singleHdl4Group(shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') { }
+function singleHdl4Group(api: Api, page: Page, shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
+    singleHdl(api, page, shape, type, start, end, deg, actionType)
+}
 // 处理异步编辑
 export class Controller {
     private __repo: CoopRepository;
@@ -157,7 +159,7 @@ export class Controller {
             savepage = page;
             status = Status.Pending;
             const shape = this.create(type, name, frame);
-            const xy = parent.frame2Page();
+            const xy = parent.frame2Root();
             shape.frame.x -= xy.x;
             shape.frame.y -= xy.y;
             api.shapeInsert(page, parent, shape, parent.childs.length)
@@ -174,7 +176,7 @@ export class Controller {
                 const ref = `${v4()}.${format}`;
                 this.__document.mediasMgr.add(ref, media);
                 const shape = this.create(ShapeType.Image, name, frame, ref, this.__document.mediasMgr);
-                const xy = parent.frame2Page();
+                const xy = parent.frame2Root();
                 shape.frame.x -= xy.x;
                 shape.frame.y -= xy.y;
                 api.shapeInsert(page, parent, shape, parent.childs.length)
@@ -193,7 +195,7 @@ export class Controller {
                 }
                 const shape = newTextShape(name, this.__document.measureFun);
                 shape.text.insertText(content, 0);
-                const xy = parent.frame2Page();
+                const xy = parent.frame2Root();
                 shape.frame.x = frame.x - xy.x;
                 shape.frame.y = frame.y - xy.y;
                 const layout = shape.getLayout();
@@ -263,7 +265,7 @@ export class Controller {
         }
 
         const close = () => {
-            if (status == Status.Fulfilled && newShape) {
+            if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();
@@ -282,7 +284,7 @@ export class Controller {
             if (len === 1) {
                 const item = shapes[0];
                 if (item.type === ShapeType.Group) {
-                    singleHdl4Group(item, type, start, end, deg, actionType); // 编组对象处理
+                    singleHdl4Group(api, page, item, type, start, end, deg, actionType); // 编组对象处理
                 } else {
                     singleHdl(api, page, item, type, start, end, deg, actionType); // 普通对象处理
                 }
@@ -294,7 +296,7 @@ export class Controller {
             status = Status.Pending;
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
-                const { x, y, width, height } = shape.frame2Page();
+                const { x, y, width, height } = shape.frame2Root();
                 const { x: ox, y: oy, width: ow, height: oh } = oldControllerFrame;
                 const { x: nx, y: ny, width: nw, height: nh } = newControllerFrame;
                 const ratio = { x: nw / ow, y: nh / oh };
@@ -305,7 +307,7 @@ export class Controller {
             status = Status.Fulfilled;
         }
         const close = () => {
-            if (status == Status.Fulfilled) {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();
@@ -339,7 +341,7 @@ export class Controller {
             status = Status.Fulfilled;
         }
         const close = () => {
-            if (status == Status.Fulfilled) {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();
@@ -357,7 +359,7 @@ export class Controller {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 const origin: GroupShape = shape.parent as GroupShape;
-                const { x, y } = shape.frame2Page();
+                const { x, y } = shape.frame2Root();
                 api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length)
                 translateTo(api, page, shape, x, y);
             }
@@ -383,7 +385,7 @@ export class Controller {
             status = Status.Fulfilled;
         }
         const close = () => {
-            if (status == Status.Fulfilled) {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();
