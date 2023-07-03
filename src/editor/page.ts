@@ -348,6 +348,55 @@ export class PageEditor {
         }
         return false;
     }
+    uppper_layer(shape: Shape, step?: number) {
+        const parent = shape.parent as GroupShape | undefined;
+        if (!parent) return false;
+        const index = parent.indexOfChild(shape);
+        const len = parent.childs.length;
+        if (index < 0 || index >= len - 1) return false;
+        const api = this.__repo.start("move", {});
+        try {
+            if (!step) { // 如果没有步值，则上移到最上层(index => parent.childs.length -1);
+                api.shapeMove(this.__page, parent, index, parent, len - 1);
+            } else {
+                if (step + index >= len) { // 如果没有步值已经迈出分组，则上移到最上层(index => parent.childs.length -1);
+                    api.shapeMove(this.__page, parent, index, parent, len - 1);
+                } else {
+                    api.shapeMove(this.__page, parent, index, parent, index + step);
+                }
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+            return false;
+        }
+    }
+    lower_layer(shape: Shape, step?: number) {
+        const parent = shape.parent as GroupShape | undefined;
+        if (!parent) return false;
+        const index = parent.indexOfChild(shape);
+        if (index < 1) return false;
+        const api = this.__repo.start("move", {});
+        try {
+            if (!step) { // 如果没有步值，则下移到最底层(index => 0);
+                api.shapeMove(this.__page, parent, index, parent, 0);
+            } else {
+                if (index - step <= 0) { // 如果没有步值已经迈出分组，则下移到最底层(index => 0);
+                    api.shapeMove(this.__page, parent, index, parent, 0);
+                } else {
+                    api.shapeMove(this.__page, parent, index, parent, index - step);
+                }
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+            return false;
+        }
+    }
     setName(name: string) {
         const api = this.__repo.start("setName", {});
         api.pageModifyName(this.__document, this.__page.id, name);
