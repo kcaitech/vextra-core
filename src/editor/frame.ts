@@ -17,6 +17,8 @@ export interface Api {
     shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
 }
 
+const minimum_WH = 0.001; // 用户可设置最小宽高值。以防止宽高为0
+
 function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number) {
 
     const childs = shape.childs;
@@ -218,7 +220,8 @@ export function translate(api: Api, page: Page, shape: Shape, dx: number, dy: nu
 
 export function expandTo(api: Api, page: Page, shape: Shape, w: number, h: number) {
     const frame = shape.frame;
-
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
     let changed = false;
     if (shape.isNoTransform()) {
         changed = setFrame(page, shape, frame.x, frame.y, w, h, api);
@@ -310,6 +313,8 @@ export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         h = -h;
     }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
     // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
     const cx1 = w / 2;
     const cy1 = h / 2;
@@ -325,6 +330,7 @@ export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     // (0,0)需要偏移到target位置
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
+
     const changed = setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
     // if (changed) updateFrame(shape);
 }
@@ -364,6 +370,8 @@ export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         h = -h;
     }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
 
     // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
     const cx1 = w / 2;
@@ -418,6 +426,8 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         h = -h;
     }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
 
     // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
     const cx1 = w / 2;
@@ -472,6 +482,8 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         h = -h;
     }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
     // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
     const cx1 = w / 2;
     const cy1 = h / 2;
