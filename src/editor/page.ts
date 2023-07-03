@@ -9,7 +9,7 @@ import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill } from "../data/classes";
+import { Border, BorderStyle, Color, Fill, Artboard } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
@@ -237,6 +237,132 @@ export class PageEditor {
         return false;
     }
 
+    create_artboard(shapes: Shape[], artboardname: string): false | Artboard {
+        if (shapes.length === 0) return false;
+        if (shapes.find((v) => !v.parent)) return false;
+        const fshape = shapes[0];
+        const savep = fshape.parent as GroupShape;
+
+        const api = this.__repo.start("group", {});
+        try {
+            // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
+            const saveidx = savep.indexOfChild(shapes[0]);
+            // 1、新建一个GroupShape
+            const artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
+            // 计算frame
+            //   计算每个shape的绝对坐标
+            const boundsArr = shapes.map((s) => {
+                const box = s.boundingBox()
+                const p = s.parent!;
+                const m = p.matrix2Root();
+                const lt = m.computeCoord(box.x, box.y);
+                const rb = m.computeCoord(box.x + box.width, box.y + box.height);
+                return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
+            })
+            const firstXY = boundsArr[0]
+            const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
+
+            boundsArr.reduce((pre, cur) => {
+                expandBounds(pre, cur.x, cur.y);
+                expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
+                return pre;
+            }, bounds)
+
+            const realXY = shapes.map((s) => s.frame2Root())
+
+            const m = new Matrix(savep.matrix2Root().inverse)
+            const xy = m.computeCoord(bounds.left, bounds.top)
+
+            artboard.frame.width = bounds.right - bounds.left;
+            artboard.frame.height = bounds.bottom - bounds.top;
+            artboard.frame.x = xy.x;
+            artboard.frame.y = xy.y;
+
+            // 4、将GroupShape加入到save parent(层级最高图形的parent)中
+            api.shapeInsert(this.__page, savep, artboard, saveidx)
+
+            // 2、将shapes里对象从parent中退出
+            // 3、将shapes里的对象从原本parent下移入新建的GroupShape
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const s = shapes[i];
+                const p = s.parent as GroupShape;
+                const idx = p.indexOfChild(s);
+                api.shapeMove(this.__page, p, idx, artboard, 0); // 层级低的放前面
+
+                if (p.childs.length <= 0) {
+                    this.delete_inner(this.__page, p, api)
+                }
+            }
+
+            // 往上调整width & height
+            // update childs frame
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const c = shapes[i]
+
+                const r = realXY[i]
+                const target = m.computeCoord(r.x, r.y);
+                const cur = c.matrix2Parent().computeCoord(0, 0);
+
+                api.shapeModifyX(this.__page, c, c.frame.x + target.x - cur.x - xy.x);
+                api.shapeModifyY(this.__page, c, c.frame.y + target.y - cur.y - xy.y)
+            }
+
+            this.__repo.commit();
+            return artboard;
+        }
+        catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    dissolution_artboard(shape: Artboard): false | Shape[] {
+        if (!shape.parent) return false;
+        const api = this.__repo.start("", {});
+        try {
+            const savep = shape.parent as GroupShape;
+            let idx = savep.indexOfChild(shape);
+            const saveidx = idx;
+            const m = shape.matrix2Parent();
+            const childs: Shape[] = [];
+
+            for (let i = 0, len = shape.childs.length; i < len; i++) {
+                const c = shape.childs[i]
+                const m1 = c.matrix2Parent();
+                m1.multiAtLeft(m);
+                const target = m1.computeCoord(0, 0);
+
+                if (shape.rotation) {
+                    api.shapeModifyRotate(this.__page, c, (c.rotation || 0) + shape.rotation)
+                }
+                if (shape.isFlippedHorizontal) {
+                    api.shapeModifyHFlip(this.__page, c, !c.isFlippedHorizontal)
+                }
+                if (shape.isFlippedVertical) {
+                    api.shapeModifyVFlip(this.__page, c, !c.isFlippedVertical)
+                }
+                const m2 = c.matrix2Parent();
+                const cur = m2.computeCoord(0, 0);
+
+                api.shapeModifyX(this.__page, c, c.frame.x + target.x - cur.x);
+                api.shapeModifyY(this.__page, c, c.frame.y + target.y - cur.y);
+            }
+            for (let len = shape.childs.length; len > 0; len--) {
+                const c = shape.childs[0];
+                api.shapeMove(this.__page, shape, 0, savep, idx)
+                idx++;
+                childs.push(c);
+            }
+            api.shapeDelete(this.__page, savep, saveidx + childs.length)
+            this.__repo.commit();
+            return childs;
+        } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
     private delete_inner(page: Page, shape: Shape, api: Api): boolean {
         const p = shape.parent as GroupShape;
         if (!p) return false;
@@ -280,7 +406,7 @@ export class PageEditor {
                 const savep = shape.parent as GroupShape;
                 if (!savep) return false;
                 this.delete_inner(page, shape, api)
-                if (!savep.childs.length) {
+                if (!savep.childs.length && savep.type === ShapeType.Group) {
                     this.delete_inner(page, savep, api);
                 }
             } catch (error) {
@@ -347,6 +473,55 @@ export class PageEditor {
             }
         }
         return false;
+    }
+    uppper_layer(shape: Shape, step?: number) {
+        const parent = shape.parent as GroupShape | undefined;
+        if (!parent) return false;
+        const index = parent.indexOfChild(shape);
+        const len = parent.childs.length;
+        if (index < 0 || index >= len - 1) return false;
+        const api = this.__repo.start("move", {});
+        try {
+            if (!step) { // 如果没有步值，则上移到最上层(index => parent.childs.length -1);
+                api.shapeMove(this.__page, parent, index, parent, len - 1);
+            } else {
+                if (step + index >= len) { // 如果没有步值已经迈出分组，则上移到最上层(index => parent.childs.length -1);
+                    api.shapeMove(this.__page, parent, index, parent, len - 1);
+                } else {
+                    api.shapeMove(this.__page, parent, index, parent, index + step);
+                }
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+            return false;
+        }
+    }
+    lower_layer(shape: Shape, step?: number) {
+        const parent = shape.parent as GroupShape | undefined;
+        if (!parent) return false;
+        const index = parent.indexOfChild(shape);
+        if (index < 1) return false;
+        const api = this.__repo.start("move", {});
+        try {
+            if (!step) { // 如果没有步值，则下移到最底层(index => 0);
+                api.shapeMove(this.__page, parent, index, parent, 0);
+            } else {
+                if (index - step <= 0) { // 如果没有步值已经迈出分组，则下移到最底层(index => 0);
+                    api.shapeMove(this.__page, parent, index, parent, 0);
+                } else {
+                    api.shapeMove(this.__page, parent, index, parent, index - step);
+                }
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+            return false;
+        }
     }
     setName(name: string) {
         const api = this.__repo.start("setName", {});
