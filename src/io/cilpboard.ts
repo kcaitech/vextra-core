@@ -91,7 +91,7 @@ export function import_shape(document: Document, source: { index: number, conten
             } else if (type === ShapeType.Image) {
                 r = importImageShape(_s.content as types.ImageShape, ctx);
             } else if (type === ShapeType.Text) {
-                r = importTextShape(_s.content as types.TextShape);
+                r = importTextShape(_s.content as types.TextShape, ctx);
             } else if (type === ShapeType.Path) {
                 r = importPathShape(_s.content as types.PathShape);
             } else if (type === ShapeType.Artboard) {
@@ -105,7 +105,7 @@ export function import_shape(document: Document, source: { index: number, conten
                 if (childs && childs.length) {
                     set_childs_id(childs);
                 }
-                r = importGroupShape(_s.content as types.GroupShape);
+                r = importGroupShape(_s.content as types.GroupShape, ctx);
             }
             if (r) {
                 result.push(r);

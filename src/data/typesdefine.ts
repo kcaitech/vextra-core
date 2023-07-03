@@ -280,6 +280,7 @@ export type DocumentMeta = {
 }
 /* curve point */
 export type CurvePoint = {
+    id: string
     cornerRadius: number
     curveFrom: Point2D
     curveTo: Point2D

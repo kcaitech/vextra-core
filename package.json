@@ -1,6 +1,6 @@
 {
   "name": "@kcdesign/data",
-  "version": "0.1.42",
+  "version": "0.1.47",
   "private": false,
   "description": "kcdesign core module",
   "author": "kcaisoft.com",
@@ -19,7 +19,7 @@
     "coop-server": "npx tsc -p src/coop/server-tsconfig.json && node dist_server/coop/server.js"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.329.0",
+    "@aws-sdk/client-s3": "3.329.0",
     "minio": "^7.1.0",
     "mongodb": "^5.6.0",
     "uuid": "^9.0.0"

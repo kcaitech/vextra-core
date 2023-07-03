@@ -66,7 +66,7 @@ function importPoints(data: IJSON): CurvePoint[] {
         const hasCurveFrom: boolean = d['hasCurveFrom'];
         const hasCurveTo: boolean = d['hasCurveTo'];
         const point: Point2D = importXY(d['point']);
-        return new CurvePoint(cornerRadius, curveFrom, curveTo, hasCurveFrom, hasCurveTo, curveMode, point);
+        return new CurvePoint(uuid(), cornerRadius, curveFrom, curveTo, hasCurveFrom, hasCurveTo, curveMode, point);
     });
 }
 

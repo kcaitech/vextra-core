@@ -50,6 +50,26 @@ export function adjustLinesVertical(lines: LineArray, align: TextVerAlign) {
 
 export type MeasureFun = (code: number, font: string) => TextMetrics | undefined;
 
+function isNewLineCharCode(code: number) {
+    // U+0009: Horizontal tab
+    // U+000A: Line feed
+    // U+000B: Vertical tab
+    // U+000C: Form feed
+    // U+000D: Carriage return
+    // U+0020: Space
+    // U+00A0: Non-breaking space
+    // U+2028: Line separator
+    // U+2029: Paragraph separator
+    switch (code) {
+        case 0x0A:
+        case 0x0D:
+        case 0x2028:
+        case 0x2029:
+            return true;
+    }
+    return false;
+}
+
 export function layoutLines(para: Para, width: number, measure: MeasureFun): LineArray {
     let spans = para.spans;
     let spansCount = spans.length;
@@ -86,12 +106,18 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
         if (spanIdx >= spansCount) spanIdx = spansCount - 1; // fix
 
         if (preSpanIdx !== spanIdx) {
+            preSpanIdx = spanIdx;
             span = spans[spanIdx];
             font = "normal " + span.fontSize + "px " + span.fontName;
         }
 
+        if (span.length === 0 && spanIdx < spansCount - 1) { // 不是最后一个空的span
+            spanIdx++;
+            continue;
+        }
+
         const c = text.charCodeAt(textIdx);
-        if (c === 0x0A) {
+        if (isNewLineCharCode(c)) {
             // '\n'
             if (!graphArray) {
                 graphArray = new GraphArray();
@@ -120,11 +146,10 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
             graphArray = undefined; //new GraphArray();
             lineArray.push(line);
             line = new Line();
+            curX = startX;
             if (preSpanIdx === spanIdx || spanIdx >= spansCount) {
                 line.maxFontSize = span.fontSize ?? 0;
             }
-
-            preSpanIdx = spanIdx;
             continue;
         }
         const m = measure(c, font);
@@ -225,7 +250,6 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
                 graphArray = undefined;
             }
         }
-        preSpanIdx = spanIdx;
     }
 
     if (graphArray && graphArray.length > 0) {
@@ -246,12 +270,12 @@ export function layoutPara(para: Para, layoutWidth: number, measure: MeasureFun)
     let paraHeight = 0;
     let graphCount = 0;
     const lines = layouts.map((line) => {
-        let lineHeight = pAttr && pAttr.minimumLineHeight || 0;
-        if (pAttr && pAttr.maximumLineHeight === pAttr.minimumLineHeight) {
-            lineHeight = pAttr.minimumLineHeight || 0;
+        let lineHeight = line.maxFontSize;
+        if (pAttr && pAttr.maximumLineHeight != undefined) {
+            lineHeight = Math.min(pAttr.maximumLineHeight, lineHeight)
         }
-        else {
-            lineHeight = line.maxFontSize;
+        if (pAttr && pAttr.minimumLineHeight != undefined) {
+            lineHeight = Math.max(pAttr.minimumLineHeight, lineHeight);
         }
         const y = paraHeight;
         paraHeight += lineHeight;

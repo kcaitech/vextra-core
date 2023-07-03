@@ -9,6 +9,10 @@ export function castNotifiable(obj: any): Notifiable | undefined {
     if (obj.__uuid === __uuid) return obj as Notifiable;
 }
 
+export function isDataBasicType(obj: any): boolean {
+    return (obj.__uuid === __uuid);
+}
+
 export class Basic {
     protected __uuid = __uuid
     typeId = '';

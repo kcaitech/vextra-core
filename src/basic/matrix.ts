@@ -57,6 +57,11 @@ export class Matrix {
     scale(sx: number, sy?: number) {
         this.multiAtLeft([sx, 0, 0, sy ?? sx, 0, 0]);
     }
+    preScale(s: number): void;
+    preScale(sx: number, sy: number): void;
+    preScale(sx: number, sy?: number) {
+        this.multi([sx, 0, 0, sy ?? sx, 0, 0]);
+    }
     /** 
      * @radians x轴向右，y轴坐标向下，顺时针方向，0-2pi 
      * @x @y 旋转中心点

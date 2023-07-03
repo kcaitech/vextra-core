@@ -1,7 +1,12 @@
 import { objectId, __objidkey } from '../basic/objectid';
-import { BasicMap, castNotifiable, IDataGuard, ISave4Restore, Notifiable } from './basic';
+import { castNotifiable, IDataGuard, ISave4Restore, isDataBasicType, Notifiable } from './basic';
 import { Watchable } from './basic';
-
+// map 对象record
+interface MapRec {
+    isContentExist: boolean // 元素是否在map对象身上
+    key: any // 键
+    content: any // 值
+}
 class TContext {
     public transact?: Transact;
     public settrap: boolean = false;
@@ -171,12 +176,10 @@ class ProxyHandler {
         return result;
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
-        const val = Reflect.get(target, propertyKey, receiver);
-        if (val === undefined && propertyKey === "__isProxy") {
-            return true;
-        }
-        if (target instanceof Map && typeof val == 'function') {
-            if (propertyKey == 'set' || propertyKey == 'delete') { // 只对Map对象的set、delete操作做get二级处理
+        if (target instanceof Map) { // map对象上的属性和方法都会进入get
+            if (propertyKey === 'size') { // map对象上唯一的一个可访问属性
+                return target.size;
+            } else if (propertyKey === 'set' || propertyKey === 'delete') { // 需要进入事务的方法
                 if (this.__context.transact === undefined) { // 二级处理中有对底层数据的修改，所以应该在事务内进行
                     throw new Error("NOT inside transact!");
                 }
@@ -186,10 +189,22 @@ class ProxyHandler {
                 else {
                     return Reflect.get(this.sub(this.__context, target, this), propertyKey);
                 }
+            } else if (propertyKey === 'clear') { // todo clear操作为批量删除，也需要进入事务
+                return true;
+            } else { // 其他操作，get、values、has、keys、forEach、entries，不影响数据
+                const val = Reflect.get(target, propertyKey, receiver);
+                if (val === undefined && propertyKey === "__isProxy") {
+                    return true;
+                }
+                return val.bind(target);
             }
-            return val.bind(target);
+        } else {
+            const val = Reflect.get(target, propertyKey, receiver);
+            if (val === undefined && propertyKey === "__isProxy") {
+                return true;
+            }
+            return val;
         }
-        return val;
     }
     has(target: object, propertyKey: PropertyKey) {
         if (target instanceof Map) {
@@ -210,7 +225,8 @@ class ProxyHandler {
                     value = deepProxy(value, h)
                 }
                 set_inner(key, value);
-                const r = new Rec(target, 'set', { isContentExist: true, content: value });
+                const map_rec: MapRec = { isContentExist: true, content: value, key };
+                const r = new Rec(target, 'set', map_rec);
                 _con.transact?.push(r);
             },
             delete(key: any) {
@@ -218,7 +234,8 @@ class ProxyHandler {
                 const ori = get(key)
                 const delete_inner = Map.prototype.delete.bind(target);
                 delete_inner(key);
-                const r = new Rec(target, 'delete', { isContentExist: false, content: ori });
+                const map_rec: MapRec = { isContentExist: false, content: ori, key };
+                const r = new Rec(target, 'delete', map_rec);
                 _con.transact?.push(r);
             }
         };
@@ -240,9 +257,9 @@ class Rec {
         if (this.__target instanceof Map) {
             if (this.__propertyKey === 'set' || this.__propertyKey === 'delete') {
                 if (this.__value.isContentExist) {
-                    this.__target.delete(this.__value.content.id);
+                    this.__target.delete(this.__value.key);
                 } else {
-                    this.__target.set(this.__value.content.id, this.__value.content);
+                    this.__target.set(this.__value.key, this.__value.content);
                 }
                 this.__value.isContentExist = !this.__value.isContentExist;
             }
@@ -480,19 +497,17 @@ function deepProxy(data: any, h: ProxyHandler): any {
     const stack: any[] = [data];
     while (stack.length > 0) {
         const d = stack.pop();
+        let parent: any = undefined;
+        if (isDataBasicType(d)) { // 当一个map对象为BasicMap对象时，其才能成为自身values集元素的__parent;
+            parent = d;
+        }
         if (d instanceof Map) {
-            let parent: any = undefined;
-            if (d instanceof BasicMap) { // 当一个map对象为BasicMap对象时，其才能成为自身values集元素的__parent;
-                parent = d;
-            }
             d.forEach((v, k, m) => {
-                if (k.startsWith("__")) {
+                if (k.toString().startsWith("__")) {
                     // donothing
                 }
                 else if (typeof (v) === 'object') { // 还有array set map
-                    if (parent) {
-                        v.__parent = parent;
-                    }
+                    if (parent) v.__parent = parent;
                     if (!isProxy(v)) {
                         m.set(k, new Proxy(v, h));
                         stack.push(v);
@@ -503,11 +518,11 @@ function deepProxy(data: any, h: ProxyHandler): any {
         else {
             for (const k in d) {
                 const v = Reflect.get(d, k);
-                if (k.startsWith("__")) {
+                if (k.toString().startsWith("__")) {
                     // donothing
                 }
                 else if (typeof (v) === 'object') { // 还有array set map
-                    v.__parent = d;
+                    if (parent) v.__parent = parent;
                     if (!isProxy(v)) {
                         const p = new Proxy(v, h);
                         Reflect.set(d, k, p);
