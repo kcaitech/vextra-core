@@ -105,7 +105,6 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
                 const target = current.map((p) => {
                     return { x: p.x * scaleX, y: p.y * scaleY }
                 })
-                if (scaleX > 5 || scaleY > 5) console.log(current, target)
 
                 const matrixarr = matrix.toArray();
                 matrixarr[4] = target[0].x;
@@ -180,9 +179,7 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
             api.shapeModifyWH(page, shape, w, h)
             const scaleX = frame.width / saveW;
             const scaleY = frame.height / saveH;
-            if (scaleX > 5 || scaleY > 5) {
-                console.log(scaleX, scaleY, frame.width, frame.height, saveW, saveH)
-            }
+
             afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY);
         }
         else {
