@@ -86,17 +86,19 @@ export class Shape extends Watchable(classes.Shape) {
     }
 
     matrix2Parent() {
-        let m = new Matrix();
+        const m = new Matrix();
         const frame = this.frame;
-        if (this.rotation || this.isFlippedHorizontal || this.isFlippedVertical) {
-            const cx = frame.width / 2;
-            const cy = frame.height / 2;
-            m.trans(-cx, -cy);
-            if (this.rotation) m.rotate(this.rotation / 360 * 2 * Math.PI);
-            if (this.isFlippedHorizontal) m.flipHoriz();
-            if (this.isFlippedVertical) m.flipVert();
-            m.trans(cx, cy);
+        if (this.isNoTransform()) {
+            m.trans(frame.x, frame.y);
+            return m;
         }
+        const cx = frame.width / 2;
+        const cy = frame.height / 2;
+        m.trans(-cx, -cy);
+        if (this.rotation) m.rotate(this.rotation / 360 * 2 * Math.PI);
+        if (this.isFlippedHorizontal) m.flipHoriz();
+        if (this.isFlippedVertical) m.flipVert();
+        m.trans(cx, cy);
         m.trans(frame.x, frame.y);
         return m;
     }
@@ -104,26 +106,23 @@ export class Shape extends Watchable(classes.Shape) {
     // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) return this.frame;
-        // if (this.__boundingBox) return this.__boundingBox;
         const path = this.getPath(true);
-        if (path.length === 0) {
-            const frame = this.frame;
+        if (path.length > 0) {
             const m = this.matrix2Parent();
-            const lt = m.computeCoord(0, 0);
-            const rt = m.computeCoord(frame.width, 0);
-            const rb = m.computeCoord(frame.width, frame.height);
-            const lb = m.computeCoord(0, frame.height);
-            const minx = Math.min(Math.min(lt.x, rt.x), Math.min(rb.x, lb.x));
-            const maxx = Math.max(Math.max(lt.x, rt.x), Math.max(rb.x, lb.x));
-            const miny = Math.min(Math.min(lt.y, rt.y), Math.min(rb.y, lb.y));
-            const maxy = Math.max(Math.max(lt.y, rt.y), Math.max(rb.y, lb.y));
-            return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+            path.transform(m);
+            const bounds = path.bounds;
+            return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
+
+        const frame = this.frame;
         const m = this.matrix2Parent();
-        path.transform(m);
-        const bounds = path.bounds;
-        return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
-        // return this.__boundingBox;
+        const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, { x: 0, y: frame.height }]
+            .map((p) => m.computeCoord(p));
+        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
 
     public notify(...args: any[]): void {
