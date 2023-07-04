@@ -2,7 +2,6 @@ import {
     PageCmdDelete,
     PageCmdInsert,
     PageCmdModify,
-    ShapeCmdGroup,
     ShapeCmdRemove,
     ShapeCmdInsert,
     ShapeCmdModify,
@@ -10,12 +9,10 @@ import {
     TextCmdModify,
     TextCmdRemove,
     TextCmdInsert,
-    TextCmdGroup,
     ShapeArrayAttrInsert,
     ShapeArrayAttrRemove,
     ShapeArrayAttrModify,
     ShapeArrayAttrMove,
-    ShapeArrayAttrGroup,
     PageCmdMove,
     TextCmdMove,
     ShapeOpMove,
@@ -134,7 +131,7 @@ export class CMDExecuter {
             return true;
         }
         catch (e) {
-            console.log("exec error:", e)
+            console.error("exec error:", e)
             this.__repo.rollback();
             return false;
         }
@@ -158,9 +155,6 @@ export class CMDExecuter {
             case CmdType.PageMove:
                 this.pageMove(cmd as PageCmdMove);
                 break;
-            case CmdType.ShapeArrayAttrGroup:
-                this.shapeArrayAttrCMDGroup(cmd as ShapeArrayAttrGroup);
-                break;
             case CmdType.ShapeArrayAttrInsert:
                 this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
                 break;
@@ -173,9 +167,6 @@ export class CMDExecuter {
             case CmdType.ShapeArrayAttrDelete:
                 this.shapeArrAttrDelete(cmd as ShapeArrayAttrRemove);
                 break;
-            case CmdType.ShapeCmdGroup:
-                this.shapeCMDGroup(cmd as ShapeCmdGroup, needUpdateFrame);
-                break;
             case CmdType.TextDelete:
                 this.textDelete(cmd as TextCmdRemove);
                 break;
@@ -184,9 +175,6 @@ export class CMDExecuter {
                 break;
             case CmdType.TextModify:
                 this.textModify(cmd as TextCmdModify);
-                break;
-            case CmdType.TextCmdGroup:
-                this.textCmdGroup(cmd as TextCmdGroup);
                 break;
             case CmdType.TextMove:
                 this.textMove(cmd as TextCmdMove);
@@ -256,6 +244,8 @@ export class CMDExecuter {
                 case CmdType.TextMove:
                     this.textMove(cmd as TextCmdMove);
                     break;
+                default:
+                    throw new Error("unknow cmd type:" + cmd.type)
             }
         })
     }
@@ -300,15 +290,16 @@ export class CMDExecuter {
 
     shapeInsert(cmd: ShapeCmdInsert, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const pageId = cmd.blockId;
-        const shape = importShape(cmd.data, this.__document)
         const page = this.__document.pagesMgr.getSync(pageId)
         const op = cmd.ops[0];
         const parentId = op.targetId[0]
         if (page && op.type === OpType.ShapeInsert) { // 后续page加载后需要更新！
             const parent = page.getShape(parentId, true);
-            if (parent && parent instanceof GroupShape) {
-                api.shapeInsert(page, parent, shape, op.index, needUpdateFrame)
+            if (!parent || !(parent instanceof GroupShape)) {
+                throw new Error("shape insert, parent error")
             }
+            const shape = importShape(cmd.data, this.__document)
+            api.shapeInsert(page, parent, shape, op.index, needUpdateFrame)
         }
     }
     shapeDelete(cmd: ShapeCmdRemove, needUpdateFrame: { shape: Shape, page: Page }[]) {
@@ -318,15 +309,17 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(pageId)
         if (page && op.type === OpType.ShapeRemove) {
             const parent = page.getShape(parentId, true);
-            if (parent && parent instanceof GroupShape) {
-                // check
-                const shapeop = op as ShapeOpRemove;
-                const shapeid = shapeop.shapeId;
-                const shape = parent.childs[op.index];
-                if (shape && shape.id !== shapeid) throw new Error("shape id not equals: " + shape.id + " " + shapeid);
-
-                api.shapeDelete(page, parent, op.index, needUpdateFrame)
+            if (!parent || !(parent instanceof GroupShape)) {
+                throw new Error("shape delete, parent error")
             }
+            // check
+            const shapeop = op as ShapeOpRemove;
+            const shapeid = shapeop.shapeId;
+            const shape = parent.childs[op.index];
+            if (shape && shape.id !== shapeid) {
+                throw new Error("shape id not equals: " + shape.id + " " + shapeid);
+            }
+            api.shapeDelete(page, parent, op.index, needUpdateFrame)
         }
     }
     private _shapeModify(page: Page, shape: Shape, op: IdOp, value: string | undefined, needUpdateFrame: { shape: Shape, page: Page }[]) {
@@ -479,8 +472,12 @@ export class CMDExecuter {
         const op = cmd.ops[0];
         const shapeId = op.targetId[0]
         const page = this.__document.pagesMgr.getSync(pageId)
-        const shape = page && page.getShape(shapeId, true);
-        if (page && shape && (op.type === OpType.IdSet || op.type === OpType.IdRemove)) {
+        if (!page) return;
+        const shape = page.getShape(shapeId, true);
+        if (!shape) {
+            throw new Error("shape modify not find shape")
+        }
+        if ((op.type === OpType.IdSet || op.type === OpType.IdRemove)) {
             const value = cmd.value;
             this._shapeModify(page, shape, op, value, needUpdateFrame);
         }
@@ -488,57 +485,19 @@ export class CMDExecuter {
     shapeMove(cmd: ShapeCmdMove, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
-        if (page) {
-            const op = cmd.ops[0];
-            if (op && op.type === OpType.ShapeMove) {
-                const moveOp = op as ShapeOpMove;
-                const parentId = moveOp.targetId[0];
-                const parentId2 = moveOp.targetId2[0];
-                const parent = page.getShape(parentId, true);
-                const parent2 = page.getShape(parentId2, true);
-                if (parent && parent2) {
-                    api.shapeMove(page, parent as GroupShape, moveOp.index, parent2 as GroupShape, moveOp.index2, needUpdateFrame)
-                }
+        if (!page) return;
+        const op = cmd.ops[0];
+        if (op.type === OpType.ShapeMove) {
+            const moveOp = op as ShapeOpMove;
+            const parentId = moveOp.targetId[0];
+            const parentId2 = moveOp.targetId2[0];
+            const parent = page.getShape(parentId, true);
+            const parent2 = page.getShape(parentId2, true);
+            if (!parent || !parent2) {
+                throw new Error("shape move not find parent")
             }
+            api.shapeMove(page, parent as GroupShape, moveOp.index, parent2 as GroupShape, moveOp.index2, needUpdateFrame)
         }
-    }
-    shapeCMDGroup(cmdGroup: ShapeCmdGroup, needUpdateFrame: { shape: Shape, page: Page }[]) {
-        cmdGroup.cmds.forEach((cmd) => {
-            switch (cmd.type) {
-                case CmdType.ShapeInsert:
-                    this.shapeInsert(cmd as ShapeCmdInsert, needUpdateFrame);
-                    break;
-                case CmdType.ShapeDelete:
-                    this.shapeDelete(cmd as ShapeCmdRemove, needUpdateFrame);
-                    break;
-                case CmdType.ShapeModify:
-                    this.shapeModify(cmd as ShapeCmdModify, needUpdateFrame);
-                    break;
-                case CmdType.ShapeMove:
-                    this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
-                    break;
-
-            }
-        })
-    }
-
-    shapeArrayAttrCMDGroup(cmdGroup: ShapeArrayAttrGroup) {
-        cmdGroup.cmds.forEach((cmd) => {
-            switch (cmd.type) {
-                case CmdType.ShapeArrayAttrInsert:
-                    this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
-                    break;
-                case CmdType.ShapeArrayAttrDelete:
-                    this.shapeArrAttrDelete(cmd as ShapeArrayAttrInsert);
-                    break;
-                case CmdType.ShapeArrayAttrModify:
-                    this.shapeArrAttrModify(cmd as ShapeArrayAttrModify);
-                    break;
-                case CmdType.ShapeArrayAttrMove:
-                    this.shapeArrAttrMove(cmd as ShapeArrayAttrMove);
-                    break;
-            }
-        })
     }
 
     shapeArrAttrInsert(cmd: ShapeArrayAttrInsert) {
@@ -772,24 +731,7 @@ export class CMDExecuter {
             }
         }
     }
-    textCmdGroup(cmd: TextCmdGroup) {
-        cmd.cmds.forEach((cmd) => {
-            switch (cmd.type) {
-                case CmdType.TextInsert:
-                    this.textInsert(cmd as TextCmdInsert);
-                    break;
-                case CmdType.TextDelete:
-                    this.textDelete(cmd as TextCmdRemove);
-                    break;
-                case CmdType.TextModify:
-                    this.textModify(cmd as TextCmdModify);
-                    break;
-                case CmdType.TextMove:
-                    this.textMove(cmd as TextCmdMove);
-                    break;
-            }
-        })
-    }
+
     textMove(cmd: TextCmdMove) {
         throw new Error("not implemented")
         // const page = this.__document.pagesMgr.getSync(cmd.blockId);
