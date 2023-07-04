@@ -9,6 +9,12 @@ import { uuid } from "../../basic/uuid";
 import { ShapeArrayAttrGroup } from "../../coop/data/classes";
 import { ShapeCmdGroup } from "../../coop/data/classes";
 import { TextCmdGroup } from "../../coop/data/classes";
+import { setOpsOrderForCmd, cmdClone } from "../../coop/common";
+
+export enum UndoRedoType {
+    Undo,
+    Redo,
+}
 
 export class CoopRepository {
     private __repo: Repository;
@@ -16,6 +22,7 @@ export class CoopRepository {
     private __cmdexec: CMDExecuter;
     private __commitListener: ((cmd: Cmd, isRemote: boolean) => void)[] = [];
     private __rollbackListener: ((isRemote: boolean) => void)[] = [];
+    private __undoRedoListener: ((type: UndoRedoType, newCmd: Cmd, oldCmdId: string) => Cmd | undefined)[] = [];
     private __allcmds: Cmd[] = [];
     private __localcmds: (Cmd & { index: number })[] = [];
     private __index: number = 0;
@@ -82,8 +89,8 @@ export class CoopRepository {
             return;
         }
         const undoCmd = this.__localcmds[this.__index - 1];
-        // 这里需要变换
-        const revertCmd = this.__cmdrevert.revert(undoCmd);
+        const oldCmdId = undoCmd.unitId;
+        let revertCmd = this.__cmdrevert.revert(undoCmd);
         if (revertCmd) {
             const unitId = uuid();
             if (revertCmd instanceof CmdGroup ||
@@ -95,6 +102,14 @@ export class CoopRepository {
             else {
                 revertCmd.unitId = unitId;
             }
+            for (const h of this.__undoRedoListener) {
+                const newCmd = h(UndoRedoType.Undo, revertCmd, oldCmdId)
+                if (newCmd === undefined) {
+                    console.log("undo变换失败")
+                    return
+                }
+                revertCmd = newCmd as any
+            }
             if (this._exec(revertCmd, false)) {
                 this.__index--;
             }
@@ -105,7 +120,9 @@ export class CoopRepository {
         if (!this.canRedo()) {
             return;
         }
-        const redoCmd = this.__localcmds[this.__index];
+        let redoCmd = cmdClone(this.__localcmds[this.__index]);
+        setOpsOrderForCmd(redoCmd, Number.MAX_VALUE)
+        const oldCmdId = redoCmd.unitId;
         if (redoCmd) {
             const unitId = uuid();
             if (redoCmd instanceof CmdGroup ||
@@ -117,7 +134,14 @@ export class CoopRepository {
             else {
                 redoCmd.unitId = unitId;
             }
-
+            for (const h of this.__undoRedoListener) {
+                const newCmd = h(UndoRedoType.Redo, redoCmd, oldCmdId)
+                if (newCmd === undefined) {
+                    console.log("redo变换失败")
+                    return
+                }
+                redoCmd = newCmd as any
+            }
             if (this._exec(redoCmd, false)) {
                 this.__index++;
             }
@@ -178,6 +202,16 @@ export class CoopRepository {
     }
     onRollback(listener: (isRemote: boolean) => void) {
         const _listeners = this.__rollbackListener;
+        _listeners.push(listener);
+        return {
+            stop() {
+                const idx = _listeners.indexOf(listener);
+                if (idx >= 0) _listeners.splice(idx, 1);
+            }
+        }
+    }
+    onUndoRedo(listener: (type: UndoRedoType, newCmd: Cmd, oldCmdId: string) => Cmd | undefined) {
+        const _listeners = this.__undoRedoListener;
         _listeners.push(listener);
         return {
             stop() {

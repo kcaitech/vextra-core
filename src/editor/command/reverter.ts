@@ -371,7 +371,7 @@ export class CMDReverter {
                 case CmdType.ShapeArrayAttrMove:
                     {
                         const r = this.revert(cmd);
-                        if (r) ret.cmds.push(r as any)
+                        if (r) revert.push(r as any)
                         break;
                     }
                 default:
