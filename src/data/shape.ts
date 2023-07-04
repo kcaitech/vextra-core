@@ -98,7 +98,8 @@ export class Shape extends Watchable(classes.Shape) {
         if (this.rotation) m.rotate(this.rotation / 360 * 2 * Math.PI);
         if (this.isFlippedHorizontal) m.flipHoriz();
         if (this.isFlippedVertical) m.flipVert();
-        m.trans(cx + frame.x, cy + frame.y);
+        m.trans(cx, cy);
+        m.trans(frame.x, frame.y);
         return m;
     }
 
