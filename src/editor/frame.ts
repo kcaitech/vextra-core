@@ -71,7 +71,7 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
             const cFrame = c.frame;
             const boundingBox = c.boundingBox();
 
-            matrix.preScale(cFrame.width, cFrame.height); // 当对象太小时，求逆矩阵会infinity
+            matrix.preScale(cFrame.width, cFrame.height);
             if (c.rotation) api.shapeModifyRotate(page, c, 0);
             if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
             if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
@@ -81,7 +81,7 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
             api.shapeModifyWH(page, c, boundingBox.width, boundingBox.height);
 
             const matrix2 = c.matrix2Parent();
-            matrix2.preScale(boundingBox.width, boundingBox.height);
+            matrix2.preScale(boundingBox.width, boundingBox.height); // 当对象太小时，求逆矩阵会infinity
             matrix.multiAtLeft(matrix2.inverse);
             const points = c.points;
             for (let i = 0, len = points.length; i < len; i++) {

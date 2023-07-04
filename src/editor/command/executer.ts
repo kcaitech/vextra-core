@@ -44,13 +44,14 @@ import {
     importBorderStyle,
     importRectRadius,
     importText,
-    importSpanAttr
+    importSpanAttr,
+    importPoint2D
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
-import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Color } from "../../data/classes";
+import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Color, PathShape } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
 import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
@@ -665,6 +666,35 @@ export class CMDExecuter {
             // todo
             else {
                 console.error("not implemented ", op)
+            }
+        }
+        else if (arrayAttr === POINTS_ID) {
+            if (!(shape instanceof PathShape)) return;
+            const pointId = cmd.arrayAttrId;
+            // find point
+            const pointIdx = shape.points.findIndex((p) => p.id === pointId)
+            if (pointIdx < 0) return;
+
+            const opId = op.opId;
+            const value = cmd.value;
+
+            if (opId === POINTS_ATTR_ID.point) {
+                if (op.type === OpType.IdSet && value) {
+                    const p = importPoint2D(JSON.parse(value));
+                    api.shapeModifyCurvPoint(page, shape, pointIdx, p);
+                }
+            }
+            else if (opId === POINTS_ATTR_ID.from) {
+                if (op.type === OpType.IdSet && value) {
+                    const p = importPoint2D(JSON.parse(value));
+                    api.shapeModifyCurvFromPoint(page, shape, pointIdx, p);
+                }
+            }
+            else if (opId === POINTS_ATTR_ID.to) {
+                if (op.type === OpType.IdSet && value) {
+                    const p = importPoint2D(JSON.parse(value));
+                    api.shapeModifyCurvToPoint(page, shape, pointIdx, p);
+                }
             }
         }
     }
