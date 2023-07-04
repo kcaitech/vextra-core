@@ -1,9 +1,10 @@
 import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
-import { GroupShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
+import { GroupShape, PathShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import { ParaAttr, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
+import { Point2D } from "data/typesdefine";
 
 export * from "./fill";
 export * from "./border";
@@ -205,4 +206,19 @@ export function shapeModifyTextMaxLineHeight(shape: TextShape, maxLineheight: nu
     const origin = text.attr?.maximumLineHeight;
     text.setMaxLineHeight(maxLineheight);
     return origin ?? 0;
+}
+export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+    const p = shape.points[index];
+    p.point.x = point.x;
+    p.point.y = point.y;
+}
+export function shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+    const p = shape.points[index];
+    p.curveFrom.x = point.x;
+    p.curveFrom.y = point.y;
+}
+export function shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
+    const p = shape.points[index];
+    p.curveTo.x = point.x;
+    p.curveTo.y = point.y;
 }

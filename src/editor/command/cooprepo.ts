@@ -158,6 +158,9 @@ export class CoopRepository {
         this.__api.start();
         return this.__api;
     }
+    isNeedCommit(): boolean {
+        return this.__api.isNeedCommit();
+    }
     commit() {
         // 
         const transact = this.__repo.transactCtx.transact;
@@ -165,6 +168,7 @@ export class CoopRepository {
             throw new Error();
         }
         const cmd = this.__api.commit();
+        if (!cmd) throw new Error("no cmd to commit")
         this.__repo.commit()
 
         this.__localcmds.length = this.__index;

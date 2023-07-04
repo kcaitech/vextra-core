@@ -127,7 +127,7 @@ export class PageEditor {
             const boundsArr = shapes.map((s) => {
                 const box = s.boundingBox()
                 const p = s.parent!;
-                const m = p.matrix2Page();
+                const m = p.matrix2Root();
                 const lt = m.computeCoord(box.x, box.y);
                 const rb = m.computeCoord(box.x + box.width, box.y + box.height);
                 return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
@@ -141,9 +141,9 @@ export class PageEditor {
                 return pre;
             }, bounds)
 
-            const realXY = shapes.map((s) => s.frame2Page())
+            const realXY = shapes.map((s) => s.frame2Root())
 
-            const m = new Matrix(savep.matrix2Page().inverse)
+            const m = new Matrix(savep.matrix2Root().inverse)
             const xy = m.computeCoord(bounds.left, bounds.top)
 
             gshape.frame.width = bounds.right - bounds.left;
@@ -295,7 +295,7 @@ export class PageEditor {
     insert(parent: GroupShape, index: number, shape: Shape, adjusted = false): Shape | false {
         // adjust shape frame refer to parent
         if (!adjusted) {
-            const xy = parent.frame2Page();
+            const xy = parent.frame2Root();
             shape.frame.x -= xy.x;
             shape.frame.y -= xy.y;
         }
@@ -363,7 +363,7 @@ export class PageEditor {
     shapeListDrag(wanderer: Shape, host: Shape, offsetOverhalf: boolean) {
         if (!wanderer || !host) return;
         try {
-            const beforeXY = wanderer.frame2Page();
+            const beforeXY = wanderer.frame2Root();
             const api = this.__repo.start('shapeLayerMove', {});
             if (wanderer.id !== host.parent?.id) {
                 if (host.type === ShapeType.Artboard) {
@@ -391,7 +391,7 @@ export class PageEditor {
                         let idx = childs.findIndex(i => i.id === host.id);
                         idx = offsetOverhalf ? idx : idx + 1; // 列表是倒序!!!
                         api.shapeMove(this.__page, wandererParent, saveidx, hostParent, idx);
-                         // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
+                        // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
                         if (!wandererParent.childs.length && wandererParent.type === ShapeType.Group) {
                             this.delete_inner(this.__page, wandererParent, api)
                         }

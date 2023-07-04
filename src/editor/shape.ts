@@ -212,7 +212,7 @@ export class ShapeEditor {
                             [width, height],
                             [0, height]
                         ]
-                        const m = p.matrix2Page();
+                        const m = p.matrix2Root();
                         _ps = _ps.map(p => {
                             const np = m.computeCoord(p[0], p[1]);
                             return [np.x, np.y];
@@ -221,7 +221,7 @@ export class ShapeEditor {
                     })
                     const box = createHorizontalBox(__points);
                     if (box) {
-                        const { x: ox, y: oy } = this.__shape.frame2Page();
+                        const { x: ox, y: oy } = this.__shape.frame2Root();
                         const { dx, dy } = { dx: ox - box.left, dy: oy - box.top };
                         for (let i = 0; i < childs.length; i++) {
                             translate(api, this.__page, childs[i], dx, dy);
