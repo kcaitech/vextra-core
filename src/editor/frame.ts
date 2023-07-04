@@ -58,15 +58,15 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
             if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
             if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
 
-            api.shapeModifyX(page, c, boundingBox.x);
-            api.shapeModifyY(page, c, boundingBox.y);
+            api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            api.shapeModifyY(page, c, boundingBox.y * scaleY);
             const width = boundingBox.width * scaleX;
             const height = boundingBox.height * scaleY;
             api.shapeModifyWH(page, c, width, height);
             afterModifyGroupShapeWH(api, page, c, scaleX, scaleY);
         }
         else if (c instanceof PathShape) {
-            // 有旋转的pathshape要处理points
+            // 摆正并处理points
             const matrix = c.matrix2Parent();
             const cFrame = c.frame;
             const boundingBox = c.boundingBox();
@@ -82,9 +82,7 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
 
             const matrix2 = c.matrix2Parent();
             matrix2.preScale(boundingBox.width, boundingBox.height);
-
             matrix.multiAtLeft(matrix2.inverse);
-
             const points = c.points;
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = points[i];
@@ -99,6 +97,13 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
                 const point = matrix.computeCoord(p.point);
                 api.shapeModifyCurvPoint(page, c, i, point);
             }
+
+            // scale
+            api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            api.shapeModifyY(page, c, boundingBox.y * scaleY);
+            const width = boundingBox.width * scaleX;
+            const height = boundingBox.height * scaleY;
+            api.shapeModifyWH(page, c, width, height);
         }
         else { // textshape imageshape symbolrefshape
             // 需要调整位置跟大小
