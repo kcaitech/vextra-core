@@ -17,130 +17,132 @@ export interface Api {
     shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
 }
 
-function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number) {
+const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
+function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number) {
     const childs = shape.childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const c = childs[i];
-        if (c.rotation) {
-            if (c instanceof GroupShape) {
-                // 需要摆正
-                const boundingBox = c.boundingBox();
-                const matrix = c.matrix2Parent();
-
-                for (let i = 0, len = c.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
-                    const cc = c.childs[i]
-                    const m1 = cc.matrix2Parent();
-                    m1.multiAtLeft(matrix);
-                    const target = m1.computeCoord(0, 0);
-
-                    if (c.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + c.rotation);
-                    if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
-                    if (c.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
-
-                    const m2 = cc.matrix2Parent();
-                    m2.trans(boundingBox.x, boundingBox.y);
-                    const cur = m2.computeCoord(0, 0);
-
-                    api.shapeModifyX(page, cc, cc.frame.x + target.x - cur.x);
-                    api.shapeModifyY(page, cc, cc.frame.y + target.y - cur.y);
-                }
-
-                if (c.rotation) api.shapeModifyRotate(page, c, 0);
-                if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
-                if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
-
-                api.shapeModifyX(page, c, boundingBox.x);
-                api.shapeModifyY(page, c, boundingBox.y);
-                const width = boundingBox.width * scaleX;
-                const height = boundingBox.height * scaleY;
-                api.shapeModifyWH(page, c, width, height);
-                afterModifyGroupShapeWH(api, page, c, scaleX, scaleY);
-            }
-            else if (c instanceof PathShape) {
-                // 有旋转的pathshape要处理points
-                const matrix = c.matrix2Parent();
-                const cFrame = c.frame;
-                const boundingBox = c.boundingBox();
-
-                matrix.preScale(cFrame.width, cFrame.height);
-                if (c.rotation) api.shapeModifyRotate(page, c, 0);
-                if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
-                if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
-
-                api.shapeModifyX(page, c, boundingBox.x);
-                api.shapeModifyY(page, c, boundingBox.y);
-                api.shapeModifyWH(page, c, boundingBox.width, boundingBox.height);
-
-                const matrix2 = c.matrix2Parent();
-                matrix2.preScale(boundingBox.width, boundingBox.height);
-
-                matrix.multiAtLeft(matrix2.inverse);
-
-                const points = c.points;
-                for (let i = 0, len = points.length; i < len; i++) {
-                    const p = points[i];
-                    if (p.hasCurveFrom) {
-                        const curveFrom = matrix.computeCoord(p.curveFrom);
-                        api.shapeModifyCurvFromPoint(page, c, i, curveFrom);
-                    }
-                    if (p.hasCurveTo) {
-                        const curveTo = matrix.computeCoord(p.curveTo);
-                        api.shapeModifyCurvToPoint(page, c, i, curveTo);
-                    }
-                    const point = matrix.computeCoord(p.point);
-                    api.shapeModifyCurvPoint(page, c, i, point);
-                }
-            }
-            else { // textshape imageshape symbolrefshape
-                // 需要调整位置跟大小
-                const cFrame = c.frame;
-                const pFrame = shape.frame;
-                const matrix = c.matrix2Parent();
-                const current = [{ x: 0, y: 0 }, { x: cFrame.width, y: cFrame.height }]
-                    .map((p) => matrix.computeCoord(p));
-
-                const target = current.map((p) => {
-                    return { x: p.x * scaleX, y: p.y * scaleY }
-                })
-                if (scaleX > 5 || scaleY > 5) console.log(current, target)
-
-                const matrixarr = matrix.toArray();
-                matrixarr[4] = target[0].x;
-                matrixarr[5] = target[0].y;
-                const m2 = new Matrix(matrixarr);
-                const m2inverse = new Matrix(m2.inverse)
-
-                const invertTarget = target.map((p) => m2inverse.computeCoord(p))
-
-                const wh = { x: invertTarget[1].x - invertTarget[0].x, y: invertTarget[1].y - invertTarget[0].y }
-
-                // 计算新的matrix 2 parent
-                const matrix2 = new Matrix();
-                {
-                    const cx = wh.x / 2;
-                    const cy = wh.y / 2;
-                    matrix2.trans(-cx, -cy);
-                    if (c.rotation) matrix2.rotate(c.rotation / 360 * 2 * Math.PI);
-                    if (c.isFlippedHorizontal) matrix2.flipHoriz();
-                    if (c.isFlippedVertical) matrix2.flipVert();
-                    matrix2.trans(cx, cy);
-                    matrix2.trans(cFrame.x, cFrame.y);
-                }
-                const xy = matrix2.computeCoord(0, 0);
-
-                const dx = target[0].x - xy.x;
-                const dy = target[0].y - xy.y;
-                setFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api);
-            }
-        }
-        else {
+        if (!c.rotation) {
             const cFrame = c.frame;
             const cX = cFrame.x * scaleX;
             const cY = cFrame.y * scaleY;
             const cW = cFrame.width * scaleX;
             const cH = cFrame.height * scaleY;
             setFrame(page, c, cX, cY, cW, cH, api);
+        }
+        else if (c instanceof GroupShape) {
+            // 需要摆正
+            const boundingBox = c.boundingBox();
+            const matrix = c.matrix2Parent();
+
+            for (let i = 0, len = c.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
+                const cc = c.childs[i]
+                const m1 = cc.matrix2Parent();
+                m1.multiAtLeft(matrix);
+                const target = m1.computeCoord(0, 0);
+
+                if (c.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + c.rotation);
+                if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
+                if (c.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
+
+                const m2 = cc.matrix2Parent();
+                m2.trans(boundingBox.x, boundingBox.y);
+                const cur = m2.computeCoord(0, 0);
+
+                api.shapeModifyX(page, cc, cc.frame.x + target.x - cur.x);
+                api.shapeModifyY(page, cc, cc.frame.y + target.y - cur.y);
+            }
+
+            if (c.rotation) api.shapeModifyRotate(page, c, 0);
+            if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
+            if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
+
+            api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            api.shapeModifyY(page, c, boundingBox.y * scaleY);
+            const width = boundingBox.width * scaleX;
+            const height = boundingBox.height * scaleY;
+            api.shapeModifyWH(page, c, width, height);
+            afterModifyGroupShapeWH(api, page, c, scaleX, scaleY);
+        }
+        else if (c instanceof PathShape) {
+            // 摆正并处理points
+            const matrix = c.matrix2Parent();
+            const cFrame = c.frame;
+            const boundingBox = c.boundingBox();
+
+            matrix.preScale(cFrame.width, cFrame.height); // 当对象太小时，求逆矩阵会infinity
+            if (c.rotation) api.shapeModifyRotate(page, c, 0);
+            if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
+            if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
+
+            api.shapeModifyX(page, c, boundingBox.x);
+            api.shapeModifyY(page, c, boundingBox.y);
+            api.shapeModifyWH(page, c, boundingBox.width, boundingBox.height);
+
+            const matrix2 = c.matrix2Parent();
+            matrix2.preScale(boundingBox.width, boundingBox.height);
+            matrix.multiAtLeft(matrix2.inverse);
+            const points = c.points;
+            for (let i = 0, len = points.length; i < len; i++) {
+                const p = points[i];
+                if (p.hasCurveFrom) {
+                    const curveFrom = matrix.computeCoord(p.curveFrom);
+                    api.shapeModifyCurvFromPoint(page, c, i, curveFrom);
+                }
+                if (p.hasCurveTo) {
+                    const curveTo = matrix.computeCoord(p.curveTo);
+                    api.shapeModifyCurvToPoint(page, c, i, curveTo);
+                }
+                const point = matrix.computeCoord(p.point);
+                api.shapeModifyCurvPoint(page, c, i, point);
+            }
+
+            // scale
+            api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            api.shapeModifyY(page, c, boundingBox.y * scaleY);
+            const width = boundingBox.width * scaleX;
+            const height = boundingBox.height * scaleY;
+            api.shapeModifyWH(page, c, width, height);
+        }
+        else { // textshape imageshape symbolrefshape
+            // 需要调整位置跟大小
+            const cFrame = c.frame;
+            const matrix = c.matrix2Parent();
+            const current = [{ x: 0, y: 0 }, { x: cFrame.width, y: cFrame.height }]
+                .map((p) => matrix.computeCoord(p));
+
+            const target = current.map((p) => {
+                return { x: p.x * scaleX, y: p.y * scaleY }
+            })
+
+            const matrixarr = matrix.toArray();
+            matrixarr[4] = target[0].x;
+            matrixarr[5] = target[0].y;
+            const m2 = new Matrix(matrixarr);
+            const m2inverse = new Matrix(m2.inverse)
+
+            const invertTarget = target.map((p) => m2inverse.computeCoord(p))
+
+            const wh = { x: invertTarget[1].x - invertTarget[0].x, y: invertTarget[1].y - invertTarget[0].y }
+
+            // 计算新的matrix 2 parent
+            const matrix2 = new Matrix();
+            {
+                const cx = wh.x / 2;
+                const cy = wh.y / 2;
+                matrix2.trans(-cx, -cy);
+                if (c.rotation) matrix2.rotate(c.rotation / 360 * 2 * Math.PI);
+                if (c.isFlippedHorizontal) matrix2.flipHoriz();
+                if (c.isFlippedVertical) matrix2.flipVert();
+                matrix2.trans(cx, cy);
+                matrix2.trans(cFrame.x, cFrame.y);
+            }
+            const xy = matrix2.computeCoord(0, 0);
+
+            const dx = target[0].x - xy.x;
+            const dy = target[0].y - xy.y;
+            setFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api);
         }
     }
 }
@@ -178,9 +180,7 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
             api.shapeModifyWH(page, shape, w, h)
             const scaleX = frame.width / saveW;
             const scaleY = frame.height / saveH;
-            if (scaleX > 5 || scaleY > 5) {
-                console.log(scaleX, scaleY, frame.width, frame.height, saveW, saveH)
-            }
+
             afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY);
         }
         else {
@@ -218,7 +218,8 @@ export function translate(api: Api, page: Page, shape: Shape, dx: number, dy: nu
 
 export function expandTo(api: Api, page: Page, shape: Shape, w: number, h: number) {
     const frame = shape.frame;
-
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
     let changed = false;
     if (shape.isNoTransform()) {
         changed = setFrame(page, shape, frame.x, frame.y, w, h, api);
@@ -310,6 +311,8 @@ export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         h = -h;
     }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
     // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
     const cx1 = w / 2;
     const cy1 = h / 2;
@@ -325,6 +328,7 @@ export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     // (0,0)需要偏移到target位置
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
+
     const changed = setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
     // if (changed) updateFrame(shape);
 }
@@ -364,6 +368,8 @@ export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         h = -h;
     }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
 
     // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
     const cx1 = w / 2;
@@ -418,6 +424,8 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         h = -h;
     }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
 
     // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
     const cx1 = w / 2;
@@ -472,6 +480,8 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         h = -h;
     }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
     // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
     const cx1 = w / 2;
     const cy1 = h / 2;
