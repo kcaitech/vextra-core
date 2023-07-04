@@ -95,7 +95,7 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ShapeInsert) {
-            op = ShapeOpInsert.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
+            op = ShapeOpRemove.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         } else {
             op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         }
@@ -105,7 +105,7 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ShapeRemove) {
-            op = ShapeOpRemove.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
+            op = ShapeOpInsert.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         } else {
             op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         }
