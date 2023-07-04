@@ -11,13 +11,18 @@ import { ShapeCmdGroup } from "../../coop/data/classes";
 import { TextCmdGroup } from "../../coop/data/classes";
 import { setOpsOrderForCmd, cmdClone } from "../../coop/common";
 
+export enum UndoRedoType {
+    Undo,
+    Redo,
+}
+
 export class CoopRepository {
     private __repo: Repository;
     private __cmdrevert: CMDReverter;
     private __cmdexec: CMDExecuter;
     private __commitListener: ((cmd: Cmd, isRemote: boolean) => void)[] = [];
     private __rollbackListener: ((isRemote: boolean) => void)[] = [];
-    private __undoRedoListener: ((newCmd: Cmd, oldCmdId: string) => Cmd | undefined)[] = [];
+    private __undoRedoListener: ((type: UndoRedoType, newCmd: Cmd, oldCmdId: string) => Cmd | undefined)[] = [];
     private __allcmds: Cmd[] = [];
     private __localcmds: (Cmd & { index: number })[] = [];
     private __index: number = 0;
@@ -98,7 +103,7 @@ export class CoopRepository {
                 revertCmd.unitId = unitId;
             }
             for (const h of this.__undoRedoListener) {
-                const newCmd = h(revertCmd, oldCmdId)
+                const newCmd = h(UndoRedoType.Undo, revertCmd, oldCmdId)
                 if (newCmd === undefined) {
                     console.log("undo变换失败")
                     return
@@ -130,7 +135,7 @@ export class CoopRepository {
                 redoCmd.unitId = unitId;
             }
             for (const h of this.__undoRedoListener) {
-                const newCmd = h(redoCmd, oldCmdId)
+                const newCmd = h(UndoRedoType.Redo, redoCmd, oldCmdId)
                 if (newCmd === undefined) {
                     console.log("redo变换失败")
                     return
@@ -201,7 +206,7 @@ export class CoopRepository {
             }
         }
     }
-    onUndoRedo(listener: (newCmd: Cmd, oldCmdId: string) => Cmd | undefined) {
+    onUndoRedo(listener: (type: UndoRedoType, newCmd: Cmd, oldCmdId: string) => Cmd | undefined) {
         const _listeners = this.__undoRedoListener;
         _listeners.push(listener);
         return {
