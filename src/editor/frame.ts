@@ -17,7 +17,7 @@ export interface Api {
     shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
 }
 
-const minimum_WH = 0.001; // 用户可设置最小宽高值。以防止宽高为0
+const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
 function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number) {
 
@@ -65,7 +65,8 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
                 const cFrame = c.frame;
                 const boundingBox = c.boundingBox();
 
-                matrix.preScale(cFrame.width, cFrame.height);
+                // matrix.preScale(cFrame.width, cFrame.height); // 当对象太小时，求逆矩阵会infinity
+                matrix.preScale(100, 100);
                 if (c.rotation) api.shapeModifyRotate(page, c, 0);
                 if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
                 if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
@@ -75,7 +76,8 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
                 api.shapeModifyWH(page, c, boundingBox.width, boundingBox.height);
 
                 const matrix2 = c.matrix2Parent();
-                matrix2.preScale(boundingBox.width, boundingBox.height);
+                // matrix2.preScale(boundingBox.width, boundingBox.height);
+                matrix2.preScale(100 * scaleX, 100 * scaleY);
 
                 matrix.multiAtLeft(matrix2.inverse);
 
