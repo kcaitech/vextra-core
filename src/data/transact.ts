@@ -177,8 +177,8 @@ class ProxyHandler {
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         if (target instanceof Map) { // map对象上的属性和方法都会进入get
-            if (propertyKey === 'size') { // map对象上唯一的一个可访问属性
-                return target.size;
+            if (propertyKey === 'get') { // 高频操作，单独提出并置顶，提高响应速度
+                return Reflect.get(target, propertyKey, receiver).bind(target);
             } else if (propertyKey === 'set' || propertyKey === 'delete') { // 需要进入事务的方法
                 if (this.__context.transact === undefined) { // 二级处理中有对底层数据的修改，所以应该在事务内进行
                     throw new Error("NOT inside transact!");
@@ -189,14 +189,19 @@ class ProxyHandler {
                 else {
                     return Reflect.get(this.sub(this.__context, target, this), propertyKey);
                 }
+            } else if (propertyKey === 'size') { // map对象上唯一的一个可访问属性
+                return target.size;
             } else if (propertyKey === 'clear') { // todo clear操作为批量删除，也需要进入事务
-                return true;
+                return false;
             } else { // 其他操作，get、values、has、keys、forEach、entries，不影响数据
                 const val = Reflect.get(target, propertyKey, receiver);
-                if (val === undefined && propertyKey === "__isProxy") {
-                    return true;
+                if (val === undefined) {
+                    if (propertyKey === "__isProxy") {
+                        return true;
+                    }
+                } else if (typeof val === 'function') {
+                    return val.bind(target);
                 }
-                return val.bind(target);
             }
         } else {
             const val = Reflect.get(target, propertyKey, receiver);
@@ -218,6 +223,10 @@ class ProxyHandler {
     }
     sub(_con: TContext, target: Map<any, any>, h: ProxyHandler) {
         return {
+            get(key: any) {
+                const get = Map.prototype.get.bind(target);
+                return get(key);
+            },
             set(key: any, value: any) {
                 const set_inner = Map.prototype.set.bind(target);
                 // set经过代理的对象
