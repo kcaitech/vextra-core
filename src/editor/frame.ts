@@ -1,7 +1,7 @@
 import { Page } from "data/page";
 import { Matrix } from "../basic/matrix";
 import { GroupShape, PathShape, Shape, TextShape } from "../data/shape";
-import { Point2D, TextBehaviour } from "../data/typesdefine";
+import { Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils";
 
 export interface Api {
@@ -20,6 +20,7 @@ export interface Api {
 const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
 function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number) {
+    if (shape.type === ShapeType.Artboard) return; // 容器不需要调整子对象
     const childs = shape.childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const c = childs[i];
@@ -31,7 +32,7 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
             const cH = cFrame.height * scaleY;
             setFrame(page, c, cX, cY, cW, cH, api);
         }
-        else if (c instanceof GroupShape) {
+        else if (c instanceof GroupShape && (c.type === ShapeType.Group)) {
             // 需要摆正
             const boundingBox = c.boundingBox();
             const matrix = c.matrix2Parent();
