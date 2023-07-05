@@ -170,7 +170,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextHorAlign(horAlign: TextHorAlign) {
+    // 段属性
+    public setTextHorAlign(horAlign: TextHorAlign, index: number, len: number) {
         const api = this.__repo.start("setTextHorAlign", {});
         try {
             api.shapeModifyTextHorAlign(this.__page, this.shape, horAlign)
@@ -182,7 +183,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setMinLineHeight(minLineHeight: number) {
+    // 行高 段属性
+    public setMinLineHeight(minLineHeight: number, index: number, len: number) {
         const api = this.__repo.start("setMinLineHeight", {});
         try {
             api.shapeModifyTextMinLineHeight(this.__page, this.shape, minLineHeight)
@@ -195,7 +197,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setMaxLineHeight(maxLineHeight: number) {
+    // 行高 段属性
+    public setMaxLineHeight(maxLineHeight: number, index: number, len: number) {
         const api = this.__repo.start("setMaxLineHeight", {});
         try {
             api.shapeModifyTextMaxLineHeight(this.__page, this.shape, maxLineHeight)
