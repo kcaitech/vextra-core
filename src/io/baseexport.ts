@@ -23,6 +23,10 @@ export function exportUserInfo(source: types.UserInfo, ctx?: IExportContext): ty
     if (ctx) ctx.afterExport(source)
     return ret
 }
+/* underline types */
+export function exportUnderlineType(source: types.UnderlineType, ctx?: IExportContext): types.UnderlineType {
+    return source
+}
 /* text */
 export function exportText(source: types.Text, ctx?: IExportContext): types.Text {
     const ret = {
@@ -101,6 +105,10 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
     if (ctx) ctx.afterExport(source)
     return ret
 }
+/* strikethrough types */
+export function exportStrikethroughType(source: types.StrikethroughType, ctx?: IExportContext): types.StrikethroughType {
+    return source
+}
 /* stop */
 export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop {
     const ret = {
@@ -116,6 +124,8 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
         fontName: source.fontName,
         fontSize: source.fontSize,
         color: source.color && exportColor(source.color, ctx),
+        strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
+        underline: source.underline && exportUnderlineType(source.underline, ctx),
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -470,6 +480,24 @@ export function exportColorControls(source: types.ColorControls, ctx?: IExportCo
     if (ctx) ctx.afterExport(source)
     return ret
 }
+/* bullet numbers */
+export function exportBulletNumbers(source: types.BulletNumbers, ctx?: IExportContext): types.BulletNumbers {
+    const ret = {
+        behavior: source.behavior && exportBulletNumbersBehavior(source.behavior, ctx),
+        offset: source.offset,
+        type: exportBulletNumbersType(source.type, ctx),
+    }
+    if (ctx) ctx.afterExport(source)
+    return ret
+}
+/* bullet & item number types */
+export function exportBulletNumbersType(source: types.BulletNumbersType, ctx?: IExportContext): types.BulletNumbersType {
+    return source
+}
+/* bullet & item number behavior */
+export function exportBulletNumbersBehavior(source: types.BulletNumbersBehavior, ctx?: IExportContext): types.BulletNumbersBehavior {
+    return source
+}
 /* border */
 export function exportBorder(source: types.Border, ctx?: IExportContext): types.Border {
     const ret = {
@@ -608,6 +636,8 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
         fontName: source.fontName,
         fontSize: source.fontSize,
         color: source.color && exportColor(source.color, ctx),
+        strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
+        underline: source.underline && exportUnderlineType(source.underline, ctx),
         length: source.length,
     }
     if (ctx) ctx.afterExport(source)
@@ -694,11 +724,15 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
         fontName: source.fontName,
         fontSize: source.fontSize,
         color: source.color && exportColor(source.color, ctx),
+        strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
+        underline: source.underline && exportUnderlineType(source.underline, ctx),
         alignment: source.alignment && exportTextHorAlign(source.alignment, ctx),
         paraSpacing: source.paraSpacing,
         kerning: source.kerning,
         minimumLineHeight: source.minimumLineHeight,
         maximumLineHeight: source.maximumLineHeight,
+        indent: source.indent,
+        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -711,9 +745,13 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
         kerning: source.kerning,
         minimumLineHeight: source.minimumLineHeight,
         maximumLineHeight: source.maximumLineHeight,
+        indent: source.indent,
+        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
         fontName: source.fontName,
         fontSize: source.fontSize,
         color: source.color && exportColor(source.color, ctx),
+        strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
+        underline: source.underline && exportUnderlineType(source.underline, ctx),
         verAlign: source.verAlign && exportTextVerAlign(source.verAlign, ctx),
         orientation: source.orientation && exportTextOrientation(source.orientation, ctx),
         textBehaviour: source.textBehaviour && exportTextBehaviour(source.textBehaviour, ctx),

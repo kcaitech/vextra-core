@@ -328,7 +328,7 @@ function _formatText(paraArray: Para[], paraIndex: number, index: number, length
         }
 
         if (props.attr) {
-            _formatTextSpan(para.spans, index, length, props.attr)
+            ret.spans.push(..._formatTextSpan(para.spans, index, length, props.attr));
         }
 
         length -= para.length - index;

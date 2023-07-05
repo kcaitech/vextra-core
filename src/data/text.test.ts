@@ -34,7 +34,8 @@ test("format", () => {
     const text = newText("input text");
     const attr = new SpanAttrSetter();
     attr.color = new Color(1, 1, 1, 1);
-    text.formatText(1, 1, { attr });
+    const ret = text.formatText(1, 1, { attr });
+    assert.isTrue(ret && ret.spans.length > 0)
     // check
     assert.equal(text.paras.length, 1);
     const para = text.paras[0];

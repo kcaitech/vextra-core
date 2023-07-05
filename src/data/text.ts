@@ -1,7 +1,7 @@
-import { Color, TextBehaviour, TextHorAlign, TextOrientation, TextVerAlign } from "./baseclasses";
+import { BulletNumbers, Color, StrikethroughType, TextBehaviour, TextHorAlign, TextOrientation, TextVerAlign, UnderlineType } from "./baseclasses";
 import { Basic, BasicArray } from "./basic";
 
-export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation } from "./baseclasses";
+export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation, StrikethroughType, UnderlineType, BulletNumbers, BulletNumbersType, BulletNumbersBehavior } from "./baseclasses";
 import * as classes from "./baseclasses"
 import { deleteText, formatText, insertComplexText, insertSimpleText } from "./textedit";
 import { MeasureFun, TextLayout, layoutText } from "./textlayout";
@@ -31,6 +31,8 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     fontName?: string
     fontSize?: number
     color?: Color
+    strikethrough?: StrikethroughType
+    underline?: UnderlineType
     constructor(
     ) {
         super()
@@ -51,6 +53,8 @@ export class ParaAttr extends SpanAttr implements classes.ParaAttr {
     kerning?: number
     minimumLineHeight?: number
     maximumLineHeight?: number
+    indent?: number
+    bulletNumbers?: BulletNumbers
     constructor(
     ) {
         super(

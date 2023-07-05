@@ -1,0 +1,23 @@
+{
+    "description": "span attr",
+    "type": "object",
+    "properties": {
+        "fontName": {
+            "type": "string"
+        },
+        "fontSize": {
+            "type": "number"
+        },
+        "color": {
+            "$ref": "./color.json"
+        },
+        "strikethrough": {
+            "$ref": "./strikethrough-type.json"
+        },
+        "underline": {
+            "$ref": "./underline-type.json"
+        }
+    },
+    "required": [],
+    "additionalProperties": false
+}

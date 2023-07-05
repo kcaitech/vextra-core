@@ -1,0 +1,8 @@
+{
+    "description": "underline types",
+    "enum": [
+        "single",
+        "double"
+    ],
+    "default": "enum"
+}

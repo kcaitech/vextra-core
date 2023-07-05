@@ -25,6 +25,10 @@ export function importUserInfo(source: types.UserInfo, ctx?: IImportContext): im
     if (ctx) ctx.afterImport(ret)
     return ret
 }
+/* underline types */
+export function importUnderlineType(source: types.UnderlineType, ctx?: IImportContext): impl.UnderlineType {
+    return source
+}
 /* text */
 export function importText(source: types.Text, ctx?: IImportContext): impl.Text {
     const ret: impl.Text = new impl.Text (
@@ -102,6 +106,10 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
     if (ctx) ctx.afterImport(ret)
     return ret
 }
+/* strikethrough types */
+export function importStrikethroughType(source: types.StrikethroughType, ctx?: IImportContext): impl.StrikethroughType {
+    return source
+}
 /* stop */
 export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
     const ret: impl.Stop = new impl.Stop (
@@ -118,6 +126,8 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
     ret.fontName = source.fontName
     ret.fontSize = source.fontSize
     ret.color = source.color && importColor(source.color, ctx)
+    ret.strikethrough = source.strikethrough && importStrikethroughType(source.strikethrough, ctx)
+    ret.underline = source.underline && importUnderlineType(source.underline, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -465,6 +475,24 @@ export function importColorControls(source: types.ColorControls, ctx?: IImportCo
     if (ctx) ctx.afterImport(ret)
     return ret
 }
+/* bullet numbers */
+export function importBulletNumbers(source: types.BulletNumbers, ctx?: IImportContext): impl.BulletNumbers {
+    const ret: impl.BulletNumbers = new impl.BulletNumbers (
+        importBulletNumbersType(source.type, ctx)
+    )
+    ret.behavior = source.behavior && importBulletNumbersBehavior(source.behavior, ctx)
+    ret.offset = source.offset
+    if (ctx) ctx.afterImport(ret)
+    return ret
+}
+/* bullet & item number types */
+export function importBulletNumbersType(source: types.BulletNumbersType, ctx?: IImportContext): impl.BulletNumbersType {
+    return source
+}
+/* bullet & item number behavior */
+export function importBulletNumbersBehavior(source: types.BulletNumbersBehavior, ctx?: IImportContext): impl.BulletNumbersBehavior {
+    return source
+}
 /* border */
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
     const ret: impl.Border = new impl.Border (
@@ -603,6 +631,8 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     ret.fontName = source.fontName
     ret.fontSize = source.fontSize
     ret.color = source.color && importColor(source.color, ctx)
+    ret.strikethrough = source.strikethrough && importStrikethroughType(source.strikethrough, ctx)
+    ret.underline = source.underline && importUnderlineType(source.underline, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -686,11 +716,15 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
     ret.fontName = source.fontName
     ret.fontSize = source.fontSize
     ret.color = source.color && importColor(source.color, ctx)
+    ret.strikethrough = source.strikethrough && importStrikethroughType(source.strikethrough, ctx)
+    ret.underline = source.underline && importUnderlineType(source.underline, ctx)
     ret.alignment = source.alignment && importTextHorAlign(source.alignment, ctx)
     ret.paraSpacing = source.paraSpacing
     ret.kerning = source.kerning
     ret.minimumLineHeight = source.minimumLineHeight
     ret.maximumLineHeight = source.maximumLineHeight
+    ret.indent = source.indent
+    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -703,9 +737,13 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     ret.kerning = source.kerning
     ret.minimumLineHeight = source.minimumLineHeight
     ret.maximumLineHeight = source.maximumLineHeight
+    ret.indent = source.indent
+    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
     ret.fontName = source.fontName
     ret.fontSize = source.fontSize
     ret.color = source.color && importColor(source.color, ctx)
+    ret.strikethrough = source.strikethrough && importStrikethroughType(source.strikethrough, ctx)
+    ret.underline = source.underline && importUnderlineType(source.underline, ctx)
     ret.verAlign = source.verAlign && importTextVerAlign(source.verAlign, ctx)
     ret.orientation = source.orientation && importTextOrientation(source.orientation, ctx)
     ret.textBehaviour = source.textBehaviour && importTextBehaviour(source.textBehaviour, ctx)

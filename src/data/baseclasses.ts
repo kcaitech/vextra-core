@@ -5,10 +5,12 @@
 
 export {
     WindingRule,
+    UnderlineType,
     TextVerAlign,
     TextOrientation,
     TextHorAlign,
     TextBehaviour,
+    StrikethroughType,
     ShapeType,
     ResizeType,
     MarkerType,
@@ -20,6 +22,8 @@ export {
     ExportFormatNameingScheme,
     ExportFileFormat,
     CurveMode,
+    BulletNumbersType,
+    BulletNumbersBehavior,
     BorderPosition,
     BoolOp,
     BlurType,
@@ -27,10 +31,12 @@ export {
 } from "./typesdefine"
 import {
     WindingRule,
+    UnderlineType,
     TextVerAlign,
     TextOrientation,
     TextHorAlign,
     TextBehaviour,
+    StrikethroughType,
     ShapeType,
     ResizeType,
     MarkerType,
@@ -42,6 +48,8 @@ import {
     ExportFormatNameingScheme,
     ExportFileFormat,
     CurveMode,
+    BulletNumbersType,
+    BulletNumbersBehavior,
     BorderPosition,
     BoolOp,
     BlurType,
@@ -143,6 +151,8 @@ export class SpanAttr extends Basic {
     fontName?: string
     fontSize?: number
     color?: Color
+    strikethrough?: StrikethroughType
+    underline?: UnderlineType
     constructor(
     ) {
         super()
@@ -623,6 +633,21 @@ export class ColorControls extends Basic {
     }
 }
 /**
+ * bullet numbers 
+ */
+export class BulletNumbers extends Basic {
+    typeId = 'bullet-numbers'
+    behavior?: BulletNumbersBehavior
+    offset?: number
+    type: BulletNumbersType
+    constructor(
+        type: BulletNumbersType
+    ) {
+        super()
+        this.type = type
+    }
+}
+/**
  * border 
  */
 export class Border extends Basic {
@@ -854,6 +879,8 @@ export class ParaAttr extends SpanAttr {
     kerning?: number
     minimumLineHeight?: number
     maximumLineHeight?: number
+    indent?: number
+    bulletNumbers?: BulletNumbers
     constructor(
     ) {
         super(

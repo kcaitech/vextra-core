@@ -1,0 +1,8 @@
+{
+    "description": "strikethrough types",
+    "enum": [
+        "single",
+        "double"
+    ],
+    "default": "enum"
+}
