@@ -1,12 +1,12 @@
-import { Color, ParaAttr, TextAttr, TextBehaviour, TextHorAlign, TextVerAlign } from "./baseclasses";
+import { Color, TextBehaviour, TextHorAlign, TextOrientation, TextVerAlign } from "./baseclasses";
 import { Basic, BasicArray } from "./basic";
 
-export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation, ParaAttr, TextAttr } from "./baseclasses";
+export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation } from "./baseclasses";
 import * as classes from "./baseclasses"
 import { deleteText, formatText, insertComplexText, insertSimpleText } from "./textedit";
 import { MeasureFun, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
-import { getText, getTextText } from "./textread";
+import { getSimpleText, getTextFormat, getTextWithFmt } from "./textread";
 import { locateCursor, locateRange, locateText } from "./textlocate";
 
 export class SpanAttr extends Basic implements classes.SpanAttr {
@@ -25,6 +25,50 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
         if (this.color) newSpanAttr.color = new Color(this.color.alpha, this.color.red, this.color.green, this.color.blue);
         return newSpanAttr;
     }
+}
+
+export class ParaAttr extends SpanAttr implements classes.ParaAttr {
+    typeId = 'para-attr'
+    alignment?: TextHorAlign
+    paraSpacing?: number
+    kerning?: number
+    minimumLineHeight?: number
+    maximumLineHeight?: number
+    constructor(
+    ) {
+        super(
+        )
+    }
+}
+
+export class TextAttr extends ParaAttr implements classes.TextAttr {
+    typeId = 'text-attr'
+    verAlign?: TextVerAlign
+    orientation?: TextOrientation
+    textBehaviour?: TextBehaviour
+    constructor(
+    ) {
+        super(
+        )
+    }
+}
+
+export class SpanAttrGetter extends SpanAttr {
+    fontNameIsMulti: boolean = false;
+    fontSizeIsMulti: boolean = false;
+    colorIsMulti: boolean = false;
+}
+
+export class ParaAttrGetter extends ParaAttr {
+    fontNameIsMulti: boolean = false;
+    fontSizeIsMulti: boolean = false;
+    colorIsMulti: boolean = false;
+
+    alignmentIsMulti: boolean = false;
+    paraSpacingIsMulti: boolean = false;
+    kerningIsMulti: boolean = false;
+    minimumLineHeightIsMulti: boolean = false;
+    maximumLineHeightIsMulti: boolean = false;
 }
 
 export class SpanAttrSetter extends SpanAttr {
@@ -129,10 +173,13 @@ export class Text extends Basic implements classes.Text {
         }, 0);
     }
     getText(index: number, count: number): string {
-        return getText(this, index, count);
+        return getSimpleText(this, index, count);
     }
     getTextWithFormat(index: number, count: number): Text {
-        return getTextText(this, index, count);
+        return getTextWithFmt(this, index, count);
+    }
+    getTextFormat(index: number, count: number) {
+        return getTextFormat(this, index, count);
     }
     insertText(text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
         // this.reLayout(); // todo

@@ -72,11 +72,11 @@ export function mergeParaAttr(para: Para | ParaAttr, attr: Para | ParaAttr): boo
             return !!_attr;
         }
         else if (_attr) {
-            return _mergeParaAttr(para.attr, attr);
+            return _mergeParaAttr(para.attr, _attr);
         }
     }
     else if (_attr) {
-        return _mergeParaAttr(para, attr);
+        return _mergeParaAttr(para, _attr);
     }
     return false;
 }
