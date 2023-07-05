@@ -8,6 +8,23 @@ import { MeasureFun, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
 import { getSimpleText, getTextFormat, getTextWithFmt } from "./textread";
 import { locateCursor, locateRange, locateText } from "./textlocate";
+/*
+ 文本框属性
+	文本框大小行为
+	垂直对齐
+	段落属性
+		水平对齐
+		行高
+		字距
+		段间距
+		编号
+		字属性
+			字号
+			颜色
+			字体
+			删除线
+			下划线
+ */
 
 export class SpanAttr extends Basic implements classes.SpanAttr {
     typeId = 'span-attr'
@@ -59,7 +76,7 @@ export class SpanAttrGetter extends SpanAttr {
     colorIsMulti: boolean = false;
 }
 
-export class ParaAttrGetter extends ParaAttr {
+export class AttrGetter extends TextAttr {
     fontNameIsMulti: boolean = false;
     fontSizeIsMulti: boolean = false;
     colorIsMulti: boolean = false;
