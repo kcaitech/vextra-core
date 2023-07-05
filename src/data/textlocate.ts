@@ -109,7 +109,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     index -= span.graphCount;
                     continue;
                 }
-
+                // 
                 const graph = span[index];
                 const y = p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
                 const x = graph.x;
@@ -222,14 +222,14 @@ export function locateRange(layout: TextLayout, start: number, end: number): { x
             const line = p[li];
 
             if (start >= line.graphCount) {
-                start -= line.length;
+                start -= line.graphCount;
                 continue;
             }
 
             for (let si = 0, len = line.length; si < len; si++) {
                 const span = line[si];
-                if (start >= span.length) {
-                    start -= span.length;
+                if (start >= span.graphCount) {
+                    start -= span.graphCount;
                     continue;
                 }
                 const gi = start;
