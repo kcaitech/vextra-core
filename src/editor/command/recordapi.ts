@@ -1,9 +1,9 @@
 import {
     Cmd, CmdType,
     PageCmdInsert, PageCmdModify, PageCmdMove, PageCmdDelete,
-    ShapeArrayAttrMove, ShapeArrayAttrGroup, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
-    ShapeCmdGroup, ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
-    TextCmdGroup, TextCmdInsert, TextCmdRemove, TextCmdModify,
+    ShapeArrayAttrMove, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
+    ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
+    TextCmdInsert, TextCmdRemove, TextCmdModify,
 } from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
@@ -75,57 +75,7 @@ export class Api {
         })
         return group;
     }
-    private groupText(blockId: string): Cmd {
-        const group = TextCmdGroup.Make(blockId);
-        this.cmds.forEach((c) => {
-            if (c.blockId !== blockId) throw new Error("blockid not equal");
-            c.unitId = group.unitId;
-            switch (c.type) {
-                case CmdType.TextDelete:
-                case CmdType.TextInsert:
-                case CmdType.TextModify:
-                case CmdType.TextMove:
-                    group.cmds.push(c as any);
-                    break;
-                default: throw new Error("unknow text group type:" + c.type)
-            }
-        })
-        return group;
-    }
-    private groupShape(blockId: string): Cmd {
-        const group = ShapeCmdGroup.Make(blockId);
-        this.cmds.forEach((c) => {
-            if (c.blockId !== blockId) throw new Error("blockid not equal");
-            c.unitId = group.unitId;
-            switch (c.type) {
-                case CmdType.ShapeDelete:
-                case CmdType.ShapeInsert:
-                case CmdType.ShapeModify:
-                case CmdType.ShapeMove:
-                    group.cmds.push(c as any);
-                    break;
-                default: throw new Error("unknow shape group type:" + c.type)
-            }
-        })
-        return group;
-    }
-    private groupAttr(blockId: string): Cmd {
-        const group = ShapeArrayAttrGroup.Make(blockId);
-        this.cmds.forEach((c) => {
-            if (c.blockId !== blockId) throw new Error("blockid not equal");
-            c.unitId = group.unitId;
-            switch (c.type) {
-                case CmdType.ShapeArrayAttrDelete:
-                case CmdType.ShapeArrayAttrInsert:
-                case CmdType.ShapeArrayAttrModify:
-                case CmdType.ShapeArrayAttrMove:
-                    group.cmds.push(c as any);
-                    break;
-                default: throw new Error("unknow shape group type:" + c.type);
-            }
-        })
-        return group;
-    }
+
     private __trap(f: () => void) {
         const save = this.repo.transactCtx.settrap;
         this.repo.transactCtx.settrap = false;
@@ -424,7 +374,7 @@ export class Api {
             if (fills && fills.length) {
                 for (let i = 0; i < fills.length; i++) {
                     const fill = fills[i];
-                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, FILLS_ID, fill.id, i, exportFill(fill)));
+                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, FILLS_ID, fill.id, index, exportFill(fill)));
                 }
             }
         })

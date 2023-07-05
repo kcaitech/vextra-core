@@ -15,10 +15,9 @@ import { v4 as uuid } from "uuid";
 import { ConstrainerProportionsAction, PageEditor, RotateAdjust } from './page';
 import { PageListItem, ShapeFrame } from '../data/baseclasses';
 import { GroupShape, Shape } from '../data/shape';
-import { ShapeCmdGroup } from '../coop/data/shapecmd';
 import { exportArtboard, exportPage, exportRectShape } from '../io/baseexport';
 import { CMDExecuter } from './command/executer';
-import { Cmd } from '../coop/data/classes';
+import { Cmd, CmdGroup } from '../coop/data/classes';
 import { CoopRepository } from './command/cooprepo';
 import { Page } from 'data/page';
 import { updateShapesFrame } from './command/utils';
@@ -64,17 +63,17 @@ test("group", () => {
         const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
         const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
         const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
-        const cmd = ShapeCmdGroup.Make(page.id);
+        const cmd = CmdGroup.Make(page.id);
         repo.start("add shape", {});
         const needUpdateFrame: { shape: Shape, page: Page }[] = [];
         api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
-        cmd.addInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
+        cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
         api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
-        cmd.addInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
+        cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
         api.shapeInsert(page, page, shape3, 2, needUpdateFrame)
-        cmd.addInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
+        cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
         api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
-        cmd.addInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
+        cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
         if (needUpdateFrame.length > 0) {
             const page = needUpdateFrame[0].page;
             const shapes = needUpdateFrame.map((v) => v.shape);
@@ -117,17 +116,17 @@ test("ungroup", () => {
         const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
         const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
         const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
-        const cmd = ShapeCmdGroup.Make(page.id);
+        const cmd = CmdGroup.Make(page.id);
         repo.start("add shape", {});
         const needUpdateFrame: { shape: Shape, page: Page }[] = [];
         api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
-        cmd.addInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
+        cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
         api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
-        cmd.addInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
+        cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
         api.shapeInsert(page, page, shape3, 2, needUpdateFrame)
-        cmd.addInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
+        cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
         api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
-        cmd.addInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
+        cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
         if (needUpdateFrame.length > 0) {
             const page = needUpdateFrame[0].page;
             const shapes = needUpdateFrame.map((v) => v.shape);
@@ -177,17 +176,17 @@ test("delete", () => {
         const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
         const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
         const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
-        const cmd = ShapeCmdGroup.Make(page.id);
+        const cmd = CmdGroup.Make(page.id);
         repo.start("add shape", {});
         const needUpdateFrame: { shape: Shape, page: Page }[] = [];
         api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
-        cmd.addInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
+        cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
         api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
-        cmd.addInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
+        cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
         api.shapeInsert(page, page, shape3, 2, needUpdateFrame)
-        cmd.addInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
+        cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
         api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
-        cmd.addInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
+        cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
         if (needUpdateFrame.length > 0) {
             const page = needUpdateFrame[0].page;
             const shapes = needUpdateFrame.map((v) => v.shape);
@@ -227,17 +226,17 @@ test("delete_batch", () => {
         const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
         const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
         const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
-        const cmd = ShapeCmdGroup.Make(page.id);
+        const cmd = CmdGroup.Make(page.id);
         repo.start("add shape", {});
         const needUpdateFrame: { shape: Shape, page: Page }[] = [];
         api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
-        cmd.addInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
+        cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
         api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
-        cmd.addInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
+        cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
         api.shapeInsert(page, page, shape3, 2, needUpdateFrame)
-        cmd.addInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
+        cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
         api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
-        cmd.addInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
+        cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
         if (needUpdateFrame.length > 0) {
             const page = needUpdateFrame[0].page;
             const shapes = needUpdateFrame.map((v) => v.shape);
@@ -331,21 +330,21 @@ test("shapeListDrag", () => { // 图层拖拽
     const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
     const frame1 = newArtboard('frame1', new ShapeFrame(0, 0, 100, 100))
     const frame2 = newArtboard('frame2', new ShapeFrame(0, 0, 100, 100))
-    const cmd = ShapeCmdGroup.Make(page.id);
+    const cmd = CmdGroup.Make(page.id);
     repo.start("add shape", {});
     const needUpdateFrame: { shape: Shape, page: Page }[] = [];
     api.shapeInsert(page, page, frame1, 0, needUpdateFrame)
-    cmd.addInsert(page.id, frame1.id, 0, JSON.stringify(exportArtboard(frame1)))
+    cmd.addShapeInsert(page.id, frame1.id, 0, JSON.stringify(exportArtboard(frame1)))
     api.shapeInsert(page, page, frame2, 1, needUpdateFrame)
-    cmd.addInsert(page.id, frame2.id, 0, JSON.stringify(exportArtboard(frame2)))
+    cmd.addShapeInsert(page.id, frame2.id, 0, JSON.stringify(exportArtboard(frame2)))
     api.shapeInsert(page, frame1, shape1, 0, needUpdateFrame)
-    cmd.addInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
+    cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
     api.shapeInsert(page, frame1, shape2, 1, needUpdateFrame)
-    cmd.addInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
+    cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
     api.shapeInsert(page, frame2, shape3, 2, needUpdateFrame)
-    cmd.addInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
+    cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
     api.shapeInsert(page, frame2, shape4, 3, needUpdateFrame)
-    cmd.addInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
+    cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
     if (needUpdateFrame.length > 0) {
         const page = needUpdateFrame[0].page;
         const shapes = needUpdateFrame.map((v) => v.shape);
@@ -410,17 +409,17 @@ test("setShapesConstrainerProportions", () => {
     const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
     const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
     const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
-    const cmd = ShapeCmdGroup.Make(page.id);
+    const cmd = CmdGroup.Make(page.id);
     repo.start("add shape", {});
     const needUpdateFrame: { shape: Shape, page: Page }[] = [];
     api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
-    cmd.addInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
+    cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
     api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
-    cmd.addInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
+    cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
     api.shapeInsert(page, page, shape3, 2, needUpdateFrame)
-    cmd.addInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
+    cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
     api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
-    cmd.addInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
+    cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
     if (needUpdateFrame.length > 0) {
         const page = needUpdateFrame[0].page;
         const shapes = needUpdateFrame.map((v) => v.shape);
@@ -468,17 +467,17 @@ test("setShapesRotate", () => {
     const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
     const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
     const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
-    const cmd = ShapeCmdGroup.Make(page.id);
+    const cmd = CmdGroup.Make(page.id);
     repo.start("add shape", {});
     const needUpdateFrame: { shape: Shape, page: Page }[] = [];
     api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
-    cmd.addInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
+    cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
     api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
-    cmd.addInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
+    cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
     api.shapeInsert(page, page, shape3, 2, needUpdateFrame)
-    cmd.addInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
+    cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
     api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
-    cmd.addInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
+    cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
     if (needUpdateFrame.length > 0) {
         const page = needUpdateFrame[0].page;
         const shapes = needUpdateFrame.map((v) => v.shape);

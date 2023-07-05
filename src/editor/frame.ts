@@ -58,20 +58,20 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
             if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
             if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
 
-            api.shapeModifyX(page, c, boundingBox.x);
-            api.shapeModifyY(page, c, boundingBox.y);
+            api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            api.shapeModifyY(page, c, boundingBox.y * scaleY);
             const width = boundingBox.width * scaleX;
             const height = boundingBox.height * scaleY;
             api.shapeModifyWH(page, c, width, height);
             afterModifyGroupShapeWH(api, page, c, scaleX, scaleY);
         }
         else if (c instanceof PathShape) {
-            // 有旋转的pathshape要处理points
+            // 摆正并处理points
             const matrix = c.matrix2Parent();
             const cFrame = c.frame;
             const boundingBox = c.boundingBox();
 
-            matrix.preScale(cFrame.width, cFrame.height); // 当对象太小时，求逆矩阵会infinity
+            matrix.preScale(cFrame.width, cFrame.height);
             if (c.rotation) api.shapeModifyRotate(page, c, 0);
             if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
             if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
@@ -81,10 +81,8 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
             api.shapeModifyWH(page, c, boundingBox.width, boundingBox.height);
 
             const matrix2 = c.matrix2Parent();
-            matrix2.preScale(boundingBox.width, boundingBox.height);
-
+            matrix2.preScale(boundingBox.width, boundingBox.height); // 当对象太小时，求逆矩阵会infinity
             matrix.multiAtLeft(matrix2.inverse);
-
             const points = c.points;
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = points[i];
@@ -99,6 +97,13 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
                 const point = matrix.computeCoord(p.point);
                 api.shapeModifyCurvPoint(page, c, i, point);
             }
+
+            // scale
+            api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            api.shapeModifyY(page, c, boundingBox.y * scaleY);
+            const width = boundingBox.width * scaleX;
+            const height = boundingBox.height * scaleY;
+            api.shapeModifyWH(page, c, width, height);
         }
         else { // textshape imageshape symbolrefshape
             // 需要调整位置跟大小
