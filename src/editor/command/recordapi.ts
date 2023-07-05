@@ -374,7 +374,7 @@ export class Api {
             if (fills && fills.length) {
                 for (let i = 0; i < fills.length; i++) {
                     const fill = fills[i];
-                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, FILLS_ID, fill.id, i, exportFill(fill)));
+                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, FILLS_ID, fill.id, index, exportFill(fill)));
                 }
             }
         })
