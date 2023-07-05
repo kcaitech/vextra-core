@@ -523,6 +523,51 @@ export class PageEditor {
             return false;
         }
     }
+    /**
+     * src 中的每个图形都将被替换成replacement
+     * @param replacement 替代品
+     * @param src 即将被替代的图形
+     * @returns 如果成功替换则返回所有替代品
+     */
+    replace(replacement: Shape[], src: Shape[]): false | Shape[] {
+        const api = this.__repo.start("replace", {});
+        try {
+            const len = replacement.length;
+            const delta_xy: { x: number, y: number }[] = [{ x: 0, y: 0 }];
+            const reference = replacement[0].frame;
+            for (let i = 1; i < len; i++) {
+                const r = replacement[i];
+                const xy = r.frame;
+                const dt = { x: xy.x - reference.x, y: xy.y - reference.y };
+                delta_xy.push(dt);
+            }
+            const src_replacement: Shape[] = [];
+            for (let i = 0; i < src.length; i++) {
+                const s = src[i];
+                const p = s.parent as GroupShape;
+                if (!p) throw new Error('invalid root');
+                let save_index = p.indexOfChild(s);
+                if (save_index < 0) throw new Error('invalid childs data');
+                const del_res = this.delete_inner(this.__page, s, api);
+                if (!del_res) throw new Error('delete failed');
+                for (let r_i = 0; r_i < len; r_i++) {
+                    const r = replacement[r_i];
+                    r.id = uuid();
+                    r.frame.x = s.frame.x + delta_xy[r_i].x;
+                    r.frame.y = s.frame.y + delta_xy[r_i].y;
+                    api.shapeInsert(this.__page, p, r, save_index);
+                    src_replacement.push(p.childs[save_index]);
+                    save_index++;
+                }
+            }
+            this.__repo.commit();
+            return src_replacement;
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+            return false;
+        }
+    }
     setName(name: string) {
         const api = this.__repo.start("setName", {});
         api.pageModifyName(this.__document, this.__page.id, name);
