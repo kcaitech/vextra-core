@@ -80,6 +80,8 @@ export type SpanAttr = {
     color?: Color
     strikethrough?: StrikethroughType
     underline?: UnderlineType
+    bold?: boolean
+    italic?: boolean
 }
 /* shape */
 export type Shape = {

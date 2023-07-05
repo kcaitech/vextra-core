@@ -16,6 +16,12 @@
         },
         "underline": {
             "$ref": "./underline-type.json"
+        },
+        "bold": {
+            "type": "boolean"
+        },
+        "italic": {
+            "type": "boolean"
         }
     },
     "required": [],

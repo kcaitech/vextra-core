@@ -153,6 +153,8 @@ export class SpanAttr extends Basic {
     color?: Color
     strikethrough?: StrikethroughType
     underline?: UnderlineType
+    bold?: boolean
+    italic?: boolean
     constructor(
     ) {
         super()

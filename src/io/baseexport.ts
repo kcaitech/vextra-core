@@ -126,6 +126,8 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
         color: source.color && exportColor(source.color, ctx),
         strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
         underline: source.underline && exportUnderlineType(source.underline, ctx),
+        bold: source.bold,
+        italic: source.italic,
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -638,6 +640,8 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
         color: source.color && exportColor(source.color, ctx),
         strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
         underline: source.underline && exportUnderlineType(source.underline, ctx),
+        bold: source.bold,
+        italic: source.italic,
         length: source.length,
     }
     if (ctx) ctx.afterExport(source)
@@ -726,6 +730,8 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
         color: source.color && exportColor(source.color, ctx),
         strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
         underline: source.underline && exportUnderlineType(source.underline, ctx),
+        bold: source.bold,
+        italic: source.italic,
         alignment: source.alignment && exportTextHorAlign(source.alignment, ctx),
         paraSpacing: source.paraSpacing,
         kerning: source.kerning,
@@ -752,6 +758,8 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
         color: source.color && exportColor(source.color, ctx),
         strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
         underline: source.underline && exportUnderlineType(source.underline, ctx),
+        bold: source.bold,
+        italic: source.italic,
         verAlign: source.verAlign && exportTextVerAlign(source.verAlign, ctx),
         orientation: source.orientation && exportTextOrientation(source.orientation, ctx),
         textBehaviour: source.textBehaviour && exportTextBehaviour(source.textBehaviour, ctx),
