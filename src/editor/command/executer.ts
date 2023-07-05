@@ -502,10 +502,13 @@ export class CMDExecuter {
 
     shapeArrAttrInsert(cmd: ShapeArrayAttrInsert) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
         const op = cmd.ops[0]
         const shapeId = op.targetId[0]
-        const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape) return;
+        const shape = page.getShape(shapeId, true);
+        if (!shape) {
+            throw new Error("shape not find")
+        }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op.type === OpType.ArrayInsert) {
@@ -519,13 +522,19 @@ export class CMDExecuter {
                 api.addBorderAt(shape.style, border, (op as ArrayOpInsert).start);
             }
         }
+        else {
+            console.error("not implemented ", arrayAttr)
+        }
     }
     shapeArrAttrDelete(cmd: ShapeArrayAttrRemove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
         const op = cmd.ops[0]
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape) return;
+        if (!shape) {
+            throw new Error("shape not find")
+        }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op.type === OpType.ArrayRemove) {
@@ -537,13 +546,19 @@ export class CMDExecuter {
                 api.deleteBorderAt(shape.style, (op as ArrayOpRemove).start)
             }
         }
+        else {
+            console.error("not implemented ", arrayAttr)
+        }
     }
     shapeArrAttrModify(cmd: ShapeArrayAttrModify) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
         const op = cmd.ops[0]
         const shapeId = op.targetId[0]
-        const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape) return;
+        const shape = page.getShape(shapeId, true);
+        if (!shape) {
+            throw new Error("shape not find")
+        }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             const fillId = cmd.arrayAttrId;
@@ -566,6 +581,9 @@ export class CMDExecuter {
                 else if (op.type === OpType.IdRemove) {
                     api.setFillEnable(shape.style, fillIdx, false)
                 }
+            }
+            else {
+                console.error("not implemented ", op)
             }
         }
         else if (arrayAttr === BORDER_ID) {
@@ -655,15 +673,24 @@ export class CMDExecuter {
                     api.shapeModifyCurvToPoint(page, shape, pointIdx, p);
                 }
             }
+            else {
+                console.error("not implemented ", op)
+            }
+        }
+        else {
+            console.error("not implemented ", arrayAttr)
         }
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
         const op0 = cmd.ops[0] as ArrayOpRemove
         const op1 = cmd.ops[1] as ArrayOpInsert
         const shapeId = op0.targetId[0]
         const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape) return;
+        if (!shape) {
+            throw new Error("shape not find")
+        }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
@@ -675,14 +702,23 @@ export class CMDExecuter {
                 api.moveBorder(shape.style, op0.start, op1.start)
             }
         }
+        else {
+            console.error("not implemented ", arrayAttr)
+        }
     }
 
     textInsert(cmd: TextCmdInsert) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
         const op = cmd.ops[0]
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape || !(shape instanceof TextShape)) return;
+        if (!shape) {
+            throw new Error("shape not find")
+        }
+        if (!(shape instanceof TextShape)) {
+            throw new Error("shape type wrong")
+        }
         const text = cmd.parseText();
         if (text.type === "simple") {
             let attr;
@@ -699,18 +735,30 @@ export class CMDExecuter {
     }
     textDelete(cmd: TextCmdRemove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
         const op = cmd.ops[0]
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape || !(shape instanceof TextShape)) return;
+        if (!shape) {
+            throw new Error("shape not find")
+        }
+        if (!(shape instanceof TextShape)) {
+            throw new Error("shape type wrong")
+        }
         api.deleteText(shape, op.start, op.length);
     }
     textModify(cmd: TextCmdModify) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
         const op = cmd.ops[0]
         const shapeId = op.targetId[0]
         const shape = page && page.getShape(shapeId, true);
-        if (!page || !shape || !(shape instanceof TextShape)) return;
+        if (!shape) {
+            throw new Error("shape not find")
+        }
+        if (!(shape instanceof TextShape)) {
+            throw new Error("shape type wrong")
+        }
         const attrId = cmd.attrId
         const value = cmd.value;
         if (attrId === TEXT_ATTR_ID.color) {
@@ -729,6 +777,9 @@ export class CMDExecuter {
                 const fontSize = value && JSON.parse(value);
                 api.textModifyFontSize(shape, op.start, op.length, fontSize)
             }
+        }
+        else {
+            console.error("not implemented ", attrId)
         }
     }
 
