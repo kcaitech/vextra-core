@@ -142,55 +142,34 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             // new para
             // 找到'\n'的属性
             const spans = para.spans;
-            let nlspanoffset = para.length - 1;
+            let copyspanoffset = Math.max(para.length - 2, 0); // 用最后个可见字符的属性
             // 一般是最后一个
-            let nlspanindex = 0;
-            let nlspan: Span | undefined;
-            for (; nlspanindex < spans.length; nlspanindex++) {
+            let copyspan: Span | undefined;
+            for (let nlspanindex = 0; nlspanindex < spans.length; nlspanindex++) {
                 const span = spans[nlspanindex];
-                if (nlspanoffset < span.length) {
-                    nlspan = span;
+                if (copyspanoffset < span.length) {
+                    copyspan = span;
                     break;
                 }
-                nlspanoffset -= span.length;
+                copyspanoffset -= span.length;
             }
-            if (!nlspan) {
-                if (para.spans.length > 0) {
-                    const last = para.spans[para.spans.length - 1];
-                    last.length += nlspanoffset + 1;
-                    nlspan = last;
-                    nlspanindex = spans.length - 1;
-                    nlspanoffset = last.length - 1;
-                }
-                else {
-                    const span = new Span(para.length);
-                    para.spans.push(span);
-                    nlspan = span;
-                    nlspanindex = 0;
-                    nlspanoffset = span.length - 1;
-                }
+            if (!copyspan && para.spans.length > 0) {
+                copyspan = para.spans[para.spans.length - 1];
             }
 
             const _text = '\n';
             const span = new Span(1);
-            mergeSpanAttr(span, nlspan);
+            if (copyspan) mergeSpanAttr(span, copyspan);
             // if (attr) mergeSpanAttr(span, attr);
             const _spans = new BasicArray<Span>(span);
             const _para = new Para(_text, _spans);
             mergeParaAttr(_para, para);
 
-            // if (paraAttr) mergeParaAttr(_para, paraAttr);
             if (attr) { // 给para的'\n'设置上
-                const _span = new Span(1);
-                mergeSpanAttr(_span, nlspan);
-                mergeSpanAttr(_span, attr);
-                if (isDiffSpanAttr(nlspan, _span)) {
-                    spans.splice(nlspanindex + 1, 0, _span);
-                    nlspan.length = nlspanoffset;
-                }
+                mergeSpanAttr(span, attr);
             }
             if (paraAttr) {
-                mergeParaAttr(para, paraAttr);
+                mergeParaAttr(_para, paraAttr);
             }
             paraArray.splice(paraIndex + 1, 0, _para);
             paraIndex++;

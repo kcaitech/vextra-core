@@ -219,7 +219,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
                 spanOffset = 0;
                 spanIdx++;
             }
-            if (preSpanIdx !== spanIdx) {
+            if (line.length === 0 && graphArray.length === 1) { // 回车换行，如果不是空行不计算行高
                 line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
             }
 
@@ -229,9 +229,9 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
             lineArray.push(line);
             line = new Line();
             curX = startX;
-            if (preSpanIdx === spanIdx || spanIdx >= spansCount) {
-                line.maxFontSize = span.fontSize ?? 0;
-            }
+            // if (preSpanIdx === spanIdx || spanIdx >= spansCount) {
+            //     line.maxFontSize = span.fontSize ?? 0;
+            // }
             continue;
         }
         const m = measure(c, font);
@@ -262,9 +262,9 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
                 line.graphCount += graphArray.length;
                 graphArray = undefined;
             }
-            if (preSpanIdx !== spanIdx || spanIdx >= spansCount) {
-                line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
-            }
+            // if (preSpanIdx !== spanIdx || spanIdx >= spansCount) {
+            line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
+            // }
         }
         else if (line.length === 0 && (!graphArray || graphArray.length === 0)) {
             if (!graphArray) {
@@ -293,11 +293,11 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
             if (spanOffset >= span.length) {
                 spanOffset = 0;
                 spanIdx++;
-                if (spanIdx >= spansCount) line.maxFontSize = span.fontSize ?? 0;
+                // if (spanIdx >= spansCount) line.maxFontSize = span.fontSize ?? 0;
             }
-            else {
-                line.maxFontSize = span.fontSize ?? 0;
-            }
+            // else {
+            //     line.maxFontSize = span.fontSize ?? 0;
+            // }
         }
         else {
             if (graphArray) {
