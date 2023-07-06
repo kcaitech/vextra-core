@@ -128,6 +128,7 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
         underline: source.underline && exportUnderlineType(source.underline, ctx),
         bold: source.bold,
         italic: source.italic,
+        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -642,6 +643,7 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
         underline: source.underline && exportUnderlineType(source.underline, ctx),
         bold: source.bold,
         italic: source.italic,
+        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
         length: source.length,
     }
     if (ctx) ctx.afterExport(source)
@@ -732,13 +734,13 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
         underline: source.underline && exportUnderlineType(source.underline, ctx),
         bold: source.bold,
         italic: source.italic,
+        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
         alignment: source.alignment && exportTextHorAlign(source.alignment, ctx),
         paraSpacing: source.paraSpacing,
         kerning: source.kerning,
         minimumLineHeight: source.minimumLineHeight,
         maximumLineHeight: source.maximumLineHeight,
         indent: source.indent,
-        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -752,7 +754,6 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
         minimumLineHeight: source.minimumLineHeight,
         maximumLineHeight: source.maximumLineHeight,
         indent: source.indent,
-        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
         fontName: source.fontName,
         fontSize: source.fontSize,
         color: source.color && exportColor(source.color, ctx),
@@ -760,6 +761,7 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
         underline: source.underline && exportUnderlineType(source.underline, ctx),
         bold: source.bold,
         italic: source.italic,
+        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
         verAlign: source.verAlign && exportTextVerAlign(source.verAlign, ctx),
         orientation: source.orientation && exportTextOrientation(source.orientation, ctx),
         textBehaviour: source.textBehaviour && exportTextBehaviour(source.textBehaviour, ctx),

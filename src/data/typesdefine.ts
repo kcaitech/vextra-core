@@ -82,6 +82,7 @@ export type SpanAttr = {
     underline?: UnderlineType
     bold?: boolean
     italic?: boolean
+    bulletNumbers?: BulletNumbers
 }
 /* shape */
 export type Shape = {
@@ -465,7 +466,6 @@ export type ParaAttr = SpanAttr & {
     minimumLineHeight?: number
     maximumLineHeight?: number
     indent?: number
-    bulletNumbers?: BulletNumbers
 }
 /* text attr */
 export type TextAttr = ParaAttr & {

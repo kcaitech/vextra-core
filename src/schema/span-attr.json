@@ -22,6 +22,9 @@
         },
         "italic": {
             "type": "boolean"
+        },
+        "bulletNumbers": {
+            "$ref": "./bullet-numbers.json"
         }
     },
     "required": [],

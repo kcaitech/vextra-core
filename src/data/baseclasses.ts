@@ -155,6 +155,7 @@ export class SpanAttr extends Basic {
     underline?: UnderlineType
     bold?: boolean
     italic?: boolean
+    bulletNumbers?: BulletNumbers
     constructor(
     ) {
         super()
@@ -882,7 +883,6 @@ export class ParaAttr extends SpanAttr {
     minimumLineHeight?: number
     maximumLineHeight?: number
     indent?: number
-    bulletNumbers?: BulletNumbers
     constructor(
     ) {
         super(

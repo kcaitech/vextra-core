@@ -19,9 +19,6 @@
         },
         "indent": {
             "type": "integer"
-        },
-        "bulletNumbers": {
-            "$ref": "./bullet-numbers.json"
         }
     },
     "required": [],

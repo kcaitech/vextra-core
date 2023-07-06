@@ -130,6 +130,7 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
     ret.underline = source.underline && importUnderlineType(source.underline, ctx)
     ret.bold = source.bold
     ret.italic = source.italic
+    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -637,6 +638,7 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     ret.underline = source.underline && importUnderlineType(source.underline, ctx)
     ret.bold = source.bold
     ret.italic = source.italic
+    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -724,13 +726,13 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
     ret.underline = source.underline && importUnderlineType(source.underline, ctx)
     ret.bold = source.bold
     ret.italic = source.italic
+    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
     ret.alignment = source.alignment && importTextHorAlign(source.alignment, ctx)
     ret.paraSpacing = source.paraSpacing
     ret.kerning = source.kerning
     ret.minimumLineHeight = source.minimumLineHeight
     ret.maximumLineHeight = source.maximumLineHeight
     ret.indent = source.indent
-    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -744,7 +746,6 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     ret.minimumLineHeight = source.minimumLineHeight
     ret.maximumLineHeight = source.maximumLineHeight
     ret.indent = source.indent
-    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
     ret.fontName = source.fontName
     ret.fontSize = source.fontSize
     ret.color = source.color && importColor(source.color, ctx)
@@ -752,6 +753,7 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     ret.underline = source.underline && importUnderlineType(source.underline, ctx)
     ret.bold = source.bold
     ret.italic = source.italic
+    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
     ret.verAlign = source.verAlign && importTextVerAlign(source.verAlign, ctx)
     ret.orientation = source.orientation && importTextOrientation(source.orientation, ctx)
     ret.textBehaviour = source.textBehaviour && importTextBehaviour(source.textBehaviour, ctx)

@@ -36,6 +36,7 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     underline?: UnderlineType
     bold?: boolean
     italic?: boolean
+    bulletNumbers?: BulletNumbers
     constructor(
     ) {
         super()
@@ -57,7 +58,6 @@ export class ParaAttr extends SpanAttr implements classes.ParaAttr {
     minimumLineHeight?: number
     maximumLineHeight?: number
     indent?: number
-    bulletNumbers?: BulletNumbers
     constructor(
     ) {
         super(
