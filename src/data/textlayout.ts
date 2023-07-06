@@ -132,7 +132,7 @@ export function adjustLinesVertical(lines: LineArray, align: TextVerAlign) {
 
 export type MeasureFun = (code: number, font: string) => TextMetrics | undefined;
 
-function isNewLineCharCode(code: number) {
+export function isNewLineCharCode(code: number) {
     // U+0009: Horizontal tab
     // U+000A: Line feed
     // U+000B: Vertical tab

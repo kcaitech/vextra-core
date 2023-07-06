@@ -1,4 +1,4 @@
-import { TextLayout } from "./textlayout";
+import { TextLayout, isNewLineCharCode } from "./textlayout";
 
 export function locateText(layout: TextLayout, x: number, y: number): { index: number, before: boolean } {
     const { yOffset, paras } = layout;
@@ -109,11 +109,23 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     index -= span.graphCount;
                     continue;
                 }
-                // todo 光标要取前一个字符的高度
+                // 光标要取前一个字符的高度
                 // 光标的大小应该与即将输入的文本大小一致
-                const graph = span[index];
+                let graph = span[index];
+                let x = graph.x;
+                if (index > 0) {
+                    graph = span[index - 1];
+                    x = graph.x + graph.cw;
+                    if (!isNewLineCharCode(span[index].char.charCodeAt(0))) x += line.graphPadding / 2;
+                }
+                else if (i > 0) {
+                    const preSpan = line[i - 1];
+                    graph = preSpan[preSpan.length - 1];
+                    x = graph.x + graph.cw;
+                    if (!isNewLineCharCode(span[index].char.charCodeAt(0))) x += line.graphPadding / 2;
+                }
+                // else index === 0, i === 0
                 const y = p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
-                const x = graph.x;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
                 return [p0, p1]
