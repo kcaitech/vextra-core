@@ -92,7 +92,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 const span = line[line.length - 1];
                 if (span.length === 0) break; // error
                 const graph = span[span.length - 1];
-                const y = p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
+                const y = layout.yOffset + p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
                 const x = graph.x + graph.cw;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
@@ -125,7 +125,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     if (!isNewLineCharCode(span[index].char.charCodeAt(0))) x += line.graphPadding / 2;
                 }
                 // else index === 0, i === 0
-                const y = p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
+                const y = layout.yOffset + p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
                 return [p0, p1]
@@ -147,7 +147,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
         const line = p[li];
 
         if (si === 0 && gi === 0 && line.graphCount <= count) { // 整行
-            const y = p.yOffset + line.y;
+            const y = layout.yOffset + p.yOffset + line.y;
             const h = line.lineHeight;
 
             const span0 = line[0];
@@ -176,8 +176,8 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
         const span = line[si];
         const graph = span[gi];
         const minX = graph.x;
-        const minY = p.yOffset + line.y; // + (line.lineHeight - graph.ch) / 2;
-        const maxY = p.yOffset + line.y + line.lineHeight;
+        const minY = layout.yOffset + p.yOffset + line.y; // + (line.lineHeight - graph.ch) / 2;
+        const maxY = layout.yOffset + p.yOffset + line.y + line.lineHeight;
         let maxX = graph.x + graph.cw;
 
         for (let i = si, len = line.length; i < len && count > 0; i++) {
