@@ -568,7 +568,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyFontSize(shape, idx, len, fontsize);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.color, fontsize, m.fontSize));
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontSize, fontsize, m.fontSize));
                 idx += m.length;
             })
         })
