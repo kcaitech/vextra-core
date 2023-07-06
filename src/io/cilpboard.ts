@@ -116,3 +116,11 @@ export function import_shape(document: Document, source: { index: number, conten
     }
     return result;
 }
+/**
+ * 生成对象副本
+ * @param src 原对象
+ * @returns 
+ */
+export function transform_data(document: Document, src: Shape[]): Shape[] {
+    return import_shape(document, export_shape(src));
+}

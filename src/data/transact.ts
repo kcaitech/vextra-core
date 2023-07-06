@@ -66,7 +66,7 @@ class ProxyHandler {
             throw new Error("NOT inside transact!");
         }
         else if (this.__context.settrap) {
-            throw new Error("inside trap!");
+            throw new Error(`inside trap: set '${propertyKey.toString()}'`);
         }
         else if (target instanceof Array) {
             if (propertyKey === "length") {
