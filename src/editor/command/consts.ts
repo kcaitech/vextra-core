@@ -16,8 +16,15 @@ export const SHAPE_ATTR_ID = {
     resizingConstraint: "resizingConstraint",
     radius: "radius",
     backgroundColor: "backgroundColor",
+
+    // text shape
     textBehaviour: "textBehaviour",
     textVerAlign: "textVerAlign",
+    defalutTextColor: "defaultTextColor",
+    defalutTextFontSize: "defaultTextFontSize",
+    defalutTextFontName: "defalutTextFontName",
+    defalutTextKerning: "defalutTextKerning",
+    defalutTextParaSpacing: "defalutTextParaSpacing",
     defalutTextHorAlign: "defaultTextHorAlign",
     defaultTextMinLineheight: "defaultTextMinLineheight",
     defaultTextMaxLineheight: "defaultTextMaxLineheight",

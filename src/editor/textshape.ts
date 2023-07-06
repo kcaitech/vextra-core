@@ -106,7 +106,15 @@ export class TextShapeEditor extends ShapeEditor {
     public isInComposingInput() {
         return this.__composingStarted;
     }
+    public setTextDefaultColor(color: Color) {
 
+    }
+    public setTextDefaultFontName(fontName: string) {
+
+    }
+    public setTextDefaultFontSize(fontSize: number) {
+
+    }
     public setTextColor(index: number, len: number, color: Color) {
         const api = this.__repo.start("setTextColor", {});
         try {
@@ -145,6 +153,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    // 对象属性
     public setTextBehaviour(textBehaviour: TextBehaviour) {
         const api = this.__repo.start("setTextBehaviour", {});
         try {
@@ -158,6 +167,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    // 对象属性
     public setTextVerAlign(verAlign: TextVerAlign) {
         const api = this.__repo.start("setTextVerAlign", {});
         try {
@@ -197,6 +207,9 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    public setTextDefaultMinLineHeight(minLineHeight: number) {
+
+    }
     // 行高 段属性
     public setMinLineHeight(minLineHeight: number, index: number, len: number) {
         const api = this.__repo.start("setMinLineHeight", {});
@@ -210,6 +223,9 @@ export class TextShapeEditor extends ShapeEditor {
             this.__repo.rollback();
         }
         return false;
+    }
+    public setDefaultMaxLineHeight(maxLineHeight: number) {
+
     }
     // 行高 段属性
     public setMaxLineHeight(maxLineHeight: number, index: number, len: number) {
@@ -225,6 +241,9 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    public setDefaultCharSpacing(kerning: number) {
+
+    }
     // 字间距 段属性
     public setCharSpacing(kerning: number, index: number, len: number) {
         const api = this.__repo.start("setCharSpace", {});
@@ -238,6 +257,9 @@ export class TextShapeEditor extends ShapeEditor {
             this.__repo.rollback();
         }
         return false;
+    }
+    public setDefaultParaSpacing(paraSpacing: number) {
+
     }
     // 段间距 段属性
     public setParaSpacing(paraSpacing: number, index: number, len: number) {
