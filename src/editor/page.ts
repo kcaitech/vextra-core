@@ -237,7 +237,12 @@ export class PageEditor {
         }
         return false;
     }
-
+    /**
+     * @description 创建一个包裹所有shapes容器
+     * @param shapes 
+     * @param artboardname 
+     * @returns { false | Artboard } 成功则返回容器
+     */
     create_artboard(shapes: Shape[], artboardname: string): false | Artboard {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
@@ -317,6 +322,11 @@ export class PageEditor {
         }
         return false;
     }
+    /**
+     * @description 解除容器
+     * @param shape 
+     * @returns { false | Shape[] } 成功则返回被解除容器的所有子元素
+     */
     dissolution_artboard(shape: Artboard): false | Shape[] {
         if (!shape.parent) return false;
         const api = this.__repo.start("", {});
@@ -475,6 +485,11 @@ export class PageEditor {
         }
         return false;
     }
+    /**
+     * @description 提高图形shape的z-index层级
+     * @param step 层级数，不传则提高到顶部
+     * @returns { boolean }
+     */
     uppper_layer(shape: Shape, step?: number) {
         const parent = shape.parent as GroupShape | undefined;
         if (!parent) return false;
@@ -500,6 +515,11 @@ export class PageEditor {
             return false;
         }
     }
+    /**
+     * @description 调低图形shape的z-index层级
+     * @param step 层级数，不传则降低到低部
+     * @returns { boolean }
+     */
     lower_layer(shape: Shape, step?: number) {
         const parent = shape.parent as GroupShape | undefined;
         if (!parent) return false;
@@ -525,7 +545,7 @@ export class PageEditor {
         }
     }
     /**
-     * src中的每个图形都将被替换成replacement
+     * @description src中的每个图形都将被替换成replacement
      * @param document 当前文档
      * @param replacement 替代品，里面图形的frame都已经在进入剪切板后被处理过了，都是在page上的绝对位置
      * @param src 即将被替代的图形
