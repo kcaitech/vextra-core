@@ -109,7 +109,8 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     index -= span.graphCount;
                     continue;
                 }
-                // 
+                // todo 光标要取前一个字符的高度
+                // 光标的大小应该与即将输入的文本大小一致
                 const graph = span[index];
                 const y = p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
                 const x = graph.x;
