@@ -254,6 +254,9 @@ export class Text extends Basic implements classes.Text {
         insertSimpleText(this, text, index, props);
         if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, text.length, this.__layout);
     }
+    composingInputUpdate(index: number) {
+        if (this.__layout) this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, 1, this.__layout);
+    }
     insertFormatText(text: Text, index: number) {
         // this.reLayout(); // todo
         insertComplexText(this, text, index);
