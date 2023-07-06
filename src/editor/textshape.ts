@@ -225,4 +225,32 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    // 字间距 段属性
+    public setCharSpacing(kerning: number, index: number, len: number) {
+        const api = this.__repo.start("setCharSpace", {});
+        try {
+            api.textModifyKerning(this.__page, this.shape, kerning, index, len)
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    // 段间距 段属性
+    public setParaSpacing(paraSpacing: number, index: number, len: number) {
+        const api = this.__repo.start("setParaSpacing", {});
+        try {
+            api.textModifyParaSpacing(this.__page, this.shape, paraSpacing, index, len)
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
 }

@@ -243,6 +243,18 @@ export function textModifyKerning(shape: TextShape, kerning: number, index: numb
     })
     return origin;
 }
+export function textModifyParaSpacing(shape: TextShape, paraSpacing: number, index: number, len: number) {
+    const attr = new ParaAttrSetter();
+    attr.paraSpacing = paraSpacing;
+    attr.paraSpacingIsSet = true;
+    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const paras = ret.paras;
+    const origin: { paraSpacing: number | undefined, length: number }[] = [];
+    paras.forEach((para) => {
+        origin.push({ paraSpacing: para.paraSpacing, length: para.length })
+    })
+    return origin;
+}
 export function shapeModifyTextDefaultMinLineHeight(shape: TextShape, minLineheight: number) {
     const text = shape.text;
     const origin = text.attr?.minimumLineHeight;

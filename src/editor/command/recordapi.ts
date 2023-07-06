@@ -661,6 +661,20 @@ export class Api {
             })
         })
     }
+    textModifyParaSpacing(page: Page, shape: TextShape, paraSpacing: number, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const alignRange = shape.text.alignParaRange(index, len);
+            index = alignRange.index;
+            len = alignRange.len;
+
+            const ret = basicapi.textModifyParaSpacing(shape, paraSpacing, index, len);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraSpacing, paraSpacing, m.paraSpacing));
+                index += m.length;
+            })
+        })
+    }
     shapeModifyTextDefaultMinLineHeight(page: Page, shape: TextShape, minLineheight: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {

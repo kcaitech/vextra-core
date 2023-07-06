@@ -47,6 +47,7 @@ export const TEXT_ATTR_ID = {
     fontSize: "fontSize",
     fontName: "fontName",
     kerning: "kerning",
+    paraSpacing: "paraSpacing",
     textHorAlign: "textHorAlign",
     textMinLineheight: "textMinLineheight",
     textMaxLineheight: "textMaxLineheight",

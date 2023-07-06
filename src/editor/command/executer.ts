@@ -802,6 +802,12 @@ export class CMDExecuter {
                 api.textModifyMinLineHeight(shape, minLineHeight, op.start, op.length)
             }
         }
+        else if (attrId === TEXT_ATTR_ID.paraSpacing) {
+            if (op.type === OpType.ArrayAttr) {
+                const paraSpacing = value && JSON.parse(value);
+                api.textModifyParaSpacing(shape, paraSpacing, op.start, op.length)
+            }
+        }
         else {
             console.error("not implemented ", attrId)
         }
