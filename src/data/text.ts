@@ -8,22 +8,23 @@ import { MeasureFun, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
 import { getSimpleText, getTextFormat, getTextWithFmt } from "./textread";
 import { locateCursor, locateRange, locateText } from "./textlocate";
+import { _travelTextPara } from "./texttravel";
 /*
  文本框属性
-	文本框大小行为
-	垂直对齐
-	段落属性
-		水平对齐
-		行高
-		字距
-		段间距
-		编号
-		字属性
-			字号
-			颜色
-			字体
-			删除线
-			下划线
+    文本框大小行为
+    垂直对齐
+    段落属性
+        水平对齐
+        行高
+        字距
+        段间距
+        编号
+        字属性
+            字号
+            颜色
+            字体
+            删除线
+            下划线
  */
 
 export class SpanAttr extends Basic implements classes.SpanAttr {
@@ -190,6 +191,47 @@ export class Text extends Basic implements classes.Text {
         }
         return '';
     }
+    paraAt(index: number): { para: Para, index: number, paraIndex: number } | undefined {
+        for (let i = 0, len = this.paras.length; i < len; i++) {
+            const p = this.paras[i];
+            if (index < p.length) {
+                return { para: p, index, paraIndex: i }
+            }
+            else {
+                index -= p.length;
+            }
+        }
+    }
+    /**
+     * 对齐段落
+     * @param index 
+     * @param len 
+     */
+    alignParaRange(index: number, len: number): { index: number, len: number } {
+        const ret = { index, len };
+        for (let i = 0, len = this.paras.length; i < len; i++) {
+            const p = this.paras[i];
+            if (index < p.length) {
+                ret.index -= index;
+                ret.len += index;
+                len += index;
+
+                for (let j = i; j < len; j++) {
+                    const p = this.paras[j];
+                    if (len <= p.length) {
+                        ret.len += p.length - len;
+                        break;
+                    }
+                    len -= p.length;
+                }
+                break;
+            }
+            else {
+                index -= p.length;
+            }
+        }
+        return ret;
+    }
     get length() {
         return this.paras.reduce((count, p) => {
             return count + p.length;
@@ -321,17 +363,25 @@ export class Text extends Basic implements classes.Text {
             this.__layout.yOffset = yOffset;
         }
     }
-    setTextHorAlign(horAlign: TextHorAlign) {
-        if (!this.attr) this.attr = new TextAttr();
-        this.attr.alignment = horAlign;
-        // todo
+
+    setDefaultTextHorAlign(horAlign: TextHorAlign) {
+        if (!this.attr) {
+            if (horAlign === TextHorAlign.Left) return;
+            this.attr = new TextAttr();
+            this.attr.alignment = horAlign;
+            this.reLayout();
+        }
+        else if (this.attr.alignment !== horAlign) {
+            this.attr.alignment = horAlign;
+            this.reLayout();
+        }
     }
-    setMinLineHeight(minLineHeight: number) {
+    setDefaultMinLineHeight(minLineHeight: number) {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.minimumLineHeight = minLineHeight;
         this.reLayout(); // todo
     }
-    setMaxLineHeight(maxLineHeight: number) {
+    setDefaultMaxLineHeight(maxLineHeight: number) {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.maximumLineHeight = maxLineHeight;
         this.reLayout(); // todo

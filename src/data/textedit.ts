@@ -1,5 +1,6 @@
 import { BasicArray } from "./basic";
 import { Para, Span, SpanAttr, ParaAttr, Text } from "./text";
+import { _travelTextPara } from "./texttravel";
 import { isDiffSpanAttr, mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 
 function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) {
@@ -311,12 +312,10 @@ function _formatTextSpan(spans: Span[], index: number, length: number, attr: Spa
     return [];
 }
 
-function _formatText(paraArray: Para[], paraIndex: number, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
+export function formatText(shapetext: Text, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
     const ret: { spans: Span[], paras: (ParaAttr & { length: number })[] } = { spans: [], paras: [] };
-    while (length > 0 && paraIndex < paraArray.length) {
-        const para = paraArray[paraIndex];
+    _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
         if (props.paraAttr) {
-            // save origin
             const para1 = new ParaAttr();
             if (para.attr) mergeParaAttr(para1, para.attr);
             const end = Math.min(para.length, index + length);
@@ -326,31 +325,11 @@ function _formatText(paraArray: Para[], paraIndex: number, index: number, length
 
             mergeParaAttr(para, props.paraAttr);
         }
-
         if (props.attr) {
             ret.spans.push(..._formatTextSpan(para.spans, index, length, props.attr));
         }
-
-        length -= para.length - index;
-        index = 0;
-        paraIndex++;
-    }
+    })
     return ret;
-}
-
-export function formatText(shapetext: Text, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
-    // const shapetext = shape.text;
-    const paras = shapetext.paras;
-    for (let i = 0, len = paras.length; i < len; i++) {
-        const p = paras[i];
-        if (index < p.length) {
-            return _formatText(paras, i, index, length, props);
-        }
-        else {
-            index -= p.length;
-        }
-    }
-    return { spans: [], paras: [] };
 }
 
 function _deleteSpan(spans: Span[], index: number, count: number): BasicArray<Span> {
