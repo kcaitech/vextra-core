@@ -53,7 +53,7 @@ export function _travelTextPara(paras: Para[], index: number, length: number, pa
     for (let i = 0, len = paras.length; i < len; i++) {
         const p = paras[i];
         if (index < p.length) {
-            __travelTextPara(paras, i, index, length, paratravel);
+            __travelTextPara(paras, i, index, length, paratravel, spantravel);
             break;
         }
         else {
