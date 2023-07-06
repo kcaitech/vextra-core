@@ -6,9 +6,6 @@ import { CMDReverter } from "./reverter";
 import { Api } from "./recordapi";
 import { Page } from "../../data/page";
 import { uuid } from "../../basic/uuid";
-import { ShapeArrayAttrGroup } from "../../coop/data/classes";
-import { ShapeCmdGroup } from "../../coop/data/classes";
-import { TextCmdGroup } from "../../coop/data/classes";
 import { setOpsOrderForCmd, cmdClone } from "../../coop/common";
 
 export enum UndoRedoType {
@@ -93,10 +90,7 @@ export class CoopRepository {
         let revertCmd = this.__cmdrevert.revert(undoCmd);
         if (revertCmd) {
             const unitId = uuid();
-            if (revertCmd instanceof CmdGroup ||
-                revertCmd instanceof ShapeArrayAttrGroup ||
-                revertCmd instanceof ShapeCmdGroup ||
-                revertCmd instanceof TextCmdGroup) {
+            if (revertCmd instanceof CmdGroup) {
                 revertCmd.setUnitId(unitId);
             }
             else {
@@ -125,10 +119,7 @@ export class CoopRepository {
         const oldCmdId = redoCmd.unitId;
         if (redoCmd) {
             const unitId = uuid();
-            if (redoCmd instanceof CmdGroup ||
-                redoCmd instanceof ShapeArrayAttrGroup ||
-                redoCmd instanceof ShapeCmdGroup ||
-                redoCmd instanceof TextCmdGroup) {
+            if (redoCmd instanceof CmdGroup) {
                 redoCmd.setUnitId(unitId);
             }
             else {

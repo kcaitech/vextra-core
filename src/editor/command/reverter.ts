@@ -6,12 +6,10 @@ import {
     PageCmdDelete,
     PageCmdModify,
     PageCmdMove,
-    ShapeArrayAttrGroup,
     ShapeArrayAttrInsert,
     ShapeArrayAttrModify,
     ShapeArrayAttrMove,
     ShapeArrayAttrRemove,
-    ShapeCmdGroup,
     TextCmdRemove,
     TextCmdInsert,
     TextCmdModify,
@@ -31,7 +29,6 @@ import {
     ShapeOpNone,
     ShapeOpRemove,
     ShapeOpMove,
-    TextCmdGroup,
     CmdGroup
 } from "../../coop/data/classes";
 import { Document } from "../../data/document"
@@ -54,8 +51,6 @@ export class CMDReverter {
                 return this.pageModify(cmd as PageCmdModify);
             case CmdType.PageMove:
                 return this.pageMove(cmd as PageCmdMove);
-            case CmdType.ShapeArrayAttrGroup:
-                return this.shapeArrAttrCMDGroup(cmd as ShapeArrayAttrGroup);
             case CmdType.ShapeArrayAttrInsert:
                 return this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
             case CmdType.ShapeArrayAttrModify:
@@ -64,8 +59,6 @@ export class CMDReverter {
                 return this.shapeArrAttrMove(cmd as ShapeArrayAttrMove);
             case CmdType.ShapeArrayAttrDelete:
                 return this.shapeArrAttrDelete(cmd as ShapeArrayAttrRemove);
-            case CmdType.ShapeCmdGroup:
-                return this.shapeCMDGroup(cmd as ShapeCmdGroup);
             case CmdType.TextDelete:
                 return this.textDelete(cmd as TextCmdRemove);
             case CmdType.TextInsert:
@@ -74,8 +67,6 @@ export class CMDReverter {
                 return this.textModify(cmd as TextCmdModify);
             case CmdType.TextMove:
                 return this.textMove(cmd as TextCmdMove);
-            case CmdType.TextCmdGroup:
-                return this.textCmdGroup(cmd as TextCmdGroup);
             case CmdType.ShapeDelete:
                 return this.shapeDelete(cmd as ShapeCmdRemove);
             case CmdType.ShapeInsert:
@@ -144,14 +135,6 @@ export class CMDReverter {
         return new PageCmdMove(CmdType.PageMove, uuid(), cmd.blockId, [op]);
     }
 
-    shapeArrAttrCMDGroup(cmd: ShapeArrayAttrGroup): ShapeArrayAttrGroup {
-        const ret = ShapeArrayAttrGroup.Make(cmd.blockId);
-        cmd.cmds.slice(0).reverse().forEach((cmd) => {
-            const r = this.revert(cmd);
-            if (r) ret.cmds.push(r as any)
-        })
-        return ret;
-    }
     shapeArrAttrInsert(cmd: ShapeArrayAttrInsert): ShapeArrayAttrRemove {
         const cmdop = cmd.ops[0];
         let op;
@@ -205,14 +188,7 @@ export class CMDReverter {
 
         return new ShapeArrayAttrInsert(CmdType.ShapeArrayAttrInsert, uuid(), cmd.blockId, [op], arrayAttrId, cmd.origin);
     }
-    shapeCMDGroup(cmd: ShapeCmdGroup): ShapeCmdGroup {
-        const ret = ShapeCmdGroup.Make(cmd.blockId);
-        cmd.cmds.slice(0).reverse().forEach((cmd) => {
-            const r = this.revert(cmd);
-            if (r) ret.cmds.push(r as any)
-        })
-        return ret;
-    }
+
     shapeDelete(cmd: ShapeCmdRemove): ShapeCmdInsert {
         const cmdop = cmd.ops[0];
         let op;
@@ -266,7 +242,7 @@ export class CMDReverter {
         return new ShapeCmdMove(CmdType.ShapeMove, uuid(), cmd.blockId, [op]);
     }
 
-    textDelete(cmd: TextCmdRemove): TextCmdInsert | TextCmdGroup {
+    textDelete(cmd: TextCmdRemove): TextCmdInsert {
         const op = cmd.ops[0];
         if (op.type !== OpType.ArrayRemove) {
             return new TextCmdInsert(CmdType.TextInsert, uuid(), cmd.blockId, [op], cmd.origin!);
@@ -310,33 +286,7 @@ export class CMDReverter {
             return new TextCmdMove(CmdType.TextMove, uuid(), cmd.blockId, [op0, op1]);
         }
     }
-    textCmdGroup(cmd: TextCmdGroup): TextCmdGroup {
-        const ret = TextCmdGroup.Make(cmd.blockId);
-        const revert = ret.cmds;
-        cmd.cmds.forEach((cmd) => {
-            switch (cmd.type) {
-                case CmdType.TextInsert:
-                    revert.push(this.textInsert(cmd as TextCmdInsert));
-                    break;
-                case CmdType.TextDelete: {
-                    const ret = this.textDelete(cmd as TextCmdRemove);
-                    if (ret instanceof TextCmdGroup) {
-                        revert.push(...ret.cmds);
-                    }
-                    else {
-                        revert.push(ret);
-                    }
-                }
-                case CmdType.TextModify:
-                    revert.push(this.textModify(cmd as TextCmdModify));
-                case CmdType.TextMove:
-                    revert.push(this.textMove(cmd as TextCmdMove));
-                default:
-                    throw new Error("unknow cmd type: " + cmd.type)
-            }
-        });
-        return ret;
-    }
+
     cmdGroup(cmd: CmdGroup): CmdGroup {
         const ret = CmdGroup.Make(cmd.blockId);
         const revert = ret.cmds;
@@ -345,16 +295,9 @@ export class CMDReverter {
                 case CmdType.TextInsert:
                     revert.push(this.textInsert(cmd as TextCmdInsert));
                     break;
-                case CmdType.TextDelete: {
-                    const ret = this.textDelete(cmd as TextCmdRemove);
-                    if (ret instanceof TextCmdGroup) {
-                        revert.push(...ret.cmds);
-                    }
-                    else {
-                        revert.push(ret);
-                    }
+                case CmdType.TextDelete:
+                    revert.push(this.textDelete(cmd as TextCmdRemove));
                     break;
-                }
                 case CmdType.TextModify:
                     revert.push(this.textModify(cmd as TextCmdModify));
                     break;

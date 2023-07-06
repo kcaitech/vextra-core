@@ -56,8 +56,6 @@ function _merge(l: Cmd, r: Cmd): MERGE_STATE {
             return MERGE_STATE.BREAK;;
         case CmdType.ShapeArrayAttrDelete:
             return MERGE_STATE.BREAK;;
-        case CmdType.ShapeCmdGroup:
-            return MERGE_STATE.BREAK;
 
         case CmdType.TextDelete:
             return MERGE_STATE.BREAK; // todo
@@ -65,8 +63,6 @@ function _merge(l: Cmd, r: Cmd): MERGE_STATE {
             return MERGE_STATE.BREAK; // todo
         case CmdType.TextModify:
             return MERGE_STATE.BREAK; // todo
-        case CmdType.TextCmdGroup:
-            return MERGE_STATE.BREAK;
         case CmdType.TextMove:
             return MERGE_STATE.BREAK;
         case CmdType.ShapeDelete:
