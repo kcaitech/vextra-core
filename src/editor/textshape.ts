@@ -93,6 +93,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("composingInput", {});
         if (this.__composingDel > 0) api.deleteText(this.__page, this.shape, this.__composingIndex, this.__composingDel);
         if (text.length > 0) api.insertSimpleText(this.__page, this.shape, this.__composingIndex, text, this.__composingAttr);
+        else this.shape.text.composingInputUpdate(this.__composingIndex);
         this.fixFrameByLayout(api);
         this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
         return true;
