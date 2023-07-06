@@ -18,9 +18,9 @@ export const SHAPE_ATTR_ID = {
     backgroundColor: "backgroundColor",
     textBehaviour: "textBehaviour",
     textVerAlign: "textVerAlign",
-    textHorAlign: "textHorAlign",
-    textMinLineheight: "textMinLineheight",
-    textMaxLineheight: "textMaxLineheight",
+    defalutTextHorAlign: "defaultTextHorAlign",
+    defaultTextMinLineheight: "defaultTextMinLineheight",
+    defaultTextMaxLineheight: "defaultTextMaxLineheight",
 }
 
 export const FILLS_ID = "fills"
@@ -47,6 +47,9 @@ export const TEXT_ATTR_ID = {
     fontSize: "fontSize",
     fontName: "fontName",
     kerning: "kerning",
+    textHorAlign: "textHorAlign",
+    textMinLineheight: "textMinLineheight",
+    textMaxLineheight: "textMaxLineheight",
 }
 
 export const POINTS_ID = "points"

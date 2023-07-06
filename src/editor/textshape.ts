@@ -170,11 +170,25 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+
+    // 对象属性
+    public setTextDefaultHorAlign(horAlign: TextHorAlign) {
+        const api = this.__repo.start("setTextDefaultHorAlign", {});
+        try {
+            api.shapeModifyTextDefaultHorAlign(this.__page, this.shape, horAlign)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
     // 段属性
     public setTextHorAlign(horAlign: TextHorAlign, index: number, len: number) {
         const api = this.__repo.start("setTextHorAlign", {});
         try {
-            api.shapeModifyTextHorAlign(this.__page, this.shape, horAlign)
+            api.textModifyHorAlign(this.__page, this.shape, horAlign, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -187,7 +201,7 @@ export class TextShapeEditor extends ShapeEditor {
     public setMinLineHeight(minLineHeight: number, index: number, len: number) {
         const api = this.__repo.start("setMinLineHeight", {});
         try {
-            api.shapeModifyTextMinLineHeight(this.__page, this.shape, minLineHeight)
+            api.textModifyMinLineHeight(this.__page, this.shape, minLineHeight, index, len)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -201,7 +215,7 @@ export class TextShapeEditor extends ShapeEditor {
     public setMaxLineHeight(maxLineHeight: number, index: number, len: number) {
         const api = this.__repo.start("setMaxLineHeight", {});
         try {
-            api.shapeModifyTextMaxLineHeight(this.__page, this.shape, maxLineHeight)
+            api.textModifyMaxLineHeight(this.__page, this.shape, maxLineHeight, index, len)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
