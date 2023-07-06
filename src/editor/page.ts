@@ -11,6 +11,7 @@ import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { Border, BorderStyle, Color, Fill, Artboard } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
+import { transform_data } from "../io/cilpboard";
 
 function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
@@ -524,37 +525,58 @@ export class PageEditor {
         }
     }
     /**
-     * src 中的每个图形都将被替换成replacement
-     * @param replacement 替代品
+     * src中的每个图形都将被替换成replacement
+     * @param document 当前文档
+     * @param replacement 替代品，里面图形的frame都已经在进入剪切板后被处理过了，都是在page上的绝对位置
      * @param src 即将被替代的图形
      * @returns 如果成功替换则返回所有替代品
      */
-    replace(replacement: Shape[], src: Shape[]): false | Shape[] {
+    replace(document: Document, replacement: Shape[], src: Shape[]): false | Shape[] {
         const api = this.__repo.start("replace", {});
         try {
             const len = replacement.length;
-            const delta_xy: { x: number, y: number }[] = [{ x: 0, y: 0 }];
-            const reference = replacement[0].frame;
+            // 寻找replacement的左上角(lt_point)，该点将和src中每个图形的左上角重合
+            const any_r_f = replacement[0].frame;
+            const lt_point = { x: any_r_f.x, y: any_r_f.y };
             for (let i = 1; i < len; i++) {
-                const r = replacement[i];
-                const xy = r.frame;
-                const dt = { x: xy.x - reference.x, y: xy.y - reference.y };
-                delta_xy.push(dt);
+                const frame = replacement[i].frame;
+                if (frame.x < lt_point.x) lt_point.x = frame.x;
+                if (frame.y < lt_point.y) lt_point.y = frame.y;
             }
+
+            // 记录每个图形相对lt_point的位置
+            const delta_xys: { x: number, y: number }[] = [];
+            for (let i = 0; i < len; i++) {
+                const r = replacement[i];
+                const rf = r.frame;
+                const dt = { x: rf.x - lt_point.x, y: rf.y - lt_point.y };
+                delta_xys.push(dt);
+            }
+            // 收集被替换上去的元素
             const src_replacement: Shape[] = [];
+
+            // 开始替换
             for (let i = 0; i < src.length; i++) {
                 const s = src[i];
                 const p = s.parent as GroupShape;
                 if (!p) throw new Error('invalid root');
                 let save_index = p.indexOfChild(s);
                 if (save_index < 0) throw new Error('invalid childs data');
+
+                // 记录被替换掉的图形原先所在的位置
+                const fr = s.frame;
+                const save_frame = { x: fr.x, y: fr.y };
+                // 先删除将被替换的图形
                 const del_res = this.delete_inner(this.__page, s, api);
                 if (!del_res) throw new Error('delete failed');
-                for (let r_i = 0; r_i < len; r_i++) {
-                    const r = replacement[r_i];
+
+                // replacement的原版数据只能使用一次，使用一次之后的替换应该使用replacement的副本数据，并确保每一份副本数据中不存在共同对象引用
+                const copy: Shape[] = i < 1 ? replacement : transform_data(document, replacement);
+                for (let r_i = 0; r_i < len; r_i++) { // 逐个插入replacement中的图形
+                    let r = copy[r_i];
                     r.id = uuid();
-                    r.frame.x = s.frame.x + delta_xy[r_i].x;
-                    r.frame.y = s.frame.y + delta_xy[r_i].y;
+                    r.frame.x = save_frame.x + delta_xys[r_i].x; // lt_point与s.frame的xy重合后，用delta_xys中的相对位置计算replacement中每个图形的偏移
+                    r.frame.y = save_frame.y + delta_xys[r_i].y;
                     api.shapeInsert(this.__page, p, r, save_index);
                     src_replacement.push(p.childs[save_index]);
                     save_index++;
