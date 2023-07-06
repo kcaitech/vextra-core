@@ -243,7 +243,10 @@ export class Text extends Basic implements classes.Text {
     getTextWithFormat(index: number, count: number): Text {
         return getTextWithFmt(this, index, count);
     }
-    getTextFormat(index: number, count: number) {
+    getDefaultTextFormat(): TextAttr | undefined {
+        return this.attr;
+    }
+    getTextFormat(index: number, count: number): AttrGetter {
         return getTextFormat(this, index, count);
     }
     insertText(text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
