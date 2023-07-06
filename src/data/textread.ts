@@ -1,65 +1,13 @@
 import { BasicArray } from "./basic";
 import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr } from "./text";
+import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { isColorEqual } from "./utils";
 
-// traveler
-function __travelTextSpan(spans: Span[], spanIndex: number, index: number, length: number, travel: (span: Span, index: number, length: number) => void) {
-    while (length > 0 && spanIndex < spans.length) {
-        const span = spans[spanIndex];
-        const end = Math.min(span.length, index + length);
-        travel(span, index, end - index);
-        length -= end - index;
-        index = 0;
-        spanIndex++;
-    }
-}
-
-function _travelTextSpan(spans: Span[], index: number, length: number, travel: (span: Span, index: number, length: number) => void) {
-    // 定位到span
-    for (let i = 0, len = spans.length; i < len; i++) {
-        const span = spans[i];
-        if (index < span.length) {
-            __travelTextSpan(spans, i, index, length, travel);
-            break;
-        }
-        else {
-            index -= span.length;
-        }
-    }
-}
-
-function __travelTextPara(paraArray: Para[], paraIndex: number, index: number, length: number, paratravel: (para: Para, index: number, length: number) => void, spantravel?: (span: Span, index: number, length: number) => void) {
-    while (length > 0 && paraIndex < paraArray.length) {
-        const para = paraArray[index];
-        const end = Math.min(para.length, index + length);
-
-        paratravel(para, index, end - index);
-
-        if (spantravel) _travelTextSpan(para.spans, index, length, spantravel);
-
-        length -= end - index;
-        index = 0;
-    }
-}
-
-function _travelTextPara(paras: Para[], index: number, length: number, paratravel: (para: Para, index: number, length: number) => void, spantravel?: (span: Span, index: number, length: number) => void) {
-    for (let i = 0, len = paras.length; i < len; i++) {
-        const p = paras[i];
-        if (index < p.length) {
-            __travelTextPara(paras, i, index, length, paratravel);
-            break;
-        }
-        else {
-            index -= p.length;
-        }
-    }
-}
-// ---------------------------------------
 
 export function getSimpleText(shapetext: Text, index: number, length: number): string {
     let text = '';
-    _travelTextPara(shapetext.paras, index, length, (para, index, length) => {
+    _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
         text += para.text.slice(index, index + length);
     })
     return text;
@@ -68,7 +16,7 @@ export function getSimpleText(shapetext: Text, index: number, length: number): s
 export function getTextWithFmt(shapetext: Text, index: number, length: number): Text { // 带格式
     const text = new Text(new BasicArray<Para>());
     _travelTextPara(shapetext.paras, index, length,
-        (para, index, length) => {
+        (paraArray, paraIndex, para, index, length) => {
             const end = index + length;
             const _text = para.text.slice(index, end);
             const para1 = new Para(_text, new BasicArray<Span>());
@@ -191,7 +139,7 @@ export function getTextFormat(shapetext: Text, index: number, length: number): A
     }
 
     _travelTextPara(shapetext.paras, index, length,
-        (para, index, length) => {
+        (paraArray, paraIndex, para, index, length) => {
             const attr = para.attr;
             if (attr) _getParaFormat(attr, parafmt);
         },
