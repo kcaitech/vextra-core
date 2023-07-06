@@ -37,6 +37,7 @@ function __travelTextPara(paraArray: Para[], paraIndex: number, index: number, l
 
         length -= end - index;
         index = 0;
+        paraIndex++;
     }
 }
 
