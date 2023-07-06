@@ -19,7 +19,7 @@ import { SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../..
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { Point2D } from "data/typesdefine";
+import { Point2D } from "../../data/typesdefine";
 
 export class Api {
     private cmds: Cmd[] = [];
