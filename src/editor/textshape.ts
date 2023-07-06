@@ -1,4 +1,4 @@
-import { Color, Page, SpanAttr, Text, TextBehaviour, TextHorAlign, TextShape, TextVerAlign } from "../data/classes";
+import { BulletNumbersType, Color, Page, SpanAttr, Text, TextBehaviour, TextHorAlign, TextShape, TextVerAlign } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
@@ -274,5 +274,39 @@ export class TextShapeEditor extends ShapeEditor {
             this.__repo.rollback();
         }
         return false;
+    }
+
+    public setTextDefaultUnderline(underline: boolean) {
+        
+    }
+
+    public setTextUnderline(underline: boolean, index: number, len: number) {
+
+    }
+
+    public setTextDefaultStrikethrough(strikethrough: boolean) {
+        
+    }
+
+    public setTextStrikethrough(strikethrough: boolean, index: number, len: number) {
+
+    }
+
+    // 需要个占位符
+
+    public setTextDefaultBulletNumbers(type: BulletNumbersType) {
+
+    }
+
+    public setTextBulletNumbers(type: BulletNumbersType, index: number, len: number) {
+        
+    }
+
+    public setTextBulletNumbersStart(start: number, index: number, len: number) {
+        
+    }
+
+    public setTextBulletNumbersInherit(inherit: boolean, index: number, len: number) {
+        
     }
 }
