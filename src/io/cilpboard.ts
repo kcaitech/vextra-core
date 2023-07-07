@@ -5,7 +5,7 @@ import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { Artboard } from "../data/classes";
-import { newTextShape } from "../editor/creator";
+import { newTextShape, newTextShapeByText } from "../editor/creator";
 
 function set_childs_id(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
@@ -142,7 +142,8 @@ export function export_text(text: types.Text): types.Text {
 export function import_text(document: Document, text: types.Text, gen?: boolean): types.Text | TextShape {
     if (gen) {
         const name = text.paras[0].text || 'text';
-        return newTextShape(name, document.measureFun);
+        const shape = newTextShapeByText(name, text, document.measureFun);
+        return shape;
     }
     return importText(text);
 }

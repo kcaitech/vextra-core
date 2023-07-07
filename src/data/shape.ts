@@ -752,10 +752,6 @@ export class TextShape extends Shape implements classes.TextShape {
         return new Path(path);
     }
 
-    getLayout(): TextLayout {
-        return this.text.getLayout();
-    }
-
     setMeasureFun(measure: MeasureFun) {
         this.text.setMeasureFun(measure);
     }
@@ -767,6 +763,10 @@ export class TextShape extends Shape implements classes.TextShape {
     setFrameSize(w: number, h: number) {
         super.setFrameSize(w, h);
         this.text.updateSize(this.frame.width, this.frame.height)
+    }
+
+    getLayout(): TextLayout {
+        return this.text.getLayout();
     }
 }
 
