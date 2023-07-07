@@ -19,7 +19,7 @@ import { SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../..
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { Point2D } from "data/typesdefine";
+import { Point2D, StrikethroughType, UnderlineType } from "../../data/typesdefine";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -374,7 +374,7 @@ export class Api {
             if (fills && fills.length) {
                 for (let i = 0; i < fills.length; i++) {
                     const fill = fills[i];
-                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, FILLS_ID, fill.id, i, exportFill(fill)));
+                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, FILLS_ID, fill.id, index, exportFill(fill)));
                 }
             }
         })
@@ -543,6 +543,31 @@ export class Api {
         })
         return del;
     }
+    shapeModifyTextColor(page: Page, shape: TextShape, color: Color) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextColor(shape, color);
+            this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defalutTextColor, exportColor(color), ret ? exportColor(ret) : undefined));
+        })
+    }
+    shapeModifyTextFontName(page: Page, shape: TextShape, fontName: string) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextFontName(shape, fontName);
+            if (ret !== fontName) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defalutTextFontName, fontName, ret));
+            }
+        })
+    }
+    shapeModifyTextFontSize(page: Page, shape: TextShape, fontSize: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextFontSize(shape, fontSize);
+            if (ret !== fontSize) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defalutTextFontSize, fontSize, ret));
+            }
+        })
+    }
     textModifyColor(page: Page, shape: TextShape, idx: number, len: number, color: Color) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
@@ -568,7 +593,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyFontSize(shape, idx, len, fontsize);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.color, fontsize, m.fontSize));
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontSize, fontsize, m.fontSize));
                 idx += m.length;
             })
         })
@@ -595,30 +620,121 @@ export class Api {
             }
         })
     }
-    shapeModifyTextHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign) {
+    shapeModifyTextKerning(page: Page, shape: TextShape, kerning: number) {
+
+    }
+    shapeModifyTextParaSpacing(page: Page, shape: TextShape, paraSpacing: number) {
+
+    }
+    shapeModifyTextUnderline(page: Page, shape: TextShape, underline: UnderlineType | undefined) {
+
+    }
+    shapeModifyStrikethrough(page: Page, shape: TextShape, strikethrouth: StrikethroughType | undefined) {
+
+    }
+
+    textModifyUnderline(page: Page, shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
+
+    }
+    textModifyStrikethrough(page: Page, shape: TextShape, strikethrough: StrikethroughType | undefined, index: number, len: number) {
+
+    }
+
+    textModifyHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign, index: number, len: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.shapeModifyTextHorAlign(shape, horAlign);
+            // fix index
+            const alignRange = shape.text.alignParaRange(index, len);
+            index = alignRange.index;
+            len = alignRange.len;
+
+            const ret = basicapi.textModifyHorAlign(shape, horAlign, index, len);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textHorAlign, horAlign, m.alignment));
+                index += m.length;
+            })
+        })
+    }
+    shapeModifyTextDefaultHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextDefaultHorAlign(shape, horAlign);
             if (ret !== horAlign) {
-                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textHorAlign, horAlign, ret));
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defalutTextHorAlign, horAlign, ret));
             }
         })
     }
-    shapeModifyTextMinLineHeight(page: Page, shape: TextShape, minLineheight: number) {
+    textModifyMinLineHeight(page: Page, shape: TextShape, minLineheight: number, index: number, len: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.shapeModifyTextMinLineHeight(shape, minLineheight);
+            const alignRange = shape.text.alignParaRange(index, len);
+            index = alignRange.index;
+            len = alignRange.len;
+
+            const ret = basicapi.textModifyMinLineHeight(shape, minLineheight, index, len);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textMinLineheight, minLineheight, m.minimumLineHeight));
+                index += m.length;
+            })
+        })
+    }
+    textModifyMaxLineHeight(page: Page, shape: TextShape, maxLineheight: number, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const alignRange = shape.text.alignParaRange(index, len);
+            index = alignRange.index;
+            len = alignRange.len;
+
+            const ret = basicapi.textModifyMaxLineHeight(shape, maxLineheight, index, len);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textMaxLineheight, maxLineheight, m.maximumLineHeight));
+                index += m.length;
+            })
+        })
+    }
+    textModifyKerning(page: Page, shape: TextShape, kerning: number, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const alignRange = shape.text.alignParaRange(index, len);
+            index = alignRange.index;
+            len = alignRange.len;
+
+            const ret = basicapi.textModifyKerning(shape, kerning, index, len);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.kerning, kerning, m.kerning));
+                index += m.length;
+            })
+        })
+    }
+    textModifyParaSpacing(page: Page, shape: TextShape, paraSpacing: number, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const alignRange = shape.text.alignParaRange(index, len);
+            index = alignRange.index;
+            len = alignRange.len;
+
+            const ret = basicapi.textModifyParaSpacing(shape, paraSpacing, index, len);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraSpacing, paraSpacing, m.paraSpacing));
+                index += m.length;
+            })
+        })
+    }
+    shapeModifyTextDefaultMinLineHeight(page: Page, shape: TextShape, minLineheight: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextDefaultMinLineHeight(shape, minLineheight);
             if (ret !== minLineheight) {
-                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textMinLineheight, minLineheight, ret));
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defaultTextMinLineheight, minLineheight, ret));
             }
         })
     }
-    shapeModifyTextMaxLineHeight(page: Page, shape: TextShape, maxLineheight: number) {
+    shapeModifyTextDefaultMaxLineHeight(page: Page, shape: TextShape, maxLineheight: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.shapeModifyTextMaxLineHeight(shape, maxLineheight);
+            const ret = basicapi.shapeModifyTextDefaultMaxLineHeight(shape, maxLineheight);
             if (ret !== maxLineheight) {
-                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textMaxLineheight, maxLineheight, ret));
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defaultTextMaxLineheight, maxLineheight, ret));
             }
         })
     }

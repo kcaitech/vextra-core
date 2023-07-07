@@ -3,7 +3,7 @@ import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, PathShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
-import { ParaAttr, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
+import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 import { Point2D } from "data/typesdefine";
 
 export * from "./fill";
@@ -165,6 +165,24 @@ export function textModifyFontSize(shape: TextShape, idx: number, len: number, f
     })
     return origin;
 }
+export function shapeModifyTextColor(shape: TextShape, color: Color | undefined) {
+    const text = shape.text;
+    const origin = text.attr?.color;
+    text.setDefaultTextColor(color);
+    return origin;
+}
+export function shapeModifyTextFontName(shape: TextShape, fontName: string | undefined) {
+    const text = shape.text;
+    const origin = text.attr?.fontName;
+    text.setDefaultFontName(fontName);
+    return origin;
+}
+export function shapeModifyTextFontSize(shape: TextShape, fontSize: number) {
+    const text = shape.text;
+    const origin = text.attr?.fontSize;
+    text.setDefaultFontSize(fontSize);
+    return origin;
+}
 export function shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour) {
     const text = shape.text;
     if (textBehaviour === TextBehaviour.Flexible) {
@@ -185,26 +203,86 @@ export function shapeModifyTextVerAlign(shape: TextShape, verAlign: TextVerAlign
     text.setTextVerAlign(verAlign);
     return origin ?? TextVerAlign.Top;
 }
-export function shapeModifyTextHorAlign(shape: TextShape, horAlign: TextHorAlign) {
+export function textModifyHorAlign(shape: TextShape, horAlign: TextHorAlign, index: number, len: number) {
+    const attr = new ParaAttrSetter();
+    attr.alignment = horAlign;
+    attr.alignmentIsSet = true;
+    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const paras = ret.paras;
+    const origin: { alignment: TextHorAlign | undefined, length: number }[] = [];
+    paras.forEach((para) => {
+        origin.push({ alignment: para.alignment, length: para.length })
+    })
+    return origin;
+}
+export function shapeModifyTextDefaultHorAlign(shape: TextShape, horAlign: TextHorAlign) {
     const text = shape.text;
     if (horAlign === TextHorAlign.Left) {
         // default
         if (!text.attr || !text.attr.alignment || text.attr.alignment === TextHorAlign.Left) return TextHorAlign.Left;
     }
     const origin = text.attr?.alignment;
-    text.setTextHorAlign(horAlign);
+    text.setDefaultTextHorAlign(horAlign);
     return origin ?? TextHorAlign.Left;
 }
-export function shapeModifyTextMinLineHeight(shape: TextShape, minLineheight: number) {
+export function textModifyMinLineHeight(shape: TextShape, minLineheight: number, index: number, len: number) {
+    const attr = new ParaAttrSetter();
+    attr.minimumLineHeight = minLineheight;
+    attr.minimumLineHeightIsSet = true;
+    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const paras = ret.paras;
+    const origin: { minimumLineHeight?: number, length: number }[] = [];
+    paras.forEach((para) => {
+        origin.push({ minimumLineHeight: para.minimumLineHeight, length: para.length })
+    })
+    return origin;
+}
+export function textModifyMaxLineHeight(shape: TextShape, maxLineheight: number, index: number, len: number) {
+    const attr = new ParaAttrSetter();
+    attr.maximumLineHeight = maxLineheight;
+    attr.maximumLineHeightIsSet = true;
+    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const paras = ret.paras;
+    const origin: { maximumLineHeight: number | undefined, length: number }[] = [];
+    paras.forEach((para) => {
+        origin.push({ maximumLineHeight: para.maximumLineHeight, length: para.length })
+    })
+    return origin;
+}
+export function textModifyKerning(shape: TextShape, kerning: number, index: number, len: number) {
+    const attr = new ParaAttrSetter();
+    attr.kerning = kerning;
+    attr.kerningIsSet = true;
+    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const paras = ret.paras;
+    const origin: { kerning: number | undefined, length: number }[] = [];
+    paras.forEach((para) => {
+        origin.push({ kerning: para.kerning, length: para.length })
+    })
+    return origin;
+}
+export function textModifyParaSpacing(shape: TextShape, paraSpacing: number, index: number, len: number) {
+    const attr = new ParaAttrSetter();
+    attr.paraSpacing = paraSpacing;
+    attr.paraSpacingIsSet = true;
+    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const paras = ret.paras;
+    const origin: { paraSpacing: number | undefined, length: number }[] = [];
+    paras.forEach((para) => {
+        origin.push({ paraSpacing: para.paraSpacing, length: para.length })
+    })
+    return origin;
+}
+export function shapeModifyTextDefaultMinLineHeight(shape: TextShape, minLineheight: number) {
     const text = shape.text;
     const origin = text.attr?.minimumLineHeight;
-    text.setMinLineHeight(minLineheight);
+    text.setDefaultMinLineHeight(minLineheight);
     return origin ?? 0;
 }
-export function shapeModifyTextMaxLineHeight(shape: TextShape, maxLineheight: number) {
+export function shapeModifyTextDefaultMaxLineHeight(shape: TextShape, maxLineheight: number) {
     const text = shape.text;
     const origin = text.attr?.maximumLineHeight;
-    text.setMaxLineHeight(maxLineheight);
+    text.setDefaultMaxLineHeight(maxLineheight);
     return origin ?? 0;
 }
 export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
