@@ -398,6 +398,19 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
+    public setTextDefaultBold(bold: boolean) {
+
+    }
+    public setTextBold(bold: boolean, index: number, len: number) {
+
+    }
+    public setTextDefaultItalic(italic: boolean) {
+
+    }
+    public setTextItalic(italic: boolean, index: number, len: number) {
+
+    }
+
     // 需要个占位符
 
     public setTextDefaultBulletNumbers(type: BulletNumbersType) {
