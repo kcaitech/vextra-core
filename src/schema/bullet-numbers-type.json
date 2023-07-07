@@ -1,0 +1,8 @@
+{
+    "description": "bullet & item number types",
+    "enum": [
+        "ordered-1ai",
+        "disorded"
+    ],
+    "default": "enum"
+}

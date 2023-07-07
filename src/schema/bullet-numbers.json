@@ -1,0 +1,19 @@
+{
+    "description": "bullet numbers",
+    "type": "object",
+    "properties": {
+        "behavior": {
+            "$ref": "./bullet-numbers-behavior.json"
+        },
+        "offset": {
+            "type": "integer"
+        },
+        "type": {
+            "$ref": "./bullet-numbers-type.json"
+        }
+    },
+    "required": [
+        "type"
+    ],
+    "additionalProperties": false
+}

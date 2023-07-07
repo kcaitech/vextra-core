@@ -1,19 +1,44 @@
-import { Color, ParaAttr, TextAttr, TextBehaviour, TextHorAlign, TextVerAlign } from "./baseclasses";
+import { BulletNumbers, Color, StrikethroughType, TextBehaviour, TextHorAlign, TextOrientation, TextVerAlign, UnderlineType } from "./baseclasses";
 import { Basic, BasicArray } from "./basic";
 
-export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation, ParaAttr, TextAttr } from "./baseclasses";
+export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation, StrikethroughType, UnderlineType, BulletNumbers, BulletNumbersType, BulletNumbersBehavior } from "./baseclasses";
 import * as classes from "./baseclasses"
 import { deleteText, formatText, insertComplexText, insertSimpleText } from "./textedit";
 import { MeasureFun, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
-import { getText, getTextText } from "./textread";
+import { getSimpleText, getTextFormat, getTextWithFmt } from "./textread";
 import { locateCursor, locateRange, locateText } from "./textlocate";
+import { _travelTextPara } from "./texttravel";
+/*
+ 文本框属性
+    文本框大小行为
+    垂直对齐
+    段落属性
+        水平对齐
+        行高
+        字距
+        段间距
+        编号
+        字属性
+            字号
+            颜色
+            字体
+            加粗
+            倾斜
+            删除线
+            下划线
+ */
 
 export class SpanAttr extends Basic implements classes.SpanAttr {
     typeId = 'span-attr'
     fontName?: string
     fontSize?: number
     color?: Color
+    strikethrough?: StrikethroughType
+    underline?: UnderlineType
+    bold?: boolean
+    italic?: boolean
+    bulletNumbers?: BulletNumbers
     constructor(
     ) {
         super()
@@ -25,6 +50,51 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
         if (this.color) newSpanAttr.color = new Color(this.color.alpha, this.color.red, this.color.green, this.color.blue);
         return newSpanAttr;
     }
+}
+
+export class ParaAttr extends SpanAttr implements classes.ParaAttr {
+    typeId = 'para-attr'
+    alignment?: TextHorAlign
+    paraSpacing?: number
+    kerning?: number
+    minimumLineHeight?: number
+    maximumLineHeight?: number
+    indent?: number
+    constructor(
+    ) {
+        super(
+        )
+    }
+}
+
+export class TextAttr extends ParaAttr implements classes.TextAttr {
+    typeId = 'text-attr'
+    verAlign?: TextVerAlign
+    orientation?: TextOrientation
+    textBehaviour?: TextBehaviour
+    constructor(
+    ) {
+        super(
+        )
+    }
+}
+
+export class SpanAttrGetter extends SpanAttr {
+    fontNameIsMulti: boolean = false;
+    fontSizeIsMulti: boolean = false;
+    colorIsMulti: boolean = false;
+}
+
+export class AttrGetter extends TextAttr {
+    fontNameIsMulti: boolean = false;
+    fontSizeIsMulti: boolean = false;
+    colorIsMulti: boolean = false;
+
+    alignmentIsMulti: boolean = false;
+    paraSpacingIsMulti: boolean = false;
+    kerningIsMulti: boolean = false;
+    minimumLineHeightIsMulti: boolean = false;
+    maximumLineHeightIsMulti: boolean = false;
 }
 
 export class SpanAttrSetter extends SpanAttr {
@@ -123,21 +193,71 @@ export class Text extends Basic implements classes.Text {
         }
         return '';
     }
+    paraAt(index: number): { para: Para, index: number, paraIndex: number } | undefined {
+        for (let i = 0, len = this.paras.length; i < len; i++) {
+            const p = this.paras[i];
+            if (index < p.length) {
+                return { para: p, index, paraIndex: i }
+            }
+            else {
+                index -= p.length;
+            }
+        }
+    }
+    /**
+     * 对齐段落
+     * @param index 
+     * @param len 
+     */
+    alignParaRange(index: number, len: number): { index: number, len: number } {
+        const ret = { index, len };
+        for (let i = 0, len = this.paras.length; i < len; i++) {
+            const p = this.paras[i];
+            if (index < p.length) {
+                ret.index -= index;
+                ret.len += index;
+                len += index;
+
+                for (let j = i; j < len; j++) {
+                    const p = this.paras[j];
+                    if (len <= p.length) {
+                        ret.len += p.length - len;
+                        break;
+                    }
+                    len -= p.length;
+                }
+                break;
+            }
+            else {
+                index -= p.length;
+            }
+        }
+        return ret;
+    }
     get length() {
         return this.paras.reduce((count, p) => {
             return count + p.length;
         }, 0);
     }
     getText(index: number, count: number): string {
-        return getText(this, index, count);
+        return getSimpleText(this, index, count);
     }
     getTextWithFormat(index: number, count: number): Text {
-        return getTextText(this, index, count);
+        return getTextWithFmt(this, index, count);
+    }
+    getDefaultTextFormat(): TextAttr | undefined {
+        return this.attr;
+    }
+    getTextFormat(index: number, count: number): AttrGetter {
+        return getTextFormat(this, index, count);
     }
     insertText(text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
         // this.reLayout(); // todo
         insertSimpleText(this, text, index, props);
         if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, text.length, this.__layout);
+    }
+    composingInputUpdate(index: number) {
+        if (this.__layout) this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, 1, this.__layout);
     }
     insertFormatText(text: Text, index: number) {
         // this.reLayout(); // todo
@@ -251,17 +371,40 @@ export class Text extends Basic implements classes.Text {
             this.__layout.yOffset = yOffset;
         }
     }
-    setTextHorAlign(horAlign: TextHorAlign) {
+
+    setDefaultTextColor(color: Color | undefined) {
+        // 不需要重排
         if (!this.attr) this.attr = new TextAttr();
-        this.attr.alignment = horAlign;
-        // todo
+        this.attr.color = color;
     }
-    setMinLineHeight(minLineHeight: number) {
+    setDefaultFontName(fontName: string | undefined) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.fontName = fontName;
+        this.reLayout();
+    }
+    setDefaultFontSize(fontSize: number) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.fontSize = fontSize;
+        this.reLayout();
+    }
+    setDefaultTextHorAlign(horAlign: TextHorAlign) {
+        if (!this.attr) {
+            if (horAlign === TextHorAlign.Left) return;
+            this.attr = new TextAttr();
+            this.attr.alignment = horAlign;
+            this.reLayout();
+        }
+        else if (this.attr.alignment !== horAlign) {
+            this.attr.alignment = horAlign;
+            this.reLayout();
+        }
+    }
+    setDefaultMinLineHeight(minLineHeight: number) {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.minimumLineHeight = minLineHeight;
         this.reLayout(); // todo
     }
-    setMaxLineHeight(maxLineHeight: number) {
+    setDefaultMaxLineHeight(maxLineHeight: number) {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.maximumLineHeight = maxLineHeight;
         this.reLayout(); // todo

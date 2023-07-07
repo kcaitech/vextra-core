@@ -15,10 +15,10 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     else if (span.color) {
         return true;
     }
-    if (attr.fontName !== attr.fontName) {
+    if (attr.fontName !== span.fontName) {
         return true;
     }
-    if (attr.fontSize !== attr.fontSize) {
+    if (attr.fontSize !== span.fontSize) {
         return true;
     }
     return false;
@@ -72,11 +72,11 @@ export function mergeParaAttr(para: Para | ParaAttr, attr: Para | ParaAttr): boo
             return !!_attr;
         }
         else if (_attr) {
-            return _mergeParaAttr(para.attr, attr);
+            return _mergeParaAttr(para.attr, _attr);
         }
     }
     else if (_attr) {
-        return _mergeParaAttr(para, attr);
+        return _mergeParaAttr(para, _attr);
     }
     return false;
 }

@@ -66,6 +66,12 @@ export function layoutAtInsert(text: Text,
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;
+    // debug
+    // {
+    //     let text = '';
+    //     layout.paras.forEach((p) => p.forEach((l) => l.forEach((gr) => gr.forEach((g) => text += g.char))))
+    //     console.log("text insert layout", text)
+    // }
     return layout;
 }
 
@@ -132,6 +138,12 @@ export function layoutAtDelete(text: Text,
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;
+    // debug
+    // {
+    //     let text = '';
+    //     layout.paras.forEach((p) => p.forEach((l) => l.forEach((gr) => gr.forEach((g) => text += g.char))))
+    //     console.log("text delete layout", text)
+    // }
     return layout;
 }
 

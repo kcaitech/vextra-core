@@ -1,4 +1,4 @@
-import { TextLayout } from "./textlayout";
+import { TextLayout, isNewLineCharCode } from "./textlayout";
 
 export function locateText(layout: TextLayout, x: number, y: number): { index: number, before: boolean } {
     const { yOffset, paras } = layout;
@@ -92,7 +92,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 const span = line[line.length - 1];
                 if (span.length === 0) break; // error
                 const graph = span[span.length - 1];
-                const y = p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
+                const y = layout.yOffset + p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
                 const x = graph.x + graph.cw;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
@@ -109,10 +109,23 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     index -= span.graphCount;
                     continue;
                 }
-
-                const graph = span[index];
-                const y = p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
-                const x = graph.x;
+                // 光标要取前一个字符的高度
+                // 光标的大小应该与即将输入的文本大小一致
+                let graph = span[index];
+                let x = graph.x;
+                if (index > 0) {
+                    graph = span[index - 1];
+                    x = graph.x + graph.cw;
+                    if (!isNewLineCharCode(span[index].char.charCodeAt(0))) x += line.graphPadding / 2;
+                }
+                else if (i > 0) {
+                    const preSpan = line[i - 1];
+                    graph = preSpan[preSpan.length - 1];
+                    x = graph.x + graph.cw;
+                    if (!isNewLineCharCode(span[index].char.charCodeAt(0))) x += line.graphPadding / 2;
+                }
+                // else index === 0, i === 0
+                const y = layout.yOffset + p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
                 return [p0, p1]
@@ -134,7 +147,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
         const line = p[li];
 
         if (si === 0 && gi === 0 && line.graphCount <= count) { // 整行
-            const y = p.yOffset + line.y;
+            const y = layout.yOffset + p.yOffset + line.y;
             const h = line.lineHeight;
 
             const span0 = line[0];
@@ -163,8 +176,8 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
         const span = line[si];
         const graph = span[gi];
         const minX = graph.x;
-        const minY = p.yOffset + line.y; // + (line.lineHeight - graph.ch) / 2;
-        const maxY = p.yOffset + line.y + line.lineHeight;
+        const minY = layout.yOffset + p.yOffset + line.y; // + (line.lineHeight - graph.ch) / 2;
+        const maxY = layout.yOffset + p.yOffset + line.y + line.lineHeight;
         let maxX = graph.x + graph.cw;
 
         for (let i = si, len = line.length; i < len && count > 0; i++) {
@@ -222,14 +235,14 @@ export function locateRange(layout: TextLayout, start: number, end: number): { x
             const line = p[li];
 
             if (start >= line.graphCount) {
-                start -= line.length;
+                start -= line.graphCount;
                 continue;
             }
 
             for (let si = 0, len = line.length; si < len; si++) {
                 const span = line[si];
-                if (start >= span.length) {
-                    start -= span.length;
+                if (start >= span.graphCount) {
+                    start -= span.graphCount;
                     continue;
                 }
                 const gi = start;

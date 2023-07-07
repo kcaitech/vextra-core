@@ -14,6 +14,11 @@ export type UserInfo = {
     userNickname: string
     avatar: string
 }
+/* underline types */
+export enum UnderlineType {
+    Single = 'single',
+    Double = 'double',
+}
 /* text */
 export type Text = {
     paras: Para[]
@@ -58,6 +63,11 @@ export type Style = {
     innerShadows: Shadow[]
     shadows: Shadow[]
 }
+/* strikethrough types */
+export enum StrikethroughType {
+    Single = 'single',
+    Double = 'double',
+}
 /* stop */
 export type Stop = {
     position: number
@@ -68,6 +78,11 @@ export type SpanAttr = {
     fontName?: string
     fontSize?: number
     color?: Color
+    strikethrough?: StrikethroughType
+    underline?: UnderlineType
+    bold?: boolean
+    italic?: boolean
+    bulletNumbers?: BulletNumbers
 }
 /* shape */
 export type Shape = {
@@ -329,6 +344,22 @@ export type ColorControls = {
     hue: number
     saturation: number
 }
+/* bullet numbers */
+export type BulletNumbers = {
+    behavior?: BulletNumbersBehavior
+    offset?: number
+    type: BulletNumbersType
+}
+/* bullet & item number types */
+export enum BulletNumbersType {
+    Ordered1Ai = 'ordered-1ai',
+    Disorded = 'disorded',
+}
+/* bullet & item number behavior */
+export enum BulletNumbersBehavior {
+    Inherit = 'inherit',
+    Renew = 'renew',
+}
 /* border */
 export type Border = {
     id: string
@@ -434,6 +465,7 @@ export type ParaAttr = SpanAttr & {
     kerning?: number
     minimumLineHeight?: number
     maximumLineHeight?: number
+    indent?: number
 }
 /* text attr */
 export type TextAttr = ParaAttr & {

@@ -19,10 +19,17 @@ export class GraphArray extends Array<IGraphy> {
 }
 export class Line extends Array<GraphArray> {
     public maxFontSize: number = 0;
+    public x: number = 0;
     public y: number = 0;
     public lineHeight: number = 0;
     public lineWidth: number = 0;
+
+    public graphWidth: number = 0;
     public graphCount: number = 0;
+    public graphPadding: number = 0;
+
+    public alignment: TextHorAlign = TextHorAlign.Left;
+    public layoutWidth: number = 0;
 }
 export type LineArray = Array<Line>
 
@@ -40,8 +47,83 @@ export class TextLayout {
     public contentWidth: number = 0;
 }
 
-export function adjustLines(lineArray: LineArray, align: TextHorAlign) {
-    // TODO
+export function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
+    if (line.alignment === align) {
+        if (line.layoutWidth === width) return;
+        if (align === TextHorAlign.Left) return;
+    }
+
+    switch (align) {
+        case TextHorAlign.Left:
+        case TextHorAlign.Natural:
+            {
+                let x = 0;
+                for (let i = 0, len = line.length; i < len; i++) {
+                    const arr = line[i];
+                    for (let j = 0, len1 = arr.length; j < len1; j++) {
+                        const graph = arr[j];
+                        graph.x = x;
+                        x += graph.cw;
+                    }
+                }
+                line.graphPadding = 0;
+                break;
+            }
+        case TextHorAlign.Centered:
+            {
+                let x = (width - line.graphWidth) / 2;
+                for (let i = 0, len = line.length; i < len; i++) {
+                    const arr = line[i];
+                    for (let j = 0, len1 = arr.length; j < len1; j++) {
+                        const graph = arr[j];
+                        graph.x = x;
+                        x += graph.cw;
+                    }
+                }
+                line.graphPadding = 0;
+                break;
+            }
+        case TextHorAlign.Right:
+            {
+                let x = width;
+                for (let i = line.length - 1; i >= 0; i--) {
+                    const arr = line[i];
+                    for (let j = arr.length - 1; j >= 0; j--) {
+                        const graph = arr[j];
+                        x -= graph.cw;
+                        graph.x = x;
+                    }
+                }
+                line.graphPadding = 0;
+                break;
+            }
+        case TextHorAlign.Justified:
+            {
+                const lastspan = line[line.length - 1];
+                const lastgraph = lastspan[lastspan.length - 1];
+
+                let graphCount = line.graphCount;
+                if (isNewLineCharCode(lastgraph.char.charCodeAt(0))) {
+                    graphCount--;
+                }
+                let x = 0;
+                const padding = graphCount === 1 ? 0 : (width - line.graphWidth) / (graphCount - 1);
+                for (let i = 0, len = line.length; i < len; i++) {
+                    const arr = line[i];
+                    for (let j = 0, len1 = arr.length; j < len1; j++) {
+                        const graph = arr[j];
+                        graph.x = x;
+                        x += graph.cw;
+                        x += padding;
+                    }
+                }
+                line.graphPadding = padding;
+                break;
+            }
+    }
+
+    line.alignment = align;
+    line.layoutWidth = width;
 }
 
 export function adjustLinesVertical(lines: LineArray, align: TextVerAlign) {
@@ -50,7 +132,7 @@ export function adjustLinesVertical(lines: LineArray, align: TextVerAlign) {
 
 export type MeasureFun = (code: number, font: string) => TextMetrics | undefined;
 
-function isNewLineCharCode(code: number) {
+export function isNewLineCharCode(code: number) {
     // U+0009: Horizontal tab
     // U+000A: Line feed
     // U+000B: Vertical tab
@@ -137,7 +219,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
                 spanOffset = 0;
                 spanIdx++;
             }
-            if (preSpanIdx !== spanIdx) {
+            if (line.length === 0 && graphArray.length === 1) { // 回车换行，如果不是空行不计算行高
                 line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
             }
 
@@ -147,9 +229,9 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
             lineArray.push(line);
             line = new Line();
             curX = startX;
-            if (preSpanIdx === spanIdx || spanIdx >= spansCount) {
-                line.maxFontSize = span.fontSize ?? 0;
-            }
+            // if (preSpanIdx === spanIdx || spanIdx >= spansCount) {
+            //     line.maxFontSize = span.fontSize ?? 0;
+            // }
             continue;
         }
         const m = measure(c, font);
@@ -180,9 +262,9 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
                 line.graphCount += graphArray.length;
                 graphArray = undefined;
             }
-            if (preSpanIdx !== spanIdx || spanIdx >= spansCount) {
-                line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
-            }
+            // if (preSpanIdx !== spanIdx || spanIdx >= spansCount) {
+            line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
+            // }
         }
         else if (line.length === 0 && (!graphArray || graphArray.length === 0)) {
             if (!graphArray) {
@@ -211,11 +293,11 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
             if (spanOffset >= span.length) {
                 spanOffset = 0;
                 spanIdx++;
-                if (spanIdx >= spansCount) line.maxFontSize = span.fontSize ?? 0;
+                // if (spanIdx >= spansCount) line.maxFontSize = span.fontSize ?? 0;
             }
-            else {
-                line.maxFontSize = span.fontSize ?? 0;
-            }
+            // else {
+            //     line.maxFontSize = span.fontSize ?? 0;
+            // }
         }
         else {
             if (graphArray) {
@@ -283,13 +365,19 @@ export function layoutPara(para: Para, layoutWidth: number, measure: MeasureFun)
 
         line.y = y;
         line.lineHeight = lineHeight;
-        // return {y, line, lineHeight}
+
+        const firstspan = line[0];
+        const firstgraph = firstspan[0];
 
         const lastspan = line[line.length - 1];
         const lastgraph = lastspan[lastspan.length - 1];
-        line.lineWidth = lastgraph.x + lastgraph.cw;
+        line.graphWidth = lastgraph.x + lastgraph.cw - firstgraph.x;
 
-        paraWidth = Math.max(line.lineWidth, paraWidth);
+        if (pAttr && pAttr.alignment) adjustLineHorAlign(line, pAttr.alignment, layoutWidth);
+        line.x = firstgraph.x;
+        line.lineWidth = lastgraph.x + lastgraph.cw - firstgraph.x;
+
+        paraWidth = Math.max(line.lineWidth + line.x, paraWidth);
         return line;
     })
     const paraLayout = new ParaLayout(...lines);

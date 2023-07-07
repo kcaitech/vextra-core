@@ -1,0 +1,31 @@
+{
+    "description": "span attr",
+    "type": "object",
+    "properties": {
+        "alignment": {
+            "$ref": "./text-hor-align.json"
+        },
+        "paraSpacing": {
+            "type": "number"
+        },
+        "kerning": {
+            "type": "number"
+        },
+        "minimumLineHeight": {
+            "type": "number"
+        },
+        "maximumLineHeight": {
+            "type": "number"
+        },
+        "indent": {
+            "type": "integer"
+        }
+    },
+    "required": [],
+    "additionalProperties": false,
+    "allOf": [
+        {
+            "$ref": "./span-attr.json"
+        }
+    ]
+}
