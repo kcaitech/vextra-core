@@ -142,8 +142,7 @@ export function newTextShapeByText(name: string, text: types.Text, measureFun: M
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
-    textshape.text = importText(text);
-    textshape.text.updateSize(textshape.frame.width, textshape.frame.height);
+    textshape.text.insertFormatText(importText(text), 0);
     textshape.setMeasureFun(measureFun);
     addCommonAttr(textshape);
     return textshape;
