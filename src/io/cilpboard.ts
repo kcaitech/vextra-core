@@ -130,15 +130,20 @@ export function transform_data(document: Document, src: Shape[]): Shape[] {
  * @param text 
  * @returns 
  */
-export function export_paras(text: types.Text): types.Text {
+export function export_text(text: types.Text): types.Text {
     return exportText(text);
 }
 /**
  * @description 导入段落
  * @param text 
+ * @param { boolean } gen 直接生成一个文字图层，否则返回整理之后的text副本
  * @returns 
  */
-export function import_paras(text: types.Text): types.Text {
+export function import_text(document: Document, text: types.Text, gen?: boolean): types.Text | TextShape {
+    if (gen) {
+        const name = text.paras[0].text || 'text';
+        return newTextShape(name, document.measureFun);
+    }
     return importText(text);
 }
 /**
@@ -146,7 +151,7 @@ export function import_paras(text: types.Text): types.Text {
  * @param text 
  * @param { boolean } gen 直接生成一个文字图层，否则返回整理之后的text副本
  */
-export function trasnform_paras(document: Document, text: types.Text, gen?: boolean): TextShape | types.Text {
+export function trasnform_text(document: Document, text: types.Text, gen?: boolean): TextShape | types.Text {
     const _text = importText(exportText(text));
     if (gen) {
         const name = text.paras[0].text || 'text';
