@@ -684,7 +684,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyItalic(shape, italic, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.bold, italic, m.italic));
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.italic, italic, m.italic));
                 index += m.length;
             })
         });
