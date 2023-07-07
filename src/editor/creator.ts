@@ -143,6 +143,7 @@ export function newTextShapeByText(name: string, text: types.Text, measureFun: M
     template_text_shape.name = name;
     const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
     textshape.text = importText(text);
+    textshape.text.updateSize(textshape.frame.width, textshape.frame.height);
     textshape.setMeasureFun(measureFun);
     addCommonAttr(textshape);
     return textshape;
