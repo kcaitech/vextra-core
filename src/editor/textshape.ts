@@ -157,6 +157,18 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    public setTextHighlightColor(index: number, len: number, color: Color) {
+        const api = this.__repo.start("setTextColor", {});
+        try {
+            api.textModifyHighlightColor(this.__page, this.shape, index, len, color)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
     public setTextFontName(index: number, len: number, fontName: string) {
         const api = this.__repo.start("setTextFontName", {});
         try {

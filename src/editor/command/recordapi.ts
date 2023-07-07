@@ -639,6 +639,9 @@ export class Api {
 
     }
 
+    textModifyHighlightColor(page: Page, shape: TextShape, idx: number, len: number, color: Color) {
+        
+    }
     textModifyUnderline(page: Page, shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
 
     }

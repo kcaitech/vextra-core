@@ -20,6 +20,7 @@ export const SHAPE_ATTR_ID = {
     // text shape
     textBehaviour: "textBehaviour",
     textVerAlign: "textVerAlign",
+    textOrientation: "textOrientation",
     defalutTextColor: "defaultTextColor",
     defalutTextFontSize: "defaultTextFontSize",
     defalutTextFontName: "defalutTextFontName",
@@ -55,6 +56,7 @@ export const BORDER_ATTR_ID = {
 
 export const TEXT_ATTR_ID = {
     color: "color",
+    highlightColor: "highlightColor",
     fontSize: "fontSize",
     fontName: "fontName",
     kerning: "kerning",

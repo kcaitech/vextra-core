@@ -927,6 +927,12 @@ export class CMDExecuter {
                 api.textModifyBulletNumbersInherit(shape, inherit, op.start, op.length)
             }
         }
+        else if (attrId === TEXT_ATTR_ID.highlightColor) {
+            if (op.type === OpType.ArrayAttr) {
+                const color = (value && importColor(JSON.parse(value))) as Color | undefined;
+                api.textModifyHighlightColor(shape, op.start, op.length, color)
+            }
+        }
         else {
             console.error("not implemented ", attrId)
         }

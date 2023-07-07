@@ -304,6 +304,9 @@ export function shapeModifyTextDefaultItalic(shape: TextShape, italic: boolean) 
 
 }
 
+export function textModifyHighlightColor(shape: TextShape, idx: number, len: number, color: Color | undefined) {
+
+}
 export function textModifyUnderline(shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
 
 }
