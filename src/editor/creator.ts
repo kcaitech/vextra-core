@@ -4,14 +4,14 @@ import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
 import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape } from "../data/shape";
 import * as types from "../data/typesdefine"
-import { importGroupShape, importPage, importArtboard, importTextShape } from "../io/baseimport";
+import { importGroupShape, importPage, importArtboard, importTextShape, importText } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import {
     Blur, Point2D, BorderOptions, ContextSettings, CurvePoint,
-    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, RectRadius, CurveMode, Span, UserInfo
+    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, RectRadius, CurveMode, Span, UserInfo, Text
 } from "../data/baseclasses";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
@@ -134,6 +134,15 @@ export function newTextShape(name: string, measureFun: MeasureFun): TextShape {
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
     const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
+    textshape.setMeasureFun(measureFun);
+    addCommonAttr(textshape);
+    return textshape;
+}
+export function newTextShapeByText(name: string, text: types.Text, measureFun: MeasureFun): TextShape {
+    template_text_shape.id = uuid();
+    template_text_shape.name = name;
+    const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
+    textshape.text = importText(text);
     textshape.setMeasureFun(measureFun);
     addCommonAttr(textshape);
     return textshape;
