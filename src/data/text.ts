@@ -23,6 +23,8 @@ import { _travelTextPara } from "./texttravel";
             字号
             颜色
             字体
+            加粗
+            倾斜
             删除线
             下划线
  */
