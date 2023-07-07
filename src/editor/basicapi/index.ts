@@ -305,19 +305,64 @@ export function shapeModifyTextDefaultItalic(shape: TextShape, italic: boolean) 
 }
 
 export function textModifyHighlightColor(shape: TextShape, idx: number, len: number, color: Color | undefined) {
-
+    const attr = new SpanAttrSetter();
+    attr.highlight = color;
+    attr.highlightIsSet = true;
+    const ret = shape.text.formatText(idx, len, { attr })
+    const spans = ret.spans;
+    const origin: { highlight: Color | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ highlight: span.highlight, length: span.length })
+    })
+    return origin;
 }
 export function textModifyUnderline(shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
-
+    const attr = new SpanAttrSetter();
+    attr.underline = underline;
+    attr.underlineIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr })
+    const spans = ret.spans;
+    const origin: { underline: UnderlineType | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ underline: span.underline, length: span.length })
+    })
+    return origin;
 }
 export function textModifyStrikethrough(shape: TextShape, strikethrough: StrikethroughType | undefined, index: number, len: number) {
-
+    const attr = new SpanAttrSetter();
+    attr.strikethrough = strikethrough;
+    attr.strikethroughIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr })
+    const spans = ret.spans;
+    const origin: { strikethrough: StrikethroughType | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ strikethrough: span.strikethrough, length: span.length })
+    })
+    return origin;
 }
 export function textModifyBold(shape: TextShape, bold: boolean, index: number, len: number) {
-
+    const attr = new SpanAttrSetter();
+    attr.bold = bold;
+    attr.boldIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr })
+    const spans = ret.spans;
+    const origin: { bold: boolean | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ bold: span.bold, length: span.length })
+    })
+    return origin;
 }
 export function textModifyItalic(shape: TextShape, italic: boolean, index: number, len: number) {
-
+    const attr = new SpanAttrSetter();
+    attr.italic = italic;
+    attr.italicIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr })
+    const spans = ret.spans;
+    const origin: { italic: boolean | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ italic: span.italic, length: span.length })
+    })
+    return origin;
 }
 
 export function textModifyBulletNumbers(shape: TextShape, bulletNumbers: BulletNumbersType | undefined, index: number, len: number) {
