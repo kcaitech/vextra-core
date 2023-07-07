@@ -108,13 +108,40 @@ export class TextShapeEditor extends ShapeEditor {
         return this.__composingStarted;
     }
     public setTextDefaultColor(color: Color) {
-
+        const api = this.__repo.start("setTextDefaultColor", {});
+        try {
+            api.shapeModifyTextColor(this.__page, this.shape, color)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
     public setTextDefaultFontName(fontName: string) {
-
+        const api = this.__repo.start("setTextDefaultFontName", {});
+        try {
+            api.shapeModifyTextFontName(this.__page, this.shape, fontName)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
     public setTextDefaultFontSize(fontSize: number) {
-
+        const api = this.__repo.start("setTextDefaultFontSize", {});
+        try {
+            api.shapeModifyTextFontSize(this.__page, this.shape, fontSize);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
     public setTextColor(index: number, len: number, color: Color) {
         const api = this.__repo.start("setTextColor", {});
@@ -209,7 +236,16 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextDefaultMinLineHeight(minLineHeight: number) {
-
+        const api = this.__repo.start("setTextDefaultMinLineHeight", {});
+        try {
+            api.shapeModifyTextDefaultMinLineHeight(this.__page, this.shape, minLineHeight)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
     // 行高 段属性
     public setMinLineHeight(minLineHeight: number, index: number, len: number) {
@@ -226,7 +262,16 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setDefaultMaxLineHeight(maxLineHeight: number) {
-
+        const api = this.__repo.start("setDefaultMaxLineHeight", {});
+        try {
+            api.shapeModifyTextDefaultMaxLineHeight(this.__page, this.shape, maxLineHeight)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
     // 行高 段属性
     public setMaxLineHeight(maxLineHeight: number, index: number, len: number) {

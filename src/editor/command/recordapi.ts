@@ -543,6 +543,31 @@ export class Api {
         })
         return del;
     }
+    shapeModifyTextColor(page: Page, shape: TextShape, color: Color) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextColor(shape, color);
+            this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defalutTextColor, exportColor(color), ret ? exportColor(ret) : undefined));
+        })
+    }
+    shapeModifyTextFontName(page: Page, shape: TextShape, fontName: string) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextFontName(shape, fontName);
+            if (ret !== fontName) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defalutTextFontName, fontName, ret));
+            }
+        })
+    }
+    shapeModifyTextFontSize(page: Page, shape: TextShape, fontSize: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextFontSize(shape, fontSize);
+            if (ret !== fontSize) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defalutTextFontSize, fontSize, ret));
+            }
+        })
+    }
     textModifyColor(page: Page, shape: TextShape, idx: number, len: number, color: Color) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {

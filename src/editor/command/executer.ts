@@ -462,6 +462,33 @@ export class CMDExecuter {
                 api.shapeModifyTextDefaultMinLineHeight(shape as TextShape, 0)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.defalutTextColor) {
+            if (op.type === OpType.IdSet && value) {
+                const color = importColor(JSON.parse(value));
+                api.shapeModifyTextColor(shape as TextShape, color);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextColor(shape as TextShape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextFontName) {
+            if (op.type === OpType.IdSet && value) {
+                const fontName = value;
+                api.shapeModifyTextFontName(shape as TextShape, fontName);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextFontName(shape as TextShape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextFontSize) {
+            if (op.type === OpType.IdSet && value) {
+                const fontSize = JSON.parse(value);
+                api.shapeModifyTextFontSize(shape as TextShape, fontSize);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextFontSize(shape as TextShape, 0)
+            }
+        }
         // todo
         else {
             console.error("not implemented ", op)

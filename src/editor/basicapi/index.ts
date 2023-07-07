@@ -165,6 +165,24 @@ export function textModifyFontSize(shape: TextShape, idx: number, len: number, f
     })
     return origin;
 }
+export function shapeModifyTextColor(shape: TextShape, color: Color | undefined) {
+    const text = shape.text;
+    const origin = text.attr?.color;
+    text.setDefaultTextColor(color);
+    return origin;
+}
+export function shapeModifyTextFontName(shape: TextShape, fontName: string | undefined) {
+    const text = shape.text;
+    const origin = text.attr?.fontName;
+    text.setDefaultFontName(fontName);
+    return origin;
+}
+export function shapeModifyTextFontSize(shape: TextShape, fontSize: number) {
+    const text = shape.text;
+    const origin = text.attr?.fontSize;
+    text.setDefaultFontSize(fontSize);
+    return origin;
+}
 export function shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour) {
     const text = shape.text;
     if (textBehaviour === TextBehaviour.Flexible) {
