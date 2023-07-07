@@ -632,12 +632,24 @@ export class Api {
     shapeModifyStrikethrough(page: Page, shape: TextShape, strikethrouth: StrikethroughType | undefined) {
 
     }
+    shapeModifyTextDefaultBold(page: Page, shape: TextShape, bold: boolean) {
+
+    }
+    shapeModifyTextDefaultItalic(page: Page, shape: TextShape, italic: boolean) {
+    
+    }
 
     textModifyUnderline(page: Page, shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
 
     }
     textModifyStrikethrough(page: Page, shape: TextShape, strikethrough: StrikethroughType | undefined, index: number, len: number) {
 
+    }
+    textModifyBold(page: Page, shape: TextShape, bold: boolean, index: number, len: number) {
+
+    }
+    textModifyItalic(page: Page, shape: TextShape, italic: boolean, index: number, len: number) {
+    
     }
 
     textModifyHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign, index: number, len: number) {

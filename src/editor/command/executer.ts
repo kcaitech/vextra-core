@@ -45,7 +45,22 @@ import {
     importPoint2D
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
-import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Color, PathShape, TextHorAlign } from "../../data/classes";
+import {
+    ImageShape,
+    SymbolRefShape,
+    GroupShape,
+    Page,
+    Shape,
+    TextShape,
+    RectShape,
+    Artboard,
+    SymbolShape,
+    Color,
+    PathShape,
+    TextHorAlign,
+    UnderlineType,
+    StrikethroughType
+} from "../../data/classes";
 
 import * as api from "../basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
@@ -489,6 +504,43 @@ export class CMDExecuter {
                 api.shapeModifyTextFontSize(shape as TextShape, 0)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.defalutTextKerning) {
+            if (op.type === OpType.IdSet && value) {
+                const kerning = JSON.parse(value);
+                api.shapeModifyTextKerning(shape as TextShape, kerning);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextKerning(shape as TextShape, 0)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextBold) {
+            if (op.type === OpType.IdSet && value) {
+                const bold = JSON.parse(value);
+                api.shapeModifyTextDefaultBold(shape as TextShape, bold);
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextItalic) {
+            if (op.type === OpType.IdSet && value) {
+                const italic = JSON.parse(value);
+                api.shapeModifyTextDefaultItalic(shape as TextShape, italic);
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextUnderline) {
+            if (op.type === OpType.IdSet && value) {
+                api.shapeModifyTextUnderline(shape as TextShape, value as UnderlineType);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextUnderline(shape as TextShape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextStrikethrough) {
+            if (op.type === OpType.IdSet && value) {
+                api.shapeModifyStrikethrough(shape as TextShape, value as StrikethroughType);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyStrikethrough(shape as TextShape, undefined)
+            }
+        }
         // todo
         else {
             console.error("not implemented ", op)
@@ -833,6 +885,28 @@ export class CMDExecuter {
             if (op.type === OpType.ArrayAttr) {
                 const paraSpacing = value && JSON.parse(value);
                 api.textModifyParaSpacing(shape, paraSpacing, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.bold) {
+            if (op.type === OpType.ArrayAttr) {
+                const bold = value && JSON.parse(value);
+                api.textModifyBold(shape, bold, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.italic) {
+            if (op.type === OpType.ArrayAttr) {
+                const italic = value && JSON.parse(value);
+                api.textModifyItalic(shape, italic, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.underline) {
+            if (op.type === OpType.ArrayAttr) {
+                api.textModifyUnderline(shape, value as UnderlineType, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.strikethrough) {
+            if (op.type === OpType.ArrayAttr) {
+                api.textModifyStrikethrough(shape, value as StrikethroughType, op.start, op.length)
             }
         }
         else {

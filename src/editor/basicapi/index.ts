@@ -4,7 +4,7 @@ import { Page } from "../../data/page";
 import { GroupShape, PathShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
-import { Point2D } from "data/typesdefine";
+import { Point2D, StrikethroughType, UnderlineType } from "../../data/typesdefine";
 
 export * from "./fill";
 export * from "./border";
@@ -285,6 +285,38 @@ export function shapeModifyTextDefaultMaxLineHeight(shape: TextShape, maxLinehei
     text.setDefaultMaxLineHeight(maxLineheight);
     return origin ?? 0;
 }
+export function shapeModifyTextKerning(shape: TextShape, kerning: number) {
+
+}
+export function shapeModifyTextParaSpacing(shape: TextShape, paraSpacing: number) {
+
+}
+export function shapeModifyTextUnderline(shape: TextShape, underline: UnderlineType | undefined) {
+
+}
+export function shapeModifyStrikethrough(shape: TextShape, strikethrouth: StrikethroughType | undefined) {
+
+}
+export function shapeModifyTextDefaultBold(shape: TextShape, bold: boolean) {
+
+}
+export function shapeModifyTextDefaultItalic(shape: TextShape, italic: boolean) {
+
+}
+
+export function textModifyUnderline(shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
+
+}
+export function textModifyStrikethrough(shape: TextShape, strikethrough: StrikethroughType | undefined, index: number, len: number) {
+
+}
+export function textModifyBold(shape: TextShape, bold: boolean, index: number, len: number) {
+
+}
+export function textModifyItalic(shape: TextShape, italic: boolean, index: number, len: number) {
+
+}
+
 export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
     p.point.x = point.x;

@@ -24,6 +24,10 @@ export const SHAPE_ATTR_ID = {
     defalutTextFontSize: "defaultTextFontSize",
     defalutTextFontName: "defalutTextFontName",
     defalutTextKerning: "defalutTextKerning",
+    defalutTextBold: "defalutTextBold",
+    defalutTextItalic: "defalutTextItalic",
+    defalutTextUnderline: "defalutTextUnderline",
+    defalutTextStrikethrough: "defalutTextStrikethrough",
     defalutTextParaSpacing: "defalutTextParaSpacing",
     defalutTextHorAlign: "defaultTextHorAlign",
     defaultTextMinLineheight: "defaultTextMinLineheight",
@@ -54,10 +58,17 @@ export const TEXT_ATTR_ID = {
     fontSize: "fontSize",
     fontName: "fontName",
     kerning: "kerning",
+    bold: "bold",
+    italic: "italic",
+    underline: "underline",
+    strikethrough: "strikethrough",
     paraSpacing: "paraSpacing",
     textHorAlign: "textHorAlign",
     textMinLineheight: "textMinLineheight",
     textMaxLineheight: "textMaxLineheight",
+    bulletNumbers: "bulletNumbers",
+    bulletNumbersStart: "bulletNumbersStart",
+    bulletNumbersInherit: "bulletNumbersInherit",
 }
 
 export const POINTS_ID = "points"

@@ -413,10 +413,6 @@ export class TextShapeEditor extends ShapeEditor {
 
     // 需要个占位符
 
-    public setTextDefaultBulletNumbers(type: BulletNumbersType) {
-
-    }
-
     public setTextBulletNumbers(type: BulletNumbersType, index: number, len: number) {
 
     }
