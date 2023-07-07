@@ -12,6 +12,7 @@ import { _travelTextPara } from "./texttravel";
 /*
  文本框属性
     文本框大小行为
+    文本方向
     垂直对齐
     段落属性
         水平对齐
@@ -25,6 +26,7 @@ import { _travelTextPara } from "./texttravel";
             字体
             加粗
             倾斜
+            高亮色
             删除线
             下划线
  */
@@ -39,6 +41,7 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     bold?: boolean
     italic?: boolean
     bulletNumbers?: BulletNumbers
+    highlight?: Color
     constructor(
     ) {
         super()

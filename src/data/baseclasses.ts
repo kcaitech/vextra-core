@@ -156,6 +156,7 @@ export class SpanAttr extends Basic {
     bold?: boolean
     italic?: boolean
     bulletNumbers?: BulletNumbers
+    highlight?: Color
     constructor(
     ) {
         super()

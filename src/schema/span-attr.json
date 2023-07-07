@@ -25,6 +25,9 @@
         },
         "bulletNumbers": {
             "$ref": "./bullet-numbers.json"
+        },
+        "highlight": {
+            "$ref": "./color.json"
         }
     },
     "required": [],

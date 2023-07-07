@@ -131,6 +131,7 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
     ret.bold = source.bold
     ret.italic = source.italic
     ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
+    ret.highlight = source.highlight && importColor(source.highlight, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -639,6 +640,7 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     ret.bold = source.bold
     ret.italic = source.italic
     ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
+    ret.highlight = source.highlight && importColor(source.highlight, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -727,6 +729,7 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
     ret.bold = source.bold
     ret.italic = source.italic
     ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
+    ret.highlight = source.highlight && importColor(source.highlight, ctx)
     ret.alignment = source.alignment && importTextHorAlign(source.alignment, ctx)
     ret.paraSpacing = source.paraSpacing
     ret.kerning = source.kerning
@@ -754,6 +757,7 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     ret.bold = source.bold
     ret.italic = source.italic
     ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
+    ret.highlight = source.highlight && importColor(source.highlight, ctx)
     ret.verAlign = source.verAlign && importTextVerAlign(source.verAlign, ctx)
     ret.orientation = source.orientation && importTextOrientation(source.orientation, ctx)
     ret.textBehaviour = source.textBehaviour && importTextBehaviour(source.textBehaviour, ctx)

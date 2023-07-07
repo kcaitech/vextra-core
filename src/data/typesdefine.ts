@@ -83,6 +83,7 @@ export type SpanAttr = {
     bold?: boolean
     italic?: boolean
     bulletNumbers?: BulletNumbers
+    highlight?: Color
 }
 /* shape */
 export type Shape = {
