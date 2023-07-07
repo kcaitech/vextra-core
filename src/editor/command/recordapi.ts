@@ -19,7 +19,7 @@ import { SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../..
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { Point2D } from "../../data/typesdefine";
+import { Point2D, StrikethroughType, UnderlineType } from "../../data/typesdefine";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -620,6 +620,26 @@ export class Api {
             }
         })
     }
+    shapeModifyTextKerning(page: Page, shape: TextShape, kerning: number) {
+
+    }
+    shapeModifyTextParaSpacing(page: Page, shape: TextShape, paraSpacing: number) {
+
+    }
+    shapeModifyTextUnderline(page: Page, shape: TextShape, underline: UnderlineType | undefined) {
+
+    }
+    shapeModifyStrikethrough(page: Page, shape: TextShape, strikethrouth: StrikethroughType | undefined) {
+
+    }
+
+    textModifyUnderline(page: Page, shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
+
+    }
+    textModifyStrikethrough(page: Page, shape: TextShape, strikethrough: StrikethroughType | undefined, index: number, len: number) {
+
+    }
+
     textModifyHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign, index: number, len: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {

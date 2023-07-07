@@ -1,4 +1,4 @@
-import { BulletNumbersType, Color, Page, SpanAttr, Text, TextBehaviour, TextHorAlign, TextShape, TextVerAlign } from "../data/classes";
+import { BulletNumbersType, Color, Page, SpanAttr, StrikethroughType, Text, TextBehaviour, TextHorAlign, TextShape, TextVerAlign, UnderlineType } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
@@ -122,7 +122,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextDefaultFontName(fontName: string) {
         const api = this.__repo.start("setTextDefaultFontName", {});
         try {
-            api.shapeModifyTextFontName(this.__page, this.shape, fontName)
+            api.shapeModifyTextFontName(this.__page, this.shape, fontName);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -135,6 +136,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextDefaultFontSize", {});
         try {
             api.shapeModifyTextFontSize(this.__page, this.shape, fontSize);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -238,7 +240,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextDefaultMinLineHeight(minLineHeight: number) {
         const api = this.__repo.start("setTextDefaultMinLineHeight", {});
         try {
-            api.shapeModifyTextDefaultMinLineHeight(this.__page, this.shape, minLineHeight)
+            api.shapeModifyTextDefaultMinLineHeight(this.__page, this.shape, minLineHeight);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -264,7 +267,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setDefaultMaxLineHeight(maxLineHeight: number) {
         const api = this.__repo.start("setDefaultMaxLineHeight", {});
         try {
-            api.shapeModifyTextDefaultMaxLineHeight(this.__page, this.shape, maxLineHeight)
+            api.shapeModifyTextDefaultMaxLineHeight(this.__page, this.shape, maxLineHeight);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -288,7 +292,17 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setDefaultCharSpacing(kerning: number) {
-
+        const api = this.__repo.start("setDefaultCharSpacing", {});
+        try {
+            api.shapeModifyTextKerning(this.__page, this.shape, kerning)
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
     // 字间距 段属性
     public setCharSpacing(kerning: number, index: number, len: number) {
@@ -305,7 +319,17 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setDefaultParaSpacing(paraSpacing: number) {
-
+        const api = this.__repo.start("setDefaultParaSpacing", {});
+        try {
+            api.shapeModifyTextParaSpacing(this.__page, this.shape, paraSpacing)
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
     // 段间距 段属性
     public setParaSpacing(paraSpacing: number, index: number, len: number) {
@@ -323,19 +347,55 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextDefaultUnderline(underline: boolean) {
-        
+        const api = this.__repo.start("setTextDefaultUnderline", {});
+        try {
+            api.shapeModifyTextUnderline(this.__page, this.shape, underline ? UnderlineType.Single : undefined)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
 
     public setTextUnderline(underline: boolean, index: number, len: number) {
-
+        const api = this.__repo.start("setTextUnderline", {});
+        try {
+            api.textModifyUnderline(this.__page, this.shape, underline ? UnderlineType.Single : undefined, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
 
     public setTextDefaultStrikethrough(strikethrough: boolean) {
-        
+        const api = this.__repo.start("setTextDefaultStrikethrough", {});
+        try {
+            api.shapeModifyStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
 
     public setTextStrikethrough(strikethrough: boolean, index: number, len: number) {
-
+        const api = this.__repo.start("setTextStrikethrough", {});
+        try {
+            api.textModifyStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
 
     // 需要个占位符
@@ -345,14 +405,14 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextBulletNumbers(type: BulletNumbersType, index: number, len: number) {
-        
+
     }
 
     public setTextBulletNumbersStart(start: number, index: number, len: number) {
-        
+
     }
 
     public setTextBulletNumbersInherit(inherit: boolean, index: number, len: number) {
-        
+
     }
 }
