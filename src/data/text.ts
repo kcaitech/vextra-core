@@ -82,16 +82,15 @@ export class TextAttr extends ParaAttr implements classes.TextAttr {
     }
 }
 
-export class SpanAttrGetter extends SpanAttr {
-    fontNameIsMulti: boolean = false;
-    fontSizeIsMulti: boolean = false;
-    colorIsMulti: boolean = false;
-}
-
 export class AttrGetter extends TextAttr {
     fontNameIsMulti: boolean = false;
     fontSizeIsMulti: boolean = false;
     colorIsMulti: boolean = false;
+    highlightIsMulti: boolean = false;
+    boldIsMulti: boolean = false;
+    italicIsMulti: boolean = false;
+    underlineIsMulti: boolean = false;
+    strikethroughIsMulti: boolean = false;
 
     alignmentIsMulti: boolean = false;
     paraSpacingIsMulti: boolean = false;
@@ -104,12 +103,22 @@ export class SpanAttrSetter extends SpanAttr {
     fontNameIsSet: boolean = false;
     fontSizeIsSet: boolean = false;
     colorIsSet: boolean = false;
+    highlightIsSet: boolean = false;
+    boldIsSet: boolean = false;
+    italicIsSet: boolean = false;
+    underlineIsSet: boolean = false;
+    strikethroughIsSet: boolean = false;
 }
 
 export class ParaAttrSetter extends ParaAttr {
     fontNameIsSet: boolean = false;
     fontSizeIsSet: boolean = false;
     colorIsSet: boolean = false;
+    highlightIsSet: boolean = false;
+    boldIsSet: boolean = false;
+    italicIsSet: boolean = false;
+    underlineIsSet: boolean = false;
+    strikethroughIsSet: boolean = false;
 
     alignmentIsSet: boolean = false;
     paraSpacingIsSet: boolean = false;
