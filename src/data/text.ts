@@ -370,6 +370,21 @@ export class Text extends Basic implements classes.Text {
         }
     }
 
+    setDefaultTextColor(color: Color | undefined) {
+        // 不需要重排
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.color = color;
+    }
+    setDefaultFontName(fontName: string | undefined) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.fontName = fontName;
+        this.reLayout();
+    }
+    setDefaultFontSize(fontSize: number) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.fontSize = fontSize;
+        this.reLayout();
+    }
     setDefaultTextHorAlign(horAlign: TextHorAlign) {
         if (!this.attr) {
             if (horAlign === TextHorAlign.Left) return;
