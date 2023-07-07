@@ -19,7 +19,7 @@ import { SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../..
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { Point2D, StrikethroughType, UnderlineType } from "../../data/typesdefine";
+import { BulletNumbersType, Point2D, StrikethroughType, UnderlineType } from "../../data/typesdefine";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -636,7 +636,7 @@ export class Api {
 
     }
     shapeModifyTextDefaultItalic(page: Page, shape: TextShape, italic: boolean) {
-    
+
     }
 
     textModifyUnderline(page: Page, shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
@@ -649,7 +649,16 @@ export class Api {
 
     }
     textModifyItalic(page: Page, shape: TextShape, italic: boolean, index: number, len: number) {
-    
+
+    }
+    textModifyBulletNumbers(page: Page, shape: TextShape, bulletNumbers: BulletNumbersType | undefined, index: number, len: number) {
+
+    }
+    textModifyBulletNumbersStart(page: Page, shape: TextShape, start: number, index: number, len: number) {
+
+    }
+    textModifyBulletNumbersInherit(page: Page, shape: TextShape, inherit: boolean, index: number, len: number) {
+
     }
 
     textModifyHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign, index: number, len: number) {

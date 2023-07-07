@@ -59,7 +59,8 @@ import {
     PathShape,
     TextHorAlign,
     UnderlineType,
-    StrikethroughType
+    StrikethroughType,
+    BulletNumbersType
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -907,6 +908,23 @@ export class CMDExecuter {
         else if (attrId === TEXT_ATTR_ID.strikethrough) {
             if (op.type === OpType.ArrayAttr) {
                 api.textModifyStrikethrough(shape, value as StrikethroughType, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.bulletNumbers) {
+            if (op.type === OpType.ArrayAttr) {
+                api.textModifyBulletNumbers(shape, value as BulletNumbersType, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.bulletNumbersStart) {
+            if (op.type === OpType.ArrayAttr) {
+                const start = value && JSON.parse(value) || 0;
+                api.textModifyBulletNumbersStart(shape, start, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.bulletNumbersInherit) {
+            if (op.type === OpType.ArrayAttr) {
+                const inherit = value && JSON.parse(value);
+                api.textModifyBulletNumbersInherit(shape, inherit, op.start, op.length)
             }
         }
         else {

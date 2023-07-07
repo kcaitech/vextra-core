@@ -399,29 +399,92 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextDefaultBold(bold: boolean) {
-
+        const api = this.__repo.start("setTextDefaultBold", {});
+        try {
+            api.shapeModifyTextDefaultBold(this.__page, this.shape, bold)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
     public setTextBold(bold: boolean, index: number, len: number) {
-
+        const api = this.__repo.start("setTextBold", {});
+        try {
+            api.textModifyBold(this.__page, this.shape, bold, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
     public setTextDefaultItalic(italic: boolean) {
-
+        const api = this.__repo.start("setTextDefaultItalic", {});
+        try {
+            api.shapeModifyTextDefaultItalic(this.__page, this.shape, italic)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
     public setTextItalic(italic: boolean, index: number, len: number) {
-
+        const api = this.__repo.start("setTextItalic", {});
+        try {
+            api.textModifyItalic(this.__page, this.shape, italic, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
 
     // 需要个占位符
 
     public setTextBulletNumbers(type: BulletNumbersType, index: number, len: number) {
-
+        const api = this.__repo.start("setTextBulletNumbers", {});
+        try {
+            api.textModifyBulletNumbers(this.__page, this.shape, type, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
 
     public setTextBulletNumbersStart(start: number, index: number, len: number) {
-
+        const api = this.__repo.start("setTextBulletNumbersStart", {});
+        try {
+            api.textModifyBulletNumbersStart(this.__page, this.shape, start, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
 
     public setTextBulletNumbersInherit(inherit: boolean, index: number, len: number) {
-
+        const api = this.__repo.start("setTextBulletNumbersInherit", {});
+        try {
+            api.textModifyBulletNumbersInherit(this.__page, this.shape, inherit, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
 }

@@ -4,7 +4,7 @@ import { Page } from "../../data/page";
 import { GroupShape, PathShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
-import { Point2D, StrikethroughType, UnderlineType } from "../../data/typesdefine";
+import { BulletNumbersType, Point2D, StrikethroughType, UnderlineType } from "../../data/typesdefine";
 
 export * from "./fill";
 export * from "./border";
@@ -314,6 +314,16 @@ export function textModifyBold(shape: TextShape, bold: boolean, index: number, l
 
 }
 export function textModifyItalic(shape: TextShape, italic: boolean, index: number, len: number) {
+
+}
+
+export function textModifyBulletNumbers(shape: TextShape, bulletNumbers: BulletNumbersType | undefined, index: number, len: number) {
+
+}
+export function textModifyBulletNumbersStart(shape: TextShape, start: number, index: number, len: number) {
+
+}
+export function textModifyBulletNumbersInherit(shape: TextShape, inherit: boolean, index: number, len: number) {
 
 }
 
