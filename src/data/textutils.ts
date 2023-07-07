@@ -160,7 +160,7 @@ function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
 
     if (attr.minimumLineHeight != undefined) {
         if (paraAttr.minimumLineHeight == undefined || paraAttr.minimumLineHeight !== attr.minimumLineHeight) {
-            paraAttr.minimumLineHeight = paraAttr.minimumLineHeight;
+            paraAttr.minimumLineHeight = attr.minimumLineHeight;
             changed = true;
         }
     } else if (attrIsSetter && (attr as ParaAttrSetter).minimumLineHeightIsSet && paraAttr.minimumLineHeight) {
@@ -170,7 +170,7 @@ function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
 
     if (attr.maximumLineHeight != undefined) {
         if (paraAttr.maximumLineHeight == undefined || paraAttr.maximumLineHeight !== attr.maximumLineHeight) {
-            paraAttr.maximumLineHeight = paraAttr.maximumLineHeight;
+            paraAttr.maximumLineHeight = attr.maximumLineHeight;
             changed = true;
         }
     } else if (attrIsSetter && (attr as ParaAttrSetter).maximumLineHeightIsSet && paraAttr.maximumLineHeight) {
@@ -180,7 +180,7 @@ function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
 
     if (attr.paraSpacing != undefined) {
         if (paraAttr.paraSpacing == undefined || paraAttr.paraSpacing !== attr.paraSpacing) {
-            paraAttr.paraSpacing = paraAttr.paraSpacing;
+            paraAttr.paraSpacing = attr.paraSpacing;
             changed = true;
         }
     } else if (attrIsSetter && (attr as ParaAttrSetter).paraSpacingIsSet && paraAttr.paraSpacing) {
@@ -190,11 +190,22 @@ function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
 
     if (attr.kerning != undefined) {
         if (paraAttr.kerning == undefined || paraAttr.kerning !== attr.kerning) {
-            paraAttr.kerning = paraAttr.kerning;
+            paraAttr.kerning = attr.kerning;
             changed = true;
         }
     } else if (attrIsSetter && (attr as ParaAttrSetter).kerningIsSet && paraAttr.kerning) {
         paraAttr.kerning = undefined;
+        changed = true;
+    }
+
+    // alignment
+    if (attr.alignment != undefined) {
+        if (paraAttr.alignment == undefined || paraAttr.alignment !== attr.alignment) {
+            paraAttr.alignment = attr.alignment;
+            changed = true;
+        }
+    } else if (attrIsSetter && (attr as ParaAttrSetter).alignmentIsSet && paraAttr.alignment) {
+        paraAttr.alignment = undefined;
         changed = true;
     }
     return changed;

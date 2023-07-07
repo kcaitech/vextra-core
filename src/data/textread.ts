@@ -54,6 +54,48 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter) {
             attrGetter.fontSizeIsMulti = true;
         }
     }
+
+    // highlight
+    if (attr.highlight != undefined && (attrGetter.highlight == undefined || !isColorEqual(attr.highlight, attrGetter.highlight))) {
+        if (attrGetter.highlight == undefined) {
+            attrGetter.highlight = attr.highlight;
+        } else {
+            attrGetter.highlightIsMulti = true;
+        }
+    }
+    // bold
+    if (attr.bold) {
+        if (attrGetter.bold == undefined || attrGetter.bold) {
+            attrGetter.bold = attr.bold;
+        } else {
+            attrGetter.boldIsMulti = true;
+        }
+    }
+
+    // italic
+    if (attr.italic) {
+        if (attrGetter.italic == undefined || attrGetter.italic) {
+            attrGetter.italic = attr.italic;
+        } else {
+            attrGetter.italicIsMulti = true;
+        }
+    }
+    // underline
+    if (attr.underline != undefined && attr.underline !== attrGetter.underline) {
+        if (attrGetter.underline == undefined) {
+            attrGetter.underline = attr.underline;
+        } else {
+            attrGetter.underlineIsMulti = true;
+        }
+    }
+    // strikethrough
+    if (attr.strikethrough != undefined && attr.strikethrough !== attrGetter.strikethrough) {
+        if (attrGetter.strikethrough == undefined) {
+            attrGetter.strikethrough = attr.strikethrough;
+        } else {
+            attrGetter.strikethroughIsMulti = true;
+        }
+    }
 }
 
 function _mergeSpanFormat(from: AttrGetter, to: AttrGetter) {
@@ -65,6 +107,26 @@ function _mergeSpanFormat(from: AttrGetter, to: AttrGetter) {
 
     if (from.fontSizeIsMulti) to.fontSizeIsMulti = true;
     else if (from.fontSize !== undefined) to.fontSize = from.fontSize;
+
+    // hightlight
+    if (from.highlightIsMulti) to.highlightIsMulti = true;
+    else if (from.highlight) to.highlight = from.highlight;
+
+    // bold
+    if (from.boldIsMulti) to.boldIsMulti = true;
+    else if (from.bold !== undefined) to.bold = from.bold;
+
+    // italic
+    if (from.italicIsMulti) to.italicIsMulti = true;
+    else if (from.italic !== undefined) to.italic = from.italic;
+
+    // underline
+    if (from.underlineIsMulti) to.underlineIsMulti = true;
+    else if (from.underline !== undefined) to.underline = from.underline;
+
+    // strikethrough
+    if (from.strikethroughIsMulti) to.strikethroughIsMulti = true;
+    else if (from.strikethrough !== undefined) to.strikethrough = from.strikethrough;
 }
 
 function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter) {
