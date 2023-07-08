@@ -1,4 +1,4 @@
-import { Text } from "./text";
+import { Text, TextBehaviour } from "./text";
 import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
 import { BasicArray } from "./basic"
 
@@ -345,7 +345,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
     return lineArray;
 }
 
-export function layoutPara(para: Para, layoutWidth: number, measure: MeasureFun) {
+export function layoutPara(text: Text, para: Para, layoutWidth: number, measure: MeasureFun) {
     let paraWidth = 0;
     const layouts = layoutLines(para, layoutWidth, measure);
     const pAttr = para.attr;
@@ -373,7 +373,10 @@ export function layoutPara(para: Para, layoutWidth: number, measure: MeasureFun)
         const lastgraph = lastspan[lastspan.length - 1];
         line.graphWidth = lastgraph.x + lastgraph.cw - firstgraph.x;
 
-        if (pAttr && pAttr.alignment) adjustLineHorAlign(line, pAttr.alignment, layoutWidth);
+        const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+        if (pAttr && pAttr.alignment && textBehaviour !== TextBehaviour.Flexible) {
+            adjustLineHorAlign(line, pAttr.alignment, layoutWidth);
+        }
         line.x = firstgraph.x;
         line.lineWidth = lastgraph.x + lastgraph.cw - firstgraph.x;
 
@@ -403,7 +406,7 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
     let contentWidth = 0;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
-        const paraLayout = layoutPara(para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure);
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);

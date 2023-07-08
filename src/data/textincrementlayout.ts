@@ -32,7 +32,7 @@ export function layoutAtInsert(text: Text,
     const needUpdateCount = paras.length - parasLayout.length + 1;
     for (let j = 0; i < parascount && j < needUpdateCount; j++, i++) {
         const para = paras[i];
-        const paraLayout = layoutPara(para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure);
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
@@ -104,7 +104,7 @@ export function layoutAtDelete(text: Text,
     const needUpdateCount = parasLayout.length - paras.length + 1;
     if (i < parascount && needUpdateCount > 0) {
         const para = paras[i];
-        const paraLayout = layoutPara(para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure);
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
@@ -178,7 +178,7 @@ export function layoutAtFormat(text: Text,
     len += index;
     for (let len2 = parasLayout.length;len >= 0 && i < parascount && i < len2; i++) {
         const para = paras[i];
-        const paraLayout = layoutPara(para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure);
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
