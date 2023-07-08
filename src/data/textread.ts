@@ -65,20 +65,24 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter) {
     }
     // bold
     if (attr.bold) {
-        if (attrGetter.bold == undefined || attrGetter.bold) {
+        if (attrGetter.bold == undefined) {
             attrGetter.bold = attr.bold;
-        } else {
+        } else if (attrGetter.bold !== attr.bold) {
             attrGetter.boldIsMulti = true;
         }
+    } else {
+        attrGetter.bold = false;
     }
 
     // italic
     if (attr.italic) {
-        if (attrGetter.italic == undefined || attrGetter.italic) {
+        if (attrGetter.italic == undefined) {
             attrGetter.italic = attr.italic;
-        } else {
+        } else if (attrGetter.italic !== attr.italic) {
             attrGetter.italicIsMulti = true;
         }
+    } else {
+        attrGetter.italic = false;
     }
     // underline
     if (attr.underline != undefined && attr.underline !== attrGetter.underline) {
