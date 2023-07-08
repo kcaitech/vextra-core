@@ -353,10 +353,10 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, measure:
     let graphCount = 0;
     const lines = layouts.map((line) => {
         let lineHeight = line.maxFontSize;
-        if (pAttr && pAttr.maximumLineHeight != undefined) {
+        if (pAttr && pAttr.maximumLineHeight) {
             lineHeight = Math.min(pAttr.maximumLineHeight, lineHeight)
         }
-        if (pAttr && pAttr.minimumLineHeight != undefined) {
+        if (pAttr && pAttr.minimumLineHeight) {
             lineHeight = Math.max(pAttr.minimumLineHeight, lineHeight);
         }
         const y = paraHeight;
