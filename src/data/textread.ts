@@ -1,5 +1,5 @@
 import { BasicArray } from "./basic";
-import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr } from "./text";
+import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { isColorEqual } from "./utils";
@@ -63,6 +63,7 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter) {
             attrGetter.highlightIsMulti = true;
         }
     }
+
     // bold
     if (attr.bold) {
         if (attrGetter.bold == undefined) {
@@ -85,20 +86,25 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter) {
         attrGetter.italic = false;
     }
     // underline
-    if (attr.underline != undefined && attr.underline !== attrGetter.underline) {
+    if (attr.underline) {
         if (attrGetter.underline == undefined) {
             attrGetter.underline = attr.underline;
-        } else {
+        } else if (attrGetter.underline !== attr.underline) {
             attrGetter.underlineIsMulti = true;
         }
+    } else {
+        attrGetter.underline = UnderlineType.None;
     }
+
     // strikethrough
-    if (attr.strikethrough != undefined && attr.strikethrough !== attrGetter.strikethrough) {
+    if (attr.strikethrough) {
         if (attrGetter.strikethrough == undefined) {
             attrGetter.strikethrough = attr.strikethrough;
-        } else {
+        } else if (attrGetter.strikethrough !== attr.strikethrough) {
             attrGetter.strikethroughIsMulti = true;
         }
+    } else {
+        attrGetter.strikethrough = StrikethroughType.None;
     }
 }
 

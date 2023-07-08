@@ -16,6 +16,7 @@ export type UserInfo = {
 }
 /* underline types */
 export enum UnderlineType {
+    None = 'none',
     Single = 'single',
     Double = 'double',
 }
@@ -65,6 +66,7 @@ export type Style = {
 }
 /* strikethrough types */
 export enum StrikethroughType {
+    None = 'none',
     Single = 'single',
     Double = 'double',
 }
