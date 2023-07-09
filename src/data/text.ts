@@ -7,19 +7,19 @@ import { deleteText, formatText, insertComplexText, insertSimpleText } from "./t
 import { MeasureFun, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
 import { getSimpleText, getTextFormat, getTextWithFmt } from "./textread";
-import { locateCursor, locateRange, locateText } from "./textlocate";
+import { CursorLocate, locateCursor, locateRange, locateText } from "./textlocate";
 import { _travelTextPara } from "./texttravel";
 /*
  文本框属性
     文本框大小行为
-    文本方向
+    文本方向*
     垂直对齐
     段落属性
         水平对齐
         行高
         字距
-        段间距
-        编号
+        段间距*
+        编号*
         字属性
             字号
             颜色
@@ -337,7 +337,7 @@ export class Text extends Basic implements classes.Text {
     locateText(x: number, y: number): { index: number, before: boolean } {
         return locateText(this.getLayout(), x, y);
     }
-    locateCursor(index: number, cursorAtBefore: boolean): { x: number, y: number }[] {
+    locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
         return locateCursor(this.getLayout(), index, cursorAtBefore);
     }
     locateRange(start: number, end: number): { x: number, y: number }[] {

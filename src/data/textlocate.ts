@@ -1,4 +1,5 @@
 import { TextLayout, isNewLineCharCode } from "./textlayout";
+import { Point2D } from "./typesdefine";
 
 export function locateText(layout: TextLayout, x: number, y: number): { index: number, before: boolean } {
     const { yOffset, paras } = layout;
@@ -73,30 +74,60 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
     return { index, before };
 }
 
+export class CursorLocate {
+    cursorPoints: Point2D[] = [];
+    lineY: number = 0;
+    lineHeight: number = 0;
+    preLineHeight: number = 0;
+    nextLineHeight: number = 0;
+}
 
-export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: boolean): { x: number, y: number }[] {
-    if (index < 0) return [];
+export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: boolean): CursorLocate | undefined {
+    if (index < 0) return;
 
     const paras = layout.paras;
-    for (let i = 0, len = paras.length; i < len; i++) {
-        const p = paras[i];
+    for (let pi = 0, plen = paras.length; pi < plen; pi++) {
+        const p = paras[pi];
         if (!(index < p.graphCount || (cursorAtBefore && index === p.graphCount))) {
             index -= p.graphCount;
             continue;
         }
 
-        for (let i = 0, len = p.length; i < len; i++) {
-            const line = p[i];
+        for (let li = 0, llen = p.length; li < llen; li++) {
+            const line = p[li];
+            const lineY = layout.yOffset + p.yOffset + line.y;
             if ((cursorAtBefore && index === line.graphCount)) {
                 if (line.length === 0) break; // error
                 const span = line[line.length - 1];
                 if (span.length === 0) break; // error
                 const graph = span[span.length - 1];
-                const y = layout.yOffset + p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
+                const y = lineY + (line.lineHeight - graph.ch) / 2;
                 const x = graph.x + graph.cw;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
-                return [p0, p1]
+                const ret = new CursorLocate();
+                ret.lineY = lineY;
+                ret.lineHeight = line.lineHeight;
+                ret.cursorPoints.push(p0, p1);
+                if (li > 0) {
+                    const preLine = p[li - 1];
+                    ret.preLineHeight = preLine.lineHeight;
+                }
+                else if (pi > 0) {
+                    const prep = paras[pi - 1];
+                    const preLine = prep[prep.length - 1];
+                    ret.preLineHeight = preLine.lineHeight;
+                }
+                if (li < llen - 1) {
+                    const nextLine = p[li + 1];
+                    ret.nextLineHeight = nextLine.lineHeight;
+                }
+                else if (pi < plen - 1) {
+                    const nextp = paras[pi + 1];
+                    const nextLine = nextp[0];
+                    ret.nextLineHeight = nextLine.lineHeight;
+                }
+                return ret;
             }
             if (index >= line.graphCount) {
                 index -= line.graphCount;
@@ -125,16 +156,37 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     if (!isNewLineCharCode(span[index].char.charCodeAt(0))) x += line.graphPadding / 2;
                 }
                 // else index === 0, i === 0
-                const y = layout.yOffset + p.yOffset + line.y + (line.lineHeight - graph.ch) / 2;
+                const y = lineY + (line.lineHeight - graph.ch) / 2;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
-                return [p0, p1]
+                const ret = new CursorLocate();
+                ret.lineY = lineY;
+                ret.lineHeight = line.lineHeight;
+                ret.cursorPoints.push(p0, p1);
+                if (li > 0) {
+                    const preLine = p[li - 1];
+                    ret.preLineHeight = preLine.lineHeight;
+                }
+                else if (pi > 0) {
+                    const prep = paras[pi - 1];
+                    const preLine = prep[prep.length - 1];
+                    ret.preLineHeight = preLine.lineHeight;
+                }
+                if (li < llen - 1) {
+                    const nextLine = p[li + 1];
+                    ret.nextLineHeight = nextLine.lineHeight;
+                }
+                else if (pi < plen - 1) {
+                    const nextp = paras[pi + 1];
+                    const nextLine = nextp[0];
+                    ret.nextLineHeight = nextLine.lineHeight;
+                }
+                return ret;
             }
             break;
         }
         break;
     }
-    return [];
 }
 
 function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi: number, count: number): { x: number, y: number }[] {
