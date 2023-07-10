@@ -8,9 +8,6 @@
         "paraSpacing": {
             "type": "number"
         },
-        "kerning": {
-            "type": "number"
-        },
         "minimumLineHeight": {
             "type": "number"
         },

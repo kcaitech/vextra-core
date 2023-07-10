@@ -28,6 +28,9 @@
         },
         "highlight": {
             "$ref": "./color.json"
+        },
+        "kerning": {
+            "type": "number"
         }
     },
     "required": [],

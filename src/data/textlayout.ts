@@ -164,7 +164,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
     }
     // const frame = shape.frame;
     // const width = frame.width;
-    const charSpace = para.attr?.kerning ?? 0;
+    const paraCharSpace = para.attr?.kerning ?? 0;
 
     const text = para.text;
     let textIdx = 0
@@ -237,7 +237,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
         const m = measure(c, font);
         const cw = m?.width ?? 0;
         const ch = span.fontSize ?? 0;
-
+        const charSpace = span.kerning ?? paraCharSpace;
         if (cw + curX + charSpace <= endX) {
             if (!graphArray) {
                 graphArray = new GraphArray();
@@ -407,6 +407,11 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = layoutPara(text, para, layoutWidth, measure);
+        if (i > 0) {
+            const prePara = text.paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);

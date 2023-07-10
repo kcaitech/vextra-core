@@ -42,6 +42,7 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     italic?: boolean
     bulletNumbers?: BulletNumbers
     highlight?: Color
+    kerning?: number
     constructor(
     ) {
         super()
@@ -59,7 +60,6 @@ export class ParaAttr extends SpanAttr implements classes.ParaAttr {
     typeId = 'para-attr'
     alignment?: TextHorAlign
     paraSpacing?: number
-    kerning?: number
     minimumLineHeight?: number
     maximumLineHeight?: number
     indent?: number

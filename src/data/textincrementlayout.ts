@@ -24,6 +24,11 @@ export function layoutAtInsert(text: Text,
         if (index < paraLayout.graphCount) break;
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
         index -= paraLayout.graphCount;
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
     }
@@ -33,6 +38,11 @@ export function layoutAtInsert(text: Text,
     for (let j = 0; i < parascount && j < needUpdateCount; j++, i++) {
         const para = paras[i];
         const paraLayout = layoutPara(text, para, layoutWidth, measure);
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
@@ -48,6 +58,11 @@ export function layoutAtInsert(text: Text,
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
@@ -96,6 +111,11 @@ export function layoutAtDelete(text: Text,
         if (index < paraLayout.graphCount) break;
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
         index -= paraLayout.graphCount;
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
     }
@@ -105,6 +125,11 @@ export function layoutAtDelete(text: Text,
     if (i < parascount && needUpdateCount > 0) {
         const para = paras[i];
         const paraLayout = layoutPara(text, para, layoutWidth, measure);
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
@@ -120,6 +145,11 @@ export function layoutAtDelete(text: Text,
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
@@ -169,6 +199,11 @@ export function layoutAtFormat(text: Text,
         if (index < paraLayout.graphCount) break;
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
         index -= paraLayout.graphCount;
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
     }
@@ -179,6 +214,11 @@ export function layoutAtFormat(text: Text,
     for (let len2 = parasLayout.length;len >= 0 && i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = layoutPara(text, para, layoutWidth, measure);
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
@@ -191,6 +231,11 @@ export function layoutAtFormat(text: Text,
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);

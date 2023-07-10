@@ -86,6 +86,7 @@ export type SpanAttr = {
     italic?: boolean
     bulletNumbers?: BulletNumbers
     highlight?: Color
+    kerning?: number
 }
 /* shape */
 export type Shape = {
@@ -465,7 +466,6 @@ export type RectShape = PathShape & {
 export type ParaAttr = SpanAttr & {
     alignment?: TextHorAlign
     paraSpacing?: number
-    kerning?: number
     minimumLineHeight?: number
     maximumLineHeight?: number
     indent?: number
