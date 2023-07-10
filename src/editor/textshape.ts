@@ -303,6 +303,20 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    public setLineHeight(lineHeight: number, index: number, len: number) {
+        const api = this.__repo.start("setLineHeight", {});
+        try {
+            api.textModifyMinLineHeight(this.__page, this.shape, lineHeight, index, len)
+            api.textModifyMaxLineHeight(this.__page, this.shape, lineHeight, index, len)
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
     public setDefaultCharSpacing(kerning: number) {
         const api = this.__repo.start("setDefaultCharSpacing", {});
         try {
