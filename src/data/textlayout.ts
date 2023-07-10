@@ -1,4 +1,4 @@
-import { Text, TextBehaviour } from "./text";
+import { Text, TextBehaviour, TextTransformType } from "./text";
 import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
 import { BasicArray } from "./basic"
 
@@ -152,7 +152,36 @@ export function isNewLineCharCode(code: number) {
     return false;
 }
 
-export function layoutLines(para: Para, width: number, measure: MeasureFun): LineArray {
+function toUpperCase(char: string) {
+    const code = char.charCodeAt(0);
+    if (code >= 0x61 && code <= 0x7A) {
+        return String.fromCharCode(code - 0x20);
+    }
+    return char;
+}
+function toLowerCase(char: string) {
+    const code = char.charCodeAt(0);
+    if (code >= 0x41 && code <= 0x5A) {
+        return String.fromCharCode(code + 0x20);
+    }
+    return char;
+}
+function transform(text: string, i: number, type: TextTransformType | undefined) {
+    const char = text.charAt(i);
+    if (!type) char;
+    switch (type) {
+        case TextTransformType.Lowercase: return toLowerCase(char);
+        case TextTransformType.Uppercase: return toUpperCase(char);
+        case TextTransformType.UppercaseFirst: {
+            if (i === 0) {
+                return toUpperCase(char);
+            }
+        }
+    }
+    return char;
+}
+
+export function layoutLines(_text: Text, para: Para, width: number, measure: MeasureFun): LineArray {
     let spans = para.spans;
     let spansCount = spans.length;
     if (spansCount === 0) {
@@ -234,17 +263,21 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
             // }
             continue;
         }
-        const m = measure(c, font);
+        const transformType = span.transform ?? (para.attr?.transform) ?? (_text.attr?.transform);
+        const char = transform(text, textIdx, transformType);
+
+        const m = measure(char.charCodeAt(0), font);
         const cw = m?.width ?? 0;
         const ch = span.fontSize ?? 0;
         const charSpace = span.kerning ?? paraCharSpace;
+
         if (cw + curX + charSpace <= endX) {
             if (!graphArray) {
                 graphArray = new GraphArray();
                 graphArray.attr = span;
             }
             graphArray.push({
-                char: text.at(textIdx) as string,
+                char,
                 metrics: m,
                 cw,
                 ch,
@@ -272,7 +305,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
                 graphArray.attr = span;
             }
             graphArray.push({
-                char: text.at(textIdx) as string,
+                char,
                 metrics: m,
                 cw,
                 ch,
@@ -313,7 +346,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
 
             curX = startX;
             graphArray.push({
-                char: text.at(textIdx) as string,
+                char,
                 metrics: m,
                 cw,
                 ch,
@@ -347,7 +380,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
 
 export function layoutPara(text: Text, para: Para, layoutWidth: number, measure: MeasureFun) {
     let paraWidth = 0;
-    const layouts = layoutLines(para, layoutWidth, measure);
+    const layouts = layoutLines(text, para, layoutWidth, measure);
     const pAttr = para.attr;
     let paraHeight = 0;
     let graphCount = 0;

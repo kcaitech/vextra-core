@@ -10,16 +10,28 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
     let before = false; // 在行尾时为true
     for (let i = 0, len = paras.length; i < len; i++) {
         const p = paras[i];
-        if (y >= p.paraHeight) {
-            y -= p.paraHeight;
-            index += p.graphCount;
-            continue;
+        const pBottomY = p.yOffset + p.paraHeight;
+        if (y >= pBottomY) {
+            // y -= p.paraHeight;
+            if (i >= len - 1) {
+                index += p.graphCount;
+                continue;
+            }
+            const nextp = paras[i + 1];
+            const netxPTopY = nextp.yOffset;
+            if (y >= netxPTopY) {
+                index += p.graphCount;
+                continue;
+            }
+            y -= netxPTopY - pBottomY;
         }
+        y -= p.yOffset;
+
         // index line
         for (let i = 0, len = p.length; i < len; i++) {
             const line = p[i];
-            if (y >= line.lineHeight) {
-                y -= line.lineHeight;
+            if (y >= line.y + line.lineHeight) {
+                // y -= line.lineHeight;
                 index += line.graphCount;
                 continue;
             }
@@ -56,7 +68,7 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
                 // get end
                 const endgraph = span[end];
                 if (endgraph.char === '\n') {
-                    end--;
+                    // end--;
                 }
                 else if (x > endgraph.x + endgraph.cw / 2) {
                     end++; // 修正鼠标位置
@@ -174,13 +186,17 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 if (index > 0) {
                     graph = span[index - 1];
                     x = graph.x + graph.cw;
-                    if (!isNewLineCharCode(span[index].char.charCodeAt(0))) x += line.graphPadding / 2;
+                    if (!isNewLineCharCode(span[index].char.charCodeAt(0))) {
+                        x += line.graphPadding / 2;
+                    }
                 }
                 else if (i > 0) {
                     const preSpan = line[i - 1];
                     graph = preSpan[preSpan.length - 1];
                     x = graph.x + graph.cw;
-                    if (!isNewLineCharCode(span[index].char.charCodeAt(0))) x += line.graphPadding / 2;
+                    if (!isNewLineCharCode(span[index].char.charCodeAt(0))) {
+                        x += line.graphPadding / 2;
+                    }
                 }
                 // else index === 0, i === 0
                 const y = lineY + (line.lineHeight - graph.ch) / 2;
