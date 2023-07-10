@@ -31,6 +31,13 @@ export enum TextVerAlign {
     Middle = 'middle',
     Bottom = 'bottom',
 }
+/* text transform types */
+export enum TextTransformType {
+    None = 'none',
+    Uppercase = 'uppercase',
+    Lowercase = 'lowercase',
+    UppercaseFirst = 'uppercase-first',
+}
 /* text orientation */
 export enum TextOrientation {
     Horizontal = 'horizontal',
@@ -87,6 +94,7 @@ export type SpanAttr = {
     bulletNumbers?: BulletNumbers
     highlight?: Color
     kerning?: number
+    transform?: TextTransformType
 }
 /* shape */
 export type Shape = {

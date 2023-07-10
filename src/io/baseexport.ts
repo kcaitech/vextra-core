@@ -47,6 +47,10 @@ export function exportText(source: types.Text, ctx?: IExportContext): types.Text
 export function exportTextVerAlign(source: types.TextVerAlign, ctx?: IExportContext): types.TextVerAlign {
     return source
 }
+/* text transform types */
+export function exportTextTransformType(source: types.TextTransformType, ctx?: IExportContext): types.TextTransformType {
+    return source
+}
 /* text orientation */
 export function exportTextOrientation(source: types.TextOrientation, ctx?: IExportContext): types.TextOrientation {
     return source
@@ -131,6 +135,7 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
         bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
         highlight: source.highlight && exportColor(source.highlight, ctx),
         kerning: source.kerning,
+        transform: source.transform && exportTextTransformType(source.transform, ctx),
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -648,6 +653,7 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
         bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
         highlight: source.highlight && exportColor(source.highlight, ctx),
         kerning: source.kerning,
+        transform: source.transform && exportTextTransformType(source.transform, ctx),
         length: source.length,
     }
     if (ctx) ctx.afterExport(source)
@@ -741,6 +747,7 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
         bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
         highlight: source.highlight && exportColor(source.highlight, ctx),
         kerning: source.kerning,
+        transform: source.transform && exportTextTransformType(source.transform, ctx),
         alignment: source.alignment && exportTextHorAlign(source.alignment, ctx),
         paraSpacing: source.paraSpacing,
         minimumLineHeight: source.minimumLineHeight,
@@ -768,6 +775,7 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
         bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
         highlight: source.highlight && exportColor(source.highlight, ctx),
         kerning: source.kerning,
+        transform: source.transform && exportTextTransformType(source.transform, ctx),
         verAlign: source.verAlign && exportTextVerAlign(source.verAlign, ctx),
         orientation: source.orientation && exportTextOrientation(source.orientation, ctx),
         textBehaviour: source.textBehaviour && exportTextBehaviour(source.textBehaviour, ctx),

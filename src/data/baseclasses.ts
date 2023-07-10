@@ -7,6 +7,7 @@ export {
     WindingRule,
     UnderlineType,
     TextVerAlign,
+    TextTransformType,
     TextOrientation,
     TextHorAlign,
     TextBehaviour,
@@ -33,6 +34,7 @@ import {
     WindingRule,
     UnderlineType,
     TextVerAlign,
+    TextTransformType,
     TextOrientation,
     TextHorAlign,
     TextBehaviour,
@@ -158,6 +160,7 @@ export class SpanAttr extends Basic {
     bulletNumbers?: BulletNumbers
     highlight?: Color
     kerning?: number
+    transform?: TextTransformType
     constructor(
     ) {
         super()

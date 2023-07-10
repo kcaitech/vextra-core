@@ -31,6 +31,9 @@
         },
         "kerning": {
             "type": "number"
+        },
+        "transform": {
+            "$ref": "./text-transform-type.json"
         }
     },
     "required": [],

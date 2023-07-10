@@ -1,7 +1,18 @@
-import { BulletNumbers, Color, StrikethroughType, TextBehaviour, TextHorAlign, TextOrientation, TextVerAlign, UnderlineType } from "./baseclasses";
+import { BulletNumbers, Color, StrikethroughType, TextBehaviour, TextHorAlign, TextOrientation, TextTransformType, TextVerAlign, UnderlineType } from "./baseclasses";
 import { Basic, BasicArray } from "./basic";
 
-export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation, StrikethroughType, UnderlineType, BulletNumbers, BulletNumbersType, BulletNumbersBehavior } from "./baseclasses";
+export {
+    TextVerAlign,
+    TextHorAlign,
+    TextBehaviour,
+    TextOrientation,
+    StrikethroughType,
+    UnderlineType,
+    BulletNumbers,
+    BulletNumbersType,
+    BulletNumbersBehavior,
+    TextTransformType
+} from "./baseclasses";
 import * as classes from "./baseclasses"
 import { deleteText, formatText, insertComplexText, insertSimpleText } from "./textedit";
 import { MeasureFun, TextLayout, layoutText } from "./textlayout";
@@ -43,6 +54,7 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     bulletNumbers?: BulletNumbers
     highlight?: Color
     kerning?: number
+    transform?: TextTransformType
     constructor(
     ) {
         super()
@@ -108,6 +120,8 @@ export class SpanAttrSetter extends SpanAttr {
     italicIsSet: boolean = false;
     underlineIsSet: boolean = false;
     strikethroughIsSet: boolean = false;
+    kerningIsSet: boolean = false;
+    transformIsSet: boolean = false;
 }
 
 export class ParaAttrSetter extends ParaAttr {
@@ -119,10 +133,11 @@ export class ParaAttrSetter extends ParaAttr {
     italicIsSet: boolean = false;
     underlineIsSet: boolean = false;
     strikethroughIsSet: boolean = false;
+    kerningIsSet: boolean = false;
+    transformIsSet: boolean = false;
 
     alignmentIsSet: boolean = false;
     paraSpacingIsSet: boolean = false;
-    kerningIsSet: boolean = false;
     minimumLineHeightIsSet: boolean = false;
     maximumLineHeightIsSet: boolean = false;
 }
