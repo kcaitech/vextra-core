@@ -436,4 +436,9 @@ export class Text extends Basic implements classes.Text {
         this.attr.maximumLineHeight = maxLineHeight;
         this.reLayout(); // todo
     }
+    setDefaultTransform(transform: TextTransformType | undefined) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.transform = transform;
+        this.reLayout(); // todo
+    }
 }
