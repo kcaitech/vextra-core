@@ -1,5 +1,6 @@
 import { BasicArray } from "./basic";
-import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType } from "./text";
+import { Color } from "./classes";
+import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType, TextTransformType, TextAttr, TextHorAlign } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { isColorEqual } from "./utils";
@@ -32,79 +33,86 @@ export function getTextWithFmt(shapetext: Text, index: number, length: number): 
     return text;
 }
 
-function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter) {
-    if (attr.color != undefined && (attrGetter.color == undefined || !isColorEqual(attr.color, attrGetter.color))) {
-        if (attrGetter.color == undefined) {
-            attrGetter.color = attr.color;
-        } else {
-            attrGetter.colorIsMulti = true;
-        }
+const _NullColor = new Color(1, 0, 0, 0);
+function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAttr | undefined, textAttr: TextAttr | undefined) {
+    const color = attr.color ?? (paraAttr?.color) ?? (textAttr?.color) ?? _NullColor;
+    if (attrGetter.color === undefined) {
+        attrGetter.color = color;
     }
-    if (attr.fontName != undefined && attr.fontName !== attrGetter.fontName) {
-        if (attrGetter.fontName == undefined) {
-            attrGetter.fontName = attr.fontName;
-        } else {
-            attrGetter.fontNameIsMulti = true;
-        }
-    }
-    if (attr.fontSize != undefined && attr.fontSize !== attrGetter.fontSize) {
-        if (attrGetter.fontSize == undefined) {
-            attrGetter.fontSize = attr.fontSize;
-        } else {
-            attrGetter.fontSizeIsMulti = true;
-        }
+    else if (color === undefined || !isColorEqual(color, attrGetter.color)) {
+        attrGetter.colorIsMulti = true;
     }
 
-    // highlight
-    if (attr.highlight != undefined && (attrGetter.highlight == undefined || !isColorEqual(attr.highlight, attrGetter.highlight))) {
-        if (attrGetter.highlight == undefined) {
-            attrGetter.highlight = attr.highlight;
-        } else {
-            attrGetter.highlightIsMulti = true;
-        }
+    const fontName = attr.fontName ?? (paraAttr?.fontName) ?? (textAttr?.fontName) ?? '';
+    if (attrGetter.fontName === undefined) {
+        attrGetter.fontName = fontName;
+    }
+    else if (fontName === undefined || attrGetter.fontName !== fontName) {
+        attrGetter.fontNameIsMulti = true;
     }
 
-    // bold
-    if (attr.bold) {
-        if (attrGetter.bold == undefined) {
-            attrGetter.bold = attr.bold;
-        } else if (attrGetter.bold !== attr.bold) {
-            attrGetter.boldIsMulti = true;
-        }
-    } else {
-        attrGetter.bold = false;
+    const fontSize = attr.fontSize ?? (paraAttr?.fontSize) ?? (textAttr?.fontSize) ?? 0;
+    if (attrGetter.fontSize === undefined) {
+        attrGetter.fontSize = fontSize;
+    }
+    else if (fontSize === undefined || attrGetter.fontSize !== fontSize) {
+        attrGetter.fontSizeIsMulti = true;
     }
 
-    // italic
-    if (attr.italic) {
-        if (attrGetter.italic == undefined) {
-            attrGetter.italic = attr.italic;
-        } else if (attrGetter.italic !== attr.italic) {
-            attrGetter.italicIsMulti = true;
-        }
-    } else {
-        attrGetter.italic = false;
+    const highlight = attr.highlight ?? (paraAttr?.highlight) ?? (textAttr?.highlight) ?? _NullColor;
+    if (attrGetter.highlight === undefined) {
+        attrGetter.highlight = highlight;
     }
-    // underline
-    if (attr.underline) {
-        if (attrGetter.underline == undefined) {
-            attrGetter.underline = attr.underline;
-        } else if (attrGetter.underline !== attr.underline) {
-            attrGetter.underlineIsMulti = true;
-        }
-    } else {
-        attrGetter.underline = UnderlineType.None;
+    else if (highlight === undefined || attrGetter.highlight !== highlight) {
+        attrGetter.highlightIsMulti = true;
     }
 
-    // strikethrough
-    if (attr.strikethrough) {
-        if (attrGetter.strikethrough == undefined) {
-            attrGetter.strikethrough = attr.strikethrough;
-        } else if (attrGetter.strikethrough !== attr.strikethrough) {
-            attrGetter.strikethroughIsMulti = true;
-        }
-    } else {
-        attrGetter.strikethrough = StrikethroughType.None;
+    const bold = attr.bold ?? (paraAttr?.bold) ?? (textAttr?.bold) ?? false;
+    if (attrGetter.bold === undefined) {
+        attrGetter.bold = bold;
+    }
+    else if (bold === undefined || attrGetter.bold !== bold) {
+        attrGetter.boldIsMulti = true;
+    }
+
+    const italic = attr.italic ?? (paraAttr?.italic) ?? (textAttr?.italic) ?? false;
+    if (attrGetter.italic === undefined) {
+        attrGetter.italic = italic;
+    }
+    else if (italic === undefined || attrGetter.italic !== italic) {
+        attrGetter.italicIsMulti = true;
+    }
+
+    const underline = attr.underline ?? (paraAttr?.underline) ?? (textAttr?.underline) ?? UnderlineType.None;
+    if (attrGetter.underline === undefined) {
+        attrGetter.underline = underline;
+    }
+    else if (underline === undefined || attrGetter.underline !== underline) {
+        attrGetter.underlineIsMulti = true;
+    }
+
+    const strikethrough = attr.strikethrough ?? (paraAttr?.strikethrough) ?? (textAttr?.strikethrough) ?? StrikethroughType.None;
+    if (attrGetter.strikethrough === undefined) {
+        attrGetter.strikethrough = strikethrough;
+    }
+    else if (strikethrough === undefined || attrGetter.strikethrough !== strikethrough) {
+        attrGetter.strikethroughIsMulti = true;
+    }
+
+    const kerning = attr.kerning ?? (paraAttr?.kerning) ?? (textAttr?.kerning) ?? 0;
+    if (attrGetter.kerning === undefined) {
+        attrGetter.kerning = kerning;
+    }
+    else if (kerning === undefined || attrGetter.kerning !== kerning) {
+        attrGetter.kerningIsMulti = true;
+    }
+
+    const transform = attr.transform ?? (paraAttr?.transform) ?? (textAttr?.transform) ?? TextTransformType.None;
+    if (attrGetter.transform === undefined) {
+        attrGetter.transform = transform;
+    }
+    else if (transform === undefined || attrGetter.transform !== transform) {
+        attrGetter.transformIsMulti = true;
     }
 }
 
@@ -137,45 +145,57 @@ function _mergeSpanFormat(from: AttrGetter, to: AttrGetter) {
     // strikethrough
     if (from.strikethroughIsMulti) to.strikethroughIsMulti = true;
     else if (from.strikethrough !== undefined) to.strikethrough = from.strikethrough;
+
+    // kerning
+    if (from.kerningIsMulti) to.kerningIsMulti = true;
+    else if (from.kerning !== undefined) to.kerning = from.kerning;
+
+    // transform
+    if (from.transformIsMulti) to.transformIsMulti = true;
+    else if (from.transform !== undefined) to.transform = from.transform;
 }
 
-function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter) {
-    _getSpanFormat(attr, attrGetter);
+function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: TextAttr | undefined) {
+    _getSpanFormat(attr, attrGetter, undefined, defaultAttr);
 
-    if (attr.alignment != undefined && attr.alignment !== attrGetter.alignment) {
-        if (attrGetter.alignment == undefined) {
-            attrGetter.alignment = attr.alignment;
-        } else {
-            attrGetter.alignmentIsMulti = true;
-        }
+    const alignment = attr.alignment ?? (defaultAttr?.alignment) ?? TextHorAlign.Left;
+    if (attrGetter.alignment === undefined) {
+        attrGetter.alignment = alignment;
     }
-    if (attr.kerning != undefined && attr.kerning !== attrGetter.kerning) {
-        if (attrGetter.kerning == undefined) {
-            attrGetter.kerning = attr.kerning;
-        } else {
-            attrGetter.kerningIsMulti = true;
-        }
+    else if (alignment === undefined || attrGetter.alignment !== alignment) {
+        attrGetter.alignmentIsMulti = true;
     }
-    if (attr.maximumLineHeight != undefined && attr.maximumLineHeight !== attrGetter.maximumLineHeight) {
-        if (attrGetter.maximumLineHeight == undefined) {
-            attrGetter.maximumLineHeight = attr.maximumLineHeight;
-        } else {
-            attrGetter.maximumLineHeightIsMulti = true;
-        }
+
+    const kerning = attr.kerning ?? (defaultAttr?.kerning) ?? 0;
+    if (attrGetter.kerning === undefined) {
+        attrGetter.kerning = kerning;
     }
-    if (attr.minimumLineHeight != undefined && attr.minimumLineHeight !== attrGetter.minimumLineHeight) {
-        if (attrGetter.minimumLineHeight == undefined) {
-            attrGetter.minimumLineHeight = attr.minimumLineHeight;
-        } else {
-            attrGetter.minimumLineHeightIsMulti = true;
-        }
+    else if (kerning === undefined || attrGetter.kerning !== kerning) {
+        attrGetter.kerningIsMulti = true;
     }
-    if (attr.paraSpacing != undefined && attr.paraSpacing !== attrGetter.paraSpacing) {
-        if (attrGetter.paraSpacing == undefined) {
-            attrGetter.paraSpacing = attr.paraSpacing;
-        } else {
-            attrGetter.paraSpacingIsMulti = true;
-        }
+
+    const maximumLineHeight = attr.maximumLineHeight ?? (defaultAttr?.maximumLineHeight) ?? 0;
+    if (attrGetter.maximumLineHeight === undefined) {
+        attrGetter.maximumLineHeight = maximumLineHeight;
+    }
+    else if (maximumLineHeight === undefined || attrGetter.maximumLineHeight !== maximumLineHeight) {
+        attrGetter.maximumLineHeightIsMulti = true;
+    }
+
+    const minimumLineHeight = attr.minimumLineHeight ?? (defaultAttr?.minimumLineHeight) ?? 0;
+    if (attrGetter.minimumLineHeight === undefined) {
+        attrGetter.minimumLineHeight = minimumLineHeight;
+    }
+    else if (minimumLineHeight === undefined || attrGetter.minimumLineHeight !== minimumLineHeight) {
+        attrGetter.minimumLineHeightIsMulti = true;
+    }
+
+    const paraSpacing = attr.paraSpacing ?? (defaultAttr?.paraSpacing) ?? 0;
+    if (attrGetter.paraSpacing === undefined) {
+        attrGetter.paraSpacing = paraSpacing;
+    }
+    else if (paraSpacing === undefined || attrGetter.paraSpacing !== paraSpacing) {
+        attrGetter.paraSpacingIsMulti = true;
     }
 }
 
@@ -204,19 +224,21 @@ export function getTextFormat(shapetext: Text, index: number, length: number): A
     const textfmt = new AttrGetter();
 
     if (shapetext.attr) {
-        _getParaFormat(shapetext.attr, textfmt);
+        _getParaFormat(shapetext.attr, textfmt, shapetext.attr);
         textfmt.verAlign = shapetext.attr.verAlign;
         textfmt.orientation = shapetext.attr.orientation;
         textfmt.textBehaviour = shapetext.attr.textBehaviour;
     }
 
+    let _paraAttr: ParaAttr | undefined;
     _travelTextPara(shapetext.paras, index, length,
         (paraArray, paraIndex, para, index, length) => {
             const attr = para.attr;
-            if (attr) _getParaFormat(attr, parafmt);
+            _paraAttr = attr;
+            if (attr) _getParaFormat(attr, parafmt, shapetext.attr);
         },
         (span, index, length) => {
-            _getSpanFormat(span, spanfmt); // todo 考虑默认属性
+            _getSpanFormat(span, spanfmt, _paraAttr, shapetext.attr);
         })
 
     // merge

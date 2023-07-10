@@ -1,10 +1,9 @@
 
-import { Para, ParaAttr, Span, Text, TextAttr } from "../../../data/text";
+import { Para, ParaAttr, Span, Text, TextAttr, TextTransformType } from "../../../data/text";
 import { importColor } from "./styleio";
 import * as types from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
 import { IJSON } from "./basic";
-import { TextTransformType } from "data/typesdefine";
 
 function importHorzAlignment(align: number) {
     return [types.TextHorAlign.Left, 

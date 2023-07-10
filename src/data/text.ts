@@ -109,6 +109,7 @@ export class AttrGetter extends TextAttr {
     kerningIsMulti: boolean = false;
     minimumLineHeightIsMulti: boolean = false;
     maximumLineHeightIsMulti: boolean = false;
+    transformIsMulti: boolean = false;
 }
 
 export class SpanAttrSetter extends SpanAttr {

@@ -41,6 +41,14 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
         return true;
     }
 
+    if (attr.kerning !== span.kerning) {
+        return true;
+    }
+
+    if (attr.transform !== span.transform) {
+        return true;
+    }
+
     // bullet numbers??
     return false;
 }
@@ -133,6 +141,26 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean) {
         changed = true;
     }
 
+    if (attr.kerning != undefined) {
+        if (span.kerning == undefined || span.kerning !== attr.kerning) {
+            span.kerning = attr.kerning;
+            changed = true;
+        }
+    } else if (attrIsSetter && (attr as ParaAttrSetter).kerningIsSet && span.kerning) {
+        span.kerning = undefined;
+        changed = true;
+    }
+
+    if (attr.transform != undefined) {
+        if (span.transform == undefined || span.transform !== attr.transform) {
+            span.transform = attr.transform;
+            changed = true;
+        }
+    } else if (attrIsSetter && (attr as ParaAttrSetter).transformIsSet && span.transform) {
+        span.transform = undefined;
+        changed = true;
+    }
+
     return changed;
 }
 
@@ -185,16 +213,6 @@ function _mergeParaAttr(paraAttr: ParaAttr, attr: ParaAttr): boolean {
         }
     } else if (attrIsSetter && (attr as ParaAttrSetter).paraSpacingIsSet && paraAttr.paraSpacing) {
         paraAttr.paraSpacing = undefined;
-        changed = true;
-    }
-
-    if (attr.kerning != undefined) {
-        if (paraAttr.kerning == undefined || paraAttr.kerning !== attr.kerning) {
-            paraAttr.kerning = attr.kerning;
-            changed = true;
-        }
-    } else if (attrIsSetter && (attr as ParaAttrSetter).kerningIsSet && paraAttr.kerning) {
-        paraAttr.kerning = undefined;
         changed = true;
     }
 

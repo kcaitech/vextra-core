@@ -1,4 +1,4 @@
-import { TextLayout, isNewLineCharCode } from "./textlayout";
+import { ParaLayout, TextLayout, isNewLineCharCode } from "./textlayout";
 import { Point2D } from "./typesdefine";
 
 export function locateText(layout: TextLayout, x: number, y: number): { index: number, before: boolean } {
@@ -78,8 +78,56 @@ export class CursorLocate {
     cursorPoints: Point2D[] = [];
     lineY: number = 0;
     lineHeight: number = 0;
+    preLineY: number = 0;
     preLineHeight: number = 0;
+    nextLineY: number = 0;
     nextLineHeight: number = 0;
+}
+
+function makeCursorLocate(layout: TextLayout, pi: number, li: number, cursorPoints: Point2D[]) {
+
+    const paras = layout.paras;
+    const p = paras[pi];
+    const line = p[li];
+    const llen = p.length;
+    const plen = paras.length;
+    const lineY = layout.yOffset + p.yOffset + line.y;
+
+    const ret = new CursorLocate();
+    ret.lineY = lineY;
+
+    ret.preLineY = lineY;
+    ret.nextLineY = lineY + line.lineHeight;
+
+    ret.lineHeight = line.lineHeight;
+    ret.cursorPoints.push(...cursorPoints);
+    if (li > 0) {
+        const preLine = p[li - 1];
+        const preLineY = layout.yOffset + p.yOffset + preLine.y;
+        ret.preLineHeight = preLine.lineHeight;
+        ret.preLineY = preLineY;
+    }
+    else if (pi > 0) {
+        const prep = paras[pi - 1];
+        const preLine = prep[prep.length - 1];
+        const preLineY = layout.yOffset + prep.yOffset + preLine.y;
+        ret.preLineHeight = preLine.lineHeight;
+        ret.preLineY = preLineY;
+    }
+    if (li < llen - 1) {
+        const nextLine = p[li + 1];
+        const nextLineY = layout.yOffset + p.yOffset + nextLine.y;
+        ret.nextLineHeight = nextLine.lineHeight;
+        ret.nextLineY = nextLineY;
+    }
+    else if (pi < plen - 1) {
+        const nextp = paras[pi + 1];
+        const nextLine = nextp[0];
+        const nextLineY = layout.yOffset + nextp.yOffset + nextLine.y;
+        ret.nextLineHeight = nextLine.lineHeight;
+        ret.nextLineY = nextLineY;
+    }
+    return ret;
 }
 
 export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: boolean): CursorLocate | undefined {
@@ -105,28 +153,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 const x = graph.x + graph.cw;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
-                const ret = new CursorLocate();
-                ret.lineY = lineY;
-                ret.lineHeight = line.lineHeight;
-                ret.cursorPoints.push(p0, p1);
-                if (li > 0) {
-                    const preLine = p[li - 1];
-                    ret.preLineHeight = preLine.lineHeight;
-                }
-                else if (pi > 0) {
-                    const prep = paras[pi - 1];
-                    const preLine = prep[prep.length - 1];
-                    ret.preLineHeight = preLine.lineHeight;
-                }
-                if (li < llen - 1) {
-                    const nextLine = p[li + 1];
-                    ret.nextLineHeight = nextLine.lineHeight;
-                }
-                else if (pi < plen - 1) {
-                    const nextp = paras[pi + 1];
-                    const nextLine = nextp[0];
-                    ret.nextLineHeight = nextLine.lineHeight;
-                }
+                const ret = makeCursorLocate(layout, pi, li, [p0, p1])
                 return ret;
             }
             if (index >= line.graphCount) {
@@ -159,28 +186,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 const y = lineY + (line.lineHeight - graph.ch) / 2;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
-                const ret = new CursorLocate();
-                ret.lineY = lineY;
-                ret.lineHeight = line.lineHeight;
-                ret.cursorPoints.push(p0, p1);
-                if (li > 0) {
-                    const preLine = p[li - 1];
-                    ret.preLineHeight = preLine.lineHeight;
-                }
-                else if (pi > 0) {
-                    const prep = paras[pi - 1];
-                    const preLine = prep[prep.length - 1];
-                    ret.preLineHeight = preLine.lineHeight;
-                }
-                if (li < llen - 1) {
-                    const nextLine = p[li + 1];
-                    ret.nextLineHeight = nextLine.lineHeight;
-                }
-                else if (pi < plen - 1) {
-                    const nextp = paras[pi + 1];
-                    const nextLine = nextp[0];
-                    ret.nextLineHeight = nextLine.lineHeight;
-                }
+                const ret = makeCursorLocate(layout, pi, li, [p0, p1])
                 return ret;
             }
             break;
