@@ -45,7 +45,7 @@ import {
     importPoint2D
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
-import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Color, PathShape } from "../../data/classes";
+import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Color, PathShape, TextHorAlign } from "../../data/classes";
 
 import * as api from "../basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
@@ -435,31 +435,58 @@ export class CMDExecuter {
                 api.shapeModifyTextVerAlign(shape as TextShape, types.TextVerAlign.Top)
             }
         }
-        else if (opId === SHAPE_ATTR_ID.textHorAlign) {
+        else if (opId === SHAPE_ATTR_ID.defalutTextHorAlign) {
             if (op.type === OpType.IdSet && value) {
                 const textHorAlign = value as types.TextHorAlign
-                api.shapeModifyTextHorAlign(shape as TextShape, textHorAlign);
+                api.shapeModifyTextDefaultHorAlign(shape as TextShape, textHorAlign);
             }
             else if (op.type === OpType.IdRemove) {
-                api.shapeModifyTextHorAlign(shape as TextShape, types.TextHorAlign.Left)
+                api.shapeModifyTextDefaultHorAlign(shape as TextShape, types.TextHorAlign.Left)
             }
         }
-        else if (opId === SHAPE_ATTR_ID.textMaxLineheight) {
+        else if (opId === SHAPE_ATTR_ID.defaultTextMaxLineheight) {
             if (op.type === OpType.IdSet && value) {
                 const textMaxLineheight = JSON.parse(value) as number;
-                api.shapeModifyTextMaxLineHeight(shape as TextShape, textMaxLineheight);
+                api.shapeModifyTextDefaultMaxLineHeight(shape as TextShape, textMaxLineheight);
             }
             else if (op.type === OpType.IdRemove) {
-                api.shapeModifyTextMaxLineHeight(shape as TextShape, 0)
+                api.shapeModifyTextDefaultMaxLineHeight(shape as TextShape, 0)
             }
         }
-        else if (opId === SHAPE_ATTR_ID.textMinLineheight) {
+        else if (opId === SHAPE_ATTR_ID.defaultTextMinLineheight) {
             if (op.type === OpType.IdSet && value) {
                 const textMinLineheight = JSON.parse(value) as number
-                api.shapeModifyTextMinLineHeight(shape as TextShape, textMinLineheight);
+                api.shapeModifyTextDefaultMinLineHeight(shape as TextShape, textMinLineheight);
             }
             else if (op.type === OpType.IdRemove) {
-                api.shapeModifyTextMinLineHeight(shape as TextShape, 0)
+                api.shapeModifyTextDefaultMinLineHeight(shape as TextShape, 0)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextColor) {
+            if (op.type === OpType.IdSet && value) {
+                const color = importColor(JSON.parse(value));
+                api.shapeModifyTextColor(shape as TextShape, color);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextColor(shape as TextShape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextFontName) {
+            if (op.type === OpType.IdSet && value) {
+                const fontName = value;
+                api.shapeModifyTextFontName(shape as TextShape, fontName);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextFontName(shape as TextShape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextFontSize) {
+            if (op.type === OpType.IdSet && value) {
+                const fontSize = JSON.parse(value);
+                api.shapeModifyTextFontSize(shape as TextShape, fontSize);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextFontSize(shape as TextShape, 0)
             }
         }
         // todo
@@ -776,6 +803,36 @@ export class CMDExecuter {
             if (op.type === OpType.ArrayAttr) {
                 const fontSize = value && JSON.parse(value);
                 api.textModifyFontSize(shape, op.start, op.length, fontSize)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.kerning) {
+            if (op.type === OpType.ArrayAttr) {
+                const kerning = value && JSON.parse(value);
+                api.textModifyKerning(shape, kerning, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.textHorAlign) {
+            if (op.type === OpType.ArrayAttr) {
+                const textHorAlign = value as TextHorAlign;
+                api.textModifyHorAlign(shape, textHorAlign, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.textMaxLineheight) {
+            if (op.type === OpType.ArrayAttr) {
+                const maxLineHeight = value && JSON.parse(value);
+                api.textModifyMaxLineHeight(shape, maxLineHeight, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.textMinLineheight) {
+            if (op.type === OpType.ArrayAttr) {
+                const minLineHeight = value && JSON.parse(value);
+                api.textModifyMinLineHeight(shape, minLineHeight, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.paraSpacing) {
+            if (op.type === OpType.ArrayAttr) {
+                const paraSpacing = value && JSON.parse(value);
+                api.textModifyParaSpacing(shape, paraSpacing, op.start, op.length)
             }
         }
         else {
