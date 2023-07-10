@@ -181,27 +181,35 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 }
                 // 光标要取前一个字符的高度
                 // 光标的大小应该与即将输入的文本大小一致
+                // x
                 let graph = span[index];
                 let x = graph.x;
+                let y = lineY + (line.lineHeight - graph.ch) / 2;
+                let ch = graph.ch;
                 if (index > 0) {
-                    graph = span[index - 1];
-                    x = graph.x + graph.cw;
-                    if (!isNewLineCharCode(span[index].char.charCodeAt(0))) {
-                        x += line.graphPadding / 2;
+                    const preGraph = span[index - 1];
+                    if (isNewLineCharCode(graph.char.charCodeAt(0))) {
+                        x = preGraph.x + preGraph.cw;
+                    } else {
+                        x = (preGraph.x + preGraph.cw + graph.x) / 2;
                     }
+                    y = lineY + (line.lineHeight - preGraph.ch) / 2;
+                    ch = preGraph.ch;
                 }
                 else if (i > 0) {
                     const preSpan = line[i - 1];
-                    graph = preSpan[preSpan.length - 1];
-                    x = graph.x + graph.cw;
-                    if (!isNewLineCharCode(span[index].char.charCodeAt(0))) {
-                        x += line.graphPadding / 2;
+                    const preGraph = preSpan[preSpan.length - 1];
+                    if (isNewLineCharCode(graph.char.charCodeAt(0))) {
+                        x = preGraph.x + preGraph.cw;
+                    } else {
+                        x = (preGraph.x + preGraph.cw + graph.x) / 2;
                     }
+                    y = lineY + (line.lineHeight - preGraph.ch) / 2;
+                    ch = preGraph.ch;
                 }
-                // else index === 0, i === 0
-                const y = lineY + (line.lineHeight - graph.ch) / 2;
+
                 const p0 = { x, y };
-                const p1 = { x, y: y + graph.ch };
+                const p1 = { x, y: y + ch };
                 const ret = makeCursorLocate(layout, pi, li, [p0, p1])
                 return ret;
             }
