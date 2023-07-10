@@ -4,7 +4,7 @@ import { Page } from "../../data/page";
 import { GroupShape, PathShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
-import { BulletNumbersType, Point2D, StrikethroughType, UnderlineType } from "../../data/typesdefine";
+import { BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 
 export * from "./fill";
 export * from "./border";
@@ -295,6 +295,24 @@ export function shapeModifyTextDefaultMaxLineHeight(shape: TextShape, maxLinehei
     const text = shape.text;
     const origin = text.attr?.maximumLineHeight;
     text.setDefaultMaxLineHeight(maxLineheight);
+    return origin ?? 0;
+}
+export function textModifySpanTransfrom(shape: TextShape, transform: TextTransformType | undefined, index: number, len: number) {
+    const attr = new SpanAttrSetter();
+    attr.transform = transform;
+    attr.transformIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr: attr })
+    const spans = ret.spans;
+    const origin: { transform: TextTransformType | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ transform: span.transform, length: span.length })
+    })
+    return origin;
+}
+export function shapeModifyTextTransform(shape: TextShape, transform: TextTransformType | undefined) {
+    const text = shape.text;
+    const origin = text.attr?.transform;
+    text.setDefaultTransform(transform);
     return origin ?? 0;
 }
 export function shapeModifyTextKerning(shape: TextShape, kerning: number) {

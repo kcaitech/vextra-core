@@ -60,7 +60,8 @@ import {
     TextHorAlign,
     UnderlineType,
     StrikethroughType,
-    BulletNumbersType
+    BulletNumbersType,
+    TextTransformType
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -542,6 +543,14 @@ export class CMDExecuter {
                 api.shapeModifyStrikethrough(shape as TextShape, undefined)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.textTransform) {
+            if (op.type === OpType.IdSet && value) {
+                api.shapeModifyTextTransform(shape as TextShape, value as TextTransformType);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextTransform(shape as TextShape, undefined)
+            }
+        }
         // todo
         else {
             console.error("not implemented ", op)
@@ -937,6 +946,12 @@ export class CMDExecuter {
             if (op.type === OpType.ArrayAttr) {
                 const color = (value && importColor(JSON.parse(value))) as Color | undefined;
                 api.textModifyHighlightColor(shape, op.start, op.length, color)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.transform) {
+            if (op.type === OpType.ArrayAttr) {
+                const transform = value as TextTransformType | undefined;
+                api.textModifySpanTransfrom(shape, transform, op.start, op.length)
             }
         }
         else {

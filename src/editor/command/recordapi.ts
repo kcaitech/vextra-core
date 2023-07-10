@@ -19,7 +19,7 @@ import { SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../..
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BulletNumbersType, Point2D, StrikethroughType, UnderlineType } from "../../data/typesdefine";
+import { BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -758,15 +758,15 @@ export class Api {
             index = alignRange.index;
             len = alignRange.len;
 
-            const ret1 = basicapi.textModifyParaKerning(shape, kerning, index, len);
-            ret1.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraKerning, kerning, m.kerning));
-                index += m.length;
-            })
+            // const ret1 = basicapi.textModifyParaKerning(shape, kerning, index, len);
+            // ret1.forEach((m) => {
+            //     this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraKerning, kerning, m.kerning));
+            //     index += m.length;
+            // })
 
-            const ret = basicapi.textModifySpanKerning(shape, undefined, index, len);
+            const ret = basicapi.textModifySpanKerning(shape, kerning, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanKerning, kerning, m.kerning));
+                if (m.kerning !== kerning) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanKerning, kerning, m.kerning));
                 index += m.length;
             })
         })
@@ -801,6 +801,22 @@ export class Api {
             if (ret !== maxLineheight) {
                 this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defaultTextMaxLineheight, maxLineheight, ret));
             }
+        })
+    }
+    shapeModifyTextTransform(page: Page, shape: TextShape, transform: TextTransformType | undefined) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.shapeModifyTextTransform(shape, transform);
+            if (ret !== transform) {
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textTransform, transform, ret));
+            }
+
+            const ret1 = basicapi.textModifySpanTransfrom(shape, undefined, 0, Number.MAX_VALUE);
+            let index = 0;
+            ret1.forEach((m) => {
+                if (m.transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.transform, undefined, m.transform));
+                index += m.length;
+            })
         })
     }
 }

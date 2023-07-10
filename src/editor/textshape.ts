@@ -1,4 +1,4 @@
-import { BulletNumbersType, Color, Page, SpanAttr, StrikethroughType, Text, TextBehaviour, TextHorAlign, TextShape, TextVerAlign, UnderlineType } from "../data/classes";
+import { BulletNumbersType, Color, Page, SpanAttr, StrikethroughType, Text, TextBehaviour, TextHorAlign, TextShape, TextTransformType, TextVerAlign, UnderlineType } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
@@ -505,6 +505,19 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextBulletNumbersInherit", {});
         try {
             api.textModifyBulletNumbersInherit(this.__page, this.shape, inherit, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public setTextTransform(transform: TextTransformType | undefined) {
+        const api = this.__repo.start("setTextTransform", {});
+        try {
+            api.shapeModifyTextTransform(this.__page, this.shape, transform)
             this.__repo.commit();
             return true;
         } catch (error) {
