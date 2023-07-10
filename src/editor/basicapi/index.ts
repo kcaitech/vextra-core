@@ -249,7 +249,7 @@ export function textModifyMaxLineHeight(shape: TextShape, maxLineheight: number,
     })
     return origin;
 }
-export function textModifyKerning(shape: TextShape, kerning: number, index: number, len: number) {
+export function textModifyParaKerning(shape: TextShape, kerning: number | undefined, index: number, len: number) {
     const attr = new ParaAttrSetter();
     attr.kerning = kerning;
     attr.kerningIsSet = true;
@@ -258,6 +258,18 @@ export function textModifyKerning(shape: TextShape, kerning: number, index: numb
     const origin: { kerning: number | undefined, length: number }[] = [];
     paras.forEach((para) => {
         origin.push({ kerning: para.kerning, length: para.length })
+    })
+    return origin;
+}
+export function textModifySpanKerning(shape: TextShape, kerning: number | undefined, index: number, len: number) {
+    const attr = new SpanAttrSetter();
+    attr.kerning = kerning;
+    attr.kerningIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr: attr })
+    const spans = ret.spans;
+    const origin: { kerning: number | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ kerning: span.kerning, length: span.length })
     })
     return origin;
 }

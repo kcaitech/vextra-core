@@ -858,10 +858,16 @@ export class CMDExecuter {
                 api.textModifyFontSize(shape, op.start, op.length, fontSize)
             }
         }
-        else if (attrId === TEXT_ATTR_ID.kerning) {
+        else if (attrId === TEXT_ATTR_ID.spanKerning) {
             if (op.type === OpType.ArrayAttr) {
                 const kerning = value && JSON.parse(value);
-                api.textModifyKerning(shape, kerning, op.start, op.length)
+                api.textModifySpanKerning(shape, kerning, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.paraKerning) {
+            if (op.type === OpType.ArrayAttr) {
+                const kerning = value && JSON.parse(value);
+                api.textModifyParaKerning(shape, kerning, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.textHorAlign) {

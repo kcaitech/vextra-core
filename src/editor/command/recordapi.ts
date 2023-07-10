@@ -758,9 +758,15 @@ export class Api {
             index = alignRange.index;
             len = alignRange.len;
 
-            const ret = basicapi.textModifyKerning(shape, kerning, index, len);
+            const ret1 = basicapi.textModifyParaKerning(shape, kerning, index, len);
+            ret1.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraKerning, kerning, m.kerning));
+                index += m.length;
+            })
+
+            const ret = basicapi.textModifySpanKerning(shape, undefined, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.kerning, kerning, m.kerning));
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanKerning, kerning, m.kerning));
                 index += m.length;
             })
         })
