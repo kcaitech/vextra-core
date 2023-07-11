@@ -132,6 +132,7 @@ export class CMDExecuter {
         }
         catch (e) {
             console.error("exec error:", e)
+            console.error("error cmd:", cmd)
             this.__repo.rollback();
             return false;
         }

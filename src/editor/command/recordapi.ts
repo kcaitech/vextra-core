@@ -108,7 +108,8 @@ export class Api {
             this.__trap(() => {
                 basicapi.pageDelete(document, index);
             })
-            this.addCmd(PageCmdDelete.Make(document.id, item.id, index))
+            const page = document.pagesMgr.getSync(item.id)
+            this.addCmd(PageCmdDelete.Make(document.id, item.id, index, JSON.stringify(exportPage(page!))))
         }
     }
     pageModifyName(document: Document, pageId: string, name: string) {
@@ -150,7 +151,7 @@ export class Api {
                 }
             }
         })
-        if (shape) this.addCmd(ShapeCmdRemove.Make(page.id, parent.id, shape.id, index));
+        if (shape) this.addCmd(ShapeCmdRemove.Make(page.id, parent.id, shape.id, index, JSON.stringify(exportShape(shape))));
     }
     shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number) {
         this.__trap(() => {

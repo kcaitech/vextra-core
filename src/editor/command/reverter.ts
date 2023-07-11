@@ -32,18 +32,8 @@ import {
     CmdGroup
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
-import { exportPage } from "../../io/baseexport";
-import { exportShape } from "./utils";
 
-function changeShapeId(shape: any): [string, string][] {
-    const res: [string, string][] = [];
-    const newId = uuid();
-    res.push([shape.id, newId]);
-    shape.id = newId;
-    if (!Array.isArray((shape as any).childs) || (shape as any).childs.length === 0) return res;
-    for (let item of (shape as any).childs) res.push(...changeShapeId(item));
-    return res;
-}
+
 
 export class CMDReverter {
     private __document: Document;
@@ -100,25 +90,17 @@ export class CMDReverter {
         } else {
             op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         }
-        return new PageCmdDelete(CmdType.PageDelete, uuid(), cmd.blockId, [op], cmd.pageId);
+        return new PageCmdDelete(CmdType.PageDelete, uuid(), cmd.blockId, [op], cmd.pageId, cmd.data);
     }
     pageDelete(cmd: PageCmdDelete): PageCmdInsert {
         const cmdop = cmd.ops[0];
         let op;
-        const newShapeId = uuid();
         if (cmdop.type === OpType.ShapeRemove) {
-            op = ShapeOpInsert.Make(cmdop.targetId[0], newShapeId, cmdop.index);
+            op = ShapeOpInsert.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index);
         } else {
             op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index);
         }
-        const page = this.__document.pagesMgr.getSync(cmd.pageId);
-        if (!page) throw new Error("page not found: " + cmd.pageId);
-        const pageObject = exportPage(page);
-        const idChangeList = changeShapeId(pageObject);
-        const data = JSON.stringify(pageObject);
-        const newCmd = new PageCmdInsert(CmdType.PageInsert, uuid(), cmd.blockId, [op], page.id, data);
-        newCmd.idChangeList = idChangeList;
-        return newCmd;
+        return new PageCmdInsert(CmdType.PageInsert, uuid(), cmd.blockId, [op], cmdop.shapeId, cmd.data);
     }
     pageModify(cmd: PageCmdModify): PageCmdModify {
         const cmdop = cmd.ops[0];
@@ -206,21 +188,12 @@ export class CMDReverter {
     shapeDelete(cmd: ShapeCmdRemove): ShapeCmdInsert {
         const cmdop = cmd.ops[0];
         let op;
-        const newShapeId = uuid();
         if (cmdop.type === OpType.ShapeRemove) {
-            op = ShapeOpInsert.Make(cmdop.targetId[0], newShapeId, cmdop.index);
+            op = ShapeOpInsert.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index);
         } else {
             op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index);
         }
-        const page = this.__document.pagesMgr.getSync(cmd.blockId);
-        const shape = page && page.getShape(cmdop.shapeId, true);
-        if (!shape) throw new Error("page not found: " + cmd.blockId);
-        const shapeObject = exportShape(shape);
-        const idChangeList = changeShapeId(shapeObject);
-        const data = JSON.stringify(shapeObject);
-        const newCmd = new ShapeCmdInsert(CmdType.ShapeInsert, uuid(), cmd.blockId, [op], data);
-        newCmd.idChangeList = idChangeList;
-        return newCmd;
+        return new ShapeCmdInsert(CmdType.ShapeInsert, uuid(), cmd.blockId, [op], cmd.data);
     }
     shapeInsert(cmd: ShapeCmdInsert): ShapeCmdRemove {
         const cmdop = cmd.ops[0];
@@ -230,7 +203,7 @@ export class CMDReverter {
         } else {
             op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
         }
-        return new ShapeCmdRemove(CmdType.ShapeDelete, uuid(), cmd.blockId, [op]);
+        return new ShapeCmdRemove(CmdType.ShapeDelete, uuid(), cmd.blockId, [op], cmd.data);
     }
     shapeModify(cmd: ShapeCmdModify): ShapeCmdModify {
         const cmdop = cmd.ops[0];
