@@ -138,6 +138,7 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
     ret.highlight = source.highlight && importColor(source.highlight, ctx)
     ret.kerning = source.kerning
     ret.transform = source.transform && importTextTransformType(source.transform, ctx)
+    ret.placeholder = source.placeholder
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -649,6 +650,7 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     ret.highlight = source.highlight && importColor(source.highlight, ctx)
     ret.kerning = source.kerning
     ret.transform = source.transform && importTextTransformType(source.transform, ctx)
+    ret.placeholder = source.placeholder
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -740,6 +742,7 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
     ret.highlight = source.highlight && importColor(source.highlight, ctx)
     ret.kerning = source.kerning
     ret.transform = source.transform && importTextTransformType(source.transform, ctx)
+    ret.placeholder = source.placeholder
     ret.alignment = source.alignment && importTextHorAlign(source.alignment, ctx)
     ret.paraSpacing = source.paraSpacing
     ret.minimumLineHeight = source.minimumLineHeight
@@ -768,6 +771,7 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     ret.highlight = source.highlight && importColor(source.highlight, ctx)
     ret.kerning = source.kerning
     ret.transform = source.transform && importTextTransformType(source.transform, ctx)
+    ret.placeholder = source.placeholder
     ret.verAlign = source.verAlign && importTextVerAlign(source.verAlign, ctx)
     ret.orientation = source.orientation && importTextOrientation(source.orientation, ctx)
     ret.textBehaviour = source.textBehaviour && importTextBehaviour(source.textBehaviour, ctx)

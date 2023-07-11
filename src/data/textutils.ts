@@ -58,15 +58,19 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
         if (attr.bulletNumbers.behavior !== span.bulletNumbers.behavior) return true;
     }
 
+    if (!!attr.placeholder !== !!span.placeholder) {
+        return true;
+    }
+
     return false;
 }
 
-export function mergeSpanAttr(span: SpanAttr, attr: SpanAttr, noBulletNumbers: boolean = true) {
-    const attrIsSetter = attr instanceof SpanAttrSetter;
-    _mergeSpanAttr(span, attr, attrIsSetter, noBulletNumbers);
+export function mergeSpanAttr(span: SpanAttr, attr: SpanAttr) {
+    const attrIsSetter = attr instanceof SpanAttrSetter || attr instanceof ParaAttrSetter;
+    _mergeSpanAttr(span, attr, attrIsSetter);
 }
 
-function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, noBulletNumbers: boolean = true) {
+function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean) {
     let changed = false;
     if (attr.color) {
         if (!span.color || !isColorEqual(attr.color, span.color)) {
@@ -169,22 +173,28 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, n
         changed = true;
     }
 
-    if (attr.bulletNumbers && !noBulletNumbers) {
-        if (!span.bulletNumbers) {
-            span.bulletNumbers = new BulletNumbers(attr.bulletNumbers.type);
+    if (attr.placeholder && attrIsSetter) {
+        if (!span.placeholder) {
+            span.placeholder = true;
             changed = true;
         }
-        if (attr.bulletNumbers.type !== span.bulletNumbers.type) {
-            span.bulletNumbers.type = attr.bulletNumbers.type;
-            changed = true;
-        }
-        if (attr.bulletNumbers.offset !== span.bulletNumbers.offset) {
-            span.bulletNumbers.offset = attr.bulletNumbers.offset;
-            changed = true;
-        }
-        if (attr.bulletNumbers.behavior !== span.bulletNumbers.behavior) {
-            span.bulletNumbers.behavior = attr.bulletNumbers.behavior;
-            changed = true;
+        if (attr.bulletNumbers) {
+            if (!span.bulletNumbers) {
+                span.bulletNumbers = new BulletNumbers(attr.bulletNumbers.type);
+                changed = true;
+            }
+            if (attr.bulletNumbers.type !== span.bulletNumbers.type) {
+                span.bulletNumbers.type = attr.bulletNumbers.type;
+                changed = true;
+            }
+            if (attr.bulletNumbers.offset !== span.bulletNumbers.offset) {
+                span.bulletNumbers.offset = attr.bulletNumbers.offset;
+                changed = true;
+            }
+            if (attr.bulletNumbers.behavior !== span.bulletNumbers.behavior) {
+                span.bulletNumbers.behavior = attr.bulletNumbers.behavior;
+                changed = true;
+            }
         }
     }
 

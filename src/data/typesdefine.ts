@@ -95,6 +95,7 @@ export type SpanAttr = {
     highlight?: Color
     kerning?: number
     transform?: TextTransformType
+    placeholder?: boolean
 }
 /* shape */
 export type Shape = {

@@ -55,6 +55,7 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     highlight?: Color
     kerning?: number
     transform?: TextTransformType
+    placeholder?: boolean
     constructor(
     ) {
         super()

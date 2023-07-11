@@ -161,6 +161,7 @@ export class SpanAttr extends Basic {
     highlight?: Color
     kerning?: number
     transform?: TextTransformType
+    placeholder?: boolean
     constructor(
     ) {
         super()

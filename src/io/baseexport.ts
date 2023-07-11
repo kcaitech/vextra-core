@@ -136,6 +136,7 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
         highlight: source.highlight && exportColor(source.highlight, ctx),
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
+        placeholder: source.placeholder,
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -654,6 +655,7 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
         highlight: source.highlight && exportColor(source.highlight, ctx),
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
+        placeholder: source.placeholder,
         length: source.length,
     }
     if (ctx) ctx.afterExport(source)
@@ -748,6 +750,7 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
         highlight: source.highlight && exportColor(source.highlight, ctx),
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
+        placeholder: source.placeholder,
         alignment: source.alignment && exportTextHorAlign(source.alignment, ctx),
         paraSpacing: source.paraSpacing,
         minimumLineHeight: source.minimumLineHeight,
@@ -776,6 +779,7 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
         highlight: source.highlight && exportColor(source.highlight, ctx),
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
+        placeholder: source.placeholder,
         verAlign: source.verAlign && exportTextVerAlign(source.verAlign, ctx),
         orientation: source.orientation && exportTextOrientation(source.orientation, ctx),
         textBehaviour: source.textBehaviour && exportTextBehaviour(source.textBehaviour, ctx),
