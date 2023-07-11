@@ -145,7 +145,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextColor(index: number, len: number, color: Color) {
+    public setTextColor(index: number, len: number, color: Color | undefined) {
         const api = this.__repo.start("setTextColor", {});
         try {
             api.textModifyColor(this.__page, this.shape, index, len, color)
@@ -157,7 +157,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextHighlightColor(index: number, len: number, color: Color) {
+    public setTextHighlightColor(index: number, len: number, color: Color | undefined) {
         const api = this.__repo.start("setTextColor", {});
         try {
             api.textModifyHighlightColor(this.__page, this.shape, index, len, color)

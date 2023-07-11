@@ -570,12 +570,22 @@ export class Api {
             }
         })
     }
-    textModifyColor(page: Page, shape: TextShape, idx: number, len: number, color: Color) {
+    textModifyColor(page: Page, shape: TextShape, idx: number, len: number, color: Color | undefined) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const ret = basicapi.textModifyColor(shape, idx, len, color);
             ret.forEach((m) => {
-                if (!m.color || !isColorEqual(color, m.color)) this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.color, exportColor(color), m.color ? exportColor(m.color) : undefined));
+                const colorEqual = m.color === color || m.color && color && isColorEqual(color, m.color);
+                if (!colorEqual) {
+                    const cmd = TextCmdModify.Make(page.id,
+                        shape.id,
+                        idx,
+                        m.length,
+                        TEXT_ATTR_ID.color,
+                        color ? exportColor(color) : undefined,
+                        m.color ? exportColor(m.color) : undefined);
+                    this.addCmd(cmd);
+                }
                 idx += m.length;
             })
         })
@@ -641,12 +651,22 @@ export class Api {
 
     }
 
-    textModifyHighlightColor(page: Page, shape: TextShape, idx: number, len: number, color: Color) {
+    textModifyHighlightColor(page: Page, shape: TextShape, idx: number, len: number, color: Color | undefined) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const ret = basicapi.textModifyHighlightColor(shape, idx, len, color);
             ret.forEach((m) => {
-                if (!m.highlight || !isColorEqual(color, m.highlight)) this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.highlightColor, exportColor(color), m.highlight ? exportColor(m.highlight) : undefined));
+                const colorEqual = m.highlight === color || m.highlight && color && isColorEqual(color, m.highlight);
+                if (!colorEqual) {
+                    const cmd = TextCmdModify.Make(page.id,
+                        shape.id,
+                        idx,
+                        m.length,
+                        TEXT_ATTR_ID.highlightColor,
+                        color ? exportColor(color) : undefined,
+                        m.highlight ? exportColor(m.highlight) : undefined);
+                    this.addCmd(cmd);
+                }
                 idx += m.length;
             })
         });
@@ -738,7 +758,7 @@ export class Api {
     textModifyBulletNumbers(page: Page, shape: TextShape, type: BulletNumbersType | undefined, index: number, len: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            if (type === undefined) {
+            if (type === undefined || type === BulletNumbersType.None) {
                 this._textModifyRemoveBulletNumbers(page, shape, index, len);
             }
             else {
