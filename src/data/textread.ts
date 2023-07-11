@@ -39,7 +39,15 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
     if (attrGetter.color === undefined) {
         attrGetter.color = color;
     }
-    else if (color === undefined || !isColorEqual(color, attrGetter.color)) {
+    else if (color === attrGetter.color) {
+        // 同时为_NullColor
+    }
+    else if (color === _NullColor || attrGetter.color === _NullColor) {
+        // 其中一个为_NullColor
+        attrGetter.colorIsMulti = true;
+    }
+    else if (!isColorEqual(color, attrGetter.color)) {
+        // 两个都不是_NullColor
         attrGetter.colorIsMulti = true;
     }
 
@@ -61,9 +69,17 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
 
     const highlight = attr.highlight ?? (paraAttr?.highlight) ?? (textAttr?.highlight) ?? _NullColor;
     if (attrGetter.highlight === undefined) {
-        attrGetter.highlight = highlight;
+        attrGetter.highlight = color;
     }
-    else if (highlight === undefined || attrGetter.highlight !== highlight) {
+    else if (highlight === attrGetter.highlight) {
+        // 同时为_NullColor
+    }
+    else if (highlight === _NullColor || attrGetter.highlight === _NullColor) {
+        // 其中一个为_NullColor
+        attrGetter.highlightIsMulti = true;
+    }
+    else if (!isColorEqual(highlight, attrGetter.highlight)) {
+        // 两个都不是_NullColor
         attrGetter.highlightIsMulti = true;
     }
 
@@ -256,6 +272,13 @@ export function getTextFormat(shapetext: Text, index: number, length: number): A
     // merge
     _mergeSpanFormat(spanfmt, parafmt);
     _mergeParaAttr(parafmt, textfmt);
+
+    if (textfmt.color === _NullColor) {
+        textfmt.color = undefined;
+    }
+    if (textfmt.highlight === _NullColor) {
+        textfmt.highlight = undefined;
+    }
 
     return textfmt;
 }
