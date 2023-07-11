@@ -17,7 +17,7 @@ import * as classes from "./baseclasses"
 import { deleteText, formatText, insertComplexText, insertSimpleText } from "./textedit";
 import { MeasureFun, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
-import { getSimpleText, getTextFormat, getTextWithFmt } from "./textread";
+import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
 import { CursorLocate, locateCursor, locateRange, locateText } from "./textlocate";
 import { _travelTextPara } from "./texttravel";
 /*
@@ -279,6 +279,10 @@ export class Text extends Basic implements classes.Text {
     getTextFormat(index: number, count: number): AttrGetter {
         return getTextFormat(this, index, count);
     }
+    getUsedFontNames(fontNames?: Set<string>): Set<string> {
+        return getUsedFontNames(this, fontNames);
+    }
+
     insertText(text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
         // this.reLayout(); // todo
         insertSimpleText(this, text, index, props);

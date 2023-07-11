@@ -247,3 +247,22 @@ export function getTextFormat(shapetext: Text, index: number, length: number): A
 
     return textfmt;
 }
+
+export function getUsedFontNames(shapetext: Text, fontNames?: Set<string>): Set<string> {
+    const ret = fontNames ?? new Set<string>;
+
+    if (shapetext.attr && shapetext.attr.fontName) {
+        ret.add(shapetext.attr.fontName);
+    }
+
+    _travelTextPara(shapetext.paras, 0, Number.MAX_VALUE,
+        (paraArray, paraIndex, para, index, length) => {
+            const attr = para.attr;
+            if (attr && attr.fontName) ret.add(attr.fontName);
+        },
+        (span, index, length) => {
+            if (span.fontName) ret.add(span.fontName);
+        })
+
+    return ret;
+}
