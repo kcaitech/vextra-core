@@ -114,6 +114,14 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
     else if (transform === undefined || attrGetter.transform !== transform) {
         attrGetter.transformIsMulti = true;
     }
+
+    const bulletNumbers = attr.bulletNumbers;
+    if (attrGetter.bulletNumbers === undefined) {
+        if (bulletNumbers) attrGetter.bulletNumbers = bulletNumbers;
+    }
+    else if (bulletNumbers && attrGetter.bulletNumbers.type !== bulletNumbers.type) {
+        attrGetter.bulletNumbersIsMulti = true;
+    }
 }
 
 function _mergeSpanFormat(from: AttrGetter, to: AttrGetter) {
@@ -153,6 +161,10 @@ function _mergeSpanFormat(from: AttrGetter, to: AttrGetter) {
     // transform
     if (from.transformIsMulti) to.transformIsMulti = true;
     else if (from.transform !== undefined) to.transform = from.transform;
+
+    // bulletnumbers
+    if (from.bulletNumbersIsMulti) to.bulletNumbersIsMulti = true;
+    else if (from.bulletNumbers !== undefined) to.bulletNumbers = from.bulletNumbers;
 }
 
 function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: TextAttr | undefined) {

@@ -110,6 +110,7 @@ export class AttrGetter extends TextAttr {
     minimumLineHeightIsMulti: boolean = false;
     maximumLineHeightIsMulti: boolean = false;
     transformIsMulti: boolean = false;
+    bulletNumbersIsMulti: boolean = false;
 }
 
 export class SpanAttrSetter extends SpanAttr {

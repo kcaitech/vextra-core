@@ -1,5 +1,5 @@
 import { importParaAttr, importTextAttr } from "../io/baseimport";
-import { Color } from "./baseclasses";
+import { BulletNumbers, Color } from "./baseclasses";
 import { Para, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter } from "./text";
 import { isColorEqual } from "./utils";
 
@@ -49,16 +49,24 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
         return true;
     }
 
-    // bullet numbers??
+    if (attr.bulletNumbers && !span.bulletNumbers || !attr.bulletNumbers && span.bulletNumbers) {
+        return true;
+    }
+    if (attr.bulletNumbers && span.bulletNumbers) {
+        if (attr.bulletNumbers.type !== span.bulletNumbers.type) return true;
+        if (attr.bulletNumbers.offset !== span.bulletNumbers.offset) return true;
+        if (attr.bulletNumbers.behavior !== span.bulletNumbers.behavior) return true;
+    }
+
     return false;
 }
 
-export function mergeSpanAttr(span: SpanAttr, attr: SpanAttr) {
+export function mergeSpanAttr(span: SpanAttr, attr: SpanAttr, noBulletNumbers: boolean = true) {
     const attrIsSetter = attr instanceof SpanAttrSetter;
-    _mergeSpanAttr(span, attr, attrIsSetter);
+    _mergeSpanAttr(span, attr, attrIsSetter, noBulletNumbers);
 }
 
-function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean) {
+function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, noBulletNumbers: boolean = true) {
     let changed = false;
     if (attr.color) {
         if (!span.color || !isColorEqual(attr.color, span.color)) {
@@ -159,6 +167,25 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean) {
     } else if (attrIsSetter && (attr as ParaAttrSetter).transformIsSet && span.transform) {
         span.transform = undefined;
         changed = true;
+    }
+
+    if (attr.bulletNumbers && !noBulletNumbers) {
+        if (!span.bulletNumbers) {
+            span.bulletNumbers = new BulletNumbers(attr.bulletNumbers.type);
+            changed = true;
+        }
+        if (attr.bulletNumbers.type !== span.bulletNumbers.type) {
+            span.bulletNumbers.type = attr.bulletNumbers.type;
+            changed = true;
+        }
+        if (attr.bulletNumbers.offset !== span.bulletNumbers.offset) {
+            span.bulletNumbers.offset = attr.bulletNumbers.offset;
+            changed = true;
+        }
+        if (attr.bulletNumbers.behavior !== span.bulletNumbers.behavior) {
+            span.bulletNumbers.behavior = attr.bulletNumbers.behavior;
+            changed = true;
+        }
     }
 
     return changed;

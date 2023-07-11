@@ -14,7 +14,7 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
             if (attr) {
                 const _span = new Span(text.length);
                 mergeSpanAttr(_span, span);
-                mergeSpanAttr(_span, attr);
+                mergeSpanAttr(_span, attr, false);
                 if (isDiffSpanAttr(span, _span)) {
                     spans.splice(i, 0, _span);
                     break;
