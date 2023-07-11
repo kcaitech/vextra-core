@@ -1,7 +1,7 @@
 // 文本编辑时的增量排版
 
-import { ParaAttrSetter, SpanAttrSetter, Text, TextVerAlign } from "./classes";
-import { MeasureFun, TextLayout, layoutPara } from "./textlayout";
+import { ParaAttrSetter, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "./classes";
+import { MeasureFun, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
 
 export function layoutAtInsert(text: Text,
     layoutWidth: number,
@@ -69,6 +69,19 @@ export function layoutAtInsert(text: Text,
     }
 
     if (parascount !== parasLayout.length) throw new Error("layout and data Not match")
+
+    // hor align
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    for (let i = 0, pc = text.paras.length; i < pc; i++) {
+        const para = text.paras[i];
+        const paraLayout = parasLayout[i];
+        const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            fixLineHorAlign(line, alignment, alignWidth);
+        }
+    }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
@@ -157,6 +170,19 @@ export function layoutAtDelete(text: Text,
 
     if (parascount !== parasLayout.length) throw new Error("layout and data Not match")
 
+    // hor align
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    for (let i = 0, pc = text.paras.length; i < pc; i++) {
+        const para = text.paras[i];
+        const paraLayout = parasLayout[i];
+        const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            fixLineHorAlign(line, alignment, alignWidth);
+        }
+    }
+
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
         switch (align) {
@@ -211,7 +237,7 @@ export function layoutAtFormat(text: Text,
     // todo 先做到段落重排
     // const needUpdateCount = parasLayout.length - paras.length + 1;
     len += index;
-    for (let len2 = parasLayout.length;len >= 0 && i < parascount && i < len2; i++) {
+    for (let len2 = parasLayout.length; len >= 0 && i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = layoutPara(text, para, layoutWidth, measure);
         if (i > 0) {
@@ -242,6 +268,19 @@ export function layoutAtFormat(text: Text,
     }
 
     if (parascount !== parasLayout.length) throw new Error("layout and data Not match")
+
+    // hor align
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    for (let i = 0, pc = text.paras.length; i < pc; i++) {
+        const para = text.paras[i];
+        const paraLayout = parasLayout[i];
+        const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            fixLineHorAlign(line, alignment, alignWidth);
+        }
+    }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {

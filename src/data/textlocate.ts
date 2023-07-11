@@ -36,6 +36,7 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
                 continue;
             }
             // index span
+            x -= line.x;
             for (let i = 0, len = line.length; i < len; i++) {
                 const span = line[i];
                 if (span.length === 0) {
@@ -162,7 +163,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 if (span.length === 0) break; // error
                 const graph = span[span.length - 1];
                 const y = lineY + (line.lineHeight - graph.ch) / 2;
-                const x = graph.x + graph.cw;
+                const x = line.x + graph.x + graph.cw;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
                 const ret = makeCursorLocate(layout, pi, li, [p0, p1])
@@ -183,15 +184,15 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 // 光标的大小应该与即将输入的文本大小一致
                 // x
                 let graph = span[index];
-                let x = graph.x;
+                let x = line.x + graph.x;
                 let y = lineY + (line.lineHeight - graph.ch) / 2;
                 let ch = graph.ch;
                 if (index > 0) {
                     const preGraph = span[index - 1];
                     if (isNewLineCharCode(graph.char.charCodeAt(0))) {
-                        x = preGraph.x + preGraph.cw;
+                        x = line.x + preGraph.x + preGraph.cw;
                     } else {
-                        x = (preGraph.x + preGraph.cw + graph.x) / 2;
+                        x = line.x + (preGraph.x + preGraph.cw + graph.x) / 2;
                     }
                     y = lineY + (line.lineHeight - preGraph.ch) / 2;
                     ch = preGraph.ch;
@@ -200,9 +201,9 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     const preSpan = line[i - 1];
                     const preGraph = preSpan[preSpan.length - 1];
                     if (isNewLineCharCode(graph.char.charCodeAt(0))) {
-                        x = preGraph.x + preGraph.cw;
+                        x = line.x + preGraph.x + preGraph.cw;
                     } else {
-                        x = (preGraph.x + preGraph.cw + graph.x) / 2;
+                        x = line.x + (preGraph.x + preGraph.cw + graph.x) / 2;
                     }
                     y = lineY + (line.lineHeight - preGraph.ch) / 2;
                     ch = preGraph.ch;

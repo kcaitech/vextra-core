@@ -22,9 +22,9 @@ export class Line extends Array<GraphArray> {
     public x: number = 0;
     public y: number = 0;
     public lineHeight: number = 0;
-    public lineWidth: number = 0;
+    public lineWidth: number = 0; // adjust后的宽度
 
-    public graphWidth: number = 0;
+    public graphWidth: number = 0; // graph+kerning的宽度
     public graphCount: number = 0;
 
     public alignment: TextHorAlign = TextHorAlign.Left;
@@ -46,44 +46,56 @@ export class TextLayout {
     public contentWidth: number = 0;
 }
 
+export function fixLineHorAlign(line: Line, align: TextHorAlign, width: number) {
+    if (line.layoutWidth === width && line.alignment === align) return;
+    if (line.alignment === TextHorAlign.Justified || line.alignment === TextHorAlign.Natural) {
+        // revert to Left
+        for (; ;) {
+
+            const lastspan = line[line.length - 1];
+            const lastgraph = lastspan[lastspan.length - 1];
+
+            let graphCount = line.graphCount;
+            if (isNewLineCharCode(lastgraph.char.charCodeAt(0))) {
+                graphCount--;
+            }
+
+            const padding = graphCount === 1 ? 0 : (line.layoutWidth - line.graphWidth) / (graphCount - 1);
+            if (align === TextHorAlign.Natural) {
+                const graphWidth = line.graphWidth / graphCount;
+                if (padding > graphWidth) {
+                    // done
+                    break;
+                }
+            }
+            let offset = 0;
+            for (let i = 0, len = line.length; i < len; i++) {
+                const arr = line[i];
+                for (let j = 0, len1 = arr.length; j < len1; j++) {
+                    const graph = arr[j];
+                    graph.x -= offset;
+                    --graphCount;
+                    if (graphCount > 0) offset += padding;
+                }
+            }
+            break;
+        }
+    }
+
+    adjustLineHorAlign(line, align, width);
+}
+
 function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
+
     switch (align) {
         case TextHorAlign.Left:
-        case TextHorAlign.Natural:
             {
-                let firstGraph;
-                if (line.length > 0) {
-                    const firstGArr = line[0];
-                    firstGraph = firstGArr[0];
-                }
-                if (!firstGraph) throw new Error("layout result wrong");
-                const offset = -firstGraph.x;
-                for (let i = 0, len = line.length; i < len; i++) {
-                    const arr = line[i];
-                    for (let j = 0, len1 = arr.length; j < len1; j++) {
-                        const graph = arr[j];
-                        graph.x += offset;
-                    }
-                }
+                line.x = 0;
                 break;
             }
         case TextHorAlign.Centered:
             {
-                const startX = (width - line.graphWidth) / 2;
-                let firstGraph;
-                if (line.length > 0) {
-                    const firstGArr = line[0];
-                    firstGraph = firstGArr[0];
-                }
-                if (!firstGraph) throw new Error("layout result wrong");
-                const offset = startX - firstGraph.x;
-                for (let i = 0, len = line.length; i < len; i++) {
-                    const arr = line[i];
-                    for (let j = 0, len1 = arr.length; j < len1; j++) {
-                        const graph = arr[j];
-                        graph.x += offset;
-                    }
-                }
+                line.x = (width - line.graphWidth) / 2;
                 break;
             }
         case TextHorAlign.Right:
@@ -95,19 +107,16 @@ function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
                 }
                 if (!lastGraph) throw new Error("layout result wrong");
                 const offset = width - lastGraph.x - lastGraph.cw;
-                for (let i = line.length - 1; i >= 0; i--) {
-                    const arr = line[i];
-                    for (let j = arr.length - 1; j >= 0; j--) {
-                        const graph = arr[j];
-                        graph.x += offset;
-                    }
-                }
+                line.x = offset;
                 break;
             }
+        case TextHorAlign.Natural:
         case TextHorAlign.Justified:
             {
                 const lastspan = line[line.length - 1];
                 const lastgraph = lastspan[lastspan.length - 1];
+
+                line.x = 0;
 
                 let firstGraph;
                 if (line.length > 0) {
@@ -123,6 +132,11 @@ function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
 
                 let offset = -firstGraph.x;
                 const padding = graphCount === 1 ? 0 : (width - line.graphWidth) / (graphCount - 1);
+
+                if (align === TextHorAlign.Natural) {
+                    const graphWidth = line.graphWidth / graphCount;
+                    if (padding > graphWidth) break;
+                }
 
                 for (let i = 0, len = line.length; i < len; i++) {
                     const arr = line[i];
@@ -228,6 +242,8 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
 
     let preSpanIdx = spanIdx;
 
+    const defaultTransform = (para.attr?.transform) ?? (_text.attr?.transform);
+
     for (; textIdx < textLen;) {
         if (spanIdx >= spansCount) spanIdx = spansCount - 1; // fix
 
@@ -291,7 +307,7 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
             // }
             continue;
         }
-        const transformType = span.transform ?? (para.attr?.transform) ?? (_text.attr?.transform);
+        const transformType = span.transform ?? defaultTransform;
         const char = transform(text, textIdx, transformType);
 
         const m = measure(char.charCodeAt(0), font);
@@ -434,12 +450,12 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, measure:
         const lastgraph = lastspan[lastspan.length - 1];
         line.graphWidth = lastgraph.x + lastgraph.cw - firstgraph.x;
 
-        const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-        if (pAttr && pAttr.alignment && textBehaviour !== TextBehaviour.Flexible) {
-            adjustLineHorAlign(line, pAttr.alignment, layoutWidth);
-        }
-        line.x = firstgraph.x;
-        line.lineWidth = lastgraph.x + lastgraph.cw - firstgraph.x;
+        // const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+        // if (pAttr && pAttr.alignment && textBehaviour !== TextBehaviour.Flexible) {
+        //     adjustLineHorAlign(line, pAttr.alignment, layoutWidth);
+        // }
+        // line.x = firstgraph.x;
+        line.lineWidth = lastgraph.x + lastgraph.cw;
 
         paraWidth = Math.max(line.lineWidth + line.x, paraWidth);
         return line;
@@ -477,6 +493,19 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
         paras.push(paraLayout);
+    }
+
+    // hor align
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    for (let i = 0, pc = text.paras.length; i < pc; i++) {
+        const para = text.paras[i];
+        const paraLayout = paras[i];
+        const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            adjustLineHorAlign(line, alignment, alignWidth);
+        }
     }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
