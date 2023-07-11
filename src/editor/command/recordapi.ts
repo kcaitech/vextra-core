@@ -15,7 +15,7 @@ import { GroupShape, RectRadius, Shape, TextShape, PathShape } from "../../data/
 import { exportShape, updateShapesFrame } from "./utils";
 import { Artboard } from "../../data/artboard";
 import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "../../data/style";
-import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
+import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
@@ -727,7 +727,8 @@ export class Api {
         });
 
         for (let i = 0, len = insertIndexs.length; i < len; i++) {
-            const attr = new SpanAttr();
+            const attr = new SpanAttrSetter();
+            attr.placeholder = true;
             attr.bulletNumbers = new BulletNumbers(type);
             basicapi.insertSimpleText(shape, '*', insertIndexs[i] + i, { attr });
             this.addCmd(TextCmdInsert.Make(page.id, shape.id, insertIndexs[i] + i, 1, { type: "simple", text: '*', attr, length: 1 }))

@@ -478,7 +478,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextBulletNumbers(type: BulletNumbersType, index: number, len: number) {
         const api = this.__repo.start("setTextBulletNumbers", {});
         try {
-            api.textModifyBulletNumbers(this.__page, this.shape, type, index, len)
+            api.textModifyBulletNumbers(this.__page, this.shape, type, index, len);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -491,7 +492,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextBulletNumbersStart(start: number, index: number, len: number) {
         const api = this.__repo.start("setTextBulletNumbersStart", {});
         try {
-            api.textModifyBulletNumbersStart(this.__page, this.shape, start, index, len)
+            api.textModifyBulletNumbersStart(this.__page, this.shape, start, index, len);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -504,7 +506,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextBulletNumbersInherit(inherit: boolean, index: number, len: number) {
         const api = this.__repo.start("setTextBulletNumbersInherit", {});
         try {
-            api.textModifyBulletNumbersInherit(this.__page, this.shape, inherit, index, len)
+            api.textModifyBulletNumbersInherit(this.__page, this.shape, inherit, index, len);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -517,7 +520,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextTransform(transform: TextTransformType | undefined, index: number, len: number) {
         const api = this.__repo.start("setTextTransform", {});
         try {
-            api.textModifyTransform(this.__page, this.shape, transform, index, len)
+            api.textModifyTransform(this.__page, this.shape, transform, index, len);
+            this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
