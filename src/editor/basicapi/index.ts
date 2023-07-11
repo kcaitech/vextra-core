@@ -297,7 +297,9 @@ export function shapeModifyTextDefaultMaxLineHeight(shape: TextShape, maxLinehei
     text.setDefaultMaxLineHeight(maxLineheight);
     return origin ?? 0;
 }
+
 export function textModifySpanTransfrom(shape: TextShape, transform: TextTransformType | undefined, index: number, len: number) {
+    // 句属性
     const attr = new SpanAttrSetter();
     attr.transform = transform;
     attr.transformIsSet = true;
@@ -306,6 +308,19 @@ export function textModifySpanTransfrom(shape: TextShape, transform: TextTransfo
     const origin: { transform: TextTransformType | undefined, length: number }[] = [];
     spans.forEach((span) => {
         origin.push({ transform: span.transform, length: span.length })
+    })
+    return origin;
+}
+export function textModifyParaTransfrom(shape: TextShape, transform: TextTransformType | undefined, index: number, len: number) {
+    // 段落属性
+    const attr = new ParaAttrSetter();
+    attr.transform = transform;
+    attr.transformIsSet = true;
+    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const paras = ret.paras;
+    const origin: { transform: TextTransformType | undefined, length: number }[] = [];
+    paras.forEach((para) => {
+        origin.push({ transform: para.transform, length: para.length })
     })
     return origin;
 }

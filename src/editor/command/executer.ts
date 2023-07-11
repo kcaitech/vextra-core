@@ -948,10 +948,16 @@ export class CMDExecuter {
                 api.textModifyHighlightColor(shape, op.start, op.length, color)
             }
         }
-        else if (attrId === TEXT_ATTR_ID.transform) {
+        else if (attrId === TEXT_ATTR_ID.spanTransform) {
             if (op.type === OpType.ArrayAttr) {
                 const transform = value as TextTransformType | undefined;
                 api.textModifySpanTransfrom(shape, transform, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.paraTransform) {
+            if (op.type === OpType.ArrayAttr) {
+                const transform = value as TextTransformType | undefined;
+                api.textModifyParaTransfrom(shape, transform, op.start, op.length)
             }
         }
         else {

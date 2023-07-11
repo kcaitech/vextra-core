@@ -20,6 +20,7 @@ import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { isColorEqual } from "../../data/utils";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -573,7 +574,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyColor(shape, idx, len, color);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.color, exportColor(color), m.color ? exportColor(m.color) : undefined));
+                if (!m.color || !isColorEqual(color, m.color)) this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.color, exportColor(color), m.color ? exportColor(m.color) : undefined));
                 idx += m.length;
             })
         })
@@ -583,7 +584,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyFontName(shape, idx, len, fontname);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontName, fontname, m.fontName));
+                if (fontname !== m.fontName) this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontName, fontname, m.fontName));
                 idx += m.length;
             })
         })
@@ -593,7 +594,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyFontSize(shape, idx, len, fontsize);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontSize, fontsize, m.fontSize));
+                if (fontsize !== m.fontSize) this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontSize, fontsize, m.fontSize));
                 idx += m.length;
             })
         })
@@ -644,7 +645,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyHighlightColor(shape, idx, len, color);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.highlightColor, exportColor(color), m.highlight ? exportColor(m.highlight) : undefined));
+                if (!m.highlight || !isColorEqual(color, m.highlight)) this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.highlightColor, exportColor(color), m.highlight ? exportColor(m.highlight) : undefined));
                 idx += m.length;
             })
         });
@@ -654,7 +655,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyUnderline(shape, underline, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.underline, underline, m.underline));
+                if (underline !== m.underline) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.underline, underline, m.underline));
                 index += m.length;
             })
         });
@@ -664,7 +665,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyStrikethrough(shape, strikethrough, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.strikethrough, strikethrough, m.strikethrough));
+                if (strikethrough !== m.strikethrough) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.strikethrough, strikethrough, m.strikethrough));
                 index += m.length;
             })
         });
@@ -674,7 +675,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyBold(shape, bold, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.bold, bold, m.bold));
+                if (bold !== m.bold) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.bold, bold, m.bold));
                 index += m.length;
             })
         });
@@ -684,7 +685,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyItalic(shape, italic, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.italic, italic, m.italic));
+                if (italic !== m.italic) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.italic, italic, m.italic));
                 index += m.length;
             })
         });
@@ -709,7 +710,7 @@ export class Api {
 
             const ret = basicapi.textModifyHorAlign(shape, horAlign, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textHorAlign, horAlign, m.alignment));
+                if (horAlign !== m.alignment) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textHorAlign, horAlign, m.alignment));
                 index += m.length;
             })
         })
@@ -732,7 +733,7 @@ export class Api {
 
             const ret = basicapi.textModifyMinLineHeight(shape, minLineheight, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textMinLineheight, minLineheight, m.minimumLineHeight));
+                if (minLineheight !== m.minimumLineHeight) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textMinLineheight, minLineheight, m.minimumLineHeight));
                 index += m.length;
             })
         })
@@ -746,7 +747,7 @@ export class Api {
 
             const ret = basicapi.textModifyMaxLineHeight(shape, maxLineheight, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textMaxLineheight, maxLineheight, m.maximumLineHeight));
+                if (maxLineheight !== m.maximumLineHeight) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textMaxLineheight, maxLineheight, m.maximumLineHeight));
                 index += m.length;
             })
         })
@@ -754,9 +755,9 @@ export class Api {
     textModifyKerning(page: Page, shape: TextShape, kerning: number, index: number, len: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const alignRange = shape.text.alignParaRange(index, len);
-            index = alignRange.index;
-            len = alignRange.len;
+            // const alignRange = shape.text.alignParaRange(index, len);
+            // index = alignRange.index;
+            // len = alignRange.len;
 
             // const ret1 = basicapi.textModifyParaKerning(shape, kerning, index, len);
             // ret1.forEach((m) => {
@@ -780,7 +781,7 @@ export class Api {
 
             const ret = basicapi.textModifyParaSpacing(shape, paraSpacing, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraSpacing, paraSpacing, m.paraSpacing));
+                if (paraSpacing !== m.paraSpacing) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraSpacing, paraSpacing, m.paraSpacing));
                 index += m.length;
             })
         })
@@ -803,20 +804,42 @@ export class Api {
             }
         })
     }
-    shapeModifyTextTransform(page: Page, shape: TextShape, transform: TextTransformType | undefined) {
+    textModifyTransform(page: Page, shape: TextShape, transform: TextTransformType | undefined, index: number, len: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.shapeModifyTextTransform(shape, transform);
-            if (ret !== transform) {
-                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textTransform, transform, ret));
+            if (transform === TextTransformType.UppercaseFirst) {
+                const alignRange = shape.text.alignParaRange(index, len);
+                index = alignRange.index;
+                len = alignRange.len;
+                const ret1 = basicapi.textModifyParaTransfrom(shape, transform, index, len);
+                ret1.forEach((m) => {
+                    if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraTransform, transform, m.transform));
+                    index += m.length;
+                })
             }
+            else if (transform !== undefined) {
+                const ret1 = basicapi.textModifySpanTransfrom(shape, transform, index, len);
+                ret1.forEach((m) => {
+                    if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanTransform, transform, m.transform));
+                    index += m.length;
+                })
+            }
+            else { // undefined
+                const ret1 = basicapi.textModifySpanTransfrom(shape, transform, index, len);
+                ret1.forEach((m) => {
+                    if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanTransform, transform, m.transform));
+                    index += m.length;
+                })
 
-            const ret1 = basicapi.textModifySpanTransfrom(shape, undefined, 0, Number.MAX_VALUE);
-            let index = 0;
-            ret1.forEach((m) => {
-                if (m.transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.transform, undefined, m.transform));
-                index += m.length;
-            })
+                const alignRange = shape.text.alignParaRange(index, len);
+                index = alignRange.index;
+                len = alignRange.len;
+                const ret2 = basicapi.textModifyParaTransfrom(shape, transform, index, len);
+                ret2.forEach((m) => {
+                    if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraTransform, transform, m.transform));
+                    index += m.length;
+                })
+            }
         })
     }
 }

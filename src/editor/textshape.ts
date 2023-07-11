@@ -514,10 +514,10 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextTransform(transform: TextTransformType | undefined) {
+    public setTextTransform(transform: TextTransformType | undefined, index: number, len: number) {
         const api = this.__repo.start("setTextTransform", {});
         try {
-            api.shapeModifyTextTransform(this.__page, this.shape, transform)
+            api.textModifyTransform(this.__page, this.shape, transform, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
