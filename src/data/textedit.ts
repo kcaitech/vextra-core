@@ -14,7 +14,7 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
             if (attr) {
                 const _span = new Span(text.length);
                 mergeSpanAttr(_span, span);
-                mergeSpanAttr(_span, attr);
+                mergeSpanAttr(_span, attr, true);
                 if (isDiffSpanAttr(span, _span)) {
                     spans.splice(i, 0, _span);
                     break;
@@ -27,7 +27,7 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
             if (attr) {
                 const _span = new Span(text.length);
                 mergeSpanAttr(_span, span);
-                mergeSpanAttr(_span, attr);
+                mergeSpanAttr(_span, attr, true);
                 if (isDiffSpanAttr(span, _span)) {
                     // split
                     const _span2 = new Span(span.length - idx);
@@ -44,7 +44,7 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
             if (attr) {
                 const _span = new Span(text.length);
                 mergeSpanAttr(_span, span);
-                mergeSpanAttr(_span, attr);
+                mergeSpanAttr(_span, attr, true);
                 if (isDiffSpanAttr(span, _span)) {
                     spans.splice(i + 1, 0, _span);
                     break;
@@ -57,7 +57,7 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
             if (attr) {
                 const _span = new Span(text.length);
                 mergeSpanAttr(_span, span);
-                mergeSpanAttr(_span, attr);
+                mergeSpanAttr(_span, attr, true);
                 if (isDiffSpanAttr(span, _span)) {
                     spans.splice(i + 1, 0, _span);
                     span.length += para.length - text.length - count; // fix
@@ -94,7 +94,7 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
                 const copy = para.spans[0];
                 mergeSpanAttr(span, copy);
             }
-            if (attr) mergeSpanAttr(span, attr);
+            if (attr) mergeSpanAttr(span, attr, true);
             const _spans = new BasicArray<Span>(span);
             const _para = new Para(_text, _spans);
             if (paraAttr) mergeParaAttr(_para, paraAttr);
@@ -166,7 +166,7 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             mergeParaAttr(_para, para);
 
             if (attr) { // 给para的'\n'设置上
-                mergeSpanAttr(span, attr);
+                mergeSpanAttr(span, attr, true);
             }
             if (paraAttr) {
                 mergeParaAttr(_para, paraAttr);

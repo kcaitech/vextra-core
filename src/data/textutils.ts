@@ -65,12 +65,12 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     return false;
 }
 
-export function mergeSpanAttr(span: SpanAttr, attr: SpanAttr) {
+export function mergeSpanAttr(span: SpanAttr, attr: SpanAttr, isSetting?: boolean) {
     const attrIsSetter = attr instanceof SpanAttrSetter || attr instanceof ParaAttrSetter;
-    _mergeSpanAttr(span, attr, attrIsSetter);
+    _mergeSpanAttr(span, attr, attrIsSetter, isSetting);
 }
 
-function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean) {
+function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, isSetting?: boolean) {
     let changed = false;
     if (attr.color) {
         if (!span.color || !isColorEqual(attr.color, span.color)) {
@@ -173,7 +173,7 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean) {
         changed = true;
     }
 
-    if (attr.placeholder && attrIsSetter) {
+    if (attr.placeholder && (attrIsSetter || isSetting)) { // placeholder属性不拷贝，仅在首次插入时设置
         if (!span.placeholder) {
             span.placeholder = true;
             changed = true;
