@@ -74,7 +74,7 @@ export class Page extends GroupShape implements classes.Page {
     }
 
     getUsedFontNames(fontNames?: Set<string>): Set<string> {
-        const ret = fontNames ?? new Set<string>;
+        const ret = fontNames ?? new Set<string>();
         const stack: Shape[] = [this];
 
         while (stack.length > 0) {

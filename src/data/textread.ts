@@ -249,7 +249,7 @@ export function getTextFormat(shapetext: Text, index: number, length: number): A
 }
 
 export function getUsedFontNames(shapetext: Text, fontNames?: Set<string>): Set<string> {
-    const ret = fontNames ?? new Set<string>;
+    const ret = fontNames ?? new Set<string>();
 
     if (shapetext.attr && shapetext.attr.fontName) {
         ret.add(shapetext.attr.fontName);
