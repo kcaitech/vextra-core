@@ -32,7 +32,7 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
             const cH = cFrame.height * scaleY;
             setFrame(page, c, cX, cY, cW, cH, api);
         }
-        else if (c instanceof GroupShape && (c.type === ShapeType.Group)) {
+        else if (c instanceof GroupShape && c.type === ShapeType.Group) {
             // 需要摆正
             const boundingBox = c.boundingBox();
             const matrix = c.matrix2Parent();
@@ -190,6 +190,20 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
         changed = true;
     }
     return changed;
+}
+// 一次设置多个图形的frame
+function setShapesFrame(api: Api, page: Page, shapes: Shape[], scaleX: number, scaleY: number) {
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        // 1. 获取每个shape执行setFrame的参数，x, y, w, h
+        const frame = shape.frame;
+        // const x =
+        // const y =
+        const w = frame.width * scaleX;
+        const h = frame.height * scaleY;
+        // 2. 执行setFrame
+        // setFrame(page, shape, x, y, w, h, api);
+    }
 }
 
 export function translateTo(api: Api, page: Page, shape: Shape, x: number, y: number) {
@@ -463,11 +477,11 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     let h = frame.height - xy2.y;
     const savelt = matrix2parent.computeCoord(0, 0) // lt
     const m = matrix2parent;
-    h = -(m.m00 * (savelt.y - target.y) - m.m10 * (savelt.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01)
+    h = -(m.m00 * (savelt.y - target.y) - m.m10 * (savelt.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01);
     w = (target.x - savelt.x + m.m01 * -h) / m.m00;
     // 宽度将要成为负数
     if (w < 0) {
-        api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
+        api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
         if (shape.rotation) {
             api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }
@@ -475,7 +489,7 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     }
     // 宽度将要成为负数
     if (h < 0) {
-        api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical)
+        api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
         if (shape.rotation) {
             api.shapeModifyRotate(page, shape, 360 - shape.rotation);
         }

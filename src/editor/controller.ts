@@ -77,11 +77,10 @@ export enum Status {
 }
 // 单个图形处理(普通对象)
 function singleHdl(api: Api, page: Page, shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
-    if (actionType === 'rotate') {
+    if (actionType === 'rotate') { // 旋转操作
         const newDeg = (shape.rotation || 0) + (deg || 0);
-        // shape.rotate(newDeg);
         api.shapeModifyRotate(page, shape, newDeg);
-    } else {
+    } else { // 缩放操作
         if (type === CtrlElementType.RectLT) {
             adjustLT2(api, page, shape, end.x, end.y);
         } else if (type === CtrlElementType.RectRT) {
@@ -123,8 +122,9 @@ function singleHdl(api: Api, page: Page, shape: Shape, type: CtrlElementType, st
 }
 // 单个图形处理(编组对象)
 function singleHdl4Group(api: Api, page: Page, shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
-    singleHdl(api, page, shape, type, start, end, deg, actionType)
+    singleHdl(api, page, shape, type, start, end, deg, actionType);
 }
+function multiHdl(api: Api, page: Page, shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') { }
 // 处理异步编辑
 export class Controller {
     private __repo: CoopRepository;
@@ -164,7 +164,7 @@ export class Controller {
             shape.frame.y -= xy.y;
             api.shapeInsert(page, parent, shape, parent.childs.length)
             newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
-            this.__repo.transactCtx.fireNotify();
+            //this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
             return newShape
         }
@@ -181,7 +181,7 @@ export class Controller {
                 shape.frame.y -= xy.y;
                 api.shapeInsert(page, parent, shape, parent.childs.length)
                 newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
-                this.__repo.transactCtx.fireNotify();
+                //this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
             }
@@ -204,7 +204,7 @@ export class Controller {
 
                 api.shapeInsert(page, parent, shape, parent.childs.length)
                 newShape = parent.childs.at(-1);
-                this.__repo.transactCtx.fireNotify();
+                //this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
             }
@@ -246,7 +246,7 @@ export class Controller {
                 expandTo(api, savepage, newShape, width, height);
                 translateTo(api, savepage, newShape, x1.x, x1.y);
             }
-            this.__repo.transactCtx.fireNotify();
+            //this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const setFrameByWheel = (point: PageXY) => {
@@ -260,7 +260,7 @@ export class Controller {
             const width = x2.x - x1.x;
             expandTo(api, savepage, newShape, width, height);
             translateTo(api, savepage, newShape, x1.x, x1.y);
-            this.__repo.transactCtx.fireNotify();
+            //this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
 
@@ -289,21 +289,12 @@ export class Controller {
                     singleHdl(api, page, item, type, start, end, deg, actionType); // 普通对象处理
                 }
             }
-            this.__repo.transactCtx.fireNotify();
+            //this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const execute4multi = (shapes: Shape[], type: CtrlElementType, oldControllerFrame: ControllerFrame, newControllerFrame: ControllerFrame) => {
             status = Status.Pending;
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                const shape = shapes[i];
-                const { x, y, width, height } = shape.frame2Root();
-                const { x: ox, y: oy, width: ow, height: oh } = oldControllerFrame;
-                const { x: nx, y: ny, width: nw, height: nh } = newControllerFrame;
-                const ratio = { x: nw / ow, y: nh / oh };
-                expandTo(api, page, shape, width * ratio.x, height * ratio.y);
-                translateTo(api, page, shape, nx + (x - ox) * ratio.x, ny + (y - oy) * ratio.y);
-            }
-            this.__repo.transactCtx.fireNotify();
+            // todo
             status = Status.Fulfilled;
         }
         const close = () => {
@@ -314,13 +305,12 @@ export class Controller {
             }
             return undefined;
         }
-        return { execute, close, execute4multi }
+        return { execute, close, execute4multi };
     }
     public asyncLineEditor(shape: Shape): AsyncLineAction {
         if (this.__repo.transactCtx.transact) {
             this.__repo.rollback();
         }
-
         const api = this.__repo.start("action", {});
         const page = shape.getPage() as Page;
         let status: Status = Status.Pending;
@@ -337,7 +327,7 @@ export class Controller {
                     adjustRB2(api, page, shape, end.x, end.y);
                 }
             }
-            this.__repo.transactCtx.fireNotify();
+            //this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const close = () => {
@@ -363,7 +353,7 @@ export class Controller {
                 api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length)
                 translateTo(api, page, shape, x, y);
             }
-            this.__repo.transactCtx.fireNotify();
+            //this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const trans = (start: PageXY, end: PageXY) => {
@@ -372,7 +362,7 @@ export class Controller {
                 if (shapes[i].isLocked) continue; // 🔒住不让动
                 translate(api, page, shapes[i], end.x - start.x, end.y - start.y);
             }
-            this.__repo.transactCtx.fireNotify();
+            //this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const transByWheel = (dx: number, dy: number) => {
@@ -381,7 +371,7 @@ export class Controller {
                 if (shapes[i].isLocked) continue; // 🔒住不让动
                 translate(api, page, shapes[i], dx, dy);
             }
-            this.__repo.transactCtx.fireNotify();
+            //this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const close = () => {
