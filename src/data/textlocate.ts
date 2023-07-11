@@ -237,8 +237,8 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
             const span1 = line[line.length - 1];
             const graph0 = span0[0];
             const graph1 = span1[span1.length - 1];
-            const x = graph0.x;
-            const w = graph1.x + graph1.cw - x;
+            const x = graph0.x + line.x;
+            const w = graph1.x + graph1.cw - graph0.x;
 
             points.push(
                 { x, y }, // left top
@@ -258,10 +258,10 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
 
         const span = line[si];
         const graph = span[gi];
-        const minX = graph.x;
+        const minX = graph.x + line.x;
         const minY = layout.yOffset + p.yOffset + line.y; // + (line.lineHeight - graph.ch) / 2;
         const maxY = layout.yOffset + p.yOffset + line.y + line.lineHeight;
-        let maxX = graph.x + graph.cw;
+        let maxX = graph.x + graph.cw + line.x;
 
         for (let i = si, len = line.length; i < len && count > 0; i++) {
             const span = line[i];
@@ -269,7 +269,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
             const last = Math.min(span.length - 1, gi + count - 1);
             const graph = span[last]; // 同一span里的字符都有相同的大小属性,取最后一个就行
 
-            maxX = graph.x + graph.cw;
+            maxX = graph.x + graph.cw + line.x;
 
             // const y = line.y + (line.lineHeight - graph.ch) / 2;
             // if (minY > y) minY = y;
