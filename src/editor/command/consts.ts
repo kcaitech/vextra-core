@@ -72,9 +72,9 @@ export const TEXT_ATTR_ID = {
     textHorAlign: "textHorAlign",
     textMinLineheight: "textMinLineheight",
     textMaxLineheight: "textMaxLineheight",
-    bulletNumbers: "bulletNumbers",
+    bulletNumbersType: "bulletNumbersType",
     bulletNumbersStart: "bulletNumbersStart",
-    bulletNumbersInherit: "bulletNumbersInherit",
+    bulletNumbersBehavior: "bulletNumbersBehavior",
 }
 
 export const POINTS_ID = "points"

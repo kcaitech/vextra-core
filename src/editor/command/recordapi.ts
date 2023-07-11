@@ -15,12 +15,13 @@ import { GroupShape, RectRadius, Shape, TextShape, PathShape } from "../../data/
 import { exportShape, updateShapesFrame } from "./utils";
 import { Artboard } from "../../data/artboard";
 import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "../../data/style";
-import { SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
+import { BulletNumbers, SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { isColorEqual } from "../../data/utils";
+import { _travelTextPara } from "../../data/texttravel";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -690,14 +691,95 @@ export class Api {
             })
         });
     }
-    textModifyBulletNumbers(page: Page, shape: TextShape, bulletNumbers: BulletNumbersType | undefined, index: number, len: number) {
 
+    private _textModifyRemoveBulletNumbers(page: Page, shape: TextShape, index: number, len: number) {
+        const removeIndexs: number[] = [];
+        _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+            if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
+                removeIndexs.push(index - _index);
+                index += para.length;
+            }
+        })
+
+        for (let i = 0, len = removeIndexs.length; i < len; i++) {
+            const del = basicapi.deleteText(shape, removeIndexs[i] - i, 1);
+            if (del && del.length > 0) this.addCmd(TextCmdRemove.Make(page.id, shape.id, removeIndexs[i] - i, del.length, { type: "complex", text: exportText(del), length: del.length }))
+        }
     }
-    textModifyBulletNumbersStart(page: Page, shape: TextShape, start: number, index: number, len: number) {
 
+    private _textModifySetBulletNumbers(page: Page, shape: TextShape, type: BulletNumbersType, index: number, len: number) {
+        const insertIndexs: number[] = [];
+        _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+            if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
+                const cur = para.spans[0].bulletNumbers;
+                if (cur.type !== type) {
+                    // fmt
+                    const origin = cur.type;
+                    cur.type = type;
+                    this.addCmd(TextCmdModify.Make(page.id, shape.id, index - _index, 1, TEXT_ATTR_ID.bulletNumbersType, type, origin));
+                }
+            }
+            else {
+                // insert with format
+                insertIndexs.push(index - _index);
+            }
+            index += para.length;
+        });
+
+        for (let i = 0, len = insertIndexs.length; i < len; i++) {
+            const attr = new SpanAttr();
+            attr.bulletNumbers = new BulletNumbers(type);
+            basicapi.insertSimpleText(shape, '*', insertIndexs[i] + i, { attr });
+            this.addCmd(TextCmdInsert.Make(page.id, shape.id, insertIndexs[i] + i, 1, { type: "simple", text: '*', attr, length: 1 }))
+        }
+    }
+
+    textModifyBulletNumbers(page: Page, shape: TextShape, type: BulletNumbersType | undefined, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            if (type === undefined) {
+                this._textModifyRemoveBulletNumbers(page, shape, index, len);
+            }
+            else {
+                this._textModifySetBulletNumbers(page, shape, type, index, len);
+            }
+        });
+    }
+
+    textModifyBulletNumbersStart(page: Page, shape: TextShape, start: number, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+                if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
+                    const cur = para.spans[0].bulletNumbers;
+                    if (cur.offset !== start) {
+                        // fmt
+                        const origin = cur.offset;
+                        cur.offset = start;
+                        this.addCmd(TextCmdModify.Make(page.id, shape.id, index - _index, 1, TEXT_ATTR_ID.bulletNumbersStart, start, origin));
+                    }
+                }
+                index += para.length;
+            });
+        });
     }
     textModifyBulletNumbersInherit(page: Page, shape: TextShape, inherit: boolean, index: number, len: number) {
-
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const behavior = inherit ? BulletNumbersBehavior.Inherit : BulletNumbersBehavior.Renew;
+            _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+                if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
+                    const cur = para.spans[0].bulletNumbers;
+                    if (cur.behavior !== behavior) {
+                        // fmt
+                        const origin = cur.behavior;
+                        cur.behavior = behavior;
+                        this.addCmd(TextCmdModify.Make(page.id, shape.id, index - _index, 1, TEXT_ATTR_ID.bulletNumbersBehavior, behavior, origin));
+                    }
+                }
+                index += para.length;
+            });
+        });
     }
 
     textModifyHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign, index: number, len: number) {

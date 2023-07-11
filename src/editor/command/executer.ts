@@ -61,7 +61,8 @@ import {
     UnderlineType,
     StrikethroughType,
     BulletNumbersType,
-    TextTransformType
+    TextTransformType,
+    BulletNumbersBehavior
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -925,9 +926,9 @@ export class CMDExecuter {
                 api.textModifyStrikethrough(shape, value as StrikethroughType, op.start, op.length)
             }
         }
-        else if (attrId === TEXT_ATTR_ID.bulletNumbers) {
+        else if (attrId === TEXT_ATTR_ID.bulletNumbersType) {
             if (op.type === OpType.ArrayAttr) {
-                api.textModifyBulletNumbers(shape, value as BulletNumbersType, op.start, op.length)
+                api.textModifyBulletNumbersType(shape, value as BulletNumbersType, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.bulletNumbersStart) {
@@ -936,10 +937,10 @@ export class CMDExecuter {
                 api.textModifyBulletNumbersStart(shape, start, op.start, op.length)
             }
         }
-        else if (attrId === TEXT_ATTR_ID.bulletNumbersInherit) {
+        else if (attrId === TEXT_ATTR_ID.bulletNumbersBehavior) {
             if (op.type === OpType.ArrayAttr) {
-                const inherit = value && JSON.parse(value);
-                api.textModifyBulletNumbersInherit(shape, inherit, op.start, op.length)
+                const inherit = value as BulletNumbersBehavior;
+                api.textModifyBulletNumbersBehavior(shape, inherit, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.highlightColor) {
