@@ -12,7 +12,7 @@ export class TextShapeEditor extends ShapeEditor {
         return this.__shape as TextShape;
     }
 
-    public insertText(text: string, index: number, attr?: SpanAttr): boolean {
+    public insertText(text: string, index: number, attr?: SpanAttr): number {
         return this.insertText2(text, index, 0, attr);
     }
 
@@ -45,19 +45,76 @@ export class TextShapeEditor extends ShapeEditor {
         return 0;
     }
 
-    public insertText2(text: string, index: number, del: number, attr?: SpanAttr): boolean {
+    public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
         const api = this.__repo.start("insertText", {});
         try {
+            let count = text.length;
             if (del > 0) api.deleteText(this.__page, this.shape, index, del);
             api.insertSimpleText(this.__page, this.shape, index, text, attr);
             this.fixFrameByLayout(api);
             this.__repo.commit();
-            return true;
+            return count;
         } catch (error) {
             console.log(error)
             this.__repo.rollback();
         }
-        return false;
+        return 0;
+    }
+
+    public insertTextForNewLine(index: number, del: number, attr?: SpanAttr): number {
+        const text = '\n';
+        const api = this.__repo.start("insertTextForNewLine", {});
+        try {
+            let count = text.length;
+            if (del > 0) api.deleteText(this.__page, this.shape, index, del);
+            for (; ;) {
+                const paraInfo = this.shape.text.paraAt(index);
+                if (!paraInfo) {
+                    throw new Error("index wrong? not find para :" + index)
+                }
+                const paraText = paraInfo.para.text;
+                const span0 = paraInfo.para.spans[0];
+                // 空行回车
+                // indent - 1
+                // 没有indent时删除编号符号
+                // 再新增空行
+                if (paraText === '\n' || paraText === '*\n' && paraInfo.index === 1) {
+
+                    const indent = paraInfo.para.attr?.indent || 0;
+                    if (indent > 0) {
+                        // todo
+                        count = 0;
+                        break;
+                    }
+                    else if (paraText === '*\n' && span0.placeholder && span0.length === 1 && span0.bulletNumbers) {
+                        // api.deleteText(this.__page, this.shape, index - 1, 1);
+                        api.textModifyBulletNumbers(this.__page, this.shape, undefined, index, 0);
+                        count = -1;
+                        break;
+                    }
+                }
+
+                // 非空行回车
+                api.insertSimpleText(this.__page, this.shape, index, text, attr);
+                // 新增段落
+                if ((!attr || !attr.bulletNumbers) &&
+                    span0.placeholder &&
+                    span0.length === 1 &&
+                    span0.bulletNumbers &&
+                    span0.bulletNumbers.type !== BulletNumbersType.None) {
+                    api.textModifyBulletNumbers(this.__page, this.shape, span0.bulletNumbers.type, index, text.length + 1);
+                    count++;
+                }
+                break;
+            }
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return count;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return 0;
     }
 
     public insertFormatText(text: Text, index: number, del: number): boolean {
@@ -101,7 +158,7 @@ export class TextShapeEditor extends ShapeEditor {
     public composingInputEnd(text: string): boolean {
         this.__repo.rollback();
         this.__composingStarted = false;
-        return this.insertText2(text, this.__composingIndex, this.__composingDel, this.__composingAttr);
+        return !!this.insertText2(text, this.__composingIndex, this.__composingDel, this.__composingAttr);
     }
 
     public isInComposingInput() {

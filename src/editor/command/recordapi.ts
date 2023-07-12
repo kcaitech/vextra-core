@@ -725,6 +725,7 @@ export class Api {
             const del = basicapi.deleteText(shape, removeIndexs[i] - i, 1);
             if (del && del.length > 0) this.addCmd(TextCmdRemove.Make(page.id, shape.id, removeIndexs[i] - i, del.length, { type: "complex", text: exportText(del), length: del.length }))
         }
+        if (removeIndexs.length > 0) shape.text.reLayout();
     }
 
     private _textModifySetBulletNumbers(page: Page, shape: TextShape, type: BulletNumbersType, index: number, len: number) {
@@ -753,6 +754,7 @@ export class Api {
             basicapi.insertSimpleText(shape, '*', insertIndexs[i] + i, { attr });
             this.addCmd(TextCmdInsert.Make(page.id, shape.id, insertIndexs[i] + i, 1, { type: "simple", text: '*', attr, length: 1 }))
         }
+        if (insertIndexs.length > 0) shape.text.reLayout();
     }
 
     textModifyBulletNumbers(page: Page, shape: TextShape, type: BulletNumbersType | undefined, index: number, len: number) {
