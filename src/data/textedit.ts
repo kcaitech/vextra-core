@@ -77,12 +77,14 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
     let newParaIndex = text.indexOf('\n');
     if (newParaIndex < 0) {
         __insertText(para, text, index, attr);
+        if (paraAttr) mergeParaAttr(para, paraAttr);
         return;
     }
     while (newParaIndex >= 0) {
         if (newParaIndex > 0) {
             const t = text.slice(0, newParaIndex);
             __insertText(para, t, index, attr);
+            if (paraAttr) mergeParaAttr(para, paraAttr);
             index += newParaIndex + 1;
         }
         text = text.slice(newParaIndex + 1)
@@ -97,6 +99,7 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             if (attr) mergeSpanAttr(span, attr, true);
             const _spans = new BasicArray<Span>(span);
             const _para = new Para(_text, _spans);
+            mergeParaAttr(_para, para);
             if (paraAttr) mergeParaAttr(_para, paraAttr);
             paraArray.splice(paraIndex, 0, _para);
             paraIndex++;
@@ -132,8 +135,9 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
                 idx -= span.length;
             }
             spans[spans.length - 1].length++; // '\n'
-            if (paraAttr) mergeParaAttr(para, paraAttr);
             const _para = new Para(_text, _spans);
+            mergeParaAttr(_para, para);
+            if (paraAttr) mergeParaAttr(_para, paraAttr);
             paraArray.splice(paraIndex + 1, 0, _para);
             para = _para;
             index = 0;

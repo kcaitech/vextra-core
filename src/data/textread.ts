@@ -258,15 +258,30 @@ export function getTextFormat(shapetext: Text, index: number, length: number): A
         textfmt.textBehaviour = shapetext.attr.textBehaviour;
     }
 
-    let _paraAttr: ParaAttr | undefined;
+    // length === 0时，获取光标属性
+    if (length === 0) {
+        const ret = shapetext.alignParaRange(index, length);
+        if (ret.index !== index) {
+            --index;
+        }
+        length = 1;
+    }
+
+    let _para: Para | undefined;
+    let _paraIndex = 0;
     _travelTextPara(shapetext.paras, index, length,
         (paraArray, paraIndex, para, index, length) => {
+            _para = para;
+            _paraIndex = index;
             const attr = para.attr;
-            _paraAttr = attr;
             if (attr) _getParaFormat(attr, parafmt, shapetext.attr);
         },
         (span, index, length) => {
-            _getSpanFormat(span, spanfmt, _paraAttr, shapetext.attr);
+            _paraIndex += index;
+            const isNewLineSpan = span.length === 1 && _paraIndex === _para!.length - 1;
+            // 忽略回车属性
+            if (!isNewLineSpan || _para!.spans.length <= 1) _getSpanFormat(span, spanfmt, _para!.attr, shapetext.attr);
+            _paraIndex += length;
         })
 
     // merge

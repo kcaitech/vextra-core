@@ -241,14 +241,14 @@ export class Text extends Basic implements classes.Text {
      */
     alignParaRange(index: number, len: number): { index: number, len: number } {
         const ret = { index, len };
-        for (let i = 0, len = this.paras.length; i < len; i++) {
+        for (let i = 0, plen = this.paras.length; i < plen; i++) {
             const p = this.paras[i];
             if (index < p.length) {
                 ret.index -= index;
                 ret.len += index;
                 len += index;
 
-                for (let j = i; j < len; j++) {
+                for (let j = i; j < plen; j++) {
                     const p = this.paras[j];
                     if (len <= p.length) {
                         ret.len += p.length - len;
