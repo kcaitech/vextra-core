@@ -315,7 +315,7 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
         const ch = span.fontSize ?? 0;
         const charSpace = span.kerning ?? paraCharSpace;
 
-        if (cw + curX + charSpace <= endX) { // charSpace,兼容sketch
+        if (cw + curX <= endX) { // cw + curX + charSpace <= endX,兼容sketch
             if (!graphArray) {
                 graphArray = new GraphArray();
                 graphArray.attr = span;
