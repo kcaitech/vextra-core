@@ -5,7 +5,6 @@ import { GroupShape, PathShape, RectRadius, RectShape, Shape, ShapeType, TextSha
 import { Artboard } from "../../data/artboard";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 import { BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
-import { _travelTextPara } from "../../data/texttravel";
 
 export * from "./fill";
 export * from "./border";
@@ -412,37 +411,15 @@ export function textModifyItalic(shape: TextShape, italic: boolean, index: numbe
 }
 
 export function textModifyBulletNumbersType(shape: TextShape, type: BulletNumbersType, index: number, len: number) {
-    _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
-        if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
-            const cur = para.spans[0].bulletNumbers;
-            if (cur.type !== type) {
-                // fmt
-                cur.type = type;
-            }
-        }
-    })
+    shape.text.setBulletNumbersType(type, index, len);
 }
+
 export function textModifyBulletNumbersStart(shape: TextShape, start: number, index: number, len: number) {
-    _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
-        if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
-            const cur = para.spans[0].bulletNumbers;
-            if (cur.offset !== start) {
-                // fmt
-                cur.offset = start;
-            }
-        }
-    })
+    shape.text.setBulletNumbersStart(start, index, len);
 }
+
 export function textModifyBulletNumbersBehavior(shape: TextShape, behavior: BulletNumbersBehavior, index: number, len: number) {
-    _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
-        if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
-            const cur = para.spans[0].bulletNumbers;
-            if (cur.behavior !== behavior) {
-                // fmt
-                cur.behavior = behavior;
-            }
-        }
-    })
+    shape.text.setBulletNumbersBehavior(behavior, index, len);
 }
 
 export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {

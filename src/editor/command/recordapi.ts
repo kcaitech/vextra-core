@@ -728,16 +728,16 @@ export class Api {
     }
 
     private _textModifySetBulletNumbers(page: Page, shape: TextShape, type: BulletNumbersType, index: number, len: number) {
+
+        const modifyeds = shape.text.setBulletNumbersType(type, index, len);
+        modifyeds.forEach((m) => {
+            this.addCmd(TextCmdModify.Make(page.id, shape.id, m.index, 1, TEXT_ATTR_ID.bulletNumbersType, type, m.origin));
+        })
+
         const insertIndexs: number[] = [];
         _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
             if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
-                const cur = para.spans[0].bulletNumbers;
-                if (cur.type !== type) {
-                    // fmt
-                    const origin = cur.type;
-                    cur.type = type;
-                    this.addCmd(TextCmdModify.Make(page.id, shape.id, index - _index, 1, TEXT_ATTR_ID.bulletNumbersType, type, origin));
-                }
+                //
             }
             else {
                 // insert with format
@@ -758,6 +758,10 @@ export class Api {
     textModifyBulletNumbers(page: Page, shape: TextShape, type: BulletNumbersType | undefined, index: number, len: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
+            const alignRange = shape.text.alignParaRange(index, len);
+            index = alignRange.index;
+            len = alignRange.len;
+
             if (type === undefined || type === BulletNumbersType.None) {
                 this._textModifyRemoveBulletNumbers(page, shape, index, len);
             }
@@ -770,36 +774,20 @@ export class Api {
     textModifyBulletNumbersStart(page: Page, shape: TextShape, start: number, index: number, len: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
-                if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
-                    const cur = para.spans[0].bulletNumbers;
-                    if (cur.offset !== start) {
-                        // fmt
-                        const origin = cur.offset;
-                        cur.offset = start;
-                        this.addCmd(TextCmdModify.Make(page.id, shape.id, index - _index, 1, TEXT_ATTR_ID.bulletNumbersStart, start, origin));
-                    }
-                }
-                index += para.length;
-            });
+            const modifyeds = shape.text.setBulletNumbersStart(start, index, len);
+            modifyeds.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, m.index, 1, TEXT_ATTR_ID.bulletNumbersStart, start, m.origin));
+            })
         });
     }
     textModifyBulletNumbersInherit(page: Page, shape: TextShape, inherit: boolean, index: number, len: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const behavior = inherit ? BulletNumbersBehavior.Inherit : BulletNumbersBehavior.Renew;
-            _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
-                if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
-                    const cur = para.spans[0].bulletNumbers;
-                    if (cur.behavior !== behavior) {
-                        // fmt
-                        const origin = cur.behavior;
-                        cur.behavior = behavior;
-                        this.addCmd(TextCmdModify.Make(page.id, shape.id, index - _index, 1, TEXT_ATTR_ID.bulletNumbersBehavior, behavior, origin));
-                    }
-                }
-                index += para.length;
-            });
+            const modifyeds = shape.text.setBulletNumbersBehavior(behavior, index, len);
+            modifyeds.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, m.index, 1, TEXT_ATTR_ID.bulletNumbersBehavior, behavior, m.origin));
+            })
         });
     }
 
