@@ -4,7 +4,7 @@ import { toLetterNumber, toRomanNumber } from './textlayoutbn';
 const assert = chai.assert;
 
 test("toLetterNumber", () => {
-    assert.equal(toLetterNumber(1), 'a');
+    assert.equal(toLetterNumber(0), 'a');
     assert.equal(toLetterNumber(25), 'z');
     assert.equal(toLetterNumber(26), 'aa');
     assert.equal(toLetterNumber(27), 'ab');
