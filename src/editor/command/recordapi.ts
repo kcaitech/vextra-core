@@ -914,35 +914,12 @@ export class Api {
                 const alignRange = shape.text.alignParaRange(index, len);
                 index = alignRange.index;
                 len = alignRange.len;
-                const ret1 = basicapi.textModifyParaTransfrom(shape, transform, index, len);
-                ret1.forEach((m) => {
-                    if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraTransform, transform, m.transform));
-                    index += m.length;
-                })
             }
-            else if (transform !== undefined) {
-                const ret1 = basicapi.textModifySpanTransfrom(shape, transform, index, len);
-                ret1.forEach((m) => {
-                    if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanTransform, transform, m.transform));
-                    index += m.length;
-                })
-            }
-            else { // undefined
-                const ret1 = basicapi.textModifySpanTransfrom(shape, transform, index, len);
-                ret1.forEach((m) => {
-                    if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanTransform, transform, m.transform));
-                    index += m.length;
-                })
-
-                const alignRange = shape.text.alignParaRange(index, len);
-                index = alignRange.index;
-                len = alignRange.len;
-                const ret2 = basicapi.textModifyParaTransfrom(shape, transform, index, len);
-                ret2.forEach((m) => {
-                    if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraTransform, transform, m.transform));
-                    index += m.length;
-                })
-            }
+            const ret1 = basicapi.textModifySpanTransfrom(shape, transform, index, len);
+            ret1.forEach((m) => {
+                if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanTransform, transform, m.transform));
+                index += m.length;
+            })
         })
     }
 }
