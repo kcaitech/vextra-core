@@ -1,9 +1,11 @@
-import { Text, TextBehaviour, TextTransformType } from "./text";
+import { BulletNumbersBehavior, BulletNumbersType, Text, TextBehaviour, TextTransformType } from "./text";
 import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
 import { BasicArray } from "./basic"
+import { getDisordedChars, getOrderedChars, layoutBulletNumber } from "./textlayoutbn";
+import { transformText } from "./textlayouttransform";
 
 export interface IGraphy {
-    char: string,
+    char: string, // 可能是多个字符，在项目符号编号中
     metrics: TextMetrics | undefined,
     cw: number,
     ch: number,
@@ -30,13 +32,27 @@ export class Line extends Array<GraphArray> {
     public alignment: TextHorAlign = TextHorAlign.Left;
     public layoutWidth: number = 0;
 }
-export type LineArray = Array<Line>
+export class LineArray extends Array<Line> {
+    public bulletNumbers?: BulletNumbersLayout;
+}
+
+export class BulletNumbersLayout {
+    public index: number = 0;
+    public level: number = 0;
+    public text: string = '';
+    public type: BulletNumbersType = BulletNumbersType.None;
+    public graph: IGraphy;
+    constructor(graph: IGraphy) {
+        this.graph = graph;
+    }
+}
 
 export class ParaLayout extends Array<Line> {
     public paraHeight: number = 0;
     public graphCount: number = 0;
     public yOffset: number = 0;
     public paraWidth: number = 0;
+    public bulletNumbers?: BulletNumbersLayout;
 }
 
 export class TextLayout {
@@ -155,10 +171,6 @@ function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
     line.layoutWidth = width;
 }
 
-export function adjustLinesVertical(lines: LineArray, align: TextVerAlign) {
-
-}
-
 export type MeasureFun = (code: number, font: string) => TextMetrics | undefined;
 
 export function isNewLineCharCode(code: number) {
@@ -181,36 +193,7 @@ export function isNewLineCharCode(code: number) {
     return false;
 }
 
-function toUpperCase(char: string) {
-    const code = char.charCodeAt(0);
-    if (code >= 0x61 && code <= 0x7A) {
-        return String.fromCharCode(code - 0x20);
-    }
-    return char;
-}
-function toLowerCase(char: string) {
-    const code = char.charCodeAt(0);
-    if (code >= 0x41 && code <= 0x5A) {
-        return String.fromCharCode(code + 0x20);
-    }
-    return char;
-}
-function transform(text: string, i: number, type: TextTransformType | undefined) {
-    const char = text.charAt(i);
-    if (!type) char;
-    switch (type) {
-        case TextTransformType.Lowercase: return toLowerCase(char);
-        case TextTransformType.Uppercase: return toUpperCase(char);
-        case TextTransformType.UppercaseFirst: {
-            if (i === 0) {
-                return toUpperCase(char);
-            }
-        }
-    }
-    return char;
-}
-
-export function layoutLines(_text: Text, para: Para, width: number, measure: MeasureFun): LineArray {
+export function layoutLines(_text: Text, para: Para, width: number, measure: MeasureFun, preBulletNumbers?: BulletNumbersLayout): LineArray {
     let spans = para.spans;
     let spansCount = spans.length;
     if (spansCount === 0) {
@@ -307,13 +290,47 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
             // }
             continue;
         }
+
+        const charSpace = span.kerning ?? paraCharSpace;
+        if (spanIdx === 0 &&
+            c === 0x2A &&
+            span.placeholder &&
+            span.length === 1 &&
+            span.bulletNumbers) { // '*' 项目符号编号
+            const layout = layoutBulletNumber(para, span, span.bulletNumbers, preBulletNumbers, measure);
+            layout.graph.x = curX;
+
+            if (!graphArray) {
+                graphArray = new GraphArray();
+                graphArray.attr = span;
+            }
+
+            graphArray.push(layout.graph);
+            curX += layout.graph.cw + charSpace;
+            textIdx++;
+            spanOffset++;
+            if (spanOffset >= span.length) {
+                spanOffset = 0;
+                spanIdx++;
+                line.push(graphArray);
+                line.graphCount += graphArray.length;
+                graphArray = undefined;
+            }
+            line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
+
+            lineArray.bulletNumbers = layout;
+            continue;
+        }
+
+        // todo tab 不对
+        // indent 未处理
         const transformType = span.transform ?? defaultTransform;
-        const char = transform(text, textIdx, transformType);
+        const char = transformText(text.charAt(textIdx), textIdx === 0 || (textIdx === 1 && !!lineArray.bulletNumbers), transformType);
 
         const m = measure(char.charCodeAt(0), font);
         const cw = m?.width ?? 0;
         const ch = span.fontSize ?? 0;
-        const charSpace = span.kerning ?? paraCharSpace;
+
 
         if (cw + curX <= endX) { // cw + curX + charSpace <= endX,兼容sketch
             if (!graphArray) {
@@ -422,9 +439,9 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
     return lineArray;
 }
 
-export function layoutPara(text: Text, para: Para, layoutWidth: number, measure: MeasureFun) {
+export function layoutPara(text: Text, para: Para, layoutWidth: number, measure: MeasureFun, preBulletNumbers?: BulletNumbersLayout) {
     let paraWidth = 0;
-    const layouts = layoutLines(text, para, layoutWidth, measure);
+    const layouts = layoutLines(text, para, layoutWidth, measure, preBulletNumbers);
     const pAttr = para.attr;
     let paraHeight = 0;
     let graphCount = 0;
@@ -464,6 +481,7 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, measure:
     paraLayout.paraHeight = paraHeight;
     paraLayout.graphCount = graphCount;
     paraLayout.paraWidth = paraWidth;
+    paraLayout.bulletNumbers = layouts.bulletNumbers;
 
     return paraLayout;
 }
@@ -481,9 +499,10 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
     const paras: ParaLayout[] = []
     let contentHeight = 0;
     let contentWidth = 0;
+    let preBulletNumbers: BulletNumbersLayout | undefined;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
         if (i > 0) {
             const prePara = text.paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -493,6 +512,7 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
         paras.push(paraLayout);
+        if (paraLayout.bulletNumbers) preBulletNumbers = paraLayout.bulletNumbers;
     }
 
     // hor align

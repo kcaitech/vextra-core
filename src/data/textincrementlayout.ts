@@ -1,7 +1,7 @@
 // 文本编辑时的增量排版
 
 import { ParaAttrSetter, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "./classes";
-import { MeasureFun, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
+import { BulletNumbersLayout, MeasureFun, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
 
 export function layoutAtInsert(text: Text,
     layoutWidth: number,
@@ -18,6 +18,7 @@ export function layoutAtInsert(text: Text,
     let contentHeight = 0;
     let contentWidth = 0;
     let i = 0;
+    let preBulletNumbers: BulletNumbersLayout | undefined;
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
@@ -31,13 +32,14 @@ export function layoutAtInsert(text: Text,
         }
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
+        if (paraLayout.bulletNumbers) preBulletNumbers = paraLayout.bulletNumbers;
     }
 
     // todo 先做到段落重排
     const needUpdateCount = paras.length - parasLayout.length + 1;
     for (let j = 0; i < parascount && j < needUpdateCount; j++, i++) {
         const para = paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -51,6 +53,7 @@ export function layoutAtInsert(text: Text,
         } else {
             parasLayout.splice(i, 0, paraLayout);
         }
+        if (paraLayout.bulletNumbers) preBulletNumbers = paraLayout.bulletNumbers;
     }
 
     // 继续更新para
@@ -118,6 +121,7 @@ export function layoutAtDelete(text: Text,
     let contentHeight = 0;
     let contentWidth = 0;
     let i = 0;
+    let preBulletNumbers: BulletNumbersLayout | undefined;
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
@@ -131,13 +135,14 @@ export function layoutAtDelete(text: Text,
         }
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
+        if (paraLayout.bulletNumbers) preBulletNumbers = paraLayout.bulletNumbers;
     }
 
     // todo 先做到段落重排
     const needUpdateCount = parasLayout.length - paras.length + 1;
     if (i < parascount && needUpdateCount > 0) {
         const para = paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -151,6 +156,7 @@ export function layoutAtDelete(text: Text,
         for (let j = 1; j < needUpdateCount; j++) {
             parasLayout.splice(i, 1);
         }
+        if (paraLayout.bulletNumbers) preBulletNumbers = paraLayout.bulletNumbers;
     }
 
     // 继续更新para
@@ -219,6 +225,7 @@ export function layoutAtFormat(text: Text,
     let contentHeight = 0;
     let contentWidth = 0;
     let i = 0;
+    let preBulletNumbers: BulletNumbersLayout | undefined;
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
@@ -232,6 +239,7 @@ export function layoutAtFormat(text: Text,
         }
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
+        if (paraLayout.bulletNumbers) preBulletNumbers = paraLayout.bulletNumbers;
     }
 
     // todo 先做到段落重排
@@ -239,7 +247,7 @@ export function layoutAtFormat(text: Text,
     len += index;
     for (let len2 = parasLayout.length; len >= 0 && i < parascount && i < len2; i++) {
         const para = paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -250,6 +258,7 @@ export function layoutAtFormat(text: Text,
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
         parasLayout.splice(i, 1, paraLayout);
         len -= para.length;
+        if (paraLayout.bulletNumbers) preBulletNumbers = paraLayout.bulletNumbers;
     }
 
     // 继续更新para

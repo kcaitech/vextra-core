@@ -1,4 +1,4 @@
-import { BulletNumbers, Color, StrikethroughType, TextBehaviour, TextHorAlign, TextOrientation, TextTransformType, TextVerAlign, UnderlineType } from "./baseclasses";
+import { BulletNumbers, BulletNumbersBehavior, BulletNumbersType, Color, StrikethroughType, TextBehaviour, TextHorAlign, TextOrientation, TextTransformType, TextVerAlign, UnderlineType } from "./baseclasses";
 import { Basic, BasicArray } from "./basic";
 
 export {
@@ -14,7 +14,7 @@ export {
     TextTransformType
 } from "./baseclasses";
 import * as classes from "./baseclasses"
-import { deleteText, formatText, insertComplexText, insertSimpleText } from "./textedit";
+import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType } from "./textedit";
 import { MeasureFun, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
@@ -447,5 +447,23 @@ export class Text extends Basic implements classes.Text {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.transform = transform;
         this.reLayout(); // todo
+    }
+
+    setBulletNumbersType(type: BulletNumbersType, index: number, len: number) {
+        const ret = setBulletNumbersType(this, type, index, len);
+        this.reLayout(); // todo
+        return ret;
+    }
+
+    setBulletNumbersStart(start: number, index: number, len: number) {
+        const ret = setBulletNumbersStart(this, start, index, len);
+        this.reLayout(); // todo
+        return ret;
+    }
+
+    setBulletNumbersBehavior(behavior: BulletNumbersBehavior, index: number, len: number) {
+        const ret = setBulletNumbersBehavior(this, behavior, index, len);
+        this.reLayout(); // todo
+        return ret;
     }
 }
