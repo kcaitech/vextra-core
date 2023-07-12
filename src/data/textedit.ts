@@ -85,7 +85,7 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             const t = text.slice(0, newParaIndex);
             __insertText(para, t, index, attr);
             if (paraAttr) mergeParaAttr(para, paraAttr);
-            index += newParaIndex + 1;
+            index += newParaIndex;
         }
         text = text.slice(newParaIndex + 1)
         if (index === 0) {
