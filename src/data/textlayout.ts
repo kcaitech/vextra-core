@@ -1,7 +1,7 @@
-import { BulletNumbersBehavior, BulletNumbersType, Text, TextBehaviour, TextTransformType } from "./text";
+import { BulletNumbersType, Text, TextBehaviour } from "./text";
 import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
 import { BasicArray } from "./basic"
-import { getDisordedChars, getOrderedChars, layoutBulletNumber } from "./textlayoutbn";
+import { layoutBulletNumber } from "./textlayoutbn";
 import { transformText } from "./textlayouttransform";
 
 export interface IGraphy {

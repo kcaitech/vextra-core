@@ -143,7 +143,16 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
                 }
                 idx -= span.length;
             }
-            spans[spans.length - 1].length++; // '\n'
+            const lastSpan = spans[spans.length - 1];
+            if (!lastSpan.placeholder) {
+                lastSpan.length++;// '\n'
+            }
+            else {
+                const _span = new Span(1);
+                mergeSpanAttr(_span, lastSpan);
+                spans.push(_span);
+            }
+
             const _para = new Para(_text, _spans);
             mergeParaAttr(_para, para);
             if (paraAttr) mergeParaAttr(_para, paraAttr);

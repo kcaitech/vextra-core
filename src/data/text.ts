@@ -347,7 +347,7 @@ export class Text extends Basic implements classes.Text {
         this.__frameHeight = h;
     }
 
-    private reLayout() {
+    reLayout() {
         this.__layout = undefined;
     }
 
