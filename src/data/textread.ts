@@ -69,7 +69,7 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
 
     const highlight = attr.highlight ?? (paraAttr?.highlight) ?? (textAttr?.highlight) ?? _NullColor;
     if (attrGetter.highlight === undefined) {
-        attrGetter.highlight = color;
+        attrGetter.highlight = highlight;
     }
     else if (highlight === attrGetter.highlight) {
         // 同时为_NullColor
