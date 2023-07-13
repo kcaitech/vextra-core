@@ -278,8 +278,8 @@ export class Text extends Basic implements classes.Text {
     getDefaultTextFormat(): TextAttr | undefined {
         return this.attr;
     }
-    getTextFormat(index: number, count: number): AttrGetter {
-        return getTextFormat(this, index, count);
+    getTextFormat(index: number, count: number, cachedAttr?: SpanAttrSetter): AttrGetter {
+        return getTextFormat(this, index, count, cachedAttr);
     }
     getUsedFontNames(fontNames?: Set<string>): Set<string> {
         return getUsedFontNames(this, fontNames);

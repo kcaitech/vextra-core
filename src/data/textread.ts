@@ -1,6 +1,6 @@
 import { BasicArray } from "./basic";
 import { Color } from "./classes";
-import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType, TextTransformType, TextAttr, TextHorAlign } from "./text";
+import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType, TextTransformType, TextAttr, TextHorAlign, SpanAttrSetter } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { isColorEqual } from "./utils";
@@ -246,7 +246,60 @@ function _mergeParaAttr(from: AttrGetter, to: AttrGetter) {
     else if (from.paraSpacing !== undefined) to.paraSpacing = from.paraSpacing;
 }
 
-export function getTextFormat(shapetext: Text, index: number, length: number): AttrGetter {
+function coverFormat(fmt: AttrGetter, attr: SpanAttrSetter) {
+    // fontNameIsSet: boolean = false;
+    // fontSizeIsSet: boolean = false;
+    // colorIsSet: boolean = false;
+    // highlightIsSet: boolean = false;
+    // boldIsSet: boolean = false;
+    // italicIsSet: boolean = false;
+    // underlineIsSet: boolean = false;
+    // strikethroughIsSet: boolean = false;
+    // kerningIsSet: boolean = false;
+    // transformIsSet: boolean = false;
+    if (attr.fontNameIsSet) {
+        fmt.fontName = attr.fontName;
+        fmt.fontNameIsMulti = false;
+    }
+    if (attr.fontSizeIsSet) {
+        fmt.fontSize = attr.fontSize;
+        fmt.fontSizeIsMulti = false;
+    }
+    if (attr.colorIsSet) {
+        fmt.color = attr.color;
+        fmt.colorIsMulti = false;
+    }
+    if (attr.highlightIsSet) {
+        fmt.highlight = attr.highlight;
+        fmt.highlightIsMulti = false;
+    }
+    if (attr.boldIsSet) {
+        fmt.bold = attr.bold;
+        fmt.boldIsMulti = false;
+    }
+    if (attr.italicIsSet) {
+        fmt.italic = attr.italic;
+        fmt.italicIsMulti = false;
+    }
+    if (attr.underlineIsSet) {
+        fmt.underline = attr.underline;
+        fmt.underlineIsMulti = false;
+    }
+    if (attr.strikethroughIsSet) {
+        fmt.strikethrough = attr.strikethrough;
+        fmt.strikethroughIsMulti = false;
+    }
+    if (attr.kerningIsSet) {
+        fmt.kerning = attr.kerning;
+        fmt.kerningIsMulti = false;
+    }
+    if (attr.transformIsSet) {
+        fmt.transform = attr.transform;
+        fmt.transformIsMulti = false;
+    }
+}
+
+export function getTextFormat(shapetext: Text, index: number, length: number, cachedAttr?: SpanAttrSetter): AttrGetter {
     const spanfmt = new AttrGetter();
     const parafmt = new AttrGetter();
     const textfmt = new AttrGetter();
@@ -265,6 +318,8 @@ export function getTextFormat(shapetext: Text, index: number, length: number): A
             --index;
         }
         length = 1;
+    } else {
+        cachedAttr = undefined; // 仅光标有效
     }
 
     let _para: Para | undefined;
@@ -293,6 +348,10 @@ export function getTextFormat(shapetext: Text, index: number, length: number): A
     }
     if (textfmt.highlight === _NullColor) {
         textfmt.highlight = undefined;
+    }
+
+    if (cachedAttr) {
+        coverFormat(textfmt, cachedAttr);
     }
 
     return textfmt;
