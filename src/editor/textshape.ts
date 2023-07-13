@@ -1,15 +1,26 @@
-import { BulletNumbersType, Color, Page, SpanAttr, StrikethroughType, Text, TextBehaviour, TextHorAlign, TextShape, TextTransformType, TextVerAlign, UnderlineType } from "../data/classes";
+import { BulletNumbersType, Color, Page, SpanAttr, SpanAttrSetter, StrikethroughType, Text, TextBehaviour, TextHorAlign, TextShape, TextTransformType, TextVerAlign, UnderlineType } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTextShapeFrameByLayout } from "./utils";
 
 export class TextShapeEditor extends ShapeEditor {
+
+    private __cachedSpanAttr?: SpanAttrSetter;
+
     constructor(shape: TextShape, page: Page, repo: CoopRepository) {
         super(shape, page, repo);
     }
     get shape(): TextShape {
         return this.__shape as TextShape;
+    }
+
+    public resetCachedSpanAttr() {
+        this.__cachedSpanAttr = undefined;
+    }
+
+    public getCachedSpanAttr() {
+        return this.__cachedSpanAttr;
     }
 
     public insertText(text: string, index: number, attr?: SpanAttr): number {
@@ -46,6 +57,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
+        attr = attr ?? this.__cachedSpanAttr;
         const api = this.__repo.start("insertText", {});
         try {
             let count = text.length;
@@ -58,10 +70,12 @@ export class TextShapeEditor extends ShapeEditor {
             console.log(error)
             this.__repo.rollback();
         }
+        this.resetCachedSpanAttr();
         return 0;
     }
 
     public insertTextForNewLine(index: number, del: number, attr?: SpanAttr): number {
+        attr = attr ?? this.__cachedSpanAttr;
         const text = '\n';
         const api = this.__repo.start("insertTextForNewLine", {});
         try {
@@ -103,6 +117,7 @@ export class TextShapeEditor extends ShapeEditor {
                     span0.bulletNumbers &&
                     span0.bulletNumbers.type !== BulletNumbersType.None) {
                     api.textModifyBulletNumbers(this.__page, this.shape, span0.bulletNumbers.type, index, text.length + 1);
+                    // if (span0.kerning) api.textModifyKerning()
                     count++;
                 }
                 break;
@@ -114,6 +129,7 @@ export class TextShapeEditor extends ShapeEditor {
             console.log(error)
             this.__repo.rollback();
         }
+        this.resetCachedSpanAttr();
         return 0;
     }
 
@@ -203,6 +219,12 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextColor(index: number, len: number, color: Color | undefined) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.color = color;
+            this.__cachedSpanAttr.colorIsSet = true;
+            return;
+        }
         const api = this.__repo.start("setTextColor", {});
         try {
             api.textModifyColor(this.__page, this.shape, index, len, color)
@@ -215,6 +237,12 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextHighlightColor(index: number, len: number, color: Color | undefined) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.highlight = color;
+            this.__cachedSpanAttr.highlightIsSet = true;
+            return;
+        }
         const api = this.__repo.start("setTextColor", {});
         try {
             api.textModifyHighlightColor(this.__page, this.shape, index, len, color)
@@ -227,6 +255,12 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextFontName(index: number, len: number, fontName: string) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.fontName = fontName;
+            this.__cachedSpanAttr.fontNameIsSet = true;
+            return;
+        }
         const api = this.__repo.start("setTextFontName", {});
         try {
             api.textModifyFontName(this.__page, this.shape, index, len, fontName)
@@ -240,6 +274,12 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextFontSize(index: number, len: number, fontSize: number) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.fontSize = fontSize;
+            this.__cachedSpanAttr.fontSizeIsSet = true;
+            return;
+        }
         const api = this.__repo.start("setTextFontSize", {});
         try {
             api.textModifyFontSize(this.__page, this.shape, index, len, fontSize)
@@ -443,6 +483,12 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextUnderline(underline: boolean, index: number, len: number) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.underline = underline ? UnderlineType.Single : undefined;
+            this.__cachedSpanAttr.underlineIsSet = true;
+            return;
+        }
         const api = this.__repo.start("setTextUnderline", {});
         try {
             api.textModifyUnderline(this.__page, this.shape, underline ? UnderlineType.Single : undefined, index, len)
@@ -469,6 +515,12 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextStrikethrough(strikethrough: boolean, index: number, len: number) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.strikethrough = strikethrough ? StrikethroughType.Single : undefined;
+            this.__cachedSpanAttr.strikethroughIsSet = true;
+            return;
+        }
         const api = this.__repo.start("setTextStrikethrough", {});
         try {
             api.textModifyStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined, index, len)
@@ -494,6 +546,12 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextBold(bold: boolean, index: number, len: number) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.bold = bold;
+            this.__cachedSpanAttr.boldIsSet = true;
+            return;
+        }
         const api = this.__repo.start("setTextBold", {});
         try {
             api.textModifyBold(this.__page, this.shape, bold, index, len)
@@ -518,6 +576,12 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextItalic(italic: boolean, index: number, len: number) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.italic = italic;
+            this.__cachedSpanAttr.italicIsSet = true;
+            return;
+        }
         const api = this.__repo.start("setTextItalic", {});
         try {
             api.textModifyItalic(this.__page, this.shape, italic, index, len)
@@ -575,6 +639,12 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextTransform(transform: TextTransformType | undefined, index: number, len: number) {
+        if (len === 0 && transform !== TextTransformType.UppercaseFirst) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.transform = transform;
+            this.__cachedSpanAttr.transformIsSet = true;
+            return;
+        }
         const api = this.__repo.start("setTextTransform", {});
         try {
             api.textModifyTransform(this.__page, this.shape, transform, index, len);
