@@ -164,7 +164,7 @@ export class Controller {
             shape.frame.y -= xy.y;
             api.shapeInsert(page, parent, shape, parent.childs.length)
             newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
-            //this.__repo.transactCtx.fireNotify();
+            this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
             return newShape
         }
@@ -181,7 +181,7 @@ export class Controller {
                 shape.frame.y -= xy.y;
                 api.shapeInsert(page, parent, shape, parent.childs.length)
                 newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
-                //this.__repo.transactCtx.fireNotify();
+                this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
             }
@@ -204,7 +204,7 @@ export class Controller {
 
                 api.shapeInsert(page, parent, shape, parent.childs.length)
                 newShape = parent.childs.at(-1);
-                //this.__repo.transactCtx.fireNotify();
+                this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
             }
@@ -246,7 +246,7 @@ export class Controller {
                 expandTo(api, savepage, newShape, width, height);
                 translateTo(api, savepage, newShape, x1.x, x1.y);
             }
-            //this.__repo.transactCtx.fireNotify();
+            this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const setFrameByWheel = (point: PageXY) => {
@@ -260,7 +260,7 @@ export class Controller {
             const width = x2.x - x1.x;
             expandTo(api, savepage, newShape, width, height);
             translateTo(api, savepage, newShape, x1.x, x1.y);
-            //this.__repo.transactCtx.fireNotify();
+            this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
 
@@ -289,7 +289,7 @@ export class Controller {
                     singleHdl(api, page, item, type, start, end, deg, actionType); // 普通对象处理
                 }
             }
-            //this.__repo.transactCtx.fireNotify();
+            this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const execute4multi = (shapes: Shape[], type: CtrlElementType, oldControllerFrame: ControllerFrame, newControllerFrame: ControllerFrame) => {
@@ -327,7 +327,7 @@ export class Controller {
                     adjustRB2(api, page, shape, end.x, end.y);
                 }
             }
-            //this.__repo.transactCtx.fireNotify();
+            this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const close = () => {
@@ -353,7 +353,7 @@ export class Controller {
                 api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length)
                 translateTo(api, page, shape, x, y);
             }
-            //this.__repo.transactCtx.fireNotify();
+            this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const trans = (start: PageXY, end: PageXY) => {
@@ -362,7 +362,7 @@ export class Controller {
                 if (shapes[i].isLocked) continue; // 🔒住不让动
                 translate(api, page, shapes[i], end.x - start.x, end.y - start.y);
             }
-            //this.__repo.transactCtx.fireNotify();
+            this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const transByWheel = (dx: number, dy: number) => {
@@ -371,7 +371,7 @@ export class Controller {
                 if (shapes[i].isLocked) continue; // 🔒住不让动
                 translate(api, page, shapes[i], dx, dy);
             }
-            //this.__repo.transactCtx.fireNotify();
+            this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const close = () => {

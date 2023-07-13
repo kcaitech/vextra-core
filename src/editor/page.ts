@@ -892,6 +892,38 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    toggleShapesVisible(shapes: Shape[]) {
+        try {
+            const api = this.__repo.start('setShapesVisible', {});
+            for (let i = 0; i < shapes.length; i++) {
+                let shape: Shape | undefined = shapes[i];
+                if (shape.type === ShapeType.Group) {
+                    shape = this.__page.shapes.get(shape.id)
+                }
+                if (!shape) continue;
+                api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    toggleShapesLock(shapes: Shape[]) {
+        try {
+            const api = this.__repo.start('setShapesLocked', {});
+            for (let i = 0; i < shapes.length; i++) {
+                let shape: Shape | undefined = shapes[i];
+                if (shape.type === ShapeType.Group) {
+                    shape = this.__page.shapes.get(shape.id)
+                }
+                if (!shape) continue;
+                api.shapeModifyLock(this.__page, shape, !shape.isLocked);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
     editor4Shape(shape: Shape): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo);
     }
