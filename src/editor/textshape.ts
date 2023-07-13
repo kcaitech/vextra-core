@@ -118,10 +118,13 @@ export class TextShapeEditor extends ShapeEditor {
                                 if (indent > curIndent) continue;
 
                                 const bulletNumbers = p.spans[0].bulletNumbers;
+                                if (bulletNumbers.type === BulletNumbersType.None) {
+                                    continue;
+                                }
                                 if (bulletNumbers.type !== BulletNumbersType.Ordered1Ai) {
                                     break;
                                 }
-                                if (bulletNumbers.behavior !== BulletNumbersBehavior.Inherit) {
+                                if (bulletNumbers.behavior && bulletNumbers.behavior !== BulletNumbersBehavior.Inherit) {
                                     curIdx += bulletNumbers.offset || 0;
                                     curIdx++;
                                     break;
