@@ -429,6 +429,12 @@ export class TextShapeEditor extends ShapeEditor {
     }
     // 字间距 段属性
     public setCharSpacing(kerning: number, index: number, len: number) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.kerning = kerning;
+            this.__cachedSpanAttr.kerningIsSet = true;
+            return;
+        }
         const api = this.__repo.start("setCharSpace", {});
         try {
             api.textModifyKerning(this.__page, this.shape, kerning, index, len)
