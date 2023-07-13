@@ -97,7 +97,7 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
     if (bulletNumbers.type === BulletNumbersType.Disorded) {
         text = getDisordedChars(indent);
 
-        const padding = 4;
+        const padding = 2;
         const ch = span.fontSize || 0;
         const cw = span.fontSize ? span.fontSize * 0.6 : 10;
         graph = {
