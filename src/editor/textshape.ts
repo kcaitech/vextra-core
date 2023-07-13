@@ -1,4 +1,4 @@
-import { BulletNumbersType, Color, Page, SpanAttr, SpanAttrSetter, StrikethroughType, Text, TextBehaviour, TextHorAlign, TextShape, TextTransformType, TextVerAlign, UnderlineType } from "../data/classes";
+import { BulletNumbersBehavior, BulletNumbersType, Color, Page, SpanAttr, SpanAttrSetter, StrikethroughType, Text, TextBehaviour, TextHorAlign, TextShape, TextTransformType, TextVerAlign, UnderlineType } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
@@ -58,24 +58,99 @@ export class TextShapeEditor extends ShapeEditor {
 
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
         attr = attr ?? this.__cachedSpanAttr;
+        this.resetCachedSpanAttr();
         const api = this.__repo.start("insertText", {});
+        let count = text.length; // 插入字符数
         try {
-            let count = text.length;
             if (del > 0) api.deleteText(this.__page, this.shape, index, del);
             api.insertSimpleText(this.__page, this.shape, index, text, attr);
             this.fixFrameByLayout(api);
             this.__repo.commit();
-            return count;
         } catch (error) {
             console.log(error)
             this.__repo.rollback();
+            return 0;
         }
-        this.resetCachedSpanAttr();
-        return 0;
+
+        // 自动编号识别
+        if (text === ' ') {
+            const paraInfo = this.shape.text.paraAt(index);
+            if (paraInfo && paraInfo.index === 1 && paraInfo.para.text.at(0) === '*') {
+                const api = this.__repo.start("auto bullet", {});
+                try {
+                    api.deleteText(this.__page, this.shape, index - 1, 2); // 删除*+空格
+                    api.textModifyBulletNumbers(this.__page, this.shape, BulletNumbersType.Disorded, index - 1, 0);
+                    this.fixFrameByLayout(api);
+                    this.__repo.commit();
+                    count = 0;
+                } catch (error) {
+                    console.log(error)
+                    this.__repo.rollback();
+                    return count;
+                }
+            }
+            else if (paraInfo && paraInfo.index >= 1 && paraInfo.para.text.at(paraInfo.index - 1) === '.') {
+                const numStr = paraInfo.para.text.slice(0, paraInfo.index - 1);
+                const numInt = parseInt(numStr);
+                if (('' + numInt) === numStr) {
+
+                    const api = this.__repo.start("auto number", {});
+                    try {
+                        const paraStartIndex = index - paraInfo.index;
+                        if (paraStartIndex !== index - numStr.length - 1) throw new Error("wrong??")
+                        api.deleteText(this.__page, this.shape, index - numStr.length - 1, numStr.length + 2); // 删除数字+.+空格
+                        api.textModifyBulletNumbers(this.__page, this.shape, BulletNumbersType.Ordered1Ai, index - numStr.length - 1, 0);
+                        // 找到最近一个有序编号
+                        const paras = this.shape.text.paras;
+                        const paraIndex = paraInfo.paraIndex;
+                        const curIndent = paraInfo.para.attr?.indent || 0;
+                        let curIdx = 0;
+                        for (let i = paraIndex - 1; i >= 0; i--) {
+                            const p = paras[i];
+                            if (p.text.at(0) === '*' &&
+                                p.spans.length > 0 &&
+                                p.spans[0].placeholder &&
+                                p.spans[0].bulletNumbers &&
+                                p.spans[0].length === 1) { // todo indent
+
+                                const indent = p.attr?.indent || 0;
+                                if (indent < curIndent) break;
+                                if (indent > curIndent) continue;
+
+                                const bulletNumbers = p.spans[0].bulletNumbers;
+                                if (bulletNumbers.type !== BulletNumbersType.Ordered1Ai) {
+                                    break;
+                                }
+                                if (bulletNumbers.behavior !== BulletNumbersBehavior.Inherit) {
+                                    curIdx += bulletNumbers.offset || 0;
+                                    curIdx++;
+                                    break;
+                                }
+                                curIdx++;
+                            }
+                        }
+                        if (numInt !== curIdx + 1) {
+                            const bnIndex = index - paraInfo.index;
+                            api.textModifyBulletNumbersInherit(this.__page, this.shape, false, bnIndex, 1);
+                            api.textModifyBulletNumbersStart(this.__page, this.shape, numInt - 1, bnIndex, 1);
+                        }
+                        this.fixFrameByLayout(api);
+                        this.__repo.commit();
+                        count = -numStr.length;
+                    } catch (error) {
+                        console.log(error)
+                        this.__repo.rollback();
+                        return count;
+                    }
+                }
+            }
+        }
+        return count;
     }
 
     public insertTextForNewLine(index: number, del: number, attr?: SpanAttr): number {
         attr = attr ?? this.__cachedSpanAttr;
+        this.resetCachedSpanAttr();
         const text = '\n';
         const api = this.__repo.start("insertTextForNewLine", {});
         try {
@@ -129,7 +204,6 @@ export class TextShapeEditor extends ShapeEditor {
             console.log(error)
             this.__repo.rollback();
         }
-        this.resetCachedSpanAttr();
         return 0;
     }
 
