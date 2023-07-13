@@ -76,17 +76,20 @@ export class TextShapeEditor extends ShapeEditor {
         if (text === ' ') {
             const paraInfo = this.shape.text.paraAt(index);
             if (paraInfo && paraInfo.index === 1 && paraInfo.para.text.at(0) === '*') {
-                const api = this.__repo.start("auto bullet", {});
-                try {
-                    api.deleteText(this.__page, this.shape, index - 1, 2); // 删除*+空格
-                    api.textModifyBulletNumbers(this.__page, this.shape, BulletNumbersType.Disorded, index - 1, 0);
-                    this.fixFrameByLayout(api);
-                    this.__repo.commit();
-                    count = 0;
-                } catch (error) {
-                    console.log(error)
-                    this.__repo.rollback();
-                    return count;
+                const span0 = paraInfo.para.spans[0];
+                if (!span0 || !span0.placeholder) {
+                    const api = this.__repo.start("auto bullet", {});
+                    try {
+                        api.deleteText(this.__page, this.shape, index - 1, 2); // 删除*+空格
+                        api.textModifyBulletNumbers(this.__page, this.shape, BulletNumbersType.Disorded, index - 1, 0);
+                        this.fixFrameByLayout(api);
+                        this.__repo.commit();
+                        count = 0;
+                    } catch (error) {
+                        console.log(error)
+                        this.__repo.rollback();
+                        return count;
+                    }
                 }
             }
             else if (paraInfo && paraInfo.index >= 1 && paraInfo.para.text.at(paraInfo.index - 1) === '.') {
