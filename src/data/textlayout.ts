@@ -76,14 +76,13 @@ export function fixLineHorAlign(line: Line, align: TextHorAlign, width: number) 
                 graphCount--;
             }
 
-            const padding = graphCount === 1 ? 0 : (line.layoutWidth - line.graphWidth) / (graphCount - 1);
+            const freeWidth = width - line.graphWidth;
             if (align === TextHorAlign.Natural) {
                 const graphWidth = line.graphWidth / graphCount;
-                if (padding > graphWidth) {
-                    // done
-                    break;
-                }
+                if (freeWidth > graphWidth) break;
             }
+            const padding = graphCount === 1 ? 0 : (freeWidth) / (graphCount - 1);
+
             let offset = 0;
             for (let i = 0, len = line.length; i < len; i++) {
                 const arr = line[i];
@@ -146,13 +145,14 @@ function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
                     graphCount--;
                 }
 
-                let offset = -firstGraph.x;
-                const padding = graphCount === 1 ? 0 : (width - line.graphWidth) / (graphCount - 1);
-
+                const freeWidth = width - line.graphWidth;
                 if (align === TextHorAlign.Natural) {
                     const graphWidth = line.graphWidth / graphCount;
-                    if (padding > graphWidth) break;
+                    if (freeWidth > graphWidth) break;
                 }
+                let offset = -firstGraph.x;
+                const padding = graphCount === 1 ? 0 : (freeWidth) / (graphCount - 1);
+
 
                 for (let i = 0, len = line.length; i < len; i++) {
                     const arr = line[i];
