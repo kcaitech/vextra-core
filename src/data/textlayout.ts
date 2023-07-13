@@ -298,7 +298,7 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
             span.length === 1 &&
             span.bulletNumbers) { // '*' 项目符号编号
             const layout = layoutBulletNumber(para, span, span.bulletNumbers, preBulletNumbers, measure);
-            layout.graph.x = curX;
+            layout.graph.x += curX;
 
             if (!graphArray) {
                 graphArray = new GraphArray();
@@ -306,7 +306,7 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
             }
 
             graphArray.push(layout.graph);
-            curX += layout.graph.cw + charSpace;
+            curX = layout.graph.x + layout.graph.cw + charSpace;
             textIdx++;
             spanOffset++;
             if (spanOffset >= span.length) {

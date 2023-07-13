@@ -1,6 +1,6 @@
 // bullet numbers layout
 
-import { BulletNumbers, BulletNumbersBehavior, BulletNumbersType, Para, Span } from "./classes";
+import { BulletNumbers, BulletNumbersBehavior, BulletNumbersType, Para, Span, TextTransformType } from "./classes";
 import { BulletNumbersLayout, IGraphy, MeasureFun } from "./textlayout";
 import { transformText } from "./textlayouttransform";
 
@@ -92,47 +92,62 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
     const indent = para.attr?.indent || 0;
     let text: string = '';
     let index = preBulletNumbers ? (preBulletNumbers.type === bulletNumbers.type ? preBulletNumbers.index + 1 : 0) : 0;
+    let graph: IGraphy | undefined;
 
     if (bulletNumbers.type === BulletNumbersType.Disorded) {
         text = getDisordedChars(indent);
+
+        const padding = 4;
+        const ch = span.fontSize || 0;
+        const cw = span.fontSize ? span.fontSize * 0.6 : 10;
+        graph = {
+            char: text,
+            metrics: metrics,
+            cw: cw * 2 - padding, // 2个字符宽度
+            ch,
+            index: 0,
+            x: padding
+        }
     }
     else if (bulletNumbers.type === BulletNumbersType.Ordered1Ai) {
         if (bulletNumbers.behavior === BulletNumbersBehavior.Renew) {
             index = bulletNumbers.offset || 0;
         }
         text = getOrderedChars(indent, index);
+
+        const transformType = span.transform;
+        const ch = span.fontSize || 0;
+        const charWidth = span.fontSize ? span.fontSize * 0.6 : 10;
+        let cw = 0;
+        if (transformType && transformType === TextTransformType.Uppercase) {
+            let text2 = '';
+            for (let i = 0, len = text.length; i < len; i++) {
+                const char = transformText(text.charAt(i), false, transformType);
+                cw += charWidth;
+                text2 += char;
+            }
+            text = text2;
+        } else {
+            cw = charWidth * text.length;
+        }
+
+        graph = {
+            char: text,
+            metrics: metrics,
+            cw,
+            ch,
+            index: 0,
+            x: 0
+        }
     }
     else {
         throw new Error("unknow bullet numbers type: " + bulletNumbers.type); // unknow
     }
 
-    const transformType = span.transform;
-    const font = "normal " + span.fontSize + "px " + span.fontName;
-    let cw = 0;
-    const ch = span.fontSize || 0;
-    const charSpace = span.kerning || 0;
-    let text2 = '';
-    for (let i = 0, len = text.length; i < len; i++) {
-        if (i > 0) cw += charSpace;
-        const char = transformText(text.charAt(i), false, transformType);
-        const m = measure(char.charCodeAt(0), font);
-        cw += m?.width ?? 0;
-        text2 += char;
-    }
-
-    const graph: IGraphy = {
-        char: text2,
-        metrics: metrics,
-        cw,
-        ch,
-        index: 0,
-        x: 0
-    }
-
     const layout = new BulletNumbersLayout(graph);
     layout.index = index;
     layout.level = para.attr?.indent || 0;
-    layout.text = text2;
+    layout.text = text;
     layout.type = bulletNumbers.type;
 
     return layout;
