@@ -307,7 +307,27 @@ export class Text extends Basic implements classes.Text {
     deleteText(index: number, count: number): Text | undefined {
         // this.reLayout(); // todo
         const ret = deleteText(this, index, count);
-        if (this.__layout) this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, count, this.__layout);
+        if (ret && this.__layout) {
+            const paras = ret.paras;
+            let hasBulletNumbers = false;
+            for (let i = 0, len = paras.length; i < len; i++) {
+                const p = paras[i];
+                if (p.text.at(0) === '*') {
+                    const spans = p.spans;
+                    const span0 = spans[0];
+                    if (span0 && span0.placeholder && span0.bulletNumbers && span0.length === 1) {
+                        hasBulletNumbers = true;
+                        break;
+                    }
+                }
+            }
+            if (hasBulletNumbers) {
+                this.reLayout();
+            }
+            else {
+                this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, count, this.__layout);
+            }
+        }
         return ret;
     }
 
