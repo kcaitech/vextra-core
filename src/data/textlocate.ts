@@ -1,5 +1,5 @@
 import { ParaLayout, TextLayout, isNewLineCharCode } from "./textlayout";
-import { Point2D } from "./typesdefine";
+import { Point2D, SpanAttr } from "./typesdefine";
 
 export function locateText(layout: TextLayout, x: number, y: number): { index: number, before: boolean } {
     const { yOffset, paras } = layout;
@@ -95,9 +95,11 @@ export class CursorLocate {
     preLineHeight: number = 0;
     nextLineY: number = 0;
     nextLineHeight: number = 0;
+    placeholder: boolean = false;
+    attr: SpanAttr | undefined;
 }
 
-function makeCursorLocate(layout: TextLayout, pi: number, li: number, cursorPoints: Point2D[]) {
+function makeCursorLocate(layout: TextLayout, pi: number, li: number, si: number, cursorPoints: Point2D[]) {
 
     const paras = layout.paras;
     const p = paras[pi];
@@ -105,9 +107,15 @@ function makeCursorLocate(layout: TextLayout, pi: number, li: number, cursorPoin
     const llen = p.length;
     const plen = paras.length;
     const lineY = layout.yOffset + p.yOffset + line.y;
+    const span = line[si];
 
     const ret = new CursorLocate();
     ret.lineY = lineY;
+
+    if (span.attr?.placeholder) {
+        ret.placeholder = true;
+        ret.attr = span.attr;
+    }
 
     ret.preLineY = lineY;
     ret.nextLineY = lineY + line.lineHeight;
@@ -166,7 +174,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 const x = line.x + graph.x + graph.cw;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
-                const ret = makeCursorLocate(layout, pi, li, [p0, p1])
+                const ret = makeCursorLocate(layout, pi, li, line.length - 1, [p0, p1])
                 return ret;
             }
             if (index >= line.graphCount) {
@@ -211,7 +219,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
 
                 const p0 = { x, y };
                 const p1 = { x, y: y + ch };
-                const ret = makeCursorLocate(layout, pi, li, [p0, p1])
+                const ret = makeCursorLocate(layout, pi, li, i, [p0, p1])
                 return ret;
             }
             break;
