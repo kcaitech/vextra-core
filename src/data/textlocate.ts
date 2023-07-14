@@ -1,5 +1,6 @@
-import { ParaLayout, TextLayout, isNewLineCharCode } from "./textlayout";
-import { Point2D, SpanAttr } from "./typesdefine";
+import { SpanAttr } from "./text";
+import { TextLayout, isNewLineCharCode } from "./textlayout";
+import { Point2D } from "./typesdefine";
 
 export class TextLocate {
     index: number = 0;

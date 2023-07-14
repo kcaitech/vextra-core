@@ -18,7 +18,7 @@ import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletN
 import { MeasureFun, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
-import { CursorLocate, locateCursor, locateRange, locateText } from "./textlocate";
+import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 import { _travelTextPara } from "./texttravel";
 /*
  文本框属性
@@ -376,7 +376,7 @@ export class Text extends Basic implements classes.Text {
         this.__layout = layoutText(this, this.__layoutWidth, this.__frameHeight, this.__measure);
         return this.__layout;
     }
-    locateText(x: number, y: number): { index: number, before: boolean } {
+    locateText(x: number, y: number): TextLocate {
         return locateText(this.getLayout(), x, y);
     }
     locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
