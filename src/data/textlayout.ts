@@ -4,6 +4,9 @@ import { BasicArray } from "./basic"
 import { layoutBulletNumber } from "./textlayoutbn";
 import { transformText } from "./textlayouttransform";
 
+const TAB_WIDTH = 28;
+const INDENT_WIDTH = TAB_WIDTH;
+
 export interface IGraphy {
     char: string, // 可能是多个字符，在项目符号编号中
     metrics: TextMetrics | undefined,
@@ -212,7 +215,7 @@ export function isNewLineCharCode(code: number) {
     return false;
 }
 
-export function layoutLines(_text: Text, para: Para, width: number, measure: MeasureFun, preBulletNumbers?: BulletNumbersLayout): LineArray {
+export function layoutLines(_text: Text, para: Para, width: number, measure: MeasureFun, preBulletNumbers: BulletNumbersLayout[]): LineArray {
     let spans = para.spans;
     let spansCount = spans.length;
     if (spansCount === 0) {
@@ -234,8 +237,9 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
     let span = spans[spanIdx];
     let font = "normal " + span.fontSize + "px " + span.fontName;
 
-    const startX = 0, endX = startX + width;
-    let curX = 0
+    const indent = (para.attr?.indent || 0) * INDENT_WIDTH;
+    const startX = Math.min(indent, width), endX = width;
+    let curX = startX;
 
     let graphArray: GraphArray | undefined;
     let line: Line = new Line();
@@ -379,7 +383,7 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
             line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
             // }
         }
-        else if (line.length === 0 && (!graphArray || graphArray.length === 0)) {
+        else if (line.length === 0 && (!graphArray || graphArray.length === 0)) { // 至少一个字符
             if (!graphArray) {
                 graphArray = new GraphArray();
                 graphArray.attr = span;
@@ -390,7 +394,7 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
                 cw,
                 ch,
                 index: textIdx,
-                x: curX
+                x: Math.max(0, endX - cw) // 挤进一个
             });
 
             line.maxFontSize = span.fontSize ?? 0;
@@ -458,7 +462,7 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
     return lineArray;
 }
 
-export function layoutPara(text: Text, para: Para, layoutWidth: number, measure: MeasureFun, preBulletNumbers?: BulletNumbersLayout) {
+export function layoutPara(text: Text, para: Para, layoutWidth: number, measure: MeasureFun, preBulletNumbers: BulletNumbersLayout[]) {
     let paraWidth = 0;
     const layouts = layoutLines(text, para, layoutWidth, measure, preBulletNumbers);
     const pAttr = para.attr;
@@ -518,7 +522,7 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
     const paras: ParaLayout[] = []
     let contentHeight = 0;
     let contentWidth = 0;
-    let preBulletNumbers: BulletNumbersLayout | undefined;
+    const preBulletNumbers: BulletNumbersLayout[] = [];
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
@@ -531,7 +535,6 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
         paras.push(paraLayout);
-        if (paraLayout.bulletNumbers) preBulletNumbers = paraLayout.bulletNumbers;
     }
 
     // hor align

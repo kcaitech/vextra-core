@@ -88,10 +88,14 @@ const metrics = new class implements TextMetrics {
     width: number = 0;
 }
 
-export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: BulletNumbers, preBulletNumbers: BulletNumbersLayout | undefined, measure: MeasureFun,): BulletNumbersLayout {
+export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: BulletNumbers, preBulletNumbers: BulletNumbersLayout[], measure: MeasureFun,): BulletNumbersLayout {
     const indent = para.attr?.indent || 0;
     let text: string = '';
-    let index = preBulletNumbers ? (preBulletNumbers.type === bulletNumbers.type ? preBulletNumbers.index + 1 : 0) : 0;
+
+
+    // let index = preBulletNumbers ? (preBulletNumbers.type === bulletNumbers.type ? preBulletNumbers.index + 1 : 0) : 0;
+
+let index = 0;
     let graph: IGraphy | undefined;
 
     if (bulletNumbers.type === BulletNumbersType.Disorded) {
@@ -112,6 +116,17 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
     else if (bulletNumbers.type === BulletNumbersType.Ordered1Ai) {
         if (bulletNumbers.behavior === BulletNumbersBehavior.Renew) {
             index = bulletNumbers.offset || 0;
+        }
+        else {
+            // 查找同级的项目编号
+            for (let i = preBulletNumbers.length - 1; i >= 0; i--) {
+                const pre = preBulletNumbers[i];
+                if (pre.level < indent) break;
+                if (pre.level > indent) continue;
+                if (pre.type !== BulletNumbersType.Ordered1Ai) break;
+                index = pre.index + 1;
+                break;
+            }
         }
         text = getOrderedChars(indent, index);
 
@@ -146,9 +161,11 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
 
     const layout = new BulletNumbersLayout(graph);
     layout.index = index;
-    layout.level = para.attr?.indent || 0;
+    layout.level = indent;
     layout.text = text;
     layout.type = bulletNumbers.type;
+
+    preBulletNumbers.push(layout);
 
     return layout;
 }
