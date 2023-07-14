@@ -764,7 +764,7 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("offsetParaIndent", {});
         try {
 
-            _travelTextPara(this.shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+            _travelTextPara(this.shape.text.paras, index, len || 1, (paraArray, paraIndex, para, _index, length) => {
                 index -= _index;
 
                 const cur = para.attr?.indent || 0;
