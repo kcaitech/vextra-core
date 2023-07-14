@@ -1,5 +1,6 @@
 import { BasicArray } from "./basic";
-import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr } from "./text";
+import { Color } from "./classes";
+import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType, TextTransformType, TextAttr, TextHorAlign, SpanAttrSetter } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { isColorEqual } from "./utils";
@@ -32,27 +33,110 @@ export function getTextWithFmt(shapetext: Text, index: number, length: number): 
     return text;
 }
 
-function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter) {
-    if (attr.color != undefined && (attrGetter.color == undefined || !isColorEqual(attr.color, attrGetter.color))) {
-        if (attrGetter.color == undefined) {
-            attrGetter.color = attr.color;
-        } else {
-            attrGetter.colorIsMulti = true;
-        }
+const _NullColor = new Color(1, 0, 0, 0);
+function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAttr | undefined, textAttr: TextAttr | undefined) {
+    const color = attr.color ?? (paraAttr?.color) ?? (textAttr?.color) ?? _NullColor;
+    if (attrGetter.color === undefined) {
+        attrGetter.color = color;
     }
-    if (attr.fontName != undefined && attr.fontName !== attrGetter.fontName) {
-        if (attrGetter.fontName == undefined) {
-            attrGetter.fontName = attr.fontName;
-        } else {
-            attrGetter.fontNameIsMulti = true;
-        }
+    else if (color === attrGetter.color) {
+        // 同时为_NullColor
     }
-    if (attr.fontSize != undefined && attr.fontSize !== attrGetter.fontSize) {
-        if (attrGetter.fontSize == undefined) {
-            attrGetter.fontSize = attr.fontSize;
-        } else {
-            attrGetter.fontSizeIsMulti = true;
-        }
+    else if (color === _NullColor || attrGetter.color === _NullColor) {
+        // 其中一个为_NullColor
+        attrGetter.colorIsMulti = true;
+    }
+    else if (!isColorEqual(color, attrGetter.color)) {
+        // 两个都不是_NullColor
+        attrGetter.colorIsMulti = true;
+    }
+
+    const fontName = attr.fontName ?? (paraAttr?.fontName) ?? (textAttr?.fontName) ?? '';
+    if (attrGetter.fontName === undefined) {
+        attrGetter.fontName = fontName;
+    }
+    else if (fontName === undefined || attrGetter.fontName !== fontName) {
+        attrGetter.fontNameIsMulti = true;
+    }
+
+    const fontSize = attr.fontSize ?? (paraAttr?.fontSize) ?? (textAttr?.fontSize) ?? 0;
+    if (attrGetter.fontSize === undefined) {
+        attrGetter.fontSize = fontSize;
+    }
+    else if (fontSize === undefined || attrGetter.fontSize !== fontSize) {
+        attrGetter.fontSizeIsMulti = true;
+    }
+
+    const highlight = attr.highlight ?? (paraAttr?.highlight) ?? (textAttr?.highlight) ?? _NullColor;
+    if (attrGetter.highlight === undefined) {
+        attrGetter.highlight = highlight;
+    }
+    else if (highlight === attrGetter.highlight) {
+        // 同时为_NullColor
+    }
+    else if (highlight === _NullColor || attrGetter.highlight === _NullColor) {
+        // 其中一个为_NullColor
+        attrGetter.highlightIsMulti = true;
+    }
+    else if (!isColorEqual(highlight, attrGetter.highlight)) {
+        // 两个都不是_NullColor
+        attrGetter.highlightIsMulti = true;
+    }
+
+    const bold = attr.bold ?? (paraAttr?.bold) ?? (textAttr?.bold) ?? false;
+    if (attrGetter.bold === undefined) {
+        attrGetter.bold = bold;
+    }
+    else if (bold === undefined || attrGetter.bold !== bold) {
+        attrGetter.boldIsMulti = true;
+    }
+
+    const italic = attr.italic ?? (paraAttr?.italic) ?? (textAttr?.italic) ?? false;
+    if (attrGetter.italic === undefined) {
+        attrGetter.italic = italic;
+    }
+    else if (italic === undefined || attrGetter.italic !== italic) {
+        attrGetter.italicIsMulti = true;
+    }
+
+    const underline = attr.underline ?? (paraAttr?.underline) ?? (textAttr?.underline) ?? UnderlineType.None;
+    if (attrGetter.underline === undefined) {
+        attrGetter.underline = underline;
+    }
+    else if (underline === undefined || attrGetter.underline !== underline) {
+        attrGetter.underlineIsMulti = true;
+    }
+
+    const strikethrough = attr.strikethrough ?? (paraAttr?.strikethrough) ?? (textAttr?.strikethrough) ?? StrikethroughType.None;
+    if (attrGetter.strikethrough === undefined) {
+        attrGetter.strikethrough = strikethrough;
+    }
+    else if (strikethrough === undefined || attrGetter.strikethrough !== strikethrough) {
+        attrGetter.strikethroughIsMulti = true;
+    }
+
+    const kerning = attr.kerning ?? (paraAttr?.kerning) ?? (textAttr?.kerning) ?? 0;
+    if (attrGetter.kerning === undefined) {
+        attrGetter.kerning = kerning;
+    }
+    else if (kerning === undefined || attrGetter.kerning !== kerning) {
+        attrGetter.kerningIsMulti = true;
+    }
+
+    const transform = attr.transform ?? (paraAttr?.transform) ?? (textAttr?.transform) ?? TextTransformType.None;
+    if (attrGetter.transform === undefined) {
+        attrGetter.transform = transform;
+    }
+    else if (transform === undefined || attrGetter.transform !== transform) {
+        attrGetter.transformIsMulti = true;
+    }
+
+    const bulletNumbers = attr.bulletNumbers;
+    if (attrGetter.bulletNumbers === undefined) {
+        if (bulletNumbers) attrGetter.bulletNumbers = bulletNumbers;
+    }
+    else if (bulletNumbers && attrGetter.bulletNumbers.type !== bulletNumbers.type) {
+        attrGetter.bulletNumbersIsMulti = true;
     }
 }
 
@@ -65,45 +149,81 @@ function _mergeSpanFormat(from: AttrGetter, to: AttrGetter) {
 
     if (from.fontSizeIsMulti) to.fontSizeIsMulti = true;
     else if (from.fontSize !== undefined) to.fontSize = from.fontSize;
+
+    // hightlight
+    if (from.highlightIsMulti) to.highlightIsMulti = true;
+    else if (from.highlight) to.highlight = from.highlight;
+
+    // bold
+    if (from.boldIsMulti) to.boldIsMulti = true;
+    else if (from.bold !== undefined) to.bold = from.bold;
+
+    // italic
+    if (from.italicIsMulti) to.italicIsMulti = true;
+    else if (from.italic !== undefined) to.italic = from.italic;
+
+    // underline
+    if (from.underlineIsMulti) to.underlineIsMulti = true;
+    else if (from.underline !== undefined) to.underline = from.underline;
+
+    // strikethrough
+    if (from.strikethroughIsMulti) to.strikethroughIsMulti = true;
+    else if (from.strikethrough !== undefined) to.strikethrough = from.strikethrough;
+
+    // kerning
+    if (from.kerningIsMulti) to.kerningIsMulti = true;
+    else if (from.kerning !== undefined) to.kerning = from.kerning;
+
+    // transform
+    if (from.transformIsMulti) to.transformIsMulti = true;
+    else if (from.transform !== undefined) to.transform = from.transform;
+
+    // bulletnumbers
+    if (from.bulletNumbersIsMulti) to.bulletNumbersIsMulti = true;
+    else if (from.bulletNumbers !== undefined) to.bulletNumbers = from.bulletNumbers;
 }
 
-function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter) {
-    _getSpanFormat(attr, attrGetter);
+function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: TextAttr | undefined) {
+    _getSpanFormat(attr, attrGetter, undefined, defaultAttr);
 
-    if (attr.alignment != undefined && attr.alignment !== attrGetter.alignment) {
-        if (attrGetter.alignment == undefined) {
-            attrGetter.alignment = attr.alignment;
-        } else {
-            attrGetter.alignmentIsMulti = true;
-        }
+    const alignment = attr.alignment ?? (defaultAttr?.alignment) ?? TextHorAlign.Left;
+    if (attrGetter.alignment === undefined) {
+        attrGetter.alignment = alignment;
     }
-    if (attr.kerning != undefined && attr.kerning !== attrGetter.kerning) {
-        if (attrGetter.kerning == undefined) {
-            attrGetter.kerning = attr.kerning;
-        } else {
-            attrGetter.kerningIsMulti = true;
-        }
+    else if (alignment === undefined || attrGetter.alignment !== alignment) {
+        attrGetter.alignmentIsMulti = true;
     }
-    if (attr.maximumLineHeight != undefined && attr.maximumLineHeight !== attrGetter.maximumLineHeight) {
-        if (attrGetter.maximumLineHeight == undefined) {
-            attrGetter.maximumLineHeight = attr.maximumLineHeight;
-        } else {
-            attrGetter.maximumLineHeightIsMulti = true;
-        }
+
+    const kerning = attr.kerning ?? (defaultAttr?.kerning) ?? 0;
+    if (attrGetter.kerning === undefined) {
+        attrGetter.kerning = kerning;
     }
-    if (attr.minimumLineHeight != undefined && attr.minimumLineHeight !== attrGetter.minimumLineHeight) {
-        if (attrGetter.minimumLineHeight == undefined) {
-            attrGetter.minimumLineHeight = attr.minimumLineHeight;
-        } else {
-            attrGetter.minimumLineHeightIsMulti = true;
-        }
+    else if (kerning === undefined || attrGetter.kerning !== kerning) {
+        attrGetter.kerningIsMulti = true;
     }
-    if (attr.paraSpacing != undefined && attr.paraSpacing !== attrGetter.paraSpacing) {
-        if (attrGetter.paraSpacing == undefined) {
-            attrGetter.paraSpacing = attr.paraSpacing;
-        } else {
-            attrGetter.paraSpacingIsMulti = true;
-        }
+
+    const maximumLineHeight = attr.maximumLineHeight ?? (defaultAttr?.maximumLineHeight) ?? 0;
+    if (attrGetter.maximumLineHeight === undefined) {
+        attrGetter.maximumLineHeight = maximumLineHeight;
+    }
+    else if (maximumLineHeight === undefined || attrGetter.maximumLineHeight !== maximumLineHeight) {
+        attrGetter.maximumLineHeightIsMulti = true;
+    }
+
+    const minimumLineHeight = attr.minimumLineHeight ?? (defaultAttr?.minimumLineHeight) ?? 0;
+    if (attrGetter.minimumLineHeight === undefined) {
+        attrGetter.minimumLineHeight = minimumLineHeight;
+    }
+    else if (minimumLineHeight === undefined || attrGetter.minimumLineHeight !== minimumLineHeight) {
+        attrGetter.minimumLineHeightIsMulti = true;
+    }
+
+    const paraSpacing = attr.paraSpacing ?? (defaultAttr?.paraSpacing) ?? 0;
+    if (attrGetter.paraSpacing === undefined) {
+        attrGetter.paraSpacing = paraSpacing;
+    }
+    else if (paraSpacing === undefined || attrGetter.paraSpacing !== paraSpacing) {
+        attrGetter.paraSpacingIsMulti = true;
     }
 }
 
@@ -126,30 +246,132 @@ function _mergeParaAttr(from: AttrGetter, to: AttrGetter) {
     else if (from.paraSpacing !== undefined) to.paraSpacing = from.paraSpacing;
 }
 
-export function getTextFormat(shapetext: Text, index: number, length: number): AttrGetter {
+function coverFormat(fmt: AttrGetter, attr: SpanAttrSetter) {
+    // fontNameIsSet: boolean = false;
+    // fontSizeIsSet: boolean = false;
+    // colorIsSet: boolean = false;
+    // highlightIsSet: boolean = false;
+    // boldIsSet: boolean = false;
+    // italicIsSet: boolean = false;
+    // underlineIsSet: boolean = false;
+    // strikethroughIsSet: boolean = false;
+    // kerningIsSet: boolean = false;
+    // transformIsSet: boolean = false;
+    if (attr.fontNameIsSet) {
+        fmt.fontName = attr.fontName;
+        fmt.fontNameIsMulti = false;
+    }
+    if (attr.fontSizeIsSet) {
+        fmt.fontSize = attr.fontSize;
+        fmt.fontSizeIsMulti = false;
+    }
+    if (attr.colorIsSet) {
+        fmt.color = attr.color;
+        fmt.colorIsMulti = false;
+    }
+    if (attr.highlightIsSet) {
+        fmt.highlight = attr.highlight;
+        fmt.highlightIsMulti = false;
+    }
+    if (attr.boldIsSet) {
+        fmt.bold = attr.bold;
+        fmt.boldIsMulti = false;
+    }
+    if (attr.italicIsSet) {
+        fmt.italic = attr.italic;
+        fmt.italicIsMulti = false;
+    }
+    if (attr.underlineIsSet) {
+        fmt.underline = attr.underline;
+        fmt.underlineIsMulti = false;
+    }
+    if (attr.strikethroughIsSet) {
+        fmt.strikethrough = attr.strikethrough;
+        fmt.strikethroughIsMulti = false;
+    }
+    if (attr.kerningIsSet) {
+        fmt.kerning = attr.kerning;
+        fmt.kerningIsMulti = false;
+    }
+    if (attr.transformIsSet) {
+        fmt.transform = attr.transform;
+        fmt.transformIsMulti = false;
+    }
+}
+
+export function getTextFormat(shapetext: Text, index: number, length: number, cachedAttr?: SpanAttrSetter): AttrGetter {
     const spanfmt = new AttrGetter();
     const parafmt = new AttrGetter();
     const textfmt = new AttrGetter();
 
     if (shapetext.attr) {
-        _getParaFormat(shapetext.attr, textfmt);
+        _getParaFormat(shapetext.attr, textfmt, shapetext.attr);
         textfmt.verAlign = shapetext.attr.verAlign;
         textfmt.orientation = shapetext.attr.orientation;
         textfmt.textBehaviour = shapetext.attr.textBehaviour;
     }
 
+    // length === 0时，获取光标属性
+    if (length === 0) {
+        const ret = shapetext.alignParaRange(index, length);
+        if (ret.index !== index) {
+            --index;
+        }
+        length = 1;
+    } else {
+        cachedAttr = undefined; // 仅光标有效
+    }
+
+    let _para: Para | undefined;
+    let _paraIndex = 0;
     _travelTextPara(shapetext.paras, index, length,
         (paraArray, paraIndex, para, index, length) => {
+            _para = para;
+            _paraIndex = index;
             const attr = para.attr;
-            if (attr) _getParaFormat(attr, parafmt);
+            if (attr) _getParaFormat(attr, parafmt, shapetext.attr);
         },
         (span, index, length) => {
-            _getSpanFormat(span, spanfmt); // todo 考虑默认属性
+            _paraIndex += index;
+            const isNewLineSpan = span.length === 1 && _paraIndex === _para!.length - 1;
+            // 忽略回车属性
+            if (!isNewLineSpan || _para!.spans.length <= 1) _getSpanFormat(span, spanfmt, _para!.attr, shapetext.attr);
+            _paraIndex += length;
         })
 
     // merge
     _mergeSpanFormat(spanfmt, parafmt);
     _mergeParaAttr(parafmt, textfmt);
 
+    if (textfmt.color === _NullColor) {
+        textfmt.color = undefined;
+    }
+    if (textfmt.highlight === _NullColor) {
+        textfmt.highlight = undefined;
+    }
+
+    if (cachedAttr) {
+        coverFormat(textfmt, cachedAttr);
+    }
+
     return textfmt;
+}
+
+export function getUsedFontNames(shapetext: Text, fontNames?: Set<string>): Set<string> {
+    const ret = fontNames ?? new Set<string>();
+
+    if (shapetext.attr && shapetext.attr.fontName) {
+        ret.add(shapetext.attr.fontName);
+    }
+
+    _travelTextPara(shapetext.paras, 0, Number.MAX_VALUE,
+        (paraArray, paraIndex, para, index, length) => {
+            const attr = para.attr;
+            if (attr && attr.fontName) ret.add(attr.fontName);
+        },
+        (span, index, length) => {
+            if (span.fontName) ret.add(span.fontName);
+        })
+
+    return ret;
 }

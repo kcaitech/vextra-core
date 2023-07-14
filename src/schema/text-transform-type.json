@@ -1,0 +1,10 @@
+{
+    "description": "text transform types",
+    "enum": [
+        "none",
+        "uppercase",
+        "lowercase",
+        "uppercase-first"
+    ],
+    "default": "path"
+}

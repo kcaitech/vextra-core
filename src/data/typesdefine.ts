@@ -16,6 +16,7 @@ export type UserInfo = {
 }
 /* underline types */
 export enum UnderlineType {
+    None = 'none',
     Single = 'single',
     Double = 'double',
 }
@@ -29,6 +30,13 @@ export enum TextVerAlign {
     Top = 'top',
     Middle = 'middle',
     Bottom = 'bottom',
+}
+/* text transform types */
+export enum TextTransformType {
+    None = 'none',
+    Uppercase = 'uppercase',
+    Lowercase = 'lowercase',
+    UppercaseFirst = 'uppercase-first',
 }
 /* text orientation */
 export enum TextOrientation {
@@ -65,6 +73,7 @@ export type Style = {
 }
 /* strikethrough types */
 export enum StrikethroughType {
+    None = 'none',
     Single = 'single',
     Double = 'double',
 }
@@ -83,6 +92,10 @@ export type SpanAttr = {
     bold?: boolean
     italic?: boolean
     bulletNumbers?: BulletNumbers
+    highlight?: Color
+    kerning?: number
+    transform?: TextTransformType
+    placeholder?: boolean
 }
 /* shape */
 export type Shape = {
@@ -352,6 +365,7 @@ export type BulletNumbers = {
 }
 /* bullet & item number types */
 export enum BulletNumbersType {
+    None = 'none',
     Ordered1Ai = 'ordered-1ai',
     Disorded = 'disorded',
 }
@@ -462,7 +476,6 @@ export type RectShape = PathShape & {
 export type ParaAttr = SpanAttr & {
     alignment?: TextHorAlign
     paraSpacing?: number
-    kerning?: number
     minimumLineHeight?: number
     maximumLineHeight?: number
     indent?: number

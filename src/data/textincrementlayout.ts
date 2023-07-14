@@ -1,7 +1,7 @@
 // 文本编辑时的增量排版
 
-import { ParaAttrSetter, SpanAttrSetter, Text, TextVerAlign } from "./classes";
-import { MeasureFun, TextLayout, layoutPara } from "./textlayout";
+import { ParaAttrSetter, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "./classes";
+import { BulletNumbersLayout, MeasureFun, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
 
 export function layoutAtInsert(text: Text,
     layoutWidth: number,
@@ -18,21 +18,33 @@ export function layoutAtInsert(text: Text,
     let contentHeight = 0;
     let contentWidth = 0;
     let i = 0;
+    const preBulletNumbers: BulletNumbersLayout[] = [];
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (index < paraLayout.graphCount) break;
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
         index -= paraLayout.graphCount;
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
+        if (paraLayout.bulletNumbers) preBulletNumbers.push(paraLayout.bulletNumbers);
     }
 
     // todo 先做到段落重排
     const needUpdateCount = paras.length - parasLayout.length + 1;
     for (let j = 0; i < parascount && j < needUpdateCount; j++, i++) {
         const para = paras[i];
-        const paraLayout = layoutPara(para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
@@ -48,12 +60,30 @@ export function layoutAtInsert(text: Text,
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
     }
 
     if (parascount !== parasLayout.length) throw new Error("layout and data Not match")
+
+    // hor align
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    for (let i = 0, pc = text.paras.length; i < pc; i++) {
+        const para = text.paras[i];
+        const paraLayout = parasLayout[i];
+        const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            fixLineHorAlign(line, alignment, alignWidth);
+        }
+    }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
@@ -90,21 +120,33 @@ export function layoutAtDelete(text: Text,
     let contentHeight = 0;
     let contentWidth = 0;
     let i = 0;
+    const preBulletNumbers: BulletNumbersLayout[] = [];
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (index < paraLayout.graphCount) break;
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
         index -= paraLayout.graphCount;
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
+        if (paraLayout.bulletNumbers) preBulletNumbers.push(paraLayout.bulletNumbers);
     }
 
     // todo 先做到段落重排
     const needUpdateCount = parasLayout.length - paras.length + 1;
     if (i < parascount && needUpdateCount > 0) {
         const para = paras[i];
-        const paraLayout = layoutPara(para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
@@ -120,12 +162,30 @@ export function layoutAtDelete(text: Text,
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
     }
 
     if (parascount !== parasLayout.length) throw new Error("layout and data Not match")
+
+    // hor align
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    for (let i = 0, pc = text.paras.length; i < pc; i++) {
+        const para = text.paras[i];
+        const paraLayout = parasLayout[i];
+        const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            fixLineHorAlign(line, alignment, alignWidth);
+        }
+    }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
@@ -163,22 +223,34 @@ export function layoutAtFormat(text: Text,
     let contentHeight = 0;
     let contentWidth = 0;
     let i = 0;
+    const preBulletNumbers: BulletNumbersLayout[] = [];
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (index < paraLayout.graphCount) break;
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
         index -= paraLayout.graphCount;
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
+        if (paraLayout.bulletNumbers) preBulletNumbers.push(paraLayout.bulletNumbers);
     }
 
     // todo 先做到段落重排
     // const needUpdateCount = parasLayout.length - paras.length + 1;
     len += index;
-    for (let len2 = parasLayout.length;len >= 0 && i < parascount && i < len2; i++) {
+    for (let len2 = parasLayout.length; len >= 0 && i < parascount && i < len2; i++) {
         const para = paras[i];
-        const paraLayout = layoutPara(para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
@@ -191,12 +263,30 @@ export function layoutAtFormat(text: Text,
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (i > 0) {
+            const prePara = paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
     }
 
     if (parascount !== parasLayout.length) throw new Error("layout and data Not match")
+
+    // hor align
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    for (let i = 0, pc = text.paras.length; i < pc; i++) {
+        const para = text.paras[i];
+        const paraLayout = parasLayout[i];
+        const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            fixLineHorAlign(line, alignment, alignWidth);
+        }
+    }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {

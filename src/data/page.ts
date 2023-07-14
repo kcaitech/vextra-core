@@ -72,4 +72,21 @@ export class Page extends GroupShape implements classes.Page {
     get artboardList() {
         return Array.from(this.artboards.values());
     }
+
+    getUsedFontNames(fontNames?: Set<string>): Set<string> {
+        const ret = fontNames ?? new Set<string>();
+        const stack: Shape[] = [this];
+
+        while (stack.length > 0) {
+            const shape = stack.pop();
+            if (shape instanceof GroupShape) {
+                stack.push(...shape.childs);
+            }
+            else if (shape instanceof TextShape) {
+                shape.text.getUsedFontNames(ret);
+            }
+        }
+
+        return ret;
+    }
 }

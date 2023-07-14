@@ -1,6 +1,7 @@
 {
     "description": "underline types",
     "enum": [
+        "none",
         "single",
         "double"
     ],

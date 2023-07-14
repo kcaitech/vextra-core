@@ -68,3 +68,22 @@ test("edit1", () => {
     assert.exists(para.spans[1].color);
     assert.notExists(para.spans[2].color)
 })
+
+test("alignParaRange", () => {
+    const text = newText("input text");
+    const ret = text.alignParaRange(1, 0);
+    assert.equal(ret.index, 0);
+    assert.equal(ret.len, text.length);
+
+    text.insertText('efg\n', 1);//"iefg\nnput text\n"
+    assert.equal(text.paras.length, 2);
+    assert.equal(text.paras[0].text, "iefg\n");
+    assert.equal(text.paras[1].text, "nput text\n");
+    const ret0 = text.alignParaRange(1, 0);
+    assert.equal(ret0.index, 0);
+    assert.equal(ret0.len, text.paras[0].length);
+
+    const ret1 = text.alignParaRange(1, 5);
+    assert.equal(ret1.index, 0);
+    assert.equal(ret1.len, text.length);
+})

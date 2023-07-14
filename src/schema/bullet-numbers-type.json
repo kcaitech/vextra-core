@@ -1,6 +1,7 @@
 {
     "description": "bullet & item number types",
     "enum": [
+        "none",
         "ordered-1ai",
         "disorded"
     ],

@@ -25,6 +25,18 @@
         },
         "bulletNumbers": {
             "$ref": "./bullet-numbers.json"
+        },
+        "highlight": {
+            "$ref": "./color.json"
+        },
+        "kerning": {
+            "type": "number"
+        },
+        "transform": {
+            "$ref": "./text-transform-type.json"
+        },
+        "placeholder": {
+            "type": "boolean"
         }
     },
     "required": [],

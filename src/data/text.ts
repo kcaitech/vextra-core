@@ -1,30 +1,43 @@
-import { BulletNumbers, Color, StrikethroughType, TextBehaviour, TextHorAlign, TextOrientation, TextVerAlign, UnderlineType } from "./baseclasses";
+import { BulletNumbers, BulletNumbersBehavior, BulletNumbersType, Color, StrikethroughType, TextBehaviour, TextHorAlign, TextOrientation, TextTransformType, TextVerAlign, UnderlineType } from "./baseclasses";
 import { Basic, BasicArray } from "./basic";
 
-export { TextVerAlign, TextHorAlign, TextBehaviour, TextOrientation, StrikethroughType, UnderlineType, BulletNumbers, BulletNumbersType, BulletNumbersBehavior } from "./baseclasses";
+export {
+    TextVerAlign,
+    TextHorAlign,
+    TextBehaviour,
+    TextOrientation,
+    StrikethroughType,
+    UnderlineType,
+    BulletNumbers,
+    BulletNumbersType,
+    BulletNumbersBehavior,
+    TextTransformType
+} from "./baseclasses";
 import * as classes from "./baseclasses"
-import { deleteText, formatText, insertComplexText, insertSimpleText } from "./textedit";
+import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
 import { MeasureFun, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
-import { getSimpleText, getTextFormat, getTextWithFmt } from "./textread";
-import { locateCursor, locateRange, locateText } from "./textlocate";
+import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
+import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 import { _travelTextPara } from "./texttravel";
 /*
  文本框属性
     文本框大小行为
+    文本方向*
     垂直对齐
     段落属性
         水平对齐
         行高
         字距
-        段间距
-        编号
+        段间距*
+        编号*
         字属性
             字号
             颜色
             字体
             加粗
             倾斜
+            高亮色
             删除线
             下划线
  */
@@ -39,6 +52,10 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     bold?: boolean
     italic?: boolean
     bulletNumbers?: BulletNumbers
+    highlight?: Color
+    kerning?: number
+    transform?: TextTransformType
+    placeholder?: boolean
     constructor(
     ) {
         super()
@@ -56,7 +73,6 @@ export class ParaAttr extends SpanAttr implements classes.ParaAttr {
     typeId = 'para-attr'
     alignment?: TextHorAlign
     paraSpacing?: number
-    kerning?: number
     minimumLineHeight?: number
     maximumLineHeight?: number
     indent?: number
@@ -79,38 +95,52 @@ export class TextAttr extends ParaAttr implements classes.TextAttr {
     }
 }
 
-export class SpanAttrGetter extends SpanAttr {
-    fontNameIsMulti: boolean = false;
-    fontSizeIsMulti: boolean = false;
-    colorIsMulti: boolean = false;
-}
-
 export class AttrGetter extends TextAttr {
     fontNameIsMulti: boolean = false;
     fontSizeIsMulti: boolean = false;
     colorIsMulti: boolean = false;
+    highlightIsMulti: boolean = false;
+    boldIsMulti: boolean = false;
+    italicIsMulti: boolean = false;
+    underlineIsMulti: boolean = false;
+    strikethroughIsMulti: boolean = false;
 
     alignmentIsMulti: boolean = false;
     paraSpacingIsMulti: boolean = false;
     kerningIsMulti: boolean = false;
     minimumLineHeightIsMulti: boolean = false;
     maximumLineHeightIsMulti: boolean = false;
+    transformIsMulti: boolean = false;
+    bulletNumbersIsMulti: boolean = false;
 }
 
 export class SpanAttrSetter extends SpanAttr {
     fontNameIsSet: boolean = false;
     fontSizeIsSet: boolean = false;
     colorIsSet: boolean = false;
+    highlightIsSet: boolean = false;
+    boldIsSet: boolean = false;
+    italicIsSet: boolean = false;
+    underlineIsSet: boolean = false;
+    strikethroughIsSet: boolean = false;
+    kerningIsSet: boolean = false;
+    transformIsSet: boolean = false;
 }
 
 export class ParaAttrSetter extends ParaAttr {
     fontNameIsSet: boolean = false;
     fontSizeIsSet: boolean = false;
     colorIsSet: boolean = false;
+    highlightIsSet: boolean = false;
+    boldIsSet: boolean = false;
+    italicIsSet: boolean = false;
+    underlineIsSet: boolean = false;
+    strikethroughIsSet: boolean = false;
+    kerningIsSet: boolean = false;
+    transformIsSet: boolean = false;
 
     alignmentIsSet: boolean = false;
     paraSpacingIsSet: boolean = false;
-    kerningIsSet: boolean = false;
     minimumLineHeightIsSet: boolean = false;
     maximumLineHeightIsSet: boolean = false;
 }
@@ -204,6 +234,22 @@ export class Text extends Basic implements classes.Text {
             }
         }
     }
+    spanAt(index: number): Span | undefined {
+        const paraInfo = this.paraAt(index);
+        if (!paraInfo) return;
+        const para = paraInfo.para;
+        index = paraInfo.index;
+        const spans = para.spans;
+        for (let i = 0, len = spans.length; i <len; i++) {
+            const span = spans[i];
+            if (index < span.length) {
+                return span;
+            }
+            else {
+                index -= span.length;
+            }
+        }
+    }
     /**
      * 对齐段落
      * @param index 
@@ -211,14 +257,14 @@ export class Text extends Basic implements classes.Text {
      */
     alignParaRange(index: number, len: number): { index: number, len: number } {
         const ret = { index, len };
-        for (let i = 0, len = this.paras.length; i < len; i++) {
+        for (let i = 0, plen = this.paras.length; i < plen; i++) {
             const p = this.paras[i];
             if (index < p.length) {
                 ret.index -= index;
                 ret.len += index;
                 len += index;
 
-                for (let j = i; j < len; j++) {
+                for (let j = i; j < plen; j++) {
                     const p = this.paras[j];
                     if (len <= p.length) {
                         ret.len += p.length - len;
@@ -248,9 +294,13 @@ export class Text extends Basic implements classes.Text {
     getDefaultTextFormat(): TextAttr | undefined {
         return this.attr;
     }
-    getTextFormat(index: number, count: number): AttrGetter {
-        return getTextFormat(this, index, count);
+    getTextFormat(index: number, count: number, cachedAttr?: SpanAttrSetter): AttrGetter {
+        return getTextFormat(this, index, count, cachedAttr);
     }
+    getUsedFontNames(fontNames?: Set<string>): Set<string> {
+        return getUsedFontNames(this, fontNames);
+    }
+
     insertText(text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
         // this.reLayout(); // todo
         insertSimpleText(this, text, index, props);
@@ -273,7 +323,27 @@ export class Text extends Basic implements classes.Text {
     deleteText(index: number, count: number): Text | undefined {
         // this.reLayout(); // todo
         const ret = deleteText(this, index, count);
-        if (this.__layout) this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, count, this.__layout);
+        if (ret && this.__layout) {
+            const paras = ret.paras;
+            let hasBulletNumbers = false;
+            for (let i = 0, len = paras.length; i < len; i++) {
+                const p = paras[i];
+                if (p.text.at(0) === '*') {
+                    const spans = p.spans;
+                    const span0 = spans[0];
+                    if (span0 && span0.placeholder && span0.bulletNumbers && span0.length === 1) {
+                        hasBulletNumbers = true;
+                        break;
+                    }
+                }
+            }
+            if (hasBulletNumbers) {
+                this.reLayout();
+            }
+            else {
+                this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, count, this.__layout);
+            }
+        }
         return ret;
     }
 
@@ -313,7 +383,7 @@ export class Text extends Basic implements classes.Text {
         this.__frameHeight = h;
     }
 
-    private reLayout() {
+    reLayout() {
         this.__layout = undefined;
     }
 
@@ -322,10 +392,10 @@ export class Text extends Basic implements classes.Text {
         this.__layout = layoutText(this, this.__layoutWidth, this.__frameHeight, this.__measure);
         return this.__layout;
     }
-    locateText(x: number, y: number): { index: number, before: boolean } {
+    locateText(x: number, y: number): TextLocate {
         return locateText(this.getLayout(), x, y);
     }
-    locateCursor(index: number, cursorAtBefore: boolean): { x: number, y: number }[] {
+    locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
         return locateCursor(this.getLayout(), index, cursorAtBefore);
     }
     locateRange(start: number, end: number): { x: number, y: number }[] {
@@ -408,5 +478,34 @@ export class Text extends Basic implements classes.Text {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.maximumLineHeight = maxLineHeight;
         this.reLayout(); // todo
+    }
+    setDefaultTransform(transform: TextTransformType | undefined) {
+        if (!this.attr) this.attr = new TextAttr();
+        this.attr.transform = transform;
+        this.reLayout(); // todo
+    }
+
+    setBulletNumbersType(type: BulletNumbersType, index: number, len: number) {
+        const ret = setBulletNumbersType(this, type, index, len);
+        this.reLayout(); // todo
+        return ret;
+    }
+
+    setBulletNumbersStart(start: number, index: number, len: number) {
+        const ret = setBulletNumbersStart(this, start, index, len);
+        this.reLayout(); // todo
+        return ret;
+    }
+
+    setBulletNumbersBehavior(behavior: BulletNumbersBehavior, index: number, len: number) {
+        const ret = setBulletNumbersBehavior(this, behavior, index, len);
+        this.reLayout(); // todo
+        return ret;
+    }
+
+    setParaIndent(indent: number | undefined, index: number, len: number) {
+        const ret = setParaIndent(this, indent, index, len);
+        this.reLayout(); // todo
+        return ret;
     }
 }

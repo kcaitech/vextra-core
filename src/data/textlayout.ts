@@ -1,9 +1,14 @@
-import { Text } from "./text";
+import { BulletNumbersType, Text, TextBehaviour } from "./text";
 import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
 import { BasicArray } from "./basic"
+import { layoutBulletNumber } from "./textlayoutbn";
+import { transformText } from "./textlayouttransform";
+
+const TAB_WIDTH = 28;
+const INDENT_WIDTH = TAB_WIDTH;
 
 export interface IGraphy {
-    char: string,
+    char: string, // 可能是多个字符，在项目符号编号中
     metrics: TextMetrics | undefined,
     cw: number,
     ch: number,
@@ -22,22 +27,35 @@ export class Line extends Array<GraphArray> {
     public x: number = 0;
     public y: number = 0;
     public lineHeight: number = 0;
-    public lineWidth: number = 0;
+    public lineWidth: number = 0; // adjust后的宽度
 
-    public graphWidth: number = 0;
+    public graphWidth: number = 0; // graph+kerning的宽度
     public graphCount: number = 0;
-    public graphPadding: number = 0;
 
     public alignment: TextHorAlign = TextHorAlign.Left;
     public layoutWidth: number = 0;
 }
-export type LineArray = Array<Line>
+export class LineArray extends Array<Line> {
+    public bulletNumbers?: BulletNumbersLayout;
+}
+
+export class BulletNumbersLayout {
+    public index: number = 0;
+    public level: number = 0;
+    public text: string = '';
+    public type: BulletNumbersType = BulletNumbersType.None;
+    public graph: IGraphy;
+    constructor(graph: IGraphy) {
+        this.graph = graph;
+    }
+}
 
 export class ParaLayout extends Array<Line> {
     public paraHeight: number = 0;
     public graphCount: number = 0;
     public yOffset: number = 0;
     public paraWidth: number = 0;
+    public bulletNumbers?: BulletNumbersLayout;
 }
 
 export class TextLayout {
@@ -47,87 +65,132 @@ export class TextLayout {
     public contentWidth: number = 0;
 }
 
-export function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
-    if (line.alignment === align) {
-        if (line.layoutWidth === width) return;
-        if (align === TextHorAlign.Left) return;
+export function fixLineHorAlign(line: Line, align: TextHorAlign, width: number) {
+    if (line.layoutWidth === width && line.alignment === align) return;
+    if (line.alignment === TextHorAlign.Justified || line.alignment === TextHorAlign.Natural) {
+        // revert to Left
+        for (; ;) {
+
+            const lastspan = line[line.length - 1];
+            const lastgraph = lastspan[lastspan.length - 1];
+            let firstGraph;
+            let firstGArr
+            if (line.length > 0) {
+                firstGArr = line[0];
+                firstGraph = firstGArr[0];
+            }
+            if (!firstGArr || !firstGraph) throw new Error("layout result wrong");
+
+            let graphCount = line.graphCount;
+            if (isNewLineCharCode(lastgraph.char.charCodeAt(0))) {
+                graphCount--;
+            }
+            let ignoreFirst = false;
+            if (firstGArr.length === 1 && firstGArr.attr?.placeholder) {
+                graphCount--;
+                ignoreFirst = true;
+            }
+            if (graphCount <= 1) break;
+
+            const freeWidth = width - line.graphWidth - firstGraph.x;
+            if (align === TextHorAlign.Natural) {
+                const graphWidth = line.graphWidth / graphCount;
+                if (freeWidth > graphWidth) break;
+            }
+            const padding = graphCount === 1 ? 0 : (freeWidth) / (graphCount - 1);
+
+            let offset = 0;
+            for (let i = ignoreFirst ? 1 : 0, len = line.length; i < len; i++) {
+                const arr = line[i];
+                for (let j = 0, len1 = arr.length; j < len1; j++) {
+                    const graph = arr[j];
+                    graph.x -= offset;
+                    --graphCount;
+                    if (graphCount > 0) offset += padding;
+                }
+            }
+            break;
+        }
     }
+
+    adjustLineHorAlign(line, align, width);
+}
+
+function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
 
     switch (align) {
         case TextHorAlign.Left:
-        case TextHorAlign.Natural:
             {
-                let x = 0;
-                for (let i = 0, len = line.length; i < len; i++) {
-                    const arr = line[i];
-                    for (let j = 0, len1 = arr.length; j < len1; j++) {
-                        const graph = arr[j];
-                        graph.x = x;
-                        x += graph.cw;
-                    }
-                }
-                line.graphPadding = 0;
+                line.x = 0;
                 break;
             }
         case TextHorAlign.Centered:
             {
-                let x = (width - line.graphWidth) / 2;
-                for (let i = 0, len = line.length; i < len; i++) {
-                    const arr = line[i];
-                    for (let j = 0, len1 = arr.length; j < len1; j++) {
-                        const graph = arr[j];
-                        graph.x = x;
-                        x += graph.cw;
-                    }
-                }
-                line.graphPadding = 0;
+                line.x = (width - line.graphWidth) / 2;
                 break;
             }
         case TextHorAlign.Right:
             {
-                let x = width;
-                for (let i = line.length - 1; i >= 0; i--) {
-                    const arr = line[i];
-                    for (let j = arr.length - 1; j >= 0; j--) {
-                        const graph = arr[j];
-                        x -= graph.cw;
-                        graph.x = x;
-                    }
+                let lastGraph;
+                if (line.length > 0) {
+                    const firstGArr = line[line.length - 1];
+                    lastGraph = firstGArr[firstGArr.length - 1];
                 }
-                line.graphPadding = 0;
+                if (!lastGraph) throw new Error("layout result wrong");
+                const offset = width - lastGraph.x - lastGraph.cw;
+                line.x = offset;
                 break;
             }
+        case TextHorAlign.Natural:
         case TextHorAlign.Justified:
             {
                 const lastspan = line[line.length - 1];
                 const lastgraph = lastspan[lastspan.length - 1];
 
+                line.x = 0;
+
+                let firstGraph;
+                let firstGArr
+                if (line.length > 0) {
+                    firstGArr = line[0];
+                    firstGraph = firstGArr[0];
+                }
+                if (!firstGArr || !firstGraph) throw new Error("layout result wrong");
+
                 let graphCount = line.graphCount;
                 if (isNewLineCharCode(lastgraph.char.charCodeAt(0))) {
                     graphCount--;
                 }
-                let x = 0;
-                const padding = graphCount === 1 ? 0 : (width - line.graphWidth) / (graphCount - 1);
-                for (let i = 0, len = line.length; i < len; i++) {
+                // 项目符号编号不参与
+                let ignoreFirst = false;
+                if (firstGArr.length === 1 && firstGArr.attr?.placeholder) {
+                    graphCount--;
+                    ignoreFirst = true;
+                }
+                if (graphCount <= 1) break;
+                const freeWidth = width - line.graphWidth - firstGraph.x;
+                if (align === TextHorAlign.Natural) {
+                    const graphWidth = line.graphWidth / graphCount;
+                    if (freeWidth > graphWidth) break;
+                }
+                let offset = 0;
+                const padding = graphCount === 1 ? 0 : (freeWidth) / (graphCount - 1);
+
+                for (let i = ignoreFirst ? 1 : 0, len = line.length; i < len; i++) {
                     const arr = line[i];
                     for (let j = 0, len1 = arr.length; j < len1; j++) {
                         const graph = arr[j];
-                        graph.x = x;
-                        x += graph.cw;
-                        x += padding;
+                        graph.x += offset;
+                        --graphCount;
+                        if (graphCount > 0) offset += padding;
                     }
                 }
-                line.graphPadding = padding;
                 break;
             }
     }
 
     line.alignment = align;
     line.layoutWidth = width;
-}
-
-export function adjustLinesVertical(lines: LineArray, align: TextVerAlign) {
-
 }
 
 export type MeasureFun = (code: number, font: string) => TextMetrics | undefined;
@@ -152,7 +215,7 @@ export function isNewLineCharCode(code: number) {
     return false;
 }
 
-export function layoutLines(para: Para, width: number, measure: MeasureFun): LineArray {
+export function layoutLines(_text: Text, para: Para, width: number, measure: MeasureFun, preBulletNumbers: BulletNumbersLayout[]): LineArray {
     let spans = para.spans;
     let spansCount = spans.length;
     if (spansCount === 0) {
@@ -164,7 +227,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
     }
     // const frame = shape.frame;
     // const width = frame.width;
-    const charSpace = para.attr?.kerning ?? 0;
+    const paraCharSpace = para.attr?.kerning ?? 0;
 
     const text = para.text;
     let textIdx = 0
@@ -174,8 +237,9 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
     let span = spans[spanIdx];
     let font = "normal " + span.fontSize + "px " + span.fontName;
 
-    const startX = 0, endX = startX + width;
-    let curX = 0
+    const indent = (para.attr?.indent || 0) * INDENT_WIDTH;
+    const startX = Math.min(indent, width), endX = width;
+    let curX = startX;
 
     let graphArray: GraphArray | undefined;
     let line: Line = new Line();
@@ -183,6 +247,8 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
     const lineArray: LineArray = [];
 
     let preSpanIdx = spanIdx;
+
+    const defaultTransform = (para.attr?.transform) ?? (_text.attr?.transform);
 
     for (; textIdx < textLen;) {
         if (spanIdx >= spansCount) spanIdx = spansCount - 1; // fix
@@ -205,6 +271,19 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
                 graphArray = new GraphArray();
                 graphArray.attr = span;
             }
+
+            let preGraph;
+            if (graphArray.length > 0) {
+                preGraph = graphArray[graphArray.length - 1];
+            }
+            else if (line.length > 0) {
+                const preGArr = line[line.length - 1];
+                preGraph = preGArr[preGArr.length - 1];
+            }
+            if (preGraph) {
+                curX = preGraph.x + preGraph.cw;
+            }
+
             graphArray.push({
                 char: '\n',
                 metrics: undefined,
@@ -234,17 +313,55 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
             // }
             continue;
         }
-        const m = measure(c, font);
+
+        const charSpace = span.kerning ?? paraCharSpace;
+        if (spanIdx === 0 &&
+            c === 0x2A &&
+            span.placeholder &&
+            span.length === 1 &&
+            span.bulletNumbers) { // '*' 项目符号编号
+            const layout = layoutBulletNumber(para, span, span.bulletNumbers, preBulletNumbers, measure);
+            layout.graph.x += curX;
+
+            if (!graphArray) {
+                graphArray = new GraphArray();
+                graphArray.attr = span;
+            }
+
+            graphArray.push(layout.graph);
+            curX = layout.graph.x + layout.graph.cw + charSpace;
+            textIdx++;
+            spanOffset++;
+            if (spanOffset >= span.length) {
+                spanOffset = 0;
+                spanIdx++;
+                line.push(graphArray);
+                line.graphCount += graphArray.length;
+                graphArray = undefined;
+            }
+            line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
+
+            lineArray.bulletNumbers = layout;
+            continue;
+        }
+
+        // todo tab 不对
+        // indent 未处理
+        const transformType = span.transform ?? defaultTransform;
+        const char = transformText(text.charAt(textIdx), textIdx === 0 || (textIdx === 1 && !!lineArray.bulletNumbers), transformType);
+
+        const m = measure(char.charCodeAt(0), font);
         const cw = m?.width ?? 0;
         const ch = span.fontSize ?? 0;
 
-        if (cw + curX + charSpace <= endX) {
+
+        if (cw + curX <= endX) { // cw + curX + charSpace <= endX,兼容sketch
             if (!graphArray) {
                 graphArray = new GraphArray();
                 graphArray.attr = span;
             }
             graphArray.push({
-                char: text.at(textIdx) as string,
+                char,
                 metrics: m,
                 cw,
                 ch,
@@ -266,18 +383,18 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
             line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
             // }
         }
-        else if (line.length === 0 && (!graphArray || graphArray.length === 0)) {
+        else if (line.length === 0 && (!graphArray || graphArray.length === 0)) { // 至少一个字符
             if (!graphArray) {
                 graphArray = new GraphArray();
                 graphArray.attr = span;
             }
             graphArray.push({
-                char: text.at(textIdx) as string,
+                char,
                 metrics: m,
                 cw,
                 ch,
                 index: textIdx,
-                x: curX
+                x: Math.max(0, endX - cw) // 挤进一个
             });
 
             line.maxFontSize = span.fontSize ?? 0;
@@ -313,7 +430,7 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
 
             curX = startX;
             graphArray.push({
-                char: text.at(textIdx) as string,
+                char,
                 metrics: m,
                 cw,
                 ch,
@@ -345,18 +462,18 @@ export function layoutLines(para: Para, width: number, measure: MeasureFun): Lin
     return lineArray;
 }
 
-export function layoutPara(para: Para, layoutWidth: number, measure: MeasureFun) {
+export function layoutPara(text: Text, para: Para, layoutWidth: number, measure: MeasureFun, preBulletNumbers: BulletNumbersLayout[]) {
     let paraWidth = 0;
-    const layouts = layoutLines(para, layoutWidth, measure);
+    const layouts = layoutLines(text, para, layoutWidth, measure, preBulletNumbers);
     const pAttr = para.attr;
     let paraHeight = 0;
     let graphCount = 0;
     const lines = layouts.map((line) => {
         let lineHeight = line.maxFontSize;
-        if (pAttr && pAttr.maximumLineHeight != undefined) {
+        if (pAttr && pAttr.maximumLineHeight) {
             lineHeight = Math.min(pAttr.maximumLineHeight, lineHeight)
         }
-        if (pAttr && pAttr.minimumLineHeight != undefined) {
+        if (pAttr && pAttr.minimumLineHeight) {
             lineHeight = Math.max(pAttr.minimumLineHeight, lineHeight);
         }
         const y = paraHeight;
@@ -373,9 +490,12 @@ export function layoutPara(para: Para, layoutWidth: number, measure: MeasureFun)
         const lastgraph = lastspan[lastspan.length - 1];
         line.graphWidth = lastgraph.x + lastgraph.cw - firstgraph.x;
 
-        if (pAttr && pAttr.alignment) adjustLineHorAlign(line, pAttr.alignment, layoutWidth);
-        line.x = firstgraph.x;
-        line.lineWidth = lastgraph.x + lastgraph.cw - firstgraph.x;
+        // const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+        // if (pAttr && pAttr.alignment && textBehaviour !== TextBehaviour.Flexible) {
+        //     adjustLineHorAlign(line, pAttr.alignment, layoutWidth);
+        // }
+        // line.x = firstgraph.x;
+        line.lineWidth = lastgraph.x + lastgraph.cw;
 
         paraWidth = Math.max(line.lineWidth + line.x, paraWidth);
         return line;
@@ -384,6 +504,7 @@ export function layoutPara(para: Para, layoutWidth: number, measure: MeasureFun)
     paraLayout.paraHeight = paraHeight;
     paraLayout.graphCount = graphCount;
     paraLayout.paraWidth = paraWidth;
+    paraLayout.bulletNumbers = layouts.bulletNumbers;
 
     return paraLayout;
 }
@@ -401,13 +522,32 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
     const paras: ParaLayout[] = []
     let contentHeight = 0;
     let contentWidth = 0;
+    const preBulletNumbers: BulletNumbersLayout[] = [];
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
-        const paraLayout = layoutPara(para, layoutWidth, measure);
+        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
+        if (i > 0) {
+            const prePara = text.paras[i - 1];
+            const paraSpacing = prePara.attr?.paraSpacing || 0;
+            contentHeight += paraSpacing;
+        }
         paraLayout.yOffset = contentHeight;
         contentHeight += paraLayout.paraHeight;
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
         paras.push(paraLayout);
+    }
+
+    // hor align
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    for (let i = 0, pc = text.paras.length; i < pc; i++) {
+        const para = text.paras[i];
+        const paraLayout = paras[i];
+        const alignment = para.attr?.alignment ?? TextHorAlign.Left;
+        for (let li = 0, llen = paraLayout.length; li < llen; li++) {
+            const line = paraLayout[li];
+            adjustLineHorAlign(line, alignment, alignWidth);
+        }
     }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;

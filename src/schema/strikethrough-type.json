@@ -1,6 +1,7 @@
 {
     "description": "strikethrough types",
     "enum": [
+        "none",
         "single",
         "double"
     ],

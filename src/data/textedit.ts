@@ -1,5 +1,5 @@
 import { BasicArray } from "./basic";
-import { Para, Span, SpanAttr, ParaAttr, Text } from "./text";
+import { Para, Span, SpanAttr, ParaAttr, Text, BulletNumbersType, BulletNumbersBehavior } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { isDiffSpanAttr, mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 
@@ -8,14 +8,14 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
     para.text = para.text.slice(0, index) + text + para.text.slice(index);
 
     for (let count = 0, i = 0, len = spans.length, idx = index; i < len; i++) {
-        const span = spans[i];
+        let span = spans[i];
         count += span.length;
         if (idx === 0) {
-            if (attr) {
+            if (attr || span.placeholder) {
                 const _span = new Span(text.length);
                 mergeSpanAttr(_span, span);
-                mergeSpanAttr(_span, attr);
-                if (isDiffSpanAttr(span, _span)) {
+                if (attr) mergeSpanAttr(_span, attr, true);
+                if (span.placeholder || _span.placeholder || isDiffSpanAttr(span, _span)) {
                     spans.splice(i, 0, _span);
                     break;
                 }
@@ -27,8 +27,8 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
             if (attr) {
                 const _span = new Span(text.length);
                 mergeSpanAttr(_span, span);
-                mergeSpanAttr(_span, attr);
-                if (isDiffSpanAttr(span, _span)) {
+                mergeSpanAttr(_span, attr, true);
+                if (span.placeholder || _span.placeholder || isDiffSpanAttr(span, _span)) {
                     // split
                     const _span2 = new Span(span.length - idx);
                     mergeSpanAttr(_span2, span);
@@ -41,11 +41,11 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
             break;
         }
         if (idx === span.length) { // 优先继承前一个span属性
-            if (attr) {
+            if (attr || span.placeholder) {
                 const _span = new Span(text.length);
                 mergeSpanAttr(_span, span);
-                mergeSpanAttr(_span, attr);
-                if (isDiffSpanAttr(span, _span)) {
+                if (attr) mergeSpanAttr(_span, attr, true);
+                if (span.placeholder || _span.placeholder || isDiffSpanAttr(span, _span)) {
                     spans.splice(i + 1, 0, _span);
                     break;
                 }
@@ -54,17 +54,26 @@ function __insertText(para: Para, text: string, index: number, attr?: SpanAttr) 
             break;
         }
         if (i === len - 1) { // 原数据有错？
-            if (attr) {
+            if (span.placeholder) {
+                const _span = new Span(para.length - text.length - count);
+                mergeSpanAttr(_span, span);
+                spans.splice(i + 1, 0, _span);
+                i++;
+                span = spans[i];
+            }
+            else {
+                span.length += para.length - text.length - count; // fix
+            }
+            if (attr || span.placeholder) {
                 const _span = new Span(text.length);
                 mergeSpanAttr(_span, span);
-                mergeSpanAttr(_span, attr);
-                if (isDiffSpanAttr(span, _span)) {
+                if (attr) mergeSpanAttr(_span, attr, true);
+                if (span.placeholder || _span.placeholder || isDiffSpanAttr(span, _span)) {
                     spans.splice(i + 1, 0, _span);
-                    span.length += para.length - text.length - count; // fix
                     break;
                 }
             }
-            span.length += para.length - count;
+            span.length += text.length;
             break;
         }
         idx -= span.length;
@@ -77,13 +86,15 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
     let newParaIndex = text.indexOf('\n');
     if (newParaIndex < 0) {
         __insertText(para, text, index, attr);
+        if (paraAttr) mergeParaAttr(para, paraAttr);
         return;
     }
     while (newParaIndex >= 0) {
         if (newParaIndex > 0) {
             const t = text.slice(0, newParaIndex);
             __insertText(para, t, index, attr);
-            index += newParaIndex + 1;
+            if (paraAttr) mergeParaAttr(para, paraAttr);
+            index += newParaIndex;
         }
         text = text.slice(newParaIndex + 1)
         if (index === 0) {
@@ -94,9 +105,10 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
                 const copy = para.spans[0];
                 mergeSpanAttr(span, copy);
             }
-            if (attr) mergeSpanAttr(span, attr);
+            if (attr) mergeSpanAttr(span, attr, true);
             const _spans = new BasicArray<Span>(span);
             const _para = new Para(_text, _spans);
+            mergeParaAttr(_para, para);
             if (paraAttr) mergeParaAttr(_para, paraAttr);
             paraArray.splice(paraIndex, 0, _para);
             paraIndex++;
@@ -131,9 +143,19 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
                 }
                 idx -= span.length;
             }
-            spans[spans.length - 1].length++; // '\n'
-            if (paraAttr) mergeParaAttr(para, paraAttr);
+            const lastSpan = spans[spans.length - 1];
+            if (!lastSpan.placeholder) {
+                lastSpan.length++;// '\n'
+            }
+            else {
+                const _span = new Span(1);
+                mergeSpanAttr(_span, lastSpan);
+                spans.push(_span);
+            }
+
             const _para = new Para(_text, _spans);
+            mergeParaAttr(_para, para);
+            if (paraAttr) mergeParaAttr(_para, paraAttr);
             paraArray.splice(paraIndex + 1, 0, _para);
             para = _para;
             index = 0;
@@ -166,7 +188,7 @@ function _insertText(paraArray: Para[], paraIndex: number, para: Para, text: str
             mergeParaAttr(_para, para);
 
             if (attr) { // 给para的'\n'设置上
-                mergeSpanAttr(span, attr);
+                mergeSpanAttr(span, attr, true);
             }
             if (paraAttr) {
                 mergeParaAttr(_para, paraAttr);
@@ -486,4 +508,78 @@ export function deleteText(shapetext: Text, index: number, count: number): Text 
             index -= p.length;
         }
     }
+}
+
+export function setBulletNumbersType(shapetext: Text, type: BulletNumbersType, index: number, len: number): { index: number, len: number, origin: BulletNumbersType | undefined }[] {
+    const ret: { index: number, len: number, origin: BulletNumbersType | undefined }[] = [];
+    _travelTextPara(shapetext.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+        index -= _index; // 对齐到0
+        if (_index === 0 && para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
+            const cur = para.spans[0].bulletNumbers;
+            if (cur.type !== type) {
+                // fmt
+                const origin = cur.type;
+                cur.type = type;
+
+                ret.push({ index, len: 1, origin })
+            }
+        }
+        index += para.length;
+    })
+    return ret;
+}
+
+export function setBulletNumbersStart(shapetext: Text, start: number, index: number, len: number): { index: number, len: number, origin: number }[] {
+    const ret: { index: number, len: number, origin: number }[] = [];
+    _travelTextPara(shapetext.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+        index -= _index; // 对齐到0
+        if (_index === 0 && para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
+            const cur = para.spans[0].bulletNumbers;
+            if (cur.offset !== start) {
+                // fmt
+                const origin = cur.offset || 0;
+                cur.offset = start;
+                ret.push({ index, len: 1, origin })
+            }
+        }
+        index += para.length;
+    })
+    return ret;
+}
+
+export function setBulletNumbersBehavior(shapetext: Text, behavior: BulletNumbersBehavior, index: number, len: number): { index: number, len: number, origin: BulletNumbersBehavior | undefined }[] {
+    const ret: { index: number, len: number, origin: BulletNumbersBehavior | undefined }[] = [];
+    _travelTextPara(shapetext.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+        index -= _index; // 对齐到0
+        if (_index === 0 && para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
+            const cur = para.spans[0].bulletNumbers;
+            if (cur.behavior !== behavior) {
+                // fmt
+                const origin = cur.behavior;
+                cur.behavior = behavior;
+                ret.push({ index, len: 1, origin })
+            }
+        }
+        index += para.length;
+    })
+    return ret;
+}
+
+export function setParaIndent(shapetext: Text, indent: number | undefined, index: number, len: number): { index: number, len: number, origin: number | undefined }[] {
+    const ret: { index: number, len: number, origin: number | undefined }[] = [];
+    _travelTextPara(shapetext.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+        index -= _index; // 对齐到0
+
+        const origin = para.attr?.indent || 0;
+        const cur = indent ?? 0;
+        if (cur !== origin) {
+            // fmt
+            if (!para.attr) para.attr = new ParaAttr();
+            para.attr.indent = indent;
+            ret.push({ index, len: para.length, origin })
+        }
+
+        index += para.length;
+    })
+    return ret;
 }
