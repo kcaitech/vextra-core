@@ -15,11 +15,13 @@ import { GroupShape, RectRadius, Shape, TextShape, PathShape } from "../../data/
 import { exportShape, updateShapesFrame } from "./utils";
 import { Artboard } from "../../data/artboard";
 import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "../../data/style";
-import { SpanAttr, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
+import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { Point2D, StrikethroughType, UnderlineType } from "../../data/typesdefine";
+import { BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { isColorEqual } from "../../data/utils";
+import { _travelTextPara } from "../../data/texttravel";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -108,7 +110,8 @@ export class Api {
             this.__trap(() => {
                 basicapi.pageDelete(document, index);
             })
-            this.addCmd(PageCmdDelete.Make(document.id, item.id, index))
+            const page = document.pagesMgr.getSync(item.id)
+            this.addCmd(PageCmdDelete.Make(document.id, item.id, index, JSON.stringify(exportPage(page!))))
         }
     }
     pageModifyName(document: Document, pageId: string, name: string) {
@@ -150,7 +153,7 @@ export class Api {
                 }
             }
         })
-        if (shape) this.addCmd(ShapeCmdRemove.Make(page.id, parent.id, shape.id, index));
+        if (shape) this.addCmd(ShapeCmdRemove.Make(page.id, parent.id, shape.id, index, JSON.stringify(exportShape(shape))));
     }
     shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number) {
         this.__trap(() => {
@@ -568,12 +571,22 @@ export class Api {
             }
         })
     }
-    textModifyColor(page: Page, shape: TextShape, idx: number, len: number, color: Color) {
+    textModifyColor(page: Page, shape: TextShape, idx: number, len: number, color: Color | undefined) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const ret = basicapi.textModifyColor(shape, idx, len, color);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.color, color, m.color));
+                const colorEqual = m.color === color || m.color && color && isColorEqual(color, m.color);
+                if (!colorEqual) {
+                    const cmd = TextCmdModify.Make(page.id,
+                        shape.id,
+                        idx,
+                        m.length,
+                        TEXT_ATTR_ID.color,
+                        color ? exportColor(color) : undefined,
+                        m.color ? exportColor(m.color) : undefined);
+                    this.addCmd(cmd);
+                }
                 idx += m.length;
             })
         })
@@ -583,7 +596,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyFontName(shape, idx, len, fontname);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontName, fontname, m.fontName));
+                if (fontname !== m.fontName) this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontName, fontname, m.fontName));
                 idx += m.length;
             })
         })
@@ -593,7 +606,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyFontSize(shape, idx, len, fontsize);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontSize, fontsize, m.fontSize));
+                if (fontsize !== m.fontSize) this.addCmd(TextCmdModify.Make(page.id, shape.id, idx, m.length, TEXT_ATTR_ID.fontSize, fontsize, m.fontSize));
                 idx += m.length;
             })
         })
@@ -632,12 +645,155 @@ export class Api {
     shapeModifyStrikethrough(page: Page, shape: TextShape, strikethrouth: StrikethroughType | undefined) {
 
     }
-
-    textModifyUnderline(page: Page, shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
+    shapeModifyTextDefaultBold(page: Page, shape: TextShape, bold: boolean) {
 
     }
-    textModifyStrikethrough(page: Page, shape: TextShape, strikethrough: StrikethroughType | undefined, index: number, len: number) {
+    shapeModifyTextDefaultItalic(page: Page, shape: TextShape, italic: boolean) {
 
+    }
+
+    textModifyHighlightColor(page: Page, shape: TextShape, idx: number, len: number, color: Color | undefined) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.textModifyHighlightColor(shape, idx, len, color);
+            ret.forEach((m) => {
+                const colorEqual = m.highlight === color || m.highlight && color && isColorEqual(color, m.highlight);
+                if (!colorEqual) {
+                    const cmd = TextCmdModify.Make(page.id,
+                        shape.id,
+                        idx,
+                        m.length,
+                        TEXT_ATTR_ID.highlightColor,
+                        color ? exportColor(color) : undefined,
+                        m.highlight ? exportColor(m.highlight) : undefined);
+                    this.addCmd(cmd);
+                }
+                idx += m.length;
+            })
+        });
+    }
+    textModifyUnderline(page: Page, shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.textModifyUnderline(shape, underline, index, len);
+            ret.forEach((m) => {
+                if (underline !== m.underline) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.underline, underline, m.underline));
+                index += m.length;
+            })
+        });
+    }
+    textModifyStrikethrough(page: Page, shape: TextShape, strikethrough: StrikethroughType | undefined, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.textModifyStrikethrough(shape, strikethrough, index, len);
+            ret.forEach((m) => {
+                if (strikethrough !== m.strikethrough) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.strikethrough, strikethrough, m.strikethrough));
+                index += m.length;
+            })
+        });
+    }
+    textModifyBold(page: Page, shape: TextShape, bold: boolean, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.textModifyBold(shape, bold, index, len);
+            ret.forEach((m) => {
+                if (bold !== m.bold) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.bold, bold, m.bold));
+                index += m.length;
+            })
+        });
+    }
+    textModifyItalic(page: Page, shape: TextShape, italic: boolean, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const ret = basicapi.textModifyItalic(shape, italic, index, len);
+            ret.forEach((m) => {
+                if (italic !== m.italic) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.italic, italic, m.italic));
+                index += m.length;
+            })
+        });
+    }
+
+    private _textModifyRemoveBulletNumbers(page: Page, shape: TextShape, index: number, len: number) {
+        const removeIndexs: number[] = [];
+        _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+            index -= _index;
+            if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
+                removeIndexs.push(index - _index);
+            }
+            index += para.length;
+        })
+
+        for (let i = 0, len = removeIndexs.length; i < len; i++) {
+            const del = basicapi.deleteText(shape, removeIndexs[i] - i, 1);
+            if (del && del.length > 0) this.addCmd(TextCmdRemove.Make(page.id, shape.id, removeIndexs[i] - i, del.length, { type: "complex", text: exportText(del), length: del.length }))
+        }
+        if (removeIndexs.length > 0) shape.text.reLayout();
+    }
+
+    private _textModifySetBulletNumbers(page: Page, shape: TextShape, type: BulletNumbersType, index: number, len: number) {
+
+        const modifyeds = shape.text.setBulletNumbersType(type, index, len);
+        modifyeds.forEach((m) => {
+            this.addCmd(TextCmdModify.Make(page.id, shape.id, m.index, 1, TEXT_ATTR_ID.bulletNumbersType, type, m.origin));
+        })
+
+        const insertIndexs: number[] = [];
+        _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+            index -= _index;
+            if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
+                //
+            }
+            else {
+                // insert with format
+                insertIndexs.push(index - _index);
+            }
+            index += para.length;
+        });
+
+        for (let i = 0, len = insertIndexs.length; i < len; i++) {
+            const attr = new SpanAttrSetter();
+            attr.placeholder = true;
+            attr.bulletNumbers = new BulletNumbers(type);
+            basicapi.insertSimpleText(shape, '*', insertIndexs[i] + i, { attr });
+            this.addCmd(TextCmdInsert.Make(page.id, shape.id, insertIndexs[i] + i, 1, { type: "simple", text: '*', attr, length: 1 }))
+        }
+        if (insertIndexs.length > 0) shape.text.reLayout();
+    }
+
+    textModifyBulletNumbers(page: Page, shape: TextShape, type: BulletNumbersType | undefined, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const alignRange = shape.text.alignParaRange(index, len);
+            index = alignRange.index;
+            len = alignRange.len;
+
+            if (type === undefined || type === BulletNumbersType.None) {
+                this._textModifyRemoveBulletNumbers(page, shape, index, len);
+            }
+            else {
+                this._textModifySetBulletNumbers(page, shape, type, index, len);
+            }
+        });
+    }
+
+    textModifyBulletNumbersStart(page: Page, shape: TextShape, start: number, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const modifyeds = shape.text.setBulletNumbersStart(start, index, len);
+            modifyeds.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, m.index, 1, TEXT_ATTR_ID.bulletNumbersStart, start, m.origin));
+            })
+        });
+    }
+    textModifyBulletNumbersInherit(page: Page, shape: TextShape, inherit: boolean, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const behavior = inherit ? BulletNumbersBehavior.Inherit : BulletNumbersBehavior.Renew;
+            const modifyeds = shape.text.setBulletNumbersBehavior(behavior, index, len);
+            modifyeds.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, shape.id, m.index, 1, TEXT_ATTR_ID.bulletNumbersBehavior, behavior, m.origin));
+            })
+        });
     }
 
     textModifyHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign, index: number, len: number) {
@@ -650,11 +806,28 @@ export class Api {
 
             const ret = basicapi.textModifyHorAlign(shape, horAlign, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textHorAlign, horAlign, m.alignment));
+                if (horAlign !== m.alignment) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textHorAlign, horAlign, m.alignment));
                 index += m.length;
             })
         })
     }
+
+    textModifyParaIndent(page: Page, shape: TextShape, indent: number | undefined, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            // fix index
+            // const alignRange = shape.text.alignParaRange(index, len);
+            // index = alignRange.index;
+            // len = alignRange.len;
+
+            const ret = shape.text.setParaIndent(indent, index, len);
+            ret.forEach((m) => {
+                if (indent !== m.origin) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.len, TEXT_ATTR_ID.indent, indent, m.origin));
+                index += m.len;
+            })
+        })
+    }
+
     shapeModifyTextDefaultHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
@@ -673,7 +846,7 @@ export class Api {
 
             const ret = basicapi.textModifyMinLineHeight(shape, minLineheight, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textMinLineheight, minLineheight, m.minimumLineHeight));
+                if (minLineheight !== m.minimumLineHeight) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textMinLineheight, minLineheight, m.minimumLineHeight));
                 index += m.length;
             })
         })
@@ -687,7 +860,7 @@ export class Api {
 
             const ret = basicapi.textModifyMaxLineHeight(shape, maxLineheight, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textMaxLineheight, maxLineheight, m.maximumLineHeight));
+                if (maxLineheight !== m.maximumLineHeight) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.textMaxLineheight, maxLineheight, m.maximumLineHeight));
                 index += m.length;
             })
         })
@@ -695,13 +868,19 @@ export class Api {
     textModifyKerning(page: Page, shape: TextShape, kerning: number, index: number, len: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const alignRange = shape.text.alignParaRange(index, len);
-            index = alignRange.index;
-            len = alignRange.len;
+            // const alignRange = shape.text.alignParaRange(index, len);
+            // index = alignRange.index;
+            // len = alignRange.len;
 
-            const ret = basicapi.textModifyKerning(shape, kerning, index, len);
+            // const ret1 = basicapi.textModifyParaKerning(shape, kerning, index, len);
+            // ret1.forEach((m) => {
+            //     this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraKerning, kerning, m.kerning));
+            //     index += m.length;
+            // })
+
+            const ret = basicapi.textModifySpanKerning(shape, kerning, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.kerning, kerning, m.kerning));
+                if (m.kerning !== kerning) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanKerning, kerning, m.kerning));
                 index += m.length;
             })
         })
@@ -715,7 +894,7 @@ export class Api {
 
             const ret = basicapi.textModifyParaSpacing(shape, paraSpacing, index, len);
             ret.forEach((m) => {
-                this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraSpacing, paraSpacing, m.paraSpacing));
+                if (paraSpacing !== m.paraSpacing) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.paraSpacing, paraSpacing, m.paraSpacing));
                 index += m.length;
             })
         })
@@ -736,6 +915,21 @@ export class Api {
             if (ret !== maxLineheight) {
                 this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.defaultTextMaxLineheight, maxLineheight, ret));
             }
+        })
+    }
+    textModifyTransform(page: Page, shape: TextShape, transform: TextTransformType | undefined, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            if (transform === TextTransformType.UppercaseFirst) {
+                const alignRange = shape.text.alignParaRange(index, len);
+                index = alignRange.index;
+                len = alignRange.len;
+            }
+            const ret1 = basicapi.textModifySpanTransfrom(shape, transform, index, len);
+            ret1.forEach((m) => {
+                if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanTransform, transform, m.transform));
+                index += m.length;
+            })
         })
     }
 }

@@ -55,7 +55,6 @@
                     }
                 ],
                 "attr": {
-                    "maximumLineHeight": 24,
                     "minimumLineHeight": 24
                 }
             }
