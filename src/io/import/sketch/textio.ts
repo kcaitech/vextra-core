@@ -1,5 +1,5 @@
 
-import { Para, ParaAttr, Span, Text, TextAttr } from "../../../data/text";
+import { Para, ParaAttr, Span, Text, TextAttr, TextTransformType } from "../../../data/text";
 import { importColor } from "./styleio";
 import * as types from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
@@ -45,6 +45,7 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
             const attrAttr = attr['attributes'];
             const font:IJSON = attrAttr && attrAttr['MSAttributedStringFontAttribute'] && attrAttr['MSAttributedStringFontAttribute']['attributes'];
             const color:IJSON = attrAttr && attrAttr['MSAttributedStringColorAttribute'];
+            const transfrom = attrAttr && attrAttr['MSAttributedStringTextTransformAttribute'];
             const kerning = attrAttr && attrAttr['kerning'];
 
             let len = Math.min(location + length - spanIndex, end - spanIndex);
@@ -54,6 +55,13 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
             }
 
             const span = new Span(len);
+            span.kerning = kerning;
+            span.transform = ((t) => {
+                switch (t) {
+                    case 1: return TextTransformType.Uppercase;
+                    case 2: return TextTransformType.Lowercase;
+                }
+            })(transfrom);
             span.fontName = font['name'];
             span.fontSize = font['size'];
             span.color = color && importColor(color)
@@ -71,7 +79,7 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
                 // paraAttr.allowsDefaultTighteningForTruncation = pAttr["allowsDefaultTighteningForTruncation"] || 0;
                 paraAttr.maximumLineHeight = pAttr["maximumLineHeight"] || Number.MAX_VALUE;
                 paraAttr.minimumLineHeight = pAttr["minimumLineHeight"] || 0;
-                paraAttr.kerning = kerning || 0;
+                // paraAttr.kerning = kerning || 0;
             }
         }
 

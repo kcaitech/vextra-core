@@ -49,6 +49,10 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
 export function importTextVerAlign(source: types.TextVerAlign, ctx?: IImportContext): impl.TextVerAlign {
     return source
 }
+/* text transform types */
+export function importTextTransformType(source: types.TextTransformType, ctx?: IImportContext): impl.TextTransformType {
+    return source
+}
 /* text orientation */
 export function importTextOrientation(source: types.TextOrientation, ctx?: IImportContext): impl.TextOrientation {
     return source
@@ -131,6 +135,10 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
     ret.bold = source.bold
     ret.italic = source.italic
     ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
+    ret.highlight = source.highlight && importColor(source.highlight, ctx)
+    ret.kerning = source.kerning
+    ret.transform = source.transform && importTextTransformType(source.transform, ctx)
+    ret.placeholder = source.placeholder
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -639,6 +647,10 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     ret.bold = source.bold
     ret.italic = source.italic
     ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
+    ret.highlight = source.highlight && importColor(source.highlight, ctx)
+    ret.kerning = source.kerning
+    ret.transform = source.transform && importTextTransformType(source.transform, ctx)
+    ret.placeholder = source.placeholder
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -727,9 +739,12 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
     ret.bold = source.bold
     ret.italic = source.italic
     ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
+    ret.highlight = source.highlight && importColor(source.highlight, ctx)
+    ret.kerning = source.kerning
+    ret.transform = source.transform && importTextTransformType(source.transform, ctx)
+    ret.placeholder = source.placeholder
     ret.alignment = source.alignment && importTextHorAlign(source.alignment, ctx)
     ret.paraSpacing = source.paraSpacing
-    ret.kerning = source.kerning
     ret.minimumLineHeight = source.minimumLineHeight
     ret.maximumLineHeight = source.maximumLineHeight
     ret.indent = source.indent
@@ -742,7 +757,6 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     )
     ret.alignment = source.alignment && importTextHorAlign(source.alignment, ctx)
     ret.paraSpacing = source.paraSpacing
-    ret.kerning = source.kerning
     ret.minimumLineHeight = source.minimumLineHeight
     ret.maximumLineHeight = source.maximumLineHeight
     ret.indent = source.indent
@@ -754,6 +768,10 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     ret.bold = source.bold
     ret.italic = source.italic
     ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
+    ret.highlight = source.highlight && importColor(source.highlight, ctx)
+    ret.kerning = source.kerning
+    ret.transform = source.transform && importTextTransformType(source.transform, ctx)
+    ret.placeholder = source.placeholder
     ret.verAlign = source.verAlign && importTextVerAlign(source.verAlign, ctx)
     ret.orientation = source.orientation && importTextOrientation(source.orientation, ctx)
     ret.textBehaviour = source.textBehaviour && importTextBehaviour(source.textBehaviour, ctx)

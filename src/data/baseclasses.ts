@@ -7,6 +7,7 @@ export {
     WindingRule,
     UnderlineType,
     TextVerAlign,
+    TextTransformType,
     TextOrientation,
     TextHorAlign,
     TextBehaviour,
@@ -33,6 +34,7 @@ import {
     WindingRule,
     UnderlineType,
     TextVerAlign,
+    TextTransformType,
     TextOrientation,
     TextHorAlign,
     TextBehaviour,
@@ -156,6 +158,10 @@ export class SpanAttr extends Basic {
     bold?: boolean
     italic?: boolean
     bulletNumbers?: BulletNumbers
+    highlight?: Color
+    kerning?: number
+    transform?: TextTransformType
+    placeholder?: boolean
     constructor(
     ) {
         super()
@@ -879,7 +885,6 @@ export class ParaAttr extends SpanAttr {
     typeId = 'para-attr'
     alignment?: TextHorAlign
     paraSpacing?: number
-    kerning?: number
     minimumLineHeight?: number
     maximumLineHeight?: number
     indent?: number
