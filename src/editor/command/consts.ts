@@ -75,6 +75,7 @@ export const TEXT_ATTR_ID = {
     bulletNumbersType: "bulletNumbersType",
     bulletNumbersStart: "bulletNumbersStart",
     bulletNumbersBehavior: "bulletNumbersBehavior",
+    indent: "indent",
 }
 
 export const POINTS_ID = "points"

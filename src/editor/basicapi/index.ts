@@ -422,6 +422,10 @@ export function textModifyBulletNumbersBehavior(shape: TextShape, behavior: Bull
     shape.text.setBulletNumbersBehavior(behavior, index, len);
 }
 
+export function textModifyParaIndent(shape: TextShape, indent: number | undefined, index: number, len: number) {
+    shape.text.setParaIndent(indent, index, len);
+}
+
 export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
     p.point.x = point.x;

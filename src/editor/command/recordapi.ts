@@ -808,6 +808,23 @@ export class Api {
             })
         })
     }
+
+    textModifyParaIndent(page: Page, shape: TextShape, indent: number | undefined, index: number, len: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            // fix index
+            // const alignRange = shape.text.alignParaRange(index, len);
+            // index = alignRange.index;
+            // len = alignRange.len;
+
+            const ret = shape.text.setParaIndent(indent, index, len);
+            ret.forEach((m) => {
+                if (indent !== m.origin) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.len, TEXT_ATTR_ID.indent, indent, m.origin));
+                index += m.len;
+            })
+        })
+    }
+
     shapeModifyTextDefaultHorAlign(page: Page, shape: TextShape, horAlign: TextHorAlign) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {

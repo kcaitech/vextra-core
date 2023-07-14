@@ -961,6 +961,12 @@ export class CMDExecuter {
                 api.textModifyParaTransfrom(shape, transform, op.start, op.length)
             }
         }
+        else if (attrId === TEXT_ATTR_ID.indent) {
+            if (op.type === OpType.ArrayAttr) {
+                const indent = value && JSON.parse(value) || undefined;
+                api.textModifyParaIndent(shape, indent, op.start, op.length)
+            }
+        }
         else {
             console.error("not implemented ", attrId)
         }

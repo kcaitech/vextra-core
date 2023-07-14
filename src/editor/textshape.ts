@@ -1,3 +1,4 @@
+import { _travelTextPara } from "data/texttravel";
 import { BulletNumbersBehavior, BulletNumbersType, Color, Page, SpanAttr, SpanAttrSetter, StrikethroughType, Text, TextBehaviour, TextHorAlign, TextShape, TextTransformType, TextVerAlign, UnderlineType } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
@@ -734,6 +735,32 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextTransform", {});
         try {
             api.textModifyTransform(this.__page, this.shape, transform, index, len);
+            this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public offsetParaIndent(offset: number, index: number, len: number) {
+        const api = this.__repo.start("offsetParaIndent", {});
+        try {
+
+            _travelTextPara(this.shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+                index -= _index;
+
+                const cur = para.attr?.indent || 0;
+                const tar = Math.max(0, cur + offset);
+                if (cur !== tar) {
+                    api.textModifyParaIndent(this.__page, this.shape, tar ? tar : undefined, index, para.length)
+                }
+
+                index += para.length;
+            })
+
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
