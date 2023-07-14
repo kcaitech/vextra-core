@@ -45,7 +45,25 @@ import {
     importPoint2D
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
-import { ImageShape, SymbolRefShape, GroupShape, Page, Shape, TextShape, RectShape, Artboard, SymbolShape, Color, PathShape, TextHorAlign } from "../../data/classes";
+import {
+    ImageShape,
+    SymbolRefShape,
+    GroupShape,
+    Page,
+    Shape,
+    TextShape,
+    RectShape,
+    Artboard,
+    SymbolShape,
+    Color,
+    PathShape,
+    TextHorAlign,
+    UnderlineType,
+    StrikethroughType,
+    BulletNumbersType,
+    TextTransformType,
+    BulletNumbersBehavior
+} from "../../data/classes";
 
 import * as api from "../basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
@@ -132,6 +150,7 @@ export class CMDExecuter {
         }
         catch (e) {
             console.error("exec error:", e)
+            console.error("error cmd:", cmd)
             this.__repo.rollback();
             return false;
         }
@@ -489,6 +508,51 @@ export class CMDExecuter {
                 api.shapeModifyTextFontSize(shape as TextShape, 0)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.defalutTextKerning) {
+            if (op.type === OpType.IdSet && value) {
+                const kerning = JSON.parse(value);
+                api.shapeModifyTextKerning(shape as TextShape, kerning);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextKerning(shape as TextShape, 0)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextBold) {
+            if (op.type === OpType.IdSet && value) {
+                const bold = JSON.parse(value);
+                api.shapeModifyTextDefaultBold(shape as TextShape, bold);
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextItalic) {
+            if (op.type === OpType.IdSet && value) {
+                const italic = JSON.parse(value);
+                api.shapeModifyTextDefaultItalic(shape as TextShape, italic);
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextUnderline) {
+            if (op.type === OpType.IdSet && value) {
+                api.shapeModifyTextUnderline(shape as TextShape, value as UnderlineType);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextUnderline(shape as TextShape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.defalutTextStrikethrough) {
+            if (op.type === OpType.IdSet && value) {
+                api.shapeModifyStrikethrough(shape as TextShape, value as StrikethroughType);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyStrikethrough(shape as TextShape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.textTransform) {
+            if (op.type === OpType.IdSet && value) {
+                api.shapeModifyTextTransform(shape as TextShape, value as TextTransformType);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyTextTransform(shape as TextShape, undefined)
+            }
+        }
         // todo
         else {
             console.error("not implemented ", op)
@@ -805,10 +869,16 @@ export class CMDExecuter {
                 api.textModifyFontSize(shape, op.start, op.length, fontSize)
             }
         }
-        else if (attrId === TEXT_ATTR_ID.kerning) {
+        else if (attrId === TEXT_ATTR_ID.spanKerning) {
             if (op.type === OpType.ArrayAttr) {
                 const kerning = value && JSON.parse(value);
-                api.textModifyKerning(shape, kerning, op.start, op.length)
+                api.textModifySpanKerning(shape, kerning, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.paraKerning) {
+            if (op.type === OpType.ArrayAttr) {
+                const kerning = value && JSON.parse(value);
+                api.textModifyParaKerning(shape, kerning, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.textHorAlign) {
@@ -833,6 +903,69 @@ export class CMDExecuter {
             if (op.type === OpType.ArrayAttr) {
                 const paraSpacing = value && JSON.parse(value);
                 api.textModifyParaSpacing(shape, paraSpacing, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.bold) {
+            if (op.type === OpType.ArrayAttr) {
+                const bold = value && JSON.parse(value);
+                api.textModifyBold(shape, bold, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.italic) {
+            if (op.type === OpType.ArrayAttr) {
+                const italic = value && JSON.parse(value);
+                api.textModifyItalic(shape, italic, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.underline) {
+            if (op.type === OpType.ArrayAttr) {
+                api.textModifyUnderline(shape, value as UnderlineType, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.strikethrough) {
+            if (op.type === OpType.ArrayAttr) {
+                api.textModifyStrikethrough(shape, value as StrikethroughType, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.bulletNumbersType) {
+            if (op.type === OpType.ArrayAttr) {
+                api.textModifyBulletNumbersType(shape, value as BulletNumbersType, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.bulletNumbersStart) {
+            if (op.type === OpType.ArrayAttr) {
+                const start = value && JSON.parse(value) || 0;
+                api.textModifyBulletNumbersStart(shape, start, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.bulletNumbersBehavior) {
+            if (op.type === OpType.ArrayAttr) {
+                const inherit = value as BulletNumbersBehavior;
+                api.textModifyBulletNumbersBehavior(shape, inherit, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.highlightColor) {
+            if (op.type === OpType.ArrayAttr) {
+                const color = (value && importColor(JSON.parse(value))) as Color | undefined;
+                api.textModifyHighlightColor(shape, op.start, op.length, color)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.spanTransform) {
+            if (op.type === OpType.ArrayAttr) {
+                const transform = value as TextTransformType | undefined;
+                api.textModifySpanTransfrom(shape, transform, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.paraTransform) {
+            if (op.type === OpType.ArrayAttr) {
+                const transform = value as TextTransformType | undefined;
+                api.textModifyParaTransfrom(shape, transform, op.start, op.length)
+            }
+        }
+        else if (attrId === TEXT_ATTR_ID.indent) {
+            if (op.type === OpType.ArrayAttr) {
+                const indent = value && JSON.parse(value) || undefined;
+                api.textModifyParaIndent(shape, indent, op.start, op.length)
             }
         }
         else {

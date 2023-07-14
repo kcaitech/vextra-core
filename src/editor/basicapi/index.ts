@@ -4,7 +4,7 @@ import { Page } from "../../data/page";
 import { GroupShape, PathShape, RectRadius, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
-import { Point2D } from "data/typesdefine";
+import { BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 
 export * from "./fill";
 export * from "./border";
@@ -249,7 +249,7 @@ export function textModifyMaxLineHeight(shape: TextShape, maxLineheight: number,
     })
     return origin;
 }
-export function textModifyKerning(shape: TextShape, kerning: number, index: number, len: number) {
+export function textModifyParaKerning(shape: TextShape, kerning: number | undefined, index: number, len: number) {
     const attr = new ParaAttrSetter();
     attr.kerning = kerning;
     attr.kerningIsSet = true;
@@ -258,6 +258,18 @@ export function textModifyKerning(shape: TextShape, kerning: number, index: numb
     const origin: { kerning: number | undefined, length: number }[] = [];
     paras.forEach((para) => {
         origin.push({ kerning: para.kerning, length: para.length })
+    })
+    return origin;
+}
+export function textModifySpanKerning(shape: TextShape, kerning: number | undefined, index: number, len: number) {
+    const attr = new SpanAttrSetter();
+    attr.kerning = kerning;
+    attr.kerningIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr: attr })
+    const spans = ret.spans;
+    const origin: { kerning: number | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ kerning: span.kerning, length: span.length })
     })
     return origin;
 }
@@ -285,6 +297,135 @@ export function shapeModifyTextDefaultMaxLineHeight(shape: TextShape, maxLinehei
     text.setDefaultMaxLineHeight(maxLineheight);
     return origin ?? 0;
 }
+
+export function textModifySpanTransfrom(shape: TextShape, transform: TextTransformType | undefined, index: number, len: number) {
+    // 句属性
+    const attr = new SpanAttrSetter();
+    attr.transform = transform;
+    attr.transformIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr: attr })
+    const spans = ret.spans;
+    const origin: { transform: TextTransformType | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ transform: span.transform, length: span.length })
+    })
+    return origin;
+}
+export function textModifyParaTransfrom(shape: TextShape, transform: TextTransformType | undefined, index: number, len: number) {
+    // 段落属性
+    const attr = new ParaAttrSetter();
+    attr.transform = transform;
+    attr.transformIsSet = true;
+    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const paras = ret.paras;
+    const origin: { transform: TextTransformType | undefined, length: number }[] = [];
+    paras.forEach((para) => {
+        origin.push({ transform: para.transform, length: para.length })
+    })
+    return origin;
+}
+export function shapeModifyTextTransform(shape: TextShape, transform: TextTransformType | undefined) {
+    const text = shape.text;
+    const origin = text.attr?.transform;
+    text.setDefaultTransform(transform);
+    return origin ?? 0;
+}
+export function shapeModifyTextKerning(shape: TextShape, kerning: number) {
+
+}
+export function shapeModifyTextParaSpacing(shape: TextShape, paraSpacing: number) {
+
+}
+export function shapeModifyTextUnderline(shape: TextShape, underline: UnderlineType | undefined) {
+
+}
+export function shapeModifyStrikethrough(shape: TextShape, strikethrouth: StrikethroughType | undefined) {
+
+}
+export function shapeModifyTextDefaultBold(shape: TextShape, bold: boolean) {
+
+}
+export function shapeModifyTextDefaultItalic(shape: TextShape, italic: boolean) {
+
+}
+
+export function textModifyHighlightColor(shape: TextShape, idx: number, len: number, color: Color | undefined) {
+    const attr = new SpanAttrSetter();
+    attr.highlight = color;
+    attr.highlightIsSet = true;
+    const ret = shape.text.formatText(idx, len, { attr })
+    const spans = ret.spans;
+    const origin: { highlight: Color | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ highlight: span.highlight, length: span.length })
+    })
+    return origin;
+}
+export function textModifyUnderline(shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
+    const attr = new SpanAttrSetter();
+    attr.underline = underline;
+    attr.underlineIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr })
+    const spans = ret.spans;
+    const origin: { underline: UnderlineType | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ underline: span.underline, length: span.length })
+    })
+    return origin;
+}
+export function textModifyStrikethrough(shape: TextShape, strikethrough: StrikethroughType | undefined, index: number, len: number) {
+    const attr = new SpanAttrSetter();
+    attr.strikethrough = strikethrough;
+    attr.strikethroughIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr })
+    const spans = ret.spans;
+    const origin: { strikethrough: StrikethroughType | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ strikethrough: span.strikethrough, length: span.length })
+    })
+    return origin;
+}
+export function textModifyBold(shape: TextShape, bold: boolean, index: number, len: number) {
+    const attr = new SpanAttrSetter();
+    attr.bold = bold;
+    attr.boldIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr })
+    const spans = ret.spans;
+    const origin: { bold: boolean | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ bold: span.bold, length: span.length })
+    })
+    return origin;
+}
+export function textModifyItalic(shape: TextShape, italic: boolean, index: number, len: number) {
+    const attr = new SpanAttrSetter();
+    attr.italic = italic;
+    attr.italicIsSet = true;
+    const ret = shape.text.formatText(index, len, { attr })
+    const spans = ret.spans;
+    const origin: { italic: boolean | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ italic: span.italic, length: span.length })
+    })
+    return origin;
+}
+
+export function textModifyBulletNumbersType(shape: TextShape, type: BulletNumbersType, index: number, len: number) {
+    shape.text.setBulletNumbersType(type, index, len);
+}
+
+export function textModifyBulletNumbersStart(shape: TextShape, start: number, index: number, len: number) {
+    shape.text.setBulletNumbersStart(start, index, len);
+}
+
+export function textModifyBulletNumbersBehavior(shape: TextShape, behavior: BulletNumbersBehavior, index: number, len: number) {
+    shape.text.setBulletNumbersBehavior(behavior, index, len);
+}
+
+export function textModifyParaIndent(shape: TextShape, indent: number | undefined, index: number, len: number) {
+    shape.text.setParaIndent(indent, index, len);
+}
+
 export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
     p.point.x = point.x;
