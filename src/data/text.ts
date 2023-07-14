@@ -234,6 +234,22 @@ export class Text extends Basic implements classes.Text {
             }
         }
     }
+    spanAt(index: number): Span | undefined {
+        const paraInfo = this.paraAt(index);
+        if (!paraInfo) return;
+        const para = paraInfo.para;
+        index = paraInfo.index;
+        const spans = para.spans;
+        for (let i = 0, len = spans.length; i <len; i++) {
+            const span = spans[i];
+            if (index < span.length) {
+                return span;
+            }
+            else {
+                index -= span.length;
+            }
+        }
+    }
     /**
      * 对齐段落
      * @param index 

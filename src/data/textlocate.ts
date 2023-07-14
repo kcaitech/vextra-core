@@ -88,9 +88,17 @@ export function locateText(layout: TextLayout, x: number, y: number): TextLocate
                 }
                 index += end;
 
-                if (span.attr?.placeholder) {
-                    ret.placeholder = true;
-                    ret.attr = span.attr;
+                if (end < span.length) {
+                    if (span.attr?.placeholder) {
+                        ret.placeholder = true;
+                        ret.attr = span.attr;
+                    }
+                } else if (si < slen - 1) {
+                    const nextspan = line[si + 1];
+                    if (nextspan.attr?.placeholder) {
+                        ret.placeholder = true;
+                        ret.attr = nextspan.attr;
+                    }
                 }
 
                 break;
