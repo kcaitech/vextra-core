@@ -1,5 +1,20 @@
-import { _travelTextPara } from "data/texttravel";
-import { BulletNumbersBehavior, BulletNumbersType, Color, Page, SpanAttr, SpanAttrSetter, StrikethroughType, Text, TextBehaviour, TextHorAlign, TextShape, TextTransformType, TextVerAlign, UnderlineType } from "../data/classes";
+import { _travelTextPara } from "../data/texttravel";
+import {
+    BulletNumbersBehavior,
+    BulletNumbersType,
+    Color,
+    Page,
+    SpanAttr,
+    SpanAttrSetter,
+    StrikethroughType,
+    Text,
+    TextBehaviour,
+    TextHorAlign,
+    TextShape,
+    TextTransformType,
+    TextVerAlign,
+    UnderlineType
+} from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
