@@ -92,10 +92,7 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
     const indent = para.attr?.indent || 0;
     let text: string = '';
 
-
-    // let index = preBulletNumbers ? (preBulletNumbers.type === bulletNumbers.type ? preBulletNumbers.index + 1 : 0) : 0;
-
-let index = 0;
+    let index = 0;
     let graph: IGraphy | undefined;
 
     if (bulletNumbers.type === BulletNumbersType.Disorded) {
