@@ -1,10 +1,11 @@
 import { GroupShape, ImageShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
-import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape } from "./baseexport";
-import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape } from "./baseimport";
+import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText } from "./baseexport";
+import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText } from "./baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { Artboard } from "../data/classes";
+import { newTextShape, newTextShapeByText } from "../editor/creator";
 
 function set_childs_id(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
@@ -115,4 +116,47 @@ export function import_shape(document: Document, source: { index: number, conten
         console.log(error);
     }
     return result;
+}
+/**
+ * 生成对象副本
+ * @param src 原对象
+ * @returns 
+ */
+export function transform_data(document: Document, src: Shape[]): Shape[] {
+    return import_shape(document, export_shape(src));
+}
+/**
+ * @description 导出段落
+ * @param text 
+ * @returns 
+ */
+export function export_text(text: types.Text): types.Text {
+    return exportText(text);
+}
+/**
+ * @description 导入段落
+ * @param text 
+ * @param { boolean } gen 直接生成一个文字图层，否则返回整理之后的text副本
+ * @returns 
+ */
+export function import_text(document: Document, text: types.Text, gen?: boolean): types.Text | TextShape {
+    if (gen) {
+        const name = text.paras[0].text || 'text';
+        const shape = newTextShapeByText(name, text, document.measureFun);
+        return shape;
+    }
+    return importText(text);
+}
+/**
+ * @description 段落整理
+ * @param text 
+ * @param { boolean } gen 直接生成一个文字图层，否则返回整理之后的text副本
+ */
+export function trasnform_text(document: Document, text: types.Text, gen?: boolean): TextShape | types.Text {
+    const _text = importText(exportText(text));
+    if (gen) {
+        const name = text.paras[0].text || 'text';
+        return newTextShape(name, document.measureFun)
+    }
+    return _text;
 }
