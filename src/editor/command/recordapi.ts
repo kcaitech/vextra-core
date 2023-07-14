@@ -715,10 +715,11 @@ export class Api {
     private _textModifyRemoveBulletNumbers(page: Page, shape: TextShape, index: number, len: number) {
         const removeIndexs: number[] = [];
         _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+            index -= _index;
             if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
                 removeIndexs.push(index - _index);
-                index += para.length;
             }
+            index += para.length;
         })
 
         for (let i = 0, len = removeIndexs.length; i < len; i++) {
@@ -737,6 +738,7 @@ export class Api {
 
         const insertIndexs: number[] = [];
         _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+            index -= _index;
             if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
                 //
             }
