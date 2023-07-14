@@ -1,23 +1,31 @@
 import { ParaLayout, TextLayout, isNewLineCharCode } from "./textlayout";
 import { Point2D, SpanAttr } from "./typesdefine";
 
-export function locateText(layout: TextLayout, x: number, y: number): { index: number, before: boolean } {
+export class TextLocate {
+    index: number = 0;
+    before: boolean = false;
+    placeholder: boolean = false;
+    attr: SpanAttr | undefined;
+}
+
+export function locateText(layout: TextLayout, x: number, y: number): TextLocate {
     const { yOffset, paras } = layout;
+    const ret = new TextLocate();
     // index line
-    if (y < yOffset) return { index: 0, before: false };
+    if (y < yOffset) return ret;
     y -= yOffset;
     let index = 0;
     let before = false; // 在行尾时为true
-    for (let i = 0, len = paras.length; i < len; i++) {
-        const p = paras[i];
+    for (let pi = 0, plen = paras.length; pi < plen; pi++) {
+        const p = paras[pi];
         const pBottomY = p.yOffset + p.paraHeight;
         if (y >= pBottomY) {
             // y -= p.paraHeight;
-            if (i >= len - 1) {
+            if (pi >= plen - 1) {
                 index += p.graphCount;
                 continue;
             }
-            const nextp = paras[i + 1];
+            const nextp = paras[pi + 1];
             const netxPTopY = nextp.yOffset;
             if (y >= netxPTopY) {
                 index += p.graphCount;
@@ -28,8 +36,8 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
         y -= p.yOffset;
 
         // index line
-        for (let i = 0, len = p.length; i < len; i++) {
-            const line = p[i];
+        for (let li = 0, llen = p.length; li < llen; li++) {
+            const line = p[li];
             if (y >= line.y + line.lineHeight) {
                 // y -= line.lineHeight;
                 index += line.graphCount;
@@ -37,15 +45,15 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
             }
             // index span
             x -= line.x;
-            for (let i = 0, len = line.length; i < len; i++) {
-                const span = line[i];
+            for (let si = 0, slen = line.length; si < slen; si++) {
+                const span = line[si];
                 if (span.length === 0) {
                     throw new Error("layout result error, graph array is empty")
                 }
                 const lastGraph = span[span.length - 1];
                 if (x >= (lastGraph.x + lastGraph.cw)) {
                     index += span.graphCount;
-                    if (i === len - 1) {
+                    if (si === slen - 1) {
                         // before = true;
                         if (lastGraph.char === '\n') index--; // 忽略回车
                         else before = true;
@@ -74,17 +82,25 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
                 else if (x > endgraph.x + endgraph.cw / 2) {
                     end++; // 修正鼠标位置
                 }
-                if (i === len - 1 && end === span.length) {
+                if (si === slen - 1 && end === span.length) {
                     before = true;
                 }
                 index += end;
+
+                if (span.attr?.placeholder) {
+                    ret.placeholder = true;
+                    ret.attr = span.attr;
+                }
+
                 break;
             }
             break;
         }
         break;
     }
-    return { index, before };
+    ret.index = index;
+    ret.before = before;
+    return ret;
 }
 
 export class CursorLocate {
