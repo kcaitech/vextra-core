@@ -564,3 +564,22 @@ export function setBulletNumbersBehavior(shapetext: Text, behavior: BulletNumber
     })
     return ret;
 }
+
+export function setParaIndent(shapetext: Text, indent: number | undefined, index: number, len: number): { index: number, len: number, origin: number | undefined }[] {
+    const ret: { index: number, len: number, origin: number | undefined }[] = [];
+    _travelTextPara(shapetext.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+        index -= _index; // 对齐到0
+
+        const origin = para.attr?.indent || 0;
+        const cur = indent ?? 0;
+        if (cur !== origin) {
+            // fmt
+            if (!para.attr) para.attr = new ParaAttr();
+            para.attr.indent = indent;
+            ret.push({ index, len: para.length, origin })
+        }
+
+        index += para.length;
+    })
+    return ret;
+}

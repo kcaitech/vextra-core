@@ -14,7 +14,7 @@ export {
     TextTransformType
 } from "./baseclasses";
 import * as classes from "./baseclasses"
-import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType } from "./textedit";
+import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
 import { MeasureFun, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
@@ -483,6 +483,12 @@ export class Text extends Basic implements classes.Text {
 
     setBulletNumbersBehavior(behavior: BulletNumbersBehavior, index: number, len: number) {
         const ret = setBulletNumbersBehavior(this, behavior, index, len);
+        this.reLayout(); // todo
+        return ret;
+    }
+
+    setParaIndent(indent: number | undefined, index: number, len: number) {
+        const ret = setParaIndent(this, indent, index, len);
         this.reLayout(); // todo
         return ret;
     }
