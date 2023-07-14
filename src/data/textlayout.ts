@@ -70,13 +70,26 @@ export function fixLineHorAlign(line: Line, align: TextHorAlign, width: number) 
 
             const lastspan = line[line.length - 1];
             const lastgraph = lastspan[lastspan.length - 1];
+            let firstGraph;
+            let firstGArr
+            if (line.length > 0) {
+                firstGArr = line[0];
+                firstGraph = firstGArr[0];
+            }
+            if (!firstGArr || !firstGraph) throw new Error("layout result wrong");
 
             let graphCount = line.graphCount;
             if (isNewLineCharCode(lastgraph.char.charCodeAt(0))) {
                 graphCount--;
             }
+            let ignoreFirst = false;
+            if (firstGArr.length === 1 && firstGArr.attr?.placeholder) {
+                graphCount--;
+                ignoreFirst = true;
+            }
+            if (graphCount <= 1) break;
 
-            const freeWidth = width - line.graphWidth;
+            const freeWidth = width - line.graphWidth - firstGraph.x;
             if (align === TextHorAlign.Natural) {
                 const graphWidth = line.graphWidth / graphCount;
                 if (freeWidth > graphWidth) break;
@@ -84,7 +97,7 @@ export function fixLineHorAlign(line: Line, align: TextHorAlign, width: number) 
             const padding = graphCount === 1 ? 0 : (freeWidth) / (graphCount - 1);
 
             let offset = 0;
-            for (let i = 0, len = line.length; i < len; i++) {
+            for (let i = ignoreFirst ? 1 : 0, len = line.length; i < len; i++) {
                 const arr = line[i];
                 for (let j = 0, len1 = arr.length; j < len1; j++) {
                     const graph = arr[j];
@@ -134,27 +147,33 @@ function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
                 line.x = 0;
 
                 let firstGraph;
+                let firstGArr
                 if (line.length > 0) {
-                    const firstGArr = line[0];
+                    firstGArr = line[0];
                     firstGraph = firstGArr[0];
                 }
-                if (!firstGraph) throw new Error("layout result wrong");
+                if (!firstGArr || !firstGraph) throw new Error("layout result wrong");
 
                 let graphCount = line.graphCount;
                 if (isNewLineCharCode(lastgraph.char.charCodeAt(0))) {
                     graphCount--;
                 }
-
-                const freeWidth = width - line.graphWidth;
+                // 项目符号编号不参与
+                let ignoreFirst = false;
+                if (firstGArr.length === 1 && firstGArr.attr?.placeholder) {
+                    graphCount--;
+                    ignoreFirst = true;
+                }
+                if (graphCount <= 1) break;
+                const freeWidth = width - line.graphWidth - firstGraph.x;
                 if (align === TextHorAlign.Natural) {
                     const graphWidth = line.graphWidth / graphCount;
                     if (freeWidth > graphWidth) break;
                 }
-                let offset = -firstGraph.x;
+                let offset = 0;
                 const padding = graphCount === 1 ? 0 : (freeWidth) / (graphCount - 1);
 
-
-                for (let i = 0, len = line.length; i < len; i++) {
+                for (let i = ignoreFirst ? 1 : 0, len = line.length; i < len; i++) {
                     const arr = line[i];
                     for (let j = 0, len1 = arr.length; j < len1; j++) {
                         const graph = arr[j];
