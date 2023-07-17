@@ -166,13 +166,6 @@ export enum ResizeType {
     Resize = 'resize',
     Float = 'float',
 }
-/* rect radius */
-export type RectRadius = {
-    rlt: number
-    rrt: number
-    rrb: number
-    rlb: number
-}
 /* point 2d */
 export type Point2D = {
     x: number
@@ -470,7 +463,6 @@ export type PathShape = Shape & {
 }
 /* rect shape */
 export type RectShape = PathShape & {
-    fixedRadius: RectRadius
 }
 /* span attr */
 export type ParaAttr = SpanAttr & {
