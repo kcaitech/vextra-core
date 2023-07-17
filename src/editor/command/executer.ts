@@ -39,7 +39,6 @@ import {
     importColor,
     importBorderPosition,
     importBorderStyle,
-    importRectRadius,
     importText,
     importSpanAttr,
     importPoint2D
@@ -423,8 +422,8 @@ export class CMDExecuter {
         }
         else if (opId === SHAPE_ATTR_ID.radius) {
             if (op.type === OpType.IdSet && value) {
-                const v = importRectRadius(JSON.parse(value));
-                api.shapeModifyRadius(shape as RectShape, v)
+                const v = (JSON.parse(value) as {lt: number, rt: number, rb: number, lb: number});
+                api.shapeModifyRadius(shape as RectShape, v.lt, v.rt, v.rb, v.lb)
             }
         }
         else if (opId === SHAPE_ATTR_ID.constrainerProportions) {
