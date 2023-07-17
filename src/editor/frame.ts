@@ -116,7 +116,6 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
             const target = current.map((p) => {
                 return { x: p.x * scaleX, y: p.y * scaleY }
             })
-
             const matrixarr = matrix.toArray();
             matrixarr[4] = target[0].x;
             matrixarr[5] = target[0].y;
@@ -190,20 +189,6 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
         changed = true;
     }
     return changed;
-}
-// 一次设置多个图形的frame
-function setShapesFrame(api: Api, page: Page, shapes: Shape[], scaleX: number, scaleY: number) {
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        // 1. 获取每个shape执行setFrame的参数，x, y, w, h
-        const frame = shape.frame;
-        // const x =
-        // const y =
-        const w = frame.width * scaleX;
-        const h = frame.height * scaleY;
-        // 2. 执行setFrame
-        // setFrame(page, shape, x, y, w, h, api);
-    }
 }
 
 export function translateTo(api: Api, page: Page, shape: Shape, x: number, y: number) {
