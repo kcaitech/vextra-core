@@ -204,17 +204,6 @@ export function exportShadow(source: types.Shadow, ctx?: IExportContext): types.
 export function exportResizeType(source: types.ResizeType, ctx?: IExportContext): types.ResizeType {
     return source
 }
-/* rect radius */
-export function exportRectRadius(source: types.RectRadius, ctx?: IExportContext): types.RectRadius {
-    const ret = {
-        rlt: source.rlt,
-        rrt: source.rrt,
-        rrb: source.rrb,
-        rlb: source.rlb,
-    }
-    if (ctx) ctx.afterExport(source)
-    return ret
-}
 /* point 2d */
 export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): types.Point2D {
     const ret = {
@@ -731,7 +720,6 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        fixedRadius: exportRectRadius(source.fixedRadius, ctx),
     }
     if (ctx) ctx.afterExport(source)
     return ret
