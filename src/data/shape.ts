@@ -104,6 +104,26 @@ export class Shape extends Watchable(classes.Shape) {
         return m;
     }
 
+    // 相对以x、y为原点的坐标系
+    matrixRelative(x: number, y: number) {
+        const m = new Matrix();
+        const frame = this.frame;
+        const rFrame = new ShapeFrame(frame.x - x, frame.y - y, frame.width, frame.height);
+        if (this.isNoTransform()) {
+            m.trans(rFrame.x, rFrame.y);
+        } else {
+            const cx = frame.width / 2;
+            const cy = frame.height / 2;
+            m.trans(-cx, -cy);
+            if (this.rotation) m.rotate(this.rotation / 360 * 2 * Math.PI);
+            if (this.isFlippedHorizontal) m.flipHoriz();
+            if (this.isFlippedVertical) m.flipVert();
+            m.trans(cx, cy);
+            m.trans(rFrame.x, rFrame.y);
+        }
+        return m;
+    }
+
     // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) return this.frame;
