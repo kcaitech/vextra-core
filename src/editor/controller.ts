@@ -10,6 +10,7 @@ import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { ResourceMgr } from "../data/basic";
 import { Api } from "./command/recordapi";
+import { Matrix } from "basic/matrix";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -56,7 +57,6 @@ export interface AsyncTransfer {
 export interface AsyncBaseAction {
     execute: (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => void;
     close: () => undefined;
-    execute4multi: (shapes: Shape[], type: CtrlElementType, oldControllerFrame: ControllerFrame, newControllerFrame: ControllerFrame) => void;
 }
 export interface AsyncLineAction {
     execute: (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => void;
@@ -124,7 +124,6 @@ function singleHdl(api: Api, page: Page, shape: Shape, type: CtrlElementType, st
 function singleHdl4Group(api: Api, page: Page, shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
     singleHdl(api, page, shape, type, start, end, deg, actionType);
 }
-function multiHdl(api: Api, page: Page, shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') { }
 // 处理异步编辑
 export class Controller {
     private __repo: CoopRepository;
@@ -292,11 +291,6 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
-        const execute4multi = (shapes: Shape[], type: CtrlElementType, oldControllerFrame: ControllerFrame, newControllerFrame: ControllerFrame) => {
-            status = Status.Pending;
-            // todo
-            status = Status.Fulfilled;
-        }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
@@ -305,7 +299,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { execute, close, execute4multi };
+        return { execute, close };
     }
     public asyncLineEditor(shape: Shape): AsyncLineAction {
         if (this.__repo.transactCtx.transact) {
