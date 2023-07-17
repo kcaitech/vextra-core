@@ -11,7 +11,7 @@ import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import {
     Blur, Point2D, BorderOptions, ContextSettings, CurvePoint,
-    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, RectRadius, CurveMode, Span, UserInfo, Text
+    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, CurveMode, Span, UserInfo, Text
 } from "../data/baseclasses";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
@@ -83,13 +83,12 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
-    const radius = new RectRadius(0, 0, 0, 0);
     const p1 = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0)); // lt
     const p2 = new CurvePoint(uuid(), 0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.Straight, new Point2D(1, 0)); // rt
     const p3 = new CurvePoint(uuid(), 0, new Point2D(1, 1), new Point2D(1, 1), false, false, CurveMode.Straight, new Point2D(1, 1)); // rb
     const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
     curvePoint.push(p1, p2, p3, p4);
-    const shape = new RectShape(id, name, types.ShapeType.Rectangle, frame, style, types.BoolOp.None, curvePoint, radius);
+    const shape = new RectShape(id, name, types.ShapeType.Rectangle, frame, style, types.BoolOp.None, curvePoint);
     addCommonAttr(shape);
     return shape;
 }

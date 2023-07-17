@@ -2,12 +2,11 @@ import { GroupShape, RectShape, Shape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
-import { RectRadius, ShapeType } from "../data/baseclasses";
+import { ShapeType } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { Matrix } from "basic/matrix";
 export class ShapeEditor {
     protected __shape: Shape;
     protected __repo: CoopRepository;
@@ -83,10 +82,10 @@ export class ShapeEditor {
         this.__repo.commit();
     }
     // radius
-    public setRadius(radius: RectRadius) {
+    public setRadius(lt: number, rt: number, rb: number, lb: number) {
         if (!(this.__shape instanceof RectShape)) return;
         const api = this.__repo.start("setRadius", {});
-        api.shapeModifyRadius(this.__page, this.__shape, radius);
+        api.shapeModifyRadius(this.__page, this.__shape, lt, rt, rb, lb);
         this.__repo.commit();
     }
 
