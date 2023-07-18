@@ -378,7 +378,7 @@ export class PageEditor {
         const p = shape.parent as GroupShape;
         if (!p) return false;
         api.shapeDelete(page, p, p.indexOfChild(shape))
-        if (p.childs.length <= 0) {
+        if (p.childs.length <= 0 && p.type === ShapeType.Group) {
             this.delete_inner(page, p, api)
         }
         return true;
@@ -391,7 +391,7 @@ export class PageEditor {
         const api = this.__repo.start("delete", {});
         try {
             if (this.delete_inner(page, shape, api)) {
-                if (!savep.childs.length) {
+                if (!savep.childs.length && savep.type === ShapeType.Group) {
                     this.delete_inner(page, savep, api);
                 }
                 this.__repo.commit()
@@ -416,7 +416,7 @@ export class PageEditor {
                 if (!page) return false;
                 const savep = shape.parent as GroupShape;
                 if (!savep) return false;
-                this.delete_inner(page, shape, api)
+                this.delete_inner(page, shape, api);
                 if (!savep.childs.length && savep.type === ShapeType.Group) {
                     this.delete_inner(page, savep, api);
                 }
