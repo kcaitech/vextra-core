@@ -116,9 +116,9 @@ export class PageEditor {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
-            const gshape = newGroupShape(groupname);
+            let gshape = newGroupShape(groupname);
 
-            group(this.__page, shapes, gshape, savep, saveidx, api);
+            gshape = group(this.__page, shapes, gshape, savep, saveidx, api);
 
             this.__repo.commit();
             return gshape;
@@ -160,8 +160,8 @@ export class PageEditor {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
-            const artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
-            group(this.__page, shapes, artboard, savep, saveidx, api);
+            let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
+            artboard = group(this.__page, shapes, artboard, savep, saveidx, api) as Artboard;
 
             this.__repo.commit();
             return artboard;
@@ -202,8 +202,8 @@ export class PageEditor {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
-            const gshape = newFlattenShape(groupname);
-            group(this.__page, shapes, gshape, savep, saveidx, api);
+            let gshape = newFlattenShape(groupname);
+            gshape = group(this.__page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
 
             this.__repo.commit();

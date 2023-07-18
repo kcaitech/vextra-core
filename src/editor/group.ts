@@ -25,7 +25,7 @@ function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
     return true;
 }
 
-export function group(page: Page, shapes: Shape[], gshape: GroupShape, savep: GroupShape, saveidx: number, api: Api) {
+export function group(page: Page, shapes: Shape[], gshape: GroupShape, savep: GroupShape, saveidx: number, api: Api): GroupShape {
     // 计算frame
     //   计算每个shape的绝对坐标
     const boundsArr = shapes.map((s) => {
@@ -83,6 +83,7 @@ export function group(page: Page, shapes: Shape[], gshape: GroupShape, savep: Gr
         api.shapeModifyX(page, c, c.frame.x + target.x - cur.x - xy.x);
         api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - xy.y)
     }
+    return gshape;
 }
 
 export function ungroup(page: Page, shape: GroupShape, api: Api): Shape[] {
