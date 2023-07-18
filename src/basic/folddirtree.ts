@@ -225,6 +225,15 @@ export class FoldDirTree<T extends DirItem> {
         // compare
         let i = 0;
         const slen = shapechilds.length;
+
+        if (slen === 0) {
+            for (let k = 0; k < childs.length; k++) {
+                const node = childs[k];
+                this.__id2node.delete(node.__data.data.id);
+                this.__dirtree.del(node);
+            }
+        }
+
         for (; i < slen && i < childs.length; i++) {
             const shapechild = shapechilds[i]
             const nodechild = childs[i]
