@@ -1,4 +1,6 @@
-import {S3Client, GetObjectCommand, PutObjectCommand} from "@aws-sdk/client-s3";
+import AWS from "aws-sdk";
+
+AWS.config.correctClockSkew = true;
 
 export interface StorageOptions {
     endPoint: string;
@@ -25,66 +27,56 @@ function concatUint8Array(arrays: Uint8Array[]): Uint8Array {
 }
 
 export class Storage {
-    private client: S3Client;
+    private client: AWS.S3;
     private options: StorageOptions;
 
     constructor(options: StorageOptions) {
-        this.client = new S3Client({
+        this.client = new AWS.S3({
             endpoint: options.endPoint,
             region: options.region,
+            signatureVersion: "v4",
             credentials: {
                 accessKeyId: options.accessKey,
                 secretAccessKey: options.secretKey,
                 sessionToken: options.sessionToken,
             },
-            forcePathStyle: true,
-            tls: false,
-        })
+            s3ForcePathStyle: true,
+            sslEnabled: false,
+            correctClockSkew: true,
+        });
         this.options = options;
     }
 
     public get(uri: string): Promise<Uint8Array> {
         return new Promise<Uint8Array>((resolve, reject) => {
-            const command = new GetObjectCommand({
+            this.client.getObject({
                 Bucket: this.options.bucketName,
                 Key: uri,
-            });
-            this.client.send(command).then((data) => {
-                const chunks: Uint8Array[] = [];
-                const reader = (data.Body as ReadableStream).getReader();
-                const pump = () => {
-                    reader.read().then(({ done, value }) => {
-                        if (done) {
-                            resolve(concatUint8Array(chunks));
-                            return;
-                        }
-                        chunks.push(value);
-                        pump();
-                    }).catch((err) => {
-                        reject(err);
-                    });
+            }, (err, data) => {
+                if (err) {
+                    reject(err);
+                    return;
                 }
-                pump();
-            }).catch((err) => {
-                reject(err);
-            });
+                resolve(data.Body as Uint8Array)
+            })
         })
     }
 
     // 将二进制数据上传到指定的路径
     public put(uri: string, data: Uint8Array, contentType: string = "application/json"): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            const command = new PutObjectCommand({
+            this.client.putObject({
                 Bucket: this.options.bucketName,
                 Key: uri,
                 Body: data,
                 ContentType: contentType,
-            });
-            this.client.send(command).then((data) => {
+            }, (err, data) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
                 resolve();
-            }).catch((err) => {
-                reject(err);
-            });
-        })
+            })
+        });
     }
 }

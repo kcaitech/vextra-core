@@ -265,28 +265,6 @@ export class Shadow extends Basic {
     }
 }
 /**
- * rect radius 
- */
-export class RectRadius extends Basic {
-    typeId = 'rect-radius'
-    rlt: number
-    rrt: number
-    rrb: number
-    rlb: number
-    constructor(
-        rlt: number,
-        rrt: number,
-        rrb: number,
-        rlb: number
-    ) {
-        super()
-        this.rlt = rlt
-        this.rrt = rrt
-        this.rrb = rrb
-        this.rlb = rlb
-    }
-}
-/**
  * point 2d 
  */
 export class Point2D extends Basic {
@@ -855,7 +833,6 @@ export class PathShape extends Shape {
  */
 export class RectShape extends PathShape {
     typeId = 'rect-shape'
-    fixedRadius: RectRadius
     constructor(
         id: string,
         name: string,
@@ -863,8 +840,7 @@ export class RectShape extends PathShape {
         frame: ShapeFrame,
         style: Style,
         boolOp: BoolOp,
-        points: BasicArray<CurvePoint >,
-        fixedRadius: RectRadius
+        points: BasicArray<CurvePoint >
     ) {
         super(
             id,
@@ -875,7 +851,6 @@ export class RectShape extends PathShape {
             boolOp,
             points
         )
-        this.fixedRadius = fixedRadius
     }
 }
 /**

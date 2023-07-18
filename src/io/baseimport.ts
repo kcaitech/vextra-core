@@ -204,17 +204,6 @@ export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.S
 export function importResizeType(source: types.ResizeType, ctx?: IImportContext): impl.ResizeType {
     return source
 }
-/* rect radius */
-export function importRectRadius(source: types.RectRadius, ctx?: IImportContext): impl.RectRadius {
-    const ret: impl.RectRadius = new impl.RectRadius (
-        source.rlt,
-        source.rrt,
-        source.rrb,
-        source.rlb
-    )
-    if (ctx) ctx.afterImport(ret)
-    return ret
-}
 /* point 2d */
 export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl.Point2D {
     const ret: impl.Point2D = new impl.Point2D (
@@ -706,8 +695,7 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
                 if (r) ret.push(r)
             }
             return ret
-        })(),
-        importRectRadius(source.fixedRadius, ctx)
+        })()
     )
     ret.isClosed = source.isClosed
     ret.isFixedToViewport = source.isFixedToViewport

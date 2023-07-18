@@ -11,8 +11,7 @@ import {
     SymbolShape,
     SymbolRefShape,
     TextShape,
-    ExportFormat,
-    RectRadius
+    ExportFormat
 } from "../../../data/shape";
 import { Color } from "../../../data/style";
 import { importXY, importStyle, importColor } from "./styleio";
@@ -260,9 +259,9 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun): Re
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
-    const r = data['fixedRadius'] || 0;
-    const radius = new RectRadius(r, r, r, r);
-    const shape = new RectShape(id, name, ShapeType.Rectangle, frame, style, booleanOperation, new BasicArray<CurvePoint>(...points), radius);
+    // const r = data['fixedRadius'] || 0;
+    // const radius = new RectRadius(r, r, r, r);
+    const shape = new RectShape(id, name, ShapeType.Rectangle, frame, style, booleanOperation, new BasicArray<CurvePoint>(...points));
     importShapePropertys(shape, data);
     return shape;
 }
