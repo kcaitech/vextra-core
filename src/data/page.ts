@@ -14,7 +14,6 @@ export class Page extends GroupShape implements classes.Page {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     ) {
         super(
@@ -23,7 +22,6 @@ export class Page extends GroupShape implements classes.Page {
             ShapeType.Page,
             frame,
             style,
-            boolOp,
             childs
         )
         // this.onAddShape(this); // 不能add 自己

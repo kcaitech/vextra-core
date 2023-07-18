@@ -67,15 +67,20 @@ export class Shape extends Watchable(classes.Shape) {
         let m = new Matrix();
         while (s) {
             const frame = s.frame;
-            if (s.rotation || s.isFlippedHorizontal || s.isFlippedVertical) {
-                const cx = frame.width / 2;
-                const cy = frame.height / 2;
-                m.trans(-cx, -cy);
-                if (s.rotation) m.rotate(s.rotation / 360 * 2 * Math.PI);
-                if (s.isFlippedHorizontal) m.flipHoriz();
-                if (s.isFlippedVertical) m.flipVert();
-                m.trans(cx, cy);
+            if (this.isNoTransform()) {
+                m.trans(frame.x, frame.y);
+                s = s.parent;
+                continue;
             }
+
+            const cx = frame.width / 2;
+            const cy = frame.height / 2;
+            m.trans(-cx, -cy);
+            if (s.rotation) m.rotate(s.rotation / 360 * 2 * Math.PI);
+            if (s.isFlippedHorizontal) m.flipHoriz();
+            if (s.isFlippedVertical) m.flipVert();
+            m.trans(cx, cy);
+
             m.trans(frame.x, frame.y);
             s = s.parent;
         }
@@ -181,7 +186,6 @@ export class GroupShape extends Shape implements classes.GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     ) {
         super(
@@ -189,8 +193,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.childs = childs;
         (childs as any).typeId = "childs";
@@ -249,7 +252,6 @@ export class FlattenShape extends GroupShape implements classes.FlattenShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     ) {
         super(
@@ -258,7 +260,6 @@ export class FlattenShape extends GroupShape implements classes.FlattenShape {
             type,
             frame,
             style,
-            boolOp,
             childs
         )
     }
@@ -277,7 +278,6 @@ export class ImageShape extends Shape implements classes.ImageShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         imageRef: string
     ) {
         super(
@@ -285,8 +285,7 @@ export class ImageShape extends Shape implements classes.ImageShape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.imageRef = imageRef
     }
@@ -331,7 +330,6 @@ export class PathShape extends Shape implements classes.PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint>
     ) {
         super(
@@ -339,8 +337,7 @@ export class PathShape extends Shape implements classes.PathShape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.points = points
     }
@@ -452,7 +449,6 @@ export class RectShape extends PathShape implements classes.RectShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint>
     ) {
         super(
@@ -461,7 +457,6 @@ export class RectShape extends PathShape implements classes.RectShape {
             type,
             frame,
             style,
-            boolOp,
             points
         )
         this.isClosed = true;
@@ -487,16 +482,6 @@ export class RectShape extends PathShape implements classes.RectShape {
         }
         return ret;
     }
-    // getPath(offsetX: number, offsetY: number): Path;
-    // getPath(origin?: boolean): Path;
-    // getPath(arg1?: boolean | number, arg2?: number): Path {
-    //     const offsetX = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-    //     const offsetY = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
-    //     const width = this.frame.width;
-    //     const height = this.frame.height;
-    //     const path = parsePath(this, !!this.isClosed, offsetX, offsetY, width, height);
-    //     return new Path(path);
-    // }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {
@@ -510,7 +495,6 @@ export class OvalShape extends PathShape implements classes.OvalShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint>,
         ellipse: classes.Ellipse
     ) {
@@ -520,7 +504,6 @@ export class OvalShape extends PathShape implements classes.OvalShape {
             type,
             frame,
             style,
-            boolOp,
             points,
         )
         this.ellipse = ellipse;
@@ -537,7 +520,6 @@ export class LineShape extends PathShape implements classes.LineShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint>,
     ) {
         super(
@@ -546,7 +528,6 @@ export class LineShape extends PathShape implements classes.LineShape {
             type,
             frame,
             style,
-            boolOp,
             points
         )
     }
@@ -560,7 +541,6 @@ export class TextShape extends Shape implements classes.TextShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         text: Text
     ) {
         super(
@@ -568,8 +548,7 @@ export class TextShape extends Shape implements classes.TextShape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.text = text
         text.updateSize(frame.width, frame.height);
@@ -615,7 +594,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(SymbolShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     ) {
         super(
@@ -624,7 +602,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             type,
             frame,
             style,
-            boolOp,
             childs
         )
     }
@@ -642,7 +619,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         refId: string
     ) {
         super(
@@ -650,8 +626,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.refId = refId
     }

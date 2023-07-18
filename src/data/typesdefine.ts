@@ -104,7 +104,7 @@ export type Shape = {
     type: ShapeType
     frame: ShapeFrame
     style: Style
-    boolOp: BoolOp
+    boolOp?: BoolOp
     isFixedToViewport?: boolean
     isFlippedHorizontal?: boolean
     isFlippedVertical?: boolean
