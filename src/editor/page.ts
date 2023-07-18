@@ -191,7 +191,7 @@ export class PageEditor {
         return false;
     }
 
-    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | GroupShape {
+    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | FlattenShape {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
