@@ -1,9 +1,8 @@
-import { Shape, GroupShape, ShapeFrame, TextShape } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame, TextShape, FlattenShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
-import { BorderPosition, ShapeType } from "../data/typesdefine";
+import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { Matrix } from "../basic/matrix";
-import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
+import { newArtboard, newFlattenShape, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
@@ -12,13 +11,8 @@ import { Api } from "./command/recordapi";
 import { Border, BorderStyle, Color, Fill, Artboard } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
+import { group, ungroup } from "./group";
 
-function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
-    if (x < bounds.left) bounds.left = x;
-    else if (x > bounds.right) bounds.right = x;
-    if (y < bounds.top) bounds.top = y;
-    else if (y > bounds.bottom) bounds.bottom = y;
-}
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
     target: Shape
@@ -123,63 +117,8 @@ export class PageEditor {
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
             const gshape = newGroupShape(groupname);
-            // 计算frame
-            //   计算每个shape的绝对坐标
-            const boundsArr = shapes.map((s) => {
-                const box = s.boundingBox()
-                const p = s.parent!;
-                const m = p.matrix2Root();
-                const lt = m.computeCoord(box.x, box.y);
-                const rb = m.computeCoord(box.x + box.width, box.y + box.height);
-                return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
-            })
-            const firstXY = boundsArr[0]
-            const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
 
-            boundsArr.reduce((pre, cur) => {
-                expandBounds(pre, cur.x, cur.y);
-                expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
-                return pre;
-            }, bounds)
-
-            const realXY = shapes.map((s) => s.frame2Root())
-
-            const m = new Matrix(savep.matrix2Root().inverse)
-            const xy = m.computeCoord(bounds.left, bounds.top)
-
-            gshape.frame.width = bounds.right - bounds.left;
-            gshape.frame.height = bounds.bottom - bounds.top;
-            gshape.frame.x = xy.x;
-            gshape.frame.y = xy.y;
-
-            // 4、将GroupShape加入到save parent(层级最高图形的parent)中
-            api.shapeInsert(this.__page, savep, gshape, saveidx)
-
-            // 2、将shapes里对象从parent中退出
-            // 3、将shapes里的对象从原本parent下移入新建的GroupShape
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                const s = shapes[i];
-                const p = s.parent as GroupShape;
-                const idx = p.indexOfChild(s);
-                api.shapeMove(this.__page, p, idx, gshape, 0); // 层级低的放前面
-
-                if (p.childs.length <= 0) {
-                    this.delete_inner(this.__page, p, api)
-                }
-            }
-
-            // 往上调整width & height
-            // update childs frame
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                const c = shapes[i]
-
-                const r = realXY[i]
-                const target = m.computeCoord(r.x, r.y);
-                const cur = c.matrix2Parent().computeCoord(0, 0);
-
-                api.shapeModifyX(this.__page, c, c.frame.x + target.x - cur.x - xy.x);
-                api.shapeModifyY(this.__page, c, c.frame.y + target.y - cur.y - xy.y)
-            }
+            group(this.__page, shapes, gshape, savep, saveidx, api);
 
             this.__repo.commit();
             return gshape;
@@ -195,40 +134,7 @@ export class PageEditor {
         if (!shape.parent) return false;
         const api = this.__repo.start("", {});
         try {
-            const savep = shape.parent as GroupShape;
-            let idx = savep.indexOfChild(shape);
-            const saveidx = idx;
-            const m = shape.matrix2Parent();
-            const childs: Shape[] = [];
-
-            for (let i = 0, len = shape.childs.length; i < len; i++) {
-                const c = shape.childs[i]
-                const m1 = c.matrix2Parent();
-                m1.multiAtLeft(m);
-                const target = m1.computeCoord(0, 0);
-
-                if (shape.rotation) {
-                    api.shapeModifyRotate(this.__page, c, (c.rotation || 0) + shape.rotation)
-                }
-                if (shape.isFlippedHorizontal) {
-                    api.shapeModifyHFlip(this.__page, c, !c.isFlippedHorizontal)
-                }
-                if (shape.isFlippedVertical) {
-                    api.shapeModifyVFlip(this.__page, c, !c.isFlippedVertical)
-                }
-                const m2 = c.matrix2Parent();
-                const cur = m2.computeCoord(0, 0);
-
-                api.shapeModifyX(this.__page, c, c.frame.x + target.x - cur.x);
-                api.shapeModifyY(this.__page, c, c.frame.y + target.y - cur.y);
-            }
-            for (let len = shape.childs.length; len > 0; len--) {
-                const c = shape.childs[0];
-                api.shapeMove(this.__page, shape, 0, savep, idx)
-                idx++;
-                childs.push(c);
-            }
-            api.shapeDelete(this.__page, savep, saveidx + childs.length)
+            const childs = ungroup(this.__page, shape, api);
             this.__repo.commit();
             return childs;
         } catch (e) {
@@ -249,69 +155,13 @@ export class PageEditor {
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
 
-        const api = this.__repo.start("group", {});
+        const api = this.__repo.start("create_artboard", {});
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
             const artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
-            // 计算frame
-            //   计算每个shape的绝对坐标
-            const boundsArr = shapes.map((s) => {
-                const box = s.boundingBox()
-                const p = s.parent!;
-                const m = p.matrix2Root();
-                const lt = m.computeCoord(box.x, box.y);
-                const rb = m.computeCoord(box.x + box.width, box.y + box.height);
-                return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
-            })
-            const firstXY = boundsArr[0]
-            const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
-
-            boundsArr.reduce((pre, cur) => {
-                expandBounds(pre, cur.x, cur.y);
-                expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
-                return pre;
-            }, bounds)
-
-            const realXY = shapes.map((s) => s.frame2Root())
-
-            const m = new Matrix(savep.matrix2Root().inverse)
-            const xy = m.computeCoord(bounds.left, bounds.top)
-
-            artboard.frame.width = bounds.right - bounds.left;
-            artboard.frame.height = bounds.bottom - bounds.top;
-            artboard.frame.x = xy.x;
-            artboard.frame.y = xy.y;
-
-            // 4、将GroupShape加入到save parent(层级最高图形的parent)中
-            api.shapeInsert(this.__page, savep, artboard, saveidx)
-
-            // 2、将shapes里对象从parent中退出
-            // 3、将shapes里的对象从原本parent下移入新建的GroupShape
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                const s = shapes[i];
-                const p = s.parent as GroupShape;
-                const idx = p.indexOfChild(s);
-                api.shapeMove(this.__page, p, idx, artboard, 0); // 层级低的放前面
-
-                if (p.childs.length <= 0) {
-                    this.delete_inner(this.__page, p, api)
-                }
-            }
-
-            // 往上调整width & height
-            // update childs frame
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                const c = shapes[i]
-
-                const r = realXY[i]
-                const target = m.computeCoord(r.x, r.y);
-                const cur = c.matrix2Parent().computeCoord(0, 0);
-
-                api.shapeModifyX(this.__page, c, c.frame.x + target.x - cur.x - xy.x);
-                api.shapeModifyY(this.__page, c, c.frame.y + target.y - cur.y - xy.y)
-            }
+            group(this.__page, shapes, artboard, savep, saveidx, api);
 
             this.__repo.commit();
             return artboard;
@@ -329,45 +179,37 @@ export class PageEditor {
      */
     dissolution_artboard(shape: Artboard): false | Shape[] {
         if (!shape.parent) return false;
-        const api = this.__repo.start("", {});
+        const api = this.__repo.start("dissolution_artboard", {});
         try {
-            const savep = shape.parent as GroupShape;
-            let idx = savep.indexOfChild(shape);
-            const saveidx = idx;
-            const m = shape.matrix2Parent();
-            const childs: Shape[] = [];
-
-            for (let i = 0, len = shape.childs.length; i < len; i++) {
-                const c = shape.childs[i]
-                const m1 = c.matrix2Parent();
-                m1.multiAtLeft(m);
-                const target = m1.computeCoord(0, 0);
-
-                if (shape.rotation) {
-                    api.shapeModifyRotate(this.__page, c, (c.rotation || 0) + shape.rotation)
-                }
-                if (shape.isFlippedHorizontal) {
-                    api.shapeModifyHFlip(this.__page, c, !c.isFlippedHorizontal)
-                }
-                if (shape.isFlippedVertical) {
-                    api.shapeModifyVFlip(this.__page, c, !c.isFlippedVertical)
-                }
-                const m2 = c.matrix2Parent();
-                const cur = m2.computeCoord(0, 0);
-
-                api.shapeModifyX(this.__page, c, c.frame.x + target.x - cur.x);
-                api.shapeModifyY(this.__page, c, c.frame.y + target.y - cur.y);
-            }
-            for (let len = shape.childs.length; len > 0; len--) {
-                const c = shape.childs[0];
-                api.shapeMove(this.__page, shape, 0, savep, idx)
-                idx++;
-                childs.push(c);
-            }
-            api.shapeDelete(this.__page, savep, saveidx + childs.length)
+            const childs = ungroup(this.__page, shape, api);
             this.__repo.commit();
             return childs;
         } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | GroupShape {
+        if (shapes.length === 0) return false;
+        if (shapes.find((v) => !v.parent)) return false;
+        const fshape = shapes[0];
+        const savep = fshape.parent as GroupShape;
+
+        const api = this.__repo.start("boolgroup", {});
+        try {
+            // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
+            const saveidx = savep.indexOfChild(shapes[0]);
+            // 1、新建一个GroupShape
+            const gshape = newFlattenShape(groupname);
+            group(this.__page, shapes, gshape, savep, saveidx, api);
+            shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
+
+            this.__repo.commit();
+            return gshape;
+        }
+        catch (e) {
             console.log(e)
             this.__repo.rollback();
         }
@@ -924,6 +766,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     editor4Shape(shape: Shape): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo);
     }

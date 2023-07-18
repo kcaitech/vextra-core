@@ -19,7 +19,7 @@ import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAl
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BoolOp, BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { isColorEqual } from "../../data/utils";
 import { _travelTextPara } from "../../data/texttravel";
 
@@ -313,6 +313,16 @@ export class Api {
             p.curveTo.x = point.x;
             p.curveTo.y = point.y;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, shape.id, POINTS_ID, p.id, POINTS_ATTR_ID.to, exportPoint2D(point), origin))
+        })
+    }
+    shapeModifyBoolOp(page: Page, shape: Shape, op: BoolOp | undefined) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const origin = shape.boolOp;
+            if ((origin ?? BoolOp.None) !== (op ?? BoolOp.None)) {
+                shape.boolOp = op;
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.boolop, op, origin));
+            }
         })
     }
     artboardModifyBackgroundColor(page: Page, shape: Artboard, color: Color) {

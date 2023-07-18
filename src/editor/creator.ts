@@ -2,10 +2,11 @@ import { v4 as uuid } from "uuid";
 import { Page } from "../data/page";
 import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
-import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape } from "../data/shape";
+import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, FlattenShape } from "../data/shape";
 import * as types from "../data/typesdefine"
-import { importGroupShape, importPage, importArtboard, importTextShape, importText } from "../io/baseimport";
+import { importGroupShape, importPage, importArtboard, importTextShape, importText, importFlattenShape } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
+import template_flatten_shape from "./template/flatten-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
@@ -79,6 +80,14 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     return artboard
 }
 
+export function newFlattenShape(name: string): FlattenShape {
+    template_flatten_shape.id = uuid();
+    template_flatten_shape.name = name // i18n
+    const group = importFlattenShape(template_flatten_shape as types.FlattenShape);
+    addCommonAttr(group)
+    return group;
+}
+
 export function newRectShape(name: string, frame: ShapeFrame): RectShape {
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
@@ -88,7 +97,7 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
     const p3 = new CurvePoint(uuid(), 0, new Point2D(1, 1), new Point2D(1, 1), false, false, CurveMode.Straight, new Point2D(1, 1)); // rb
     const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
     curvePoint.push(p1, p2, p3, p4);
-    const shape = new RectShape(id, name, types.ShapeType.Rectangle, frame, style, types.BoolOp.None, curvePoint);
+    const shape = new RectShape(id, name, types.ShapeType.Rectangle, frame, style, curvePoint);
     addCommonAttr(shape);
     return shape;
 }
@@ -103,7 +112,7 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     const p3 = new CurvePoint(uuid(), 0, new Point2D(0.2238576251, 0), new Point2D(0.7761423749, 0), true, true, CurveMode.Mirrored, new Point2D(0.5, 0));
     const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 0.7761423749), new Point2D(0, 0.2238576251), true, true, CurveMode.Mirrored, new Point2D(0, 0.5));
     curvePoint.push(p1, p2, p3, p4);
-    const shape = new OvalShape(id, name, types.ShapeType.Oval, frame, style, types.BoolOp.None, curvePoint, ellipse);
+    const shape = new OvalShape(id, name, types.ShapeType.Oval, frame, style, curvePoint, ellipse);
     addCommonAttr(shape);
     return shape;
 }
@@ -114,7 +123,7 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const id = uuid();
-    const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, types.BoolOp.None, curvePoint);
+    const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, curvePoint);
     addCommonAttr(shape);
     return shape;
 }
@@ -123,7 +132,7 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
-    const shape = new PathShape(id, name, types.ShapeType.Line, frame, style, types.BoolOp.None, curvePoint);
+    const shape = new PathShape(id, name, types.ShapeType.Line, frame, style, curvePoint);
     addCommonAttr(shape);
     return shape;
 }
@@ -154,7 +163,7 @@ export function newComment(user: UserInfo, createAt: string, pageId: string, fra
 export function newImageShape(name: string, frame: ShapeFrame, ref?: string, mediasMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>): ImageShape {
     const id = uuid();
     const style = newStyle();
-    const img = new ImageShape(id, name, types.ShapeType.Image, frame, style, types.BoolOp.None, ref || '');
+    const img = new ImageShape(id, name, types.ShapeType.Image, frame, style, ref || '');
     if (mediasMgr) {
         img.setImageMgr(mediasMgr);
     }

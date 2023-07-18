@@ -2,7 +2,7 @@ import { GroupShape, RectShape, Shape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
-import { ShapeType } from "../data/baseclasses";
+import { BoolOp, ShapeType } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
@@ -86,6 +86,11 @@ export class ShapeEditor {
         if (!(this.__shape instanceof RectShape)) return;
         const api = this.__repo.start("setRadius", {});
         api.shapeModifyRadius(this.__page, this.__shape, lt, rt, rb, lb);
+        this.__repo.commit();
+    }
+    public setBoolOp(op: BoolOp) {
+        const api = this.__repo.start("setBoolOp", {});
+        api.shapeModifyBoolOp(this.__page, this.__shape, op);
         this.__repo.commit();
     }
 

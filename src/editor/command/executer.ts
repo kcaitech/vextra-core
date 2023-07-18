@@ -552,6 +552,14 @@ export class CMDExecuter {
                 api.shapeModifyTextTransform(shape as TextShape, undefined)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.boolop) {
+            if (op.type === OpType.IdSet && value) {
+                api.shapeModifyBoolOp(shape, value as types.BoolOp);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyBoolOp(shape, undefined)
+            }
+        }
         // todo
         else {
             console.error("not implemented ", op)

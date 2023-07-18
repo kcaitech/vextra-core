@@ -4,7 +4,7 @@ import { Page } from "../../data/page";
 import { GroupShape, PathShape, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
-import { BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BoolOp, BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 
 export * from "./fill";
 export * from "./border";
@@ -118,6 +118,9 @@ export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
     if (shape.type === ShapeType.Artboard) {
         (shape as Artboard).setArtboardColor(color);
     }
+}
+export function shapeModifyBoolOp(shape: Shape, op: BoolOp | undefined) {
+    shape.boolOp = op;
 }
 
 export function insertSimpleText(shape: TextShape, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
