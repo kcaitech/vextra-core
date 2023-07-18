@@ -235,7 +235,7 @@ export class FoldDirTree<T extends DirItem> {
             }
         }
         for (; childs.length > i;) {
-            const nodechild = childs[i]
+            const nodechild = childs[i];
             const old = this.__id2node.get(nodechild.__data.data.id);
             if (old !== nodechild) throw new Error("shape list wrong");
             this.__id2node.delete(nodechild.__data.data.id);
