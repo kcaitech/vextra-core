@@ -67,7 +67,7 @@ export class Shape extends Watchable(classes.Shape) {
         let m = new Matrix();
         while (s) {
             const frame = s.frame;
-            if (this.isNoTransform()) {
+            if (s.isNoTransform()) {
                 m.trans(frame.x, frame.y);
                 s = s.parent;
                 continue;
