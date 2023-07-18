@@ -134,13 +134,14 @@ export class Api {
         this.addCmd(PageCmdMove.Make(document.id, pageId, fromIdx, toIdx))
     }
 
-    shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number) {
+    shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number): Shape {
         this.__trap(() => {
-            parent.addChildAt(shape, index);
+            shape = parent.addChildAt(shape, index);
             page.onAddShape(shape);
         })
         this.addCmd(ShapeCmdInsert.Make(page.id, parent.id, shape.id, index, exportShape(shape)))
         this.needUpdateFrame.push({ page, shape });
+        return shape;
     }
     shapeDelete(page: Page, parent: GroupShape, index: number) {
         let shape: Shape | undefined;

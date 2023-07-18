@@ -27,11 +27,12 @@ export function pageMove(document: Document, fromIdx: number, toIdx: number) {
     }
 }
 
-export function shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
-    parent.addChildAt(shape, index);
+export function shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]): Shape {
+    shape = parent.addChildAt(shape, index);
     page.onAddShape(shape);
     // updateFrame(shape);
     needUpdateFrame.push({ shape, page });
+    return shape;
 }
 export function shapeDelete(page: Page, parent: GroupShape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
     const shape = parent.removeChildAt(index);
