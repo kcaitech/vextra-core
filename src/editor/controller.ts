@@ -3,14 +3,14 @@ import { Shape, GroupShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
-import { newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
+import { newArtboard, newGroupShape, newImageShape, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { ResourceMgr } from "../data/basic";
 import { Api } from "./command/recordapi";
-import { Matrix } from "basic/matrix";
+import { Matrix } from "../basic/matrix";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -57,6 +57,10 @@ export interface AsyncTransfer {
 export interface AsyncBaseAction {
     execute: (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => void;
     close: () => undefined;
+}
+export interface AsyncMultiAction {
+    execute: (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => void;
+    close: () => undefined | Shape[];
 }
 export interface AsyncLineAction {
     execute: (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => void;
@@ -301,6 +305,27 @@ export class Controller {
         }
         return { execute, close };
     }
+    public asyncMultiEditor(shapes: Shape[], page: Page): AsyncMultiAction {
+        const api = this.__repo.start("action", {});
+        const tool = insert_tool(shapes, page, api);
+        let status: Status = Status.Pending;
+        const execute = (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => {
+            status = Status.Pending;
+            singleHdl(api, page, tool, type, start, end, deg, actionType);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const close = () => {
+            const s = de_tool(tool, page, api);
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return s;
+        }
+        return { execute, close };
+    }
     public asyncLineEditor(shape: Shape): AsyncLineAction {
         if (this.__repo.transactCtx.transact) {
             this.__repo.rollback();
@@ -378,4 +403,101 @@ export class Controller {
         }
         return { migrate, trans, close, transByWheel }
     }
+}
+function insert_tool(shapes: Shape[], page: Page, api: Api) {
+    const fshape = shapes[0];
+    const savep = fshape.parent as GroupShape;
+    const saveidx = savep.indexOfChild(shapes[0]);
+    const gshape = newGroupShape('tool');
+    const boundsArr = shapes.map((s) => {
+        const box = s.boundingBox()
+        const p = s.parent!;
+        const m = p.matrix2Root();
+        const lt = m.computeCoord(box.x, box.y);
+        const rb = m.computeCoord(box.x + box.width, box.y + box.height);
+        return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
+    })
+    const firstXY = boundsArr[0];
+    const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
+
+    boundsArr.reduce((pre, cur) => {
+        expandBounds(pre, cur.x, cur.y);
+        expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
+        return pre;
+    }, bounds)
+    const realXY = shapes.map((s) => s.frame2Root())
+    const m = new Matrix(savep.matrix2Root().inverse)
+    const xy = m.computeCoord(bounds.left, bounds.top)
+    gshape.frame.width = bounds.right - bounds.left;
+    gshape.frame.height = bounds.bottom - bounds.top;
+    gshape.frame.x = xy.x;
+    gshape.frame.y = xy.y;
+    api.shapeInsert(page, savep, gshape, saveidx)
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const s = shapes[i];
+        const p = s.parent as GroupShape;
+        const idx = p.indexOfChild(s);
+        api.shapeMove(page, p, idx, gshape, 0);
+        if (p.childs.length <= 0) {
+            delete_for_tool(page, p, api);
+        }
+    }
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const c = shapes[i]
+        const r = realXY[i]
+        const target = m.computeCoord(r.x, r.y);
+        const cur = c.matrix2Parent().computeCoord(0, 0);
+        api.shapeModifyX(page, c, c.frame.x + target.x - cur.x - xy.x);
+        api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - xy.y)
+    }
+    return gshape;
+}
+function de_tool(shape: GroupShape, page: Page, api: Api) {
+    const savep = shape.parent as GroupShape;
+    let idx = savep.indexOfChild(shape);
+    const saveidx = idx;
+    const m = shape.matrix2Parent();
+    const childs: Shape[] = [];
+    for (let i = 0, len = shape.childs.length; i < len; i++) {
+        const c = shape.childs[i]
+        const m1 = c.matrix2Parent();
+        m1.multiAtLeft(m);
+        const target = m1.computeCoord(0, 0);
+        if (shape.rotation) {
+            api.shapeModifyRotate(page, c, (c.rotation || 0) + shape.rotation)
+        }
+        if (shape.isFlippedHorizontal) {
+            api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal)
+        }
+        if (shape.isFlippedVertical) {
+            api.shapeModifyVFlip(page, c, !c.isFlippedVertical)
+        }
+        const m2 = c.matrix2Parent();
+        const cur = m2.computeCoord(0, 0);
+        api.shapeModifyX(page, c, c.frame.x + target.x - cur.x);
+        api.shapeModifyY(page, c, c.frame.y + target.y - cur.y);
+    }
+    for (let len = shape.childs.length; len > 0; len--) {
+        const c = shape.childs[0];
+        api.shapeMove(page, shape, 0, savep, idx)
+        idx++;
+        childs.push(c);
+    }
+    api.shapeDelete(page, savep, saveidx + childs.length)
+    return childs;
+}
+function delete_for_tool(page: Page, shape: Shape, api: Api): boolean {
+    const p = shape.parent as GroupShape;
+    if (!p) return false;
+    api.shapeDelete(page, p, p.indexOfChild(shape))
+    if (p.childs.length <= 0 && p.type === ShapeType.Group) {
+        delete_for_tool(page, p, api)
+    }
+    return true;
+}
+function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
+    if (x < bounds.left) bounds.left = x;
+    else if (x > bounds.right) bounds.right = x;
+    if (y < bounds.top) bounds.top = y;
+    else if (y > bounds.bottom) bounds.bottom = y;
 }
