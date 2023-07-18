@@ -225,6 +225,7 @@ export class FoldDirTree<T extends DirItem> {
         // compare
         let i = 0;
         const slen = shapechilds.length;
+
         for (; i < slen && i < childs.length; i++) {
             const shapechild = shapechilds[i]
             const nodechild = childs[i]
@@ -233,8 +234,8 @@ export class FoldDirTree<T extends DirItem> {
                 this.insert(data, i, shapechild as T);
             }
         }
-        for (let j = i; j < childs.length; j++) {
-            const nodechild = childs[j]
+        for (; childs.length > i;) {
+            const nodechild = childs[i];
             const old = this.__id2node.get(nodechild.__data.data.id);
             if (old !== nodechild) throw new Error("shape list wrong");
             this.__id2node.delete(nodechild.__data.data.id);
