@@ -97,7 +97,7 @@ class ProxyHandler {
                     this.__context.transact.push(r);
 
                     if (!ignore) {
-                        if (typeof value === 'object') value.__parent = target;
+                        checkSetParent(value, target, this);
                         value = deepProxy(value, this);
                     }
 
@@ -126,7 +126,7 @@ class ProxyHandler {
         }
 
         if (!ignore) {
-            if (typeof value === 'object') value.__parent = target;
+            checkSetParent(value, target, this);
             value = deepProxy(value, this);
         }
 
@@ -253,6 +253,10 @@ class ProxyHandler {
 
 export const isProxy = (obj: any): boolean => obj && obj["__isProxy"];
 
+function checkSetParent(value: any, parent: any, ph: ProxyHandler) {
+    if (typeof value === 'object' && isDataBasicType(parent)) value.__parent = isProxy(parent) ? parent : new Proxy(parent, ph);
+}
+
 class Rec {
     private __target: object
     private __propertyKey: PropertyKey
@@ -262,7 +266,7 @@ class Rec {
         this.__propertyKey = propertyKey
         this.__value = value
     }
-    swap(ctx: TContext) {
+    swap(ctx: TContext, ph: ProxyHandler) {
         if (this.__target instanceof Map) {
             if (this.__propertyKey === 'set' || this.__propertyKey === 'delete') {
                 if (this.__value.isContentExist) {
@@ -281,11 +285,11 @@ class Rec {
                     // 不影响length
                     Reflect.deleteProperty(this.__target, this.__propertyKey);
                 } else {
-                    if (typeof this.__value === 'object') this.__value.__parent = this.__target;
+                    checkSetParent(this.__value, this.__target, ph);
                     Reflect.set(this.__target, this.__propertyKey, this.__value);
                 }
             } else {
-                if (typeof this.__value === 'object') this.__value.__parent = this.__target;
+                checkSetParent(this.__value, this.__target, ph);
                 Reflect.set(this.__target, this.__propertyKey, this.__value);
             }
             this.__value = v;
@@ -329,10 +333,10 @@ class ArrayRec extends Rec {
         }
     }
 
-    swap(ctx: TContext): void {
+    swap(ctx: TContext, ph: ProxyHandler): void {
         const len = Reflect.get(this.target, "length")
         for (let i = 0, l = this.__recs.length; i < l; i++) {
-            this.__recs[i].swap(ctx);
+            this.__recs[i].swap(ctx, ph);
         }
         if (this.__haslen) {
             Reflect.set(this.target, "length", this.__len);
@@ -349,18 +353,18 @@ class Transact extends Array<Rec> {
         super();
         this.__name = name;
     }
-    exec(ctx: TContext): void {
+    exec(ctx: TContext, ph: ProxyHandler): void {
         // throw new Error('Method not implemented.');
         // this.swap(ctx);
         for (let i = 0, len = this.length; i < len; i++) {
             const r = this[i];
-            r.swap(ctx);
+            r.swap(ctx, ph);
         }
     }
-    unexec(ctx: TContext): void {
+    unexec(ctx: TContext, ph: ProxyHandler): void {
         for (let i = this.length - 1; i >= 0; i--) {
             const r = this[i];
-            r.swap(ctx);
+            r.swap(ctx, ph);
         }
     }
     push(...items: Rec[]): number {
@@ -412,7 +416,7 @@ export class Repository extends Watchable(Object) implements IDataGuard {
         }
         this.__index--;
         this.__context.optiNotify = true;
-        this.__trans[this.__index].unexec(this.__context);
+        this.__trans[this.__index].unexec(this.__context, this.__ph);
         this.__context.fireNotify();
         this.notify();
     }
@@ -422,7 +426,7 @@ export class Repository extends Watchable(Object) implements IDataGuard {
             return;
         }
         this.__context.optiNotify = true;
-        this.__trans[this.__index].exec(this.__context);
+        this.__trans[this.__index].exec(this.__context, this.__ph);
         this.__index++;
         this.__context.fireNotify();
         this.notify();
@@ -478,7 +482,7 @@ export class Repository extends Watchable(Object) implements IDataGuard {
             throw new Error();
         }
         this.__context.cache.clear();
-        this.__context.transact.unexec(this.__context);
+        this.__context.transact.unexec(this.__context, this.__ph);
         this.__context.transact = undefined;
         this.__context.fireNotify();
     }
@@ -508,7 +512,7 @@ function deepProxy(data: any, h: ProxyHandler): any {
         const d = stack.pop();
         let parent: any = undefined;
         if (isDataBasicType(d)) { // 当一个map对象为BasicMap对象时，其才能成为自身values集元素的__parent;
-            parent = d;
+            parent = isProxy(d) ? d : new Proxy(d, h);
         }
         if (d instanceof Map) {
             d.forEach((v, k, m) => {

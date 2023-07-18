@@ -219,9 +219,16 @@ export class GroupShape extends Shape implements classes.GroupShape {
     addChild(child: Shape) {
         this.childs.push(child);
     }
-    addChildAt(child: Shape, idx?: number) {
+    /**
+     * 
+     * @param child 返回带proxy的对象
+     * @param idx 
+     * @returns 
+     */
+    addChildAt(child: Shape, idx?: number): Shape {
         const index = idx ?? this.childs.length;
         this.childs.splice(index, 0, child);
+        return this.childs[index];
     }
     indexOfChild(shape: Shape): number {
         return this.childs.findIndex((val) => {
