@@ -757,6 +757,54 @@ export class TextShape extends Shape {
     }
 }
 /**
+ * table shape 
+ */
+export class TableShape extends Shape {
+    typeId = 'table-shape'
+    childs: BasicArray<TableCell >
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        childs: BasicArray<TableCell >
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style
+        )
+        this.childs = childs
+    }
+}
+/**
+ * table cell 
+ */
+export class TableCell extends Shape {
+    typeId = 'table-cell'
+    childs: BasicArray<(ImageShape | TextShape) >
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        childs: BasicArray<(ImageShape | TextShape) >
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style
+        )
+        this.childs = childs
+    }
+}
+/**
  * symbol ref shape 
  */
 export class SymbolRefShape extends Shape {

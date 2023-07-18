@@ -587,6 +587,84 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
     if (ctx) ctx.afterImport(ret)
     return ret
 }
+/* table shape */
+export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
+    const ret: impl.TableShape = new impl.TableShape (
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<impl.TableCell>()
+            for (let i = 0, len = source.childs.length; i < len; i++) {
+                const r = importTableCell(source.childs[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
+    ret.isFixedToViewport = source.isFixedToViewport
+    ret.isFlippedHorizontal = source.isFlippedHorizontal
+    ret.isFlippedVertical = source.isFlippedVertical
+    ret.isLocked = source.isLocked
+    ret.isVisible = source.isVisible
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
+    ret.nameIsFixed = source.nameIsFixed
+    ret.resizingConstraint = source.resizingConstraint
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
+    ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
+    ret.clippingMaskMode = source.clippingMaskMode
+    ret.hasClippingMask = source.hasClippingMask
+    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (ctx) ctx.afterImport(ret)
+    return ret
+}
+/* table cell */
+export function importTableCell(source: types.TableCell, ctx?: IImportContext): impl.TableCell {
+    const ret: impl.TableCell = new impl.TableCell (
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<(impl.ImageShape | impl.TextShape)>()
+            for (let i = 0, len = source.childs.length; i < len; i++) {
+                const r = (() => {
+
+                    if (source.childs[i].typeId == 'image-shape') {
+                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'text-shape') {
+                        return importTextShape(source.childs[i] as types.TextShape, ctx)
+                    }
+                })()
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
+    ret.isFixedToViewport = source.isFixedToViewport
+    ret.isFlippedHorizontal = source.isFlippedHorizontal
+    ret.isFlippedVertical = source.isFlippedVertical
+    ret.isLocked = source.isLocked
+    ret.isVisible = source.isVisible
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
+    ret.nameIsFixed = source.nameIsFixed
+    ret.resizingConstraint = source.resizingConstraint
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
+    ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
+    ret.clippingMaskMode = source.clippingMaskMode
+    ret.hasClippingMask = source.hasClippingMask
+    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (ctx) ctx.afterImport(ret)
+    return ret
+}
 /* symbol ref shape */
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
     const ret: impl.SymbolRefShape = new impl.SymbolRefShape (

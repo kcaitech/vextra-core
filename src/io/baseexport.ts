@@ -593,6 +593,91 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
     if (ctx) ctx.afterExport(source)
     return ret
 }
+/* table shape */
+export function exportTableShape(source: types.TableShape, ctx?: IExportContext): types.TableShape {
+    const ret = {
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        childs: (() => {
+            const ret = []
+            for (let i = 0, len = source.childs.length; i < len; i++) {
+                const r = exportTableCell(source.childs[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+    }
+    if (ctx) ctx.afterExport(source)
+    return ret
+}
+/* table cell */
+export function exportTableCell(source: types.TableCell, ctx?: IExportContext): types.TableCell {
+    const ret = {
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        childs: (() => {
+            const ret = []
+            for (let i = 0, len = source.childs.length; i < len; i++) {
+                const r = (() => {
+                    if (typeof source.childs[i] != 'object') {
+                        return source.childs[i]
+                    }
+                    if (source.childs[i].typeId == 'image-shape') {
+                        return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'text-shape') {
+                        return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                    }
+                    {
+                        console.error(source.childs[i])
+                    }
+                })()
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+    }
+    if (ctx) ctx.afterExport(source)
+    return ret
+}
 /* symbol ref shape */
 export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExportContext): types.SymbolRefShape {
     const ret = {

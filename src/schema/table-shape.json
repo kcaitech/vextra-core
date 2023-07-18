@@ -1,0 +1,21 @@
+{
+    "description": "table shape",
+    "type": "object",
+    "properties": {
+        "childs": {
+            "type": "array",
+            "items": {
+                "$ref": "./table-cell.json"
+            }
+        }
+    },
+    "required": [
+        "childs"
+    ],
+    "allOf": [
+        {
+            "$ref": "./shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

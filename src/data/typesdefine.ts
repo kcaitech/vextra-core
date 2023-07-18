@@ -447,6 +447,14 @@ export enum BlendMode {
 export type TextShape = Shape & {
     text: Text
 }
+/* table shape */
+export type TableShape = Shape & {
+    childs: TableCell[]
+}
+/* table cell */
+export type TableCell = Shape & {
+    childs: (ImageShape | TextShape)[]
+}
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
     refId: string

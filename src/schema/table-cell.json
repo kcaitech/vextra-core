@@ -1,0 +1,28 @@
+{
+    "description": "table cell",
+    "type": "object",
+    "properties": {
+        "childs": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {
+                        "$ref": "./image-shape.json"
+                    },
+                    {
+                        "$ref": "./text-shape.json"
+                    }
+                ]
+            }
+        }
+    },
+    "required": [
+        "childs"
+    ],
+    "allOf": [
+        {
+            "$ref": "./shape.json"
+        }
+    ],
+    "additionalProperties": false
+}
