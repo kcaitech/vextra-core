@@ -14,8 +14,8 @@ import template_table_shape from "./template/table-shape.json"
 import template_table_cell from "./template/table-cell.json"
 import {
     Blur, Point2D, BorderOptions, ContextSettings, CurvePoint,
-    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, CurveMode, Span, UserInfo, Text
-} from "../data/baseclasses";
+    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo
+} from "../data/classes";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
