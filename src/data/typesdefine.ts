@@ -139,6 +139,8 @@ export enum ShapeType {
     Polygon = 'polygon',
     Oval = 'oval',
     Line = 'line',
+    Table = 'table',
+    TableCell = 'table-cell',
 }
 /* shape frame
  * x,y为parent坐标系里的点

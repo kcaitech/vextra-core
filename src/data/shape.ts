@@ -219,6 +219,9 @@ export class GroupShape extends Shape implements classes.GroupShape {
      * @returns 
      */
     addChildAt(child: Shape, idx?: number): Shape {
+        if (idx && idx > this.childs.length) {
+            throw new Error("add child at outside index: " + idx + " , childs length: " + this.childs.length)
+        }
         const index = idx ?? this.childs.length;
         this.childs.splice(index, 0, child);
         return this.childs[index];

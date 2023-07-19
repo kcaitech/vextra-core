@@ -1,0 +1,26 @@
+{
+    "description": "shape types",
+    "enum": [
+        "path",
+        "flatten-shape",
+        "group",
+        "artboard",
+        "image",
+        "page",
+        "text",
+        "symbol",
+        "symbol-ref",
+        "artboard-ref",
+
+        "rectangle",
+        "triangle",
+        "star",
+        "polygon",
+        "oval",
+        "line",
+
+        "table",
+        "table-cell"
+    ],
+    "default": "path"
+}
