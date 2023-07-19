@@ -2,7 +2,7 @@ import * as chai from 'chai'
 import { MeasureFun } from "./textlayout";
 import { Para, Span, SpanAttrSetter, Text } from './text';
 import { BasicArray } from './basic';
-import { Color } from './baseclasses';
+import { Color } from './classes';
 
 const assert = chai.assert;
 

@@ -1,5 +1,5 @@
 import { importParaAttr, importTextAttr } from "../io/baseimport";
-import { BulletNumbers, Color } from "./baseclasses";
+import { BulletNumbers, Color } from "./classes";
 import { Para, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter } from "./text";
 import { isColorEqual } from "./utils";
 

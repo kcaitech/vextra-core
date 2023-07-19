@@ -1,16 +1,52 @@
-import { ResourceMgr, Watchable } from "./basic";
+import { Basic, ResourceMgr, Watchable } from "./basic";
 import { Style, Border } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, OverrideItem, Ellipse } from "./baseclasses"
-import { ShapeType, CurvePoint, OverrideItem, ShapeFrame } from "./baseclasses"
+import { ShapeType, CurvePoint, OverrideItem, ShapeFrame, BoolOp, ExportOptions, ResizeType } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { MeasureFun, TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 
-export class Shape extends Watchable(classes.Shape) {
+export class Shape extends Watchable(Basic) implements classes.Shape {
+
+    typeId = 'shape'
+    id: string
+    type: ShapeType
+    frame: ShapeFrame
+    style: Style
+    boolOp?: BoolOp
+    isFixedToViewport?: boolean
+    isFlippedHorizontal?: boolean
+    isFlippedVertical?: boolean
+    isLocked?: boolean
+    isVisible?: boolean
+    exportOptions?: ExportOptions
+    name: string
+    nameIsFixed?: boolean
+    resizingConstraint?: number
+    resizingType?: ResizeType
+    rotation?: number
+    constrainerProportions?: boolean
+    clippingMaskMode?: number
+    hasClippingMask?: boolean
+    shouldBreakMaskChain?: boolean
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style
+    ) {
+        super()
+        this.id = id
+        this.name = name
+        this.type = type
+        this.frame = frame
+        this.style = style
+    }
 
     getPath(offsetX: number, offsetY: number): Path;
     getPath(origin?: boolean): Path;
