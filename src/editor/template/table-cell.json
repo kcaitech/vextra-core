@@ -1,0 +1,38 @@
+{
+    "typeId": "table-cell",
+    "id": "7B35A2C4-87A6-7033-A030-87CDE15F803B",
+    "name": "TableCell",
+    "type": "table-cell",
+    "boolOp": "none",
+    "frame": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+    },
+    "style": {
+        "typeId": "style",
+        "miterLimit": 0,
+        "windingRule": "non-zero",
+        "blur": {
+            "isEnabled": false,
+            "center": { "x": 0, "y": 0 },
+            "saturation": 0,
+            "type": "gaussian"
+        },
+        "borderOptions": {
+            "isEnabled": false,
+            "lineCapStyle": "butt",
+            "lineJoinStyle": "miter"
+        },
+        "borders": [],
+        "contextSettings": {
+            "blenMode": "normal",
+            "opacity": 0
+        },
+        "fills": [],
+        "innerShadows": [],
+        "shadows": []
+    },
+    "childs": []
+}

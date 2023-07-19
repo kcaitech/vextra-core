@@ -336,15 +336,15 @@ test("shapeListDrag", () => { // 图层拖拽
     api.shapeInsert(page, page, frame1, 0, needUpdateFrame)
     cmd.addShapeInsert(page.id, frame1.id, 0, JSON.stringify(exportArtboard(frame1)))
     api.shapeInsert(page, page, frame2, 1, needUpdateFrame)
-    cmd.addShapeInsert(page.id, frame2.id, 0, JSON.stringify(exportArtboard(frame2)))
+    cmd.addShapeInsert(page.id, frame2.id, 1, JSON.stringify(exportArtboard(frame2)))
     api.shapeInsert(page, frame1, shape1, 0, needUpdateFrame)
     cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
     api.shapeInsert(page, frame1, shape2, 1, needUpdateFrame)
-    cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
-    api.shapeInsert(page, frame2, shape3, 2, needUpdateFrame)
+    cmd.addShapeInsert(page.id, shape2.id, 1, JSON.stringify(exportRectShape(shape2)))
+    api.shapeInsert(page, frame2, shape3, 0, needUpdateFrame)
     cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
-    api.shapeInsert(page, frame2, shape4, 3, needUpdateFrame)
-    cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
+    api.shapeInsert(page, frame2, shape4, 1, needUpdateFrame)
+    cmd.addShapeInsert(page.id, shape4.id, 1, JSON.stringify(exportRectShape(shape4)))
     if (needUpdateFrame.length > 0) {
         const page = needUpdateFrame[0].page;
         const shapes = needUpdateFrame.map((v) => v.shape);

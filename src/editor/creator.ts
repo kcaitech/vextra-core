@@ -4,12 +4,14 @@ import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
 import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, FlattenShape } from "../data/shape";
 import * as types from "../data/typesdefine"
-import { importGroupShape, importPage, importArtboard, importTextShape, importText, importFlattenShape } from "../io/baseimport";
+import { importGroupShape, importPage, importArtboard, importTextShape, importText, importFlattenShape, importTableShape, importTableCell } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import template_flatten_shape from "./template/flatten-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
+import template_table_shape from "./template/table-shape.json"
+import template_table_cell from "./template/table-cell.json"
 import {
     Blur, Point2D, BorderOptions, ContextSettings, CurvePoint,
     Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, CurveMode, Span, UserInfo, Text
@@ -19,6 +21,7 @@ import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
 import { MeasureFun } from "../data/textlayout";
+import { TableShape } from "data/table";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {
@@ -136,6 +139,7 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     addCommonAttr(shape);
     return shape;
 }
+
 // 后续需要传入字体、字号、颜色信息
 export function newTextShape(name: string, measureFun: MeasureFun): TextShape {
     template_text_shape.id = uuid();
@@ -146,6 +150,7 @@ export function newTextShape(name: string, measureFun: MeasureFun): TextShape {
     addCommonAttr(textshape);
     return textshape;
 }
+
 export function newTextShapeByText(name: string, text: types.Text, measureFun: MeasureFun): TextShape {
     template_text_shape.id = uuid();
     template_text_shape.name = name;
@@ -155,11 +160,13 @@ export function newTextShapeByText(name: string, text: types.Text, measureFun: M
     addCommonAttr(textshape);
     return textshape;
 }
+
 export function newComment(user: UserInfo, createAt: string, pageId: string, frame: ShapeFrame, content: string, parasiticBody: Shape, rootId?: string, parentId?: string): Comment {
     const id = uuid();
     const comment = new Comment(pageId, id, frame, user, createAt, content, parasiticBody, rootId, parentId);
     return comment;
 }
+
 export function newImageShape(name: string, frame: ShapeFrame, ref?: string, mediasMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>): ImageShape {
     const id = uuid();
     const style = newStyle();
@@ -169,4 +176,30 @@ export function newImageShape(name: string, frame: ShapeFrame, ref?: string, med
     }
     addCommonAttr(img);
     return img;
+}
+
+export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number): TableShape {
+    template_table_shape.id = uuid();
+    template_table_shape.name = name // i18n
+    const table = importTableShape(template_flatten_shape as types.TableShape);
+    table.frame = frame;
+    addCommonAttr(table)
+    // cells
+    const cellWidth = frame.width / columCount;
+    const cellHeight = frame.height / rowCount;
+    for (let ci = 0, y = 0; ci < columCount; ci++) {
+        for (let ri = 0, x = 0; ri < rowCount; ri++) {
+            template_table_cell.id = uuid();
+            const cell = importTableCell(template_table_cell as types.TableCell);
+            cell.frame.width = cellWidth;
+            cell.frame.height = cellHeight;
+            cell.frame.x = x;
+            cell.frame.y = y;
+            table.childs.push(cell);
+
+            x += cellWidth;
+        }
+        y += cellHeight;
+    }
+    return table;
 }
