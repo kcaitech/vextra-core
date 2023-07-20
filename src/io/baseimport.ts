@@ -307,6 +307,7 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
         importContextSettings(source.contextSettings, ctx)
     )
     ret.gradient = source.gradient && importGradient(source.gradient, ctx)
+    ret.imageRef = source.imageRef
     if (ctx) ctx.afterImport(ret)
     return ret
 }

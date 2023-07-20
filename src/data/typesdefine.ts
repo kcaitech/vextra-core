@@ -239,6 +239,7 @@ export type Fill = {
     color: Color
     contextSettings: ContextSettings
     gradient?: Gradient
+    imageRef?: string
 }
 /* fill types */
 export enum FillType {

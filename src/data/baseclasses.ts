@@ -377,6 +377,7 @@ export class Fill extends Basic {
     color: Color
     contextSettings: ContextSettings
     gradient?: Gradient
+    imageRef?: string
     constructor(
         id: string,
         isEnabled: boolean,

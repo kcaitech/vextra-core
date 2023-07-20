@@ -57,7 +57,7 @@ export class DataLoader {
         this.__document = document;
 
         const symbolsSet = new Map<string, SymbolShape>()
-        const ctx: LoadContext = new LoadContext(measureFun);
+        const ctx: LoadContext = new LoadContext(measureFun, document.mediasMgr);
 
         const importer = this.importer = this.importer.bind(this)
         this.__handler['rectangle'] = (ctx: LoadContext, data: IJSON) => importRectShape(ctx, data, importer)

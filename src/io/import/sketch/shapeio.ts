@@ -106,7 +106,7 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun): Art
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -137,7 +137,7 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun): G
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -159,7 +159,7 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -182,7 +182,7 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun): ImageS
     const image = data['image'];
     const ref = image && image['_ref'] || "";
     const imageRef = ref.substring(ref.indexOf('/') + 1);
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -205,7 +205,7 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -229,7 +229,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun): Pa
     const points: CurvePoint[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -253,7 +253,7 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun): Re
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -276,7 +276,7 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun): Te
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -301,7 +301,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): Symbo
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -326,7 +326,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun): Sy
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }

@@ -311,6 +311,7 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
         color: exportColor(source.color, ctx),
         contextSettings: exportContextSettings(source.contextSettings, ctx),
         gradient: source.gradient && exportGradient(source.gradient, ctx),
+        imageRef: source.imageRef,
     }
     if (ctx) ctx.afterExport(source)
     return ret

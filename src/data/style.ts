@@ -1,6 +1,6 @@
 import * as classes from "./baseclasses"
 import { Blur, BorderOptions, ColorControls, ContextSettings, Shadow, WindingRule, FillType, Gradient, BorderPosition, BorderStyle, MarkerType } from "./baseclasses";
-import { Basic, BasicArray } from "./basic";
+import { Basic, BasicArray, ResourceMgr } from "./basic";
 
 export {
     GradientType,
@@ -45,9 +45,9 @@ export class Color extends classes.Color {
 
     equals(color: Color): boolean {
         return this.alpha === color.alpha &&
-        this.blue === color.blue &&
-        this.green === color.green &&
-        this.red === color.red;
+            this.blue === color.blue &&
+            this.green === color.green &&
+            this.red === color.red;
     }
 }
 
@@ -98,6 +98,11 @@ export class Fill extends Basic implements classes.Fill {
     color: Color
     contextSettings: ContextSettings
     gradient?: Gradient
+    imageRef?: string
+
+    private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
+    private __cacheData?: { buff: Uint8Array, base64: string };
+
     constructor(
         id: string,
         isEnabled: boolean,
@@ -111,6 +116,19 @@ export class Fill extends Basic implements classes.Fill {
         this.fillType = fillType
         this.color = color
         this.contextSettings = contextSettings
+    }
+    setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
+        this.__imageMgr = imageMgr;
+    }
+    peekImage() {
+        return this.__cacheData?.base64;
+    }
+    // image fill
+    async loadImage(): Promise<string> {
+        if (!this.imageRef) return "";
+        if (this.__cacheData) return this.__cacheData.base64;
+        this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
+        return this.__cacheData && this.__cacheData.base64 || "";
     }
 }
 
