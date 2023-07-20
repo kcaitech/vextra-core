@@ -101,24 +101,9 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
      */
     matrix2Root() {
         let s: Shape | undefined = this;
-        let m = new Matrix();
+        const m = new Matrix();
         while (s) {
-            const frame = s.frame;
-            if (s.isNoTransform()) {
-                m.trans(frame.x, frame.y);
-                s = s.parent;
-                continue;
-            }
-
-            const cx = frame.width / 2;
-            const cy = frame.height / 2;
-            m.trans(-cx, -cy);
-            if (s.rotation) m.rotate(s.rotation / 360 * 2 * Math.PI);
-            if (s.isFlippedHorizontal) m.flipHoriz();
-            if (s.isFlippedVertical) m.flipVert();
-            m.trans(cx, cy);
-
-            m.trans(frame.x, frame.y);
+            s.matrix2Parent(m);
             s = s.parent;
         }
         return m;
@@ -128,8 +113,8 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         return !(this.rotation || this.isFlippedHorizontal || this.isFlippedVertical)
     }
 
-    matrix2Parent() {
-        const m = new Matrix();
+    matrix2Parent(matrix?: Matrix) {
+        const m = matrix || new Matrix();
         const frame = this.frame;
         if (this.isNoTransform()) {
             m.trans(frame.x, frame.y);
@@ -524,10 +509,8 @@ export class TextShape extends Shape implements classes.TextShape {
         const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
         const w = this.frame.width;
         const h = this.frame.height;
-        const cx = x + w / 2;
-        const cy = y + h / 2;
 
-        let path = [["M", x, y],
+        const path = [["M", x, y],
         ["l", w, 0],
         ["l", 0, h],
         ["l", -w, 0],
