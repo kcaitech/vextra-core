@@ -165,5 +165,7 @@ export class Style extends Basic implements classes.Style {
         this.fills = fills
         this.innerShadows = innerShadows
         this.shadows = shadows
+        borders.setTypeId("borders");
+        fills.setTypeId("fills");
     }
 }
