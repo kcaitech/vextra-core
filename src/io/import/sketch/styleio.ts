@@ -1,19 +1,20 @@
-import { 
-    Blur, 
-    Border, 
-    BorderOptions, 
+import {
+    Blur,
+    Border,
+    BorderOptions,
     BorderStyle,
-    Color, 
-    ContextSettings, 
-    Fill, 
-    Gradient, 
-    Shadow, 
-    Stop, 
-    Style} from "../../../data/style";
+    Color,
+    ContextSettings,
+    Fill,
+    Gradient,
+    Shadow,
+    Stop,
+    Style
+} from "../../../data/style";
 import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
 import { uuid } from "../../../basic/uuid";
-import { IJSON } from "./basic";
+import { IJSON, LoadContext } from "./basic";
 
 export function importColor(data: IJSON): Color {
     // if (!data)
@@ -29,7 +30,7 @@ export function importColor(data: IJSON): Color {
 
 function importContextSettings(data: IJSON): ContextSettings {
     const blendMode: BlendMode = ((m) => {
-        switch(m) {
+        switch (m) {
             case 0: return BlendMode.Normal;
             default: return BlendMode.Normal;
         }
@@ -55,7 +56,7 @@ function importGradient(data: IJSON): Gradient {
     const elipseLength: number = data['elipseLength'];
     const from: Point2D = importXY(data['from']);
     const gradientType: GradientType = ((t) => {
-        switch(t) {
+        switch (t) {
             case 0: return GradientType.Linear;
             case 1: return GradientType.Radial;
             case 2: return GradientType.Angular;
@@ -63,7 +64,7 @@ function importGradient(data: IJSON): Gradient {
         }
     })(data['gradientType']);
     const to: Point2D = importXY(data['to']);
-    const stops: Stop[] = (data['stops'] || []).map((d: IJSON)=> {
+    const stops: Stop[] = (data['stops'] || []).map((d: IJSON) => {
         let position: number = d['position'];
         if (gradientType == GradientType.Angular) {
             position = (position + 90.0 / 360.0) % 1;/* rotate 90deg */
@@ -78,13 +79,13 @@ function importGradient(data: IJSON): Gradient {
     return new Gradient(elipseLength, from, to, gradientType, new BasicArray<Stop>(...stops));
 }
 
-export function importStyle(data: IJSON): Style {
+export function importStyle(ctx: LoadContext, data: IJSON): Style {
 
     // const gradients = env.gradients;
     const miterLimit: number = data['miterLimit'];
-    
+
     const windingRule: WindingRule = ((t: number) => {
-        switch(t) {
+        switch (t) {
             case 0: return WindingRule.NonZero;
             case 1: return WindingRule.EvenOdd;
             default: return WindingRule.NonZero;
@@ -92,33 +93,35 @@ export function importStyle(data: IJSON): Style {
     })(data['windingRule']);
 
     const blur: Blur = ((d) => {
-            return new Blur (
-                false,
-                new Point2D(0, 0), // {x: 0, y: 0},
-                0,
-                BlurType.Gaussian
-            );
-        })(data['blur']);
+        return new Blur(
+            false,
+            new Point2D(0, 0), // {x: 0, y: 0},
+            0,
+            BlurType.Gaussian
+        );
+    })(data['blur']);
 
     const borderOptions: BorderOptions = ((d: IJSON) => {
-            return new BorderOptions(
-                false,
-                // new BasicArray<number>(),
-                LineCapStyle.Butt,
-                LineJoinStyle.Miter
-            )
-        })(data['borderOptions']);
+        return new BorderOptions(
+            false,
+            // new BasicArray<number>(),
+            LineCapStyle.Butt,
+            LineJoinStyle.Miter
+        )
+    })(data['borderOptions']);
 
     const borders: Border[] = (data['borders'] || []).map((d: IJSON) => {
         const isEnabled: boolean = d['isEnabled'];
         const fillType: FillType = ((t) => {
-                switch(t) {
-                    case 0: return FillType.SolidColor;
-                    case 1: return FillType.Gradient;
-                    case 2: return FillType.Pattern;
-                    default: return FillType.SolidColor;
-                }
-            })(d['fillType']);
+            switch (t) {
+                case 0: return FillType.SolidColor;
+                case 1: return FillType.Gradient;
+                case 2: return FillType.Gradient;
+                case 3: return FillType.Gradient;
+                case 4: return FillType.Pattern;
+                default: return FillType.SolidColor;
+            }
+        })(d['fillType']);
         const color: Color = importColor(d['color']);
 
         const contextSettings: ContextSettings = importContextSettings(d['contextSettings']);
@@ -132,7 +135,7 @@ export function importStyle(data: IJSON): Style {
         }
 
         const position: BorderPosition = ((p: number) => {
-            switch(p) {
+            switch (p) {
                 case 0: return BorderPosition.Center;
                 case 1: return BorderPosition.Inner;
                 case 2: return BorderPosition.Outer;
@@ -163,7 +166,7 @@ export function importStyle(data: IJSON): Style {
                 case 4: return MarkerType.OpenCircle;
                 case 5: return MarkerType.FilledCircle;
                 case 6: return MarkerType.OpenSquare;
-                case 7: return MarkerType.FilledSquare;            
+                case 7: return MarkerType.FilledSquare;
                 default: return MarkerType.Line;
             }
         }
@@ -180,10 +183,12 @@ export function importStyle(data: IJSON): Style {
     const fills: Fill[] = (data['fills'] || []).map((d: IJSON) => {
         const isEnabled: boolean = d['isEnabled'];
         const fillType = ((t) => {
-            switch(t) {
+            switch (t) {
                 case 0: return FillType.SolidColor;
                 case 1: return FillType.Gradient;
-                case 2: return FillType.Pattern;
+                case 2: return FillType.Gradient;
+                case 3: return FillType.Gradient;
+                case 4: return FillType.Pattern;
                 default: return FillType.SolidColor;
             }
         })(d['fillType']);
@@ -199,8 +204,22 @@ export function importStyle(data: IJSON): Style {
             // gradients.set(gradientId, gradient);
         }
 
+        let imageRef;
+        if (fillType === FillType.Pattern && d['image']) {
+            // "image": {
+            //     "_class": "MSJSONFileReference",
+            //     "_ref_class": "MSImageData",
+            //     "_ref": "images\/853732577995ec08625706620b0235b0184b90e8.pdf"
+            // },
+            const image = d['image'];
+            const ref = image['_ref'] || "";
+            imageRef = ref.substring(ref.indexOf('/') + 1);
+        }
+
         const fill = new Fill(uuid(), isEnabled, fillType, color, contextSettings);
         fill.gradient = gradient;
+        fill.imageRef = imageRef;
+        fill.setImageMgr(ctx.mediasMgr);
         return fill;
     });
 
@@ -212,14 +231,14 @@ export function importStyle(data: IJSON): Style {
     // });
 
     const style: Style = new Style(//shape, 
-        miterLimit, 
-        windingRule, 
-        blur, 
-        borderOptions, 
-        new BasicArray<Border>(...borders), 
-        contextSettings, 
-        new BasicArray<Fill>(...fills), 
-        new BasicArray<Shadow>(), 
+        miterLimit,
+        windingRule,
+        blur,
+        borderOptions,
+        new BasicArray<Border>(...borders),
+        contextSettings,
+        new BasicArray<Fill>(...fills),
+        new BasicArray<Shadow>(),
         new BasicArray<Shadow>());
     // return makePair(style, gradients);
     return style;

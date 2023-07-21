@@ -149,9 +149,9 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx)
+        importStyle(source.style, ctx)
     )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -307,6 +307,7 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
         importContextSettings(source.contextSettings, ctx)
     )
     ret.gradient = source.gradient && importGradient(source.gradient, ctx)
+    ret.imageRef = source.imageRef
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -567,9 +568,87 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         importText(source.text, ctx)
     )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
+    ret.isFixedToViewport = source.isFixedToViewport
+    ret.isFlippedHorizontal = source.isFlippedHorizontal
+    ret.isFlippedVertical = source.isFlippedVertical
+    ret.isLocked = source.isLocked
+    ret.isVisible = source.isVisible
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
+    ret.nameIsFixed = source.nameIsFixed
+    ret.resizingConstraint = source.resizingConstraint
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
+    ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
+    ret.clippingMaskMode = source.clippingMaskMode
+    ret.hasClippingMask = source.hasClippingMask
+    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (ctx) ctx.afterImport(ret)
+    return ret
+}
+/* table shape */
+export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
+    const ret: impl.TableShape = new impl.TableShape (
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<impl.TableCell>()
+            for (let i = 0, len = source.childs.length; i < len; i++) {
+                const r = importTableCell(source.childs[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
+    ret.isFixedToViewport = source.isFixedToViewport
+    ret.isFlippedHorizontal = source.isFlippedHorizontal
+    ret.isFlippedVertical = source.isFlippedVertical
+    ret.isLocked = source.isLocked
+    ret.isVisible = source.isVisible
+    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
+    ret.nameIsFixed = source.nameIsFixed
+    ret.resizingConstraint = source.resizingConstraint
+    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
+    ret.rotation = source.rotation
+    ret.constrainerProportions = source.constrainerProportions
+    ret.clippingMaskMode = source.clippingMaskMode
+    ret.hasClippingMask = source.hasClippingMask
+    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (ctx) ctx.afterImport(ret)
+    return ret
+}
+/* table cell */
+export function importTableCell(source: types.TableCell, ctx?: IImportContext): impl.TableCell {
+    const ret: impl.TableCell = new impl.TableCell (
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<(impl.ImageShape | impl.TextShape)>()
+            for (let i = 0, len = source.childs.length; i < len; i++) {
+                const r = (() => {
+
+                    if (source.childs[i].typeId == 'image-shape') {
+                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'text-shape') {
+                        return importTextShape(source.childs[i] as types.TextShape, ctx)
+                    }
+                })()
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -595,9 +674,9 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         source.refId
     )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -651,7 +730,6 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -661,6 +739,7 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
             return ret
         })()
     )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -687,7 +766,6 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -698,6 +776,7 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         })()
     )
     ret.isClosed = source.isClosed
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -774,7 +853,6 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.SymbolShape | impl.LineShape | impl.OvalShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -828,6 +906,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
             return ret
         })()
     )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -853,7 +932,6 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -865,6 +943,7 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         importEllipse(source.ellipse, ctx)
     )
     ret.isClosed = source.isClosed
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -890,7 +969,6 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -901,6 +979,7 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         })()
     )
     ret.isClosed = source.isClosed
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -926,9 +1005,9 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         source.imageRef
     )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -954,7 +1033,6 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -999,6 +1077,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
             return ret
         })()
     )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -1024,7 +1103,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1069,6 +1147,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
             return ret
         })()
     )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -1094,7 +1173,6 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1139,6 +1217,7 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
             return ret
         })()
     )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
@@ -1164,7 +1243,6 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importBoolOp(source.boolOp, ctx),
         (() => {
             const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1209,6 +1287,7 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
             return ret
         })()
     )
+    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
     ret.isFlippedVertical = source.isFlippedVertical
