@@ -14,9 +14,7 @@
     "dev": "webpack --config ./webpack.config.js",
     "build": "cross-env NODE_ENV='production' webpack --config ./webpack.config.js",
     "lint": "vue-cli-service lint",
-    "test": "jest",
-    "coop-server-build": "npx tsc -p src/coop/server-tsconfig.json",
-    "coop-server": "npx tsc -p src/coop/server-tsconfig.json && node dist_server/coop/server.js"
+    "test": "jest"
   },
   "dependencies": {
     "aws-sdk": "2.1415.0",
