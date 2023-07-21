@@ -196,7 +196,6 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
             cell.frame.x = x;
             cell.frame.y = y;
             table.childs.push(cell);
-
             x += cellWidth;
         }
         y += cellHeight;
