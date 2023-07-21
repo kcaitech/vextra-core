@@ -934,6 +934,9 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                     if (source.childs[i].typeId == 'oval-shape') {
                         return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
+                    if (source.childs[i].typeId == 'table-shape') {
+                        return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                    }
                     {
                         console.error(source.childs[i])
                     }
@@ -1114,6 +1117,9 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (source.childs[i].typeId == 'oval-shape') {
                         return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
+                    if (source.childs[i].typeId == 'table-shape') {
+                        return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                    }
                     {
                         console.error(source.childs[i])
                     }
@@ -1174,6 +1180,9 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         }
                         if (source.childs[i].typeId == 'oval-shape') {
                             return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                        }
+                        if (source.childs[i].typeId == 'table-shape') {
+                            return exportTableShape(source.childs[i] as types.TableShape, ctx)
                         }
                         {
                             console.error(source.childs[i])
@@ -1251,6 +1260,9 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         if (source.childs[i].typeId == 'oval-shape') {
                             return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                         }
+                        if (source.childs[i].typeId == 'table-shape') {
+                            return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                        }
                         {
                             console.error(source.childs[i])
                         }
@@ -1326,6 +1338,9 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         }
                         if (source.childs[i].typeId == 'oval-shape') {
                             return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                        }
+                        if (source.childs[i].typeId == 'table-shape') {
+                            return exportTableShape(source.childs[i] as types.TableShape, ctx)
                         }
                         {
                             console.error(source.childs[i])
