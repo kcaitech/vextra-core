@@ -304,6 +304,7 @@ export class PageListItem extends Basic {
     typeId = 'page-list-item'
     id: string
     name: string
+    versionId?: string
     constructor(
         id: string,
         name: string
@@ -478,6 +479,7 @@ export class DocumentMeta extends Basic {
     id: string
     name: string
     pagesList: BasicArray<PageListItem >
+    versionId?: string
     constructor(
         id: string,
         name: string,

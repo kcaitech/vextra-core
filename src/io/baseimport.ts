@@ -236,6 +236,7 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
         source.id,
         source.name
     )
+    ret.versionId = source.versionId
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -405,6 +406,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
             return ret
         })()
     )
+    ret.versionId = source.versionId
     if (ctx) ctx.afterImport(ret)
     return ret
 }

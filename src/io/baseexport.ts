@@ -235,6 +235,7 @@ export function exportPageListItem(source: types.PageListItem, ctx?: IExportCont
     const ret = {
         id: source.id,
         name: source.name,
+        versionId: source.versionId,
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -409,6 +410,7 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
             }
             return ret
         })(),
+        versionId: source.versionId,
     }
     if (ctx) ctx.afterExport(source)
     return ret

@@ -47,11 +47,12 @@ export class Storage {
         this.options = options;
     }
 
-    public get(uri: string): Promise<Uint8Array> {
+    public get(uri: string, versionId?: string): Promise<Uint8Array> {
         return new Promise<Uint8Array>((resolve, reject) => {
             this.client.getObject({
                 Bucket: this.options.bucketName,
                 Key: uri,
+                VersionId: versionId,
             }, (err, data) => {
                 if (err) {
                     reject(err);

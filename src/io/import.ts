@@ -1,13 +1,13 @@
-import { Artboard } from "../data/artboard";
-import { Page } from "../data/page";
-import { ImageShape, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
-import { IImportContext, importDocumentMeta, importDocumentSyms, importPage } from "./baseimport";
+import {Artboard} from "../data/artboard";
+import {Page} from "../data/page";
+import {ImageShape, SymbolRefShape, SymbolShape, TextShape} from "../data/shape";
+import {IImportContext, importDocumentMeta, importDocumentSyms, importPage} from "./baseimport";
 import * as types from "../data/typesdefine"
-import { IDataGuard, ResourceMgr } from "../data/basic";
-import { Document, DocumentMeta, DocumentSyms } from "../data/document";
+import {IDataGuard, ResourceMgr} from "../data/basic";
+import {Document, DocumentMeta, DocumentSyms} from "../data/document";
 import * as storage from "./storage";
-import { base64ToDataUrl } from "../basic/utils";
-import { MeasureFun } from "../data/textlayout";
+import {base64ToDataUrl} from "../basic/utils";
+import {MeasureFun} from "../data/textlayout";
 
 interface IJSON {
     [key: string]: any
@@ -29,13 +29,13 @@ class RemoteLoader {
         this.storageClient = new storage.Storage(storageOptions);
     }
 
-    loadRaw(uri: string): Promise<Uint8Array> {
-        return this.storageClient.get(uri);
+    loadRaw(uri: string, versionId?: string): Promise<Uint8Array> {
+        return this.storageClient.get(uri, versionId);
     }
 
-    loadJson(uri: string): Promise<IJSON> {
+    loadJson(uri: string, versionId?: string): Promise<IJSON> {
         return new Promise((resolve, reject) => {
-            this.storageClient.get(uri).then((data: Uint8Array) => {
+            this.storageClient.get(uri, versionId).then((data: Uint8Array) => {
                 const json = JSON.parse(new TextDecoder().decode(data));
                 resolve(json);
             }).catch((err: any) => {
@@ -55,33 +55,36 @@ export class DataLoader implements IDataLoader {
         this.documentPath = documentPath;
     }
 
-    async loadDocumentMeta(ctx: IImportContext, id: string): Promise<DocumentMeta> {
-        const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/document-meta.json`)
+    async loadDocumentMeta(ctx: IImportContext, versionId?: string): Promise<DocumentMeta> {
+        const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/document-meta.json`, versionId)
         return importDocumentMeta(json as types.DocumentMeta, ctx)
     }
 
-    async loadDocumentSyms(ctx: IImportContext, id: string): Promise<DocumentSyms[]> {
-        const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/document-syms.json`)
+    async loadDocumentSyms(ctx: IImportContext, id: string, versionId?: string): Promise<DocumentSyms[]> {
+        const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/document-syms.json`, versionId)
         return (json as Array<types.DocumentSyms>).map((val) => importDocumentSyms(val, ctx))
     }
 
-    async loadPage(ctx: IImportContext, id: string): Promise<Page> {
-        const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/pages/${id}.json`)
+    async loadPage(ctx: IImportContext, id: string, versionId?: string): Promise<Page> {
+        const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/pages/${id}.json`, versionId)
         return importPage(json as types.Page, ctx)
     }
 
-    // async loadArtboard(ctx: IImportContext, id: string): Promise<Artboard> {
-    //     const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/artboards/${id}.json`)
+    // async loadArtboard(ctx: IImportContext, id: string, versionId?: string): Promise<Artboard> {
+    //     const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/artboards/${id}.json`, versionId)
     //     return importArtboard(json as types.Artboard, ctx)
     // }
 
-    // async loadSymbol(ctx: IImportContext, id: string): Promise<SymbolShape> {
-    //     const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/symbols/${id}.json`)
+    // async loadSymbol(ctx: IImportContext, id: string, versionId?: string): Promise<SymbolShape> {
+    //     const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/symbols/${id}.json`, versionId)
     //     return importSymbolShape(json as types.SymbolShape, ctx)
     // }
 
-    async loadMedia(ctx: IImportContext, id: string): Promise<{ buff: Uint8Array; base64: string; }> {
-        const buffer: Uint8Array = await this.remoteLoader.loadRaw(`${this.documentPath}/medias/${id}`)
+    async loadMedia(ctx: IImportContext, id: string, versionId?: string): Promise<{
+        buff: Uint8Array;
+        base64: string;
+    }> {
+        const buffer: Uint8Array = await this.remoteLoader.loadRaw(`${this.documentPath}/medias/${id}`, versionId)
 
         const uInt8Array = buffer;
         let i = uInt8Array.length;
@@ -106,7 +109,7 @@ export class DataLoader implements IDataLoader {
         } else {
             console.log('imageExt', ext);
         }
-        return { buff: buffer, base64: url }
+        return {buff: buffer, base64: url}
     }
 }
 
@@ -117,17 +120,18 @@ export async function importDocument(storageOptions: storage.StorageOptions, doc
         afterImport(obj: any): void {
             // throw new Error("Method not implemented.");
         }
-    }, '');
+    }, versionId);
+    const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
 
-    const document = new Document(meta.id, versionId, meta.name, meta.pagesList, gurad, measureFun);
+    const document = new Document(meta.id, versionId ?? "", meta.name, meta.pagesList, gurad, measureFun);
     const ctx = new class implements IImportContext {
         afterImport(obj: any): void {
             if (obj instanceof ImageShape) {
                 obj.setImageMgr(document.mediasMgr)
             } else if (obj instanceof SymbolRefShape) {
                 obj.setSymbolMgr(document.symbolsMgr)
-            // } else if (obj instanceof ArtboardRef) {
-            //     obj.setArtboardMgr(document.artboardMgr)
+                // } else if (obj instanceof ArtboardRef) {
+                //     obj.setArtboardMgr(document.artboardMgr)
             } else if (obj instanceof Artboard) {
                 document.artboardMgr.add(obj.id, obj);
             } else if (obj instanceof SymbolShape) {
@@ -141,7 +145,7 @@ export async function importDocument(storageOptions: storage.StorageOptions, doc
     // const document_syms = new ResourceMgr<DocumentSyms[]>();
     // document_syms.setLoader((id: string) => loader.loadDocumentSyms(ctx, ""));
 
-    document.pagesMgr.setLoader((id: string) => loader.loadPage(ctx, id));
+    document.pagesMgr.setLoader((id: string) => loader.loadPage(ctx, id, idToVersionId.get(id)));
     document.mediasMgr.setLoader((id: string) => loader.loadMedia(ctx, id));
     // document.artboardMgr.setLoader((id: string) => loader.loadArtboard(ctx, id));
     // document.symbolsMgr.setLoader((id: string) => loader.loadSymbol(ctx, id));
