@@ -61,7 +61,8 @@ import {
     StrikethroughType,
     BulletNumbersType,
     TextTransformType,
-    BulletNumbersBehavior
+    BulletNumbersBehavior,
+    Fill
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -76,7 +77,7 @@ function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
     const ctx = new class implements IImportContext {
         afterImport(obj: any): void {
-            if (obj instanceof ImageShape) {
+            if (obj instanceof ImageShape || obj instanceof Fill) {
                 obj.setImageMgr(document.mediasMgr)
             } else if (obj instanceof SymbolRefShape) {
                 obj.setSymbolMgr(document.symbolsMgr)
@@ -550,6 +551,14 @@ export class CMDExecuter {
             }
             else if (!value || op.type === OpType.IdRemove) {
                 api.shapeModifyTextTransform(shape as TextShape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.boolop) {
+            if (op.type === OpType.IdSet && value) {
+                api.shapeModifyBoolOp(shape, value as types.BoolOp);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyBoolOp(shape, undefined)
             }
         }
         // todo

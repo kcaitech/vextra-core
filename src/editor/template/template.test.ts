@@ -35,3 +35,23 @@ test('text-shape', () => {
     const res = validate.validate(textshape, 'text-shape')
     isTrue(res)
 })
+
+import flattenshape from "./flatten-shape.json"
+test('flatten-shape', () => {
+    isTrue(validate.validate(flattenshape, 'flatten-shape'))
+})
+
+import rectangle from "./rectangle-shape.json"
+test('rectangle-shape', () => {
+    isTrue(validate.validate(rectangle, 'rect-shape'))
+})
+
+import table from "./table-shape.json"
+test('table-shape', () => {
+    isTrue(validate.validate(table, 'table-shape'))
+})
+
+import tablecell from "./table-cell.json"
+test('table-cell', () => {
+    isTrue(validate.validate(tablecell, 'table-cell'))
+})
