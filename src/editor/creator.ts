@@ -181,7 +181,7 @@ export function newImageShape(name: string, frame: ShapeFrame, ref?: string, med
 export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number): TableShape {
     template_table_shape.id = uuid();
     template_table_shape.name = name // i18n
-    const table = importTableShape(template_flatten_shape as types.TableShape);
+    const table = importTableShape(template_table_shape as types.TableShape);
     table.frame = frame;
     addCommonAttr(table)
     // cells

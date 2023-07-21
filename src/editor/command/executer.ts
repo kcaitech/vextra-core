@@ -41,7 +41,8 @@ import {
     importBorderStyle,
     importText,
     importSpanAttr,
-    importPoint2D
+    importPoint2D,
+    importTableShape
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -127,6 +128,9 @@ function importShape(data: string, document: Document) {
     }
     if (source.typeId == 'oval-shape') {
         return importOvalShape(source as types.OvalShape, ctx)
+    }
+    if (source.typeId == 'table-shape') {
+        return importTableShape(source as types.TableShape, ctx)
     }
     throw new Error("unknow shape type: " + source.typeId)
 }
