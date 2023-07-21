@@ -1,7 +1,7 @@
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
-import { Shape, GroupShape } from "../data/shape";
+import { Shape, GroupShape, TextShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ShapeType } from "../data/typesdefine";
+import { ShapeType, TextBehaviour } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { newArtboard, newGroupShape, newImageShape, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
@@ -11,6 +11,7 @@ import { Document } from "../data/document";
 import { ResourceMgr } from "../data/basic";
 import { Api } from "./command/recordapi";
 import { Matrix } from "../basic/matrix";
+import { fixTextShapeFrameByLayout } from "./utils";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -61,6 +62,10 @@ export interface AsyncBaseAction {
 export interface AsyncMultiAction {
     execute: (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => void;
     close: () => undefined | Shape[];
+}
+export interface AsyncMultiAction2 {
+    executeScale: (origin1: PageXY, origin2: PageXY, scaleX: number, scaleY: number) => void;
+    close: () => void;
 }
 export interface AsyncLineAction {
     execute: (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => void;
@@ -124,9 +129,191 @@ function singleHdl(api: Api, page: Page, shape: Shape, type: CtrlElementType, st
         }
     }
 }
-// 单个图形处理(编组对象)
-function singleHdl4Group(api: Api, page: Page, shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
-    singleHdl(api, page, shape, type, start, end, deg, actionType);
+function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
+    const frame = shape.frame;
+    let changed = false;
+    if (x !== frame.x) {
+        api.shapeModifyX(page, shape, x)
+        changed = true;
+    }
+    if (y !== frame.y) {
+        api.shapeModifyY(page, shape, y)
+        changed = true;
+    }
+    if (w !== frame.width || h !== frame.height) {
+        if (shape instanceof TextShape) {
+            const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+            if (h !== frame.height) {
+                if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
+                    api.shapeModifyTextBehaviour(page, shape, TextBehaviour.FixWidthAndHeight);
+                }
+            }
+            else {
+                if (textBehaviour === TextBehaviour.Flexible) {
+                    api.shapeModifyTextBehaviour(page, shape, TextBehaviour.Fixed);
+                }
+            }
+            api.shapeModifyWH(page, shape, w, h)
+            fixTextShapeFrameByLayout(api, page, shape);
+        }
+        else if (shape instanceof GroupShape) {
+            const saveW = frame.width;
+            const saveH = frame.height;
+            api.shapeModifyWH(page, shape, w, h)
+            const scaleX = frame.width / saveW;
+            const scaleY = frame.height / saveH;
+            afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY);
+        }
+        else {
+            api.shapeModifyWH(page, shape, w, h)
+        }
+        changed = true;
+    }
+    return changed;
+}
+function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number) {
+    if (shape.type === ShapeType.Artboard) return; // 容器不需要调整子对象
+    const childs = shape.childs;
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const c = childs[i];
+        if (!c.rotation) {
+            const cFrame = c.frame;
+            const cX = cFrame.x * scaleX;
+            const cY = cFrame.y * scaleY;
+            const cW = cFrame.width * scaleX;
+            const cH = cFrame.height * scaleY;
+            setFrame(page, c, cX, cY, cW, cH, api);
+        }
+        else if (c instanceof GroupShape && c.type === ShapeType.Group) {
+            // 需要摆正
+            const boundingBox = c.boundingBox();
+            const matrix = c.matrix2Parent();
+
+            for (let i = 0, len = c.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
+                const cc = c.childs[i]
+                const m1 = cc.matrix2Parent();
+                m1.multiAtLeft(matrix);
+                const target = m1.computeCoord(0, 0);
+
+                if (c.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + c.rotation);
+                if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
+                if (c.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
+
+                const m2 = cc.matrix2Parent();
+                m2.trans(boundingBox.x, boundingBox.y);
+                const cur = m2.computeCoord(0, 0);
+
+                api.shapeModifyX(page, cc, cc.frame.x + target.x - cur.x);
+                api.shapeModifyY(page, cc, cc.frame.y + target.y - cur.y);
+            }
+
+            if (c.rotation) api.shapeModifyRotate(page, c, 0);
+            if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
+            if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
+
+            api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            api.shapeModifyY(page, c, boundingBox.y * scaleY);
+            const width = boundingBox.width * scaleX;
+            const height = boundingBox.height * scaleY;
+            api.shapeModifyWH(page, c, width, height);
+            afterModifyGroupShapeWH(api, page, c, scaleX, scaleY);
+        }
+        else if (c instanceof PathShape) {
+            // 摆正并处理points
+            const matrix = c.matrix2Parent();
+            const cFrame = c.frame;
+            const boundingBox = c.boundingBox();
+
+            matrix.preScale(cFrame.width, cFrame.height);
+            if (c.rotation) api.shapeModifyRotate(page, c, 0);
+            if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
+            if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
+
+            api.shapeModifyX(page, c, boundingBox.x);
+            api.shapeModifyY(page, c, boundingBox.y);
+            api.shapeModifyWH(page, c, boundingBox.width, boundingBox.height);
+
+            const matrix2 = c.matrix2Parent();
+            matrix2.preScale(boundingBox.width, boundingBox.height); // 当对象太小时，求逆矩阵会infinity
+            matrix.multiAtLeft(matrix2.inverse);
+            const points = c.points;
+            for (let i = 0, len = points.length; i < len; i++) {
+                const p = points[i];
+                if (p.hasCurveFrom) {
+                    const curveFrom = matrix.computeCoord(p.curveFrom);
+                    api.shapeModifyCurvFromPoint(page, c, i, curveFrom);
+                }
+                if (p.hasCurveTo) {
+                    const curveTo = matrix.computeCoord(p.curveTo);
+                    api.shapeModifyCurvToPoint(page, c, i, curveTo);
+                }
+                const point = matrix.computeCoord(p.point);
+                api.shapeModifyCurvPoint(page, c, i, point);
+            }
+
+            // scale
+            api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            api.shapeModifyY(page, c, boundingBox.y * scaleY);
+            const width = boundingBox.width * scaleX;
+            const height = boundingBox.height * scaleY;
+            api.shapeModifyWH(page, c, width, height);
+        }
+        else { // textshape imageshape symbolrefshape
+            // 需要调整位置跟大小
+            const cFrame = c.frame;
+            const matrix = c.matrix2Parent();
+            const current = [{ x: 0, y: 0 }, { x: cFrame.width, y: cFrame.height }]
+                .map((p) => matrix.computeCoord(p));
+
+            const target = current.map((p) => {
+                return { x: p.x * scaleX, y: p.y * scaleY }
+            })
+            const matrixarr = matrix.toArray();
+            matrixarr[4] = target[0].x;
+            matrixarr[5] = target[0].y;
+            const m2 = new Matrix(matrixarr);
+            const m2inverse = new Matrix(m2.inverse)
+
+            const invertTarget = target.map((p) => m2inverse.computeCoord(p))
+
+            const wh = { x: invertTarget[1].x - invertTarget[0].x, y: invertTarget[1].y - invertTarget[0].y }
+
+            // 计算新的matrix 2 parent
+            const matrix2 = new Matrix();
+            {
+                const cx = wh.x / 2;
+                const cy = wh.y / 2;
+                matrix2.trans(-cx, -cy);
+                if (c.rotation) matrix2.rotate(c.rotation / 360 * 2 * Math.PI);
+                if (c.isFlippedHorizontal) matrix2.flipHoriz();
+                if (c.isFlippedVertical) matrix2.flipVert();
+                matrix2.trans(cx, cy);
+                matrix2.trans(cFrame.x, cFrame.y);
+            }
+            const xy = matrix2.computeCoord(0, 0);
+
+            const dx = target[0].x - xy.x;
+            const dy = target[0].y - xy.y;
+            setFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api);
+        }
+    }
+}
+
+function setShapesFrame(api: Api, page: Page, shapes: Shape[], origin1: { x: number, y: number }, origin2: { x: number, y: number }, scaleX: number, scaleY: number) {
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if (!shape.rotation) {
+            const s_r_frame = shape.frame2Root();
+            const xy_in_ctrl = { x: s_r_frame.x - origin1.x, y: s_r_frame.y - origin1.y };
+            const s_r_xy_n = { x: origin2.x + xy_in_ctrl.x * scaleX, y: origin2.y + xy_in_ctrl.y * scaleY };
+            let m = shape.matrix2Parent();
+            m.multiAtLeft(m.inverse);
+            const t_xy = m.computeCoord(s_r_xy_n);
+            const n_w = shape.frame.width * scaleX;
+            const n_h = shape.frame.height * scaleY;
+            setFrame(page, shape, t_xy.x, t_xy.y, n_w, n_h, api);
+        }
+    }
 }
 // 处理异步编辑
 export class Controller {
@@ -285,12 +472,7 @@ export class Controller {
             status = Status.Pending;
             const len = shapes.length;
             if (len === 1) {
-                const item = shapes[0];
-                if (item.type === ShapeType.Group) {
-                    singleHdl4Group(api, page, item, type, start, end, deg, actionType); // 编组对象处理
-                } else {
-                    singleHdl(api, page, item, type, start, end, deg, actionType); // 普通对象处理
-                }
+                singleHdl(api, page, shapes[0], type, start, end, deg, actionType); // 普通对象处理
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -304,6 +486,25 @@ export class Controller {
             return undefined;
         }
         return { execute, close };
+    }
+    public asyncMultiEditor_beta(shapes: Shape[], page: Page): AsyncMultiAction2 {
+        const api = this.__repo.start("start", {});
+        let status: Status = Status.Pending;
+        const executeScale = (origin1: PageXY, origin2: PageXY, scaleX: number, scaleY: number) => {
+            status = Status.Pending;
+            setShapesFrame(api, page, shapes, origin1, origin2, scaleX, scaleY);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const executeRotate = () => { }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+        }
+        return { executeScale, close };
     }
     public asyncMultiEditor(shapes: Shape[], page: Page): AsyncMultiAction {
         const api = this.__repo.start("action", {});

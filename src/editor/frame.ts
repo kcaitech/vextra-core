@@ -146,14 +146,6 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
         }
     }
 }
-function setShapesFrame(api: Api, page: Page, shapes: Shape[], scaleX: number, scaleY: number) {
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if (!shape.rotation) {
-            
-        }
-    }
-}
 function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
     let changed = false;
