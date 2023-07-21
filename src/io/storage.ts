@@ -11,21 +11,6 @@ export interface StorageOptions {
     bucketName: string;
 }
 
-// 合并多个Uint8Array
-function concatUint8Array(arrays: Uint8Array[]): Uint8Array {
-    let totalLength = 0;
-    for (let arr of arrays) {
-        totalLength += arr.length;
-    }
-    let result = new Uint8Array(totalLength);
-    let offset = 0;
-    for (let arr of arrays) {
-        result.set(arr, offset);
-        offset += arr.length;
-    }
-    return result;
-}
-
 export class Storage {
     private client: AWS.S3;
     private options: StorageOptions;
