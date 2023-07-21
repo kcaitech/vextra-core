@@ -70,6 +70,7 @@
     "testPathIgnorePatterns": [
       "<rootDir>/dist/"
     ],
-    "maxWorkers": "1"
+    "maxConcurrency": 10,
+    "maxWorkers": 1
   }
 }
