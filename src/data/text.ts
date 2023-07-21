@@ -1,4 +1,17 @@
-import { BulletNumbers, BulletNumbersBehavior, BulletNumbersType, Color, StrikethroughType, TextBehaviour, TextHorAlign, TextOrientation, TextTransformType, TextVerAlign, UnderlineType } from "./baseclasses";
+import {
+    BulletNumbers,
+    BulletNumbersBehavior,
+    BulletNumbersType,
+    Color,
+    StrikethroughType,
+    TextBehaviour,
+    TextHorAlign,
+    TextOrientation,
+    TextTransformType,
+    TextVerAlign,
+    UnderlineType
+} from "./classes";
+
 import { Basic, BasicArray } from "./basic";
 
 export {
@@ -240,7 +253,7 @@ export class Text extends Basic implements classes.Text {
         const para = paraInfo.para;
         index = paraInfo.index;
         const spans = para.spans;
-        for (let i = 0, len = spans.length; i <len; i++) {
+        for (let i = 0, len = spans.length; i < len; i++) {
             const span = spans[i];
             if (index < span.length) {
                 return span;

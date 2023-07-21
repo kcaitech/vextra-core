@@ -1,15 +1,52 @@
-import { ResourceMgr, Watchable } from "./basic";
+import { Basic, ResourceMgr, Watchable } from "./basic";
 import { Style, Border } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, OverrideItem, Ellipse } from "./baseclasses"
-import { ShapeType, BoolOp, CurvePoint, OverrideItem, ShapeFrame } from "./baseclasses"
+import { ShapeType, CurvePoint, OverrideItem, ShapeFrame, BoolOp, ExportOptions, ResizeType } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { MeasureFun, TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-export class Shape extends Watchable(classes.Shape) {
+
+export class Shape extends Watchable(Basic) implements classes.Shape {
+
+    typeId = 'shape'
+    id: string
+    type: ShapeType
+    frame: ShapeFrame
+    style: Style
+    boolOp?: BoolOp
+    isFixedToViewport?: boolean
+    isFlippedHorizontal?: boolean
+    isFlippedVertical?: boolean
+    isLocked?: boolean
+    isVisible?: boolean
+    exportOptions?: ExportOptions
+    name: string
+    nameIsFixed?: boolean
+    resizingConstraint?: number
+    resizingType?: ResizeType
+    rotation?: number
+    constrainerProportions?: boolean
+    clippingMaskMode?: number
+    hasClippingMask?: boolean
+    shouldBreakMaskChain?: boolean
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style
+    ) {
+        super()
+        this.id = id
+        this.name = name
+        this.type = type
+        this.frame = frame
+        this.style = style
+    }
 
     getPath(offsetX: number, offsetY: number): Path;
     getPath(origin?: boolean): Path;
@@ -64,19 +101,9 @@ export class Shape extends Watchable(classes.Shape) {
      */
     matrix2Root() {
         let s: Shape | undefined = this;
-        let m = new Matrix();
+        const m = new Matrix();
         while (s) {
-            const frame = s.frame;
-            if (s.rotation || s.isFlippedHorizontal || s.isFlippedVertical) {
-                const cx = frame.width / 2;
-                const cy = frame.height / 2;
-                m.trans(-cx, -cy);
-                if (s.rotation) m.rotate(s.rotation / 360 * 2 * Math.PI);
-                if (s.isFlippedHorizontal) m.flipHoriz();
-                if (s.isFlippedVertical) m.flipVert();
-                m.trans(cx, cy);
-            }
-            m.trans(frame.x, frame.y);
+            s.matrix2Parent(m);
             s = s.parent;
         }
         return m;
@@ -86,8 +113,8 @@ export class Shape extends Watchable(classes.Shape) {
         return !(this.rotation || this.isFlippedHorizontal || this.isFlippedVertical)
     }
 
-    matrix2Parent() {
-        const m = new Matrix();
+    matrix2Parent(matrix?: Matrix) {
+        const m = matrix || new Matrix();
         const frame = this.frame;
         if (this.isNoTransform()) {
             m.trans(frame.x, frame.y);
@@ -124,11 +151,6 @@ export class Shape extends Watchable(classes.Shape) {
         const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
         const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-    }
-
-    public notify(...args: any[]): void {
-        // this.__boundingBox = undefined;
-        super.notify(...args);
     }
 
     flipHorizontal() {
@@ -181,7 +203,6 @@ export class GroupShape extends Shape implements classes.GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     ) {
         super(
@@ -189,16 +210,12 @@ export class GroupShape extends Shape implements classes.GroupShape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.childs = childs;
         (childs as any).typeId = "childs";
     }
-    // for io init
-    // appendChilds(childs: Shape[]) {
-    //     this.childs.push(...childs)
-    // }
+
     removeChild(shape: Shape): boolean {
         const idx = this.indexOfChild(shape);
         if (idx >= 0) {
@@ -216,9 +233,19 @@ export class GroupShape extends Shape implements classes.GroupShape {
     addChild(child: Shape) {
         this.childs.push(child);
     }
-    addChildAt(child: Shape, idx?: number) {
+    /**
+     * 
+     * @param child 返回带proxy的对象
+     * @param idx 
+     * @returns 
+     */
+    addChildAt(child: Shape, idx?: number): Shape {
+        if (idx && idx > this.childs.length) {
+            throw new Error("add child at outside index: " + idx + " , childs length: " + this.childs.length)
+        }
         const index = idx ?? this.childs.length;
         this.childs.splice(index, 0, child);
+        return this.childs[index];
     }
     indexOfChild(shape: Shape): number {
         return this.childs.findIndex((val) => {
@@ -249,7 +276,6 @@ export class FlattenShape extends GroupShape implements classes.FlattenShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     ) {
         super(
@@ -258,7 +284,6 @@ export class FlattenShape extends GroupShape implements classes.FlattenShape {
             type,
             frame,
             style,
-            boolOp,
             childs
         )
     }
@@ -277,7 +302,6 @@ export class ImageShape extends Shape implements classes.ImageShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         imageRef: string
     ) {
         super(
@@ -285,8 +309,7 @@ export class ImageShape extends Shape implements classes.ImageShape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.imageRef = imageRef
     }
@@ -331,7 +354,6 @@ export class PathShape extends Shape implements classes.PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint>
     ) {
         super(
@@ -339,8 +361,7 @@ export class PathShape extends Shape implements classes.PathShape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.points = points
     }
@@ -362,82 +383,6 @@ export class PathShape extends Shape implements classes.PathShape {
         const width = this.frame.width;
         const height = this.frame.height;
 
-        // const path: any[] = []
-        // const bezierCurveTo = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number) => {
-        //     path.push(["C", offsetX + x1, offsetY + y1, offsetX + x2, offsetY + y2, offsetX + tx, offsetY + ty]);
-        // }
-        // const moveTo = (x: number, y: number) => {
-        //     path.push(["M", offsetX + x, offsetY + y]);
-        // }
-        // const lineTo = (x: number, y: number) => {
-        //     path.push(["L", offsetX + x, offsetY + y])
-        // }
-        // const closePath = () => {
-        //     path.push(["Z"]);
-        // }
-        // const pc = this.points.length;
-        // if (pc > 0) {
-        //     const p = this.points[0];
-        //     const pt = p.point;
-        //     moveTo(pt.x * width, pt.y * height);
-        // }
-        // const curv2Point = (p: CurvePoint, nextP: CurvePoint, isClose?: boolean) => {
-        //     if (p.hasCurveFrom && nextP.hasCurveTo) {
-        //         const adjFrom = p.curveFrom;
-        //         const adjTo = nextP.curveTo;
-        //         const pt = nextP.point;
-        //         bezierCurveTo(adjFrom.x * width,
-        //             adjFrom.y * height,
-        //             adjTo.x * width,
-        //             adjTo.y * height,
-        //             pt.x * width,
-        //             pt.y * height);
-        //     }
-        //     else if (p.hasCurveFrom && !nextP.hasCurveTo) {
-        //         const adjFrom = p.curveFrom;
-        //         const adjTo = nextP.point;
-        //         const pt = nextP.point;
-        //         bezierCurveTo(adjFrom.x * width,
-        //             adjFrom.y * height,
-        //             adjTo.x * width,
-        //             adjTo.y * height,
-        //             pt.x * width,
-        //             pt.y * height);
-        //     }
-        //     else if (!p.hasCurveFrom && nextP.hasCurveTo) {
-        //         const adjFrom = p.point;
-        //         const adjTo = nextP.curveTo;
-        //         const pt = nextP.point;
-        //         bezierCurveTo(adjFrom.x * width,
-        //             adjFrom.y * height,
-        //             adjTo.x * width,
-        //             adjTo.y * height,
-        //             pt.x * width,
-        //             pt.y * height);
-        //     }
-        //     else if (!isClose) {
-        //         const pt = nextP.point;
-        //         lineTo(pt.x * width, pt.y * height);
-        //     }
-        //     else {
-        //         closePath();
-        //     }
-        // }
-        // for (let i = 0; i < pc - 1; i++) {
-        //     const p = this.points[i];
-        //     const nextP = this.points[i + 1];
-        //     curv2Point(p, nextP);
-        // }
-        // if (this.isClosed) {
-        //     if (pc > 1) {
-        //         const firstP = this.points[0];
-        //         const lastP = this.points[pc - 1];
-        //         curv2Point(lastP, firstP, true);
-        //     } else {
-        //         closePath();
-        //     }
-        // }
-
         const path = parsePath(this, !!this.isClosed, offsetX, offsetY, width, height);
         return new Path(path);
     }
@@ -452,7 +397,6 @@ export class RectShape extends PathShape implements classes.RectShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint>
     ) {
         super(
@@ -461,7 +405,6 @@ export class RectShape extends PathShape implements classes.RectShape {
             type,
             frame,
             style,
-            boolOp,
             points
         )
         this.isClosed = true;
@@ -487,16 +430,6 @@ export class RectShape extends PathShape implements classes.RectShape {
         }
         return ret;
     }
-    // getPath(offsetX: number, offsetY: number): Path;
-    // getPath(origin?: boolean): Path;
-    // getPath(arg1?: boolean | number, arg2?: number): Path {
-    //     const offsetX = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-    //     const offsetY = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
-    //     const width = this.frame.width;
-    //     const height = this.frame.height;
-    //     const path = parsePath(this, !!this.isClosed, offsetX, offsetY, width, height);
-    //     return new Path(path);
-    // }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {
@@ -510,7 +443,6 @@ export class OvalShape extends PathShape implements classes.OvalShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint>,
         ellipse: classes.Ellipse
     ) {
@@ -520,7 +452,6 @@ export class OvalShape extends PathShape implements classes.OvalShape {
             type,
             frame,
             style,
-            boolOp,
             points,
         )
         this.ellipse = ellipse;
@@ -537,7 +468,6 @@ export class LineShape extends PathShape implements classes.LineShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint>,
     ) {
         super(
@@ -546,7 +476,6 @@ export class LineShape extends PathShape implements classes.LineShape {
             type,
             frame,
             style,
-            boolOp,
             points
         )
     }
@@ -560,7 +489,6 @@ export class TextShape extends Shape implements classes.TextShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         text: Text
     ) {
         super(
@@ -568,8 +496,7 @@ export class TextShape extends Shape implements classes.TextShape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.text = text
         text.updateSize(frame.width, frame.height);
@@ -582,10 +509,8 @@ export class TextShape extends Shape implements classes.TextShape {
         const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
         const w = this.frame.width;
         const h = this.frame.height;
-        const cx = x + w / 2;
-        const cy = y + h / 2;
 
-        let path = [["M", x, y],
+        const path = [["M", x, y],
         ["l", w, 0],
         ["l", 0, h],
         ["l", -w, 0],
@@ -615,7 +540,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(SymbolShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     ) {
         super(
@@ -624,7 +548,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             type,
             frame,
             style,
-            boolOp,
             childs
         )
     }
@@ -642,7 +565,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         refId: string
     ) {
         super(
@@ -650,8 +572,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.refId = refId
     }

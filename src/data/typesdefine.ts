@@ -104,7 +104,7 @@ export type Shape = {
     type: ShapeType
     frame: ShapeFrame
     style: Style
-    boolOp: BoolOp
+    boolOp?: BoolOp
     isFixedToViewport?: boolean
     isFlippedHorizontal?: boolean
     isFlippedVertical?: boolean
@@ -139,6 +139,8 @@ export enum ShapeType {
     Polygon = 'polygon',
     Oval = 'oval',
     Line = 'line',
+    Table = 'table',
+    TableCell = 'table-cell',
 }
 /* shape frame
  * x,y为parent坐标系里的点
@@ -238,6 +240,7 @@ export type Fill = {
     color: Color
     contextSettings: ContextSettings
     gradient?: Gradient
+    imageRef?: string
 }
 /* fill types */
 export enum FillType {
@@ -448,6 +451,14 @@ export enum BlendMode {
 /* text shape */
 export type TextShape = Shape & {
     text: Text
+}
+/* table shape */
+export type TableShape = Shape & {
+    childs: TableCell[]
+}
+/* table cell */
+export type TableCell = Shape & {
+    childs: (ImageShape | TextShape)[]
 }
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {

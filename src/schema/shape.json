@@ -77,8 +77,7 @@
         "name",
         "type",
         "frame",
-        "style",
-        "boolOp"
+        "style"
     ],
     "additionalProperties": false
 }

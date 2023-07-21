@@ -3,11 +3,12 @@ import {Page} from "../data/page";
 import {ImageShape, SymbolRefShape, SymbolShape, TextShape} from "../data/shape";
 import {IImportContext, importDocumentMeta, importDocumentSyms, importPage} from "./baseimport";
 import * as types from "../data/typesdefine"
-import {IDataGuard, ResourceMgr} from "../data/basic";
+import {IDataGuard} from "../data/basic";
 import {Document, DocumentMeta, DocumentSyms} from "../data/document";
 import * as storage from "./storage";
 import {base64ToDataUrl} from "../basic/utils";
 import {MeasureFun} from "../data/textlayout";
+import {Fill} from "../data/style";
 
 interface IJSON {
     [key: string]: any
@@ -15,8 +16,11 @@ interface IJSON {
 
 interface IDataLoader {
     loadDocumentMeta(ctx: IImportContext, id: string): Promise<DocumentMeta>
+
     loadDocumentSyms(ctx: IImportContext, id: string): Promise<DocumentSyms[]>
+
     loadPage(ctx: IImportContext, id: string): Promise<Page>
+
     // loadArtboard(ctx: IImportContext, id: string): Promise<Artboard>
     // loadSymbol(ctx: IImportContext, id: string): Promise<SymbolShape>
     loadMedia(ctx: IImportContext, id: string): Promise<{ buff: Uint8Array, base64: string }>
@@ -126,7 +130,7 @@ export async function importDocument(storageOptions: storage.StorageOptions, doc
     const document = new Document(meta.id, versionId ?? "", meta.name, meta.pagesList, gurad, measureFun);
     const ctx = new class implements IImportContext {
         afterImport(obj: any): void {
-            if (obj instanceof ImageShape) {
+            if (obj instanceof ImageShape || obj instanceof Fill) {
                 obj.setImageMgr(document.mediasMgr)
             } else if (obj instanceof SymbolRefShape) {
                 obj.setSymbolMgr(document.symbolsMgr)

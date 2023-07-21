@@ -176,7 +176,7 @@ export class Shape extends Basic {
     type: ShapeType
     frame: ShapeFrame
     style: Style
-    boolOp: BoolOp
+    boolOp?: BoolOp
     isFixedToViewport?: boolean
     isFlippedHorizontal?: boolean
     isFlippedVertical?: boolean
@@ -197,8 +197,7 @@ export class Shape extends Basic {
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
-        style: Style,
-        boolOp: BoolOp
+        style: Style
     ) {
         super()
         this.id = id
@@ -206,7 +205,6 @@ export class Shape extends Basic {
         this.type = type
         this.frame = frame
         this.style = style
-        this.boolOp = boolOp
     }
 }
 /**
@@ -380,6 +378,7 @@ export class Fill extends Basic {
     color: Color
     contextSettings: ContextSettings
     gradient?: Gradient
+    imageRef?: string
     constructor(
         id: string,
         isEnabled: boolean,
@@ -748,7 +747,6 @@ export class TextShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         text: Text
     ) {
         super(
@@ -756,10 +754,57 @@ export class TextShape extends Shape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.text = text
+    }
+}
+/**
+ * table shape 
+ */
+export class TableShape extends Shape {
+    typeId = 'table-shape'
+    childs: BasicArray<TableCell >
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        childs: BasicArray<TableCell >
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style
+        )
+        this.childs = childs
+    }
+}
+/**
+ * table cell 
+ */
+export class TableCell extends Shape {
+    typeId = 'table-cell'
+    childs: BasicArray<(ImageShape | TextShape) >
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        childs: BasicArray<(ImageShape | TextShape) >
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style
+        )
+        this.childs = childs
     }
 }
 /**
@@ -775,7 +820,6 @@ export class SymbolRefShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         refId: string
     ) {
         super(
@@ -783,8 +827,7 @@ export class SymbolRefShape extends Shape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.refId = refId
     }
@@ -816,7 +859,6 @@ export class PathShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint >
     ) {
         super(
@@ -824,8 +866,7 @@ export class PathShape extends Shape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.points = points
     }
@@ -841,7 +882,6 @@ export class RectShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint >
     ) {
         super(
@@ -850,7 +890,6 @@ export class RectShape extends PathShape {
             type,
             frame,
             style,
-            boolOp,
             points
         )
     }
@@ -897,7 +936,6 @@ export class Page extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape) >
     ) {
         super(
@@ -905,8 +943,7 @@ export class Page extends Shape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.childs = childs
     }
@@ -923,7 +960,6 @@ export class OvalShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint >,
         ellipse: Ellipse
     ) {
@@ -933,7 +969,6 @@ export class OvalShape extends PathShape {
             type,
             frame,
             style,
-            boolOp,
             points
         )
         this.ellipse = ellipse
@@ -950,7 +985,6 @@ export class LineShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         points: BasicArray<CurvePoint >
     ) {
         super(
@@ -959,7 +993,6 @@ export class LineShape extends PathShape {
             type,
             frame,
             style,
-            boolOp,
             points
         )
     }
@@ -976,7 +1009,6 @@ export class ImageShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         imageRef: string
     ) {
         super(
@@ -984,8 +1016,7 @@ export class ImageShape extends Shape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.imageRef = imageRef
     }
@@ -1002,7 +1033,6 @@ export class GroupShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
     ) {
         super(
@@ -1010,8 +1040,7 @@ export class GroupShape extends Shape {
             name,
             type,
             frame,
-            style,
-            boolOp
+            style
         )
         this.childs = childs
     }
@@ -1027,7 +1056,6 @@ export class SymbolShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
     ) {
         super(
@@ -1036,7 +1064,6 @@ export class SymbolShape extends GroupShape {
             type,
             frame,
             style,
-            boolOp,
             childs
         )
     }
@@ -1052,7 +1079,6 @@ export class FlattenShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
     ) {
         super(
@@ -1061,7 +1087,6 @@ export class FlattenShape extends GroupShape {
             type,
             frame,
             style,
-            boolOp,
             childs
         )
     }
@@ -1080,7 +1105,6 @@ export class Artboard extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
     ) {
         super(
@@ -1089,7 +1113,6 @@ export class Artboard extends GroupShape {
             type,
             frame,
             style,
-            boolOp,
             childs
         )
     }
