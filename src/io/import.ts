@@ -27,19 +27,19 @@ interface IDataLoader {
 }
 
 class RemoteLoader {
-    private storageClient: storage.Storage;
+    private storage: storage.IStorage;
 
-    constructor(storageOptions: storage.StorageOptions) {
-        this.storageClient = new storage.Storage(storageOptions);
+    constructor(storage: storage.IStorage) {
+        this.storage = storage;
     }
 
     loadRaw(uri: string, versionId?: string): Promise<Uint8Array> {
-        return this.storageClient.get(uri, versionId);
+        return this.storage.get(uri, versionId);
     }
 
     loadJson(uri: string, versionId?: string): Promise<IJSON> {
         return new Promise((resolve, reject) => {
-            this.storageClient.get(uri, versionId).then((data: Uint8Array) => {
+            this.storage.get(uri, versionId).then((data: Uint8Array) => {
                 const json = JSON.parse(new TextDecoder().decode(data));
                 resolve(json);
             }).catch((err: any) => {
@@ -54,8 +54,8 @@ export class DataLoader implements IDataLoader {
     private remoteLoader: RemoteLoader;
     private documentPath: string;
 
-    constructor(storageOptions: storage.StorageOptions, documentPath: string) {
-        this.remoteLoader = new RemoteLoader(storageOptions);
+    constructor(storage: storage.IStorage, documentPath: string) {
+        this.remoteLoader = new RemoteLoader(storage);
         this.documentPath = documentPath;
     }
 
@@ -117,8 +117,8 @@ export class DataLoader implements IDataLoader {
     }
 }
 
-export async function importDocument(storageOptions: storage.StorageOptions, documentPath: string, fid: string, versionId: string, gurad: IDataGuard, measureFun: MeasureFun) {
-    const loader = new DataLoader(storageOptions, documentPath);
+export async function importDocument(storage: storage.IStorage, documentPath: string, fid: string, versionId: string, gurad: IDataGuard, measureFun: MeasureFun) {
+    const loader = new DataLoader(storage, documentPath);
 
     const meta = await loader.loadDocumentMeta(new class implements IImportContext {
         afterImport(obj: any): void {
