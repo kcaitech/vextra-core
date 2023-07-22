@@ -62,6 +62,7 @@
     },
     "testPathIgnorePatterns": [
       "<rootDir>/dist/"
-    ]
+    ],
+    "maxWorkers": "1"
   }
 }
