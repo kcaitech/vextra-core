@@ -19,7 +19,7 @@ import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAl
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BoolOp, BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { isColorEqual } from "../../data/utils";
 import { _travelTextPara } from "../../data/texttravel";
 
@@ -134,13 +134,14 @@ export class Api {
         this.addCmd(PageCmdMove.Make(document.id, pageId, fromIdx, toIdx))
     }
 
-    shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number) {
+    shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number): Shape {
         this.__trap(() => {
-            parent.addChildAt(shape, index);
+            shape = parent.addChildAt(shape, index);
             page.onAddShape(shape);
         })
         this.addCmd(ShapeCmdInsert.Make(page.id, parent.id, shape.id, index, exportShape(shape)))
         this.needUpdateFrame.push({ page, shape });
+        return shape;
     }
     shapeDelete(page: Page, parent: GroupShape, index: number) {
         let shape: Shape | undefined;
@@ -313,6 +314,16 @@ export class Api {
             p.curveTo.x = point.x;
             p.curveTo.y = point.y;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, shape.id, POINTS_ID, p.id, POINTS_ATTR_ID.to, exportPoint2D(point), origin))
+        })
+    }
+    shapeModifyBoolOp(page: Page, shape: Shape, op: BoolOp | undefined) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const origin = shape.boolOp;
+            if ((origin ?? BoolOp.None) !== (op ?? BoolOp.None)) {
+                shape.boolOp = op;
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.boolop, op, origin));
+            }
         })
     }
     artboardModifyBackgroundColor(page: Page, shape: Artboard, color: Color) {

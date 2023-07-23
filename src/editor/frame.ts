@@ -3,6 +3,7 @@ import { Matrix } from "../basic/matrix";
 import { GroupShape, PathShape, Shape, TextShape } from "../data/shape";
 import { Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils";
+import { TableShape } from "../data/table";
 
 export interface Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
@@ -146,14 +147,6 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
         }
     }
 }
-function setShapesFrame(api: Api, page: Page, shapes: Shape[], scaleX: number, scaleY: number) {
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if (!shape.rotation) {
-            
-        }
-    }
-}
 function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
     let changed = false;
@@ -189,6 +182,14 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
             const scaleY = frame.height / saveH;
 
             afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY);
+        }
+        else if (shape instanceof TableShape) {
+            const saveW = frame.width;
+            const saveH = frame.height;
+            api.shapeModifyWH(page, shape, w, h)
+
+            // 调整cell的大小
+            // todo
         }
         else {
             api.shapeModifyWH(page, shape, w, h)

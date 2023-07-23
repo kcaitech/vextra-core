@@ -16,6 +16,7 @@ export const SHAPE_ATTR_ID = {
     resizingConstraint: "resizingConstraint",
     radius: "radius",
     backgroundColor: "backgroundColor",
+    boolop: "boolop",
 
     // text shape
     textBehaviour: "textBehaviour",
