@@ -668,6 +668,11 @@ export class Path {
     get length() {
         return this.m_segs.length;
     }
+    push(... paths: Path[]) {
+        paths.forEach((p) => {
+            if (p) this.m_segs.push(... p.m_segs);
+        })
+    }
     clone(): Path {
         const segs = JSON.parse(JSON.stringify(this.m_segs))
         const path = new Path(segs);

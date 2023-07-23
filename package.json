@@ -1,6 +1,6 @@
 {
   "name": "@kcdesign/data",
-  "version": "0.1.66",
+  "version": "0.1.67",
   "private": false,
   "description": "kcdesign core module",
   "author": "kcaisoft.com",
@@ -69,6 +69,7 @@
     },
     "testPathIgnorePatterns": [
       "<rootDir>/dist/"
-    ]
+    ],
+    "maxWorkers": "1"
   }
 }

@@ -50,8 +50,9 @@ function importShapeFrame(data: IJSON): ShapeFrame {
     return new ShapeFrame(x, y, width, height);
 }
 
-function importBoolOp(data: IJSON): BoolOp {
-    return [BoolOp.Union, BoolOp.Subtract, BoolOp.Intersect, BoolOp.Diff][data['booleanOperation']] ?? BoolOp.None;
+function importBoolOp(shape: Shape, data: IJSON) {
+    const op = [BoolOp.Union, BoolOp.Subtract, BoolOp.Intersect, BoolOp.Diff][data['booleanOperation']];
+    if (op) shape.boolOp = op;
 }
 
 function importPoints(data: IJSON): CurvePoint[] {
@@ -102,11 +103,10 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun): Art
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    const booleanOperation = importBoolOp(data);
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -118,12 +118,13 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun): Art
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
 
     const childs = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new Artboard(id, name, ShapeType.Artboard, frame, style, booleanOperation, new BasicArray<Shape>(...childs));
+    const shape = new Artboard(id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs));
 
     shape.hasBackgroundColor = hasBackgroundColor;
     shape.includeBackgroundColorInExport = includeBackgroundColorInExport;
     if (backgroundColor) shape.backgroundColor = backgroundColor;
     importShapePropertys(shape, data);
+    importBoolOp(shape, data);
     return shape;
 }
 
@@ -133,19 +134,19 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun): G
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    const booleanOperation = importBoolOp(data);
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new GroupShape(id, name, ShapeType.Group, frame, style, booleanOperation, new BasicArray<Shape>(...childs));
+    const shape = new GroupShape(id, name, ShapeType.Group, frame, style, new BasicArray<Shape>(...childs));
     importShapePropertys(shape, data);
+    importBoolOp(shape, data);
     return shape;
 }
 
@@ -155,19 +156,19 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    const booleanOperation = importBoolOp(data);
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new FlattenShape(id, name, ShapeType.FlattenShape, frame, style, booleanOperation, new BasicArray<Shape>(...childs));
+    const shape = new FlattenShape(id, name, ShapeType.FlattenShape, frame, style, new BasicArray<Shape>(...childs));
     importShapePropertys(shape, data);
+    importBoolOp(shape, data);
     return shape;
 }
 
@@ -177,21 +178,21 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun): ImageS
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    const booleanOperation = importBoolOp(data);
     // const points: Point[] = importPoints(data);
     const image = data['image'];
     const ref = image && image['_ref'] || "";
     const imageRef = ref.substring(ref.indexOf('/') + 1);
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     // env.mediaMgr.addRef(imageRef);
-    const shape = new ImageShape(id, name, ShapeType.Image, frame, style, booleanOperation, imageRef);
+    const shape = new ImageShape(id, name, ShapeType.Image, frame, style, imageRef);
     // shape.setImageMgr(env.mediaMgr);
     importShapePropertys(shape, data);
+    importBoolOp(shape, data);
     return shape;
 }
 
@@ -201,11 +202,10 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    const booleanOperation = importBoolOp(data);
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -213,9 +213,10 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     // const isClosed = data['isClosed'];
 
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new Page(id, name, ShapeType.Page, frame, style, booleanOperation, new BasicArray<Shape>(...childs));
+    const shape = new Page(id, name, ShapeType.Page, frame, style, new BasicArray<Shape>(...childs));
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
+    importBoolOp(shape, data);
     return shape;
 }
 
@@ -225,20 +226,20 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun): Pa
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    const booleanOperation = importBoolOp(data);
     const points: CurvePoint[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
     const isClosed = data['isClosed'];
 
-    const shape = new PathShape(id, name, ShapeType.Path, frame, style, booleanOperation, new BasicArray<CurvePoint>(...points));
+    const shape = new PathShape(id, name, ShapeType.Path, frame, style, new BasicArray<CurvePoint>(...points));
     shape.isClosed = isClosed;
     importShapePropertys(shape, data);
+    importBoolOp(shape, data);
     return shape;
 }
 
@@ -248,12 +249,11 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun): Re
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    const booleanOperation = importBoolOp(data);
     const points: CurvePoint[] = importPoints(data);
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -261,8 +261,9 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun): Re
     // const isClosed = data['isClosed'];
     // const r = data['fixedRadius'] || 0;
     // const radius = new RectRadius(r, r, r, r);
-    const shape = new RectShape(id, name, ShapeType.Rectangle, frame, style, booleanOperation, new BasicArray<CurvePoint>(...points));
+    const shape = new RectShape(id, name, ShapeType.Rectangle, frame, style, new BasicArray<CurvePoint>(...points));
     importShapePropertys(shape, data);
+    importBoolOp(shape, data);
     return shape;
 }
 
@@ -272,11 +273,10 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun): Te
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    const booleanOperation = importBoolOp(data);
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -285,8 +285,9 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun): Te
     const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
     text.attr && (text.attr.textBehaviour = textBehaviour);
     // const isClosed = data['isClosed'];
-    const shape = new TextShape(id, name, ShapeType.Text, frame, style, booleanOperation, text);
+    const shape = new TextShape(id, name, ShapeType.Text, frame, style, text);
     importShapePropertys(shape, data);
+    importBoolOp(shape, data);
     shape.setMeasureFun(ctx.measureFun);
     return shape;
 }
@@ -297,11 +298,10 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): Symbo
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    const booleanOperation = importBoolOp(data);
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -309,10 +309,11 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): Symbo
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, booleanOperation, new BasicArray<Shape>(...childs));
+    const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs));
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
+    importBoolOp(shape, data);
     return shape;
 }
 
@@ -322,26 +323,25 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun): Sy
     const exportOptions = importExportOptions(data);
     const frame = importShapeFrame(data);
     const name: string = data['name'];
-    const booleanOperation = importBoolOp(data);
     // const points: Point[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
-    const style = importStyle(data['style']);
+    const style = importStyle(ctx, data['style']);
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    const shape = new SymbolRefShape(id, name, ShapeType.SymbolRef, frame, style, booleanOperation, data['symbolID']);
+    const shape = new SymbolRefShape(id, name, ShapeType.SymbolRef, frame, style, data['symbolID']);
 
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);
+    importBoolOp(shape, data);
     return shape;
 }
 
 // export function importShape(data: IJSON): Shape {
-
 //     switch ((data['_class'])) {
 //         case 'rectangle':
 //             return importRectShape(data); // ShapeType.Rectangle;

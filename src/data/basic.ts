@@ -38,6 +38,9 @@ export class BasicArray<T> extends Array<T> {
     notify(...args: any[]): void {
         this.__parent && this.__parent.notify(this.typeId, ...args);
     }
+    setTypeId(typeId: string) {
+        this.typeId = typeId;
+    }
 }
 
 export class BasicMap<T0, T1> extends Map<T0, T1> {

@@ -15,7 +15,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        boolOp: BoolOp,
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     ) {
         super(
@@ -24,7 +23,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
             ShapeType.Artboard,
             frame,
             style,
-            boolOp,
             childs
         )
     }

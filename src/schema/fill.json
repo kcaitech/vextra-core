@@ -23,6 +23,9 @@
         },
         "gradient": {
             "$ref": "./gradient.json"
+        },
+        "imageRef": {
+            "type": "string"
         }
     },
     "required": [

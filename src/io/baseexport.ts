@@ -149,7 +149,7 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -311,6 +311,7 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
         color: exportColor(source.color, ctx),
         contextSettings: exportContextSettings(source.contextSettings, ctx),
         gradient: source.gradient && exportGradient(source.gradient, ctx),
+        imageRef: source.imageRef,
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -573,7 +574,7 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -593,6 +594,91 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
     if (ctx) ctx.afterExport(source)
     return ret
 }
+/* table shape */
+export function exportTableShape(source: types.TableShape, ctx?: IExportContext): types.TableShape {
+    const ret = {
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        childs: (() => {
+            const ret = []
+            for (let i = 0, len = source.childs.length; i < len; i++) {
+                const r = exportTableCell(source.childs[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+    }
+    if (ctx) ctx.afterExport(source)
+    return ret
+}
+/* table cell */
+export function exportTableCell(source: types.TableCell, ctx?: IExportContext): types.TableCell {
+    const ret = {
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        childs: (() => {
+            const ret = []
+            for (let i = 0, len = source.childs.length; i < len; i++) {
+                const r = (() => {
+                    if (typeof source.childs[i] != 'object') {
+                        return source.childs[i]
+                    }
+                    if (source.childs[i].typeId == 'image-shape') {
+                        return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'text-shape') {
+                        return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                    }
+                    {
+                        console.error(source.childs[i])
+                    }
+                })()
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+    }
+    if (ctx) ctx.afterExport(source)
+    return ret
+}
 /* symbol ref shape */
 export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExportContext): types.SymbolRefShape {
     const ret = {
@@ -602,7 +688,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -659,7 +745,7 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -696,7 +782,6 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
         points: (() => {
                 const ret = []
                 for (let i = 0, len = source.points.length; i < len; i++) {
@@ -706,6 +791,7 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
                 return ret
             })(),
         isClosed: source.isClosed,
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -784,7 +870,7 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -869,7 +955,6 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
         points: (() => {
                 const ret = []
                 for (let i = 0, len = source.points.length; i < len; i++) {
@@ -879,6 +964,7 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
                 return ret
             })(),
         isClosed: source.isClosed,
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -907,7 +993,6 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
         points: (() => {
                 const ret = []
                 for (let i = 0, len = source.points.length; i < len; i++) {
@@ -917,6 +1002,7 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
                 return ret
             })(),
         isClosed: source.isClosed,
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -944,7 +1030,7 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -973,7 +1059,7 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -1049,7 +1135,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
         childs: (() => {
                 const ret = []
                 for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1098,6 +1183,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 }
                 return ret
             })(),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -1125,7 +1211,6 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
         childs: (() => {
                 const ret = []
                 for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1174,6 +1259,7 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                 }
                 return ret
             })(),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
@@ -1201,7 +1287,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        boolOp: exportBoolOp(source.boolOp, ctx),
         childs: (() => {
                 const ret = []
                 for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1250,6 +1335,7 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                 }
                 return ret
             })(),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
