@@ -12,6 +12,8 @@ import { ResourceMgr } from "../data/basic";
 import { Api } from "./command/recordapi";
 import { Matrix } from "../basic/matrix";
 import { fixTextShapeFrameByLayout } from "./utils";
+import { Artboard } from "../data/artboard";
+import { Color } from "../data/style";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -77,6 +79,7 @@ export interface AsyncCreator {
     init_text: (page: Page, parent: GroupShape, frame: ShapeFrame, content: string) => Shape | undefined;
     setFrame: (point: PageXY) => void;
     setFrameByWheel: (point: PageXY) => void;
+    collect: (page: Page, shapes: Shape[], target: Artboard) => void;
     close: () => undefined;
 }
 
@@ -352,8 +355,9 @@ export class Controller {
             const xy = parent.frame2Root();
             shape.frame.x -= xy.x;
             shape.frame.y -= xy.y;
-            api.shapeInsert(page, parent, shape, parent.childs.length)
+            api.shapeInsert(page, parent, shape, parent.childs.length);
             newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
+            if (newShape?.type === ShapeType.Artboard) api.artboardModifyBackgroundColor(page, newShape as Artboard, new Color(0, 0, 0, 0));
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
             return newShape
@@ -453,16 +457,47 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
-
+        const collect = (page: Page, shapes: Shape[], target: Artboard) => { // 容器收束
+            status = Status.Pending;
+            if (shapes.length) {
+                for (let i = 0; i < shapes.length; i++) {
+                    const s = shapes[i];
+                    const p = s.parent as GroupShape;
+                    const idx = p.indexOfChild(s);
+                    api.shapeMove(page, p, idx, target, 0);
+                    if (p.childs.length <= 0) {
+                        deleteEmptyGroupShape(page, s, api);
+                    }
+                }
+                const realXY = shapes.map((s) => s.frame2Root());
+                const t_xy = target.frame;
+                const savep = shapes[0].parent as GroupShape;
+                const m = new Matrix(savep.matrix2Root().inverse);
+                for (let i = 0; i < shapes.length; i++) {
+                    const c = shapes[i];
+                    const r = realXY[i]
+                    const target = m.computeCoord(r.x, r.y);
+                    const cur = c.matrix2Parent().computeCoord(0, 0);
+                    api.shapeModifyX(page, c, c.frame.x + target.x - cur.x - t_xy.x);
+                    api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - t_xy.y);
+                }
+            }
+            api.artboardModifyBackgroundColor(page, target, new Color(1, 255, 255, 255));
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
         const close = () => {
             if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
+                if (newShape.type === ShapeType.Artboard) {
+                    api.artboardModifyBackgroundColor(savepage!, newShape as Artboard, new Color(1, 255, 255, 255));
+                }
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();
             }
             return undefined;
         }
-        return { init, init_media, init_text, setFrame, setFrameByWheel, close }
+        return { init, init_media, init_text, setFrame, setFrameByWheel, collect, close }
     }
     // 图形编辑，适用于基础控点、控边的异步编辑
     public asyncRectEditor(shapes: Shape[], page: Page): AsyncBaseAction {
@@ -604,6 +639,15 @@ export class Controller {
         }
         return { migrate, trans, close, transByWheel }
     }
+}
+function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
+    const p = shape.parent as GroupShape;
+    if (!p) return false;
+    api.shapeDelete(page, p, p.indexOfChild(shape))
+    if (p.childs.length <= 0) {
+        deleteEmptyGroupShape(page, p, api)
+    }
+    return true;
 }
 function insert_tool(shapes: Shape[], page: Page, api: Api) {
     const fshape = shapes[0];

@@ -78,6 +78,7 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
     artboard.style.fills.push(fill);
     artboard.hasBackgroundColor = true;
+    artboard.backgroundColor = fillColor;
     artboard.isVisible = true;
     artboard.isLocked = false;
     return artboard
