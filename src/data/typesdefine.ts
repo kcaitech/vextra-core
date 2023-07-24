@@ -513,6 +513,7 @@ export type SymbolShape = GroupShape & {
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {
+    fixedRadius?: number
 }
 /* artboard shape */
 export type Artboard = GroupShape & {

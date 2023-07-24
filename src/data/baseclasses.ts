@@ -1083,6 +1083,7 @@ export class SymbolShape extends GroupShape {
  */
 export class FlattenShape extends GroupShape {
     typeId = 'flatten-shape'
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,

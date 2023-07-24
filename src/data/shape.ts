@@ -271,6 +271,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
 
 export class FlattenShape extends GroupShape implements classes.FlattenShape {
     typeId = 'flatten-shape';
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,
@@ -342,7 +343,51 @@ export class PathShape extends Shape implements classes.PathShape {
     }
 }
 
-export class ImageShape extends PathShape implements classes.ImageShape {
+export class RectShape extends PathShape implements classes.RectShape {
+    typeId = 'rect-shape'
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        points: BasicArray<CurvePoint>,
+        isClosed: boolean
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style,
+            points,
+            isClosed
+        )
+        this.isClosed = true;
+    }
+    setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
+        const ps = this.points;
+        if (ps.length === 4) {
+            ps[0].cornerRadius = lt;
+            ps[1].cornerRadius = rt;
+            ps[2].cornerRadius = rb;
+            ps[3].cornerRadius = lb;
+        }
+    }
+    getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
+        const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
+        const ps = this.points;
+        if (ps.length === 4) {
+            ret.lt = ps[0].cornerRadius;
+            ret.rt = ps[1].cornerRadius;
+            ret.rb = ps[2].cornerRadius;
+            ret.lb = ps[3].cornerRadius;
+        }
+        return ret;
+    }
+}
+
+export class ImageShape extends RectShape implements classes.ImageShape {
     typeId = 'image-shape'
     imageRef: string;
 
@@ -389,70 +434,6 @@ export class ImageShape extends PathShape implements classes.ImageShape {
         if (this.__cacheData) return this.__cacheData.base64;
         this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
         return this.__cacheData && this.__cacheData.base64 || "";
-    }
-    setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
-        const ps = this.points;
-        if (ps.length === 4) {
-            ps[0].cornerRadius = lt;
-            ps[1].cornerRadius = rt;
-            ps[2].cornerRadius = rb;
-            ps[3].cornerRadius = lb;
-        }
-    }
-    getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
-        const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
-        const ps = this.points;
-        if (ps.length === 4) {
-            ret.lt = ps[0].cornerRadius;
-            ret.rt = ps[1].cornerRadius;
-            ret.rb = ps[2].cornerRadius;
-            ret.lb = ps[3].cornerRadius;
-        }
-        return ret;
-    }
-}
-
-export class RectShape extends PathShape implements classes.RectShape {
-    typeId = 'rect-shape'
-    constructor(
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style,
-        points: BasicArray<CurvePoint>,
-        isClosed: boolean
-    ) {
-        super(
-            id,
-            name,
-            type,
-            frame,
-            style,
-            points,
-            isClosed
-        )
-        this.isClosed = true;
-    }
-    setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
-        const ps = this.points;
-        if (ps.length === 4) {
-            ps[0].cornerRadius = lt;
-            ps[1].cornerRadius = rt;
-            ps[2].cornerRadius = rb;
-            ps[3].cornerRadius = lb;
-        }
-    }
-    getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
-        const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
-        const ps = this.points;
-        if (ps.length === 4) {
-            ret.lt = ps[0].cornerRadius;
-            ret.rt = ps[1].cornerRadius;
-            ret.rb = ps[2].cornerRadius;
-            ret.lb = ps[3].cornerRadius;
-        }
-        return ret;
     }
 }
 

@@ -1253,6 +1253,7 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    ret.fixedRadius = source.fixedRadius
     if (ctx) ctx.afterImport(ret)
     return ret
 }

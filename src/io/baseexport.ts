@@ -1295,6 +1295,7 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        fixedRadius: source.fixedRadius,
     }
     if (ctx) ctx.afterExport(source)
     return ret

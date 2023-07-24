@@ -1,0 +1,16 @@
+{
+    "description": "flatten shape",
+    "type": "object",
+    "properties": {
+        "fixedRadius": {
+            "type": "number"
+        }
+    },
+    "required": [],
+    "allOf": [
+        {
+            "$ref": "./group-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}
