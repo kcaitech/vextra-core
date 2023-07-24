@@ -278,7 +278,7 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.resizingConstraint, resizingConstraint, save))
         })
     }
-    shapeModifyRadius(page: Page, shape: RectShape | ImageShape, lt: number, rt: number, rb: number, lb: number) {
+    shapeModifyRadius(page: Page, shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.getRectRadius();

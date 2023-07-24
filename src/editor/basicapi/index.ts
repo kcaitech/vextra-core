@@ -112,7 +112,7 @@ export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | unde
 export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: number) {
     shape.setResizingConstraint(resizingConstraint);
 }
-export function shapeModifyRadius(shape: RectShape | ImageShape, lt: number, rt: number, rb: number, lb: number) {
+export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
     shape.setRectRadius(lt, rt, rb, lb);
 }
 export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
