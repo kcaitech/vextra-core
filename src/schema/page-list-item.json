@@ -1,5 +1,5 @@
 {
-    "description": "document meta",
+    "description": "page list item",
     "type": "object",
     "properties": {
         "id": {
@@ -12,12 +12,6 @@
             "type": "string",
             "default": "Page"
         },
-        "pagesList": {
-            "type": "array",
-            "items": {
-                "$ref": "./page-list-item.json"
-            }
-        },
         "versionId": {
             "type": "string",
             "default": ""
@@ -25,8 +19,7 @@
     },
     "required": [
         "id",
-        "name",
-        "pagesList"
+        "name"
     ],
     "additionalProperties": false
 }
