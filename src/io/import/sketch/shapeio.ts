@@ -189,7 +189,13 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun): ImageS
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     // env.mediaMgr.addRef(imageRef);
-    const shape = new ImageShape(id, name, ShapeType.Image, frame, style, imageRef);
+    const curvePoint = new BasicArray<CurvePoint>();
+    const p1 = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0)); // lt
+    const p2 = new CurvePoint(uuid(), 0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.Straight, new Point2D(1, 0)); // rt
+    const p3 = new CurvePoint(uuid(), 0, new Point2D(1, 1), new Point2D(1, 1), false, false, CurveMode.Straight, new Point2D(1, 1)); // rb
+    const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
+    curvePoint.push(p1, p2, p3, p4);
+    const shape = new ImageShape(id, name, ShapeType.Image, frame, style, curvePoint, true, imageRef);
     // shape.setImageMgr(env.mediaMgr);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -236,8 +242,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun): Pa
     // const text = data['attributedString'] && importText(data['attributedString']);
     const isClosed = data['isClosed'];
 
-    const shape = new PathShape(id, name, ShapeType.Path, frame, style, new BasicArray<CurvePoint>(...points));
-    shape.isClosed = isClosed;
+    const shape = new PathShape(id, name, ShapeType.Path, frame, style, new BasicArray<CurvePoint>(...points), isClosed);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     return shape;
@@ -261,7 +266,7 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun): Re
     // const isClosed = data['isClosed'];
     // const r = data['fixedRadius'] || 0;
     // const radius = new RectRadius(r, r, r, r);
-    const shape = new RectShape(id, name, ShapeType.Rectangle, frame, style, new BasicArray<CurvePoint>(...points));
+    const shape = new RectShape(id, name, ShapeType.Rectangle, frame, style, new BasicArray<CurvePoint>(...points), true);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     return shape;

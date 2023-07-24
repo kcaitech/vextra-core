@@ -1033,6 +1033,15 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
+        points: (() => {
+                const ret = []
+                for (let i = 0, len = source.points.length; i < len; i++) {
+                    const r = exportCurvePoint(source.points[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        isClosed: source.isClosed,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,

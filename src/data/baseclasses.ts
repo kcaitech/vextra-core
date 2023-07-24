@@ -850,14 +850,15 @@ export class Span extends SpanAttr {
 export class PathShape extends Shape {
     typeId = 'path-shape'
     points: BasicArray<CurvePoint >
-    isClosed?: boolean
+    isClosed: boolean
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean
     ) {
         super(
             id,
@@ -867,6 +868,7 @@ export class PathShape extends Shape {
             style
         )
         this.points = points
+        this.isClosed = isClosed
     }
 }
 /**
@@ -880,7 +882,8 @@ export class RectShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean
     ) {
         super(
             id,
@@ -888,7 +891,8 @@ export class RectShape extends PathShape {
             type,
             frame,
             style,
-            points
+            points,
+            isClosed
         )
     }
 }
@@ -959,6 +963,7 @@ export class OvalShape extends PathShape {
         frame: ShapeFrame,
         style: Style,
         points: BasicArray<CurvePoint >,
+        isClosed: boolean,
         ellipse: Ellipse
     ) {
         super(
@@ -967,7 +972,8 @@ export class OvalShape extends PathShape {
             type,
             frame,
             style,
-            points
+            points,
+            isClosed
         )
         this.ellipse = ellipse
     }
@@ -983,7 +989,8 @@ export class LineShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean
     ) {
         super(
             id,
@@ -991,14 +998,15 @@ export class LineShape extends PathShape {
             type,
             frame,
             style,
-            points
+            points,
+            isClosed
         )
     }
 }
 /**
  * image shape 
  */
-export class ImageShape extends Shape {
+export class ImageShape extends PathShape {
     typeId = 'image-shape'
     imageRef: string
     constructor(
@@ -1007,6 +1015,8 @@ export class ImageShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean,
         imageRef: string
     ) {
         super(
@@ -1014,7 +1024,9 @@ export class ImageShape extends Shape {
             name,
             type,
             frame,
-            style
+            style,
+            points,
+            isClosed
         )
         this.imageRef = imageRef
     }

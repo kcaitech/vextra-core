@@ -470,7 +470,7 @@ export type Span = SpanAttr & {
 /* path shape */
 export type PathShape = Shape & {
     points: CurvePoint[]
-    isClosed?: boolean
+    isClosed: boolean
 }
 /* rect shape */
 export type RectShape = PathShape & {
@@ -501,7 +501,7 @@ export type OvalShape = PathShape & {
 export type LineShape = PathShape & {
 }
 /* image shape */
-export type ImageShape = Shape & {
+export type ImageShape = PathShape & {
     imageRef: string
 }
 /* group shape */

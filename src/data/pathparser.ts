@@ -1,4 +1,4 @@
-import { PathShape } from "./shape";
+import { CurvePoint } from "./shape";
 import { CurveMode, Point2D } from "./typesdefine"
 
 type CornerCalcInfo = {
@@ -46,11 +46,11 @@ function add(p: Point2D, pt: Point2D) {
  * curveMode 4, disconnected, control point 位置随意
  * curveMode 3, 也是对称，长度可以不一样
  */
-export function parsePath(shape: PathShape, isClosed: boolean, offsetX: number, offsetY: number, width: number, height: number): any[] {
+export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: number, offsetY: number, width: number, height: number): any[] {
     let hasBegin = false;
 
 
-    const len = shape.points.length;
+    const len = points.length;
     if (len < 2) return [];
 
     const cacheCornerCalcInfo: { [k: number]: CornerCalcInfo } = {};
@@ -74,7 +74,7 @@ export function parsePath(shape: PathShape, isClosed: boolean, offsetX: number, 
         return { x: offsetX + point.x * width, y: offsetY + point.y * height };
     }
 
-    const transformedPoints = shape.points.map((p) => transformPoint(p.point));
+    const transformedPoints = points.map((p) => transformPoint(p.point));
 
     for (let i = 0; i < len - 1; i++) {
         _connectTwo(i, i + 1);
@@ -85,7 +85,7 @@ export function parsePath(shape: PathShape, isClosed: boolean, offsetX: number, 
     }
 
     function _isCornerRadius(idx: number) {
-        const curvePoint = shape.points[idx];
+        const curvePoint = points[idx];
         if (!isClosed && (idx === 0 || idx === len - 1)) {
             return false;
         }
@@ -108,9 +108,9 @@ export function parsePath(shape: PathShape, isClosed: boolean, offsetX: number, 
         }
         const preIndex = idx === 0 ? len - 1 : idx - 1;
         const nextIndex = idx === len - 1 ? 0 : idx + 1;
-        const pre = shape.points[preIndex];
-        const cur = shape.points[idx];
-        const next = shape.points[nextIndex];
+        const pre = points[preIndex];
+        const cur = points[idx];
+        const next = points[nextIndex];
         // 拿到三个点
         const prePoint = transformedPoints[preIndex]; //pre.point; // A
         const curPoint = transformedPoints[idx]; //cur.point; // B
@@ -181,7 +181,7 @@ export function parsePath(shape: PathShape, isClosed: boolean, offsetX: number, 
 
             startPt = nextTangent;
         } else {
-            const fromCurvePoint = shape.points[fromIdx];
+            const fromCurvePoint = points[fromIdx];
             startPt = transformedPoints[fromIdx]
             startHandle = fromCurvePoint.hasCurveFrom ? fromCurvePoint.curveFrom : undefined;
             if (startHandle) startHandle = transformPoint(startHandle)
@@ -197,7 +197,7 @@ export function parsePath(shape: PathShape, isClosed: boolean, offsetX: number, 
             const { preTangent } = _getCornerInfo(toIdx);
             endPt = preTangent;
         } else {
-            const toCurvePoint = shape.points[toIdx];
+            const toCurvePoint = points[toIdx];
             endPt = transformedPoints[toIdx];
             endHandle = toCurvePoint.hasCurveTo ? toCurvePoint.curveTo : undefined;
             if (endHandle) endHandle = transformPoint(endHandle);
