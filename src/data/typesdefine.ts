@@ -183,6 +183,7 @@ export type Para = {
 export type PageListItem = {
     id: string
     name: string
+    versionId?: string
 }
 /* override list item */
 export type OverrideItem = {
@@ -301,6 +302,7 @@ export type DocumentMeta = {
     id: string
     name: string
     pagesList: PageListItem[]
+    versionId?: string
 }
 /* curve point */
 export type CurvePoint = {
