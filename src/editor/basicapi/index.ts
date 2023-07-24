@@ -1,7 +1,7 @@
 import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
-import { GroupShape, PathShape, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
+import { GroupShape, ImageShape, PathShape, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 import { BoolOp, BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
@@ -112,8 +112,8 @@ export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | unde
 export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: number) {
     shape.setResizingConstraint(resizingConstraint);
 }
-export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
-    shape.setRadius(lt, rt, rb, lb);
+export function shapeModifyRadius(shape: RectShape | ImageShape, lt: number, rt: number, rb: number, lb: number) {
+    shape.setRectRadius(lt, rt, rb, lb);
 }
 export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
     if (shape.type === ShapeType.Artboard) {

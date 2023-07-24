@@ -11,7 +11,7 @@ import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportText } from "../../io/baseexport";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
-import { GroupShape, Shape, TextShape, PathShape } from "../../data/shape";
+import { GroupShape, Shape, TextShape, PathShape, ImageShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Artboard } from "../../data/artboard";
 import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "../../data/style";
@@ -278,11 +278,11 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.resizingConstraint, resizingConstraint, save))
         })
     }
-    shapeModifyRadius(page: Page, shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
+    shapeModifyRadius(page: Page, shape: RectShape | ImageShape, lt: number, rt: number, rb: number, lb: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const save = shape.getRadius();
-            shape.setRadius(lt, rt, rb, lb);
+            const save = shape.getRectRadius();
+            shape.setRectRadius(lt, rt, rb, lb);
             this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.radius, { lt, rt, rb, lb }, save))
         })
     }

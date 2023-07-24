@@ -428,7 +428,7 @@ export class CMDExecuter {
         else if (opId === SHAPE_ATTR_ID.radius) {
             if (op.type === OpType.IdSet && value) {
                 const v = (JSON.parse(value) as {lt: number, rt: number, rb: number, lb: number});
-                api.shapeModifyRadius(shape as RectShape, v.lt, v.rt, v.rb, v.lb)
+                api.shapeModifyRadius(shape as RectShape | ImageShape, v.lt, v.rt, v.rb, v.lb)
             }
         }
         else if (opId === SHAPE_ATTR_ID.constrainerProportions) {
