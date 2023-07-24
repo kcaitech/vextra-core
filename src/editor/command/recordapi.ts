@@ -212,7 +212,7 @@ export class Api {
         if (rotate !== shape.rotation) {
             this.__trap(() => {
                 const save = shape.rotation;
-                shape.rotation = rotate;
+                shape.rotation = rotate % 360;
                 this.needUpdateFrame.push({ page, shape });
                 this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.rotate, rotate, save))
             })
