@@ -9,14 +9,13 @@ export { ColumSegment, RowSegment } from "./tableread";
 
 export class TableCell extends Shape implements classes.TableCell {
     typeId = 'table-cell'
-    childs: BasicArray<(ImageShape | TextShape)>
+    child?: (ImageShape | TextShape)
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
-        style: Style,
-        childs: BasicArray<(ImageShape | TextShape)>
+        style: Style
     ) {
         super(
             id,
@@ -25,7 +24,9 @@ export class TableCell extends Shape implements classes.TableCell {
             frame,
             style
         )
-        this.childs = childs
+    }
+    get childs() {
+        return this.child ? [this.child] : [];
     }
 }
 

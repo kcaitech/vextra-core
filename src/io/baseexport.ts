@@ -656,26 +656,19 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        childs: (() => {
-            const ret = []
-            for (let i = 0, len = source.childs.length; i < len; i++) {
-                const r = (() => {
-                    if (typeof source.childs[i] != 'object') {
-                        return source.childs[i]
-                    }
-                    if (source.childs[i].typeId == 'image-shape') {
-                        return exportImageShape(source.childs[i] as types.ImageShape, ctx)
-                    }
-                    if (source.childs[i].typeId == 'text-shape') {
-                        return exportTextShape(source.childs[i] as types.TextShape, ctx)
-                    }
-                    {
-                        console.error(source.childs[i])
-                    }
-                })()
-                if (r) ret.push(r)
+        child: (() => {
+            if (typeof source.child != 'object') {
+                return source.child
             }
-            return ret
+            if (source.child.typeId == 'image-shape') {
+                return exportImageShape(source.child as types.ImageShape, ctx)
+            }
+            if (source.child.typeId == 'text-shape') {
+                return exportTextShape(source.child as types.TextShape, ctx)
+            }
+            {
+                console.error(source.child)
+            }
         })(),
     }
     if (ctx) ctx.afterExport(source)

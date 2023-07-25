@@ -788,14 +788,13 @@ export class TableShape extends Shape {
  */
 export class TableCell extends Shape {
     typeId = 'table-cell'
-    childs: BasicArray<(ImageShape | TextShape) >
+    child?: (ImageShape | TextShape)
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
-        style: Style,
-        childs: BasicArray<(ImageShape | TextShape) >
+        style: Style
     ) {
         super(
             id,
@@ -804,7 +803,6 @@ export class TableCell extends Shape {
             frame,
             style
         )
-        this.childs = childs
     }
 }
 /**

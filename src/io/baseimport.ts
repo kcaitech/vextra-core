@@ -632,23 +632,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.ImageShape | impl.TextShape)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = (() => {
-
-                    if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
-                    }
-                    if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(source.childs[i] as types.TextShape, ctx)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
+        importStyle(source.style, ctx)
     )
     ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
@@ -665,6 +649,15 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    ret.child = source.child && (() => {
+
+        if (source.child.typeId == 'image-shape') {
+            return importImageShape(source.child as types.ImageShape, ctx)
+        }
+        if (source.child.typeId == 'text-shape') {
+            return importTextShape(source.child as types.TextShape, ctx)
+        }
+    })()
     if (ctx) ctx.afterImport(ret)
     return ret
 }

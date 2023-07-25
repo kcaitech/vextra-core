@@ -458,7 +458,7 @@ export type TableShape = Shape & {
 }
 /* table cell */
 export type TableCell = Shape & {
-    childs: (ImageShape | TextShape)[]
+    child?: (ImageShape | TextShape)
 }
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
