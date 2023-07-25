@@ -348,7 +348,7 @@ export class Api {
     artboardModifyBackgroundColor(page: Page, shape: Artboard, color: Color) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const save = shape.backgroundColor;
+            const save = shape.style.fills[0]?.color || shape.backgroundColor || Color.DefaultColor;
             shape.setArtboardColor(color);
             this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.backgroundColor, exportColor(color), save && exportColor(save)))
         })

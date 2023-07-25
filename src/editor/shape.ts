@@ -104,9 +104,12 @@ export class ShapeEditor {
     }
     public setFillColor(idx: number, color: Color) {
         if (this.__shape.type === ShapeType.Artboard) {
-            const api = this.__repo.start("setFillColor", {});
-            api.artboardModifyBackgroundColor(this.__page, this.__shape as Artboard, color);
-            this.__repo.commit();
+            const fill: Fill = this.__shape.style.fills[0];
+            if (fill) {
+                const api = this.__repo.start("setFillColor", {});
+                api.setFillColor(this.__page, this.__shape, 0, color)
+                this.__repo.commit();
+            }
         } else {
             const fill: Fill = this.__shape.style.fills[idx];
             if (fill) {
