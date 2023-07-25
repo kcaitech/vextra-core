@@ -88,7 +88,7 @@ export class ShapeEditor {
         api.shapeModifyRadius(this.__page, this.__shape, lt, rt, rb, lb);
         this.__repo.commit();
     }
-    public setBoolOp(op: BoolOp) {
+    public setBoolOp(op: BoolOp, name?: string) {
         const api = this.__repo.start("setBoolOp", {});
         api.shapeModifyBoolOp(this.__page, this.__shape, op);
         this.__repo.commit();
