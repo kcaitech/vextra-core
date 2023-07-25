@@ -170,7 +170,7 @@ export class Controller {
             shape.frame.y -= xy.y;
             api.shapeInsert(page, parent, shape, parent.childs.length);
             newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
-            if (newShape?.type === ShapeType.Artboard) api.artboardModifyBackgroundColor(page, newShape as Artboard, new Color(0, 0, 0, 0));
+            if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
             return newShape
@@ -295,14 +295,14 @@ export class Controller {
                     api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - t_xy.y);
                 }
             }
-            api.artboardModifyBackgroundColor(page, target, new Color(1, 255, 255, 255));
+            api.setFillColor(page, target, 0, new Color(1, 255, 255, 255));
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const close = () => {
             if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
                 if (newShape.type === ShapeType.Artboard) {
-                    api.artboardModifyBackgroundColor(savepage!, newShape as Artboard, new Color(1, 255, 255, 255));
+                    api.setFillColor(savepage!, newShape, 0, new Color(1, 255, 255, 255));
                 }
                 this.__repo.commit();
             } else {
