@@ -13,7 +13,7 @@ import {
     TextShape,
     ExportFormat
 } from "../../../data/shape";
-import { Color } from "../../../data/style";
+import { BlendMode, Color, ContextSettings } from "../../../data/style";
 import { importXY, importStyle, importColor } from "./styleio";
 import { Page } from "../../../data/page";
 import { importText } from "./textio";
@@ -23,6 +23,8 @@ import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D } from "../../../d
 import { BasicArray } from "../../../data/basic";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
+import { Fill, FillType } from "../../../data/classes";
+import { importFill } from "../../../io/baseimport";
 
 function uniqueId(ctx: LoadContext, id: string): string {
     // if (ctx.shapeIds.has(id)) id = uuid();
@@ -116,6 +118,18 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun): Art
     const hasBackgroundColor: boolean = data['hasBackgroundColor'];
     const includeBackgroundColorInExport: boolean = data['includeBackgroundColorInExport'];
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
+
+    if (hasBackgroundColor && backgroundColor) {
+        const contextSettings = new ContextSettings(BlendMode.Normal, 1);
+        const fill = new Fill(uuid(), true, FillType.SolidColor, backgroundColor, contextSettings);
+        style.fills.length = 0;
+        style.fills.push(fill);
+    } else {
+        const contextSettings = new ContextSettings(BlendMode.Normal, 1);
+        const fill = new Fill(uuid(), true, FillType.SolidColor, new Color(1, 255, 255, 255), contextSettings);
+        style.fills.length = 0;
+        style.fills.push(fill);
+    }
 
     const childs = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
     const shape = new Artboard(id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs));

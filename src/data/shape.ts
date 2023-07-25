@@ -130,7 +130,6 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         m.trans(frame.x, frame.y);
         return m;
     }
-
     // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) return this.frame;
