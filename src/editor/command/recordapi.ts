@@ -14,14 +14,15 @@ import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINT
 import { GroupShape, Shape, TextShape, PathShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Artboard } from "../../data/artboard";
-import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BoolOp, BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { isColorEqual } from "../../data/utils";
 import { _travelTextPara } from "../../data/texttravel";
+import { uuid } from "../../basic/uuid";
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -126,6 +127,24 @@ export class Api {
             this.repo.transactCtx.settrap = save;
         }
         this.addCmd(PageCmdModify.Make(document.id, item.id, PAGE_ATTR_ID.name, name, s_name));
+    }
+    pageModifyBackground(document: Document, pageId: string, color: Color) {
+        const item = document.pagesMgr.getSync(pageId);
+        if (!item) return;
+        const contextSettings = new ContextSettings(BlendMode.Normal, 1);
+        const fillColor = new Color(1, 239, 239, 239);
+        const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
+        const pre = item.style.fills[0];
+        const save = this.repo.transactCtx.settrap;
+        this.repo.transactCtx.settrap = false;
+        if (!pre) item.style.fills.push(fill);
+        const s = JSON.stringify(exportFill(item.style.fills[0]));
+        try {
+            item.style.fills[0].color = color;
+        } finally {
+            this.repo.transactCtx.settrap = save;
+        }
+        this.addCmd(PageCmdModify.Make(document.id, item.id, PAGE_ATTR_ID.background, JSON.stringify(exportFill(item.style.fills[0])), s));
     }
     pageMove(document: Document, pageId: string, fromIdx: number, toIdx: number) {
         this.__trap(() => {

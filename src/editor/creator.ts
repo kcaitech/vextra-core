@@ -41,7 +41,12 @@ export function newDocument(documentName: string, repo: Repository, measureFun: 
 export function newPage(name: string): Page {
     templage_page.id = uuid();
     templage_page.name = name;
-    return importPage(templage_page as types.Page);
+    const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
+    const fillColor = new Color(1, 239, 239, 239);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
+    const page = importPage(templage_page as types.Page)
+    page.style.fills.push(fill);
+    return page;
 }
 
 export function newGroupShape(name: string): GroupShape {
