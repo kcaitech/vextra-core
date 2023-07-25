@@ -3,7 +3,7 @@ import { Shape, GroupShape, TextShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType, TextBehaviour } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
-import { newArtboard, newGroupShape, newImageShape, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
+import { newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { v4 } from "uuid";
@@ -301,23 +301,6 @@ function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX
         }
     }
 }
-
-function setShapesFrame(api: Api, page: Page, shapes: Shape[], origin1: { x: number, y: number }, origin2: { x: number, y: number }, scaleX: number, scaleY: number) {
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if (!shape.rotation) {
-            const s_r_frame = shape.frame2Root();
-            const xy_in_ctrl = { x: s_r_frame.x - origin1.x, y: s_r_frame.y - origin1.y };
-            const s_r_xy_n = { x: origin2.x + xy_in_ctrl.x * scaleX, y: origin2.y + xy_in_ctrl.y * scaleY };
-            let m = shape.matrix2Parent();
-            m.multiAtLeft(m.inverse);
-            const t_xy = m.computeCoord(s_r_xy_n);
-            const n_w = shape.frame.width * scaleX;
-            const n_h = shape.frame.height * scaleY;
-            setFrame(page, shape, t_xy.x, t_xy.y, n_w, n_h, api);
-        }
-    }
-}
 // 处理异步编辑
 export class Controller {
     private __repo: CoopRepository;
@@ -522,44 +505,11 @@ export class Controller {
         }
         return { execute, close };
     }
-    public asyncMultiEditor_beta(shapes: Shape[], page: Page): AsyncMultiAction2 {
-        const api = this.__repo.start("start", {});
-        let status: Status = Status.Pending;
-        const executeScale = (origin1: PageXY, origin2: PageXY, scaleX: number, scaleY: number) => {
-            status = Status.Pending;
-            setShapesFrame(api, page, shapes, origin1, origin2, scaleX, scaleY);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
-        }
-        const executeRotate = () => { }
-        const close = () => {
-            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
-                this.__repo.commit();
-            } else {
-                this.__repo.rollback();
-            }
-        }
-        return { executeScale, close };
-    }
     public asyncMultiEditor(shapes: Shape[], page: Page): AsyncMultiAction {
-        const api = this.__repo.start("action", {});
-        const tool = insert_tool(shapes, page, api);
-        let status: Status = Status.Pending;
         const execute = (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => {
-            status = Status.Pending;
-            singleHdl(api, page, tool, type, start, end, deg, actionType);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
+            // todo
         }
-        const close = () => {
-            const s = de_tool(tool, page, api);
-            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
-                this.__repo.commit();
-            } else {
-                this.__repo.rollback();
-            }
-            return s;
-        }
+        const close = () => undefined
         return { execute, close };
     }
     public asyncLineEditor(shape: Shape): AsyncLineAction {
@@ -648,101 +598,4 @@ function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
         deleteEmptyGroupShape(page, p, api)
     }
     return true;
-}
-function insert_tool(shapes: Shape[], page: Page, api: Api) {
-    const fshape = shapes[0];
-    const savep = fshape.parent as GroupShape;
-    const saveidx = savep.indexOfChild(shapes[0]);
-    const gshape = newGroupShape('tool');
-    const boundsArr = shapes.map((s) => {
-        const box = s.boundingBox()
-        const p = s.parent!;
-        const m = p.matrix2Root();
-        const lt = m.computeCoord(box.x, box.y);
-        const rb = m.computeCoord(box.x + box.width, box.y + box.height);
-        return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
-    })
-    const firstXY = boundsArr[0];
-    const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
-
-    boundsArr.reduce((pre, cur) => {
-        expandBounds(pre, cur.x, cur.y);
-        expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
-        return pre;
-    }, bounds)
-    const realXY = shapes.map((s) => s.frame2Root())
-    const m = new Matrix(savep.matrix2Root().inverse)
-    const xy = m.computeCoord(bounds.left, bounds.top)
-    gshape.frame.width = bounds.right - bounds.left;
-    gshape.frame.height = bounds.bottom - bounds.top;
-    gshape.frame.x = xy.x;
-    gshape.frame.y = xy.y;
-    api.shapeInsert(page, savep, gshape, saveidx)
-    for (let i = 0, len = shapes.length; i < len; i++) {
-        const s = shapes[i];
-        const p = s.parent as GroupShape;
-        const idx = p.indexOfChild(s);
-        api.shapeMove(page, p, idx, gshape, 0);
-        if (p.childs.length <= 0) {
-            delete_for_tool(page, p, api);
-        }
-    }
-    for (let i = 0, len = shapes.length; i < len; i++) {
-        const c = shapes[i]
-        const r = realXY[i]
-        const target = m.computeCoord(r.x, r.y);
-        const cur = c.matrix2Parent().computeCoord(0, 0);
-        api.shapeModifyX(page, c, c.frame.x + target.x - cur.x - xy.x);
-        api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - xy.y)
-    }
-    return gshape;
-}
-function de_tool(shape: GroupShape, page: Page, api: Api) {
-    const savep = shape.parent as GroupShape;
-    let idx = savep.indexOfChild(shape);
-    const saveidx = idx;
-    const m = shape.matrix2Parent();
-    const childs: Shape[] = [];
-    for (let i = 0, len = shape.childs.length; i < len; i++) {
-        const c = shape.childs[i]
-        const m1 = c.matrix2Parent();
-        m1.multiAtLeft(m);
-        const target = m1.computeCoord(0, 0);
-        if (shape.rotation) {
-            api.shapeModifyRotate(page, c, (c.rotation || 0) + shape.rotation)
-        }
-        if (shape.isFlippedHorizontal) {
-            api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal)
-        }
-        if (shape.isFlippedVertical) {
-            api.shapeModifyVFlip(page, c, !c.isFlippedVertical)
-        }
-        const m2 = c.matrix2Parent();
-        const cur = m2.computeCoord(0, 0);
-        api.shapeModifyX(page, c, c.frame.x + target.x - cur.x);
-        api.shapeModifyY(page, c, c.frame.y + target.y - cur.y);
-    }
-    for (let len = shape.childs.length; len > 0; len--) {
-        const c = shape.childs[0];
-        api.shapeMove(page, shape, 0, savep, idx)
-        idx++;
-        childs.push(c);
-    }
-    api.shapeDelete(page, savep, saveidx + childs.length)
-    return childs;
-}
-function delete_for_tool(page: Page, shape: Shape, api: Api): boolean {
-    const p = shape.parent as GroupShape;
-    if (!p) return false;
-    api.shapeDelete(page, p, p.indexOfChild(shape))
-    if (p.childs.length <= 0 && p.type === ShapeType.Group) {
-        delete_for_tool(page, p, api)
-    }
-    return true;
-}
-function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
-    if (x < bounds.left) bounds.left = x;
-    else if (x > bounds.right) bounds.right = x;
-    if (y < bounds.top) bounds.top = y;
-    else if (y > bounds.bottom) bounds.bottom = y;
 }
