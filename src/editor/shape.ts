@@ -96,7 +96,7 @@ export class ShapeEditor {
         this.__shape.childs.forEach((child) => {
             api.shapeModifyBoolOp(this.__page, child, op);
         })
-        api.shapeModifyBoolOpShape(this.__page, this.__shape, true);
+        api.shapeModifyBoolOpShape(this.__page, this.__shape, op !== BoolOp.None);
         this.__repo.commit();
     }
 
