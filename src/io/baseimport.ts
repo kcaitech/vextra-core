@@ -1094,6 +1094,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    ret.isBoolOpShape = source.isBoolOpShape
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -1149,6 +1150,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
             return ret
         })()
     )
+    ret.isBoolOpShape = source.isBoolOpShape
     ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1219,6 +1221,7 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
             return ret
         })()
     )
+    ret.isBoolOpShape = source.isBoolOpShape
     ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1289,6 +1292,7 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
             return ret
         })()
     )
+    ret.isBoolOpShape = source.isBoolOpShape
     ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
     ret.isFixedToViewport = source.isFixedToViewport
     ret.isFlippedHorizontal = source.isFlippedHorizontal

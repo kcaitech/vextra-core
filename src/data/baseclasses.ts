@@ -1027,6 +1027,7 @@ export class ImageShape extends Shape {
 export class GroupShape extends Shape {
     typeId = 'group-shape'
     childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
+    isBoolOpShape?: boolean
     constructor(
         id: string,
         name: string,

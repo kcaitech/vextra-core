@@ -196,6 +196,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 export class GroupShape extends Shape implements classes.GroupShape {
     typeId = 'group-shape';
     childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
+    isBoolOpShape?: boolean
     constructor(
         id: string,
         name: string,
@@ -268,7 +269,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
 }
 
 export class FlattenShape extends GroupShape implements classes.FlattenShape {
-    typeId = 'flatten-shape';
+    typeId = 'group-shape'; // 转为groupshape
     constructor(
         id: string,
         name: string,
@@ -285,6 +286,7 @@ export class FlattenShape extends GroupShape implements classes.FlattenShape {
             style,
             childs
         )
+        this.isBoolOpShape = true;
     }
 }
 

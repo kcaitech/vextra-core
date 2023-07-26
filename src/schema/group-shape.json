@@ -41,6 +41,9 @@
                     }
                 ]
             }
+        },
+        "isBoolOpShape": {
+            "type": "boolean"
         }
     },
     "required": [

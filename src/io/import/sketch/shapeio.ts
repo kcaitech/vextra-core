@@ -7,7 +7,6 @@ import {
     RectShape,
     Shape,
     ShapeFrame,
-    FlattenShape,
     SymbolShape,
     SymbolRefShape,
     TextShape,
@@ -164,7 +163,7 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun): G
     return shape;
 }
 
-export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun): FlattenShape {
+export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun): GroupShape {
     // const type = importShapeType(data);
     const id: string = uniqueId(ctx, data['do_objectID']);
     const exportOptions = importExportOptions(data);
@@ -180,7 +179,8 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new FlattenShape(id, name, ShapeType.FlattenShape, frame, style, new BasicArray<Shape>(...childs));
+    const shape = new GroupShape(id, name, ShapeType.Group, frame, style, new BasicArray<Shape>(...childs));
+    shape.isBoolOpShape = true;
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     return shape;
