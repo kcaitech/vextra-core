@@ -360,7 +360,10 @@ export class Controller {
                 const sf_common = np.computeCoord(target_xy);
                 // 计算自转后的xy
                 const r = s.rotation || 0;
-                api.shapeModifyRotate(page, s, r + deg);
+                let cr = deg;
+                if (s.isFlippedHorizontal) cr = -cr;
+                if (s.isFlippedVertical) cr = -cr;
+                api.shapeModifyRotate(page, s, r + cr);
                 const sf_self = s.matrix2Parent().computeCoord(0, 0);
                 // 比较集体旋转与自转的xy偏差
                 const delta = { x: sf_common.x - sf_self.x, y: sf_common.y - sf_self.y };
