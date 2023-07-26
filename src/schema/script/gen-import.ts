@@ -46,7 +46,7 @@ handler['object'] = function (schema: any, className: string, attrname: string, 
             let v = schema.properties[keys[i]]
             if (props.has(k)) {
                 if (JSON.stringify(v) != JSON.stringify(props.get(k)?.schema)) {
-                    console.error('duplicate attribute', props.get(k), v)
+                    console.error('duplicate attribute: ' + k + ' at: ' + className, props.get(k), v)
                 }
             }
             else {

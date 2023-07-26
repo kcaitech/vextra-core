@@ -1,6 +1,6 @@
 import {Artboard} from "../data/artboard";
 import {Page} from "../data/page";
-import {ImageShape, SymbolRefShape, SymbolShape, TextShape} from "../data/shape";
+import {FlattenShape, ImageShape, SymbolRefShape, SymbolShape, TextShape} from "../data/shape";
 import {IImportContext, importDocumentMeta, importDocumentSyms, importPage} from "./baseimport";
 import * as types from "../data/typesdefine"
 import {IDataGuard} from "../data/basic";
@@ -142,6 +142,8 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
                 document.symbolsMgr.add(obj.id, obj);
             } else if (obj instanceof TextShape) {
                 obj.setMeasureFun(measureFun);
+            } else if (obj instanceof FlattenShape) {
+                obj.isBoolOpShape = true;
             }
         }
     }

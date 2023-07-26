@@ -299,7 +299,7 @@ export class FlattenShape extends GroupShape implements classes.FlattenShape {
             style,
             childs
         )
-        this.isBoolOpShape = true;
+        this.isBoolOpShape = true; // io 时这个是延后设置的，所以无效
     }
 }
 

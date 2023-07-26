@@ -1,4 +1,4 @@
-import { GroupShape, ImageShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
+import { FlattenShape, GroupShape, ImageShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
 import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText } from "./baseexport";
 import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText } from "./baseimport";
 import * as types from "../data/typesdefine";
@@ -61,8 +61,8 @@ export function export_shape(shapes: Shape[]) {
 export function import_shape(document: Document, source: { index: number, content: types.Shape }[]) {
     const ctx = new class implements IImportContext {
         afterImport(obj: any): void {
-            if (obj instanceof ImageShape) {
-                obj.setImageMgr(document.mediasMgr || obj instanceof Fill)
+            if (obj instanceof ImageShape || obj instanceof Fill) {
+                obj.setImageMgr(document.mediasMgr)
             } else if (obj instanceof SymbolRefShape) {
                 obj.setSymbolMgr(document.symbolsMgr)
                 // } else if (obj instanceof ArtboardRef) {
@@ -73,6 +73,8 @@ export function import_shape(document: Document, source: { index: number, conten
                 document.symbolsMgr.add(obj.id, obj);
             } else if (obj instanceof TextShape) {
                 obj.setMeasureFun(document.measureFun);
+            } else if (obj instanceof FlattenShape) {
+                obj.isBoolOpShape = true;
             }
         }
     }
