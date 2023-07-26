@@ -8,7 +8,7 @@ import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill, Artboard } from "../data/classes";
+import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
 import { group, ungroup } from "./group";
@@ -211,6 +211,20 @@ export class PageEditor {
             return gshape;
         }
         catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    flattenBoolShape(shape: GroupShape, path: Path | string): PathShape | false {
+        if (!shape.isBoolOpShape) return false;
+
+        const api = this.__repo.start("flattenBoolShape", {});
+        try {
+            // todo
+            this.__repo.commit();
+        } catch (e) {
             console.log(e)
             this.__repo.rollback();
         }

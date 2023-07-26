@@ -82,11 +82,16 @@ export class ShapeEditor {
         this.__repo.commit();
     }
     // radius
-    public setRadius(lt: number, rt: number, rb: number, lb: number) {
+    public setRectRadius(lt: number, rt: number, rb: number, lb: number) {
         if (!(this.__shape instanceof RectShape)) return;
         const api = this.__repo.start("setRadius", {});
         api.shapeModifyRadius(this.__page, this.__shape, lt, rt, rb, lb);
         this.__repo.commit();
+    }
+    public setBoolOpShapeFixedRadius(fixRadius: number) {
+        if (!(this.__shape instanceof GroupShape) || !this.__shape.isBoolOpShape) return;
+        // const api = this.__repo.start("setFixedRadius", {});
+        // this.__repo.commit();
     }
 
     public setBoolOp(op: BoolOp, name?: string) {
