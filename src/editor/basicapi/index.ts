@@ -123,6 +123,10 @@ export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
 export function shapeModifyBoolOp(shape: Shape, op: BoolOp | undefined) {
     shape.boolOp = op;
 }
+export function shapeModifyBoolOpShape(shape: GroupShape, isOpShape: boolean | undefined) {
+    if (isOpShape) shape.isBoolOpShape = true;
+    else shape.isBoolOpShape = undefined;
+}
 
 export function insertSimpleText(shape: TextShape, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
     shape.text.insertText(text, index, props)

@@ -202,7 +202,8 @@ export class PageEditor {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
-            let gshape = newFlattenShape(groupname);
+            let gshape = newGroupShape(groupname);
+            gshape.isBoolOpShape = true;
             gshape = group(this.__page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
 

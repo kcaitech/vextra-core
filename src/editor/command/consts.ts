@@ -18,6 +18,7 @@ export const SHAPE_ATTR_ID = {
     radius: "radius",
     backgroundColor: "backgroundColor",
     boolop: "boolop",
+    isboolopshape: "isboolopshape",
 
     // text shape
     textBehaviour: "textBehaviour",

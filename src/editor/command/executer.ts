@@ -561,6 +561,15 @@ export class CMDExecuter {
                 api.shapeModifyBoolOp(shape, undefined)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.isboolopshape) {
+            if (op.type === OpType.IdSet && value) {
+                const isOpShape = JSON.parse(value);
+                api.shapeModifyBoolOpShape(shape as GroupShape, isOpShape);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyBoolOpShape(shape as GroupShape, undefined)
+            }
+        }
         // todo
         else {
             console.error("not implemented ", op)

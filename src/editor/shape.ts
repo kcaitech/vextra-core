@@ -88,9 +88,22 @@ export class ShapeEditor {
         api.shapeModifyRadius(this.__page, this.__shape, lt, rt, rb, lb);
         this.__repo.commit();
     }
+
     public setBoolOp(op: BoolOp, name?: string) {
+        if (!(this.__shape instanceof GroupShape)) return;
         const api = this.__repo.start("setBoolOp", {});
-        api.shapeModifyBoolOp(this.__page, this.__shape, op);
+        if (name) api.shapeModifyName(this.__page, this.__shape, name);
+        this.__shape.childs.forEach((child) => {
+            api.shapeModifyBoolOp(this.__page, child, op);
+        })
+        api.shapeModifyBoolOpShape(this.__page, this.__shape, true);
+        this.__repo.commit();
+    }
+
+    public setIsBoolOpShape(isOpShape: boolean) {
+        if (!(this.__shape instanceof GroupShape)) return;
+        const api = this.__repo.start("setIsBoolOpShape", {});
+        api.shapeModifyBoolOpShape(this.__page, this.__shape, isOpShape);
         this.__repo.commit();
     }
 

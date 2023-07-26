@@ -345,6 +345,16 @@ export class Api {
             }
         })
     }
+    shapeModifyBoolOpShape(page: Page, shape: GroupShape, isOpShape: boolean | undefined) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const origin = shape.isBoolOpShape;
+            if (!!isOpShape !== !!origin) {
+                basicapi.shapeModifyBoolOpShape(shape, isOpShape);
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.isboolopshape, isOpShape, origin));
+            }
+        })
+    }
     artboardModifyBackgroundColor(page: Page, shape: Artboard, color: Color) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
