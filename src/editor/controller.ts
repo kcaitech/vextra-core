@@ -336,6 +336,7 @@ export class Controller {
     public asyncMultiEditor(shapes: Shape[], page: Page): AsyncMultiAction {
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
+        const pMap: Map<string, Matrix> = new Map();
         const executeScale = (type: CtrlElementType, start: PageXY, end: PageXY) => { }
         const executeRotate = (deg: number, m: Matrix) => {
             status = Status.Pending;
@@ -348,8 +349,14 @@ export class Controller {
                 m2r.multiAtLeft(m);
                 const target_xy = m2r.computeCoord(0, 0); // 目标位置（root）
                 // 计算集体旋转后的xy
-                const p2r = sp.matrix2Root();
-                const np = new Matrix(p2r.inverse);
+                let np = new Matrix();
+                const ex = pMap.get(sp.id);
+                if (ex) np = ex;
+                else {
+                    const p2r = sp.matrix2Root();
+                    np = new Matrix(p2r.inverse);
+                    pMap.set(sp.id, np);
+                }
                 const sf_common = np.computeCoord(target_xy);
                 // 计算自转后的xy
                 const r = s.rotation || 0;
