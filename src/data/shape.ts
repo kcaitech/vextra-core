@@ -266,6 +266,19 @@ export class GroupShape extends Shape implements classes.GroupShape {
         ["z"]];
         return new Path(path);
     }
+
+    getBoolOp(): { op: BoolOp, isMulti?: boolean } {
+        if (!this.isBoolOpShape || this.childs.length === 0) return { op: BoolOp.None }
+        const childs = this.childs;
+        const op: BoolOp = childs[0].boolOp ?? BoolOp.None;
+        for (let i = 1, len = childs.length; i < len; i++) {
+            const op1 = childs[i].boolOp ?? BoolOp.None;
+            if (op1 !== op) {
+                return { op, isMulti: true }
+            }
+        }
+        return { op }
+    }
 }
 
 export class FlattenShape extends GroupShape implements classes.FlattenShape {
