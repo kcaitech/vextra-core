@@ -1,5 +1,5 @@
-import { BoolOp, FlattenShape, GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
-import { Color, Style } from "./style";
+import { FlattenShape, GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
+import { Style } from "./style";
 import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
 import { Path } from "./path";
@@ -7,7 +7,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
     typeId = 'artboard';
     hasBackgroundColor?: boolean;
     includeBackgroundColorInExport?: boolean;
-    backgroundColor?: Color;
 
     constructor(
         id: string,
@@ -25,9 +24,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
             style,
             childs
         )
-    }
-    setArtboardColor(color: Color) {
-        this.backgroundColor = color;
     }
     // 容器暂时不能设置圆角
     getPath(offsetX: number, offsetY: number): Path;
