@@ -409,12 +409,6 @@ export class CMDExecuter {
                 api.shapeModifyLock(shape, false)
             }
         }
-        else if (opId === SHAPE_ATTR_ID.backgroundColor) {
-            if (op.type === OpType.IdSet && value) {
-                const color = importColor(JSON.parse(value))
-                api.shapeModifyBackgroundColor(shape, color)
-            }
-        }
         else if (opId === SHAPE_ATTR_ID.resizingConstraint) {
             if (op.type === OpType.IdSet && value) {
                 const v = JSON.parse(value);

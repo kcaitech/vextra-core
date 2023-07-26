@@ -766,7 +766,16 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-
+    setBackground(color: Color) {
+        try {
+            const api = this.__repo.start('setBackground', {});
+            api.pageModifyBackground(this.__document, this.__page.id, color);
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
     editor4Shape(shape: Shape): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo);
     }

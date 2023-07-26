@@ -96,24 +96,16 @@ export class ShapeEditor {
 
     // fill
     public addFill(fill: Fill) {
-        if (this.__shape.type !== ShapeType.Artboard) {
-            const api = this.__repo.start("addFill", {});
-            api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length);
-            this.__repo.commit();
-        }
+        const api = this.__repo.start("addFill", {});
+        api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length);
+        this.__repo.commit();
     }
     public setFillColor(idx: number, color: Color) {
-        if (this.__shape.type === ShapeType.Artboard) {
+        const fill: Fill = this.__shape.style.fills[idx];
+        if (fill) {
             const api = this.__repo.start("setFillColor", {});
-            api.artboardModifyBackgroundColor(this.__page, this.__shape as Artboard, color);
+            api.setFillColor(this.__page, this.__shape, idx, color)
             this.__repo.commit();
-        } else {
-            const fill: Fill = this.__shape.style.fills[idx];
-            if (fill) {
-                const api = this.__repo.start("setFillColor", {});
-                api.setFillColor(this.__page, this.__shape, idx, color)
-                this.__repo.commit();
-            }
         }
     }
 
@@ -126,7 +118,7 @@ export class ShapeEditor {
     }
     public deleteFill(idx: number) {
         const fill = this.__shape.style.fills[idx];
-        if (this.__shape.type !== ShapeType.Artboard && fill) {
+        if (fill) {
             const api = this.__repo.start("deleteFill", {});
             api.deleteFillAt(this.__page, this.__shape, idx);
             this.__repo.commit();

@@ -1,5 +1,6 @@
 export const PAGE_ATTR_ID = {
-    name: "name"
+    name: "name",
+    background: "background"
 }
 
 export const SHAPE_ATTR_ID = {
