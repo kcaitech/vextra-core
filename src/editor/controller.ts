@@ -61,8 +61,9 @@ export interface AsyncBaseAction {
     close: () => undefined;
 }
 export interface AsyncMultiAction {
-    execute: (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => void;
-    close: () => undefined | Shape[];
+    executeScale: (type: CtrlElementType, start: PageXY, end: PageXY) => void;
+    executeRotate: (deg: number, m: Matrix) => void;
+    close: () => void;
 }
 export interface AsyncMultiAction2 {
     executeScale: (origin1: PageXY, origin2: PageXY, scaleX: number, scaleY: number) => void;
@@ -318,10 +319,7 @@ export class Controller {
         let status: Status = Status.Pending;
         const execute = (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => {
             status = Status.Pending;
-            const len = shapes.length;
-            if (len === 1) {
-                singleHdl(api, page, shapes[0], type, start, end, deg, actionType); // 普通对象处理
-            }
+            singleHdl(api, page, shapes[0], type, start, end, deg, actionType); // 普通对象处理
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
@@ -336,16 +334,42 @@ export class Controller {
         return { execute, close };
     }
     public asyncMultiEditor(shapes: Shape[], page: Page): AsyncMultiAction {
-        const execute = (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => {
-            // todo
+        const api = this.__repo.start("action", {});
+        let status: Status = Status.Pending;
+        const executeScale = (type: CtrlElementType, start: PageXY, end: PageXY) => { }
+        const executeRotate = (deg: number, m: Matrix) => {
+            status = Status.Pending;
+            for (let i = 0; i < shapes.length; i++) {
+                const s = shapes[i];
+                const sp = s.parent;
+                if (!sp) continue;
+                // 计算左上角的目标位置
+                const m2r = s.matrix2Root();
+                const ori = m2r.computeCoord(0, 0); // lt
+                const target_xy = m.computeCoord(ori); // 目标位置（root）
+                // 计算集体旋转后的xy
+                const p2r = sp.matrix2Root();
+                const np = new Matrix(p2r.inverse);
+                const sf_common = np.computeCoord(target_xy);
+                // 计算自转后的xy
+                const r = s.rotation || 0;
+                api.shapeModifyRotate(page, s, r + deg);
+                const sf_self = s.matrix2Parent().computeCoord(0, 0);
+                // 比较集体旋转与自转的xy偏差
+                const delta = { x: sf_common.x - sf_self.x, y: sf_common.y - sf_self.y }
+                api.shapeModifyX(page, s, s.frame.x + delta.x);
+                api.shapeModifyY(page, s, s.frame.y + delta.y);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
         }
-        const close = () => undefined
-        return { execute, close };
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) this.__repo.commit();
+            else this.__repo.rollback();
+        }
+        return { executeScale, executeRotate, close };
     }
     public asyncLineEditor(shape: Shape): AsyncLineAction {
-        if (this.__repo.transactCtx.transact) {
-            this.__repo.rollback();
-        }
         const api = this.__repo.start("action", {});
         const page = shape.getPage() as Page;
         let status: Status = Status.Pending;
