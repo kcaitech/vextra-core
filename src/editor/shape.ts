@@ -97,7 +97,6 @@ export class ShapeEditor {
     // fill
     public addFill(fill: Fill) {
         const api = this.__repo.start("addFill", {});
-        console.log('add');
         api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length);
         this.__repo.commit();
     }
