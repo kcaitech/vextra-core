@@ -6,7 +6,6 @@ import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShap
 import * as types from "../data/typesdefine"
 import { importGroupShape, importPage, importArtboard, importTextShape, importText, importFlattenShape, importTableShape, importTableCell } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
-import template_flatten_shape from "./template/flatten-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
@@ -87,14 +86,6 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     artboard.isVisible = true;
     artboard.isLocked = false;
     return artboard
-}
-
-export function newFlattenShape(name: string): FlattenShape {
-    template_flatten_shape.id = uuid();
-    template_flatten_shape.name = name // i18n
-    const group = importFlattenShape(template_flatten_shape as types.FlattenShape);
-    addCommonAttr(group)
-    return group;
 }
 
 export function newRectShape(name: string, frame: ShapeFrame): RectShape {
@@ -187,7 +178,7 @@ export function newImageShape(name: string, frame: ShapeFrame, ref?: string, med
 export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number): TableShape {
     template_table_shape.id = uuid();
     template_table_shape.name = name // i18n
-    const table = importTableShape(template_flatten_shape as types.TableShape);
+    const table = importTableShape(template_table_shape as types.TableShape);
     table.frame = frame;
     addCommonAttr(table)
     // cells

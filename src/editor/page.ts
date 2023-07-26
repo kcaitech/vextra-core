@@ -1,8 +1,8 @@
-import { Shape, GroupShape, ShapeFrame, TextShape, FlattenShape } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame, TextShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newFlattenShape, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
+import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
@@ -191,7 +191,7 @@ export class PageEditor {
         return false;
     }
 
-    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | FlattenShape {
+    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | GroupShape {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];

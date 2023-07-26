@@ -62,7 +62,8 @@ import {
     BulletNumbersType,
     TextTransformType,
     BulletNumbersBehavior,
-    Fill
+    Fill,
+    FlattenShape
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -89,6 +90,8 @@ function importShape(data: string, document: Document) {
                 document.symbolsMgr.add(obj.id, obj);
             } else if (obj instanceof TextShape) {
                 obj.setMeasureFun(document.measureFun);
+            } else if (obj instanceof FlattenShape) {
+                obj.isBoolOpShape = true;
             }
         }
     }
