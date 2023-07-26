@@ -345,8 +345,8 @@ export class Controller {
                 if (!sp) continue;
                 // 计算左上角的目标位置
                 const m2r = s.matrix2Root();
-                const ori = m2r.computeCoord(0, 0); // lt
-                const target_xy = m.computeCoord(ori); // 目标位置（root）
+                m2r.multiAtLeft(m);
+                const target_xy = m2r.computeCoord(0, 0); // 目标位置（root）
                 // 计算集体旋转后的xy
                 const p2r = sp.matrix2Root();
                 const np = new Matrix(p2r.inverse);
@@ -356,7 +356,7 @@ export class Controller {
                 api.shapeModifyRotate(page, s, r + deg);
                 const sf_self = s.matrix2Parent().computeCoord(0, 0);
                 // 比较集体旋转与自转的xy偏差
-                const delta = { x: sf_common.x - sf_self.x, y: sf_common.y - sf_self.y }
+                const delta = { x: sf_common.x - sf_self.x, y: sf_common.y - sf_self.y };
                 api.shapeModifyX(page, s, s.frame.x + delta.x);
                 api.shapeModifyY(page, s, s.frame.y + delta.y);
             }
