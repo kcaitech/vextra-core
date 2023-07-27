@@ -26,7 +26,7 @@ export const pal: {
         getTextPath: TextPathFun,
     },
     boolop: BoolOpFuns,
-    zip: IZip
+    unzip: (file: File | string) => IZip
 } = {
     text: {
         textMeasure: (code: number, font: string) => undefined,
@@ -38,20 +38,7 @@ export const pal: {
         subtract: (path0: string, path1: string) => "",
         union: (path0: string, path1: string) => ""
     },
-    zip: new class implements IZip {
-        entryDataJson(entry: string): Promise<{ [key: string]: any; }> {
-            throw new Error("Method not implemented.");
-        }
-        entryData(entry: string): Promise<Uint8Array> {
-            throw new Error("Method not implemented.");
-        }
-        close(): void {
-            throw new Error("Method not implemented.");
-        }
-        on(event: "ready", handler: () => void): void;
-        on(event: "error", handler: (error: any) => void): void;
-        on(event: unknown, handler: unknown): void {
-            throw new Error("Method not implemented.");
-        }
+    unzip: (file: File | string) => {
+        throw new Error("not implemented")
     }
 }

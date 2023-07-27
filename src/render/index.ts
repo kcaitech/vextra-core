@@ -13,3 +13,4 @@ export { render as renderPathShape } from "./pathshape";
 export { render as renderRecShape } from "./rectangle";
 export { render as renderBoolOpShape } from "./shapegroup";
 export { render as renderSymbolRef } from "./symbolref";
+export { render as renderTextShape } from "./text";
