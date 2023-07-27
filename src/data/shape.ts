@@ -197,6 +197,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
     typeId = 'group-shape';
     childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     isBoolOpShape?: boolean
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,
