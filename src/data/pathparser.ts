@@ -46,7 +46,7 @@ function add(p: Point2D, pt: Point2D) {
  * curveMode 4, disconnected, control point 位置随意
  * curveMode 3, 也是对称，长度可以不一样
  */
-export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: number, offsetY: number, width: number, height: number): any[] {
+export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: number, offsetY: number, width: number, height: number, fixedRadius: number = 0): any[] {
     let hasBegin = false;
 
 
@@ -89,7 +89,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         if (!isClosed && (idx === 0 || idx === len - 1)) {
             return false;
         }
-        return curvePoint.curveMode === CurveMode.Straight && curvePoint.cornerRadius > 0;
+        return curvePoint.curveMode === CurveMode.Straight && (curvePoint.cornerRadius > 0 || fixedRadius > 0);
     }
 
     /**
@@ -122,7 +122,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         // 三点之间的夹角
         const radian = calcAngleABC(prePoint, curPoint, nextPoint);
 
-        let radius = cur.cornerRadius;
+        let radius = cur.cornerRadius || fixedRadius;
         // 计算相切的点距离 curPoint 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
         const tangent = Math.tan(radian / 2);
         let dist = radius / tangent;
@@ -130,8 +130,8 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         // 校准 dist，用户设置的 cornerRadius 可能太大，而实际显示 cornerRadius 受到 AB BC 两边长度限制。
         // 如果 B C 端点设置了 cornerRadius，可用长度减半
         const minDist = Math.min(
-            pre.curveMode === CurveMode.Straight && pre.cornerRadius > 0 ? lenAB / 2 : lenAB,
-            next.curveMode === CurveMode.Straight && next.cornerRadius > 0 ? lenBC / 2 : lenBC
+            pre.curveMode === CurveMode.Straight && (pre.cornerRadius || fixedRadius) > 0 ? lenAB / 2 : lenAB,
+            next.curveMode === CurveMode.Straight && (next.cornerRadius || fixedRadius) > 0 ? lenBC / 2 : lenBC
         );
 
         if (dist > minDist) {

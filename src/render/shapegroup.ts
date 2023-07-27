@@ -4,6 +4,7 @@ import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { gPal } from "../basic/pal";
+import { parsePath } from "data/pathparser";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path): Path {
     const boolop = gPal.boolop;
@@ -68,21 +69,29 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
 }
 
 export function render(h: Function, shape: GroupShape, reflush?: number, consumed?: Array<Shape>): any {
-    const path = render2path(shape, consumed).toString();
-
+    let path = render2path(shape, consumed);
     const frame = shape.frame;
+
+    const fixedRadius = shape.fixedRadius || 0;
+    if (fixedRadius > 0) {
+        const curvs = path.toCurvePoints(frame.width, frame.height);
+        const ps = parsePath(curvs.points, !!curvs.isClosed, 0, 0, frame.width, frame.height, fixedRadius);
+        path = new Path(ps);
+    }
+
+    const pathstr = path.toString();
     const childs = [];
 
     // fill
     if (shape.style.fills.length > 0) {
-        childs.push(...fillR(h, shape.style, frame, path));
+        childs.push(...fillR(h, shape.style, frame, pathstr));
     } else {
         const child0 = shape.childs[0];
-        if (child0) childs.push(...fillR(h, child0.style, frame, path));
+        if (child0) childs.push(...fillR(h, child0.style, frame, pathstr));
     }
 
     // border
-    childs.push(...borderR(h, shape, path));
+    childs.push(...borderR(h, shape, pathstr));
 
     // ----------------------------------------------------------
     // shadows todo
