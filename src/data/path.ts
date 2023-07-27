@@ -1,4 +1,7 @@
+import { uuid } from "basic/uuid";
 import { Matrix } from "../basic/matrix";
+import { CurveMode, CurvePoint, Point2D } from "./baseclasses";
+import { float_accuracy } from "../basic/consts";
 
 // ----------------------------------------------------------------------------------
 // transform
@@ -656,6 +659,274 @@ export function parsePathString(pathString: string): (string | number)[][] {
     return data;
 }
 
+// path -> curvpoint[]
+// ----------------------------------------------------------------------------------
+// 将路径中的相对值转换为绝对坐标
+type CurvSeg = {
+    beginpoint: { x: number, y: number },
+    prepoint: { x: number, y: number },
+    points: CurvePoint[],
+    isClosed?: boolean,
+}
+
+type CurvCtx = {
+    width: number,
+    height: number,
+    segs: CurvSeg[], // 初始化时至少给一个
+}
+
+const curvHandler: { [key: string]: (ctx: CurvCtx, item: any[]) => void } = {}
+
+function convertPath2CurvePoints(path: any[], width: number, height: number): {
+    points: CurvePoint[],
+    isClosed?: boolean
+} {
+    const ctx: CurvCtx = {
+        width,
+        height,
+        segs: []
+    };
+    ctx.segs.push({
+        beginpoint: { x: 0, y: 0 },
+        prepoint: { x: 0, y: 0 },
+        points: []
+    });
+
+    for (let i = 0, len = path.length; i < len; i++) {
+        const item = path[i];
+        curvHandler[item[0]](ctx, item)
+    }
+
+    // fix close
+    for (let i = 0, len = ctx.segs.length; i < len; i++) {
+        const seg = ctx.segs[i];
+        if (seg.points.length <= 1) continue;
+        if (seg.isClosed && i < len - 1) {
+            // 把最后两个点连接起来
+            const p0 = seg.points[0];
+            const pe = seg.points[seg.points.length - 1];
+            if (Math.abs(pe.point.x - p0.point.x) < float_accuracy && Math.abs(pe.point.y - p0.point.y)) {
+                pe.point.x = p0.point.x;
+                pe.point.y = p0.point.y;
+            }
+            else {
+                curveHandleLine(seg, p0.point.x, p0.point.y);
+            }
+        }
+    }
+
+    const ret: {
+        points: CurvePoint[],
+        isClosed: boolean
+    } = {
+        points: [],
+        isClosed: false
+    }
+
+    for (let i = 0, len = ctx.segs.length; i < len; i++) {
+        const seg = ctx.segs[i];
+        if (seg.points.length <= 1) continue;
+        ret.points.push(...seg.points);
+        ret.isClosed = !!seg.isClosed;
+    }
+
+    ret.points = ret.points.map((p) => {
+        if (p.hasCurveFrom) {
+            p.curveFrom.x /= width;
+            p.curveFrom.y /= height;
+        }
+        if (p.hasCurveTo) {
+            p.curveTo.x /= width;
+            p.curveTo.y /= height;
+        }
+        p.point.x /= width;
+        p.point.y /= height;
+        return p;
+    })
+
+    return ret;
+}
+
+curvHandler['M'] = (ctx: CurvCtx, item: any[]) => {
+    const x = item[1];
+    const y = item[2];
+    const seg = {
+        beginpoint: { x, y },
+        prepoint: { x, y },
+        points: [],
+    }
+    ctx.segs.push(seg);
+}
+curvHandler['m'] = (ctx: CurvCtx, item: any[]) => {
+    const preseg = ctx.segs[ctx.segs.length - 1];
+    const x = preseg.prepoint.x || 0 + item[1];
+    const y = preseg.prepoint.y || 0 + item[2];
+    const seg = {
+        beginpoint: { x, y },
+        prepoint: { x, y },
+        points: [],
+    }
+    ctx.segs.push(seg);
+}
+
+function curveHandleLine(seg: CurvSeg, x: number, y: number) {
+    if (seg.points.length === 0) {
+        const point = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(seg.beginpoint.x, seg.beginpoint.y));
+        seg.points.push(point);
+    }
+    const point = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(x, y));
+    seg.points.push(point);
+}
+
+curvHandler['L'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    const x = item[1];
+    const y = item[2];
+    curveHandleLine(seg, x, y);
+    seg.prepoint.x = x;
+    seg.prepoint.y = y;
+}
+curvHandler['l'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    const x = seg.prepoint.x + item[1];
+    const y = seg.prepoint.y + item[2];
+    curveHandleLine(seg, x, y);
+    seg.prepoint.x = x;
+    seg.prepoint.y = y;
+}
+
+function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2: number, x: number, y: number) {
+    if (seg.points.length > 0) {
+        const prePoint = seg.points[seg.points.length - 1];
+        prePoint.hasCurveTo = true;
+        prePoint.curveTo.x = x1;
+        prePoint.curveTo.y = y1;
+    }
+    else {
+        const point = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(x1, y1), false, true, CurveMode.Asymmetric, new Point2D(seg.beginpoint.x, seg.beginpoint.y));
+        seg.points.push(point);
+    }
+    const point = new CurvePoint(uuid(), 0, new Point2D(x2, y2), new Point2D(0, 0), true, false, CurveMode.Asymmetric, new Point2D(x, y));
+    seg.points.push(point);
+}
+
+curvHandler['A'] = (ctx: CurvCtx, item: any[]) => {
+    // (rx ry x-axis-rotation large-arc-flag sweep-flag x y)
+    const seg = ctx.segs[ctx.segs.length - 1];
+    const x = item[6];
+    const y = item[7];
+    const curves = arcToBezier(seg.prepoint, item.slice(1))
+    if (curves) for (let i = 0, len = curves.length; i < len; i++) {
+        // C x1 y1, x2 y2, x y
+        item = ['C', ...curves[i]]
+        const x = item[5];
+        const y = item[6];
+        const x1 = item[1];
+        const y1 = item[2];
+        const x2 = item[3];
+        const y2 = item[4];
+        curveHandleBezier(seg, x1, y1, x2, y2, x, y);
+    }
+    seg.prepoint.x = x;
+    seg.prepoint.y = y;
+}
+curvHandler['a'] = (ctx: CurvCtx, item: any[]) => {
+    // (rx ry x-axis-rotation large-arc-flag sweep-flag dx dy)
+    const seg = ctx.segs[ctx.segs.length - 1];
+    const x = seg.prepoint.x + item[6];
+    const y = seg.prepoint.y + item[7];
+    item = item.slice(0);
+    item[0] = 'A';
+    item[6] = x;
+    item[7] = y;
+    const curves = arcToBezier(seg.prepoint, item.slice(1))
+    if (curves) for (let i = 0, len = curves.length; i < len; i++) {
+        // C x1 y1, x2 y2, x y
+        item = ['C', ...curves[i]]
+        const x = item[5];
+        const y = item[6];
+        const x1 = item[1];
+        const y1 = item[2];
+        const x2 = item[3];
+        const y2 = item[4];
+        curveHandleBezier(seg, x1, y1, x2, y2, x, y);
+    }
+    seg.prepoint.x = x;
+    seg.prepoint.y = y;
+}
+
+curvHandler['H'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    const x = item[1];
+    const y = seg.prepoint.y;
+    curveHandleLine(seg, x, y);
+    seg.prepoint.x = x;
+    seg.prepoint.y = y;
+}
+curvHandler['h'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    const x = seg.prepoint.x + item[1];
+    const y = seg.prepoint.y;
+    curveHandleLine(seg, x, y);
+    seg.prepoint.x = x;
+    seg.prepoint.y = y;
+}
+curvHandler['V'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    const x = seg.prepoint.x;
+    const y = item[1];
+    curveHandleLine(seg, x, y);
+    seg.prepoint.x = x;
+    seg.prepoint.y = y;
+}
+curvHandler['v'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    const x = seg.prepoint.x;
+    const y = seg.prepoint.y + item[1];
+    curveHandleLine(seg, x, y);
+    seg.prepoint.x = x;
+    seg.prepoint.y = y;
+}
+curvHandler['C'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    // C x1 y1, x2 y2, x y
+    const x = item[5];
+    const y = item[6];
+    const x1 = item[1];
+    const y1 = item[2];
+    const x2 = item[3];
+    const y2 = item[4];
+    curveHandleBezier(seg, x1, y1, x2, y2, x, y);
+    seg.prepoint.x = x;
+    seg.prepoint.y = y;
+}
+curvHandler['c'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    // c dx1 dy1, dx2 dy2, dx dy
+    const x = seg.prepoint.x + item[5];
+    const y = seg.prepoint.y + item[6];
+    const x1 = seg.prepoint.x + item[1];
+    const y1 = seg.prepoint.y + item[2];
+    const x2 = seg.prepoint.x + item[3];
+    const y2 = seg.prepoint.y + item[4];
+    curveHandleBezier(seg, x1, y1, x2, y2, x, y);
+    seg.prepoint.x = x;
+    seg.prepoint.y = y;
+}
+curvHandler['Z'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    seg.isClosed = true;
+    seg.prepoint.x = seg.beginpoint.x;
+    seg.prepoint.y = seg.beginpoint.y;
+}
+curvHandler['z'] = (ctx: CurvCtx, item: any[]) => {
+    const seg = ctx.segs[ctx.segs.length - 1];
+    seg.isClosed = true;
+    seg.prepoint.x = seg.beginpoint.x;
+    seg.prepoint.y = seg.beginpoint.y;
+}
+// -------------------------------------------------------------
+
 export class Path {
     private m_segs: any[];
     private __bounds?: Bounds;
@@ -668,9 +939,9 @@ export class Path {
     get length() {
         return this.m_segs.length;
     }
-    push(... paths: Path[]) {
+    push(...paths: Path[]) {
         paths.forEach((p) => {
-            if (p) this.m_segs.push(... p.m_segs);
+            if (p) this.m_segs.push(...p.m_segs);
         })
     }
     clone(): Path {
@@ -701,5 +972,8 @@ export class Path {
         this.__bounds = calcPathBounds(this.m_segs);
         Object.freeze(this.__bounds);
         return this.__bounds;
+    }
+    toCurvePoints(width: number, height: number): { points: CurvePoint[], isClosed?: boolean } {
+        return convertPath2CurvePoints(this.m_segs, width, height);
     }
 }

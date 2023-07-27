@@ -1,0 +1,1 @@
+export const float_accuracy = 1e-7;
