@@ -943,6 +943,7 @@ export class Path {
         paths.forEach((p) => {
             if (p) this.m_segs.push(...p.m_segs);
         })
+        this.__bounds = undefined; // todo
     }
     clone(): Path {
         const segs = JSON.parse(JSON.stringify(this.m_segs))
