@@ -458,7 +458,7 @@ export type TableShape = Shape & {
 }
 /* table cell */
 export type TableCell = Shape & {
-    childs: (ImageShape | TextShape)[]
+    child?: (ImageShape | TextShape)
 }
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
@@ -472,7 +472,7 @@ export type Span = SpanAttr & {
 /* path shape */
 export type PathShape = Shape & {
     points: CurvePoint[]
-    isClosed?: boolean
+    isClosed: boolean
 }
 /* rect shape */
 export type RectShape = PathShape & {
@@ -493,7 +493,7 @@ export type TextAttr = ParaAttr & {
 }
 /* page */
 export type Page = Shape & {
-    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape)[]
+    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape | TableShape)[]
 }
 /* oval shape */
 export type OvalShape = PathShape & {
@@ -503,12 +503,12 @@ export type OvalShape = PathShape & {
 export type LineShape = PathShape & {
 }
 /* image shape */
-export type ImageShape = Shape & {
+export type ImageShape = PathShape & {
     imageRef: string
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape)[]
+    childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape)[]
     isBoolOpShape?: boolean
     fixedRadius?: number
 }

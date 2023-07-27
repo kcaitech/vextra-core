@@ -2,23 +2,18 @@
     "description": "table cell",
     "type": "object",
     "properties": {
-        "childs": {
-            "type": "array",
-            "items": {
-                "oneOf": [
-                    {
-                        "$ref": "./image-shape.json"
-                    },
-                    {
-                        "$ref": "./text-shape.json"
-                    }
-                ]
-            }
+        "child": {
+            "oneOf": [
+                {
+                    "$ref": "./image-shape.json"
+                },
+                {
+                    "$ref": "./text-shape.json"
+                }
+            ]
         }
     },
-    "required": [
-        "childs"
-    ],
+    "required": [],
     "allOf": [
         {
             "$ref": "./shape.json"

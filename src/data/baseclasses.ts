@@ -788,14 +788,13 @@ export class TableShape extends Shape {
  */
 export class TableCell extends Shape {
     typeId = 'table-cell'
-    childs: BasicArray<(ImageShape | TextShape) >
+    child?: (ImageShape | TextShape)
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
-        style: Style,
-        childs: BasicArray<(ImageShape | TextShape) >
+        style: Style
     ) {
         super(
             id,
@@ -804,7 +803,6 @@ export class TableCell extends Shape {
             frame,
             style
         )
-        this.childs = childs
     }
 }
 /**
@@ -852,14 +850,15 @@ export class Span extends SpanAttr {
 export class PathShape extends Shape {
     typeId = 'path-shape'
     points: BasicArray<CurvePoint >
-    isClosed?: boolean
+    isClosed: boolean
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean
     ) {
         super(
             id,
@@ -869,6 +868,7 @@ export class PathShape extends Shape {
             style
         )
         this.points = points
+        this.isClosed = isClosed
     }
 }
 /**
@@ -882,7 +882,8 @@ export class RectShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean
     ) {
         super(
             id,
@@ -890,7 +891,8 @@ export class RectShape extends PathShape {
             type,
             frame,
             style,
-            points
+            points,
+            isClosed
         )
     }
 }
@@ -929,14 +931,14 @@ export class TextAttr extends ParaAttr {
  */
 export class Page extends Shape {
     typeId = 'page'
-    childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape) >
+    childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape | TableShape) >
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape) >
+        childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape | TableShape) >
     ) {
         super(
             id,
@@ -961,6 +963,7 @@ export class OvalShape extends PathShape {
         frame: ShapeFrame,
         style: Style,
         points: BasicArray<CurvePoint >,
+        isClosed: boolean,
         ellipse: Ellipse
     ) {
         super(
@@ -969,7 +972,8 @@ export class OvalShape extends PathShape {
             type,
             frame,
             style,
-            points
+            points,
+            isClosed
         )
         this.ellipse = ellipse
     }
@@ -985,7 +989,8 @@ export class LineShape extends PathShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint >
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean
     ) {
         super(
             id,
@@ -993,14 +998,15 @@ export class LineShape extends PathShape {
             type,
             frame,
             style,
-            points
+            points,
+            isClosed
         )
     }
 }
 /**
  * image shape 
  */
-export class ImageShape extends Shape {
+export class ImageShape extends PathShape {
     typeId = 'image-shape'
     imageRef: string
     constructor(
@@ -1009,6 +1015,8 @@ export class ImageShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean,
         imageRef: string
     ) {
         super(
@@ -1016,7 +1024,9 @@ export class ImageShape extends Shape {
             name,
             type,
             frame,
-            style
+            style,
+            points,
+            isClosed
         )
         this.imageRef = imageRef
     }
@@ -1026,7 +1036,7 @@ export class ImageShape extends Shape {
  */
 export class GroupShape extends Shape {
     typeId = 'group-shape'
-    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
+    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
     isBoolOpShape?: boolean
     fixedRadius?: number
     constructor(
@@ -1035,7 +1045,7 @@ export class GroupShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
     ) {
         super(
             id,
@@ -1058,7 +1068,7 @@ export class SymbolShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
     ) {
         super(
             id,
@@ -1081,7 +1091,7 @@ export class FlattenShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
     ) {
         super(
             id,
@@ -1107,7 +1117,7 @@ export class Artboard extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
     ) {
         super(
             id,

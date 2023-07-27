@@ -34,7 +34,7 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
     const ret: impl.Text = new impl.Text (
         (() => {
             const ret = new BasicArray<impl.Para>()
-            for (let i = 0, len = source.paras.length; i < len; i++) {
+            for (let i = 0, len = source.paras && source.paras.length; i < len; i++) {
                 const r = importPara(source.paras[i], ctx)
                 if (r) ret.push(r)
             }
@@ -74,7 +74,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         importBorderOptions(source.borderOptions, ctx),
         (() => {
             const ret = new BasicArray<impl.Border>()
-            for (let i = 0, len = source.borders.length; i < len; i++) {
+            for (let i = 0, len = source.borders && source.borders.length; i < len; i++) {
                 const r = importBorder(source.borders[i], ctx)
                 if (r) ret.push(r)
             }
@@ -83,7 +83,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         importContextSettings(source.contextSettings, ctx),
         (() => {
             const ret = new BasicArray<impl.Fill>()
-            for (let i = 0, len = source.fills.length; i < len; i++) {
+            for (let i = 0, len = source.fills && source.fills.length; i < len; i++) {
                 const r = importFill(source.fills[i], ctx)
                 if (r) ret.push(r)
             }
@@ -91,7 +91,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         })(),
         (() => {
             const ret = new BasicArray<impl.Shadow>()
-            for (let i = 0, len = source.innerShadows.length; i < len; i++) {
+            for (let i = 0, len = source.innerShadows && source.innerShadows.length; i < len; i++) {
                 const r = importShadow(source.innerShadows[i], ctx)
                 if (r) ret.push(r)
             }
@@ -99,7 +99,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         })(),
         (() => {
             const ret = new BasicArray<impl.Shadow>()
-            for (let i = 0, len = source.shadows.length; i < len; i++) {
+            for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
                 const r = importShadow(source.shadows[i], ctx)
                 if (r) ret.push(r)
             }
@@ -219,7 +219,7 @@ export function importPara(source: types.Para, ctx?: IImportContext): impl.Para 
         source.text,
         (() => {
             const ret = new BasicArray<impl.Span>()
-            for (let i = 0, len = source.spans.length; i < len; i++) {
+            for (let i = 0, len = source.spans && source.spans.length; i < len; i++) {
                 const r = importSpan(source.spans[i], ctx)
                 if (r) ret.push(r)
             }
@@ -284,7 +284,7 @@ export function importGradient(source: types.Gradient, ctx?: IImportContext): im
         importGradientType(source.gradientType, ctx),
         (() => {
             const ret = new BasicArray<impl.Stop>()
-            for (let i = 0, len = source.stops.length; i < len; i++) {
+            for (let i = 0, len = source.stops && source.stops.length; i < len; i++) {
                 const r = importStop(source.stops[i], ctx)
                 if (r) ret.push(r)
             }
@@ -325,7 +325,7 @@ export function importExportOptions(source: types.ExportOptions, ctx?: IImportCo
     const ret: impl.ExportOptions = new impl.ExportOptions (
         (() => {
             const ret = new BasicArray<impl.ExportFormat>()
-            for (let i = 0, len = source.exportFormats.length; i < len; i++) {
+            for (let i = 0, len = source.exportFormats && source.exportFormats.length; i < len; i++) {
                 const r = importExportFormat(source.exportFormats[i], ctx)
                 if (r) ret.push(r)
             }
@@ -333,7 +333,7 @@ export function importExportOptions(source: types.ExportOptions, ctx?: IImportCo
         })(),
         (() => {
             const ret = new BasicArray<string>()
-            for (let i = 0, len = source.includedChildIds.length; i < len; i++) {
+            for (let i = 0, len = source.includedChildIds && source.includedChildIds.length; i < len; i++) {
                 const r = source.includedChildIds[i]
                 if (r) ret.push(r)
             }
@@ -383,7 +383,7 @@ export function importDocumentSyms(source: types.DocumentSyms, ctx?: IImportCont
         source.pageId,
         (() => {
             const ret = new BasicArray<string>()
-            for (let i = 0, len = source.symbols.length; i < len; i++) {
+            for (let i = 0, len = source.symbols && source.symbols.length; i < len; i++) {
                 const r = source.symbols[i]
                 if (r) ret.push(r)
             }
@@ -400,7 +400,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
         source.name,
         (() => {
             const ret = new BasicArray<impl.PageListItem>()
-            for (let i = 0, len = source.pagesList.length; i < len; i++) {
+            for (let i = 0, len = source.pagesList && source.pagesList.length; i < len; i++) {
                 const r = importPageListItem(source.pagesList[i], ctx)
                 if (r) ret.push(r)
             }
@@ -600,7 +600,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         importStyle(source.style, ctx),
         (() => {
             const ret = new BasicArray<impl.TableCell>()
-            for (let i = 0, len = source.childs.length; i < len; i++) {
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = importTableCell(source.childs[i], ctx)
                 if (r) ret.push(r)
             }
@@ -632,23 +632,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.ImageShape | impl.TextShape)>()
-            for (let i = 0, len = source.childs.length; i < len; i++) {
-                const r = (() => {
-
-                    if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
-                    }
-                    if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(source.childs[i] as types.TextShape, ctx)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
+        importStyle(source.style, ctx)
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
@@ -665,6 +649,15 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.child !== undefined) ret.child = (() => {
+
+        if (source.child.typeId == 'image-shape') {
+            return importImageShape(source.child as types.ImageShape, ctx)
+        }
+        if (source.child.typeId == 'text-shape') {
+            return importTextShape(source.child as types.TextShape, ctx)
+        }
+    })()
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -695,7 +688,7 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.overrides !== undefined) ret.overrides = (() => {
         const ret = new BasicArray<impl.OverrideItem>()
-        for (let i = 0, len = source.overrides.length; i < len; i++) {
+        for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
             const r = importOverrideItem(source.overrides[i], ctx)
             if (r) ret.push(r)
         }
@@ -734,12 +727,13 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
         importStyle(source.style, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points.length; i < len; i++) {
+            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
-        })()
+        })(),
+        source.isClosed
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
@@ -756,7 +750,6 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.isClosed !== undefined) ret.isClosed = source.isClosed
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -770,14 +763,14 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         importStyle(source.style, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points.length; i < len; i++) {
+            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
-        })()
+        })(),
+        source.isClosed
     )
-    if (source.isClosed !== undefined) ret.isClosed = source.isClosed
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -856,8 +849,8 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.SymbolShape | impl.LineShape | impl.OvalShape)>()
-            for (let i = 0, len = source.childs.length; i < len; i++) {
+            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.SymbolShape | impl.LineShape | impl.OvalShape | impl.TableShape)>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
 
                     if (source.childs[i].typeId == 'shape') {
@@ -902,6 +895,9 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
                     if (source.childs[i].typeId == 'oval-shape') {
                         return importOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
+                    if (source.childs[i].typeId == 'table-shape') {
+                        return importTableShape(source.childs[i] as types.TableShape, ctx)
+                    }
                 })()
                 if (r) ret.push(r)
             }
@@ -936,15 +932,15 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         importStyle(source.style, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points.length; i < len; i++) {
+            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
+        source.isClosed,
         importEllipse(source.ellipse, ctx)
     )
-    if (source.isClosed !== undefined) ret.isClosed = source.isClosed
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -973,14 +969,14 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         importStyle(source.style, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
-            for (let i = 0, len = source.points.length; i < len; i++) {
+            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
-        })()
+        })(),
+        source.isClosed
     )
-    if (source.isClosed !== undefined) ret.isClosed = source.isClosed
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1007,6 +1003,15 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<impl.CurvePoint>()
+            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const r = importCurvePoint(source.points[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.isClosed,
         source.imageRef
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
@@ -1036,8 +1041,8 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
-            for (let i = 0, len = source.childs.length; i < len; i++) {
+            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
 
                     if (source.childs[i].typeId == 'group-shape') {
@@ -1072,6 +1077,9 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                     }
                     if (source.childs[i].typeId == 'oval-shape') {
                         return importOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'table-shape') {
+                        return importTableShape(source.childs[i] as types.TableShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1108,8 +1116,8 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
-            for (let i = 0, len = source.childs.length; i < len; i++) {
+            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
 
                     if (source.childs[i].typeId == 'group-shape') {
@@ -1144,6 +1152,9 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                     }
                     if (source.childs[i].typeId == 'oval-shape') {
                         return importOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'table-shape') {
+                        return importTableShape(source.childs[i] as types.TableShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1180,8 +1191,8 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
-            for (let i = 0, len = source.childs.length; i < len; i++) {
+            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
 
                     if (source.childs[i].typeId == 'group-shape') {
@@ -1216,6 +1227,9 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
                     }
                     if (source.childs[i].typeId == 'oval-shape') {
                         return importOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'table-shape') {
+                        return importTableShape(source.childs[i] as types.TableShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1252,8 +1266,8 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape)>()
-            for (let i = 0, len = source.childs.length; i < len; i++) {
+            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
 
                     if (source.childs[i].typeId == 'group-shape') {
@@ -1288,6 +1302,9 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                     }
                     if (source.childs[i].typeId == 'oval-shape') {
                         return importOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    }
+                    if (source.childs[i].typeId == 'table-shape') {
+                        return importTableShape(source.childs[i] as types.TableShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)

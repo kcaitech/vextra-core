@@ -304,72 +304,18 @@ export class FlattenShape extends GroupShape implements classes.FlattenShape {
     }
 }
 
-export class ImageShape extends Shape implements classes.ImageShape {
-    typeId = 'image-shape'
-    imageRef: string;
-
-    private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
-    private __cacheData?: { buff: Uint8Array, base64: string };
-
-    constructor(
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style,
-        imageRef: string
-    ) {
-        super(
-            id,
-            name,
-            type,
-            frame,
-            style
-        )
-        this.imageRef = imageRef
-    }
-    setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
-        this.__imageMgr = imageMgr;
-    }
-    peekImage() {
-        return this.__cacheData?.base64;
-    }
-    // image shape
-    async loadImage(): Promise<string> {
-        if (this.__cacheData) return this.__cacheData.base64;
-        this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
-        return this.__cacheData && this.__cacheData.base64 || "";
-    }
-    getPath(offsetX: number, offsetY: number): Path;
-    getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
-        const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-        const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
-        const w = this.frame.width;
-        const h = this.frame.height;
-        const cx = x + w / 2;
-        const cy = y + h / 2;
-
-        let path = [["M", x, y],
-        ["l", w, 0],
-        ["l", 0, h],
-        ["l", -w, 0],
-        ["z"]];
-        return new Path(path);
-    }
-}
-
 export class PathShape extends Shape implements classes.PathShape {
     typeId = 'path-shape'
     points: BasicArray<CurvePoint>
-    isClosed?: boolean
+    isClosed: boolean
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint>
+        points: BasicArray<CurvePoint>,
+        isClosed: boolean
     ) {
         super(
             id,
@@ -378,7 +324,8 @@ export class PathShape extends Shape implements classes.PathShape {
             frame,
             style
         )
-        this.points = points
+        this.points = points;
+        this.isClosed = isClosed;
     }
     // path shape
     get pointsCount() {
@@ -398,21 +345,27 @@ export class PathShape extends Shape implements classes.PathShape {
         const width = this.frame.width;
         const height = this.frame.height;
 
-        const path = parsePath(this, !!this.isClosed, offsetX, offsetY, width, height);
+        const path = parsePath(this.points, !!this.isClosed, offsetX, offsetY, width, height);
         return new Path(path);
+    }
+    setRadius(radius: number): void {
+        this.points.forEach((p) => p.cornerRadius = radius);
+    }
+    getRadius(): number[] {
+        return this.points.map((p) => p.cornerRadius);
     }
 }
 
 export class RectShape extends PathShape implements classes.RectShape {
     typeId = 'rect-shape'
-    points: BasicArray<CurvePoint>
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        points: BasicArray<CurvePoint>
+        points: BasicArray<CurvePoint>,
+        isClosed: boolean
     ) {
         super(
             id,
@@ -420,12 +373,12 @@ export class RectShape extends PathShape implements classes.RectShape {
             type,
             frame,
             style,
-            points
+            points,
+            isClosed
         )
         this.isClosed = true;
-        this.points = points;
     }
-    setRadius(lt: number, rt: number, rb: number, lb: number): void {
+    setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
         const ps = this.points;
         if (ps.length === 4) {
             ps[0].cornerRadius = lt;
@@ -434,7 +387,7 @@ export class RectShape extends PathShape implements classes.RectShape {
             ps[3].cornerRadius = lb;
         }
     }
-    getRadius(): { lt: number, rt: number, rb: number, lb: number } {
+    getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
         const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
         const ps = this.points;
         if (ps.length === 4) {
@@ -447,11 +400,13 @@ export class RectShape extends PathShape implements classes.RectShape {
     }
 }
 
-export class OvalShape extends PathShape implements classes.OvalShape {
-    typeId = 'oval-shape'
-    ellipse: classes.Ellipse
-    points: BasicArray<CurvePoint>
-    isClosed?: boolean
+export class ImageShape extends RectShape implements classes.ImageShape {
+    typeId = 'image-shape'
+    imageRef: string;
+
+    private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
+    private __cacheData?: { buff: Uint8Array, base64: string };
+
     constructor(
         id: string,
         name: string,
@@ -459,6 +414,58 @@ export class OvalShape extends PathShape implements classes.OvalShape {
         frame: ShapeFrame,
         style: Style,
         points: BasicArray<CurvePoint>,
+        isClosed: boolean,
+        imageRef: string
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style,
+            points,
+            isClosed
+        )
+        this.imageRef = imageRef
+        this.isClosed = true;
+        if (points.length === 0) { // 兼容旧数据
+            // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
+            const id1 = "b259921b-4eba-461d-afc3-c4c58c1fa337"
+            const id2 = "62ea3ee3-3378-4602-a918-7e05f426bb8e"
+            const id3 = "1519da3c-c692-4e1d-beb4-01a85cc56738"
+            const id4 = "e857f541-4e7f-491b-96e6-2ca38f1d4c09"
+            const p1 = new CurvePoint(id1, 0, new classes.Point2D(0, 0), new classes.Point2D(0, 0), false, false, classes.CurveMode.Straight, new classes.Point2D(0, 0)); // lt
+            const p2 = new CurvePoint(id2, 0, new classes.Point2D(1, 0), new classes.Point2D(1, 0), false, false, classes.CurveMode.Straight, new classes.Point2D(1, 0)); // rt
+            const p3 = new CurvePoint(id3, 0, new classes.Point2D(1, 1), new classes.Point2D(1, 1), false, false, classes.CurveMode.Straight, new classes.Point2D(1, 1)); // rb
+            const p4 = new CurvePoint(id4, 0, new classes.Point2D(0, 1), new classes.Point2D(0, 1), false, false, classes.CurveMode.Straight, new classes.Point2D(0, 1)); // lb
+            points.push(p1, p2, p3, p4);
+        }
+    }
+    setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
+        this.__imageMgr = imageMgr;
+    }
+    peekImage() {
+        return this.__cacheData?.base64;
+    }
+    // image shape
+    async loadImage(): Promise<string> {
+        if (this.__cacheData) return this.__cacheData.base64;
+        this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
+        return this.__cacheData && this.__cacheData.base64 || "";
+    }
+}
+
+export class OvalShape extends PathShape implements classes.OvalShape {
+    typeId = 'oval-shape'
+    ellipse: classes.Ellipse
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        points: BasicArray<CurvePoint>,
+        isClosed: boolean,
         ellipse: classes.Ellipse
     ) {
         super(
@@ -468,9 +475,9 @@ export class OvalShape extends PathShape implements classes.OvalShape {
             frame,
             style,
             points,
+            isClosed
         )
         this.ellipse = ellipse;
-        this.points = points;
         this.isClosed = true;
     }
 }
@@ -484,6 +491,7 @@ export class LineShape extends PathShape implements classes.LineShape {
         frame: ShapeFrame,
         style: Style,
         points: BasicArray<CurvePoint>,
+        isClosed: boolean
     ) {
         super(
             id,
@@ -491,7 +499,8 @@ export class LineShape extends PathShape implements classes.LineShape {
             type,
             frame,
             style,
-            points
+            points,
+            isClosed
         )
     }
 }

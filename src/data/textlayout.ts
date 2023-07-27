@@ -3,6 +3,8 @@ import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
 import { BasicArray } from "./basic"
 import { layoutBulletNumber } from "./textlayoutbn";
 import { transformText } from "./textlayouttransform";
+import { MeasureFun } from "../basic/palinterface";
+export { MeasureFun } from "../basic/palinterface";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -192,8 +194,6 @@ function adjustLineHorAlign(line: Line, align: TextHorAlign, width: number) {
     line.alignment = align;
     line.layoutWidth = width;
 }
-
-export type MeasureFun = (code: number, font: string) => TextMetrics | undefined;
 
 export function isNewLineCharCode(code: number) {
     // U+0009: Horizontal tab

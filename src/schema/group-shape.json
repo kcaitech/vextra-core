@@ -38,6 +38,9 @@
                     },
                     {
                         "$ref": "./oval-shape.json"
+                    },
+                    {
+                        "$ref": "./table-shape.json"
                     }
                 ]
             }

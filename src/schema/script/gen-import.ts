@@ -249,7 +249,7 @@ handler['array'] = function (schema: any, className: string, attrname: string, l
 
     let ret = `(() => {
 ${indent(level + 1)}const ret = ${retobj}
-${indent(level + 1)}for (let i = 0, len = ${attrname}.length; i < len; i++) {
+${indent(level + 1)}for (let i = 0, len = ${attrname} && ${attrname}.length; i < len; i++) {
 ${indent(level + 1)}    const r = ${handler['type'](items, className, attrname + '[i]', level + 2, filename, allschemas)}
 ${indent(level + 1)}    if (r) ret.push(r)
 ${indent(level + 1)}}

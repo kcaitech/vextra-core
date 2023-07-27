@@ -440,6 +440,7 @@ export class Repository extends Watchable(Object) implements IDataGuard {
         return this.__index < this.__trans.length;
     }
 
+    private __saveStartStack?: Error; // 用于记录开始了事务的地方
     /**
      *
      * @param name
@@ -447,8 +448,10 @@ export class Repository extends Watchable(Object) implements IDataGuard {
      */
     start(name: string, saved: any) {
         if (this.__context.transact !== undefined) {
-            throw new Error();
+            console.log(this.__saveStartStack);
+            throw new Error("has transact not commited");
         }
+        this.__saveStartStack = new Error();
         this.__context.optiNotify = true;
         this.__context.cache.clear();
         this.__context.transact = new Transact(name);
@@ -460,7 +463,7 @@ export class Repository extends Watchable(Object) implements IDataGuard {
      */
     _commit() {
         if (this.__context.transact === undefined) {
-            throw new Error();
+            throw new Error("No transace neet commit");
         }
         this.__context.cache.clear();
         this.__trans.length = this.__index;
@@ -468,6 +471,7 @@ export class Repository extends Watchable(Object) implements IDataGuard {
             this.__trans.push(this.__context.transact);
             this.__index++;
         }
+        this.__saveStartStack = undefined;
         this.__context.transact = undefined;
         this.__context.fireNotify();
         this.notify();
