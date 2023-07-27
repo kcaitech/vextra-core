@@ -11,8 +11,9 @@ import { Api } from "./command/recordapi";
 import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
-import { group, ungroup } from "./group";
+import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
+import { Matrix } from "basic/matrix";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -218,6 +219,73 @@ export class PageEditor {
         return false;
     }
 
+    flattenShapes(shapes: Shape[], name?: string): PathShape | false {
+        if (shapes.length === 0) return false;
+        if (shapes.find((v) => !v.parent)) return false;
+        const fshape = shapes[0];
+        const savep = fshape.parent as GroupShape;
+        const saveidx = savep.indexOfChild(fshape);
+        if (!name) name = fshape.name;
+
+        const api = this.__repo.start("flattenShapes", {});
+        try {
+            // bounds
+            // 计算frame
+            //   计算每个shape的绝对坐标
+            const boundsArr = shapes.map((s) => {
+                const box = s.boundingBox()
+                const p = s.parent!;
+                const m = p.matrix2Root();
+                const lt = m.computeCoord(box.x, box.y);
+                const rb = m.computeCoord(box.x + box.width, box.y + box.height);
+                return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
+            })
+            const firstXY = boundsArr[0]
+            const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
+
+            boundsArr.reduce((pre, cur) => {
+                expandBounds(pre, cur.x, cur.y);
+                expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
+                return pre;
+            }, bounds)
+
+            const m = new Matrix(savep.matrix2Root().inverse)
+            const xy = m.computeCoord(bounds.left, bounds.top)
+
+            const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);
+            const path = new Path();
+            shapes.forEach((shape) => {
+                const shapem = shape.matrix2Root();
+                const shapepath = shape.getPath(true);
+
+                shapem.multiAtLeft(m);
+                shapepath.transform(shapem);
+
+                path.push(shapepath);
+            })
+            path.translate(frame.x, frame.y);
+
+            let pathShape = newPathShape(name, frame, path);
+            pathShape = api.shapeInsert(this.__page, savep, pathShape, saveidx) as PathShape;
+
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const s = shapes[i];
+                const p = s.parent as GroupShape;
+                const idx = p.indexOfChild(s);
+                api.shapeDelete(this.__page, p, idx);
+                if (p.childs.length <= 0) {
+                    deleteEmptyGroupShape(this.__page, p, api)
+                }
+            }
+            this.__repo.commit();
+            return pathShape;
+        } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
     flattenBoolShape(shape: GroupShape): PathShape | false {
         if (!shape.isBoolOpShape) return false;
         const parent = shape.parent as GroupShape;
@@ -230,13 +298,14 @@ export class PageEditor {
 
             const gframe = shape.frame;
             const frame = new ShapeFrame(gframe.x, gframe.y, gframe.width, gframe.height); // clone
-            const pathShape = newPathShape(shape.name, frame, path);
+            let pathShape = newPathShape(shape.name, frame, path);
 
             const index = parent.indexOfChild(shape);
             api.shapeDelete(this.__page, parent, index);
-            api.shapeInsert(this.__page, parent, pathShape, index);
+            pathShape = api.shapeInsert(this.__page, parent, pathShape, index) as PathShape;
 
             this.__repo.commit();
+            return pathShape;
         } catch (e) {
             console.log(e)
             this.__repo.rollback();

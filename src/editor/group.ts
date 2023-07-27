@@ -8,14 +8,14 @@ import { Matrix } from "../basic/matrix";
 import { GroupShape, Shape } from "../data/shape";
 import { Api } from "./command/recordapi";
 
-function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
+export function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
     else if (x > bounds.right) bounds.right = x;
     if (y < bounds.top) bounds.top = y;
     else if (y > bounds.bottom) bounds.bottom = y;
 }
 
-function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
+export function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
     const p = shape.parent as GroupShape;
     if (!p) return false;
     api.shapeDelete(page, p, p.indexOfChild(shape))
