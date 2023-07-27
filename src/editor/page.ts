@@ -256,7 +256,7 @@ export class PageEditor {
             const path = new Path();
             shapes.forEach((shape) => {
                 const shapem = shape.matrix2Root();
-                const shapepath = shape.getPath(true);
+                const shapepath = render2path(shape);
 
                 shapem.multiAtLeft(m);
                 shapepath.transform(shapem);
