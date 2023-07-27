@@ -558,6 +558,10 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
         sx = -sx;
     }
+    if (sy < 0) {
+        api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+        sy = -sy;
+    }
     if (s.isFlippedHorizontal || s.isFlippedVertical) {
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
         const self = s.matrix2Parent().computeCoord(0, 0);
