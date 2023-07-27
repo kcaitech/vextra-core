@@ -4,7 +4,7 @@ import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { gPal } from "../basic/pal";
-import { parsePath } from "data/pathparser";
+import { parsePath } from "../data/pathparser";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path): Path {
     const boolop = gPal.boolop;
