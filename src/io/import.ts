@@ -7,7 +7,6 @@ import {IDataGuard} from "../data/basic";
 import {Document, DocumentMeta, DocumentSyms} from "../data/document";
 import * as storage from "./storage";
 import {base64ToDataUrl} from "../basic/utils";
-import {MeasureFun} from "../data/textlayout";
 import {Fill} from "../data/style";
 
 interface IJSON {
@@ -117,7 +116,7 @@ export class DataLoader implements IDataLoader {
     }
 }
 
-export async function importDocument(storage: storage.IStorage, documentPath: string, fid: string, versionId: string, gurad: IDataGuard, measureFun: MeasureFun) {
+export async function importDocument(storage: storage.IStorage, documentPath: string, fid: string, versionId: string, gurad: IDataGuard) {
     const loader = new DataLoader(storage, documentPath);
 
     const meta = await loader.loadDocumentMeta(new class implements IImportContext {
@@ -127,7 +126,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     }, versionId);
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
 
-    const document = new Document(meta.id, versionId ?? "", meta.name, meta.pagesList, gurad, measureFun);
+    const document = new Document(meta.id, versionId ?? "", meta.name, meta.pagesList, gurad);
     const ctx = new class implements IImportContext {
         afterImport(obj: any): void {
             if (obj instanceof ImageShape || obj instanceof Fill) {
@@ -140,8 +139,6 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
                 document.artboardMgr.add(obj.id, obj);
             } else if (obj instanceof SymbolShape) {
                 document.symbolsMgr.add(obj.id, obj);
-            } else if (obj instanceof TextShape) {
-                obj.setMeasureFun(measureFun);
             } else if (obj instanceof FlattenShape) {
                 obj.isBoolOpShape = true;
             }

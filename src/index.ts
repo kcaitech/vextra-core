@@ -1,5 +1,6 @@
 export * from "./basic/matrix"
 export * from "./basic/objectid"
+export * from "./basic/pal"
 
 // data
 export * from "./data/basic"

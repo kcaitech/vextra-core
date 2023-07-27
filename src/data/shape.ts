@@ -7,7 +7,7 @@ export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, 
 import { ShapeType, CurvePoint, OverrideItem, ShapeFrame, BoolOp, ExportOptions, ResizeType } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
-import { MeasureFun, TextLayout } from "./textlayout";
+import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
@@ -540,10 +540,6 @@ export class TextShape extends Shape implements classes.TextShape {
         ["l", -w, 0],
         ["z"]];
         return new Path(path);
-    }
-
-    setMeasureFun(measure: MeasureFun) {
-        this.text.setMeasureFun(measure);
     }
 
     setFrameSize(w: number, h: number) {

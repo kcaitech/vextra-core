@@ -28,7 +28,7 @@ export {
 } from "./baseclasses";
 import * as classes from "./baseclasses"
 import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
-import { MeasureFun, TextLayout, layoutText } from "./textlayout";
+import { TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
@@ -204,7 +204,6 @@ export class Text extends Basic implements classes.Text {
     private __layoutWidth: number = 0;
     private __frameWidth: number = 0;
     private __frameHeight: number = 0;
-    private __measure: MeasureFun = (code: number, font: string) => undefined;
 
     constructor(
         paras: BasicArray<Para>
@@ -317,20 +316,20 @@ export class Text extends Basic implements classes.Text {
     insertText(text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
         // this.reLayout(); // todo
         insertSimpleText(this, text, index, props);
-        if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, text.length, this.__layout);
+        if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, index, text.length, this.__layout);
     }
     composingInputUpdate(index: number) {
-        if (this.__layout) this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, 1, this.__layout);
+        if (this.__layout) this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, index, 1, this.__layout);
     }
     insertFormatText(text: Text, index: number) {
         // this.reLayout(); // todo
         insertComplexText(this, text, index);
-        if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, text.length, this.__layout);
+        if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, index, text.length, this.__layout);
     }
     formatText(index: number, length: number, props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
         // this.reLayout(); // todo
         const ret = formatText(this, index, length, props)
-        if (this.__layout) this.__layout = layoutAtFormat(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, length, this.__layout, props);
+        if (this.__layout) this.__layout = layoutAtFormat(this, this.__layoutWidth, this.__frameHeight, index, length, this.__layout, props);
         return ret;
     }
     deleteText(index: number, count: number): Text | undefined {
@@ -354,17 +353,10 @@ export class Text extends Basic implements classes.Text {
                 this.reLayout();
             }
             else {
-                this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, this.__measure, index, count, this.__layout);
+                this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, index, count, this.__layout);
             }
         }
         return ret;
-    }
-
-    setMeasureFun(measure: MeasureFun) {
-        if (this.__measure !== measure) {
-            this.__measure = measure;
-            this.reLayout();
-        }
     }
 
     updateSize(w: number, h: number) {
@@ -402,7 +394,7 @@ export class Text extends Basic implements classes.Text {
 
     getLayout() {
         if (this.__layout) return this.__layout;
-        this.__layout = layoutText(this, this.__layoutWidth, this.__frameHeight, this.__measure);
+        this.__layout = layoutText(this, this.__layoutWidth, this.__frameHeight);
         return this.__layout;
     }
     locateText(x: number, y: number): TextLocate {

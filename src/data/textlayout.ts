@@ -3,8 +3,7 @@ import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
 import { BasicArray } from "./basic"
 import { layoutBulletNumber } from "./textlayoutbn";
 import { transformText } from "./textlayouttransform";
-import { MeasureFun } from "../basic/palinterface";
-export { MeasureFun } from "../basic/palinterface";
+import { pal } from "../basic/pal";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -215,7 +214,8 @@ export function isNewLineCharCode(code: number) {
     return false;
 }
 
-export function layoutLines(_text: Text, para: Para, width: number, measure: MeasureFun, preBulletNumbers: BulletNumbersLayout[]): LineArray {
+export function layoutLines(_text: Text, para: Para, width: number, preBulletNumbers: BulletNumbersLayout[]): LineArray {
+    const measure = pal.text.textMeasure;
     let spans = para.spans;
     let spansCount = spans.length;
     if (spansCount === 0) {
@@ -320,7 +320,7 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
             span.placeholder &&
             span.length === 1 &&
             span.bulletNumbers) { // '*' 项目符号编号
-            const layout = layoutBulletNumber(para, span, span.bulletNumbers, preBulletNumbers, measure);
+            const layout = layoutBulletNumber(para, span, span.bulletNumbers, preBulletNumbers);
             layout.graph.x += curX;
 
             if (!graphArray) {
@@ -462,9 +462,9 @@ export function layoutLines(_text: Text, para: Para, width: number, measure: Mea
     return lineArray;
 }
 
-export function layoutPara(text: Text, para: Para, layoutWidth: number, measure: MeasureFun, preBulletNumbers: BulletNumbersLayout[]) {
+export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulletNumbers: BulletNumbersLayout[]) {
     let paraWidth = 0;
-    const layouts = layoutLines(text, para, layoutWidth, measure, preBulletNumbers);
+    const layouts = layoutLines(text, para, layoutWidth, preBulletNumbers);
     const pAttr = para.attr;
     let paraHeight = 0;
     let graphCount = 0;
@@ -509,7 +509,7 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, measure:
     return paraLayout;
 }
 
-export function layoutText(text: Text, layoutWidth: number, layoutHeight: number, measure: MeasureFun): TextLayout {
+export function layoutText(text: Text, layoutWidth: number, layoutHeight: number): TextLayout {
     // const layoutWidth = ((b: TextBehaviour) => {
     //     switch (b) {
     //         case TextBehaviour.Flexible: return Number.MAX_VALUE;
@@ -525,7 +525,7 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
     const preBulletNumbers: BulletNumbersLayout[] = [];
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
+        const paraLayout = layoutPara(text, para, layoutWidth, preBulletNumbers);
         if (i > 0) {
             const prePara = text.paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;

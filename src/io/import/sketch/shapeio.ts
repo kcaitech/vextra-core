@@ -307,7 +307,6 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun): Te
     const shape = new TextShape(id, name, ShapeType.Text, frame, style, text);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
-    shape.setMeasureFun(ctx.measureFun);
     return shape;
 }
 

@@ -1,4 +1,3 @@
-import { MeasureFun } from "../../../data/textlayout";
 import { Shape } from "../../../data/shape";
 import { ResourceMgr } from "../../../data/basic";
 
@@ -8,10 +7,8 @@ export interface IJSON {
 
 export class LoadContext {
     shapeIds: Set<string> = new Set();
-    measureFun: MeasureFun;
     mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>;
-    constructor(measureFun: MeasureFun, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
-        this.measureFun = measureFun;
+    constructor(mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.mediasMgr = mediasMgr;
     }
 }

@@ -1,5 +1,4 @@
 import * as chai from 'chai'
-import { MeasureFun } from "./textlayout";
 import { Para, Span, SpanAttrSetter, Text } from './text';
 import { BasicArray } from './basic';
 import { Color } from './classes';
@@ -16,17 +15,12 @@ const metrics = new class implements TextMetrics {
     width: number = 10;
 }
 
-const measureFun: MeasureFun = (code: number, font: string): TextMetrics => {
-    return metrics;
-}
-
 const newText = (content: string): Text => {
     const text = new Text(new BasicArray());
     const para = new Para(content + '\n', new BasicArray());
     text.paras.push(para);
     const span = new Span(para.length);
     para.spans.push(span);
-    text.setMeasureFun(measureFun);
     return text;
 }
 

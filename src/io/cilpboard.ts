@@ -71,8 +71,6 @@ export function import_shape(document: Document, source: { index: number, conten
                 document.artboardMgr.add(obj.id, obj);
             } else if (obj instanceof SymbolShape) {
                 document.symbolsMgr.add(obj.id, obj);
-            } else if (obj instanceof TextShape) {
-                obj.setMeasureFun(document.measureFun);
             } else if (obj instanceof FlattenShape) {
                 obj.isBoolOpShape = true;
             }
@@ -144,7 +142,7 @@ export function export_text(text: types.Text): types.Text {
 export function import_text(document: Document, text: types.Text, gen?: boolean): types.Text | TextShape {
     if (gen) {
         const name = text.paras[0].text || 'text';
-        const shape = newTextShapeByText(name, text, document.measureFun);
+        const shape = newTextShapeByText(name, text);
         return shape;
     }
     return importText(text);
@@ -158,7 +156,7 @@ export function trasnform_text(document: Document, text: types.Text, gen?: boole
     const _text = importText(exportText(text));
     if (gen) {
         const name = text.paras[0].text || 'text';
-        return newTextShape(name, document.measureFun)
+        return newTextShape(name)
     }
     return _text;
 }

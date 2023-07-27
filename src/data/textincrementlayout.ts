@@ -1,12 +1,11 @@
 // 文本编辑时的增量排版
 
 import { ParaAttrSetter, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "./classes";
-import { BulletNumbersLayout, MeasureFun, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
+import { BulletNumbersLayout, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
 
 export function layoutAtInsert(text: Text,
     layoutWidth: number,
     layoutHeight: number,
-    measure: MeasureFun,
     index: number,
     len: number,
     layout: TextLayout): TextLayout {
@@ -39,7 +38,7 @@ export function layoutAtInsert(text: Text,
     const needUpdateCount = paras.length - parasLayout.length + 1;
     for (let j = 0; i < parascount && j < needUpdateCount; j++, i++) {
         const para = paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
+        const paraLayout = layoutPara(text, para, layoutWidth, preBulletNumbers);
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -108,7 +107,6 @@ export function layoutAtInsert(text: Text,
 export function layoutAtDelete(text: Text,
     layoutWidth: number,
     layoutHeight: number,
-    measure: MeasureFun,
     index: number,
     len: number,
     layout: TextLayout): TextLayout {
@@ -141,7 +139,7 @@ export function layoutAtDelete(text: Text,
     const needUpdateCount = parasLayout.length - paras.length + 1;
     if (i < parascount && needUpdateCount > 0) {
         const para = paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
+        const paraLayout = layoutPara(text, para, layoutWidth, preBulletNumbers);
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -210,7 +208,6 @@ export function layoutAtDelete(text: Text,
 export function layoutAtFormat(text: Text,
     layoutWidth: number,
     layoutHeight: number,
-    measure: MeasureFun,
     index: number,
     len: number,
     layout: TextLayout,
@@ -245,7 +242,7 @@ export function layoutAtFormat(text: Text,
     len += index;
     for (let len2 = parasLayout.length; len >= 0 && i < parascount && i < len2; i++) {
         const para = paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, measure, preBulletNumbers);
+        const paraLayout = layoutPara(text, para, layoutWidth, preBulletNumbers);
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;

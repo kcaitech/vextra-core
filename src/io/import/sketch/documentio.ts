@@ -1,5 +1,4 @@
 
-import { MeasureFun } from "data/textlayout";
 import { uuid } from "../../../basic/uuid";
 import { BasicArray, IDataGuard } from "../../../data/basic";
 import { Document, PageListItem } from "../../../data/document";
@@ -30,7 +29,7 @@ async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicA
     return pageList;
 }
 
-export async function importDocument(name: string, lzData: LzData, gurad: IDataGuard, measureFun: MeasureFun) {
+export async function importDocument(name: string, lzData: LzData, gurad: IDataGuard) {
     const data: IJSON = await lzData.loadJson('document.json');
     const pageIds = (data["pages"] || []).map((d: IJSON) => {
         const ref: string = d['_ref'];
@@ -39,9 +38,9 @@ export async function importDocument(name: string, lzData: LzData, gurad: IDataG
     const pageList = await importPageList(lzData, pageIds);
     let id = data["do_objectID"];
     if (!id || id.length === 0) id = uuid();
-    const document = new Document(id, "", name, pageList, gurad, measureFun);
+    const document = new Document(id, "", name, pageList, gurad);
     
-    new DataLoader(lzData, document, measureFun);
+    new DataLoader(lzData, document);
 
     return document;
 }
