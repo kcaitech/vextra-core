@@ -3,7 +3,7 @@ import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
 import { BasicArray } from "./basic"
 import { layoutBulletNumber } from "./textlayoutbn";
 import { transformText } from "./textlayouttransform";
-import { pal } from "../basic/pal";
+import { gPal } from "../basic/pal";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -215,7 +215,7 @@ export function isNewLineCharCode(code: number) {
 }
 
 export function layoutLines(_text: Text, para: Para, width: number, preBulletNumbers: BulletNumbersLayout[]): LineArray {
-    const measure = pal.text.textMeasure;
+    const measure = gPal.text.textMeasure;
     let spans = para.spans;
     let spansCount = spans.length;
     if (spansCount === 0) {

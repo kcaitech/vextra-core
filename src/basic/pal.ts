@@ -20,7 +20,7 @@ export type BoolOpFuns = {
 
 export type TextPathFun = (font: string, fontSize: number, charCode: number) => string;
 
-export const pal: {
+export const gPal: {
     text: {
         textMeasure: MeasureFun,
         getTextPath: TextPathFun,

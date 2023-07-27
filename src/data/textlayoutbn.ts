@@ -1,6 +1,6 @@
 // bullet numbers layout
 
-import { pal } from "../basic/pal";
+import { gPal } from "../basic/pal";
 import { BulletNumbers, BulletNumbersBehavior, BulletNumbersType, Para, Span, TextTransformType } from "./classes";
 import { BulletNumbersLayout, IGraphy } from "./textlayout";
 import { transformText } from "./textlayouttransform";
@@ -90,7 +90,7 @@ const metrics = new class implements TextMetrics {
 }
 
 export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: BulletNumbers, preBulletNumbers: BulletNumbersLayout[]): BulletNumbersLayout {
-    const measure = pal.text.textMeasure;
+    const measure = gPal.text.textMeasure;
     const indent = para.attr?.indent || 0;
     let text: string = '';
 

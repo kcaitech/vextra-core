@@ -3,7 +3,7 @@
 import { DefaultColor, isColorEqual } from "./basic";
 import { TextShape, Path, Color  } from '../data/classes';
 import { GraphArray } from "../data/textlayout";
-import { pal } from "../basic/pal";
+import { gPal } from "../basic/pal";
 
 
 function toRGBA(color: Color): string {
@@ -21,7 +21,7 @@ function isBlankChar(charCode: number) {
 }
 
 export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number): Path {
-    const getTextPath = pal.text.getTextPath;
+    const getTextPath = gPal.text.getTextPath;
     const { yOffset, paras } = shape.getLayout();
     const pc = paras.length;
 

@@ -3,10 +3,10 @@ import { BoolOp, GroupShape, Path, Shape, TextShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
 import { renderText2Path } from "./text";
-import { pal } from "../basic/pal";
+import { gPal } from "../basic/pal";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path): Path {
-    const boolop = pal.boolop;
+    const boolop = gPal.boolop;
     let path = "";
     switch (bop) {
         case BoolOp.Diff:
