@@ -1,4 +1,4 @@
-import { uuid } from "basic/uuid";
+import { uuid } from "../basic/uuid";
 import { Matrix } from "../basic/matrix";
 import { CurveMode, CurvePoint, Point2D } from "./baseclasses";
 import { float_accuracy } from "../basic/consts";
