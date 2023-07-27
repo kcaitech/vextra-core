@@ -12,6 +12,7 @@ import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape } from "../
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
 import { group, ungroup } from "./group";
+import { render2path } from "../render";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -217,17 +218,18 @@ export class PageEditor {
         return false;
     }
 
-    flattenBoolShape(shape: GroupShape, path: Path | string): PathShape | false {
+    flattenBoolShape(shape: GroupShape): PathShape | false {
         if (!shape.isBoolOpShape) return false;
         const parent = shape.parent as GroupShape;
         if (!parent) return false;
+
+        const path = render2path(shape);
 
         const api = this.__repo.start("flattenBoolShape", {});
         try {
 
             const gframe = shape.frame;
             const frame = new ShapeFrame(gframe.x, gframe.y, gframe.width, gframe.height); // clone
-            if (typeof path === 'string') path = new Path(path);
             const pathShape = newPathShape(shape.name, frame, path);
 
             const index = parent.indexOfChild(shape);
