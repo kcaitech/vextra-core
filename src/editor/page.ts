@@ -276,7 +276,7 @@ export class PageEditor {
 
                 path.push(shapepath);
             })
-            path.translate(frame.x, frame.y);
+            path.translate(-frame.x, -frame.y);
 
             let pathShape = newPathShape(name, frame, path, style);
             pathShape = api.shapeInsert(this.__page, savep, pathShape, saveidx) as PathShape;
