@@ -88,10 +88,12 @@ export class ShapeEditor {
         api.shapeModifyRadius(this.__page, this.__shape, lt, rt, rb, lb);
         this.__repo.commit();
     }
-    public setBoolOpShapeFixedRadius(fixRadius: number) {
+
+    public setBoolOpShapeFixedRadius(fixedRadius: number) {
         if (!(this.__shape instanceof GroupShape) || !this.__shape.isBoolOpShape) return;
-        // const api = this.__repo.start("setFixedRadius", {});
-        // this.__repo.commit();
+        const api = this.__repo.start("setFixedRadius", {});
+        api.shapeModifyFixedRadius(this.__page, this.__shape, fixedRadius || undefined);
+        this.__repo.commit();
     }
 
     public setBoolOp(op: BoolOp, name?: string) {

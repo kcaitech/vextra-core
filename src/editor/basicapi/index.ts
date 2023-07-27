@@ -115,6 +115,9 @@ export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: 
 export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
     shape.setRadius(lt, rt, rb, lb);
 }
+export function shapeModifyFixedRadius(shape: GroupShape, fixedRadius: number | undefined) {
+    shape.fixedRadius = fixedRadius;
+}
 export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
     if (shape.type === ShapeType.Artboard) {
         (shape as Artboard).setArtboardColor(color);

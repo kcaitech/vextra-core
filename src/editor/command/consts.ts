@@ -19,6 +19,7 @@ export const SHAPE_ATTR_ID = {
     backgroundColor: "backgroundColor",
     boolop: "boolop",
     isboolopshape: "isboolopshape",
+    fixedRadius: "fixedRadius",
 
     // text shape
     textBehaviour: "textBehaviour",

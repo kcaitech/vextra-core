@@ -305,6 +305,16 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.radius, { lt, rt, rb, lb }, save))
         })
     }
+    shapeModifyFixedRadius(page: Page, shape: GroupShape, fixedRadius: number | undefined) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const save = shape.fixedRadius;
+            if ((save || 0) !== (fixedRadius || 0)) {
+                shape.fixedRadius = fixedRadius;
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.fixedRadius, fixedRadius, save))
+            }
+        })
+    }
     shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {

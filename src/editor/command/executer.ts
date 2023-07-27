@@ -573,6 +573,15 @@ export class CMDExecuter {
                 api.shapeModifyBoolOpShape(shape as GroupShape, undefined)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.fixedRadius) {
+            if (op.type === OpType.IdSet && value) {
+                const fixedRadius = JSON.parse(value);
+                api.shapeModifyFixedRadius(shape as GroupShape, fixedRadius);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyFixedRadius(shape as GroupShape, undefined)
+            }
+        }
         // todo
         else {
             console.error("not implemented ", op)
