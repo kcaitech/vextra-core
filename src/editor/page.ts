@@ -316,9 +316,13 @@ export class PageEditor {
 
         const api = this.__repo.start("flattenBoolShape", {});
         try {
-
             const gframe = shape.frame;
-            const frame = new ShapeFrame(gframe.x, gframe.y, gframe.width, gframe.height); // clone
+            const boundingBox = path.bounds;
+            const w = boundingBox.maxX - boundingBox.minX;
+            const h = boundingBox.maxY - boundingBox.minY;
+            const frame = new ShapeFrame(gframe.x + boundingBox.minX, gframe.y + boundingBox.minY, w, h); // clone
+            path.translate(-boundingBox.minX, -boundingBox.minY);
+
             let pathShape = newPathShape(shape.name, frame, path, style);
 
             const index = parent.indexOfChild(shape);
