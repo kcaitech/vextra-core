@@ -187,9 +187,18 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
             const saveW = frame.width;
             const saveH = frame.height;
             api.shapeModifyWH(page, shape, w, h)
-
+            const scaleX = frame.width / saveW;
+            const scaleY = frame.height / saveH;
             // 调整cell的大小
-            // todo
+            const cells = shape.childs;
+            cells.forEach((cell) => {
+                api.shapeModifyX(page, cell, cell.frame.x * scaleX);
+                api.shapeModifyY(page, cell, cell.frame.y * scaleY);
+                api.shapeModifyWH(page, cell, cell.frame.width * scaleX, cell.frame.height * scaleY);
+                if (cell.childs.length > 0) {
+                    api.shapeModifyWH(page, cell.childs[0], cell.frame.width * scaleX, cell.frame.height * scaleY);
+                }
+            })
         }
         else {
             api.shapeModifyWH(page, shape, w, h)

@@ -1,4 +1,4 @@
-import { GroupShape, RectShape, Shape } from "../data/shape";
+import { GroupShape, RectShape, Shape, ImageShape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";

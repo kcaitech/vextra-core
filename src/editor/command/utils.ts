@@ -1,7 +1,8 @@
-import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape } from "../../io/baseexport";
+import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape, exportTableShape } from "../../io/baseexport";
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
 import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, RectShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../../data/shape";
+import { TableShape } from "../../data/table";
 import { Page } from "../../data/page";
 
 export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
@@ -208,6 +209,7 @@ export function exportShape(shape: Shape): Object {
         case ShapeType.Text: return (exportTextShape(shape as TextShape))
         case ShapeType.Group: return (exportGroupShape(shape as GroupShape))
         case ShapeType.FlattenShape: return exportFlattenShape(shape as FlattenShape);
+        case ShapeType.Table: return exportTableShape(shape as TableShape)
         default: throw new Error("unknow shape type: " + shape.type)
     }
 }

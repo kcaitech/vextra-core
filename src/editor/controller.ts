@@ -3,7 +3,7 @@ import { Shape, GroupShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
-import { newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
+import { newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape } from "./creator";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { v4 } from "uuid";
@@ -151,6 +151,7 @@ export class Controller {
                 return shape;
             }
             case ShapeType.Image: return newImageShape(name, frame, ref, mediasMgr);
+            case ShapeType.Table: return newTable(name, frame, 3, 3);
             default: return newRectShape(name, frame);
         }
     }
