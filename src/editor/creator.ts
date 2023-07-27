@@ -13,7 +13,7 @@ import template_table_shape from "./template/table-shape.json"
 import template_table_cell from "./template/table-cell.json"
 import {
     Blur, Point2D, BorderOptions, ContextSettings, CurvePoint,
-    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo
+    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path
 } from "../data/classes";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
@@ -86,6 +86,17 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     artboard.isVisible = true;
     artboard.isLocked = false;
     return artboard
+}
+
+export function newPathShape(name: string, frame: ShapeFrame, path: Path): PathShape {
+    const points = path.toCurvePoints(frame.width, frame.height);
+    const style = newStyle();
+    const curvePoint = new BasicArray<CurvePoint>(...points.points);
+    const id = uuid();
+    const shape = new PathShape(id, name, types.ShapeType.Path, frame, style, curvePoint);
+    shape.isClosed = points.isClosed;
+    addCommonAttr(shape);
+    return shape;
 }
 
 export function newRectShape(name: string, frame: ShapeFrame): RectShape {

@@ -2,7 +2,7 @@ import { Shape, GroupShape, ShapeFrame, TextShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
+import { newArtboard, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
@@ -219,10 +219,21 @@ export class PageEditor {
 
     flattenBoolShape(shape: GroupShape, path: Path | string): PathShape | false {
         if (!shape.isBoolOpShape) return false;
+        const parent = shape.parent as GroupShape;
+        if (!parent) return false;
 
         const api = this.__repo.start("flattenBoolShape", {});
         try {
-            // todo
+
+            const gframe = shape.frame;
+            const frame = new ShapeFrame(gframe.x, gframe.y, gframe.width, gframe.height); // clone
+            if (typeof path === 'string') path = new Path(path);
+            const pathShape = newPathShape(shape.name, frame, path);
+
+            const index = parent.indexOfChild(shape);
+            api.shapeDelete(this.__page, parent, index);
+            api.shapeInsert(this.__page, parent, pathShape, index);
+
             this.__repo.commit();
         } catch (e) {
             console.log(e)
