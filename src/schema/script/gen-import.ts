@@ -92,8 +92,8 @@ handler['object'] = function (schema: any, className: string, attrname: string, 
 
     props.forEach((v, k) => {
         if (required.has(k)) return
-        ret += indent(level) + 'ret.' + k + ' = '
-        if (v.schema['$ref'] || v.schema.type == 'array' || v.schema.type == 'object' || v.schema.oneOf) ret += attrname + '.' + k + ' && '
+        ret += indent(level) + `if (${attrname}.${k} !== undefined) ` + 'ret.' + k + ' = '
+        // if (v.schema['$ref'] || v.schema.type == 'array' || v.schema.type == 'object' || v.schema.oneOf) ret += attrname + '.' + k + ' && '
         ret += handler['type'](v.schema, v.className, attrname + '.' + k, level, v.filename, allschemas)
         ret += '\n'
     })

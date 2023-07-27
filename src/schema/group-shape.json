@@ -44,6 +44,9 @@
         },
         "isBoolOpShape": {
             "type": "boolean"
+        },
+        "fixedRadius": {
+            "type": "number"
         }
     },
     "required": [

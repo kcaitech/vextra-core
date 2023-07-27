@@ -41,7 +41,7 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
             return ret
         })()
     )
-    ret.attr = source.attr && importTextAttr(source.attr, ctx)
+    if (source.attr !== undefined) ret.attr = importTextAttr(source.attr, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -106,7 +106,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
             return ret
         })()
     )
-    ret.colorControls = source.colorControls && importColorControls(source.colorControls, ctx)
+    if (source.colorControls !== undefined) ret.colorControls = importColorControls(source.colorControls, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -119,7 +119,7 @@ export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop 
     const ret: impl.Stop = new impl.Stop (
         source.position
     )
-    ret.color = source.color && importColor(source.color, ctx)
+    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -127,18 +127,18 @@ export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop 
 export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): impl.SpanAttr {
     const ret: impl.SpanAttr = new impl.SpanAttr (
     )
-    ret.fontName = source.fontName
-    ret.fontSize = source.fontSize
-    ret.color = source.color && importColor(source.color, ctx)
-    ret.strikethrough = source.strikethrough && importStrikethroughType(source.strikethrough, ctx)
-    ret.underline = source.underline && importUnderlineType(source.underline, ctx)
-    ret.bold = source.bold
-    ret.italic = source.italic
-    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
-    ret.highlight = source.highlight && importColor(source.highlight, ctx)
-    ret.kerning = source.kerning
-    ret.transform = source.transform && importTextTransformType(source.transform, ctx)
-    ret.placeholder = source.placeholder
+    if (source.fontName !== undefined) ret.fontName = source.fontName
+    if (source.fontSize !== undefined) ret.fontSize = source.fontSize
+    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
+    if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
+    if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
+    if (source.bold !== undefined) ret.bold = source.bold
+    if (source.italic !== undefined) ret.italic = source.italic
+    if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
+    if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
+    if (source.kerning !== undefined) ret.kerning = source.kerning
+    if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
+    if (source.placeholder !== undefined) ret.placeholder = source.placeholder
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -151,21 +151,21 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx)
     )
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -226,7 +226,7 @@ export function importPara(source: types.Para, ctx?: IImportContext): impl.Para 
             return ret
         })()
     )
-    ret.attr = source.attr && importParaAttr(source.attr, ctx)
+    if (source.attr !== undefined) ret.attr = importParaAttr(source.attr, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -236,7 +236,7 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
         source.id,
         source.name
     )
-    ret.versionId = source.versionId
+    if (source.versionId !== undefined) ret.versionId = source.versionId
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -245,7 +245,7 @@ export function importOverrideItem(source: types.OverrideItem, ctx?: IImportCont
     const ret: impl.OverrideItem = new impl.OverrideItem (
         source.id
     )
-    ret.value = source.value && (() => {
+    if (source.value !== undefined) ret.value = (() => {
 
         if (source.value.typeId == 'style') {
             return importStyle(source.value as types.Style, ctx)
@@ -307,8 +307,8 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
         importColor(source.color, ctx),
         importContextSettings(source.contextSettings, ctx)
     )
-    ret.gradient = source.gradient && importGradient(source.gradient, ctx)
-    ret.imageRef = source.imageRef
+    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
+    if (source.imageRef !== undefined) ret.imageRef = source.imageRef
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -349,12 +349,12 @@ export function importExportOptions(source: types.ExportOptions, ctx?: IImportCo
 export function importExportFormat(source: types.ExportFormat, ctx?: IImportContext): impl.ExportFormat {
     const ret: impl.ExportFormat = new impl.ExportFormat (
     )
-    ret.absoluteSize = source.absoluteSize
-    ret.fileFormat = source.fileFormat && importExportFileFormat(source.fileFormat, ctx)
-    ret.name = source.name
-    ret.namingScheme = source.namingScheme && importExportFormatNameingScheme(source.namingScheme, ctx)
-    ret.scale = source.scale
-    ret.visibleScaleType = source.visibleScaleType && importExportVisibleScaleType(source.visibleScaleType, ctx)
+    if (source.absoluteSize !== undefined) ret.absoluteSize = source.absoluteSize
+    if (source.fileFormat !== undefined) ret.fileFormat = importExportFileFormat(source.fileFormat, ctx)
+    if (source.name !== undefined) ret.name = source.name
+    if (source.namingScheme !== undefined) ret.namingScheme = importExportFormatNameingScheme(source.namingScheme, ctx)
+    if (source.scale !== undefined) ret.scale = source.scale
+    if (source.visibleScaleType !== undefined) ret.visibleScaleType = importExportVisibleScaleType(source.visibleScaleType, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -407,7 +407,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
             return ret
         })()
     )
-    ret.versionId = source.versionId
+    if (source.versionId !== undefined) ret.versionId = source.versionId
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -450,8 +450,8 @@ export function importComment(source: types.Comment, ctx?: IImportContext): impl
         source.content,
         importShape(source.parasiticBody, ctx)
     )
-    ret.parentId = source.parentId
-    ret.rootId = source.rootId
+    if (source.parentId !== undefined) ret.parentId = source.parentId
+    if (source.rootId !== undefined) ret.rootId = source.rootId
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -483,8 +483,8 @@ export function importBulletNumbers(source: types.BulletNumbers, ctx?: IImportCo
     const ret: impl.BulletNumbers = new impl.BulletNumbers (
         importBulletNumbersType(source.type, ctx)
     )
-    ret.behavior = source.behavior && importBulletNumbersBehavior(source.behavior, ctx)
-    ret.offset = source.offset
+    if (source.behavior !== undefined) ret.behavior = importBulletNumbersBehavior(source.behavior, ctx)
+    if (source.offset !== undefined) ret.offset = source.offset
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -510,7 +510,7 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
         importMarkerType(source.startMarkerType, ctx),
         importMarkerType(source.endMarkerType, ctx)
     )
-    ret.gradient = source.gradient && importGradient(source.gradient, ctx)
+    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -549,8 +549,8 @@ export function importBlur(source: types.Blur, ctx?: IImportContext): impl.Blur 
         source.saturation,
         importBlurType(source.type, ctx)
     )
-    ret.motionAngle = source.motionAngle
-    ret.radius = source.radius
+    if (source.motionAngle !== undefined) ret.motionAngle = source.motionAngle
+    if (source.radius !== undefined) ret.radius = source.radius
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -572,21 +572,21 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
         importStyle(source.style, ctx),
         importText(source.text, ctx)
     )
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -607,21 +607,21 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
             return ret
         })()
     )
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -650,21 +650,21 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
             return ret
         })()
     )
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -678,22 +678,22 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         importStyle(source.style, ctx),
         source.refId
     )
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ret.overrides = source.overrides && (() => {
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.overrides !== undefined) ret.overrides = (() => {
         const ret = new BasicArray<impl.OverrideItem>()
         for (let i = 0, len = source.overrides.length; i < len; i++) {
             const r = importOverrideItem(source.overrides[i], ctx)
@@ -709,18 +709,18 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     const ret: impl.Span = new impl.Span (
         source.length
     )
-    ret.fontName = source.fontName
-    ret.fontSize = source.fontSize
-    ret.color = source.color && importColor(source.color, ctx)
-    ret.strikethrough = source.strikethrough && importStrikethroughType(source.strikethrough, ctx)
-    ret.underline = source.underline && importUnderlineType(source.underline, ctx)
-    ret.bold = source.bold
-    ret.italic = source.italic
-    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
-    ret.highlight = source.highlight && importColor(source.highlight, ctx)
-    ret.kerning = source.kerning
-    ret.transform = source.transform && importTextTransformType(source.transform, ctx)
-    ret.placeholder = source.placeholder
+    if (source.fontName !== undefined) ret.fontName = source.fontName
+    if (source.fontSize !== undefined) ret.fontSize = source.fontSize
+    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
+    if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
+    if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
+    if (source.bold !== undefined) ret.bold = source.bold
+    if (source.italic !== undefined) ret.italic = source.italic
+    if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
+    if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
+    if (source.kerning !== undefined) ret.kerning = source.kerning
+    if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
+    if (source.placeholder !== undefined) ret.placeholder = source.placeholder
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -741,22 +741,22 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
             return ret
         })()
     )
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ret.isClosed = source.isClosed
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.isClosed !== undefined) ret.isClosed = source.isClosed
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -777,22 +777,22 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
             return ret
         })()
     )
-    ret.isClosed = source.isClosed
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.isClosed !== undefined) ret.isClosed = source.isClosed
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -800,23 +800,23 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
 export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): impl.ParaAttr {
     const ret: impl.ParaAttr = new impl.ParaAttr (
     )
-    ret.fontName = source.fontName
-    ret.fontSize = source.fontSize
-    ret.color = source.color && importColor(source.color, ctx)
-    ret.strikethrough = source.strikethrough && importStrikethroughType(source.strikethrough, ctx)
-    ret.underline = source.underline && importUnderlineType(source.underline, ctx)
-    ret.bold = source.bold
-    ret.italic = source.italic
-    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
-    ret.highlight = source.highlight && importColor(source.highlight, ctx)
-    ret.kerning = source.kerning
-    ret.transform = source.transform && importTextTransformType(source.transform, ctx)
-    ret.placeholder = source.placeholder
-    ret.alignment = source.alignment && importTextHorAlign(source.alignment, ctx)
-    ret.paraSpacing = source.paraSpacing
-    ret.minimumLineHeight = source.minimumLineHeight
-    ret.maximumLineHeight = source.maximumLineHeight
-    ret.indent = source.indent
+    if (source.fontName !== undefined) ret.fontName = source.fontName
+    if (source.fontSize !== undefined) ret.fontSize = source.fontSize
+    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
+    if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
+    if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
+    if (source.bold !== undefined) ret.bold = source.bold
+    if (source.italic !== undefined) ret.italic = source.italic
+    if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
+    if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
+    if (source.kerning !== undefined) ret.kerning = source.kerning
+    if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
+    if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (source.alignment !== undefined) ret.alignment = importTextHorAlign(source.alignment, ctx)
+    if (source.paraSpacing !== undefined) ret.paraSpacing = source.paraSpacing
+    if (source.minimumLineHeight !== undefined) ret.minimumLineHeight = source.minimumLineHeight
+    if (source.maximumLineHeight !== undefined) ret.maximumLineHeight = source.maximumLineHeight
+    if (source.indent !== undefined) ret.indent = source.indent
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -824,26 +824,26 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
 export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): impl.TextAttr {
     const ret: impl.TextAttr = new impl.TextAttr (
     )
-    ret.alignment = source.alignment && importTextHorAlign(source.alignment, ctx)
-    ret.paraSpacing = source.paraSpacing
-    ret.minimumLineHeight = source.minimumLineHeight
-    ret.maximumLineHeight = source.maximumLineHeight
-    ret.indent = source.indent
-    ret.fontName = source.fontName
-    ret.fontSize = source.fontSize
-    ret.color = source.color && importColor(source.color, ctx)
-    ret.strikethrough = source.strikethrough && importStrikethroughType(source.strikethrough, ctx)
-    ret.underline = source.underline && importUnderlineType(source.underline, ctx)
-    ret.bold = source.bold
-    ret.italic = source.italic
-    ret.bulletNumbers = source.bulletNumbers && importBulletNumbers(source.bulletNumbers, ctx)
-    ret.highlight = source.highlight && importColor(source.highlight, ctx)
-    ret.kerning = source.kerning
-    ret.transform = source.transform && importTextTransformType(source.transform, ctx)
-    ret.placeholder = source.placeholder
-    ret.verAlign = source.verAlign && importTextVerAlign(source.verAlign, ctx)
-    ret.orientation = source.orientation && importTextOrientation(source.orientation, ctx)
-    ret.textBehaviour = source.textBehaviour && importTextBehaviour(source.textBehaviour, ctx)
+    if (source.alignment !== undefined) ret.alignment = importTextHorAlign(source.alignment, ctx)
+    if (source.paraSpacing !== undefined) ret.paraSpacing = source.paraSpacing
+    if (source.minimumLineHeight !== undefined) ret.minimumLineHeight = source.minimumLineHeight
+    if (source.maximumLineHeight !== undefined) ret.maximumLineHeight = source.maximumLineHeight
+    if (source.indent !== undefined) ret.indent = source.indent
+    if (source.fontName !== undefined) ret.fontName = source.fontName
+    if (source.fontSize !== undefined) ret.fontSize = source.fontSize
+    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
+    if (source.strikethrough !== undefined) ret.strikethrough = importStrikethroughType(source.strikethrough, ctx)
+    if (source.underline !== undefined) ret.underline = importUnderlineType(source.underline, ctx)
+    if (source.bold !== undefined) ret.bold = source.bold
+    if (source.italic !== undefined) ret.italic = source.italic
+    if (source.bulletNumbers !== undefined) ret.bulletNumbers = importBulletNumbers(source.bulletNumbers, ctx)
+    if (source.highlight !== undefined) ret.highlight = importColor(source.highlight, ctx)
+    if (source.kerning !== undefined) ret.kerning = source.kerning
+    if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
+    if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (source.verAlign !== undefined) ret.verAlign = importTextVerAlign(source.verAlign, ctx)
+    if (source.orientation !== undefined) ret.orientation = importTextOrientation(source.orientation, ctx)
+    if (source.textBehaviour !== undefined) ret.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -908,21 +908,21 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
             return ret
         })()
     )
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -944,22 +944,22 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         })(),
         importEllipse(source.ellipse, ctx)
     )
-    ret.isClosed = source.isClosed
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.isClosed !== undefined) ret.isClosed = source.isClosed
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -980,22 +980,22 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
             return ret
         })()
     )
-    ret.isClosed = source.isClosed
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.isClosed !== undefined) ret.isClosed = source.isClosed
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -1009,21 +1009,21 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         importStyle(source.style, ctx),
         source.imageRef
     )
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -1079,22 +1079,23 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
             return ret
         })()
     )
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ret.isBoolOpShape = source.isBoolOpShape
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -1150,22 +1151,23 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
             return ret
         })()
     )
-    ret.isBoolOpShape = source.isBoolOpShape
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -1221,22 +1223,23 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
             return ret
         })()
     )
-    ret.isBoolOpShape = source.isBoolOpShape
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -1292,25 +1295,26 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
             return ret
         })()
     )
-    ret.isBoolOpShape = source.isBoolOpShape
-    ret.boolOp = source.boolOp && importBoolOp(source.boolOp, ctx)
-    ret.isFixedToViewport = source.isFixedToViewport
-    ret.isFlippedHorizontal = source.isFlippedHorizontal
-    ret.isFlippedVertical = source.isFlippedVertical
-    ret.isLocked = source.isLocked
-    ret.isVisible = source.isVisible
-    ret.exportOptions = source.exportOptions && importExportOptions(source.exportOptions, ctx)
-    ret.nameIsFixed = source.nameIsFixed
-    ret.resizingConstraint = source.resizingConstraint
-    ret.resizingType = source.resizingType && importResizeType(source.resizingType, ctx)
-    ret.rotation = source.rotation
-    ret.constrainerProportions = source.constrainerProportions
-    ret.clippingMaskMode = source.clippingMaskMode
-    ret.hasClippingMask = source.hasClippingMask
-    ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ret.hasBackgroundColor = source.hasBackgroundColor
-    ret.includeBackgroundColorInExport = source.includeBackgroundColorInExport
-    ret.backgroundColor = source.backgroundColor && importColor(source.backgroundColor, ctx)
+    if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.hasBackgroundColor !== undefined) ret.hasBackgroundColor = source.hasBackgroundColor
+    if (source.includeBackgroundColorInExport !== undefined) ret.includeBackgroundColorInExport = source.includeBackgroundColorInExport
+    if (source.backgroundColor !== undefined) ret.backgroundColor = importColor(source.backgroundColor, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }

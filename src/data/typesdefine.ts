@@ -510,6 +510,7 @@ export type ImageShape = Shape & {
 export type GroupShape = Shape & {
     childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape)[]
     isBoolOpShape?: boolean
+    fixedRadius?: number
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {

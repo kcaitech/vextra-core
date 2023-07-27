@@ -1125,6 +1125,7 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
             return ret
         })(),
         isBoolOpShape: source.isBoolOpShape,
+        fixedRadius: source.fixedRadius,
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -1187,6 +1188,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 return ret
             })(),
         isBoolOpShape: source.isBoolOpShape,
+        fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -1264,6 +1266,7 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                 return ret
             })(),
         isBoolOpShape: source.isBoolOpShape,
+        fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -1341,6 +1344,7 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                 return ret
             })(),
         isBoolOpShape: source.isBoolOpShape,
+        fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,

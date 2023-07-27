@@ -1028,6 +1028,7 @@ export class GroupShape extends Shape {
     typeId = 'group-shape'
     childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape) >
     isBoolOpShape?: boolean
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,
