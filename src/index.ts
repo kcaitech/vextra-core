@@ -29,3 +29,6 @@ export * from "./service/taskmgr"
 
 // coop
 export * from "./coop"
+
+// render
+export * from "./render"
