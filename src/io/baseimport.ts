@@ -407,7 +407,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
             return ret
         })()
     )
-    ret.versionId = source.versionId
+    ret.lastCmdId = source.lastCmdId
     if (ctx) ctx.afterImport(ret)
     return ret
 }

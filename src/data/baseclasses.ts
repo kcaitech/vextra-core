@@ -478,7 +478,7 @@ export class DocumentMeta extends Basic {
     id: string
     name: string
     pagesList: BasicArray<PageListItem >
-    versionId?: string
+    lastCmdId?: string
     constructor(
         id: string,
         name: string,
