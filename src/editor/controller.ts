@@ -554,12 +554,16 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         pMap.set(p.id, np);
     }
     const xy = np.computeCoord(target_xy);
+    if (sx < 0) {
+        api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+        sx = -sx;
+    }
     if (s.isFlippedHorizontal || s.isFlippedVertical) {
+        api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
         const self = s.matrix2Parent().computeCoord(0, 0);
         const delta = { x: xy.x - self.x, y: xy.y - self.y };
         api.shapeModifyX(page, s, s.frame.x + delta.x);
         api.shapeModifyY(page, s, s.frame.y + delta.y);
-        api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
     } else {
         api.shapeModifyX(page, s, xy.x);
         api.shapeModifyY(page, s, xy.y);
