@@ -698,21 +698,24 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
     }
 
     // fix close
+    let segcount = 0;
     for (let i = 0, len = ctx.segs.length; i < len; i++) {
         const seg = ctx.segs[i];
         if (seg.points.length <= 1) continue;
-        if (seg.isClosed && i < len - 1) {
+        if (seg.isClosed && (i < len - 1 || segcount > 0)) {
             // 把最后两个点连接起来
             const p0 = seg.points[0];
             const pe = seg.points[seg.points.length - 1];
-            if (Math.abs(pe.point.x - p0.point.x) < float_accuracy && Math.abs(pe.point.y - p0.point.y)) {
+            if (Math.abs(pe.point.x - p0.point.x) < float_accuracy && Math.abs(pe.point.y - p0.point.y) < float_accuracy) {
                 pe.point.x = p0.point.x;
                 pe.point.y = p0.point.y;
             }
             else {
                 curveHandleLine(seg, p0.point.x, p0.point.y);
             }
+            seg.isClosed = false;
         }
+        segcount++;
     }
 
     const ret: {
@@ -726,6 +729,16 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
     for (let i = 0, len = ctx.segs.length; i < len; i++) {
         const seg = ctx.segs[i];
         if (seg.points.length <= 1) continue;
+
+        if (ret.points.length > 0) {
+            const p0 = seg.points[0];
+            const pe = ret.points[ret.points.length - 1];
+            if (Math.abs(pe.point.x - p0.point.x) > float_accuracy || Math.abs(pe.point.y - p0.point.y) > float_accuracy) {
+                // move
+                ret.points.push(new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(p0.point.x, p0.point.y)));
+            }
+        }
+
         ret.points.push(...seg.points);
         ret.isClosed = !!seg.isClosed;
     }

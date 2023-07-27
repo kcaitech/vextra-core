@@ -1,3 +1,4 @@
+import { float_accuracy } from "../basic/consts";
 import { CurvePoint } from "./shape";
 import { CurveMode, Point2D } from "./typesdefine"
 
@@ -77,6 +78,12 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
     const transformedPoints = points.map((p) => transformPoint(p.point));
 
     for (let i = 0; i < len - 1; i++) {
+        const p = points[i + 1];
+        if (p.curveMode === CurveMode.None) {
+            hasBegin = false;
+            i++;
+            continue;
+        }
         _connectTwo(i, i + 1);
     }
     if (isClosed) {
@@ -87,6 +94,14 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
     function _isCornerRadius(idx: number) {
         const curvePoint = points[idx];
         if (!isClosed && (idx === 0 || idx === len - 1)) {
+            // 事实上是否close
+            if (len > 1) {
+                const point = idx === 0 ? points[len - 1] : points[0];
+                if (Math.abs(curvePoint.point.x - point.point.x) < float_accuracy &&
+                    Math.abs(curvePoint.point.y - point.point.y) < float_accuracy) {
+                    return curvePoint.curveMode === CurveMode.Straight && (curvePoint.cornerRadius > 0 || fixedRadius > 0);
+                }
+            }
             return false;
         }
         return curvePoint.curveMode === CurveMode.Straight && (curvePoint.cornerRadius > 0 || fixedRadius > 0);
