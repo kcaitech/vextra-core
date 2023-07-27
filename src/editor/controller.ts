@@ -1,5 +1,5 @@
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
-import { Shape, GroupShape } from "../data/shape";
+import { Shape, GroupShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
@@ -13,6 +13,7 @@ import { Api } from "./command/recordapi";
 import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
 import { Color } from "../data/style";
+import { afterModifyGroupShapeWH } from "./frame";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -61,7 +62,7 @@ export interface AsyncBaseAction {
     close: () => undefined;
 }
 export interface AsyncMultiAction {
-    executeScale: (type: CtrlElementType, start: PageXY, end: PageXY) => void;
+    executeScale: (origin1: { x: number, y: number }, origin2: { x: number, y: number }, sx: number, sy: number) => void;
     executeRotate: (deg: number, m: Matrix) => void;
     close: () => void;
 }
@@ -337,7 +338,22 @@ export class Controller {
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
         const pMap: Map<string, Matrix> = new Map();
-        const executeScale = (type: CtrlElementType, start: PageXY, end: PageXY) => { }
+        const executeScale = (origin1: { x: number, y: number }, origin2: { x: number, y: number }, sx: number, sy: number) => {
+            status = Status.Pending;
+            for (let i = 0; i < shapes.length; i++) {
+                const s = shapes[i];
+                const p = s.parent;
+                if (!p) continue;
+                if (!s.rotation) set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
+                else if (s instanceof GroupShape && s.type === ShapeType.Group) adjust_group_rotate_frame(api, page, s, sx, sy);
+                else if (s instanceof PathShape) {
+                    adjust_pathshape_rotate_frame(api, page, s);
+                    set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
+                }
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
         const executeRotate = (deg: number, m: Matrix) => {
             status = Status.Pending;
             for (let i = 0; i < shapes.length; i++) {
@@ -353,8 +369,7 @@ export class Controller {
                 const ex = pMap.get(sp.id);
                 if (ex) np = ex;
                 else {
-                    const p2r = sp.matrix2Root();
-                    np = new Matrix(p2r.inverse);
+                    np = new Matrix(sp.matrix2Root().inverse);
                     pMap.set(sp.id, np);
                 }
                 const sf_common = np.computeCoord(target_xy);
@@ -462,4 +477,92 @@ function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
         deleteEmptyGroupShape(page, p, api)
     }
     return true;
+}
+function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: number, sy: number) {
+    const boundingBox = s.boundingBox();
+    const matrix = s.matrix2Parent();
+    for (let i = 0, len = s.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
+        const cc = s.childs[i]
+        const m1 = cc.matrix2Parent();
+        m1.multiAtLeft(matrix);
+        const target = m1.computeCoord(0, 0);
+
+        if (s.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + s.rotation);
+        if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
+        if (s.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
+
+        const m2 = cc.matrix2Parent();
+        m2.trans(boundingBox.x, boundingBox.y);
+        const cur = m2.computeCoord(0, 0);
+
+        api.shapeModifyX(page, cc, cc.frame.x + target.x - cur.x);
+        api.shapeModifyY(page, cc, cc.frame.y + target.y - cur.y);
+    }
+
+    if (s.rotation) api.shapeModifyRotate(page, s, 0);
+    if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+    if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+
+    api.shapeModifyX(page, s, boundingBox.x * sx);
+    api.shapeModifyY(page, s, boundingBox.y * sy);
+    const width = boundingBox.width * sx;
+    const height = boundingBox.height * sy;
+    api.shapeModifyWH(page, s, width, height);
+    afterModifyGroupShapeWH(api, page, s, sx, sy);
+}
+function adjust_pathshape_rotate_frame(api: Api, page: Page, s: PathShape) {
+    const matrix = s.matrix2Parent();
+    const frame = s.frame;
+    const boundingBox = s.boundingBox();
+    matrix.preScale(frame.width, frame.height);
+    if (s.rotation) api.shapeModifyRotate(page, s, 0);
+    if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+    if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+    api.shapeModifyX(page, s, boundingBox.x);
+    api.shapeModifyY(page, s, boundingBox.y);
+    api.shapeModifyWH(page, s, boundingBox.width, boundingBox.height);
+    const matrix2 = s.matrix2Parent();
+    matrix2.preScale(boundingBox.width, boundingBox.height);
+    matrix.multiAtLeft(matrix2.inverse);
+    const points = s.points;
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = points[i];
+        if (p.hasCurveFrom) {
+            const curveFrom = matrix.computeCoord(p.curveFrom);
+            api.shapeModifyCurvFromPoint(page, s, i, curveFrom);
+        }
+        if (p.hasCurveTo) {
+            const curveTo = matrix.computeCoord(p.curveTo);
+            api.shapeModifyCurvToPoint(page, s, i, curveTo);
+        }
+        const point = matrix.computeCoord(p.point);
+        api.shapeModifyCurvPoint(page, s, i, point);
+    }
+}
+function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>, origin1: { x: number, y: number }, origin2: { x: number, y: number }, sx: number, sy: number) {
+    const p = s.parent;
+    if (!p) return;
+    const m = s.matrix2Root();
+    const lt = m.computeCoord(0, 0);
+    const r_o_lt = { x: lt.x - origin1.x, y: lt.y - origin1.y };
+    const target_xy = { x: origin2.x + sx * r_o_lt.x, y: origin2.y + sy * r_o_lt.y };
+    let np = new Matrix();
+    const ex = pMap.get(p.id);
+    if (ex) np = ex;
+    else {
+        np = new Matrix(p.matrix2Root().inverse);
+        pMap.set(p.id, np);
+    }
+    const xy = np.computeCoord(target_xy);
+    if (s.isFlippedHorizontal || s.isFlippedVertical) {
+        const self = s.matrix2Parent().computeCoord(0, 0);
+        const delta = { x: xy.x - self.x, y: xy.y - self.y };
+        api.shapeModifyX(page, s, s.frame.x + delta.x);
+        api.shapeModifyY(page, s, s.frame.y + delta.y);
+        api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
+    } else {
+        api.shapeModifyX(page, s, xy.x);
+        api.shapeModifyY(page, s, xy.y);
+        api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
+    }
 }
