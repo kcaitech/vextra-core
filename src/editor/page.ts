@@ -8,12 +8,13 @@ import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape } from "../data/classes";
+import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
+import { IImportContext, importStyle } from "../io/baseimport";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -219,6 +220,17 @@ export class PageEditor {
         return false;
     }
 
+    private cloneStyle(style: Style): Style {
+        const _this = this;
+        return importStyle(style, new class implements IImportContext {
+            afterImport(obj: any): void {
+                if (obj instanceof Fill) {
+                    obj.setImageMgr(_this.__document.mediasMgr)
+                }
+            }
+        });
+    }
+
     flattenShapes(shapes: Shape[], name?: string): PathShape | false {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
@@ -226,6 +238,7 @@ export class PageEditor {
         const savep = fshape.parent as GroupShape;
         const saveidx = savep.indexOfChild(fshape);
         if (!name) name = fshape.name;
+        const style: Style = this.cloneStyle(fshape.style);
 
         const api = this.__repo.start("flattenShapes", {});
         try {
@@ -265,7 +278,7 @@ export class PageEditor {
             })
             path.translate(frame.x, frame.y);
 
-            let pathShape = newPathShape(name, frame, path);
+            let pathShape = newPathShape(name, frame, path, style);
             pathShape = api.shapeInsert(this.__page, savep, pathShape, saveidx) as PathShape;
 
             for (let i = 0, len = shapes.length; i < len; i++) {
@@ -292,13 +305,21 @@ export class PageEditor {
         if (!parent) return false;
 
         const path = render2path(shape);
+        let style: Style | undefined;
+        if (shape.style.fills.length > 0) {
+            style = this.cloneStyle(shape.style);
+        }
+        else if (shape.childs.length > 0) {
+            const child = shape.childs[0];
+            style = this.cloneStyle(child.style);
+        }
 
         const api = this.__repo.start("flattenBoolShape", {});
         try {
 
             const gframe = shape.frame;
             const frame = new ShapeFrame(gframe.x, gframe.y, gframe.width, gframe.height); // clone
-            let pathShape = newPathShape(shape.name, frame, path);
+            let pathShape = newPathShape(shape.name, frame, path, style);
 
             const index = parent.indexOfChild(shape);
             api.shapeDelete(this.__page, parent, index);

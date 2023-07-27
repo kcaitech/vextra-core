@@ -87,9 +87,9 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     return artboard
 }
 
-export function newPathShape(name: string, frame: ShapeFrame, path: Path): PathShape {
+export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape {
     const points = path.toCurvePoints(frame.width, frame.height);
-    const style = newStyle();
+    style = style || newStyle();
     const curvePoint = new BasicArray<CurvePoint>(...points.points);
     const id = uuid();
     const shape = new PathShape(id, name, types.ShapeType.Path, frame, style, curvePoint, !!points.isClosed);
