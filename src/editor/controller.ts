@@ -146,7 +146,7 @@ export class Controller {
             case ShapeType.Oval: return newOvalShape(name, frame);
             case ShapeType.Line: return newLineShape(name, frame);
             case ShapeType.Text: {
-                const shape = newTextShape(name, this.__document.measureFun);
+                const shape = newTextShape(name);
                 shape.frame = frame;
                 return shape;
             }
@@ -201,7 +201,7 @@ export class Controller {
                 if (content.length > 19) {
                     name = name.slice(0, 19) + '...';
                 }
-                const shape = newTextShape(name, this.__document.measureFun);
+                const shape = newTextShape(name);
                 shape.text.insertText(content, 0);
                 const xy = parent.frame2Root();
                 shape.frame.x = frame.x - xy.x;
