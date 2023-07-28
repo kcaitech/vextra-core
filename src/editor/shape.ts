@@ -1,4 +1,4 @@
-import { GroupShape, RectShape, Shape, ImageShape } from "../data/shape";
+import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2 } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
@@ -84,13 +84,17 @@ export class ShapeEditor {
     // radius
     public setRectRadius(lt: number, rt: number, rb: number, lb: number) {
         if (!(this.__shape instanceof RectShape)) return;
-        const api = this.__repo.start("setRadius", {});
+        const api = this.__repo.start("setRectRadius", {});
         api.shapeModifyRadius(this.__page, this.__shape, lt, rt, rb, lb);
         this.__repo.commit();
     }
-
-    public setBoolOpShapeFixedRadius(fixedRadius: number) {
-        if (!(this.__shape instanceof GroupShape) || !this.__shape.isBoolOpShape) return;
+    public setFixedRadius(fixedRadius: number) {
+        if (this.__shape instanceof GroupShape) {
+            if (!this.__shape.isBoolOpShape) return;
+        }
+        else if (!(this.__shape instanceof PathShape || this.__shape instanceof PathShape2)) {
+            return;
+        }
         const api = this.__repo.start("setFixedRadius", {});
         api.shapeModifyFixedRadius(this.__page, this.__shape, fixedRadius || undefined);
         this.__repo.commit();
