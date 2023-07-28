@@ -39,7 +39,7 @@ export async function importDocument(name: string, lzData: LzData, gurad: IDataG
     const pageList = await importPageList(lzData, pageIds);
     let id = data["do_objectID"];
     if (!id || id.length === 0) id = uuid();
-    const document = new Document(id, "", name, pageList, gurad, measureFun);
+    const document = new Document(id, "", "", name, pageList, gurad, measureFun);
     
     new DataLoader(lzData, document, measureFun);
 

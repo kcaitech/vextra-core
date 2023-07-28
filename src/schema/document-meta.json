@@ -26,7 +26,8 @@
     "required": [
         "id",
         "name",
-        "pagesList"
+        "pagesList",
+        "lastCmdId"
     ],
     "additionalProperties": false
 }

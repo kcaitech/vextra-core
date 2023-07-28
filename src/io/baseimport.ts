@@ -405,9 +405,9 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
                 if (r) ret.push(r)
             }
             return ret
-        })()
+        })(),
+        source.lastCmdId
     )
-    ret.lastCmdId = source.lastCmdId
     if (ctx) ctx.afterImport(ret)
     return ret
 }
