@@ -118,11 +118,6 @@ export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: 
 export function shapeModifyFixedRadius(shape: GroupShape | PathShape | PathShape2, fixedRadius: number | undefined) {
     shape.fixedRadius = fixedRadius;
 }
-export function shapeModifyBackgroundColor(shape: Shape, color: Color) {
-    if (shape.type === ShapeType.Artboard) {
-        (shape as Artboard).setArtboardColor(color);
-    }
-}
 export function shapeModifyBoolOp(shape: Shape, op: BoolOp | undefined) {
     shape.boolOp = op;
 }

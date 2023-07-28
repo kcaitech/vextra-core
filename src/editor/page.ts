@@ -1,4 +1,4 @@
-import { Shape, GroupShape, ShapeFrame, TextShape, PathShape2 } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame, TextShape, PathShape2, RectShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
@@ -496,7 +496,7 @@ export class PageEditor {
     }
     /**
      * @description 调低图形shape的z-index层级
-     * @param step 层级数，不传则降低到低部
+     * @param step 层级数，不传则降低到底部
      * @returns { boolean }
      */
     lower_layer(shape: Shape, step?: number) {
@@ -910,6 +910,18 @@ export class PageEditor {
             this.__repo.commit();
         } catch (error) {
             console.log(error);
+            this.__repo.rollback();
+        }
+    }
+    setShapesRadius(shapes: Shape[], lt: number, rt: number, rb: number, lb: number) {
+        try {
+            const api = this.__repo.start('setShapesRadius', {});
+            for (let i = 0; i < shapes.length; i++) {
+                const s = shapes[i];
+                if (s instanceof RectShape) api.shapeModifyRadius(this.__page, s, lt, rt, rb, lb);
+            }
+            this.__repo.commit();
+        } catch (error) {
             this.__repo.rollback();
         }
     }

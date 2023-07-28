@@ -24,7 +24,7 @@ import { updateShapesFrame } from './command/utils';
 
 function createTestDocument() {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
     const page = newPage("Page1");
 
     const pagesMgr = document.pagesMgr;
@@ -50,7 +50,7 @@ export function get_actions_rotate(shapes: Shape[], value: number) {
 }
 test("group", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
 
     const page = newPage("Page1");
 
@@ -106,7 +106,7 @@ test("group", () => {
 })
 test("ungroup", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
     const page = newPage("Page1");
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
@@ -166,7 +166,7 @@ test("ungroup", () => {
 })
 test("delete", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
     const page = newPage("Page1");
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
@@ -217,7 +217,7 @@ test("delete", () => {
 })
 test("delete_batch", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
     const page = newPage("Page1");
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
@@ -265,7 +265,7 @@ test("delete_batch", () => {
 })
 test("insert", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
     const page = newPage("Page1");
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
@@ -293,7 +293,7 @@ test("setName", async () => {
     const pageList = new BasicArray<PageListItem>();
     const pitem = new PageListItem(page.id, page.name);
     pageList.push(pitem);
-    const document = new Document(uuid(), "", "Blank", pageList, repo);
+    const document = new Document(uuid(), "", "", "Blank", pageList, repo);
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
 
@@ -320,7 +320,7 @@ test("shapeListDrag", () => { // 图层拖拽
     const pageList = new BasicArray<PageListItem>();
     const pitem = new PageListItem(page.id, page.name);
     pageList.push(pitem);
-    const document = new Document(uuid(), "", "Blank", pageList, repo);
+    const document = new Document(uuid(), "", "", "Blank", pageList, repo);
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
 
@@ -400,7 +400,7 @@ test("arrange", () => {
 })
 test("setShapesConstrainerProportions", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
     const page = newPage("Page1");
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);
@@ -458,7 +458,7 @@ test("setShapesFrame", () => {
 })
 test("setShapesRotate", () => {
     const repo = new Repository()
-    const document = new Document(uuid(), "", "Blank", new BasicArray(), repo);
+    const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
     const page = newPage("Page1");
     const pagesMgr = document.pagesMgr;
     pagesMgr.add(page.id, page);

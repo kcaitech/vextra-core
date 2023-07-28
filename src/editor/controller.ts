@@ -1,5 +1,5 @@
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
-import { Shape, GroupShape } from "../data/shape";
+import { Shape, GroupShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
@@ -13,6 +13,7 @@ import { Api } from "./command/recordapi";
 import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
 import { Color } from "../data/style";
+import { afterModifyGroupShapeWH } from "./frame";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -50,28 +51,6 @@ export enum CtrlElementType { // 控制元素类型
     LineEndR = 'line-end-rotate',
     Text = 'text'
 }
-export interface AsyncTransfer {
-    migrate: (targetParent: GroupShape) => void;
-    trans: (start: PageXY, end: PageXY) => void;
-    transByWheel: (dx: number, dy: number) => void;
-    close: () => undefined;
-}
-export interface AsyncBaseAction {
-    execute: (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => void;
-    close: () => undefined;
-}
-export interface AsyncMultiAction {
-    execute: (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => void;
-    close: () => undefined | Shape[];
-}
-export interface AsyncMultiAction2 {
-    executeScale: (origin1: PageXY, origin2: PageXY, scaleX: number, scaleY: number) => void;
-    close: () => void;
-}
-export interface AsyncLineAction {
-    execute: (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => void;
-    close: () => undefined;
-}
 export interface AsyncCreator {
     init: (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame) => Shape | undefined;
     init_media: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: { buff: Uint8Array, base64: string }) => Shape | undefined;
@@ -81,55 +60,31 @@ export interface AsyncCreator {
     collect: (page: Page, shapes: Shape[], target: Artboard) => void;
     close: () => undefined;
 }
+export interface AsyncBaseAction {
+    executeRotate: (deg: number) => void;
+    executeScale: (type: CtrlElementType, start: PageXY, end: PageXY) => void;
+    close: () => undefined;
+}
+export interface AsyncMultiAction {
+    executeScale: (origin1: { x: number, y: number }, origin2: { x: number, y: number }, sx: number, sy: number) => void;
+    executeRotate: (deg: number, m: Matrix) => void;
+    close: () => void;
+}
+export interface AsyncLineAction {
+    execute: (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => void;
+    close: () => undefined;
+}
+
+export interface AsyncTransfer {
+    migrate: (targetParent: GroupShape) => void;
+    trans: (start: PageXY, end: PageXY) => void;
+    transByWheel: (dx: number, dy: number) => void;
+    close: () => undefined;
+}
 
 export enum Status {
     Pending = 'pending',
     Fulfilled = 'fulfilled'
-}
-// 单个图形处理(普通对象)
-function singleHdl(api: Api, page: Page, shape: Shape, type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') {
-    if (actionType === 'rotate') { // 旋转操作
-        const newDeg = (shape.rotation || 0) + (deg || 0);
-        api.shapeModifyRotate(page, shape, newDeg);
-    } else { // 缩放操作
-        if (type === CtrlElementType.RectLT) {
-            adjustLT2(api, page, shape, end.x, end.y);
-        } else if (type === CtrlElementType.RectRT) {
-            adjustRT2(api, page, shape, end.x, end.y);
-        } else if (type === CtrlElementType.RectRB) {
-            adjustRB2(api, page, shape, end.x, end.y);
-        } else if (type === CtrlElementType.RectLB) {
-            adjustLB2(api, page, shape, end.x, end.y);
-        } else if (type === CtrlElementType.RectTop) {
-            const m = shape.matrix2Root();
-            const p1 = m.inverseCoord(start.x, start.y);
-            const p2 = m.inverseCoord(end.x, end.y);
-            const dy = p2.y - p1.y;
-            const { x, y } = m.computeCoord(0, dy);
-            adjustLT2(api, page, shape, x, y);
-        } else if (type === CtrlElementType.RectRight) {
-            const m = shape.matrix2Root();
-            const p1 = m.inverseCoord(start.x, start.y);
-            const p2 = m.inverseCoord(end.x, end.y);
-            const dx = p2.x - p1.x;
-            const { x, y } = m.computeCoord(shape.frame.width + dx, 0);
-            adjustRT2(api, page, shape, x, y);
-        } else if (type === CtrlElementType.RectBottom) {
-            const m = shape.matrix2Root();
-            const p1 = m.inverseCoord(start.x, start.y);
-            const p2 = m.inverseCoord(end.x, end.y);
-            const dy = p2.y - p1.y;
-            const { x, y } = m.computeCoord(shape.frame.width, shape.frame.height + dy);
-            adjustRB2(api, page, shape, x, y);
-        } else if (type === CtrlElementType.RectLeft) {
-            const m = shape.matrix2Root();
-            const p1 = m.inverseCoord(start.x, start.y);
-            const p2 = m.inverseCoord(end.x, end.y);
-            const dx = p2.x - p1.x;
-            const { x, y } = m.computeCoord(dx, shape.frame.height);
-            adjustLB2(api, page, shape, x, y);
-        }
-    }
 }
 // 处理异步编辑
 export class Controller {
@@ -171,7 +126,7 @@ export class Controller {
             shape.frame.y -= xy.y;
             api.shapeInsert(page, parent, shape, parent.childs.length);
             newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
-            if (newShape?.type === ShapeType.Artboard) api.artboardModifyBackgroundColor(page, newShape as Artboard, new Color(0, 0, 0, 0));
+            if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
             return newShape
@@ -296,14 +251,14 @@ export class Controller {
                     api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - t_xy.y);
                 }
             }
-            api.artboardModifyBackgroundColor(page, target, new Color(1, 255, 255, 255));
+            api.setFillColor(page, target, 0, new Color(1, 255, 255, 255));
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const close = () => {
             if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
                 if (newShape.type === ShapeType.Artboard) {
-                    api.artboardModifyBackgroundColor(savepage!, newShape as Artboard, new Color(1, 255, 255, 255));
+                    api.setFillColor(savepage!, newShape, 0, new Color(1, 255, 255, 255));
                 }
                 this.__repo.commit();
             } else {
@@ -313,15 +268,55 @@ export class Controller {
         }
         return { init, init_media, init_text, setFrame, setFrameByWheel, collect, close }
     }
-    // 图形编辑，适用于基础控点、控边的异步编辑
-    public asyncRectEditor(shapes: Shape[], page: Page): AsyncBaseAction {
+    // 单个图形异步编辑
+    public asyncRectEditor(shape: Shape, page: Page): AsyncBaseAction {
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
-        const execute = (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => {
+        const executeRotate = (deg: number) => {
             status = Status.Pending;
-            const len = shapes.length;
-            if (len === 1) {
-                singleHdl(api, page, shapes[0], type, start, end, deg, actionType); // 普通对象处理
+            const newDeg = (shape.rotation || 0) + (deg || 0);
+            api.shapeModifyRotate(page, shape, newDeg);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const executeScale = (type: CtrlElementType, start: PageXY, end: PageXY) => {
+            status = Status.Pending;
+            if (type === CtrlElementType.RectLT) {
+                adjustLT2(api, page, shape, end.x, end.y);
+            } else if (type === CtrlElementType.RectRT) {
+                adjustRT2(api, page, shape, end.x, end.y);
+            } else if (type === CtrlElementType.RectRB) {
+                adjustRB2(api, page, shape, end.x, end.y);
+            } else if (type === CtrlElementType.RectLB) {
+                adjustLB2(api, page, shape, end.x, end.y);
+            } else if (type === CtrlElementType.RectTop) {
+                const m = shape.matrix2Root();
+                const p1 = m.inverseCoord(start.x, start.y);
+                const p2 = m.inverseCoord(end.x, end.y);
+                const dy = p2.y - p1.y;
+                const { x, y } = m.computeCoord(0, dy);
+                adjustLT2(api, page, shape, x, y);
+            } else if (type === CtrlElementType.RectRight) {
+                const m = shape.matrix2Root();
+                const p1 = m.inverseCoord(start.x, start.y);
+                const p2 = m.inverseCoord(end.x, end.y);
+                const dx = p2.x - p1.x;
+                const { x, y } = m.computeCoord(shape.frame.width + dx, 0);
+                adjustRT2(api, page, shape, x, y);
+            } else if (type === CtrlElementType.RectBottom) {
+                const m = shape.matrix2Root();
+                const p1 = m.inverseCoord(start.x, start.y);
+                const p2 = m.inverseCoord(end.x, end.y);
+                const dy = p2.y - p1.y;
+                const { x, y } = m.computeCoord(shape.frame.width, shape.frame.height + dy);
+                adjustRB2(api, page, shape, x, y);
+            } else if (type === CtrlElementType.RectLeft) {
+                const m = shape.matrix2Root();
+                const p1 = m.inverseCoord(start.x, start.y);
+                const p2 = m.inverseCoord(end.x, end.y);
+                const dx = p2.x - p1.x;
+                const { x, y } = m.computeCoord(dx, shape.frame.height);
+                adjustLB2(api, page, shape, x, y);
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -334,19 +329,70 @@ export class Controller {
             }
             return undefined;
         }
-        return { execute, close };
+        return { executeRotate, executeScale, close };
     }
+    // 多对象的异步编辑
     public asyncMultiEditor(shapes: Shape[], page: Page): AsyncMultiAction {
-        const execute = (type: CtrlElementType, start: PageXY, end: PageXY, deg?: number, actionType?: 'rotate' | 'scale') => {
-            // todo
+        const api = this.__repo.start("action", {});
+        let status: Status = Status.Pending;
+        const pMap: Map<string, Matrix> = new Map();
+        const executeScale = (origin1: PageXY, origin2: PageXY, sx: number, sy: number) => {
+            status = Status.Pending;
+            for (let i = 0; i < shapes.length; i++) {
+                const s = shapes[i];
+                const p = s.parent;
+                if (!p) continue;
+                if (!s.rotation) set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
+                else if (s instanceof GroupShape && s.type === ShapeType.Group) adjust_group_rotate_frame(api, page, s, sx, sy);
+                else if (s instanceof PathShape) {
+                    adjust_pathshape_rotate_frame(api, page, s);
+                    set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
+                }
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
         }
-        const close = () => undefined
-        return { execute, close };
+        const executeRotate = (deg: number, m: Matrix) => {
+            status = Status.Pending;
+            for (let i = 0; i < shapes.length; i++) {
+                const s = shapes[i];
+                const sp = s.parent;
+                if (!sp) continue;
+                // 计算左上角的目标位置
+                const m2r = s.matrix2Root();
+                m2r.multiAtLeft(m);
+                const target_xy = m2r.computeCoord(0, 0); // 目标位置（root）
+                // 计算集体旋转后的xy
+                let np = new Matrix();
+                const ex = pMap.get(sp.id);
+                if (ex) np = ex;
+                else {
+                    np = new Matrix(sp.matrix2Root().inverse);
+                    pMap.set(sp.id, np);
+                }
+                const sf_common = np.computeCoord(target_xy);
+                // 计算自转后的xy
+                const r = s.rotation || 0;
+                let cr = deg;
+                if (s.isFlippedHorizontal) cr = -cr;
+                if (s.isFlippedVertical) cr = -cr;
+                api.shapeModifyRotate(page, s, r + cr);
+                const sf_self = s.matrix2Parent().computeCoord(0, 0);
+                // 比较集体旋转与自转的xy偏差
+                const delta = { x: sf_common.x - sf_self.x, y: sf_common.y - sf_self.y };
+                api.shapeModifyX(page, s, s.frame.x + delta.x);
+                api.shapeModifyY(page, s, s.frame.y + delta.y);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) this.__repo.commit();
+            else this.__repo.rollback();
+        }
+        return { executeScale, executeRotate, close };
     }
     public asyncLineEditor(shape: Shape): AsyncLineAction {
-        if (this.__repo.transactCtx.transact) {
-            this.__repo.rollback();
-        }
         const api = this.__repo.start("action", {});
         const page = shape.getPage() as Page;
         let status: Status = Status.Pending;
@@ -429,4 +475,101 @@ function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
         deleteEmptyGroupShape(page, p, api)
     }
     return true;
+}
+function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: number, sy: number) {
+    const boundingBox = s.boundingBox();
+    const matrix = s.matrix2Parent();
+    for (let i = 0, len = s.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
+        const cc = s.childs[i]
+        const m1 = cc.matrix2Parent();
+        m1.multiAtLeft(matrix);
+        const target = m1.computeCoord(0, 0);
+
+        if (s.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + s.rotation);
+        if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
+        if (s.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
+
+        const m2 = cc.matrix2Parent();
+        m2.trans(boundingBox.x, boundingBox.y);
+        const cur = m2.computeCoord(0, 0);
+
+        api.shapeModifyX(page, cc, cc.frame.x + target.x - cur.x);
+        api.shapeModifyY(page, cc, cc.frame.y + target.y - cur.y);
+    }
+
+    if (s.rotation) api.shapeModifyRotate(page, s, 0);
+    if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+    if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+
+    api.shapeModifyX(page, s, boundingBox.x * sx);
+    api.shapeModifyY(page, s, boundingBox.y * sy);
+    const width = boundingBox.width * sx;
+    const height = boundingBox.height * sy;
+    api.shapeModifyWH(page, s, width, height);
+    afterModifyGroupShapeWH(api, page, s, sx, sy);
+}
+function adjust_pathshape_rotate_frame(api: Api, page: Page, s: PathShape) {
+    const matrix = s.matrix2Parent();
+    const frame = s.frame;
+    const boundingBox = s.boundingBox();
+    matrix.preScale(frame.width, frame.height);
+    if (s.rotation) api.shapeModifyRotate(page, s, 0);
+    if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+    if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+    api.shapeModifyX(page, s, boundingBox.x);
+    api.shapeModifyY(page, s, boundingBox.y);
+    api.shapeModifyWH(page, s, boundingBox.width, boundingBox.height);
+    const matrix2 = s.matrix2Parent();
+    matrix2.preScale(boundingBox.width, boundingBox.height);
+    matrix.multiAtLeft(matrix2.inverse);
+    const points = s.points;
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = points[i];
+        if (p.hasCurveFrom) {
+            const curveFrom = matrix.computeCoord(p.curveFrom);
+            api.shapeModifyCurvFromPoint(page, s, i, curveFrom);
+        }
+        if (p.hasCurveTo) {
+            const curveTo = matrix.computeCoord(p.curveTo);
+            api.shapeModifyCurvToPoint(page, s, i, curveTo);
+        }
+        const point = matrix.computeCoord(p.point);
+        api.shapeModifyCurvPoint(page, s, i, point);
+    }
+}
+function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>, origin1: { x: number, y: number }, origin2: { x: number, y: number }, sx: number, sy: number) {
+    const p = s.parent;
+    if (!p) return;
+    const m = s.matrix2Root();
+    const lt = m.computeCoord(0, 0);
+    const r_o_lt = { x: lt.x - origin1.x, y: lt.y - origin1.y };
+    const target_xy = { x: origin2.x + sx * r_o_lt.x, y: origin2.y + sy * r_o_lt.y };
+    let np = new Matrix();
+    const ex = pMap.get(p.id);
+    if (ex) np = ex;
+    else {
+        np = new Matrix(p.matrix2Root().inverse);
+        pMap.set(p.id, np);
+    }
+    const xy = np.computeCoord(target_xy);
+    if (sx < 0) {
+        api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+        sx = -sx;
+    }
+    if (sy < 0) {
+        api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+        sy = -sy;
+    }
+    if (s.isFlippedHorizontal || s.isFlippedVertical) {
+        api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
+        const self = s.matrix2Parent().computeCoord(0, 0);
+        const delta = { x: xy.x - self.x, y: xy.y - self.y };
+        api.shapeModifyX(page, s, s.frame.x + delta.x);
+        api.shapeModifyY(page, s, s.frame.y + delta.y);
+    } else {
+        api.shapeModifyX(page, s, xy.x);
+        api.shapeModifyY(page, s, xy.y);
+        api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
+    }
+    if (s instanceof GroupShape && s.type === ShapeType.Group) afterModifyGroupShapeWH(api, page, s, sx, sy);
 }

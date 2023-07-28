@@ -32,7 +32,7 @@ export function addCommonAttr(shape: Shape) {
 export function newDocument(documentName: string, repo: Repository): Document {
     const dId = uuid();
     const pageList = new BasicArray<PageListItem>();
-    const document = new Document(dId, '', documentName, pageList, repo);
+    const document = new Document(dId, "", "", documentName, pageList, repo);
     return document;
 }
 
@@ -80,8 +80,6 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     const fillColor = new Color(1, 255, 255, 255);
     const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
     artboard.style.fills.push(fill);
-    artboard.hasBackgroundColor = true;
-    artboard.backgroundColor = fillColor;
     artboard.isVisible = true;
     artboard.isLocked = false;
     return artboard
