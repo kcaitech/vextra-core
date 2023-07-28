@@ -478,11 +478,13 @@ export type Span = SpanAttr & {
 /* path shape */
 export type PathShape2 = Shape & {
     pathsegs: PathSegment[]
+    fixedRadius?: number
 }
 /* path shape */
 export type PathShape = Shape & {
     points: CurvePoint[]
     isClosed: boolean
+    fixedRadius?: number
 }
 /* rect shape */
 export type RectShape = PathShape & {

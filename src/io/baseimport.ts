@@ -765,6 +765,7 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -801,6 +802,7 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -822,6 +824,7 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         })(),
         source.isClosed
     )
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -992,6 +995,7 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         source.isClosed,
         importEllipse(source.ellipse, ctx)
     )
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1028,6 +1032,7 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         })(),
         source.isClosed
     )
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
@@ -1065,6 +1070,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         source.isClosed,
         source.imageRef
     )
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal

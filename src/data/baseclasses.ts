@@ -866,6 +866,7 @@ export class Span extends SpanAttr {
 export class PathShape2 extends Shape {
     typeId = 'path-shape2'
     pathsegs: BasicArray<PathSegment >
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,
@@ -891,6 +892,7 @@ export class PathShape extends Shape {
     typeId = 'path-shape'
     points: BasicArray<CurvePoint >
     isClosed: boolean
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,

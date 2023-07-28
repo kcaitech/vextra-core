@@ -779,6 +779,7 @@ export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext)
             }
             return ret
         })(),
+        fixedRadius: source.fixedRadius,
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -816,6 +817,7 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
             return ret
         })(),
         isClosed: source.isClosed,
+        fixedRadius: source.fixedRadius,
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -838,6 +840,7 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
                 return ret
             })(),
         isClosed: source.isClosed,
+        fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -1014,6 +1017,7 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
                 return ret
             })(),
         isClosed: source.isClosed,
+        fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -1052,6 +1056,7 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
                 return ret
             })(),
         isClosed: source.isClosed,
+        fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -1089,6 +1094,7 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
                 return ret
             })(),
         isClosed: source.isClosed,
+        fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,

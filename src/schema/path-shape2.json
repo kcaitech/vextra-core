@@ -7,6 +7,9 @@
             "items": {
                 "$ref": "./path-segment.json"
             }
+        },
+        "fixedRadius": {
+            "type": "number"
         }
     },
     "required": [

@@ -308,6 +308,7 @@ export class PathShape extends Shape implements classes.PathShape {
     typeId = 'path-shape'
     points: BasicArray<CurvePoint>
     isClosed: boolean
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,
@@ -345,7 +346,7 @@ export class PathShape extends Shape implements classes.PathShape {
         const width = this.frame.width;
         const height = this.frame.height;
 
-        const path = parsePath(this.points, !!this.isClosed, offsetX, offsetY, width, height);
+        const path = parsePath(this.points, !!this.isClosed, offsetX, offsetY, width, height, this.fixedRadius);
         return new Path(path);
     }
     setRadius(radius: number): void {
@@ -359,6 +360,7 @@ export class PathShape extends Shape implements classes.PathShape {
 export class PathShape2 extends Shape implements classes.PathShape2 {
     typeId = 'path-shape2'
     pathsegs: BasicArray<PathSegment >
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,
@@ -391,7 +393,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
 
         let pathstr = "";
         this.pathsegs.forEach((seg) => {
-            pathstr += parsePath(seg.points, !!seg.isClosed, offsetX, offsetY, width, height);
+            pathstr += parsePath(seg.points, !!seg.isClosed, offsetX, offsetY, width, height, this.fixedRadius);
         });
         return new Path(pathstr);
     }

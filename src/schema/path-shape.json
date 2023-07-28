@@ -10,6 +10,9 @@
         },
         "isClosed": {
             "type": "boolean"
+        },
+        "fixedRadius": {
+            "type": "number"
         }
     },
     "required": [
