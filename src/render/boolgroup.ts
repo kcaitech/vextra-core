@@ -1,10 +1,23 @@
-import { BoolOp, GroupShape, Path, Shape, TextShape } from "../data/classes";
+import { BoolOp, GroupShape, Path, Shape, Style, TextShape } from "../data/classes";
 // import { difference, intersection, subtract, union } from "./boolop";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
+
+// find first usable style
+export function findUsableFillStyle(shape: Shape): Style {
+    if (shape.style.fills.length > 0) return shape.style;
+    if (shape instanceof GroupShape && shape.isBoolOpShape && shape.childs.length > 0) return findUsableFillStyle(shape.childs[0]);
+    return shape.style;
+}
+
+export function findUsableBorderStyle(shape: Shape): Style {
+    if (shape.style.borders.length > 0) return shape.style;
+    if (shape instanceof GroupShape && shape.isBoolOpShape && shape.childs.length > 0) return findUsableBorderStyle(shape.childs[0]);
+    return shape.style;
+}
 
 function opPath(bop: BoolOp, path0: Path, path1: Path): Path {
     const boolop = gPal.boolop;
@@ -88,13 +101,18 @@ export function render(h: Function, shape: GroupShape, reflush?: number, consume
     // fill
     if (shape.style.fills.length > 0) {
         childs.push(...fillR(h, shape.style, frame, pathstr));
-    } else {
+    } else if (shape.childs[0]) {
         const child0 = shape.childs[0];
-        if (child0) childs.push(...fillR(h, child0.style, frame, pathstr));
+        childs.push(...fillR(h, findUsableFillStyle(child0), frame, pathstr));
     }
 
     // border
-    childs.push(...borderR(h, shape, pathstr));
+    if (shape.style.borders.length > 0) {
+        childs.push(...borderR(h, shape.style, frame, pathstr));
+    } else if (shape.childs[0]) {
+        const child0 = shape.childs[0];
+        childs.push(...borderR(h, findUsableBorderStyle(child0), frame, pathstr));
+    }
 
     // ----------------------------------------------------------
     // shadows todo

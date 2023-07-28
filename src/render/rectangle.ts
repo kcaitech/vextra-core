@@ -14,7 +14,7 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     // fill
     childs.push(...fillR(h, shape.style, frame, path));
     // border
-    childs.push(...borderR(h, shape, path));
+    childs.push(...borderR(h, shape.style, frame, path));
 
 
     const props: any = {}

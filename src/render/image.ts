@@ -24,7 +24,7 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
     childs.push(img);
 
     // border
-    childs.push(...borderR(h, shape, path));
+    childs.push(...borderR(h, shape.style, frame, path));
 
     const props: any = {}
     props.width = frame.width;

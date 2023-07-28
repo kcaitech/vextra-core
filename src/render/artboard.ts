@@ -53,7 +53,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
             const path = shape.getPath(true).toString();
             ab_props.x = 0;
             ab_props.y = 0;
-            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape, path)]);
+            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style, frame, path)]);
         } else {
             return h('svg', ab_props, childs);
         }

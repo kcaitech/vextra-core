@@ -35,7 +35,7 @@ export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeTyp
     // fill
     childs.push(...fillR(h, shape.style, frame, path));
     // border
-    childs.push(...borderR(h, shape, path));
+    childs.push(...borderR(h, shape.style, frame, path));
 
     // symbol
     childs.push(...renderSym(h, sym, comsMap, shape.frame)); // 有缩放

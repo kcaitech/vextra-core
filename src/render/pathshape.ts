@@ -16,7 +16,7 @@ export function render(h: Function, shape: PathShape, reflush?: number) {
     childs.push(...fillR(h, shape.style, frame, path));
 
     // border
-    childs.push(...borderR(h, shape, path));
+    childs.push(...borderR(h, shape.style, frame, path));
 
     // ----------------------------------------------------------
     // shadows todo

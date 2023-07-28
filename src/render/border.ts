@@ -2,15 +2,15 @@
 
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
-import { Shape, Border, Gradient, BorderPosition, FillType, GradientType } from "../data/classes";
+import { Shape, Border, Gradient, BorderPosition, FillType, GradientType, Style, ShapeFrame } from "../data/classes";
 
-const handler: { [key: string]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};
-const angularHandler: { [key: string]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};
+const handler: { [key: string]: (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string) => any } = {};
+const angularHandler: { [key: string]: (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string) => any } = {};
 
-angularHandler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Border, path: string): any {
+angularHandler[BorderPosition.Inner] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
     const clipId = "clippath-border" + objectId(border);
     const maskId = "mask-border" + objectId(border);
-    const frame = shape.frame;
+    // const frame = shape.frame;
     const thickness = border.thickness;
     const width = frame.width;
     const height = frame.height;
@@ -53,9 +53,9 @@ angularHandler[BorderPosition.Inner] = function (h: Function, shape: Shape, bord
     ]);
 }
 
-angularHandler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Border, path: string): any {
+angularHandler[BorderPosition.Center] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
     const maskId = "mask-border" + objectId(border);
-    const frame = shape.frame;
+    // const frame = shape.frame;
     const thickness = border.thickness;
 
     const g_ = renderGradient(h, border.gradient as Gradient, frame);
@@ -90,8 +90,8 @@ angularHandler[BorderPosition.Center] = function (h: Function, shape: Shape, bor
     ])
 }
 
-angularHandler[BorderPosition.Outer] = function (h: Function, shape: Shape, border: Border, path: string): any {
-    const frame = shape.frame;
+angularHandler[BorderPosition.Outer] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
+    // const frame = shape.frame;
     const thickness = border.thickness;
 
     const g_ = renderGradient(h, border.gradient as Gradient, frame);
@@ -135,9 +135,9 @@ angularHandler[BorderPosition.Outer] = function (h: Function, shape: Shape, bord
     ]);
 }
 
-handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Border, path: string): any {
+handler[BorderPosition.Inner] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
     const clipId = "clippath-border" + objectId(border);
-    const frame = shape.frame;
+    // const frame = shape.frame;
     const thickness = border.thickness;
 
     let g_;
@@ -155,7 +155,7 @@ handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Bor
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
         const color = border.color;
-        const opacity = shape.style.contextSettings.opacity;
+        const opacity = style.contextSettings.opacity;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
@@ -176,8 +176,8 @@ handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Bor
     return h("g", elArr);
 }
 
-handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Border, path: string): any {
-    const frame = shape.frame;
+handler[BorderPosition.Center] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
+    // const frame = shape.frame;
     const thickness = border.thickness;
     let g_;
     const body_props: any = {
@@ -194,7 +194,7 @@ handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Bo
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
         const color = border.color;
-        const opacity = shape.style.contextSettings.opacity;
+        const opacity = style.contextSettings.opacity;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
@@ -208,8 +208,8 @@ handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Bo
     }
 }
 
-handler[BorderPosition.Outer] = function (h: Function, shape: Shape, border: Border, path: string): any {
-    const frame = shape.frame;
+handler[BorderPosition.Outer] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
+    // const frame = shape.frame;
     const thickness = border.thickness;
 
     let g_;
@@ -225,7 +225,7 @@ handler[BorderPosition.Outer] = function (h: Function, shape: Shape, border: Bor
     }
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
-        const opacity = shape.style.contextSettings.opacity;
+        const opacity = style.contextSettings.opacity;
         const color = border.color;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     } else {
@@ -256,10 +256,10 @@ handler[BorderPosition.Outer] = function (h: Function, shape: Shape, border: Bor
     return (h("g", elArr));
 }
 
-export function render(h: Function, shape: Shape, path?: string): Array<any> {
-    const style = shape.style;
+export function render(h: Function, style: Style, frame: ShapeFrame, path: string): Array<any> {
+    // const style = shape.style;
     const bc = style.borders.length;
-    path = path || shape.getPath(true).toString();
+    // path = path || shape.getPath(true).toString();
 
     const elArr = new Array();
     for (let i = 0; i < bc; i++) {
@@ -272,9 +272,9 @@ export function render(h: Function, shape: Shape, path?: string): Array<any> {
         const gradientType = border.gradient && border.gradient.gradientType;
 
         fillType == FillType.Gradient && gradientType == GradientType.Angular && (() => {
-            elArr.push(angularHandler[position](h, shape, border, path));
+            elArr.push(angularHandler[position](h, style, frame, border, path));
         })() || (fillType == FillType.SolidColor || fillType == FillType.Gradient) && (() => {
-            elArr.push(handler[position](h, shape, border, path));
+            elArr.push(handler[position](h, style, frame, border, path));
         })() || fillType == FillType.Pattern && (() => {
             return true; // todo
         })
