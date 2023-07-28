@@ -89,7 +89,7 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
     style = style || newStyle();
     const id = uuid();
     const segs = path.toCurvePoints(frame.width, frame.height);
-    if (segs.length <= 0) {
+    if (segs.length <= 1) {
         const seg = segs[0];
         const points = seg?.points || [];
         const isClosed = seg?.isClosed || false;
