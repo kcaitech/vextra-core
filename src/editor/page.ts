@@ -320,13 +320,13 @@ export class PageEditor {
         if (!parent) return false;
 
         const path = render2path(shape);
-        let style: Style | undefined;
-        if (shape.style.fills.length > 0) {
-            style = this.cloneStyle(shape.style);
-        }
-        else if (shape.childs.length > 0) {
-            const child = shape.childs[0];
-            style = this.cloneStyle(child.style);
+
+        // copy fill and borders
+        const copyStyle = findUsableFillStyle(shape);
+        const style: Style = this.cloneStyle(copyStyle);
+        const borderStyle = findUsableBorderStyle(shape);
+        if (borderStyle !== copyStyle) {
+            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
         const api = this.__repo.start("flattenBoolShape", {});
