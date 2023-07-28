@@ -93,6 +93,10 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         return curvePoint.curveMode === CurveMode.Straight && (curvePoint.cornerRadius > 0 || fixedRadius > 0);
     }
 
+    function pointEquals(p0: Point2D, p1: Point2D) {
+        return Math.abs(p0.x - p1.x) < float_accuracy && Math.abs(p0.y - p1.y) < float_accuracy;
+    }
+
     /**
      * # Notice 1
      * sketch 可以设置并存储的 corner radius 可能非常大，绘制的时候需要加以限制。
@@ -110,9 +114,11 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         const preIndex = idx === 0 ? len - 1 : idx - 1;
         const nextIndex = idx === len - 1 ? 0 : idx + 1;
 
-        const cur = points[idx];
         const pre = points[preIndex];
+        if (pre.hasCurveFrom && !pointEquals(pre.point, pre.curveFrom)) return;
+        const cur = points[idx];
         const next = points[nextIndex];
+        if (next.hasCurveTo && !pointEquals(next.point, next.curveTo)) return;
         // 拿到三个点
         const prePoint = transformedPoints[preIndex]; //pre.point; // A
         const curPoint = transformedPoints[idx]; //cur.point; // B
