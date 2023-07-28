@@ -1352,9 +1352,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        hasBackgroundColor: source.hasBackgroundColor,
-        includeBackgroundColorInExport: source.includeBackgroundColorInExport,
-        backgroundColor: source.backgroundColor && exportColor(source.backgroundColor, ctx),
     }
     if (ctx) ctx.afterExport(source)
     return ret

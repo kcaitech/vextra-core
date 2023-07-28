@@ -1096,9 +1096,6 @@ export class FlattenShape extends GroupShape {
  */
 export class Artboard extends GroupShape {
     typeId = 'artboard'
-    hasBackgroundColor?: boolean
-    includeBackgroundColorInExport?: boolean
-    backgroundColor?: Color
     constructor(
         id: string,
         name: string,

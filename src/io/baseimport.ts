@@ -1304,9 +1304,6 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     ret.clippingMaskMode = source.clippingMaskMode
     ret.hasClippingMask = source.hasClippingMask
     ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    ret.hasBackgroundColor = source.hasBackgroundColor
-    ret.includeBackgroundColorInExport = source.includeBackgroundColorInExport
-    ret.backgroundColor = source.backgroundColor && importColor(source.backgroundColor, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }

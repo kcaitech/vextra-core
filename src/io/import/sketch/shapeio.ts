@@ -131,7 +131,6 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun): Art
     }
     const childs = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
     const shape = new Artboard(id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs));
-    shape.hasBackgroundColor = true;
     
     importShapePropertys(shape, data);
     importBoolOp(shape, data);

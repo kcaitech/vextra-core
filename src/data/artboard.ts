@@ -5,9 +5,6 @@ import { BasicArray } from "./basic";
 import { Path } from "./path";
 export class Artboard extends GroupShape implements classes.Artboard {
     typeId = 'artboard';
-    hasBackgroundColor?: boolean;
-    includeBackgroundColorInExport?: boolean;
-
     constructor(
         id: string,
         name: string,

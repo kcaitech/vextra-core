@@ -518,7 +518,4 @@ export type FlattenShape = GroupShape & {
 }
 /* artboard shape */
 export type Artboard = GroupShape & {
-    hasBackgroundColor?: boolean
-    includeBackgroundColorInExport?: boolean
-    backgroundColor?: Color
 }
