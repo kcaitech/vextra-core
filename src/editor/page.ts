@@ -15,6 +15,7 @@ import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
 import { IImportContext, importStyle } from "../io/baseimport";
+import { gPal } from "../basic/pal";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -266,16 +267,21 @@ export class PageEditor {
             const xy = m.computeCoord(bounds.left, bounds.top)
 
             const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);
-            const path = new Path();
+            let pathstr = "";
             shapes.forEach((shape) => {
                 const shapem = shape.matrix2Root();
                 const shapepath = render2path(shape);
-
                 shapem.multiAtLeft(m);
                 shapepath.transform(shapem);
 
-                path.push(shapepath);
+                if (pathstr.length > 0) {
+                    pathstr = gPal.boolop.union(pathstr, shapepath.toString())
+                }
+                else {
+                    pathstr = shapepath.toString();
+                }
             })
+            const path = new Path(pathstr);
             path.translate(-frame.x, -frame.y);
 
             let pathShape = newPathShape(name, frame, path, style);
