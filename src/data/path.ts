@@ -706,9 +706,10 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
         if (Math.abs(pe.point.x - p0.point.x) < float_accuracy && Math.abs(pe.point.y - p0.point.y) < float_accuracy) {
             seg.isClosed = true;
             if (pe.hasCurveTo) {
-                p0.hasCurveFrom = true;
-                p0.curveFrom = pe.curveTo;
+                p0.hasCurveTo = true;
+                p0.curveTo = pe.curveTo;
             }
+
             seg.points.splice(seg.points.length - 1, 1); // 删掉最后个重复的
         }
     }
@@ -795,15 +796,15 @@ curvHandler['l'] = (ctx: CurvCtx, item: any[]) => {
 function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2: number, x: number, y: number) {
     if (seg.points.length > 0) {
         const prePoint = seg.points[seg.points.length - 1];
-        prePoint.hasCurveTo = true;
-        prePoint.curveTo.x = x1;
-        prePoint.curveTo.y = y1;
+        prePoint.hasCurveFrom = true;
+        prePoint.curveFrom.x = x1;
+        prePoint.curveFrom.y = y1;
     }
     else {
-        const point = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(x1, y1), false, true, CurveMode.Asymmetric, new Point2D(seg.beginpoint.x, seg.beginpoint.y));
+        const point = new CurvePoint(uuid(), 0, new Point2D(x1, y1), new Point2D(0, 0), true, false, CurveMode.Asymmetric, new Point2D(seg.beginpoint.x, seg.beginpoint.y));
         seg.points.push(point);
     }
-    const point = new CurvePoint(uuid(), 0, new Point2D(x2, y2), new Point2D(0, 0), true, false, CurveMode.Asymmetric, new Point2D(x, y));
+    const point = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(x2, y2), false, true, CurveMode.Asymmetric, new Point2D(x, y));
     seg.points.push(point);
 }
 
