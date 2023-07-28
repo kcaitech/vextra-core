@@ -126,7 +126,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     }, versionId);
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
 
-    const document = new Document(meta.id, versionId ?? "", meta.name, meta.pagesList, gurad);
+    const document = new Document(meta.id, versionId ?? "", meta.lastCmdId, meta.name, meta.pagesList, gurad);
     const ctx = new class implements IImportContext {
         afterImport(obj: any): void {
             if (obj instanceof ImageShape || obj instanceof Fill) {

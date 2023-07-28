@@ -421,9 +421,9 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
                 if (r) ret.push(r)
             }
             return ret
-        })()
+        })(),
+        source.lastCmdId
     )
-    if (source.versionId !== undefined) ret.versionId = source.versionId
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -1386,9 +1386,6 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.hasBackgroundColor !== undefined) ret.hasBackgroundColor = source.hasBackgroundColor
-    if (source.includeBackgroundColorInExport !== undefined) ret.includeBackgroundColorInExport = source.includeBackgroundColorInExport
-    if (source.backgroundColor !== undefined) ret.backgroundColor = importColor(source.backgroundColor, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }

@@ -308,7 +308,7 @@ export type DocumentMeta = {
     id: string
     name: string
     pagesList: PageListItem[]
-    versionId?: string
+    lastCmdId: string
 }
 /* curve point */
 export type CurvePoint = {
@@ -532,7 +532,4 @@ export type FlattenShape = GroupShape & {
 }
 /* artboard shape */
 export type Artboard = GroupShape & {
-    hasBackgroundColor?: boolean
-    includeBackgroundColorInExport?: boolean
-    backgroundColor?: Color
 }

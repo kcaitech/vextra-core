@@ -19,11 +19,12 @@ export class Document extends Watchable(DocumentMeta) {
     constructor(
         id: string,
         versionId: string,
+        lastCmdId: string,
         name: string,
         pagesList: BasicArray<PageListItem>,
         guard: IDataGuard
     ) {
-        super(id, name, pagesList ?? new BasicArray())
+        super(id, name, pagesList ?? new BasicArray(), lastCmdId)
         this.__versionId = versionId;
         this.__name = name;
         this.__pages = new ResourceMgr<Page>(guard);
@@ -32,6 +33,9 @@ export class Document extends Watchable(DocumentMeta) {
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>();
         this.__styles = new ResourceMgr<Style>();
         return guard.guard(this);
+    }
+    get versionId() {
+        return this.__versionId;
     }
     get pagesMgr() {
         return this.__pages;

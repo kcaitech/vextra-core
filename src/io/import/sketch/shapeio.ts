@@ -115,7 +115,6 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun): Art
     // const isClosed = data['isClosed'];
 
     const hasBackgroundColor: boolean = data['hasBackgroundColor'];
-    const includeBackgroundColorInExport: boolean = data['includeBackgroundColorInExport'];
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
 
     if (hasBackgroundColor && backgroundColor) {
@@ -129,13 +128,9 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun): Art
         style.fills.length = 0;
         style.fills.push(fill);
     }
-
     const childs = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
     const shape = new Artboard(id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs));
-
-    shape.hasBackgroundColor = hasBackgroundColor;
-    shape.includeBackgroundColorInExport = includeBackgroundColorInExport;
-    if (backgroundColor) shape.backgroundColor = backgroundColor;
+    
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     return shape;

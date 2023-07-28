@@ -1,16 +1,10 @@
 import { FlattenShape, GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
-import { Color, ContextSettings, Style } from "./style";
+import { Style } from "./style";
 import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
 import { Path } from "./path";
-import { uuid } from "../basic/uuid";
-import { Fill } from "../data/classes";
 export class Artboard extends GroupShape implements classes.Artboard {
     typeId = 'artboard';
-    hasBackgroundColor?: boolean;
-    includeBackgroundColorInExport?: boolean;
-    backgroundColor?: Color;
-
     constructor(
         id: string,
         name: string,
@@ -27,17 +21,6 @@ export class Artboard extends GroupShape implements classes.Artboard {
             style,
             childs
         )
-    }
-    setArtboardColor(color: Color) {
-        const fill = this.style.fills[0];
-        if (fill) {
-            fill.color = color;
-        } else {
-            const contextSettings = new ContextSettings(classes.BlendMode.Normal, 1);
-            const _f = new Fill(uuid(), true, classes.FillType.SolidColor, color, contextSettings);
-            this.style.fills.push(_f);
-        }
-        this.backgroundColor = color;
     }
     // 容器暂时不能设置圆角
     getPath(offsetX: number, offsetY: number): Path;
