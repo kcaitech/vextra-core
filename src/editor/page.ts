@@ -14,8 +14,10 @@ import { transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
-import { IImportContext, importStyle } from "../io/baseimport";
+import { IImportContext, importBorder, importStyle } from "../io/baseimport";
 import { gPal } from "../basic/pal";
+import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
+import { BasicArray } from "../data/basic";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -239,7 +241,14 @@ export class PageEditor {
         const savep = fshape.parent as GroupShape;
         const saveidx = savep.indexOfChild(fshape);
         if (!name) name = fshape.name;
-        const style: Style = this.cloneStyle(shapes[shapes.length - 1].style);
+
+        // copy fill and borders
+        const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
+        const style: Style = this.cloneStyle(copyStyle);
+        const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
+        if (borderStyle !== copyStyle) {
+            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+        }
 
         const api = this.__repo.start("flattenShapes", {});
         try {

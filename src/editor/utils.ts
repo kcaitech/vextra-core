@@ -1,4 +1,4 @@
-import { Page, Shape, TextBehaviour, TextShape } from "../data/classes";
+import { GroupShape, Page, Shape, Style, TextBehaviour, TextShape } from "../data/classes";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
