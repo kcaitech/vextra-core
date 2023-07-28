@@ -324,7 +324,7 @@ export class PageEditor {
             path.translate(-boundingBox.minX, -boundingBox.minY);
 
             let pathShape = newPathShape(shape.name, frame, path, style);
-
+            pathShape.fixedRadius = shape.fixedRadius;
             const index = parent.indexOfChild(shape);
             api.shapeDelete(this.__page, parent, index);
             pathShape = api.shapeInsert(this.__page, parent, pathShape, index) as PathShape;
