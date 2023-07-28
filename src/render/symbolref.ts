@@ -31,7 +31,7 @@ export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeTyp
     }
     const frame = shape.frame;
     const childs = [];
-    const path = shape.getPath(true).toString();
+    const path = shape.getPath().toString();
     // fill
     childs.push(...fillR(h, shape.style, frame, path));
     // border

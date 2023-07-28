@@ -29,7 +29,7 @@ export function render(h: Function, shape: Shape, path?: string): Array<any> {
     const fillColor = shape.style.fills.at(-1)?.color || new Color(1, 0, 0, 0);
     const fill = fillColor.toHex();
     const elArr = new Array(); 
-    path = path || shape.getPath(true).toString();
+    path = path || shape.getPath().toString();
     elArr.push(handler[MarkerType.FilledArrow](h, shape, fill, stroke, fillColor, path, border));
     return elArr;
 }

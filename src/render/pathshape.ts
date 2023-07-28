@@ -9,7 +9,7 @@ export function render(h: Function, shape: PathShape, reflush?: number) {
     // }
     if (!shape.isVisible) return;
     const frame = shape.frame;
-    const path = shape.getPath(true).toString();
+    const path = shape.getPath().toString();
     const childs = [];
 
     // fill

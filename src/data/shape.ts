@@ -48,9 +48,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.style = style
     }
 
-    getPath(offsetX: number, offsetY: number): Path;
-    getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
+    getPath(fixedRadius?: number): Path {
         return new Path();
     }
 
@@ -133,7 +131,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) return this.frame;
-        const path = this.getPath(true);
+        const path = this.getPath();
         if (path.length > 0) {
             const m = this.matrix2Parent();
             path.transform(m);
@@ -253,11 +251,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
             return val.id == shape.id
         })
     }
-    getPath(offsetX: number, offsetY: number): Path;
-    getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
-        const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-        const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
+
+    getPath(): Path {
+        const x = 0;
+        const y = 0;
         const w = this.frame.width;
         const h = this.frame.height;
         let path = [["M", x, y],
@@ -338,15 +335,15 @@ export class PathShape extends Shape implements classes.PathShape {
     mapPoints<T>(f: (value: CurvePoint, index: number, array: CurvePoint[]) => T): T[] {
         return this.points.map(f);
     }
-    getPath(offsetX: number, offsetY: number): Path;
-    getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
-        const offsetX = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-        const offsetY = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
+
+    getPath(fixedRadius?: number): Path {
+        const offsetX = 0;
+        const offsetY = 0;
         const width = this.frame.width;
         const height = this.frame.height;
 
-        const path = parsePath(this.points, !!this.isClosed, offsetX, offsetY, width, height, this.fixedRadius);
+        fixedRadius = this.fixedRadius ?? fixedRadius;
+        const path = parsePath(this.points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
         return new Path(path);
     }
     setRadius(radius: number): void {
@@ -383,17 +380,16 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         return this.pathsegs.reduce((count, seg) => (count + seg.points.length), 0);
     }
 
-    getPath(offsetX: number, offsetY: number): Path;
-    getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
-        const offsetX = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-        const offsetY = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
+    getPath(fixedRadius?: number): Path {
+        const offsetX = 0;
+        const offsetY = 0;
         const width = this.frame.width;
         const height = this.frame.height;
 
+        fixedRadius = this.fixedRadius ?? fixedRadius;
         const path: any[] = [];
         this.pathsegs.forEach((seg) => {
-            path.push(...parsePath(seg.points, !!seg.isClosed, offsetX, offsetY, width, height, this.fixedRadius));
+            path.push(...parsePath(seg.points, !!seg.isClosed, offsetX, offsetY, width, height, fixedRadius));
         });
         return new Path(path);
     }
@@ -575,11 +571,9 @@ export class TextShape extends Shape implements classes.TextShape {
         text.updateSize(frame.width, frame.height);
     }
 
-    getPath(offsetX: number, offsetY: number): Path;
-    getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
-        const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-        const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
+    getPath(): Path {
+        const x = 0;
+        const y = 0;
         const w = this.frame.width;
         const h = this.frame.height;
 

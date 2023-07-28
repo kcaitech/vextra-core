@@ -3,7 +3,7 @@ import { Color, Shape } from "../data/classes";
 export function render(h: Function, shape: Shape, reflush?: number) {
     if (!shape.isVisible) return;
     const frame = shape.frame;
-    const path = shape.getPath(true);
+    const path = shape.getPath();
     const border = shape.style.borders.at(-1);
     const borderColor = shape.style.borders.at(-1)?.color || new Color(1, 0, 0, 0);
     const stroke = borderColor.toHex();

@@ -23,11 +23,9 @@ export class Artboard extends GroupShape implements classes.Artboard {
         )
     }
     // 容器暂时不能设置圆角
-    getPath(offsetX: number, offsetY: number): Path;
-    getPath(origin?: boolean): Path;
-    getPath(arg1?: boolean | number, arg2?: number): Path {
-        const x = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
-        const y = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
+    getPath(): Path {
+        const x = 0;
+        const y = 0;
         const w = this.frame.width;
         const h = this.frame.height;
         const path = [

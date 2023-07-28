@@ -42,16 +42,17 @@ function opPath(bop: BoolOp, path0: Path, path1: Path): Path {
     return new Path(path);
 }
 
-export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
+export function render2path(shape: Shape, fixedRadius?: number, consumed?: Array<Shape>): Path {
     if (!(shape instanceof GroupShape) || shape.childs.length === 0) {
-        const path = shape instanceof TextShape ? renderText2Path(shape, 0, 0) : shape.getPath(0, 0);
+        const path = shape instanceof TextShape ? renderText2Path(shape, 0, 0) : shape.getPath(fixedRadius);
         return path;
     }
 
+    fixedRadius = shape.fixedRadius ?? fixedRadius;
     const cc = shape.childs.length;
     const child0 = shape.childs[0];
     const frame0 = child0.frame;
-    const path0 = render2path(child0, consumed);
+    const path0 = render2path(child0, fixedRadius, consumed);
     consumed?.push(child0);
     if (child0.isNoTransform()) {
         path0.translate(frame0.x, frame0.y);
@@ -63,7 +64,7 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
     for (let i = 1; i < cc; i++) {
         const child1 = shape.childs[i];
         const frame1 = child1.frame;
-        const path1 = render2path(child1, consumed);
+        const path1 = render2path(child1, fixedRadius, consumed);
         if (child1.isNoTransform()) {
             path1.translate(frame1.x, frame1.y);
         } else {
@@ -82,18 +83,18 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
 }
 
 export function render(h: Function, shape: GroupShape, reflush?: number, consumed?: Array<Shape>): any {
-    let path = render2path(shape, consumed);
+    let path = render2path(shape, shape.fixedRadius, consumed);
     const frame = shape.frame;
 
-    const fixedRadius = shape.fixedRadius || 0;
-    if (fixedRadius > 0) {
-        const segs = path.toCurvePoints(frame.width, frame.height);
-        const ps: any[] = [];
-        segs.forEach((seg) => {
-            ps.push(...parsePath(seg.points, !!seg.isClosed, 0, 0, frame.width, frame.height, fixedRadius));
-        })
-        path = new Path(ps);
-    }
+    // const fixedRadius = shape.fixedRadius || 0;
+    // if (fixedRadius > 0) {
+    //     const segs = path.toCurvePoints(frame.width, frame.height);
+    //     const ps: any[] = [];
+    //     segs.forEach((seg) => {
+    //         ps.push(...parsePath(seg.points, !!seg.isClosed, 0, 0, frame.width, frame.height, fixedRadius));
+    //     })
+    //     path = new Path(ps);
+    // }
 
     const pathstr = path.toString();
     const childs = [];

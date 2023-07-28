@@ -7,7 +7,7 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
     if (!shape.isVisible) return;
     const frame = shape.frame;
 
-    const path = shape.getPath(true).toString();
+    const path = shape.getPath().toString();
     const id = "clippath-image-" + objectId(shape);
     const cp = clippathR(h, id, path);
     const childs = [cp];

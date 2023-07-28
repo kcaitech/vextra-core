@@ -37,7 +37,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
             const props: any = {}
             if (reflush) props.reflush = reflush;
             props.transform = `translate(${frame.x},${frame.y})`;
-            const path = shape.getPath(true).toString();
+            const path = shape.getPath().toString();
             ab_props.x = 0, ab_props.y = 0;
             return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style, frame, path)]);
         } else {
@@ -58,7 +58,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
         if (reflush) props.reflush = reflush;
         ab_props.x = 0, ab_props.y = 0;
         if (b_len) {
-            const path = shape.getPath(true).toString();
+            const path = shape.getPath().toString();
             return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style, frame, path)]);
         } else {
             return h("g", props, [h('svg', ab_props, childs)]);
