@@ -391,11 +391,11 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         const width = this.frame.width;
         const height = this.frame.height;
 
-        let pathstr = "";
+        const path: any[] = [];
         this.pathsegs.forEach((seg) => {
-            pathstr += parsePath(seg.points, !!seg.isClosed, offsetX, offsetY, width, height, this.fixedRadius);
+            path.push(...parsePath(seg.points, !!seg.isClosed, offsetX, offsetY, width, height, this.fixedRadius));
         });
-        return new Path(pathstr);
+        return new Path(path);
     }
     setRadius(radius: number): void {
         this.pathsegs.forEach((seg) => seg.points.forEach((p) => (p.cornerRadius = radius)));
