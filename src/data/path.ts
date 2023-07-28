@@ -984,7 +984,7 @@ export class Path {
     get bounds() {
         if (this.__bounds) return this.__bounds;
         this.__bounds = calcPathBounds(this.m_segs);
-        Object.freeze(this.__bounds);
+        // Object.freeze(this.__bounds);
         return this.__bounds;
     }
     toCurvePoints(width: number, height: number): { points: CurvePoint[], isClosed?: boolean } {
