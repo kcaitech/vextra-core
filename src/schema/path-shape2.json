@@ -1,0 +1,21 @@
+{
+    "description": "path shape",
+    "type": "object",
+    "properties": {
+        "pathsegs": {
+            "type": "array",
+            "items": {
+                "$ref": "./path-segment.json"
+            }
+        }
+    },
+    "required": [
+        "pathsegs"
+    ],
+    "allOf": [
+        {
+            "$ref": "./shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

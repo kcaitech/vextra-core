@@ -1,12 +1,11 @@
 import { importParaAttr, importTextAttr } from "../io/baseimport";
 import { BulletNumbers, Color } from "./classes";
 import { Para, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter } from "./text";
-import { isColorEqual } from "./utils";
 
 export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (attr.color) {
         if (!span.color) return true;
-        if (!isColorEqual(attr.color, span.color)) return true;
+        if (!(attr.color.equals(span.color))) return true;
     }
     else if (span.color) {
         return true;
@@ -14,7 +13,7 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
 
     if (attr.highlight) {
         if (!span.highlight) return true;
-        if (!isColorEqual(attr.highlight, span.highlight)) return true;
+        if (!(attr.highlight.equals(span.highlight))) return true;
     }
     else if (span.highlight) {
         return true;
@@ -73,7 +72,7 @@ export function mergeSpanAttr(span: SpanAttr, attr: SpanAttr, isSetting?: boolea
 function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, isSetting?: boolean) {
     let changed = false;
     if (attr.color) {
-        if (!span.color || !isColorEqual(attr.color, span.color)) {
+        if (!span.color || !(attr.color.equals(span.color))) {
             span.color = new Color(attr.color.alpha, attr.color.red, attr.color.green, attr.color.blue)
             changed = true;
         }
@@ -83,7 +82,7 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
     }
 
     if (attr.highlight) {
-        if (!span.highlight || !isColorEqual(attr.highlight, span.highlight)) {
+        if (!span.highlight || !(attr.highlight.equals(span.highlight))) {
             span.highlight = new Color(attr.highlight.alpha, attr.highlight.red, attr.highlight.green, attr.highlight.blue)
             changed = true;
         }

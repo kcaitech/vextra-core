@@ -3,8 +3,6 @@ import { Color } from "./classes";
 import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType, TextTransformType, TextAttr, TextHorAlign, SpanAttrSetter } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
-import { isColorEqual } from "./utils";
-
 
 export function getSimpleText(shapetext: Text, index: number, length: number): string {
     let text = '';
@@ -46,7 +44,7 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
         // 其中一个为_NullColor
         attrGetter.colorIsMulti = true;
     }
-    else if (!isColorEqual(color, attrGetter.color)) {
+    else if (!(color.equals(attrGetter.color))) {
         // 两个都不是_NullColor
         attrGetter.colorIsMulti = true;
     }
@@ -78,7 +76,7 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
         // 其中一个为_NullColor
         attrGetter.highlightIsMulti = true;
     }
-    else if (!isColorEqual(highlight, attrGetter.highlight)) {
+    else if (!(highlight.equals(attrGetter.highlight))) {
         // 两个都不是_NullColor
         attrGetter.highlightIsMulti = true;
     }

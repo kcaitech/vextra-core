@@ -3,8 +3,8 @@ import { Style, Border } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
-export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, OverrideItem, Ellipse } from "./baseclasses"
-import { ShapeType, CurvePoint, OverrideItem, ShapeFrame, BoolOp, ExportOptions, ResizeType } from "./baseclasses"
+export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, OverrideItem, Ellipse, PathSegment } from "./baseclasses"
+import { ShapeType, CurvePoint, OverrideItem, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
@@ -137,7 +137,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         if (path.length > 0) {
             const m = this.matrix2Parent();
             path.transform(m);
-            const bounds = path.bounds;
+            const bounds = path.calcBounds();
             return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
 
@@ -353,6 +353,53 @@ export class PathShape extends Shape implements classes.PathShape {
     }
     getRadius(): number[] {
         return this.points.map((p) => p.cornerRadius);
+    }
+}
+
+export class PathShape2 extends Shape implements classes.PathShape2 {
+    typeId = 'path-shape2'
+    pathsegs: BasicArray<PathSegment >
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        pathsegs: BasicArray<PathSegment >
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style
+        )
+        this.pathsegs = pathsegs
+    }
+    // path shape
+    get pointsCount() {
+        return this.pathsegs.reduce((count, seg) => (count + seg.points.length), 0);
+    }
+
+    getPath(offsetX: number, offsetY: number): Path;
+    getPath(origin?: boolean): Path;
+    getPath(arg1?: boolean | number, arg2?: number): Path {
+        const offsetX = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.x) : (arg1 as number);
+        const offsetY = typeof arg1 == "boolean" ? (arg1 ? 0 : this.frame.y) : (arg2 as number);
+        const width = this.frame.width;
+        const height = this.frame.height;
+
+        let pathstr = "";
+        this.pathsegs.forEach((seg) => {
+            pathstr += parsePath(seg.points, !!seg.isClosed, offsetX, offsetY, width, height);
+        });
+        return new Path(pathstr);
+    }
+    setRadius(radius: number): void {
+        this.pathsegs.forEach((seg) => seg.points.forEach((p) => (p.cornerRadius = radius)));
+    }
+    getRadius(): number[] {
+        return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => { radius.push(p.cornerRadius); return radius; }, radius), []);
     }
 }
 

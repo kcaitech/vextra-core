@@ -213,6 +213,22 @@ export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): type
     if (ctx) ctx.afterExport(source)
     return ret
 }
+/* path segment */
+export function exportPathSegment(source: types.PathSegment, ctx?: IExportContext): types.PathSegment {
+    const ret = {
+        points: (() => {
+            const ret = []
+            for (let i = 0, len = source.points.length; i < len; i++) {
+                const r = exportCurvePoint(source.points[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        isClosed: source.isClosed,
+    }
+    if (ctx) ctx.afterExport(source)
+    return ret
+}
 /* para */
 export function exportPara(source: types.Para, ctx?: IExportContext): types.Para {
     const ret = {
@@ -727,6 +743,42 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
         transform: source.transform && exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
         length: source.length,
+    }
+    if (ctx) ctx.afterExport(source)
+    return ret
+}
+/* path shape */
+export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext): types.PathShape2 {
+    const ret = {
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        pathsegs: (() => {
+            const ret = []
+            for (let i = 0, len = source.pathsegs.length; i < len; i++) {
+                const r = exportPathSegment(source.pathsegs[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
     }
     if (ctx) ctx.afterExport(source)
     return ret

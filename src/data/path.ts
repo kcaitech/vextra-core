@@ -680,7 +680,7 @@ const curvHandler: { [key: string]: (ctx: CurvCtx, item: any[]) => void } = {}
 function convertPath2CurvePoints(path: any[], width: number, height: number): {
     points: CurvePoint[],
     isClosed?: boolean
-} {
+}[] {
     const ctx: CurvCtx = {
         width,
         height,
@@ -697,64 +697,48 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
         curvHandler[item[0]](ctx, item)
     }
 
-    // fix close
-    let segcount = 0;
+    // 最后个
     for (let i = 0, len = ctx.segs.length; i < len; i++) {
         const seg = ctx.segs[i];
         if (seg.points.length <= 1) continue;
-        if (seg.isClosed && (i < len - 1 || segcount > 0)) {
-            // 把最后两个点连接起来
-            const p0 = seg.points[0];
-            const pe = seg.points[seg.points.length - 1];
-            if (Math.abs(pe.point.x - p0.point.x) < float_accuracy && Math.abs(pe.point.y - p0.point.y) < float_accuracy) {
-                pe.point.x = p0.point.x;
-                pe.point.y = p0.point.y;
+        const p0 = seg.points[0];
+        const pe = seg.points[seg.points.length - 1];
+        if (Math.abs(pe.point.x - p0.point.x) < float_accuracy && Math.abs(pe.point.y - p0.point.y) < float_accuracy) {
+            seg.isClosed = true;
+            if (pe.hasCurveTo) {
+                p0.hasCurveFrom = true;
+                p0.curveFrom = pe.curveTo;
             }
-            else {
-                curveHandleLine(seg, p0.point.x, p0.point.y);
-            }
-            seg.isClosed = false;
+            seg.points.splice(seg.points.length - 1, 1); // 删掉最后个重复的
         }
-        segcount++;
     }
 
     const ret: {
         points: CurvePoint[],
         isClosed: boolean
-    } = {
-        points: [],
-        isClosed: false
-    }
+    }[] = []
 
     for (let i = 0, len = ctx.segs.length; i < len; i++) {
         const seg = ctx.segs[i];
         if (seg.points.length <= 1) continue;
 
-        if (ret.points.length > 0) {
-            const p0 = seg.points[0];
-            const pe = ret.points[ret.points.length - 1];
-            if (Math.abs(pe.point.x - p0.point.x) > float_accuracy || Math.abs(pe.point.y - p0.point.y) > float_accuracy) {
-                // move
-                ret.points.push(new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(p0.point.x, p0.point.y)));
-            }
-        }
-
-        ret.points.push(...seg.points);
-        ret.isClosed = !!seg.isClosed;
+        ret.push({points: seg.points, isClosed: !!seg.isClosed})
     }
 
-    ret.points = ret.points.map((p) => {
-        if (p.hasCurveFrom) {
-            p.curveFrom.x /= width;
-            p.curveFrom.y /= height;
-        }
-        if (p.hasCurveTo) {
-            p.curveTo.x /= width;
-            p.curveTo.y /= height;
-        }
-        p.point.x /= width;
-        p.point.y /= height;
-        return p;
+    ret.forEach((seg) => {
+        seg.points = seg.points.map((p) => {
+            if (p.hasCurveFrom) {
+                p.curveFrom.x /= width;
+                p.curveFrom.y /= height;
+            }
+            if (p.hasCurveTo) {
+                p.curveTo.x /= width;
+                p.curveTo.y /= height;
+            }
+            p.point.x /= width;
+            p.point.y /= height;
+            return p;
+        })
     })
 
     return ret;
@@ -981,13 +965,13 @@ export class Path {
     toString() {
         return this.m_segs.map((v) => v.join(" ")).join(" ");
     }
-    get bounds() {
+    calcBounds() {
         if (this.__bounds) return this.__bounds;
         this.__bounds = calcPathBounds(this.m_segs);
         // Object.freeze(this.__bounds);
         return this.__bounds;
     }
-    toCurvePoints(width: number, height: number): { points: CurvePoint[], isClosed?: boolean } {
+    toCurvePoints(width: number, height: number): { points: CurvePoint[], isClosed?: boolean }[] {
         return convertPath2CurvePoints(this.m_segs, width, height);
     }
 }

@@ -78,12 +78,6 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
     const transformedPoints = points.map((p) => transformPoint(p.point));
 
     for (let i = 0; i < len - 1; i++) {
-        const p = points[i + 1];
-        if (p.curveMode === CurveMode.None) {
-            hasBegin = false;
-            i++;
-            continue;
-        }
         _connectTwo(i, i + 1);
     }
     if (isClosed) {
@@ -94,14 +88,6 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
     function _isCornerRadius(idx: number) {
         const curvePoint = points[idx];
         if (!isClosed && (idx === 0 || idx === len - 1)) {
-            // 事实上是否close
-            if (len > 1) {
-                const point = idx === 0 ? points[len - 1] : points[0];
-                if (Math.abs(curvePoint.point.x - point.point.x) < float_accuracy &&
-                    Math.abs(curvePoint.point.y - point.point.y) < float_accuracy) {
-                    return curvePoint.curveMode === CurveMode.Straight && (curvePoint.cornerRadius > 0 || fixedRadius > 0);
-                }
-            }
             return false;
         }
         return curvePoint.curveMode === CurveMode.Straight && (curvePoint.cornerRadius > 0 || fixedRadius > 0);
@@ -117,14 +103,15 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
      * @param idx
      * @returns
      */
-    function _getCornerInfo(idx: number): CornerCalcInfo {
+    function _getCornerInfo(idx: number): CornerCalcInfo | undefined {
         if (cacheCornerCalcInfo[idx]) {
             return cacheCornerCalcInfo[idx];
         }
         const preIndex = idx === 0 ? len - 1 : idx - 1;
         const nextIndex = idx === len - 1 ? 0 : idx + 1;
-        const pre = points[preIndex];
+
         const cur = points[idx];
+        const pre = points[preIndex];
         const next = points[nextIndex];
         // 拿到三个点
         const prePoint = transformedPoints[preIndex]; //pre.point; // A
@@ -136,6 +123,9 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
 
         // 三点之间的夹角
         const radian = calcAngleABC(prePoint, curPoint, nextPoint);
+        if (Number.isNaN(radian)) {
+            return;
+        }
 
         let radius = cur.cornerRadius || fixedRadius;
         // 计算相切的点距离 curPoint 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
@@ -190,9 +180,10 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         let endPt: Point2D;
         let endHandle: Point2D | undefined;
 
+        let cornerInfo;
         // 获取起始点信息
-        if (_isCornerRadius(fromIdx)) {
-            const { nextTangent } = _getCornerInfo(fromIdx);
+        if (_isCornerRadius(fromIdx) && (cornerInfo = _getCornerInfo(fromIdx))) {
+            const { nextTangent } = cornerInfo;
 
             startPt = nextTangent;
         } else {
@@ -208,8 +199,8 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         }
 
         // 获取终点信息
-        if (_isCornerRadius(toIdx)) {
-            const { preTangent } = _getCornerInfo(toIdx);
+        if (_isCornerRadius(toIdx) && (cornerInfo = _getCornerInfo(toIdx))) {
+            const { preTangent } = cornerInfo;
             endPt = preTangent;
         } else {
             const toCurvePoint = points[toIdx];
@@ -233,8 +224,8 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         }
 
         // 如果 end 的时候是 corner，绘制圆角
-        if (_isCornerRadius(toIdx)) {
-            const { nextTangent, preHandle, nextHandle } = _getCornerInfo(toIdx);
+        if (_isCornerRadius(toIdx) && (cornerInfo = _getCornerInfo(toIdx))) {
+            const { nextTangent, preHandle, nextHandle } = cornerInfo;
             bezierCurveTo(preHandle.x, preHandle.y, nextHandle.x, nextHandle.y, nextTangent.x, nextTangent.y);
         }
     }

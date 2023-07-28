@@ -74,8 +74,11 @@ export function render(h: Function, shape: GroupShape, reflush?: number, consume
 
     const fixedRadius = shape.fixedRadius || 0;
     if (fixedRadius > 0) {
-        const curvs = path.toCurvePoints(frame.width, frame.height);
-        const ps = parsePath(curvs.points, !!curvs.isClosed, 0, 0, frame.width, frame.height, fixedRadius);
+        const segs = path.toCurvePoints(frame.width, frame.height);
+        const ps: any[] = [];
+        segs.forEach((seg) => {
+            ps.push(...parsePath(seg.points, !!seg.isClosed, 0, 0, frame.width, frame.height, fixedRadius));
+        })
         path = new Path(ps);
     }
 

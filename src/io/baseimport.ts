@@ -213,6 +213,22 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
     if (ctx) ctx.afterImport(ret)
     return ret
 }
+/* path segment */
+export function importPathSegment(source: types.PathSegment, ctx?: IImportContext): impl.PathSegment {
+    const ret: impl.PathSegment = new impl.PathSegment (
+        (() => {
+            const ret = new BasicArray<impl.CurvePoint>()
+            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const r = importCurvePoint(source.points[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.isClosed
+    )
+    if (ctx) ctx.afterImport(ret)
+    return ret
+}
 /* para */
 export function importPara(source: types.Para, ctx?: IImportContext): impl.Para {
     const ret: impl.Para = new impl.Para (
@@ -714,6 +730,41 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     if (source.kerning !== undefined) ret.kerning = source.kerning
     if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
     if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (ctx) ctx.afterImport(ret)
+    return ret
+}
+/* path shape */
+export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
+    const ret: impl.PathShape2 = new impl.PathShape2 (
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<impl.PathSegment>()
+            for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const r = importPathSegment(source.pathsegs[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (ctx) ctx.afterImport(ret)
     return ret
 }

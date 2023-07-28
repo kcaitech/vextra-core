@@ -279,6 +279,22 @@ export class Point2D extends Basic {
     }
 }
 /**
+ * path segment 
+ */
+export class PathSegment extends Basic {
+    typeId = 'path-segment'
+    points: BasicArray<CurvePoint >
+    isClosed: boolean
+    constructor(
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean
+    ) {
+        super()
+        this.points = points
+        this.isClosed = isClosed
+    }
+}
+/**
  * para 
  */
 export class Para extends Basic {
@@ -842,6 +858,30 @@ export class Span extends SpanAttr {
         super(
         )
         this.length = length
+    }
+}
+/**
+ * path shape 
+ */
+export class PathShape2 extends Shape {
+    typeId = 'path-shape2'
+    pathsegs: BasicArray<PathSegment >
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        pathsegs: BasicArray<PathSegment >
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style
+        )
+        this.pathsegs = pathsegs
     }
 }
 /**

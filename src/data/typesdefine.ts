@@ -124,6 +124,7 @@ export type Shape = {
 /* shape types */
 export enum ShapeType {
     Path = 'path',
+    Path2 = 'path2',
     FlattenShape = 'flatten-shape',
     Group = 'group',
     Artboard = 'artboard',
@@ -172,6 +173,11 @@ export enum ResizeType {
 export type Point2D = {
     x: number
     y: number
+}
+/* path segment */
+export type PathSegment = {
+    points: CurvePoint[]
+    isClosed: boolean
 }
 /* para */
 export type Para = {
@@ -468,6 +474,10 @@ export type SymbolRefShape = Shape & {
 /* span attr */
 export type Span = SpanAttr & {
     length: number
+}
+/* path shape */
+export type PathShape2 = Shape & {
+    pathsegs: PathSegment[]
 }
 /* path shape */
 export type PathShape = Shape & {

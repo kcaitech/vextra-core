@@ -2,6 +2,7 @@
     "description": "shape types",
     "enum": [
         "path",
+        "path2",
         "flatten-shape",
         "group",
         "artboard",
