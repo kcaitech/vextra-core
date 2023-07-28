@@ -411,7 +411,7 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
             }
             return ret
         })(),
-        versionId: source.versionId,
+        lastCmdId: source.lastCmdId,
     }
     if (ctx) ctx.afterExport(source)
     return ret

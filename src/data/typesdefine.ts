@@ -302,7 +302,7 @@ export type DocumentMeta = {
     id: string
     name: string
     pagesList: PageListItem[]
-    versionId?: string
+    lastCmdId: string
 }
 /* curve point */
 export type CurvePoint = {
