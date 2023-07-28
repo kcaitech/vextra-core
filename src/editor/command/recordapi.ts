@@ -20,7 +20,6 @@ import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
-import { isColorEqual } from "../../data/utils";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 
@@ -626,7 +625,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyColor(shape, idx, len, color);
             ret.forEach((m) => {
-                const colorEqual = m.color === color || m.color && color && isColorEqual(color, m.color);
+                const colorEqual = m.color === color || m.color && color && color.equals(m.color);
                 if (!colorEqual) {
                     const cmd = TextCmdModify.Make(page.id,
                         shape.id,
@@ -707,7 +706,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyHighlightColor(shape, idx, len, color);
             ret.forEach((m) => {
-                const colorEqual = m.highlight === color || m.highlight && color && isColorEqual(color, m.highlight);
+                const colorEqual = m.highlight === color || m.highlight && color && color.equals(m.highlight);
                 if (!colorEqual) {
                     const cmd = TextCmdModify.Make(page.id,
                         shape.id,

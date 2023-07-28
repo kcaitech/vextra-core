@@ -42,7 +42,8 @@ import {
     importText,
     importSpanAttr,
     importPoint2D,
-    importTableShape
+    importTableShape,
+    importPathShape2
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -108,6 +109,9 @@ function importShape(data: string, document: Document) {
     }
     if (source.typeId == 'path-shape') {
         return importPathShape(source as types.PathShape, ctx)
+    }
+    if (source.typeId == 'path-shape2') {
+        return importPathShape2(source as types.PathShape2, ctx)
     }
     if (source.typeId == 'rect-shape') {
         return importRectShape(source as types.RectShape, ctx)

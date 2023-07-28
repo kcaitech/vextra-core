@@ -1,4 +1,4 @@
-import { Shape, GroupShape, ShapeFrame, TextShape } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame, TextShape, PathShape2 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
@@ -231,14 +231,14 @@ export class PageEditor {
         });
     }
 
-    flattenShapes(shapes: Shape[], name?: string): PathShape | false {
+    flattenShapes(shapes: Shape[], name?: string): PathShape | PathShape2 | false {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
         const saveidx = savep.indexOfChild(fshape);
         if (!name) name = fshape.name;
-        const style: Style = this.cloneStyle(fshape.style);
+        const style: Style = this.cloneStyle(shapes[shapes.length - 1].style);
 
         const api = this.__repo.start("flattenShapes", {});
         try {
@@ -279,7 +279,7 @@ export class PageEditor {
             path.translate(-frame.x, -frame.y);
 
             let pathShape = newPathShape(name, frame, path, style);
-            pathShape = api.shapeInsert(this.__page, savep, pathShape, saveidx) as PathShape;
+            pathShape = api.shapeInsert(this.__page, savep, pathShape, saveidx) as PathShape | PathShape2;
 
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
@@ -317,7 +317,7 @@ export class PageEditor {
         const api = this.__repo.start("flattenBoolShape", {});
         try {
             const gframe = shape.frame;
-            const boundingBox = path.bounds;
+            const boundingBox = path.calcBounds();
             const w = boundingBox.maxX - boundingBox.minX;
             const h = boundingBox.maxY - boundingBox.minY;
             const frame = new ShapeFrame(gframe.x + boundingBox.minX, gframe.y + boundingBox.minY, w, h); // clone

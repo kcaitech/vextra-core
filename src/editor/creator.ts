@@ -2,7 +2,7 @@ import { v4 as uuid } from "uuid";
 import { Page } from "../data/page";
 import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
-import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, FlattenShape } from "../data/shape";
+import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, FlattenShape, PathShape2, PathSegment } from "../data/shape";
 import * as types from "../data/typesdefine"
 import { importGroupShape, importPage, importArtboard, importTextShape, importText, importFlattenShape, importTableShape, importTableCell } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
@@ -19,7 +19,7 @@ import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
-import { TableShape } from "data/table";
+import { TableShape } from "../data/table";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {
@@ -87,14 +87,31 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     return artboard
 }
 
-export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape {
-    const points = path.toCurvePoints(frame.width, frame.height);
+export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape | PathShape2 {
     style = style || newStyle();
-    const curvePoint = new BasicArray<CurvePoint>(...points.points);
     const id = uuid();
-    const shape = new PathShape(id, name, types.ShapeType.Path, frame, style, curvePoint, !!points.isClosed);
-    addCommonAttr(shape);
-    return shape;
+    const segs = path.toCurvePoints(frame.width, frame.height);
+    if (segs.length <= 0) {
+        const seg = segs[0];
+        const points = seg?.points || [];
+        const isClosed = seg?.isClosed || false;
+        const curvePoint = new BasicArray<CurvePoint>(...points);
+        const shape = new PathShape(id, name, types.ShapeType.Path, frame, style, curvePoint, !!isClosed);
+        addCommonAttr(shape);
+        return shape;
+    }
+    else {
+        const pathsegs = new BasicArray<PathSegment>();
+        segs.forEach((seg) => {
+            const points = seg.points;
+            const isClosed = seg.isClosed || false;
+            const curvePoint = new BasicArray<CurvePoint>(...points);
+            pathsegs.push(new PathSegment(curvePoint, isClosed))
+        })
+        const shape = new PathShape2(id, name, types.ShapeType.Path2, frame, style, pathsegs);
+        addCommonAttr(shape);
+        return shape;
+    }
 }
 
 export function newRectShape(name: string, frame: ShapeFrame): RectShape {

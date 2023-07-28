@@ -1,7 +1,7 @@
-import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape, exportTableShape } from "../../io/baseexport";
+import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape, exportTableShape, exportPathShape2 } from "../../io/baseexport";
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
-import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, RectShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../../data/shape";
+import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../../data/shape";
 import { TableShape } from "../../data/table";
 import { Page } from "../../data/page";
 
@@ -203,6 +203,7 @@ export function exportShape(shape: Shape): Object {
         case ShapeType.Line: return (exportLineShape(shape as LineShape))
         case ShapeType.Oval: return (exportOvalShape(shape as OvalShape))
         case ShapeType.Path: return (exportPathShape(shape as PathShape))
+        case ShapeType.Path2: return (exportPathShape2(shape as PathShape2))
         case ShapeType.Rectangle: return (exportRectShape(shape as RectShape))
         case ShapeType.SymbolRef: return (exportSymbolRefShape(shape as SymbolRefShape))
         case ShapeType.Symbol: return (exportSymbolShape(shape as SymbolShape))
