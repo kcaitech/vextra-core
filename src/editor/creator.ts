@@ -34,7 +34,7 @@ export function addCommonAttr(shape: Shape) {
 export function newDocument(documentName: string, repo: Repository, measureFun: MeasureFun): Document {
     const dId = uuid();
     const pageList = new BasicArray<PageListItem>();
-    const document = new Document(dId, '', documentName, pageList, repo, measureFun);
+    const document = new Document(dId, "", "", documentName, pageList, repo, measureFun);
     return document;
 }
 
