@@ -107,17 +107,17 @@ export function render(h: Function, shape: GroupShape, reflush?: number, consume
     // fill
     if (shape.style.fills.length > 0) {
         childs.push(...fillR(h, shape.style, frame, pathstr));
-    } else if (shape.childs[0]) {
-        const child0 = shape.childs[0];
-        childs.push(...fillR(h, findUsableFillStyle(child0), frame, pathstr));
+    // } else if (shape.childs[0]) {
+    //     const child0 = shape.childs[0];
+    //     childs.push(...fillR(h, findUsableFillStyle(child0), frame, pathstr));
     }
 
     // border
     if (shape.style.borders.length > 0) {
         childs.push(...borderR(h, shape.style, frame, pathstr));
-    } else if (shape.childs[0]) {
-        const child0 = shape.childs[0];
-        childs.push(...borderR(h, findUsableBorderStyle(child0), frame, pathstr));
+    // } else if (shape.childs[0]) {
+    //     const child0 = shape.childs[0];
+    //     childs.push(...borderR(h, findUsableBorderStyle(child0), frame, pathstr));
     }
 
     // ----------------------------------------------------------
