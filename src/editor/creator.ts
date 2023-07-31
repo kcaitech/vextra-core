@@ -47,10 +47,11 @@ export function newPage(name: string): Page {
     return page;
 }
 
-export function newGroupShape(name: string): GroupShape {
+export function newGroupShape(name: string, style?: Style): GroupShape {
     template_group_shape.id = uuid();
     template_group_shape.name = name // i18n
     const group = importGroupShape(template_group_shape as types.GroupShape);
+    if (style) group.style = style;
     addCommonAttr(group)
     return group;
 }

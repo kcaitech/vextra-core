@@ -202,13 +202,20 @@ export class PageEditor {
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
+        // copy fill and borders
+        const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
+        const style: Style = this.cloneStyle(copyStyle);
+        const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
+        if (borderStyle !== copyStyle) {
+            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+        }
 
         const api = this.__repo.start("boolgroup", {});
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
-            let gshape = newGroupShape(groupname);
+            let gshape = newGroupShape(groupname, style);
             gshape.isBoolOpShape = true;
             gshape = group(this.__page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
