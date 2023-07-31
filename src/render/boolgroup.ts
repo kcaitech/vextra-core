@@ -3,7 +3,7 @@ import { BoolOp, GroupShape, Path, Shape, Style, TextShape } from "../data/class
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
 import { renderText2Path } from "./text";
-import { gPal } from "../basic/pal";
+import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
 
 // find first usable style
@@ -19,40 +19,36 @@ export function findUsableBorderStyle(shape: Shape): Style {
     return shape.style;
 }
 
-function opPath(bop: BoolOp, path0: Path, path1: Path): Path {
-    const boolop = gPal.boolop;
-    let path = "";
+function opPath(bop: BoolOp, path0: IPalPath, path1: IPalPath) {
     switch (bop) {
         case BoolOp.Diff:
-            path = boolop.difference(path0.toString(), path1.toString());
+            path0.difference(path1);
             break;
         case BoolOp.Intersect:
-            path = boolop.intersection(path0.toString(), path1.toString());
+            path0.intersection(path1);
             break;
         case BoolOp.Subtract:
-            path = boolop.subtract(path0.toString(), path1.toString());
+            path0.subtract(path1);
             break;
         case BoolOp.Union:
-            path = boolop.union(path0.toString(), path1.toString());
+            path0.union(path1);
             break;
-        // case BoolOp.SimpleUnion:
-        //     path = path0 + path1;
-        //     break;
     }
-    return new Path(path);
 }
 
-export function render2path(shape: Shape, fixedRadius?: number, consumed?: Array<Shape>): Path {
-    if (!(shape instanceof GroupShape) || shape.childs.length === 0) {
+export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
+    const shapeIsGroup = shape instanceof GroupShape;
+    let fixedRadius: number | undefined;
+    if (shapeIsGroup) fixedRadius = shape.fixedRadius;
+    if (!shapeIsGroup || shape.childs.length === 0) {
         const path = shape instanceof TextShape ? renderText2Path(shape, 0, 0) : shape.getPath(fixedRadius);
         return path;
     }
 
-    fixedRadius = shape.fixedRadius ?? fixedRadius;
     const cc = shape.childs.length;
     const child0 = shape.childs[0];
     const frame0 = child0.frame;
-    const path0 = render2path(child0, fixedRadius, consumed);
+    const path0 = render2path(child0, consumed);
     consumed?.push(child0);
     if (child0.isNoTransform()) {
         path0.translate(frame0.x, frame0.y);
@@ -60,41 +56,50 @@ export function render2path(shape: Shape, fixedRadius?: number, consumed?: Array
         path0.transform(child0.matrix2Parent())
     }
 
-    let joinPath: Path = path0;
+    const joinPath: IPalPath = gPal.makePalPath(path0.toString());
     for (let i = 1; i < cc; i++) {
         const child1 = shape.childs[i];
         const frame1 = child1.frame;
-        const path1 = render2path(child1, fixedRadius, consumed);
+        const path1 = render2path(child1, consumed);
         if (child1.isNoTransform()) {
             path1.translate(frame1.x, frame1.y);
         } else {
             path1.transform(child1.matrix2Parent())
         }
         const pathop = child1.boolOp ?? BoolOp.None;
+        const palpath1 = gPal.makePalPath(path1.toString());
         if (pathop === BoolOp.None) {
-            joinPath.push(path1);
+            joinPath.addPath(palpath1);
         } else {
-            joinPath = joinPath.length === 0 ? path1 : opPath(pathop, joinPath, path1)
+            opPath(pathop, joinPath, palpath1)
         }
+        palpath1.delete();
         if (consumed) consumed.push(child1);
     }
+    const pathstr = joinPath.toSVGString();
+    joinPath.delete();
 
-    return joinPath;
+    let resultpath: Path | undefined;
+    // radius
+    if (fixedRadius && fixedRadius > 0) {
+        const frame = shape.frame;
+        const path = new Path(pathstr);
+        const segs = path.toCurvePoints(frame.width, frame.height);
+        const ps: any[] = [];
+        segs.forEach((seg) => {
+            ps.push(...parsePath(seg.points, !!seg.isClosed, 0, 0, frame.width, frame.height, fixedRadius));
+        })
+        resultpath = new Path(ps);
+    }
+    else {
+        resultpath = new Path(pathstr);
+    }
+    return resultpath;
 }
 
 export function render(h: Function, shape: GroupShape, reflush?: number, consumed?: Array<Shape>): any {
-    let path = render2path(shape, shape.fixedRadius, consumed);
+    const path = render2path(shape, consumed);
     const frame = shape.frame;
-
-    // const fixedRadius = shape.fixedRadius || 0;
-    // if (fixedRadius > 0) {
-    //     const segs = path.toCurvePoints(frame.width, frame.height);
-    //     const ps: any[] = [];
-    //     segs.forEach((seg) => {
-    //         ps.push(...parsePath(seg.points, !!seg.isClosed, 0, 0, frame.width, frame.height, fixedRadius));
-    //     })
-    //     path = new Path(ps);
-    // }
 
     const pathstr = path.toString();
     const childs = [];

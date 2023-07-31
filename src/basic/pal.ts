@@ -20,12 +20,23 @@ export type BoolOpFuns = {
 
 export type TextPathFun = (font: string, fontSize: number, charCode: number) => string;
 
+export interface IPalPath {
+    difference(path: IPalPath): boolean,
+    intersection(path: IPalPath): boolean,
+    subtract(path: IPalPath): boolean,
+    union(path: IPalPath): boolean
+    addPath(path: IPalPath): boolean
+    toSVGString(): string;
+    delete(): void;
+}
+
 export const gPal: {
     text: {
         textMeasure: MeasureFun,
         getTextPath: TextPathFun,
     },
     boolop: BoolOpFuns,
+    makePalPath: (path: string) => IPalPath,
     unzip: (file: File | string) => IZip
 } = {
     text: {
@@ -37,6 +48,9 @@ export const gPal: {
         intersection: (path0: string, path1: string) => "",
         subtract: (path0: string, path1: string) => "",
         union: (path0: string, path1: string) => ""
+    },
+    makePalPath: (path: string): IPalPath => {
+        throw new Error("not implemented")
     },
     unzip: (file: File | string) => {
         throw new Error("not implemented")
