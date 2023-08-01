@@ -2,15 +2,15 @@
     "description": "table cell",
     "type": "object",
     "properties": {
-        "child": {
-            "oneOf": [
-                {
-                    "$ref": "./image-shape.json"
-                },
-                {
-                    "$ref": "./text-shape.json"
-                }
-            ]
+        "cellType": {
+            "$ref": "./table-cell-type.json"
+        },
+        "text": {
+            "$ref": "./text.json"
+        },
+        "imageRef": {
+            "type": "string",
+            "default": "$uuid"
         }
     },
     "required": [],

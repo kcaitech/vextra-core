@@ -4,5 +4,5 @@
         "inherit",
         "renew"
     ],
-    "default": "enum"
+    "default": "inherit"
 }

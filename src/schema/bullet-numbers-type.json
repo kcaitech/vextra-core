@@ -5,5 +5,5 @@
         "ordered-1ai",
         "disorded"
     ],
-    "default": "enum"
+    "default": "none"
 }

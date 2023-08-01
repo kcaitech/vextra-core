@@ -3,7 +3,6 @@ import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 import { Artboard } from "./artboard";
-import { TableCell, TableShape } from "./table";
 export class Page extends GroupShape implements classes.Page {
     typeId = 'page';
     artboards: Map<string, Artboard> = new Map();
@@ -36,7 +35,7 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Artboard) {
             this.artboards.set(shape.id, shape as Artboard);
         }
-        if (recursive && (shape instanceof GroupShape || shape instanceof TableShape || shape instanceof TableCell)) {
+        if (recursive && (shape instanceof GroupShape)) {
             const childs = shape.childs;
             childs.forEach((c) => this.onAddShape(c))
         }
@@ -46,7 +45,7 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Artboard) {
             this.artboards.delete(shape.id);
         }
-        if (recursive && (shape instanceof GroupShape || shape instanceof TableShape || shape instanceof TableCell)) {
+        if (recursive && (shape instanceof GroupShape)) {
             const childs = shape.childs;
             childs.forEach((c) => this.onRemoveShape(c))
         }
@@ -78,7 +77,7 @@ export class Page extends GroupShape implements classes.Page {
 
         while (stack.length > 0) {
             const shape = stack.pop();
-            if (shape instanceof GroupShape || shape instanceof TableShape || shape instanceof TableCell) {
+            if (shape instanceof GroupShape) {
                 stack.push(...shape.childs);
             }
             else if (shape instanceof TextShape) {

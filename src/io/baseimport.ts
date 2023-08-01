@@ -65,6 +65,10 @@ export function importTextHorAlign(source: types.TextHorAlign, ctx?: IImportCont
 export function importTextBehaviour(source: types.TextBehaviour, ctx?: IImportContext): impl.TextBehaviour {
     return source
 }
+/* table cell types */
+export function importTableCellType(source: types.TableCellType, ctx?: IImportContext): impl.TableCellType {
+    return source
+}
 /* style */
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
     const ret: impl.Style = new impl.Style (
@@ -666,15 +670,9 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.child !== undefined) ret.child = (() => {
-
-        if (source.child.typeId == 'image-shape') {
-            return importImageShape(source.child as types.ImageShape, ctx)
-        }
-        if (source.child.typeId == 'text-shape') {
-            return importTextShape(source.child as types.TextShape, ctx)
-        }
-    })()
+    if (source.cellType !== undefined) ret.cellType = importTableCellType(source.cellType, ctx)
+    if (source.text !== undefined) ret.text = importText(source.text, ctx)
+    if (source.imageRef !== undefined) ret.imageRef = source.imageRef
     if (ctx) ctx.afterImport(ret)
     return ret
 }

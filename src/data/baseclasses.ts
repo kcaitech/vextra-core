@@ -11,6 +11,7 @@ export {
     TextOrientation,
     TextHorAlign,
     TextBehaviour,
+    TableCellType,
     StrikethroughType,
     ShapeType,
     ResizeType,
@@ -38,6 +39,7 @@ import {
     TextOrientation,
     TextHorAlign,
     TextBehaviour,
+    TableCellType,
     StrikethroughType,
     ShapeType,
     ResizeType,
@@ -807,7 +809,9 @@ export class TableShape extends Shape {
  */
 export class TableCell extends Shape {
     typeId = 'table-cell'
-    child?: (ImageShape | TextShape)
+    cellType?: TableCellType
+    text?: Text
+    imageRef?: string
     constructor(
         id: string,
         name: string,

@@ -5,5 +5,5 @@
         "single",
         "double"
     ],
-    "default": "enum"
+    "default": "none"
 }

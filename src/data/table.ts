@@ -1,15 +1,20 @@
 import { Style } from "./style";
 import * as classes from "./baseclasses"
-import { BasicArray } from "./basic";
-import { ShapeType, ShapeFrame } from "./baseclasses"
-import { ImageShape, Shape, TextShape } from "./shape";
+import { BasicArray, ResourceMgr } from "./basic";
+import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
+import { GroupShape, Shape } from "./shape";
 import { ColumSegment, RowSegment, getColumnsInfo, getRowsInfo } from "./tableread";
 import { Path } from "./path";
+import { Text } from "./text"
+import { TextLayout } from "./textlayout";
 export { ColumSegment, RowSegment } from "./tableread";
+export { TableCellType } from "./baseclasses";
 
 export class TableCell extends Shape implements classes.TableCell {
     typeId = 'table-cell'
-    child?: (ImageShape | TextShape)
+    cellType?: TableCellType
+    text?: Text
+    imageRef?: string
     constructor(
         id: string,
         name: string,
@@ -20,15 +25,11 @@ export class TableCell extends Shape implements classes.TableCell {
         super(
             id,
             name,
-            ShapeType.TableCell,
+            type,
             frame,
             style
         )
     }
-    get childs() {
-        return this.child ? [this.child] : [];
-    }
-
     getPath(): Path {
         const x = 0;
         const y = 0;
@@ -41,9 +42,35 @@ export class TableCell extends Shape implements classes.TableCell {
         ["z"]];
         return new Path(path);
     }
+
+    // image
+    setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
+        this.__imageMgr = imageMgr;
+    }
+    peekImage() {
+        return this.__cacheData?.base64;
+    }
+    // image shape
+    async loadImage(): Promise<string> {
+        if (this.__cacheData) return this.__cacheData.base64;
+        this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
+        return this.__cacheData && this.__cacheData.base64 || "";
+    }
+
+    // text
+    setFrameSize(w: number, h: number) {
+        super.setFrameSize(w, h);
+        if (this.text) this.text.updateSize(this.frame.width, this.frame.height)
+    }
+    getLayout(): TextLayout | undefined {
+        if (this.text) {
+            this.text.updateSize(this.frame.width, this.frame.height);
+            return this.text.getLayout();
+        }
+    }
 }
 
-export class TableShape extends Shape implements classes.TableShape {
+export class TableShape extends GroupShape implements classes.TableShape {
     typeId = 'table-shape'
     childs: BasicArray<TableCell>
     constructor(
@@ -59,11 +86,11 @@ export class TableShape extends Shape implements classes.TableShape {
             name,
             ShapeType.Table,
             frame,
-            style
+            style,
+            childs
         )
         this.childs = childs
     }
-
     getPath(): Path {
         const x = 0;
         const y = 0;

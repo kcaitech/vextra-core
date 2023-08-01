@@ -63,6 +63,10 @@ export function exportTextHorAlign(source: types.TextHorAlign, ctx?: IExportCont
 export function exportTextBehaviour(source: types.TextBehaviour, ctx?: IExportContext): types.TextBehaviour {
     return source
 }
+/* table cell types */
+export function exportTableCellType(source: types.TableCellType, ctx?: IExportContext): types.TableCellType {
+    return source
+}
 /* style */
 export function exportStyle(source: types.Style, ctx?: IExportContext): types.Style {
     const ret = {
@@ -673,20 +677,9 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        child: (() => {
-            if (typeof source.child != 'object') {
-                return source.child
-            }
-            if (source.child.typeId == 'image-shape') {
-                return exportImageShape(source.child as types.ImageShape, ctx)
-            }
-            if (source.child.typeId == 'text-shape') {
-                return exportTextShape(source.child as types.TextShape, ctx)
-            }
-            {
-                console.error(source.child)
-            }
-        })(),
+        cellType: source.cellType && exportTableCellType(source.cellType, ctx),
+        text: source.text && exportText(source.text, ctx),
+        imageRef: source.imageRef,
     }
     if (ctx) ctx.afterExport(source)
     return ret

@@ -57,6 +57,12 @@ export enum TextBehaviour {
     Fixed = 'fixed',
     FixWidthAndHeight = 'fixWidthAndHeight',
 }
+/* table cell types */
+export enum TableCellType {
+    None = 'none',
+    Text = 'text',
+    Image = 'image',
+}
 /* style */
 export type Style = {
     typeId: string
@@ -465,7 +471,9 @@ export type TableShape = Shape & {
 }
 /* table cell */
 export type TableCell = Shape & {
-    child?: (ImageShape | TextShape)
+    cellType?: TableCellType
+    text?: Text
+    imageRef?: string
 }
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {

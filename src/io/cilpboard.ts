@@ -4,7 +4,7 @@ import { importArtboard, importRectShape, importOvalShape, importImageShape, IIm
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
-import { Artboard, Fill } from "../data/classes";
+import { Artboard, Fill, TableCell } from "../data/classes";
 import { newTextShape, newTextShapeByText } from "../editor/creator";
 
 function set_childs_id(shapes: Shape[]) {
@@ -61,7 +61,7 @@ export function export_shape(shapes: Shape[]) {
 export function import_shape(document: Document, source: { index: number, content: types.Shape }[]) {
     const ctx = new class implements IImportContext {
         afterImport(obj: any): void {
-            if (obj instanceof ImageShape || obj instanceof Fill) {
+            if (obj instanceof ImageShape || obj instanceof Fill || obj instanceof TableCell) {
                 obj.setImageMgr(document.mediasMgr)
             } else if (obj instanceof SymbolRefShape) {
                 obj.setSymbolMgr(document.symbolsMgr)
