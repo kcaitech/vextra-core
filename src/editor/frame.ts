@@ -133,7 +133,7 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
                 const cx = wh.x / 2;
                 const cy = wh.y / 2;
                 matrix2.trans(-cx, -cy);
-                if (c.rotation) matrix2.rotate(c.rotation / 360 * 2 * Math.PI);
+                if (c.rotation) matrix2.rotate(c.rotation / 180 * Math.PI);
                 if (c.isFlippedHorizontal) matrix2.flipHoriz();
                 if (c.isFlippedVertical) matrix2.flipVert();
                 matrix2.trans(cx, cy);
@@ -246,7 +246,7 @@ export function expandTo(api: Api, page: Page, shape: Shape, w: number, h: numbe
         const cy1 = h / 2;
         const m1 = new Matrix();
         m1.trans(-cx1, -cy1);
-        if (shape.rotation) m1.rotate(shape.rotation / 360 * 2 * Math.PI);
+        if (shape.rotation) m1.rotate(shape.rotation / 180 * Math.PI);
         if (shape.isFlippedHorizontal) m1.flipHoriz();
         if (shape.isFlippedVertical) m1.flipVert();
         m1.trans(cx1, cy1);
@@ -335,7 +335,7 @@ export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     const cy1 = h / 2;
     const m1 = new Matrix();
     m1.trans(-cx1, -cy1);
-    if (shape.rotation) m1.rotate(shape.rotation / 360 * 2 * Math.PI);
+    if (shape.rotation) m1.rotate(shape.rotation / 180 * Math.PI);
     if (shape.isFlippedHorizontal) m1.flipHoriz();
     if (shape.isFlippedVertical) m1.flipVert();
     m1.trans(cx1, cy1);
@@ -392,7 +392,7 @@ export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     const cy1 = h / 2;
     const m1 = new Matrix();
     m1.trans(-cx1, -cy1);
-    if (shape.rotation) m1.rotate(shape.rotation / 360 * 2 * Math.PI);
+    if (shape.rotation) m1.rotate(shape.rotation / 180 * Math.PI);
     if (shape.isFlippedHorizontal) m1.flipHoriz();
     if (shape.isFlippedVertical) m1.flipVert();
     m1.trans(cx1, cy1);
@@ -447,7 +447,7 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     const cy1 = h / 2;
     const m1 = new Matrix();
     m1.trans(-cx1, -cy1);
-    if (shape.rotation) m1.rotate(shape.rotation / 360 * 2 * Math.PI);
+    if (shape.rotation) m1.rotate(shape.rotation / 180 * Math.PI);
     if (shape.isFlippedHorizontal) m1.flipHoriz();
     if (shape.isFlippedVertical) m1.flipVert();
     m1.trans(cx1, cy1);
@@ -499,7 +499,7 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     const cy1 = h / 2;
     const m1 = new Matrix();
     m1.trans(-cx1, -cy1);
-    if (shape.rotation) m1.rotate(shape.rotation / 360 * 2 * Math.PI);
+    if (shape.rotation) m1.rotate(shape.rotation / 180 * Math.PI);
     if (shape.isFlippedHorizontal) m1.flipHoriz();
     if (shape.isFlippedVertical) m1.flipVert();
     m1.trans(cx1, cy1);
@@ -526,11 +526,11 @@ export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
         if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
         scale = -scale;
     }
-    let t_xy = { x: f.width * (1 - scale) / 2, y: (1 - scale) * f.height };
-    t_xy = s.matrix2Root().computeCoord(t_xy);
-    t_xy = new Matrix(p.matrix2Root().inverse).computeCoord(t_xy);
-    api.shapeModifyX(page, s, t_xy.x);
-    api.shapeModifyY(page, s, t_xy.y);
+    const o_xy = s.matrix2Parent().computeCoord(0, 0);
+    const t_xy = s.matrix2Parent().computeCoord({ x: f.width * (1 - scale) / 2, y: (1 - scale) * f.height });
+    const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
+    api.shapeModifyX(page, s, f.x + delta.x);
+    api.shapeModifyY(page, s, f.y + delta.y);
     api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
 }
