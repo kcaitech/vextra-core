@@ -523,12 +523,13 @@ export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
         scale = -scale;
     }
     const m2p = s.matrix2Parent();
-    const o_xy = m2p.computeCoord(0, 0);
     const t_xy = m2p.computeCoord({ x: f.width * (1 - scale) / 2, y: (1 - scale) * f.height });
+    api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    // 当一个图形宽高改变之后，矩阵转换过程中的旋转矩阵计算(图形中心偏移数值)将受影响，应该重新计算转换矩阵
+    const o_xy = s.matrix2Parent().computeCoord(0, 0);
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
-    api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
 }
 // 拖拽右边
@@ -541,13 +542,13 @@ export function erScaleByR(api: Api, page: Page, s: Shape, scale: number) {
         if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
         scale = -scale;
     }
-    const m2r = s.matrix2Root();
-    const t_xy = m2r.computeCoord(0, ((1 - scale) * f.height) / 2);
-    const pm2rin = new Matrix(p.matrix2Root().inverse);
-    const c_xy = pm2rin.computeCoord(t_xy);
-    api.shapeModifyX(page, s, c_xy.x);
-    api.shapeModifyY(page, s, c_xy.y);
+    const m2p = s.matrix2Parent();
+    const t_xy = m2p.computeCoord({ x: 0, y: ((1 - scale) * f.height) / 2 });
     api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    const o_xy = s.matrix2Parent().computeCoord(0, 0);
+    const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
+    api.shapeModifyX(page, s, f.x + delta.x);
+    api.shapeModifyY(page, s, f.y + delta.y);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
 }
 // 拖拽底部
@@ -560,14 +561,13 @@ export function erScaleByB(api: Api, page: Page, s: Shape, scale: number) {
         if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
         scale = -scale;
     }
-    // 调整图形位置
-    const m2r = s.matrix2Root();
-    const t_xy = m2r.computeCoord(f.width * (1 - scale) / 2, 0);
-    const pm2rin = new Matrix(p.matrix2Root().inverse);
-    const c_xy = pm2rin.computeCoord(t_xy);
-    api.shapeModifyX(page, s, c_xy.x);
-    api.shapeModifyY(page, s, c_xy.y);
+    const m2p = s.matrix2Parent();
+    const t_xy = m2p.computeCoord({ x: f.width * (1 - scale) / 2, y: 0 });
     api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    const o_xy = s.matrix2Parent().computeCoord(0, 0);
+    const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
+    api.shapeModifyX(page, s, f.x + delta.x);
+    api.shapeModifyY(page, s, f.y + delta.y);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
 }
 // 拖拽左边
@@ -580,12 +580,12 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
         if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
         scale = -scale;
     }
-    const m2r = s.matrix2Root();
-    const t_xy = m2r.computeCoord(f.width * (1 - scale), ((1 - scale) * f.height) / 2);
-    const pm2rin = new Matrix(p.matrix2Root().inverse);
-    const c_xy = pm2rin.computeCoord(t_xy);
-    api.shapeModifyX(page, s, c_xy.x);
-    api.shapeModifyY(page, s, c_xy.y);
+    const m2p = s.matrix2Parent();
+    const t_xy = m2p.computeCoord({ x: f.width * (1 - scale), y: ((1 - scale) * f.height) / 2 });
     api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    const o_xy = s.matrix2Parent().computeCoord(0, 0);
+    const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
+    api.shapeModifyX(page, s, f.x + delta.x);
+    api.shapeModifyY(page, s, f.y + delta.y);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
 }
