@@ -478,7 +478,6 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     const m = matrix2parent;
     h = -(m.m00 * (savelt.y - target.y) - m.m10 * (savelt.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01);
     w = (target.x - savelt.x + m.m01 * -h) / m.m00;
-    // 宽度将要成为负数
     if (w < 0) {
         api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
         if (shape.rotation) {
@@ -486,7 +485,6 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         w = -w;
     }
-    // 宽度将要成为负数
     if (h < 0) {
         api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
         if (shape.rotation) {
@@ -512,4 +510,83 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     dy = target.y - xy1.y;
 
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
+}
+// 等比缩放
+// 拖拽顶部
+export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
+    const p = s.parent;
+    if (!p) return;
+    const f = s.frame;
+    if (scale < 0) {
+        api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+        if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
+        scale = -scale;
+    }
+    // 调整图形位置
+    const m2r = s.matrix2Root();
+    const t_xy = m2r.computeCoord(f.width * (1 - scale) / 2, (1 - scale) * f.height); // 左上角目标位置
+    const pm2rin = new Matrix(p.matrix2Root().inverse);
+    const c_xy = pm2rin.computeCoord(t_xy);
+    api.shapeModifyX(page, s, c_xy.x);
+    api.shapeModifyY(page, s, c_xy.y);
+    api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
+}
+// 拖拽右边
+export function erScaleByR(api: Api, page: Page, s: Shape, scale: number) {
+    const p = s.parent;
+    if (!p) return;
+    const f = s.frame;
+    if (scale < 0) {
+        api.shapeModifyHFlip(page, s, !s.isFlippedVertical);
+        if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
+        scale = -scale;
+    }
+    const m2r = s.matrix2Root();
+    const t_xy = m2r.computeCoord(0, ((1 - scale) * f.height) / 2); // 左上角目标位置
+    const pm2rin = new Matrix(p.matrix2Root().inverse);
+    const c_xy = pm2rin.computeCoord(t_xy);
+    api.shapeModifyX(page, s, c_xy.x);
+    api.shapeModifyY(page, s, c_xy.y);
+    api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
+}
+// 拖拽底部
+export function erScaleByB(api: Api, page: Page, s: Shape, scale: number) {
+    const p = s.parent;
+    if (!p) return;
+    const f = s.frame;
+    if (scale < 0) {
+        api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+        if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
+        scale = -scale;
+    }
+    // 调整图形位置
+    const m2r = s.matrix2Root();
+    const t_xy = m2r.computeCoord(f.width * (1 - scale) / 2, 0); // 左上角目标位置
+    const pm2rin = new Matrix(p.matrix2Root().inverse);
+    const c_xy = pm2rin.computeCoord(t_xy);
+    api.shapeModifyX(page, s, c_xy.x);
+    api.shapeModifyY(page, s, c_xy.y);
+    api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
+}
+// 拖拽左边
+export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
+    const p = s.parent;
+    if (!p) return;
+    const f = s.frame;
+    if (scale < 0) {
+        api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+        if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
+        scale = -scale;
+    }
+    const m2r = s.matrix2Root();
+    const t_xy = m2r.computeCoord(f.width * (1 - scale), ((1 - scale) * f.height) / 2); // 左上角目标位置
+    const pm2rin = new Matrix(p.matrix2Root().inverse);
+    const c_xy = pm2rin.computeCoord(t_xy);
+    api.shapeModifyX(page, s, c_xy.x);
+    api.shapeModifyY(page, s, c_xy.y);
+    api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
 }

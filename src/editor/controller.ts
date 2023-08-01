@@ -1,4 +1,4 @@
-import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
+import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL } from "./frame";
 import { Shape, GroupShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
@@ -63,6 +63,7 @@ export interface AsyncCreator {
 export interface AsyncBaseAction {
     executeRotate: (deg: number) => void;
     executeScale: (type: CtrlElementType, start: PageXY, end: PageXY) => void;
+    executeErScale: (type: CtrlElementType, scale: number) => void
     close: () => undefined;
 }
 export interface AsyncMultiAction {
@@ -321,6 +322,20 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
+        const executeErScale = (type: CtrlElementType, scale: number) => {
+            status = Status.Pending;
+            if (type === CtrlElementType.RectTop) {
+                erScaleByT(api, page, shape, scale);
+            } else if (type === CtrlElementType.RectRight) {
+                erScaleByR(api, page, shape, scale);
+            } else if (type === CtrlElementType.RectBottom) {
+                erScaleByB(api, page, shape, scale);
+            } else if (type === CtrlElementType.RectLeft) {
+                erScaleByL(api, page, shape, scale);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
@@ -329,7 +344,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { executeRotate, executeScale, close };
+        return { executeRotate, executeScale, executeErScale, close };
     }
     // 多对象的异步编辑
     public asyncMultiEditor(shapes: Shape[], page: Page): AsyncMultiAction {
