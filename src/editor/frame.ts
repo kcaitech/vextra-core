@@ -524,7 +524,11 @@ export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
     }
     const m2p = s.matrix2Parent();
     const t_xy = m2p.computeCoord({ x: f.width * (1 - scale) / 2, y: (1 - scale) * f.height });
-    api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    let t_w = f.width * scale;
+    let t_h = f.height * scale;
+    if (t_w < minimum_WH) t_w = minimum_WH;
+    if (t_h < minimum_WH) t_h = minimum_WH;
+    api.shapeModifyWH(page, s, t_w, t_h);
     // 当一个图形宽高改变之后，矩阵转换过程中的旋转矩阵计算(图形中心偏移数值)将受影响，应该重新计算转换矩阵
     const o_xy = s.matrix2Parent().computeCoord(0, 0);
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
@@ -544,7 +548,11 @@ export function erScaleByR(api: Api, page: Page, s: Shape, scale: number) {
     }
     const m2p = s.matrix2Parent();
     const t_xy = m2p.computeCoord({ x: 0, y: ((1 - scale) * f.height) / 2 });
-    api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    let t_w = f.width * scale;
+    let t_h = f.height * scale;
+    if (t_w < minimum_WH) t_w = minimum_WH;
+    if (t_h < minimum_WH) t_h = minimum_WH;
+    api.shapeModifyWH(page, s, t_w, t_h);
     const o_xy = s.matrix2Parent().computeCoord(0, 0);
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
@@ -563,7 +571,11 @@ export function erScaleByB(api: Api, page: Page, s: Shape, scale: number) {
     }
     const m2p = s.matrix2Parent();
     const t_xy = m2p.computeCoord({ x: f.width * (1 - scale) / 2, y: 0 });
-    api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    let t_w = f.width * scale;
+    let t_h = f.height * scale;
+    if (t_w < minimum_WH) t_w = minimum_WH;
+    if (t_h < minimum_WH) t_h = minimum_WH;
+    api.shapeModifyWH(page, s, t_w, t_h);
     const o_xy = s.matrix2Parent().computeCoord(0, 0);
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
@@ -582,7 +594,11 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
     }
     const m2p = s.matrix2Parent();
     const t_xy = m2p.computeCoord({ x: f.width * (1 - scale), y: ((1 - scale) * f.height) / 2 });
-    api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
+    let t_w = f.width * scale;
+    let t_h = f.height * scale;
+    if (t_w < minimum_WH) t_w = minimum_WH;
+    if (t_h < minimum_WH) t_h = minimum_WH;
+    api.shapeModifyWH(page, s, t_w, t_h);
     const o_xy = s.matrix2Parent().computeCoord(0, 0);
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
