@@ -368,7 +368,6 @@ export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     const m = matrix2parent;
     h = (m.m00 * (savert.y - target.y) - m.m10 * (savert.x - target.x)) / (m.m10 * m.m01 - m.m00 * m.m11);
     w = (savert.x - target.x + m.m01 * h) / m.m00;
-    // 宽度将要成为负数
     if (w < 0) {
         api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
@@ -376,7 +375,6 @@ export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         w = -w;
     }
-    // 宽度将要成为负数
     if (h < 0) {
         api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical)
         if (shape.rotation) {
@@ -423,7 +421,6 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     const m = matrix2parent;
     h = (m.m00 * (savelb.y - target.y) - m.m10 * (savelb.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01)
     w = (target.x - savelb.x + m.m01 * h) / m.m00;
-    // 宽度将要成为负数
     if (w < 0) {
         api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
@@ -431,7 +428,6 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
         }
         w = -w;
     }
-    // 宽度将要成为负数
     if (h < 0) {
         api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical)
         if (shape.rotation) {
