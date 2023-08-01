@@ -153,10 +153,15 @@ export class CoopRepository {
         return this.__api.isNeedCommit();
     }
     commit() {
+        if (!this.isNeedCommit()) {
+            console.log("no cmd to commit")
+            this.rollback(false);
+            return;
+        }
         // 
         const transact = this.__repo.transactCtx.transact;
         if (transact === undefined) {
-            throw new Error();
+            throw new Error("not inside transact!");
         }
         const cmd = this.__api.commit();
         if (!cmd) throw new Error("no cmd to commit")

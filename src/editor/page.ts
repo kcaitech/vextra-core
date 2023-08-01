@@ -1,17 +1,23 @@
-import { Shape, GroupShape, ShapeFrame, TextShape, FlattenShape, RectShape } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame, TextShape, PathShape2, RectShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newFlattenShape, newGroupShape, newLineShape, newOvalShape, newRectShape } from "./creator";
+import { newArtboard, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill, Artboard } from "../data/classes";
+import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
-import { group, ungroup } from "./group";
+import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
+import { render2path } from "../render";
+import { Matrix } from "../basic/matrix";
+import { IImportContext, importBorder, importStyle } from "../io/baseimport";
+import { gPal } from "../basic/pal";
+import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
+import { BasicArray } from "../data/basic";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -191,18 +197,26 @@ export class PageEditor {
         return false;
     }
 
-    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | FlattenShape {
+    boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | GroupShape {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
+        // copy fill and borders
+        const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
+        const style: Style = this.cloneStyle(copyStyle);
+        const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
+        if (borderStyle !== copyStyle) {
+            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+        }
 
         const api = this.__repo.start("boolgroup", {});
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
-            let gshape = newFlattenShape(groupname);
+            let gshape = newGroupShape(groupname, style);
+            gshape.isBoolOpShape = true;
             gshape = group(this.__page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
 
@@ -210,6 +224,136 @@ export class PageEditor {
             return gshape;
         }
         catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    private cloneStyle(style: Style): Style {
+        const _this = this;
+        return importStyle(style, new class implements IImportContext {
+            afterImport(obj: any): void {
+                if (obj instanceof Fill) {
+                    obj.setImageMgr(_this.__document.mediasMgr)
+                }
+            }
+        });
+    }
+
+    flattenShapes(shapes: Shape[], name?: string): PathShape | PathShape2 | false {
+        if (shapes.length === 0) return false;
+        if (shapes.find((v) => !v.parent)) return false;
+        const fshape = shapes[0];
+        const savep = fshape.parent as GroupShape;
+        const saveidx = savep.indexOfChild(fshape);
+        if (!name) name = fshape.name;
+
+        // copy fill and borders
+        const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
+        const style: Style = this.cloneStyle(copyStyle);
+        const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
+        if (borderStyle !== copyStyle) {
+            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+        }
+
+        const api = this.__repo.start("flattenShapes", {});
+        try {
+            // bounds
+            // 计算frame
+            //   计算每个shape的绝对坐标
+            const boundsArr = shapes.map((s) => {
+                const box = s.boundingBox()
+                const p = s.parent!;
+                const m = p.matrix2Root();
+                const lt = m.computeCoord(box.x, box.y);
+                const rb = m.computeCoord(box.x + box.width, box.y + box.height);
+                return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
+            })
+            const firstXY = boundsArr[0]
+            const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
+
+            boundsArr.reduce((pre, cur) => {
+                expandBounds(pre, cur.x, cur.y);
+                expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
+                return pre;
+            }, bounds)
+
+            const m = new Matrix(savep.matrix2Root().inverse)
+            const xy = m.computeCoord(bounds.left, bounds.top)
+
+            const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);
+            let pathstr = "";
+            shapes.forEach((shape) => {
+                const shapem = shape.matrix2Root();
+                const shapepath = render2path(shape);
+                shapem.multiAtLeft(m);
+                shapepath.transform(shapem);
+
+                if (pathstr.length > 0) {
+                    pathstr = gPal.boolop.union(pathstr, shapepath.toString())
+                }
+                else {
+                    pathstr = shapepath.toString();
+                }
+            })
+            const path = new Path(pathstr);
+            path.translate(-frame.x, -frame.y);
+
+            let pathShape = newPathShape(name, frame, path, style);
+            pathShape = api.shapeInsert(this.__page, savep, pathShape, saveidx) as PathShape | PathShape2;
+
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const s = shapes[i];
+                const p = s.parent as GroupShape;
+                const idx = p.indexOfChild(s);
+                api.shapeDelete(this.__page, p, idx);
+                if (p.childs.length <= 0) {
+                    deleteEmptyGroupShape(this.__page, p, api)
+                }
+            }
+            this.__repo.commit();
+            return pathShape;
+        } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    flattenBoolShape(shape: GroupShape): PathShape | false {
+        if (!shape.isBoolOpShape) return false;
+        const parent = shape.parent as GroupShape;
+        if (!parent) return false;
+
+        const path = render2path(shape);
+
+        // copy fill and borders
+        const copyStyle = findUsableFillStyle(shape);
+        const style: Style = this.cloneStyle(copyStyle);
+        const borderStyle = findUsableBorderStyle(shape);
+        if (borderStyle !== copyStyle) {
+            style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
+        }
+
+        const api = this.__repo.start("flattenBoolShape", {});
+        try {
+            const gframe = shape.frame;
+            const boundingBox = path.calcBounds();
+            const w = boundingBox.maxX - boundingBox.minX;
+            const h = boundingBox.maxY - boundingBox.minY;
+            const frame = new ShapeFrame(gframe.x + boundingBox.minX, gframe.y + boundingBox.minY, w, h); // clone
+            path.translate(-boundingBox.minX, -boundingBox.minY);
+
+            let pathShape = newPathShape(shape.name, frame, path, style);
+            pathShape.fixedRadius = shape.fixedRadius;
+            const index = parent.indexOfChild(shape);
+            api.shapeDelete(this.__page, parent, index);
+            pathShape = api.shapeInsert(this.__page, parent, pathShape, index) as PathShape;
+
+            this.__repo.commit();
+            return pathShape;
+        } catch (e) {
             console.log(e)
             this.__repo.rollback();
         }

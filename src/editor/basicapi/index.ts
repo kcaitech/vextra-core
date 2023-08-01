@@ -1,7 +1,7 @@
 import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
-import { GroupShape, PathShape, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
+import { GroupShape, ImageShape, PathShape, PathShape2, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { Artboard } from "../../data/artboard";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 import { BoolOp, BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
@@ -113,10 +113,17 @@ export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: 
     shape.setResizingConstraint(resizingConstraint);
 }
 export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
-    shape.setRadius(lt, rt, rb, lb);
+    shape.setRectRadius(lt, rt, rb, lb);
+}
+export function shapeModifyFixedRadius(shape: GroupShape | PathShape | PathShape2, fixedRadius: number | undefined) {
+    shape.fixedRadius = fixedRadius;
 }
 export function shapeModifyBoolOp(shape: Shape, op: BoolOp | undefined) {
     shape.boolOp = op;
+}
+export function shapeModifyBoolOpShape(shape: GroupShape, isOpShape: boolean | undefined) {
+    if (isOpShape) shape.isBoolOpShape = true;
+    else shape.isBoolOpShape = undefined;
 }
 
 export function insertSimpleText(shape: TextShape, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {

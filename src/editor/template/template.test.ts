@@ -36,11 +36,6 @@ test('text-shape', () => {
     isTrue(res)
 })
 
-import flattenshape from "./flatten-shape.json"
-test('flatten-shape', () => {
-    isTrue(validate.validate(flattenshape, 'flatten-shape'))
-})
-
 import rectangle from "./rectangle-shape.json"
 test('rectangle-shape', () => {
     isTrue(validate.validate(rectangle, 'rect-shape'))

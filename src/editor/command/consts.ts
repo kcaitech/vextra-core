@@ -15,9 +15,11 @@ export const SHAPE_ATTR_ID = {
     visible: "visible",
     lock: "lock",
     resizingConstraint: "resizingConstraint",
-    radius: "radius",
+    radius: "radius", // rect radius
     backgroundColor: "backgroundColor",
     boolop: "boolop",
+    isboolopshape: "isboolopshape",
+    fixedRadius: "fixedRadius",
 
     // text shape
     textBehaviour: "textBehaviour",

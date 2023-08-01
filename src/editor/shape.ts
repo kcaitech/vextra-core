@@ -1,4 +1,4 @@
-import { GroupShape, RectShape, Shape } from "../data/shape";
+import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2 } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
@@ -82,15 +82,39 @@ export class ShapeEditor {
         this.__repo.commit();
     }
     // radius
-    public setRadius(lt: number, rt: number, rb: number, lb: number) {
+    public setRectRadius(lt: number, rt: number, rb: number, lb: number) {
         if (!(this.__shape instanceof RectShape)) return;
-        const api = this.__repo.start("setRadius", {});
+        const api = this.__repo.start("setRectRadius", {});
         api.shapeModifyRadius(this.__page, this.__shape, lt, rt, rb, lb);
         this.__repo.commit();
     }
-    public setBoolOp(op: BoolOp) {
+    public setFixedRadius(fixedRadius: number) {
+        if (this.__shape instanceof GroupShape) {
+            if (!this.__shape.isBoolOpShape) return;
+        }
+        else if (!(this.__shape instanceof PathShape || this.__shape instanceof PathShape2)) {
+            return;
+        }
+        const api = this.__repo.start("setFixedRadius", {});
+        api.shapeModifyFixedRadius(this.__page, this.__shape, fixedRadius || undefined);
+        this.__repo.commit();
+    }
+
+    public setBoolOp(op: BoolOp, name?: string) {
+        if (!(this.__shape instanceof GroupShape)) return;
         const api = this.__repo.start("setBoolOp", {});
-        api.shapeModifyBoolOp(this.__page, this.__shape, op);
+        if (name) api.shapeModifyName(this.__page, this.__shape, name);
+        this.__shape.childs.forEach((child) => {
+            api.shapeModifyBoolOp(this.__page, child, op);
+        })
+        api.shapeModifyBoolOpShape(this.__page, this.__shape, op !== BoolOp.None);
+        this.__repo.commit();
+    }
+
+    public setIsBoolOpShape(isOpShape: boolean) {
+        if (!(this.__shape instanceof GroupShape)) return;
+        const api = this.__repo.start("setIsBoolOpShape", {});
+        api.shapeModifyBoolOpShape(this.__page, this.__shape, isOpShape);
         this.__repo.commit();
     }
 

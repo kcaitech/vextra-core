@@ -11,7 +11,7 @@ import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportText } from "../../io/baseexport";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
-import { GroupShape, Shape, TextShape, PathShape } from "../../data/shape";
+import { GroupShape, Shape, TextShape, PathShape, ImageShape, PathShape2 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Artboard } from "../../data/artboard";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
@@ -20,7 +20,6 @@ import { cmdmerge } from "./merger";
 import { RectShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
-import { isColorEqual } from "../../data/utils";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 
@@ -300,9 +299,19 @@ export class Api {
     shapeModifyRadius(page: Page, shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const save = shape.getRadius();
-            shape.setRadius(lt, rt, rb, lb);
+            const save = shape.getRectRadius();
+            shape.setRectRadius(lt, rt, rb, lb);
             this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.radius, { lt, rt, rb, lb }, save))
+        })
+    }
+    shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2, fixedRadius: number | undefined) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const save = shape.fixedRadius;
+            if ((save || 0) !== (fixedRadius || 0)) {
+                shape.fixedRadius = fixedRadius;
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.fixedRadius, fixedRadius, save))
+            }
         })
     }
     shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
@@ -342,6 +351,16 @@ export class Api {
             if ((origin ?? BoolOp.None) !== (op ?? BoolOp.None)) {
                 shape.boolOp = op;
                 this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.boolop, op, origin));
+            }
+        })
+    }
+    shapeModifyBoolOpShape(page: Page, shape: GroupShape, isOpShape: boolean | undefined) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const origin = shape.isBoolOpShape;
+            if (!!isOpShape !== !!origin) {
+                basicapi.shapeModifyBoolOpShape(shape, isOpShape);
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.isboolopshape, isOpShape, origin));
             }
         })
     }
@@ -598,7 +617,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyColor(shape, idx, len, color);
             ret.forEach((m) => {
-                const colorEqual = m.color === color || m.color && color && isColorEqual(color, m.color);
+                const colorEqual = m.color === color || m.color && color && color.equals(m.color);
                 if (!colorEqual) {
                     const cmd = TextCmdModify.Make(page.id,
                         shape.id,
@@ -679,7 +698,7 @@ export class Api {
         this.__trap(() => {
             const ret = basicapi.textModifyHighlightColor(shape, idx, len, color);
             ret.forEach((m) => {
-                const colorEqual = m.highlight === color || m.highlight && color && isColorEqual(color, m.highlight);
+                const colorEqual = m.highlight === color || m.highlight && color && color.equals(m.highlight);
                 if (!colorEqual) {
                     const cmd = TextCmdModify.Make(page.id,
                         shape.id,

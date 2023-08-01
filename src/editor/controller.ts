@@ -3,7 +3,7 @@ import { Shape, GroupShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
-import { newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTextShape } from "./creator";
+import { newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape } from "./creator";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { v4 } from "uuid";
@@ -101,11 +101,12 @@ export class Controller {
             case ShapeType.Oval: return newOvalShape(name, frame);
             case ShapeType.Line: return newLineShape(name, frame);
             case ShapeType.Text: {
-                const shape = newTextShape(name, this.__document.measureFun);
+                const shape = newTextShape(name);
                 shape.frame = frame;
                 return shape;
             }
             case ShapeType.Image: return newImageShape(name, frame, ref, mediasMgr);
+            case ShapeType.Table: return newTable(name, frame, 3, 3);
             default: return newRectShape(name, frame);
         }
     }
@@ -155,7 +156,7 @@ export class Controller {
                 if (content.length > 19) {
                     name = name.slice(0, 19) + '...';
                 }
-                const shape = newTextShape(name, this.__document.measureFun);
+                const shape = newTextShape(name);
                 shape.text.insertText(content, 0);
                 const xy = parent.frame2Root();
                 shape.frame.x = frame.x - xy.x;

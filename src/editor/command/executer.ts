@@ -41,7 +41,9 @@ import {
     importBorderStyle,
     importText,
     importSpanAttr,
-    importPoint2D
+    importPoint2D,
+    importTableShape,
+    importPathShape2
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -62,7 +64,8 @@ import {
     BulletNumbersType,
     TextTransformType,
     BulletNumbersBehavior,
-    Fill
+    Fill,
+    FlattenShape
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -87,8 +90,8 @@ function importShape(data: string, document: Document) {
                 document.artboardMgr.add(obj.id, obj);
             } else if (obj instanceof SymbolShape) {
                 document.symbolsMgr.add(obj.id, obj);
-            } else if (obj instanceof TextShape) {
-                obj.setMeasureFun(document.measureFun);
+            } else if (obj instanceof FlattenShape) {
+                obj.isBoolOpShape = true;
             }
         }
     }
@@ -106,6 +109,9 @@ function importShape(data: string, document: Document) {
     }
     if (source.typeId == 'path-shape') {
         return importPathShape(source as types.PathShape, ctx)
+    }
+    if (source.typeId == 'path-shape2') {
+        return importPathShape2(source as types.PathShape2, ctx)
     }
     if (source.typeId == 'rect-shape') {
         return importRectShape(source as types.RectShape, ctx)
@@ -127,6 +133,9 @@ function importShape(data: string, document: Document) {
     }
     if (source.typeId == 'oval-shape') {
         return importOvalShape(source as types.OvalShape, ctx)
+    }
+    if (source.typeId == 'table-shape') {
+        return importTableShape(source as types.TableShape, ctx)
     }
     throw new Error("unknow shape type: " + source.typeId)
 }
@@ -553,6 +562,24 @@ export class CMDExecuter {
             }
             else if (!value || op.type === OpType.IdRemove) {
                 api.shapeModifyBoolOp(shape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.isboolopshape) {
+            if (op.type === OpType.IdSet && value) {
+                const isOpShape = JSON.parse(value);
+                api.shapeModifyBoolOpShape(shape as GroupShape, isOpShape);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyBoolOpShape(shape as GroupShape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.fixedRadius) {
+            if (op.type === OpType.IdSet && value) {
+                const fixedRadius = JSON.parse(value);
+                api.shapeModifyFixedRadius(shape as GroupShape, fixedRadius);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.shapeModifyFixedRadius(shape as GroupShape, undefined)
             }
         }
         // todo
