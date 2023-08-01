@@ -527,6 +527,7 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
         importMarkerType(source.endMarkerType, ctx)
     )
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
+    if (source.pos !== undefined) ret.pos = source.pos
     if (ctx) ctx.afterImport(ret)
     return ret
 }

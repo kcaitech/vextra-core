@@ -39,6 +39,9 @@
         },
         "endMarkerType": {
             "$ref": "./marker-type.json"
+        },
+        "pos": {
+            "type": "number"
         }
     },
     "required": [

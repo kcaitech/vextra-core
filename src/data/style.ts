@@ -64,6 +64,7 @@ export class Border extends Basic implements classes.Border {
     borderStyle: BorderStyle
     startMarkerType: MarkerType
     endMarkerType: MarkerType
+    pos?: number
     constructor(
         id: string,
         isEnabled: boolean,

@@ -531,6 +531,7 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
         borderStyle: exportBorderStyle(source.borderStyle, ctx),
         startMarkerType: exportMarkerType(source.startMarkerType, ctx),
         endMarkerType: exportMarkerType(source.endMarkerType, ctx),
+        pos: source.pos,
     }
     if (ctx) ctx.afterExport(source)
     return ret

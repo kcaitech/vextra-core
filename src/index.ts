@@ -6,7 +6,7 @@ export * from "./basic/pal"
 export * from "./data/basic"
 export * from "./data/classes"
 export * from "./data/transact"
-export * from "./data/model"
+export * from "./data/consts"
 
 // io
 export * from "./io"

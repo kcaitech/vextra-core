@@ -28,6 +28,19 @@ export class TableCell extends Shape implements classes.TableCell {
     get childs() {
         return this.child ? [this.child] : [];
     }
+
+    getPath(): Path {
+        const x = 0;
+        const y = 0;
+        const w = this.frame.width;
+        const h = this.frame.height;
+        const path = [["M", x, y],
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
+        return new Path(path);
+    }
 }
 
 export class TableShape extends Shape implements classes.TableShape {
