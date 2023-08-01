@@ -337,8 +337,7 @@ export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
 
-    const changed = setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
-    // if (changed) updateFrame(shape);
+    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
 export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: number) { // 左下角
     const p = shape.parent;
@@ -394,8 +393,7 @@ export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     // (0,0)需要偏移到target位置
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
-    const changed = setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
-    // if (changed) updateFrame(shape);
+    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
 export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: number) { // 右上角
     const p = shape.parent;
@@ -451,8 +449,7 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
 
-    const changed = setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
-    // if (changed) updateFrame(shape);
+    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
 export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number) {
     const p = shape.parent;
@@ -505,6 +502,5 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
 
-    const changed = setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
-    // if (changed) updateFrame(shape);
+    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
