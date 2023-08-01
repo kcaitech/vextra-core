@@ -38,6 +38,9 @@ export const SHAPE_ATTR_ID = {
     defalutTextHorAlign: "defaultTextHorAlign",
     defaultTextMinLineheight: "defaultTextMinLineheight",
     defaultTextMaxLineheight: "defaultTextMaxLineheight",
+
+    // table
+    cellContent: "cellContent"
 }
 
 export const FILLS_ID = "fills"

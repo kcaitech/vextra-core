@@ -8,6 +8,7 @@ import { BoolOp, BulletNumbersBehavior, BulletNumbersType, Point2D, Strikethroug
 
 export * from "./fill";
 export * from "./border";
+export * from "./table";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     document.insertPage(index, page)

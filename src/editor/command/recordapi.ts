@@ -17,7 +17,7 @@ import { Artboard } from "../../data/artboard";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
-import { RectShape } from "../../data/classes";
+import { RectShape, TableCell } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
@@ -971,6 +971,17 @@ export class Api {
                 if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, shape.id, index, m.length, TEXT_ATTR_ID.spanTransform, transform, m.transform));
                 index += m.length;
             })
+        })
+    }
+
+    tableSetCellContent(page: Page, cell: TableCell, content: ImageShape | TextShape | undefined) {
+        this.checkShapeAtPage(page, cell);
+        this.__trap(() => {
+            const origin = cell.child;
+            if (origin !== content) {
+                cell.child = content;
+                this.addCmd(ShapeCmdModify.Make(page.id, cell.id, SHAPE_ATTR_ID.cellContent, content && exportShape(content), origin && exportShape(origin)))
+            }
         })
     }
 }

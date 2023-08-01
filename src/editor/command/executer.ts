@@ -43,7 +43,8 @@ import {
     importSpanAttr,
     importPoint2D,
     importTableShape,
-    importPathShape2
+    importPathShape2,
+    importTableCell
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -65,7 +66,8 @@ import {
     TextTransformType,
     BulletNumbersBehavior,
     Fill,
-    FlattenShape
+    FlattenShape,
+    TableCell
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -136,6 +138,9 @@ function importShape(data: string, document: Document) {
     }
     if (source.typeId == 'table-shape') {
         return importTableShape(source as types.TableShape, ctx)
+    }
+    if (source.typeId == 'table-cell') {
+        return importTableCell(source as types.TableCell, ctx)
     }
     throw new Error("unknow shape type: " + source.typeId)
 }
@@ -426,7 +431,7 @@ export class CMDExecuter {
         }
         else if (opId === SHAPE_ATTR_ID.radius) {
             if (op.type === OpType.IdSet && value) {
-                const v = (JSON.parse(value) as {lt: number, rt: number, rb: number, lb: number});
+                const v = (JSON.parse(value) as { lt: number, rt: number, rb: number, lb: number });
                 api.shapeModifyRadius(shape as RectShape, v.lt, v.rt, v.rb, v.lb)
             }
         }
@@ -580,6 +585,15 @@ export class CMDExecuter {
             }
             else if (!value || op.type === OpType.IdRemove) {
                 api.shapeModifyFixedRadius(shape as GroupShape, undefined)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.cellContent) {
+            if (op.type === OpType.IdSet && value) {
+                const content = importShape(value, this.__document);
+                api.tableSetCellContent(shape as TableCell, content as TextShape | ImageShape);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.tableSetCellContent(shape as TableCell, undefined)
             }
         }
         // todo

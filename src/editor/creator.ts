@@ -163,11 +163,12 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
 }
 
 // 后续需要传入字体、字号、颜色信息
-export function newTextShape(name: string): TextShape {
+export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
     const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
+    if (frame) textshape.frame = frame;
     addCommonAttr(textshape);
     return textshape;
 }
