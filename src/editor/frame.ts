@@ -522,8 +522,9 @@ export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
         if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
         scale = -scale;
     }
-    const o_xy = s.matrix2Parent().computeCoord(0, 0);
-    const t_xy = s.matrix2Parent().computeCoord({ x: f.width * (1 - scale) / 2, y: (1 - scale) * f.height });
+    const m2p = s.matrix2Parent();
+    const o_xy = m2p.computeCoord(0, 0);
+    const t_xy = m2p.computeCoord({ x: f.width * (1 - scale) / 2, y: (1 - scale) * f.height });
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
