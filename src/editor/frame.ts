@@ -511,7 +511,11 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
 
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
-// 等比缩放
+
+/**
+ * @description 等比缩放
+ * @param { number } scale 缩放比例
+ */
 // 拖拽顶部
 export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
     const p = s.parent;
@@ -522,9 +526,10 @@ export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
         if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
         scale = -scale;
     }
-    // 调整图形位置
+    let t_xy = { x: f.width * (1 - scale) / 2, y: (1 - scale) * f.height };
+    const m2p = s.matrix2Parent();
     const m2r = s.matrix2Root();
-    const t_xy = m2r.computeCoord(f.width * (1 - scale) / 2, (1 - scale) * f.height); // 左上角目标位置
+    t_xy = m2r.computeCoord(t_xy);
     const pm2rin = new Matrix(p.matrix2Root().inverse);
     const c_xy = pm2rin.computeCoord(t_xy);
     api.shapeModifyX(page, s, c_xy.x);
@@ -543,7 +548,7 @@ export function erScaleByR(api: Api, page: Page, s: Shape, scale: number) {
         scale = -scale;
     }
     const m2r = s.matrix2Root();
-    const t_xy = m2r.computeCoord(0, ((1 - scale) * f.height) / 2); // 左上角目标位置
+    const t_xy = m2r.computeCoord(0, ((1 - scale) * f.height) / 2);
     const pm2rin = new Matrix(p.matrix2Root().inverse);
     const c_xy = pm2rin.computeCoord(t_xy);
     api.shapeModifyX(page, s, c_xy.x);
@@ -563,7 +568,7 @@ export function erScaleByB(api: Api, page: Page, s: Shape, scale: number) {
     }
     // 调整图形位置
     const m2r = s.matrix2Root();
-    const t_xy = m2r.computeCoord(f.width * (1 - scale) / 2, 0); // 左上角目标位置
+    const t_xy = m2r.computeCoord(f.width * (1 - scale) / 2, 0);
     const pm2rin = new Matrix(p.matrix2Root().inverse);
     const c_xy = pm2rin.computeCoord(t_xy);
     api.shapeModifyX(page, s, c_xy.x);
@@ -582,7 +587,7 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
         scale = -scale;
     }
     const m2r = s.matrix2Root();
-    const t_xy = m2r.computeCoord(f.width * (1 - scale), ((1 - scale) * f.height) / 2); // 左上角目标位置
+    const t_xy = m2r.computeCoord(f.width * (1 - scale), ((1 - scale) * f.height) / 2);
     const pm2rin = new Matrix(p.matrix2Root().inverse);
     const c_xy = pm2rin.computeCoord(t_xy);
     api.shapeModifyX(page, s, c_xy.x);
