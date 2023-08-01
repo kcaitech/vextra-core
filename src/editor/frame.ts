@@ -527,13 +527,10 @@ export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
         scale = -scale;
     }
     let t_xy = { x: f.width * (1 - scale) / 2, y: (1 - scale) * f.height };
-    const m2p = s.matrix2Parent();
-    const m2r = s.matrix2Root();
-    t_xy = m2r.computeCoord(t_xy);
-    const pm2rin = new Matrix(p.matrix2Root().inverse);
-    const c_xy = pm2rin.computeCoord(t_xy);
-    api.shapeModifyX(page, s, c_xy.x);
-    api.shapeModifyY(page, s, c_xy.y);
+    t_xy = s.matrix2Root().computeCoord(t_xy);
+    t_xy = new Matrix(p.matrix2Root().inverse).computeCoord(t_xy);
+    api.shapeModifyX(page, s, t_xy.x);
+    api.shapeModifyY(page, s, t_xy.y);
     api.shapeModifyWH(page, s, f.width * scale, f.height * scale);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
 }
