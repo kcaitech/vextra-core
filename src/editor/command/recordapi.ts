@@ -11,13 +11,12 @@ import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportText } from "../../io/baseexport";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
-import { GroupShape, Shape, TextShape, PathShape, ImageShape, PathShape2 } from "../../data/shape";
+import { GroupShape, Shape, TextShape, PathShape, PathShape2 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
-import { Artboard } from "../../data/artboard";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
-import { RectShape, TableCell } from "../../data/classes";
+import { RectShape, TableCell, TableCellType } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
@@ -973,15 +972,33 @@ export class Api {
             })
         })
     }
-
-    tableSetCellContent(page: Page, cell: TableCell, content: ImageShape | TextShape | undefined) {
+    tableSetCellContent(page: Page, cell: TableCell, contentType: TableCellType | undefined, content: string | Text) {
         this.checkShapeAtPage(page, cell);
         this.__trap(() => {
-            const origin = cell.child;
-            if (origin !== content) {
-                cell.child = content;
-                this.addCmd(ShapeCmdModify.Make(page.id, cell.id, SHAPE_ATTR_ID.cellContent, content && exportShape(content), origin && exportShape(origin)))
+            const originType = cell.cellType === TableCellType.None ? undefined : cell.cellType;
+            contentType = contentType === TableCellType.None ? undefined : contentType;
+
+            // if (originType !== cell.cellType) {
+            const originContent = ((type: TableCellType | undefined) => {
+                if (type === TableCellType.Text) return exportText(cell.text!);
+                if (type === TableCellType.Image) return cell.imageRef!;
+            })(originType);
+
+            let content4cmd;
+            cell.cellType = contentType;
+            if (contentType === TableCellType.Image && typeof content === 'string') {
+                cell.imageRef = content;
+                content4cmd = content;
             }
+            else if (contentType === TableCellType.Text && content instanceof Text) {
+                cell.text = content;
+                content4cmd = exportText(content);
+            }
+
+            this.addCmd(ShapeCmdModify.Make(page.id, cell.id, SHAPE_ATTR_ID.cellContent,
+                { type: contentType, content: content4cmd },
+                { type: originType, content: originContent }))
+            // }
         })
     }
 }

@@ -2,9 +2,10 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { newImageShape, newTextShape } from "./creator";
-import { ShapeFrame } from "../data/baseclasses";
+import { newImageShape, newText, newTextShape } from "./creator";
+import { ShapeFrame, TableCellType } from "../data/baseclasses";
 import { ResourceMgr } from "../data/basic";
+import { Text } from "data/text";
 
 export class TableEditor extends ShapeEditor {
 
@@ -31,19 +32,21 @@ export class TableEditor extends ShapeEditor {
     // 调整行高
     // 调整列宽
 
-    setCellContentImage(cell: TableCell, ref: string, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>, name?: string) {
+    setCellContentImage(cell: TableCell, ref: string) {
+        if (cell.childs.length > 0) return;
         const frame = new ShapeFrame(0, 0, cell.frame.width, cell.frame.height);
-        const image = newImageShape(name || "", frame, ref, mediasMgr);
         const api = this.__repo.start('setCellContentImage', {});
-        api.tableSetCellContent(this.__page, cell, image);
+        api.tableSetCellContent(this.__page, cell, TableCellType.Image, ref);
         this.__repo.commit();
     }
 
-    setCellContentText(cell: TableCell, name?: string) {
+    setCellContentText(cell: TableCell, text?: string) {
+        if (cell.childs.length > 0) return;
         const frame = new ShapeFrame(0, 0, cell.frame.width, cell.frame.height);
-        const text = newTextShape(name || "", frame)
         const api = this.__repo.start('setCellContentText', {});
-        api.tableSetCellContent(this.__page, cell, text);
+        const _text = newText();
+        if (text && text.length > 0) _text.insertText(text, 0);
+        api.tableSetCellContent(this.__page, cell, TableCellType.Text, _text);
         this.__repo.commit();
     }
 }

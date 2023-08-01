@@ -82,7 +82,7 @@ function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
     const ctx = new class implements IImportContext {
         afterImport(obj: any): void {
-            if (obj instanceof ImageShape || obj instanceof Fill) {
+            if (obj instanceof ImageShape || obj instanceof Fill || obj instanceof TableCell) {
                 obj.setImageMgr(document.mediasMgr)
             } else if (obj instanceof SymbolRefShape) {
                 obj.setSymbolMgr(document.symbolsMgr)
@@ -589,11 +589,14 @@ export class CMDExecuter {
         }
         else if (opId === SHAPE_ATTR_ID.cellContent) {
             if (op.type === OpType.IdSet && value) {
-                const content = importShape(value, this.__document);
-                api.tableSetCellContent(shape as TableCell, content as TextShape | ImageShape);
+                let { type, content } = JSON.parse(value);
+                if (type === types.TableCellType.Text) {
+                    content = importText(content);
+                }
+                api.tableSetCellContent(shape as TableCell, type, content);
             }
             else if (!value || op.type === OpType.IdRemove) {
-                api.tableSetCellContent(shape as TableCell, undefined)
+                api.tableSetCellContent(shape as TableCell, undefined, "");
             }
         }
         // todo

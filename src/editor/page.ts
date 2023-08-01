@@ -8,7 +8,7 @@ import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style } from "../data/classes";
+import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -18,6 +18,7 @@ import { IImportContext, importBorder, importStyle } from "../io/baseimport";
 import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
+import { TableEditor } from "./table";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -937,5 +938,8 @@ export class PageEditor {
     }
     editor4TextShape(shape: TextShape): TextShapeEditor {
         return new TextShapeEditor(shape, this.__page, this.__repo);
+    }
+    editor4Table(shape: TableShape): TableEditor {
+        return new TableEditor(shape, this.__page, this.__repo);
     }
 }

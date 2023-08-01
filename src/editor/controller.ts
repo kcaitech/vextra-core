@@ -106,7 +106,7 @@ export class Controller {
                 return shape;
             }
             case ShapeType.Image: return newImageShape(name, frame, ref, mediasMgr);
-            case ShapeType.Table: return newTable(name, frame, 3, 3);
+            case ShapeType.Table: return newTable(name, frame, 3, 3, mediasMgr);
             default: return newRectShape(name, frame);
         }
     }

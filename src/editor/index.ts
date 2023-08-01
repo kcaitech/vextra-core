@@ -8,6 +8,8 @@ import { ShapeEditor } from "./shape";
 import { Controller } from "./controller";
 import { CoopRepository } from "./command/cooprepo";
 import { TextShapeEditor } from "./textshape";
+import { TableEditor } from "./table";
+import { TableShape } from "../data/table";
 
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";
@@ -45,10 +47,7 @@ export class Editor {
 
     editor4Shape(shape: Shape): ShapeEditor {
         // get page
-        let p: Shape | undefined = shape;
-        while (p && (!(p instanceof Page))) {
-            p = p.parent;
-        }
+        const p: Shape | undefined = shape.getPage();
         if (!p) throw Error("shape has not parent Page!")
         const pe = this.editor4Page(p as Page);
         return pe.editor4Shape(shape);
@@ -56,13 +55,17 @@ export class Editor {
 
     editor4TextShape(shape: TextShape): TextShapeEditor {
         // get page
-        let p: Shape | undefined = shape;
-        while (p && (!(p instanceof Page))) {
-            p = p.parent;
-        }
+        const p: Shape | undefined = shape.getPage();
         if (!p) throw Error("shape has not parent Page!")
         const pe = this.editor4Page(p as Page);
         return pe.editor4TextShape(shape);
+    }
+    editor4Table(shape: TableShape): TableEditor {
+        // get page
+        const p: Shape | undefined = shape.getPage();
+        if (!p) throw Error("shape has not parent Page!")
+        const pe = this.editor4Page(p as Page);
+        return pe.editor4Table(shape);
     }
     controller(): Controller {
         const e = new Controller(this.m_repo, this.data);

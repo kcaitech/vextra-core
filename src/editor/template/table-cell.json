@@ -16,7 +16,10 @@
         "windingRule": "non-zero",
         "blur": {
             "isEnabled": false,
-            "center": { "x": 0, "y": 0 },
+            "center": {
+                "x": 0,
+                "y": 0
+            },
             "saturation": 0,
             "type": "gaussian"
         },

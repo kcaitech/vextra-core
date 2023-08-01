@@ -2,18 +2,20 @@ import { v4 as uuid } from "uuid";
 import { Page } from "../data/page";
 import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
-import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, FlattenShape, PathShape2, PathSegment } from "../data/shape";
+import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment } from "../data/shape";
 import * as types from "../data/typesdefine"
-import { importGroupShape, importPage, importArtboard, importTextShape, importText, importFlattenShape, importTableShape, importTableCell } from "../io/baseimport";
+import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape, importTableCell } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import template_table_shape from "./template/table-shape.json"
 import template_table_cell from "./template/table-cell.json"
+import template_text from "./template/text.json"
 import {
     Blur, Point2D, BorderOptions, ContextSettings, CurvePoint,
-    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path
+    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
+    Text
 } from "../data/classes";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
@@ -162,6 +164,10 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     return shape;
 }
 
+export function newText(): Text {
+    return importText(template_text);
+}
+
 // 后续需要传入字体、字号、颜色信息
 export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
     template_text_shape.id = uuid();
@@ -205,7 +211,7 @@ export function newImageShape(name: string, frame: ShapeFrame, ref?: string, med
     return img;
 }
 
-export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number): TableShape {
+export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>): TableShape {
     template_table_shape.id = uuid();
     template_table_shape.name = name // i18n
     const table = importTableShape(template_table_shape as types.TableShape);
@@ -218,6 +224,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
         for (let ri = 0, x = 0; ri < rowCount; ri++) {
             template_table_cell.id = uuid();
             const cell = importTableCell(template_table_cell as types.TableCell);
+            if (mediasMgr) cell.setImageMgr(mediasMgr);
             cell.frame.width = cellWidth;
             cell.frame.height = cellHeight;
             cell.frame.x = x;
