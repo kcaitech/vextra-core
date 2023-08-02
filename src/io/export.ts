@@ -39,7 +39,7 @@ class ExfContext implements IExportContext {
         else if (obj.typeId === 'image-shape') {
             this.medias.add(obj.imageRef)
         }
-        else if (obj.typeId === 'fill') {
+        else if (obj.typeId === 'fill' || obj.typeId === 'table-cell') {
             if (obj.imageRef) this.medias.add(obj.imageRef)
         }
         // else if (obj.typeId === 'artboard-ref') {
