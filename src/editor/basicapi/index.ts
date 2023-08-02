@@ -9,6 +9,8 @@ export * from "./fill";
 export * from "./border";
 export * from "./table";
 
+type TextShapeLike = Shape & { text: Text }
+
 export function pageInsert(document: Document, page: Page, index: number) {
     document.insertPage(index, page)
 }
@@ -189,8 +191,8 @@ export function shapeModifyTextFontSize(shapetext: Text, fontSize: number) {
     text.setDefaultFontSize(fontSize);
     return origin;
 }
-export function shapeModifyTextBehaviour(page: Page, shapetext: Text, textBehaviour: TextBehaviour) {
-    const text = shapetext;
+export function shapeModifyTextBehaviour(page: Page, shape: TextShapeLike, textBehaviour: TextBehaviour) {
+    const text = shape.text;
     if (textBehaviour === TextBehaviour.Flexible) {
         // default
         if (!text.attr || !text.attr.textBehaviour || text.attr.textBehaviour === TextBehaviour.Flexible) return TextBehaviour.Flexible;

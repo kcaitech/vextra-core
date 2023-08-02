@@ -632,7 +632,7 @@ export class Api {
     shapeModifyTextBehaviour(page: Page, shape: TextShapeLike, textBehaviour: TextBehaviour) {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.shapeModifyTextBehaviour(page, shape.text, textBehaviour);
+            const ret = basicapi.shapeModifyTextBehaviour(page, shape, textBehaviour);
             if (ret !== textBehaviour) {
                 this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.textBehaviour, textBehaviour, ret));
             }

@@ -450,12 +450,10 @@ export class CMDExecuter {
         else if (opId === SHAPE_ATTR_ID.textBehaviour) {
             if (op.type === OpType.IdSet && value) {
                 const textBehaviour = value as types.TextBehaviour
-                const text = (shape as TextShapeLike).text;
-                api.shapeModifyTextBehaviour(page, text, textBehaviour);
+                api.shapeModifyTextBehaviour(page, shape as TextShapeLike, textBehaviour);
             }
             else if (op.type === OpType.IdRemove) {
-                const text = (shape as TextShapeLike).text;
-                api.shapeModifyTextBehaviour(page, text, types.TextBehaviour.Flexible)
+                api.shapeModifyTextBehaviour(page, shape as TextShapeLike, types.TextBehaviour.Flexible)
             }
         }
         else if (opId === SHAPE_ATTR_ID.textVerAlign) {
