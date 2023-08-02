@@ -5,7 +5,9 @@ import { Artboard, ShapeType, Color } from '../data/classes';
 const defaultColor = Color.DefaultColor;
 // artboard单独一个svg节点，需要设置overflow
 export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any>, reflush?: number) {
-    if (!shape.isVisible) return;
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const ab_props: any = {
         version: "1.1",
         xmlns: "http://www.w3.org/2000/svg",

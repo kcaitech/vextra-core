@@ -1,8 +1,8 @@
 
 
 import { DefaultColor, isColorEqual } from "./basic";
-import { TextShape, Path, Color  } from '../data/classes';
-import { GraphArray } from "../data/textlayout";
+import { TextShape, Path, Color } from '../data/classes';
+import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 
 
@@ -101,9 +101,8 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
     }
 }
 
-export function render(h: Function, shape: TextShape, reflush?: number) {
-    if (!shape.isVisible) return null;
-    const { yOffset, paras } = shape.getLayout();
+export function renderTextLayout(h: Function, layout: TextLayout) {
+    const { yOffset, paras } = layout;
     const pc = paras.length;
 
     const childs = []
@@ -185,6 +184,14 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
             renderDecorateLines(h, line.x, underlineY, underlines, childs);
         }
     }
+    return childs;
+}
+
+export function render(h: Function, shape: TextShape, reflush?: number) {
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
+    const childs = renderTextLayout(h, shape.getLayout());
 
     const frame = shape.frame;
     const props: any = {}

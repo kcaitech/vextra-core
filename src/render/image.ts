@@ -4,7 +4,9 @@ import { render as borderR } from "./border";
 import { render as clippathR } from "./clippath"
 
 export function render(h: Function, shape: ImageShape, url: string, reflush?: number) {
-    if (!shape.isVisible) return;
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const frame = shape.frame;
 
     const path = shape.getPath().toString();

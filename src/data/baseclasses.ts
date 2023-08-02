@@ -671,7 +671,6 @@ export class Border extends Basic {
     borderStyle: BorderStyle
     startMarkerType: MarkerType
     endMarkerType: MarkerType
-    pos?: number
     constructor(
         id: string,
         isEnabled: boolean,

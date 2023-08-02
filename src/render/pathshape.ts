@@ -7,7 +7,9 @@ export function render(h: Function, shape: PathShape, reflush?: number) {
     //     // todo 只画selection
     //     return;
     // }
-    if (!shape.isVisible) return;
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const frame = shape.frame;
     const path = shape.getPath().toString();
     const childs = [];

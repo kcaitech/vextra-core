@@ -1,7 +1,9 @@
 import { Color, Shape } from "../data/classes";
 
 export function render(h: Function, shape: Shape, reflush?: number) {
-    if (!shape.isVisible) return;
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const frame = shape.frame;
     const path = shape.getPath();
     const border = shape.style.borders.at(-1);

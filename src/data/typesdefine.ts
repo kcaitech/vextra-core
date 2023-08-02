@@ -397,7 +397,6 @@ export type Border = {
     borderStyle: BorderStyle
     startMarkerType: MarkerType
     endMarkerType: MarkerType
-    pos?: number
 }
 /* border style */
 export type BorderStyle = {

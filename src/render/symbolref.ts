@@ -5,6 +5,9 @@ import { render as borderR } from "./border"
 
 function renderSym(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame): any {
     // if (!shape.isVisible) return [];
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const childs: Array<any> = renderGroupChilds(h, shape, comsMap);
     const frame = shape.frame;
 

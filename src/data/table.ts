@@ -43,6 +43,13 @@ export class TableCell extends Shape implements classes.TableCell {
         return new Path(path);
     }
 
+    isImageCell() {
+        return this.cellType === TableCellType.Image;
+    }
+    isTextCell() {
+        return this.cellType === TableCellType.Text;
+    }
+
     // image
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;

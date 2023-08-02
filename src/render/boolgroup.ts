@@ -98,6 +98,9 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
 }
 
 export function render(h: Function, shape: GroupShape, reflush?: number, consumed?: Array<Shape>): any {
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const path = render2path(shape, consumed);
     const frame = shape.frame;
 

@@ -1,20 +1,32 @@
-import { ShapeType, TableCell } from "../data/classes";
+import { ShapeType, TableCell, TableCellType } from "../data/classes";
+import { renderTextLayout } from "./text";
 
-export function render(h: Function, shape: TableCell, comsMap: Map<ShapeType, any>): any {
+export function render(h: Function, shape: TableCell): any {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
-    const child = shape.child;
-    if (!child) return;
+
+    const cellType = shape.cellType ?? TableCellType.None;
+    if (cellType === TableCellType.None) return;
 
     const frame = shape.frame;
     const childs = [];
 
-    const com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
-    const node = h(com, { data: child });
-    childs.push(node);
+    if (cellType === TableCellType.Image) {
+        const img = h("image", {
+            'xlink:href': shape.peekImage(),
+            width: frame.width,
+            height: frame.height,
+            x: 0,
+            y: 0,
+            'preserveAspectRatio': 'none meet'
+        });
+        childs.push(img);
+    }
+    else if (cellType === TableCellType.Text) {
+        childs.push(...renderTextLayout(h, shape.getLayout()!))
+    }
 
-    const props: any = {}
-    props.transform = `translate(${frame.x},${frame.y})`
+    const props = { transform: `translate(${frame.x},${frame.y})` }
 
     return h('g', props, childs);
 }

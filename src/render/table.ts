@@ -1,8 +1,7 @@
-import { Path, Shape, ShapeFrame, ShapeType, Style, TableShape } from "../data/classes";
+import { ShapeType, TableShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { render as rCell } from "./tablecell";
-import { BorderPos } from "data/consts";
 
 export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
     const isVisible = shape.isVisible ?? true;
@@ -27,10 +26,11 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
     // content
     for (let i = 0; i < cc; i++) {
         const child = shape.childs[i];
-        const node = rCell(h, child, comsMap)
+        const node = rCell(h, child)
         if (node) nodes.push(node);
     }
 
+    // todo 边框位置
     // border
     nodes.push(...borderR(h, shape.style, frame, path));
     for (let i = 0; i < cc; i++) {

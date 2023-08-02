@@ -7,10 +7,3 @@ export const ResizingConstraints = {
     Height: 0b010000,
     Top: 0b100000,
 }
-
-export const BorderPos = {
-    Left: 1 << 0,
-    Top: 1 << 1,
-    Right: 1 << 2,
-    Bottom: 1 << 3,
-}
