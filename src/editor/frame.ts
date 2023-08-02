@@ -175,7 +175,7 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
                 }
             }
             api.shapeModifyWH(page, shape, w, h)
-            fixTextShapeFrameByLayout(api, page, shape);
+            fixTextShapeFrameByLayout(api, page, shape, shape.text);
         }
         else if (shape instanceof GroupShape) {
             const saveW = frame.width;

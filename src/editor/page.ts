@@ -1,4 +1,4 @@
-import { Shape, GroupShape, ShapeFrame, TextShape, PathShape2, RectShape } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
@@ -8,7 +8,7 @@ import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape } from "../data/classes";
+import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -936,7 +936,7 @@ export class PageEditor {
     editor4Shape(shape: Shape): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo);
     }
-    editor4TextShape(shape: TextShape): TextShapeEditor {
+    editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
         return new TextShapeEditor(shape, this.__page, this.__repo);
     }
     editor4Table(shape: TableShape): TableEditor {

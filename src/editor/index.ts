@@ -1,6 +1,6 @@
 import { Document } from "../data/document";
 import { Page } from "../data/page";
-import { Shape, TextShape } from "../data/shape";
+import { Shape } from "../data/shape";
 import { ISave4Restore } from "../data/basic";
 import { DocEditor } from "./document";
 import { PageEditor } from "./page";
@@ -10,6 +10,7 @@ import { CoopRepository } from "./command/cooprepo";
 import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
 import { TableShape } from "../data/table";
+import { Text } from "../data/text"
 
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";
@@ -53,7 +54,7 @@ export class Editor {
         return pe.editor4Shape(shape);
     }
 
-    editor4TextShape(shape: TextShape): TextShapeEditor {
+    editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
         // get page
         const p: Shape | undefined = shape.getPage();
         if (!p) throw Error("shape has not parent Page!")

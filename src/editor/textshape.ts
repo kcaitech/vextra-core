@@ -7,10 +7,10 @@ import {
     SpanAttr,
     SpanAttrSetter,
     StrikethroughType,
-    Text,
+
     TextBehaviour,
     TextHorAlign,
-    TextShape,
+    Text, Shape,
     TextTransformType,
     TextVerAlign,
     UnderlineType
@@ -19,6 +19,8 @@ import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTextShapeFrameByLayout } from "./utils";
+
+type TextShape = Shape & { text: Text }
 
 export class TextShapeEditor extends ShapeEditor {
 
@@ -44,7 +46,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     private fixFrameByLayout(api: Api) {
-        fixTextShapeFrameByLayout(api, this.__page, this.shape)
+        fixTextShapeFrameByLayout(api, this.__page, this.shape, this.shape.text)
     }
 
     public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape
