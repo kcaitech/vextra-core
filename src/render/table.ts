@@ -1,9 +1,9 @@
-import { TableShape } from "../data/classes";
+import { ShapeType, TableShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { render as rCell } from "./tablecell";
 
-export function render(h: Function, shape: TableShape, reflush?: number): any {
+export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
     const frame = shape.frame;
@@ -26,8 +26,9 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
     // content
     for (let i = 0; i < cc; i++) {
         const child = shape.childs[i];
-        const node = rCell(h, child)
-        if (node) nodes.push(node);
+        const com = comsMap.get(ShapeType.TableCell);
+        const node = h(com, { data: child });
+        nodes.push(node);
     }
 
     // todo 边框位置

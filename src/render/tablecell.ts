@@ -1,7 +1,7 @@
-import { ShapeType, TableCell, TableCellType } from "../data/classes";
+import { TableCell, TableCellType } from "../data/classes";
 import { renderTextLayout } from "./text";
 
-export function render(h: Function, shape: TableCell): any {
+export function render(h: Function, shape: TableCell, url?: string, reflush?: number): any {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
 
@@ -13,12 +13,12 @@ export function render(h: Function, shape: TableCell): any {
 
     if (cellType === TableCellType.Image) {
         const img = h("image", {
-            'xlink:href': shape.peekImage(),
+            'xlink:href': url,
             width: frame.width,
             height: frame.height,
             x: 0,
             y: 0,
-            'preserveAspectRatio': 'none meet'
+            'preserveAspectRatio': 'xMidYMid meet'
         });
         childs.push(img);
     }
@@ -26,7 +26,7 @@ export function render(h: Function, shape: TableCell): any {
         childs.push(...renderTextLayout(h, shape.getLayout()!))
     }
 
-    const props = { transform: `translate(${frame.x},${frame.y})` }
+    const props = { transform: `translate(${frame.x},${frame.y})`, reflush }
 
     return h('g', props, childs);
 }
