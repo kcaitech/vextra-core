@@ -33,16 +33,12 @@ export class TableEditor extends ShapeEditor {
     // 调整列宽
 
     setCellContentImage(cell: TableCell, ref: string) {
-        if (cell.childs.length > 0) return;
-        const frame = new ShapeFrame(0, 0, cell.frame.width, cell.frame.height);
         const api = this.__repo.start('setCellContentImage', {});
         api.tableSetCellContent(this.__page, cell, TableCellType.Image, ref);
         this.__repo.commit();
     }
 
     setCellContentText(cell: TableCell, text?: string) {
-        if (cell.childs.length > 0) return;
-        const frame = new ShapeFrame(0, 0, cell.frame.width, cell.frame.height);
         const api = this.__repo.start('setCellContentText', {});
         const _text = newText();
         if (text && text.length > 0) _text.insertText(text, 0);

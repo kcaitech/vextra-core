@@ -1,8 +1,7 @@
 import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
-import { GroupShape, ImageShape, PathShape, PathShape2, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
-import { Artboard } from "../../data/artboard";
+import { GroupShape, PathShape, PathShape2, RectShape, Shape } from "../../data/shape";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 import { BoolOp, BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 
@@ -127,20 +126,20 @@ export function shapeModifyBoolOpShape(shape: GroupShape, isOpShape: boolean | u
     else shape.isBoolOpShape = undefined;
 }
 
-export function insertSimpleText(shape: TextShape, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
-    shape.text.insertText(text, index, props)
+export function insertSimpleText(shapetext: Text, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+    shapetext.insertText(text, index, props)
 }
-export function insertComplexText(shape: TextShape, text: Text, index: number) {
-    shape.text.insertFormatText(text, index);
+export function insertComplexText(shapetext: Text, text: Text, index: number) {
+    shapetext.insertFormatText(text, index);
 }
-export function deleteText(shape: TextShape, index: number, count: number): Text | undefined {
-    return shape.text.deleteText(index, count);
+export function deleteText(shapetext: Text, index: number, count: number): Text | undefined {
+    return shapetext.deleteText(index, count);
 }
-export function textModifyColor(shape: TextShape, idx: number, len: number, color: Color | undefined) {
+export function textModifyColor(shapetext: Text, idx: number, len: number, color: Color | undefined) {
     const attr = new SpanAttrSetter();
     attr.color = color;
     attr.colorIsSet = true;
-    const ret = shape.text.formatText(idx, len, { attr })
+    const ret = shapetext.formatText(idx, len, { attr })
     const spans = ret.spans;
     const origin: { color: Color | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -148,11 +147,11 @@ export function textModifyColor(shape: TextShape, idx: number, len: number, colo
     })
     return origin;
 }
-export function textModifyFontName(shape: TextShape, idx: number, len: number, fontname: string | undefined) {
+export function textModifyFontName(shapetext: Text, idx: number, len: number, fontname: string | undefined) {
     const attr = new SpanAttrSetter();
     attr.fontName = fontname;
     attr.fontNameIsSet = true;
-    const ret = shape.text.formatText(idx, len, { attr })
+    const ret = shapetext.formatText(idx, len, { attr })
     const spans = ret.spans;
     const origin: { fontName: string | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -160,11 +159,11 @@ export function textModifyFontName(shape: TextShape, idx: number, len: number, f
     })
     return origin;
 }
-export function textModifyFontSize(shape: TextShape, idx: number, len: number, fontsize: number | undefined) {
+export function textModifyFontSize(shapetext: Text, idx: number, len: number, fontsize: number | undefined) {
     const attr = new SpanAttrSetter();
     attr.fontSize = fontsize;
     attr.fontSizeIsSet = true;
-    const ret = shape.text.formatText(idx, len, { attr })
+    const ret = shapetext.formatText(idx, len, { attr })
     const spans = ret.spans;
     const origin: { fontSize: number | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -172,26 +171,26 @@ export function textModifyFontSize(shape: TextShape, idx: number, len: number, f
     })
     return origin;
 }
-export function shapeModifyTextColor(shape: TextShape, color: Color | undefined) {
-    const text = shape.text;
+export function shapeModifyTextColor(shapetext: Text, color: Color | undefined) {
+    const text = shapetext;
     const origin = text.attr?.color;
     text.setDefaultTextColor(color);
     return origin;
 }
-export function shapeModifyTextFontName(shape: TextShape, fontName: string | undefined) {
-    const text = shape.text;
+export function shapeModifyTextFontName(shapetext: Text, fontName: string | undefined) {
+    const text = shapetext;
     const origin = text.attr?.fontName;
     text.setDefaultFontName(fontName);
     return origin;
 }
-export function shapeModifyTextFontSize(shape: TextShape, fontSize: number) {
-    const text = shape.text;
+export function shapeModifyTextFontSize(shapetext: Text, fontSize: number) {
+    const text = shapetext;
     const origin = text.attr?.fontSize;
     text.setDefaultFontSize(fontSize);
     return origin;
 }
-export function shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour) {
-    const text = shape.text;
+export function shapeModifyTextBehaviour(page: Page, shapetext: Text, textBehaviour: TextBehaviour) {
+    const text = shapetext;
     if (textBehaviour === TextBehaviour.Flexible) {
         // default
         if (!text.attr || !text.attr.textBehaviour || text.attr.textBehaviour === TextBehaviour.Flexible) return TextBehaviour.Flexible;
@@ -200,8 +199,8 @@ export function shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehav
     text.setTextBehaviour(textBehaviour);
     return origin ?? TextBehaviour.Flexible;
 }
-export function shapeModifyTextVerAlign(shape: TextShape, verAlign: TextVerAlign) {
-    const text = shape.text;
+export function shapeModifyTextVerAlign(shapetext: Text, verAlign: TextVerAlign) {
+    const text = shapetext;
     if (verAlign === TextVerAlign.Top) {
         // default
         if (!text.attr || !text.attr.verAlign || text.attr.verAlign === TextVerAlign.Top) return TextVerAlign.Top;
@@ -210,11 +209,11 @@ export function shapeModifyTextVerAlign(shape: TextShape, verAlign: TextVerAlign
     text.setTextVerAlign(verAlign);
     return origin ?? TextVerAlign.Top;
 }
-export function textModifyHorAlign(shape: TextShape, horAlign: TextHorAlign, index: number, len: number) {
+export function textModifyHorAlign(shapetext: Text, horAlign: TextHorAlign, index: number, len: number) {
     const attr = new ParaAttrSetter();
     attr.alignment = horAlign;
     attr.alignmentIsSet = true;
-    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const ret = shapetext.formatText(index, len, { paraAttr: attr })
     const paras = ret.paras;
     const origin: { alignment: TextHorAlign | undefined, length: number }[] = [];
     paras.forEach((para) => {
@@ -222,8 +221,8 @@ export function textModifyHorAlign(shape: TextShape, horAlign: TextHorAlign, ind
     })
     return origin;
 }
-export function shapeModifyTextDefaultHorAlign(shape: TextShape, horAlign: TextHorAlign) {
-    const text = shape.text;
+export function shapeModifyTextDefaultHorAlign(shapetext: Text, horAlign: TextHorAlign) {
+    const text = shapetext;
     if (horAlign === TextHorAlign.Left) {
         // default
         if (!text.attr || !text.attr.alignment || text.attr.alignment === TextHorAlign.Left) return TextHorAlign.Left;
@@ -232,11 +231,11 @@ export function shapeModifyTextDefaultHorAlign(shape: TextShape, horAlign: TextH
     text.setDefaultTextHorAlign(horAlign);
     return origin ?? TextHorAlign.Left;
 }
-export function textModifyMinLineHeight(shape: TextShape, minLineheight: number, index: number, len: number) {
+export function textModifyMinLineHeight(shapetext: Text, minLineheight: number, index: number, len: number) {
     const attr = new ParaAttrSetter();
     attr.minimumLineHeight = minLineheight;
     attr.minimumLineHeightIsSet = true;
-    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const ret = shapetext.formatText(index, len, { paraAttr: attr })
     const paras = ret.paras;
     const origin: { minimumLineHeight?: number, length: number }[] = [];
     paras.forEach((para) => {
@@ -244,11 +243,11 @@ export function textModifyMinLineHeight(shape: TextShape, minLineheight: number,
     })
     return origin;
 }
-export function textModifyMaxLineHeight(shape: TextShape, maxLineheight: number, index: number, len: number) {
+export function textModifyMaxLineHeight(shapetext: Text, maxLineheight: number, index: number, len: number) {
     const attr = new ParaAttrSetter();
     attr.maximumLineHeight = maxLineheight;
     attr.maximumLineHeightIsSet = true;
-    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const ret = shapetext.formatText(index, len, { paraAttr: attr })
     const paras = ret.paras;
     const origin: { maximumLineHeight: number | undefined, length: number }[] = [];
     paras.forEach((para) => {
@@ -256,11 +255,11 @@ export function textModifyMaxLineHeight(shape: TextShape, maxLineheight: number,
     })
     return origin;
 }
-export function textModifyParaKerning(shape: TextShape, kerning: number | undefined, index: number, len: number) {
+export function textModifyParaKerning(shapetext: Text, kerning: number | undefined, index: number, len: number) {
     const attr = new ParaAttrSetter();
     attr.kerning = kerning;
     attr.kerningIsSet = true;
-    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const ret = shapetext.formatText(index, len, { paraAttr: attr })
     const paras = ret.paras;
     const origin: { kerning: number | undefined, length: number }[] = [];
     paras.forEach((para) => {
@@ -268,11 +267,11 @@ export function textModifyParaKerning(shape: TextShape, kerning: number | undefi
     })
     return origin;
 }
-export function textModifySpanKerning(shape: TextShape, kerning: number | undefined, index: number, len: number) {
+export function textModifySpanKerning(shapetext: Text, kerning: number | undefined, index: number, len: number) {
     const attr = new SpanAttrSetter();
     attr.kerning = kerning;
     attr.kerningIsSet = true;
-    const ret = shape.text.formatText(index, len, { attr: attr })
+    const ret = shapetext.formatText(index, len, { attr: attr })
     const spans = ret.spans;
     const origin: { kerning: number | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -280,11 +279,11 @@ export function textModifySpanKerning(shape: TextShape, kerning: number | undefi
     })
     return origin;
 }
-export function textModifyParaSpacing(shape: TextShape, paraSpacing: number, index: number, len: number) {
+export function textModifyParaSpacing(shapetext: Text, paraSpacing: number, index: number, len: number) {
     const attr = new ParaAttrSetter();
     attr.paraSpacing = paraSpacing;
     attr.paraSpacingIsSet = true;
-    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const ret = shapetext.formatText(index, len, { paraAttr: attr })
     const paras = ret.paras;
     const origin: { paraSpacing: number | undefined, length: number }[] = [];
     paras.forEach((para) => {
@@ -292,25 +291,25 @@ export function textModifyParaSpacing(shape: TextShape, paraSpacing: number, ind
     })
     return origin;
 }
-export function shapeModifyTextDefaultMinLineHeight(shape: TextShape, minLineheight: number) {
-    const text = shape.text;
+export function shapeModifyTextDefaultMinLineHeight(shapetext: Text, minLineheight: number) {
+    const text = shapetext;
     const origin = text.attr?.minimumLineHeight;
     text.setDefaultMinLineHeight(minLineheight);
     return origin ?? 0;
 }
-export function shapeModifyTextDefaultMaxLineHeight(shape: TextShape, maxLineheight: number) {
-    const text = shape.text;
+export function shapeModifyTextDefaultMaxLineHeight(shapetext: Text, maxLineheight: number) {
+    const text = shapetext;
     const origin = text.attr?.maximumLineHeight;
     text.setDefaultMaxLineHeight(maxLineheight);
     return origin ?? 0;
 }
 
-export function textModifySpanTransfrom(shape: TextShape, transform: TextTransformType | undefined, index: number, len: number) {
+export function textModifySpanTransfrom(shapetext: Text, transform: TextTransformType | undefined, index: number, len: number) {
     // 句属性
     const attr = new SpanAttrSetter();
     attr.transform = transform;
     attr.transformIsSet = true;
-    const ret = shape.text.formatText(index, len, { attr: attr })
+    const ret = shapetext.formatText(index, len, { attr: attr })
     const spans = ret.spans;
     const origin: { transform: TextTransformType | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -318,12 +317,12 @@ export function textModifySpanTransfrom(shape: TextShape, transform: TextTransfo
     })
     return origin;
 }
-export function textModifyParaTransfrom(shape: TextShape, transform: TextTransformType | undefined, index: number, len: number) {
+export function textModifyParaTransfrom(shapetext: Text, transform: TextTransformType | undefined, index: number, len: number) {
     // 段落属性
     const attr = new ParaAttrSetter();
     attr.transform = transform;
     attr.transformIsSet = true;
-    const ret = shape.text.formatText(index, len, { paraAttr: attr })
+    const ret = shapetext.formatText(index, len, { paraAttr: attr })
     const paras = ret.paras;
     const origin: { transform: TextTransformType | undefined, length: number }[] = [];
     paras.forEach((para) => {
@@ -331,36 +330,18 @@ export function textModifyParaTransfrom(shape: TextShape, transform: TextTransfo
     })
     return origin;
 }
-export function shapeModifyTextTransform(shape: TextShape, transform: TextTransformType | undefined) {
-    const text = shape.text;
+export function shapeModifyTextTransform(shapetext: Text, transform: TextTransformType | undefined) {
+    const text = shapetext;
     const origin = text.attr?.transform;
     text.setDefaultTransform(transform);
     return origin ?? 0;
 }
-export function shapeModifyTextKerning(shape: TextShape, kerning: number) {
 
-}
-export function shapeModifyTextParaSpacing(shape: TextShape, paraSpacing: number) {
-
-}
-export function shapeModifyTextUnderline(shape: TextShape, underline: UnderlineType | undefined) {
-
-}
-export function shapeModifyStrikethrough(shape: TextShape, strikethrouth: StrikethroughType | undefined) {
-
-}
-export function shapeModifyTextDefaultBold(shape: TextShape, bold: boolean) {
-
-}
-export function shapeModifyTextDefaultItalic(shape: TextShape, italic: boolean) {
-
-}
-
-export function textModifyHighlightColor(shape: TextShape, idx: number, len: number, color: Color | undefined) {
+export function textModifyHighlightColor(shapetext: Text, idx: number, len: number, color: Color | undefined) {
     const attr = new SpanAttrSetter();
     attr.highlight = color;
     attr.highlightIsSet = true;
-    const ret = shape.text.formatText(idx, len, { attr })
+    const ret = shapetext.formatText(idx, len, { attr })
     const spans = ret.spans;
     const origin: { highlight: Color | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -368,11 +349,11 @@ export function textModifyHighlightColor(shape: TextShape, idx: number, len: num
     })
     return origin;
 }
-export function textModifyUnderline(shape: TextShape, underline: UnderlineType | undefined, index: number, len: number) {
+export function textModifyUnderline(shapetext: Text, underline: UnderlineType | undefined, index: number, len: number) {
     const attr = new SpanAttrSetter();
     attr.underline = underline;
     attr.underlineIsSet = true;
-    const ret = shape.text.formatText(index, len, { attr })
+    const ret = shapetext.formatText(index, len, { attr })
     const spans = ret.spans;
     const origin: { underline: UnderlineType | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -380,11 +361,11 @@ export function textModifyUnderline(shape: TextShape, underline: UnderlineType |
     })
     return origin;
 }
-export function textModifyStrikethrough(shape: TextShape, strikethrough: StrikethroughType | undefined, index: number, len: number) {
+export function textModifyStrikethrough(shapetext: Text, strikethrough: StrikethroughType | undefined, index: number, len: number) {
     const attr = new SpanAttrSetter();
     attr.strikethrough = strikethrough;
     attr.strikethroughIsSet = true;
-    const ret = shape.text.formatText(index, len, { attr })
+    const ret = shapetext.formatText(index, len, { attr })
     const spans = ret.spans;
     const origin: { strikethrough: StrikethroughType | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -392,11 +373,11 @@ export function textModifyStrikethrough(shape: TextShape, strikethrough: Striket
     })
     return origin;
 }
-export function textModifyBold(shape: TextShape, bold: boolean, index: number, len: number) {
+export function textModifyBold(shapetext: Text, bold: boolean, index: number, len: number) {
     const attr = new SpanAttrSetter();
     attr.bold = bold;
     attr.boldIsSet = true;
-    const ret = shape.text.formatText(index, len, { attr })
+    const ret = shapetext.formatText(index, len, { attr })
     const spans = ret.spans;
     const origin: { bold: boolean | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -404,11 +385,11 @@ export function textModifyBold(shape: TextShape, bold: boolean, index: number, l
     })
     return origin;
 }
-export function textModifyItalic(shape: TextShape, italic: boolean, index: number, len: number) {
+export function textModifyItalic(shapetext: Text, italic: boolean, index: number, len: number) {
     const attr = new SpanAttrSetter();
     attr.italic = italic;
     attr.italicIsSet = true;
-    const ret = shape.text.formatText(index, len, { attr })
+    const ret = shapetext.formatText(index, len, { attr })
     const spans = ret.spans;
     const origin: { italic: boolean | undefined, length: number }[] = [];
     spans.forEach((span) => {
@@ -417,20 +398,20 @@ export function textModifyItalic(shape: TextShape, italic: boolean, index: numbe
     return origin;
 }
 
-export function textModifyBulletNumbersType(shape: TextShape, type: BulletNumbersType, index: number, len: number) {
-    shape.text.setBulletNumbersType(type, index, len);
+export function textModifyBulletNumbersType(shapetext: Text, type: BulletNumbersType, index: number, len: number) {
+    shapetext.setBulletNumbersType(type, index, len);
 }
 
-export function textModifyBulletNumbersStart(shape: TextShape, start: number, index: number, len: number) {
-    shape.text.setBulletNumbersStart(start, index, len);
+export function textModifyBulletNumbersStart(shapetext: Text, start: number, index: number, len: number) {
+    shapetext.setBulletNumbersStart(start, index, len);
 }
 
-export function textModifyBulletNumbersBehavior(shape: TextShape, behavior: BulletNumbersBehavior, index: number, len: number) {
-    shape.text.setBulletNumbersBehavior(behavior, index, len);
+export function textModifyBulletNumbersBehavior(shapetext: Text, behavior: BulletNumbersBehavior, index: number, len: number) {
+    shapetext.setBulletNumbersBehavior(behavior, index, len);
 }
 
-export function textModifyParaIndent(shape: TextShape, indent: number | undefined, index: number, len: number) {
-    shape.text.setParaIndent(indent, index, len);
+export function textModifyParaIndent(shapetext: Text, indent: number | undefined, index: number, len: number) {
+    shapetext.setParaIndent(indent, index, len);
 }
 
 export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {

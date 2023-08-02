@@ -276,44 +276,7 @@ export class TextShapeEditor extends ShapeEditor {
     public isInComposingInput() {
         return this.__composingStarted;
     }
-    public setTextDefaultColor(color: Color) {
-        const api = this.__repo.start("setTextDefaultColor", {});
-        try {
-            api.shapeModifyTextColor(this.__page, this.shape, color)
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
-    public setTextDefaultFontName(fontName: string) {
-        const api = this.__repo.start("setTextDefaultFontName", {});
-        try {
-            api.shapeModifyTextFontName(this.__page, this.shape, fontName);
-            this.fixFrameByLayout(api);
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
-    public setTextDefaultFontSize(fontSize: number) {
-        const api = this.__repo.start("setTextDefaultFontSize", {});
-        try {
-            api.shapeModifyTextFontSize(this.__page, this.shape, fontSize);
-            this.fixFrameByLayout(api);
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
+
     public setTextColor(index: number, len: number, color: Color | undefined) {
         if (len === 0) {
             if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
@@ -416,19 +379,6 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    // 对象属性
-    public setTextDefaultHorAlign(horAlign: TextHorAlign) {
-        const api = this.__repo.start("setTextDefaultHorAlign", {});
-        try {
-            api.shapeModifyTextDefaultHorAlign(this.__page, this.shape, horAlign)
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
     // 段属性
     public setTextHorAlign(horAlign: TextHorAlign, index: number, len: number) {
         const api = this.__repo.start("setTextHorAlign", {});
@@ -442,19 +392,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextDefaultMinLineHeight(minLineHeight: number) {
-        const api = this.__repo.start("setTextDefaultMinLineHeight", {});
-        try {
-            api.shapeModifyTextDefaultMinLineHeight(this.__page, this.shape, minLineHeight);
-            this.fixFrameByLayout(api);
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
+
     // 行高 段属性
     public setMinLineHeight(minLineHeight: number, index: number, len: number) {
         const api = this.__repo.start("setMinLineHeight", {});
@@ -469,19 +407,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setDefaultMaxLineHeight(maxLineHeight: number) {
-        const api = this.__repo.start("setDefaultMaxLineHeight", {});
-        try {
-            api.shapeModifyTextDefaultMaxLineHeight(this.__page, this.shape, maxLineHeight);
-            this.fixFrameByLayout(api);
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
+
     // 行高 段属性
     public setMaxLineHeight(maxLineHeight: number, index: number, len: number) {
         const api = this.__repo.start("setMaxLineHeight", {});
@@ -510,19 +436,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setDefaultCharSpacing(kerning: number) {
-        const api = this.__repo.start("setDefaultCharSpacing", {});
-        try {
-            api.shapeModifyTextKerning(this.__page, this.shape, kerning)
-            this.fixFrameByLayout(api);
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
+
     // 字间距 段属性
     public setCharSpacing(kerning: number, index: number, len: number) {
         if (len === 0) {
@@ -543,38 +457,13 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setDefaultParaSpacing(paraSpacing: number) {
-        const api = this.__repo.start("setDefaultParaSpacing", {});
-        try {
-            api.shapeModifyTextParaSpacing(this.__page, this.shape, paraSpacing)
-            this.fixFrameByLayout(api);
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
+
     // 段间距 段属性
     public setParaSpacing(paraSpacing: number, index: number, len: number) {
         const api = this.__repo.start("setParaSpacing", {});
         try {
             api.textModifyParaSpacing(this.__page, this.shape, paraSpacing, index, len)
             this.fixFrameByLayout(api);
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
-
-    public setTextDefaultUnderline(underline: boolean) {
-        const api = this.__repo.start("setTextDefaultUnderline", {});
-        try {
-            api.shapeModifyTextUnderline(this.__page, this.shape, underline ? UnderlineType.Single : undefined)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -603,19 +492,6 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextDefaultStrikethrough(strikethrough: boolean) {
-        const api = this.__repo.start("setTextDefaultStrikethrough", {});
-        try {
-            api.shapeModifyStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined)
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
-
     public setTextStrikethrough(strikethrough: boolean, index: number, len: number) {
         if (len === 0) {
             if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
@@ -635,18 +511,6 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextDefaultBold(bold: boolean) {
-        const api = this.__repo.start("setTextDefaultBold", {});
-        try {
-            api.shapeModifyTextDefaultBold(this.__page, this.shape, bold)
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
     public setTextBold(bold: boolean, index: number, len: number) {
         if (len === 0) {
             if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
@@ -665,18 +529,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextDefaultItalic(italic: boolean) {
-        const api = this.__repo.start("setTextDefaultItalic", {});
-        try {
-            api.shapeModifyTextDefaultItalic(this.__page, this.shape, italic)
-            this.__repo.commit();
-            return true;
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-        return false;
-    }
+
     public setTextItalic(italic: boolean, index: number, len: number) {
         if (len === 0) {
             if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();

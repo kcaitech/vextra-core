@@ -67,7 +67,8 @@ import {
     BulletNumbersBehavior,
     Fill,
     FlattenShape,
-    TableCell
+    TableCell,
+    Text
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -77,6 +78,8 @@ import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
 import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
 import { updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
+
+type TextShapeLike = Shape & { text: Text }
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
@@ -447,118 +450,33 @@ export class CMDExecuter {
         else if (opId === SHAPE_ATTR_ID.textBehaviour) {
             if (op.type === OpType.IdSet && value) {
                 const textBehaviour = value as types.TextBehaviour
-                api.shapeModifyTextBehaviour(page, shape as TextShape, textBehaviour);
+                const text = (shape as TextShapeLike).text;
+                api.shapeModifyTextBehaviour(page, text, textBehaviour);
             }
             else if (op.type === OpType.IdRemove) {
-                api.shapeModifyTextBehaviour(page, shape as TextShape, types.TextBehaviour.Flexible)
+                const text = (shape as TextShapeLike).text;
+                api.shapeModifyTextBehaviour(page, text, types.TextBehaviour.Flexible)
             }
         }
         else if (opId === SHAPE_ATTR_ID.textVerAlign) {
             if (op.type === OpType.IdSet && value) {
                 const textVerAlign = value as types.TextVerAlign
-                api.shapeModifyTextVerAlign(shape as TextShape, textVerAlign);
+                const text = (shape as TextShapeLike).text;
+                api.shapeModifyTextVerAlign(text, textVerAlign);
             }
             else if (op.type === OpType.IdRemove) {
-                api.shapeModifyTextVerAlign(shape as TextShape, types.TextVerAlign.Top)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defalutTextHorAlign) {
-            if (op.type === OpType.IdSet && value) {
-                const textHorAlign = value as types.TextHorAlign
-                api.shapeModifyTextDefaultHorAlign(shape as TextShape, textHorAlign);
-            }
-            else if (op.type === OpType.IdRemove) {
-                api.shapeModifyTextDefaultHorAlign(shape as TextShape, types.TextHorAlign.Left)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defaultTextMaxLineheight) {
-            if (op.type === OpType.IdSet && value) {
-                const textMaxLineheight = JSON.parse(value) as number;
-                api.shapeModifyTextDefaultMaxLineHeight(shape as TextShape, textMaxLineheight);
-            }
-            else if (op.type === OpType.IdRemove) {
-                api.shapeModifyTextDefaultMaxLineHeight(shape as TextShape, 0)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defaultTextMinLineheight) {
-            if (op.type === OpType.IdSet && value) {
-                const textMinLineheight = JSON.parse(value) as number
-                api.shapeModifyTextDefaultMinLineHeight(shape as TextShape, textMinLineheight);
-            }
-            else if (op.type === OpType.IdRemove) {
-                api.shapeModifyTextDefaultMinLineHeight(shape as TextShape, 0)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defalutTextColor) {
-            if (op.type === OpType.IdSet && value) {
-                const color = importColor(JSON.parse(value));
-                api.shapeModifyTextColor(shape as TextShape, color);
-            }
-            else if (!value || op.type === OpType.IdRemove) {
-                api.shapeModifyTextColor(shape as TextShape, undefined)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defalutTextFontName) {
-            if (op.type === OpType.IdSet && value) {
-                const fontName = value;
-                api.shapeModifyTextFontName(shape as TextShape, fontName);
-            }
-            else if (!value || op.type === OpType.IdRemove) {
-                api.shapeModifyTextFontName(shape as TextShape, undefined)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defalutTextFontSize) {
-            if (op.type === OpType.IdSet && value) {
-                const fontSize = JSON.parse(value);
-                api.shapeModifyTextFontSize(shape as TextShape, fontSize);
-            }
-            else if (!value || op.type === OpType.IdRemove) {
-                api.shapeModifyTextFontSize(shape as TextShape, 0)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defalutTextKerning) {
-            if (op.type === OpType.IdSet && value) {
-                const kerning = JSON.parse(value);
-                api.shapeModifyTextKerning(shape as TextShape, kerning);
-            }
-            else if (!value || op.type === OpType.IdRemove) {
-                api.shapeModifyTextKerning(shape as TextShape, 0)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defalutTextBold) {
-            if (op.type === OpType.IdSet && value) {
-                const bold = JSON.parse(value);
-                api.shapeModifyTextDefaultBold(shape as TextShape, bold);
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defalutTextItalic) {
-            if (op.type === OpType.IdSet && value) {
-                const italic = JSON.parse(value);
-                api.shapeModifyTextDefaultItalic(shape as TextShape, italic);
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defalutTextUnderline) {
-            if (op.type === OpType.IdSet && value) {
-                api.shapeModifyTextUnderline(shape as TextShape, value as UnderlineType);
-            }
-            else if (!value || op.type === OpType.IdRemove) {
-                api.shapeModifyTextUnderline(shape as TextShape, undefined)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.defalutTextStrikethrough) {
-            if (op.type === OpType.IdSet && value) {
-                api.shapeModifyStrikethrough(shape as TextShape, value as StrikethroughType);
-            }
-            else if (!value || op.type === OpType.IdRemove) {
-                api.shapeModifyStrikethrough(shape as TextShape, undefined)
+                const text = (shape as TextShapeLike).text;
+                api.shapeModifyTextVerAlign(text, types.TextVerAlign.Top)
             }
         }
         else if (opId === SHAPE_ATTR_ID.textTransform) {
             if (op.type === OpType.IdSet && value) {
-                api.shapeModifyTextTransform(shape as TextShape, value as TextTransformType);
+                const text = (shape as TextShapeLike).text;
+                api.shapeModifyTextTransform(text, value as TextTransformType);
             }
             else if (!value || op.type === OpType.IdRemove) {
-                api.shapeModifyTextTransform(shape as TextShape, undefined)
+                const text = (shape as TextShapeLike).text;
+                api.shapeModifyTextTransform(text, undefined)
             }
         }
         else if (opId === SHAPE_ATTR_ID.boolop) {
@@ -857,14 +775,15 @@ export class CMDExecuter {
             throw new Error("shape type wrong")
         }
         const text = cmd.parseText();
+        const shapetext = (shape as TextShapeLike).text;
         if (text.type === "simple") {
             let attr;
             if (text.attr) attr = importSpanAttr(text.attr);
-            api.insertSimpleText(shape, text.text as string, op.start, { attr })
+            api.insertSimpleText(shapetext, text.text as string, op.start, { attr })
         }
         else if (text.type === "complex") {
             const _text = importText(text.text as types.Text);
-            api.insertComplexText(shape, _text, op.start)
+            api.insertComplexText(shapetext, _text, op.start)
         }
         else {
             throw new Error("unknow text insert type: " + cmd.text)
@@ -879,10 +798,11 @@ export class CMDExecuter {
         if (!shape) {
             throw new Error("shape not find")
         }
-        if (!(shape instanceof TextShape)) {
+        const shapetext = (shape as TextShapeLike).text;
+        if (!(shapetext instanceof Text)) {
             throw new Error("shape type wrong")
         }
-        api.deleteText(shape, op.start, op.length);
+        api.deleteText(shapetext, op.start, op.length);
     }
     textModify(cmd: TextCmdModify) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
@@ -898,120 +818,121 @@ export class CMDExecuter {
         }
         const attrId = cmd.attrId
         const value = cmd.value;
+        const shapetext = (shape as TextShapeLike).text;
         if (attrId === TEXT_ATTR_ID.color) {
             if (op.type === OpType.ArrayAttr) {
                 const color = (value && importColor(JSON.parse(value))) as Color | undefined;
-                api.textModifyColor(shape, op.start, op.length, color)
+                api.textModifyColor(shapetext, op.start, op.length, color)
             }
         }
         else if (attrId === TEXT_ATTR_ID.fontName) {
             if (op.type === OpType.ArrayAttr) {
-                api.textModifyFontName(shape, op.start, op.length, value)
+                api.textModifyFontName(shapetext, op.start, op.length, value)
             }
         }
         else if (attrId === TEXT_ATTR_ID.fontSize) {
             if (op.type === OpType.ArrayAttr) {
                 const fontSize = value && JSON.parse(value);
-                api.textModifyFontSize(shape, op.start, op.length, fontSize)
+                api.textModifyFontSize(shapetext, op.start, op.length, fontSize)
             }
         }
         else if (attrId === TEXT_ATTR_ID.spanKerning) {
             if (op.type === OpType.ArrayAttr) {
                 const kerning = value && JSON.parse(value);
-                api.textModifySpanKerning(shape, kerning, op.start, op.length)
+                api.textModifySpanKerning(shapetext, kerning, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.paraKerning) {
             if (op.type === OpType.ArrayAttr) {
                 const kerning = value && JSON.parse(value);
-                api.textModifyParaKerning(shape, kerning, op.start, op.length)
+                api.textModifyParaKerning(shapetext, kerning, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.textHorAlign) {
             if (op.type === OpType.ArrayAttr) {
                 const textHorAlign = value as TextHorAlign;
-                api.textModifyHorAlign(shape, textHorAlign, op.start, op.length)
+                api.textModifyHorAlign(shapetext, textHorAlign, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.textMaxLineheight) {
             if (op.type === OpType.ArrayAttr) {
                 const maxLineHeight = value && JSON.parse(value);
-                api.textModifyMaxLineHeight(shape, maxLineHeight, op.start, op.length)
+                api.textModifyMaxLineHeight(shapetext, maxLineHeight, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.textMinLineheight) {
             if (op.type === OpType.ArrayAttr) {
                 const minLineHeight = value && JSON.parse(value);
-                api.textModifyMinLineHeight(shape, minLineHeight, op.start, op.length)
+                api.textModifyMinLineHeight(shapetext, minLineHeight, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.paraSpacing) {
             if (op.type === OpType.ArrayAttr) {
                 const paraSpacing = value && JSON.parse(value);
-                api.textModifyParaSpacing(shape, paraSpacing, op.start, op.length)
+                api.textModifyParaSpacing(shapetext, paraSpacing, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.bold) {
             if (op.type === OpType.ArrayAttr) {
                 const bold = value && JSON.parse(value);
-                api.textModifyBold(shape, bold, op.start, op.length)
+                api.textModifyBold(shapetext, bold, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.italic) {
             if (op.type === OpType.ArrayAttr) {
                 const italic = value && JSON.parse(value);
-                api.textModifyItalic(shape, italic, op.start, op.length)
+                api.textModifyItalic(shapetext, italic, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.underline) {
             if (op.type === OpType.ArrayAttr) {
-                api.textModifyUnderline(shape, value as UnderlineType, op.start, op.length)
+                api.textModifyUnderline(shapetext, value as UnderlineType, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.strikethrough) {
             if (op.type === OpType.ArrayAttr) {
-                api.textModifyStrikethrough(shape, value as StrikethroughType, op.start, op.length)
+                api.textModifyStrikethrough(shapetext, value as StrikethroughType, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.bulletNumbersType) {
             if (op.type === OpType.ArrayAttr) {
-                api.textModifyBulletNumbersType(shape, value as BulletNumbersType, op.start, op.length)
+                api.textModifyBulletNumbersType(shapetext, value as BulletNumbersType, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.bulletNumbersStart) {
             if (op.type === OpType.ArrayAttr) {
                 const start = value && JSON.parse(value) || 0;
-                api.textModifyBulletNumbersStart(shape, start, op.start, op.length)
+                api.textModifyBulletNumbersStart(shapetext, start, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.bulletNumbersBehavior) {
             if (op.type === OpType.ArrayAttr) {
                 const inherit = value as BulletNumbersBehavior;
-                api.textModifyBulletNumbersBehavior(shape, inherit, op.start, op.length)
+                api.textModifyBulletNumbersBehavior(shapetext, inherit, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.highlightColor) {
             if (op.type === OpType.ArrayAttr) {
                 const color = (value && importColor(JSON.parse(value))) as Color | undefined;
-                api.textModifyHighlightColor(shape, op.start, op.length, color)
+                api.textModifyHighlightColor(shapetext, op.start, op.length, color)
             }
         }
         else if (attrId === TEXT_ATTR_ID.spanTransform) {
             if (op.type === OpType.ArrayAttr) {
                 const transform = value as TextTransformType | undefined;
-                api.textModifySpanTransfrom(shape, transform, op.start, op.length)
+                api.textModifySpanTransfrom(shapetext, transform, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.paraTransform) {
             if (op.type === OpType.ArrayAttr) {
                 const transform = value as TextTransformType | undefined;
-                api.textModifyParaTransfrom(shape, transform, op.start, op.length)
+                api.textModifyParaTransfrom(shapetext, transform, op.start, op.length)
             }
         }
         else if (attrId === TEXT_ATTR_ID.indent) {
             if (op.type === OpType.ArrayAttr) {
                 const indent = value && JSON.parse(value) || undefined;
-                api.textModifyParaIndent(shape, indent, op.start, op.length)
+                api.textModifyParaIndent(shapetext, indent, op.start, op.length)
             }
         }
         else {

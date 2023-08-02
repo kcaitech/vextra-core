@@ -26,18 +26,6 @@ export const SHAPE_ATTR_ID = {
     textVerAlign: "textVerAlign",
     textOrientation: "textOrientation",
     textTransform: "textTransform",
-    defalutTextColor: "defaultTextColor",
-    defalutTextFontSize: "defaultTextFontSize",
-    defalutTextFontName: "defalutTextFontName",
-    defalutTextKerning: "defalutTextKerning",
-    defalutTextBold: "defalutTextBold",
-    defalutTextItalic: "defalutTextItalic",
-    defalutTextUnderline: "defalutTextUnderline",
-    defalutTextStrikethrough: "defalutTextStrikethrough",
-    defalutTextParaSpacing: "defalutTextParaSpacing",
-    defalutTextHorAlign: "defaultTextHorAlign",
-    defaultTextMinLineheight: "defaultTextMinLineheight",
-    defaultTextMaxLineheight: "defaultTextMaxLineheight",
 
     // table
     cellContent: "cellContent"
