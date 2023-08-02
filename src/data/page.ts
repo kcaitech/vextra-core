@@ -3,6 +3,7 @@ import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 import { Artboard } from "./artboard";
+import { TableCell } from "./classes";
 export class Page extends GroupShape implements classes.Page {
     typeId = 'page';
     artboards: Map<string, Artboard> = new Map();
@@ -80,8 +81,8 @@ export class Page extends GroupShape implements classes.Page {
             if (shape instanceof GroupShape) {
                 stack.push(...shape.childs);
             }
-            else if (shape instanceof TextShape) {
-                shape.text.getUsedFontNames(ret);
+            else if (shape instanceof TextShape || shape instanceof TableCell) {
+                if (shape.text) shape.text.getUsedFontNames(ret);
             }
         }
 

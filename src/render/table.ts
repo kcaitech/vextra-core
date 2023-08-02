@@ -1,9 +1,9 @@
-import { ShapeType, TableShape } from "../data/classes";
+import { TableShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { render as rCell } from "./tablecell";
 
-export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
+export function render(h: Function, shape: TableShape, reflush?: number): any {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
     const frame = shape.frame;
