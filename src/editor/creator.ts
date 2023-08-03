@@ -217,22 +217,26 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     const table = importTableShape(template_table_shape as types.TableShape);
     table.frame = frame;
     addCommonAttr(table)
+
     // cells
-    const cellWidth = frame.width / columCount;
-    const cellHeight = frame.height / rowCount;
-    for (let ci = 0, y = 0; ci < columCount; ci++) {
-        for (let ri = 0, x = 0; ri < rowCount; ri++) {
-            template_table_cell.id = uuid();
-            const cell = importTableCell(template_table_cell as types.TableCell);
-            if (mediasMgr) cell.setImageMgr(mediasMgr);
-            cell.frame.width = cellWidth;
-            cell.frame.height = cellHeight;
-            cell.frame.x = x;
-            cell.frame.y = y;
-            table.childs.push(cell);
-            x += cellWidth;
-        }
-        y += cellHeight;
+    const cellCount = columCount * rowCount;
+    for (let ci = 0; ci < cellCount; ci++) {
+        template_table_cell.id = uuid();
+        const cell = importTableCell(template_table_cell as types.TableCell);
+        if (mediasMgr) cell.setImageMgr(mediasMgr);
+        table.childs.push(cell);
     }
+
+    // 行高
+    const rowHeight = 1 / rowCount;
+    for (let ri = 0; ri < rowCount; ri++) {
+        table.rowHeights.push(rowHeight);
+    }
+    // 列宽
+    const colWidth = 1 / columCount;
+    for (let ci = 0; ci < columCount; ci++) {
+        table.colWidths.push(colWidth);
+    }
+
     return table;
 }
