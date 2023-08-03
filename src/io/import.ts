@@ -6,7 +6,7 @@ import * as types from "../data/typesdefine"
 import {IDataGuard} from "../data/basic";
 import {Document, DocumentMeta, DocumentSyms} from "../data/document";
 import * as storage from "./storage";
-import {base64ToDataUrl} from "../basic/utils";
+import {base64Encode, base64ToDataUrl} from "../basic/utils";
 import {Fill} from "../data/style";
 
 interface IJSON {
@@ -97,7 +97,7 @@ export class DataLoader implements IDataLoader {
         }
         const data = binaryString.join('');
 
-        const base64 = window.btoa(data);
+        const base64 = base64Encode(data);
 
         let url = '';
         const ext = id.substring(id.lastIndexOf('.') + 1);
