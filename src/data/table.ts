@@ -3,11 +3,11 @@ import * as classes from "./baseclasses"
 import { BasicArray, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
 import { GroupShape, Shape } from "./shape";
-import { ColumSegment, RowSegment, getColumnsInfo, getRowsInfo } from "./tableread";
 import { Path } from "./path";
 import { Text } from "./text"
 import { TextLayout } from "./textlayout";
-export { ColumSegment, RowSegment } from "./tableread";
+import { TableLayout, layoutTable } from "./tablelayout";
+export { TableLayout } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
 export class TableCell extends Shape implements classes.TableCell {
@@ -15,11 +15,13 @@ export class TableCell extends Shape implements classes.TableCell {
     cellType?: TableCellType
     text?: Text
     imageRef?: string
+    rowSpan?: number
+    colSpan?: number
     constructor(
         id: string,
         name: string,
         type: ShapeType,
-        frame: ShapeFrame,
+        frame: ShapeFrame, // cell里的frame是无用的，真实的位置大小通过行高列宽计算
         style: Style
     ) {
         super(
@@ -35,6 +37,19 @@ export class TableCell extends Shape implements classes.TableCell {
         const y = 0;
         const w = this.frame.width;
         const h = this.frame.height;
+        const path = [["M", x, y],
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
+        return new Path(path);
+    }
+
+    getPathOfFrame(frame: ShapeFrame): Path {
+        const x = 0;
+        const y = 0;
+        const w = frame.width;
+        const h = frame.height;
         const path = [["M", x, y],
         ["l", w, 0],
         ["l", 0, h],
@@ -79,14 +94,17 @@ export class TableCell extends Shape implements classes.TableCell {
 
 export class TableShape extends GroupShape implements classes.TableShape {
     typeId = 'table-shape'
-    childs: BasicArray<TableCell>
+    rowHeights: BasicArray<number >
+    colWidths: BasicArray<number >
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<TableCell>
+        childs: BasicArray<TableCell >,
+        rowHeights: BasicArray<number >,
+        colWidths: BasicArray<number >
     ) {
         super(
             id,
@@ -96,7 +114,8 @@ export class TableShape extends GroupShape implements classes.TableShape {
             style,
             childs
         )
-        this.childs = childs
+        this.rowHeights = rowHeights
+        this.colWidths = colWidths
     }
     getPath(): Path {
         const x = 0;
@@ -110,12 +129,7 @@ export class TableShape extends GroupShape implements classes.TableShape {
         ["z"]];
         return new Path(path);
     }
-
-    getColumnsInfo(): ColumSegment[][] {
-        return getColumnsInfo(this);
-    }
-
-    getRowsInfo(): RowSegment[][] {
-        return getRowsInfo(this);
+    getLayout(): TableLayout {
+        return layoutTable(this);
     }
 }

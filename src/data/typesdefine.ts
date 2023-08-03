@@ -467,12 +467,16 @@ export type TextShape = Shape & {
 /* table shape */
 export type TableShape = Shape & {
     childs: TableCell[]
+    rowHeights: number[]
+    colWidths: number[]
 }
 /* table cell */
 export type TableCell = Shape & {
     cellType?: TableCellType
     text?: Text
     imageRef?: string
+    rowSpan?: number
+    colSpan?: number
 }
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {

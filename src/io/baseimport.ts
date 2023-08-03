@@ -625,6 +625,22 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
                 if (r) ret.push(r)
             }
             return ret
+        })(),
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.rowHeights && source.rowHeights.length; i < len; i++) {
+                const r = source.rowHeights[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.colWidths && source.colWidths.length; i < len; i++) {
+                const r = source.colWidths[i]
+                if (r) ret.push(r)
+            }
+            return ret
         })()
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
@@ -672,6 +688,8 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     if (source.cellType !== undefined) ret.cellType = importTableCellType(source.cellType, ctx)
     if (source.text !== undefined) ret.text = importText(source.text, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
+    if (source.rowSpan !== undefined) ret.rowSpan = source.rowSpan
+    if (source.colSpan !== undefined) ret.colSpan = source.colSpan
     if (ctx) ctx.afterImport(ret)
     return ret
 }

@@ -11,6 +11,14 @@
         "imageRef": {
             "type": "string",
             "default": "$uuid"
+        },
+        "rowSpan": {
+            "type": "number",
+            "default": 1
+        },
+        "colSpan": {
+            "type": "number",
+            "default": 1
         }
     },
     "required": [],

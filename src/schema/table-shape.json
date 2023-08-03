@@ -7,10 +7,24 @@
             "items": {
                 "$ref": "./table-cell.json"
             }
+        },
+        "rowHeights": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
+        "colWidths": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
         }
     },
     "required": [
-        "childs"
+        "childs",
+        "rowHeights",
+        "colWidths"
     ],
     "allOf": [
         {

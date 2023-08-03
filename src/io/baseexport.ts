@@ -648,6 +648,22 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
             }
             return ret
         })(),
+        rowHeights: (() => {
+            const ret = []
+            for (let i = 0, len = source.rowHeights.length; i < len; i++) {
+                const r = source.rowHeights[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        colWidths: (() => {
+            const ret = []
+            for (let i = 0, len = source.colWidths.length; i < len; i++) {
+                const r = source.colWidths[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
     }
     if (ctx) ctx.afterExport(source)
     return ret
@@ -679,6 +695,8 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
         cellType: source.cellType && exportTableCellType(source.cellType, ctx),
         text: source.text && exportText(source.text, ctx),
         imageRef: source.imageRef,
+        rowSpan: source.rowSpan,
+        colSpan: source.colSpan,
     }
     if (ctx) ctx.afterExport(source)
     return ret

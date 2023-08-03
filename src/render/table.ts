@@ -1,46 +1,51 @@
-import { ShapeType, TableShape } from "../data/classes";
+import { TableShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { render as rCell } from "./tablecell";
 
-export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
+export function render(h: Function, shape: TableShape, reflush?: number): any {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
     const frame = shape.frame;
+
+    const layout = shape.getLayout();
+
     const nodes = [];
     const path = shape.getPath().toString();
-    const childspath = shape.childs.map((c) => {
-        const path = c.getPath();
-        return path.toString();
-    });
-    const cc = shape.childs.length;
 
-    // fill
-    nodes.push(...fillR(h, shape.style, frame, path));
-    for (let i = 0; i < cc; i++) {
-        const child = shape.childs[i];
-        const fill = fillR(h, child.style, child.frame, childspath[i]);
-        nodes.push(h("g", { transform: `translate(${child.frame.x},${child.frame.y})` }, fill));
+    // fill & content
+    for (let i = 0, len = layout.grid.length; i < len; ++i) {
+        const row = layout.grid[i];
+        for (let j = 0, len = row.length; j < len; ++j) {
+            const cellLayout = row[j];
+            if (cellLayout.index.row === i && cellLayout.index.col === j) {
+                const path = cellLayout.cell.getPathOfFrame(cellLayout.frame);
+                const pathstr = path.toString();
+                const child = cellLayout.cell;
+                const fill = fillR(h, child.style, cellLayout.frame, pathstr);
+                nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, fill));
+
+                // content
+                nodes.push(rCell(h, child, cellLayout.frame));
+            }
+        }
     }
 
-    // content
-    for (let i = 0; i < cc; i++) {
-        const child = shape.childs[i];
-        const com = comsMap.get(ShapeType.TableCell);
-        const node = h(com, { data: child });
-        nodes.push(node);
-    }
-
-    // todo 边框位置
     // border
     nodes.push(...borderR(h, shape.style, frame, path));
-    for (let i = 0; i < cc; i++) {
-        const child = shape.childs[i];
-        const style = child.style.borders.length > 0 ? child.style : shape.style;
-
-        // todo 边框会互相覆盖
-        const node = borderR(h, style, child.frame, childspath[i]) // todo 上下左右
-        nodes.push(h("g", { transform: `translate(${child.frame.x},${child.frame.y})` }, node));
+    for (let i = 0, len = layout.grid.length; i < len; ++i) {
+        const row = layout.grid[i];
+        for (let j = 0, len = row.length; j < len; ++j) {
+            const cellLayout = row[j];
+            if (cellLayout.index.row === i && cellLayout.index.col === j) {
+                const path = cellLayout.cell.getPathOfFrame(cellLayout.frame);
+                const pathstr = path.toString();
+                const child = cellLayout.cell;
+                const style = child.style.borders.length > 0 ? child.style : shape.style;
+                const fill = borderR(h, style, cellLayout.frame, pathstr)
+                nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, fill));
+            }
+        }
     }
 
     const props: any = {}

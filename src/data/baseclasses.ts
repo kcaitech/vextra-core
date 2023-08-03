@@ -785,13 +785,17 @@ export class TextShape extends Shape {
 export class TableShape extends Shape {
     typeId = 'table-shape'
     childs: BasicArray<TableCell >
+    rowHeights: BasicArray<number >
+    colWidths: BasicArray<number >
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<TableCell >
+        childs: BasicArray<TableCell >,
+        rowHeights: BasicArray<number >,
+        colWidths: BasicArray<number >
     ) {
         super(
             id,
@@ -801,6 +805,8 @@ export class TableShape extends Shape {
             style
         )
         this.childs = childs
+        this.rowHeights = rowHeights
+        this.colWidths = colWidths
     }
 }
 /**
@@ -811,6 +817,8 @@ export class TableCell extends Shape {
     cellType?: TableCellType
     text?: Text
     imageRef?: string
+    rowSpan?: number
+    colSpan?: number
     constructor(
         id: string,
         name: string,
