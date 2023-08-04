@@ -1,0 +1,65 @@
+import { uuid } from "../basic/uuid";
+import { Blur, BorderOptions, ContextSettings, Point2D, Shadow, ShapeFrame } from "./baseclasses";
+import { BasicArray } from "./basic";
+import { Border, Fill, Style } from "./style";
+import { TableCell, TableShape } from "./table";
+import { BlendMode, BlurType, LineCapStyle, LineJoinStyle, ShapeType, WindingRule } from "./typesdefine";
+
+function newCell(): TableCell {
+    return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
+        0,
+        WindingRule.EvenOdd,
+        new Blur(
+            true,
+            new Point2D(0, 0),
+            0,
+            BlurType.Gaussian
+        ),
+        new BorderOptions(true, LineCapStyle.Butt, LineJoinStyle.Bevel),
+        new BasicArray<Border>(),
+        new ContextSettings(
+            BlendMode.Color,
+            1
+        ),
+        new BasicArray<Fill>(),
+        new BasicArray<Shadow>(),
+        new BasicArray<Shadow>()
+    ))
+}
+
+export function tableInsertRow(table: TableShape, idx: number, height: number) {
+    table.rowHeights.splice(idx, 0, height);
+    const childs = table.childs as BasicArray<TableCell>;
+    const row = [];
+    for (let i = 0, count = table.colWidths.length; i < count; ++i) {
+        row.push(newCell());
+    }
+    childs.splice(idx * table.colWidths.length, 0, ...row);
+}
+
+export function tableRemoveRow(table: TableShape, idx: number) {
+    table.rowHeights.splice(idx, 1);
+    const childs = table.childs as BasicArray<TableCell>;
+    const colCount = table.colWidths.length;
+    return childs.splice(idx * colCount, colCount);
+}
+
+export function tableInsertCol(table: TableShape, idx: number, width: number) {
+    table.colWidths.splice(idx, 0, width);
+    const childs = table.childs as BasicArray<TableCell>;
+    const colCount = table.colWidths.length;
+    for (let i = 0, count = table.rowHeights.length; i < count; ++i) {
+        childs.splice(i * colCount + idx + i, 0, newCell());
+    }
+}
+
+export function tableRemoveCol(table: TableShape, idx: number) {
+    table.colWidths.splice(idx, 1);
+    const childs = table.childs as BasicArray<TableCell>;
+    const colCount = table.colWidths.length;
+    const removed = [];
+    for (let i = 0, count = table.rowHeights.length; i < count; ++i) {
+        removed.push(...childs.splice(i * colCount + idx - i, 1));
+    }
+    return removed;
+}

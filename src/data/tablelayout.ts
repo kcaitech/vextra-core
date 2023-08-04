@@ -20,7 +20,9 @@ export function layoutTable(table: TableShape): TableLayout {
     const width = frame.width;
     const height = frame.height;
     const rowHeights = table.rowHeights;
+    const rowHBase = rowHeights.reduce((sum, cur) => sum + cur, 0);
     const colWidths = table.colWidths;
+    const colWBase = colWidths.reduce((sum, cur) => sum + cur, 0);
 
     let celli = 0, cellLen = cells.length;
 
@@ -28,11 +30,11 @@ export function layoutTable(table: TableShape): TableLayout {
         if (!grid[ri]) grid[ri] = [];
         const grow = grid[ri];
 
-        const rowHeight = rowHeights[ri] * height;
+        const rowHeight = rowHeights[ri] / rowHBase * height;
 
         for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen && celli < cellLen; ++ci, ++celli) {
 
-            const colWidth = colWidths[ci] * width;
+            const colWidth = colWidths[ci] / colWBase * width;
 
             if (grow[ci]) {
                 colX += colWidth;
@@ -42,23 +44,37 @@ export function layoutTable(table: TableShape): TableLayout {
             const cell = cells[celli];
             const rowSpan = cell.rowSpan || 1;
             const colSpan = cell.colSpan || 1;
+
             const d: TableGridItem = {
                 cell,
                 index: {
                     row: ri,
                     col: ci
                 },
-                frame: new ShapeFrame(colX, rowY, colWidth, rowHeight)
+                frame: new ShapeFrame(colX, rowY, 0, 0)
             }
 
+            let dwidth = 0;
+            let dheight = 0;
             // fill grid
             for (let _ri = ri, rend = ri + rowSpan; _ri < rend; ++_ri) {
                 if (!grid[_ri]) grid[_ri] = [];
                 const _gr = grid[_ri];
+                const rowHeight = rowHeights[_ri] / rowHBase * height;
+
+                let _h = 0;
                 for (let _ci = ci, cend = ci + colSpan; _ci < cend; ++_ci) {
                     _gr[_ci] = d;
+                    if (dwidth === 0) {
+                        const colWidth = colWidths[_ci] / colWBase * width;
+                        _h += colWidth;
+                    }
                 }
+                if (dwidth === 0) dwidth = _h;
+                dheight += rowHeight;
             }
+            d.frame.width = dwidth;
+            d.frame.height = dheight;
 
             colX += colWidth;
         }

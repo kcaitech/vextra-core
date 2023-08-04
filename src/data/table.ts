@@ -7,6 +7,7 @@ import { Path } from "./path";
 import { Text } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableLayout, layoutTable } from "./tablelayout";
+import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
 export { TableLayout } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
@@ -90,21 +91,40 @@ export class TableCell extends Shape implements classes.TableCell {
             return this.text.getLayout();
         }
     }
+
+    setContentType(contentType: TableCellType | undefined) {
+        contentType = contentType === TableCellType.None ? undefined : contentType;
+        this.cellType = contentType;
+    }
+
+    setContentText(text: Text | undefined) {
+        this.text = text;
+    }
+
+    setContentImage(ref: string | undefined) {
+        this.imageRef = ref;
+    }
+    setCellSpan(rowSpan: number | undefined, colSpan: number | undefined) {
+        rowSpan = rowSpan && rowSpan <= 1 ? undefined : rowSpan;
+        colSpan = colSpan && colSpan <= 1 ? undefined : colSpan;
+        this.rowSpan = rowSpan;
+        this.colSpan = colSpan;
+    }
 }
 
 export class TableShape extends GroupShape implements classes.TableShape {
     typeId = 'table-shape'
-    rowHeights: BasicArray<number >
-    colWidths: BasicArray<number >
+    rowHeights: BasicArray<number>
+    colWidths: BasicArray<number>
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<TableCell >,
-        rowHeights: BasicArray<number >,
-        colWidths: BasicArray<number >
+        childs: BasicArray<TableCell>,
+        rowHeights: BasicArray<number>,
+        colWidths: BasicArray<number>
     ) {
         super(
             id,
@@ -131,5 +151,45 @@ export class TableShape extends GroupShape implements classes.TableShape {
     }
     getLayout(): TableLayout {
         return layoutTable(this);
+    }
+    getColWidths() {
+        const frame = this.frame;
+        const width = frame.width;
+        const colWidths = this.colWidths;
+        const colWBase = colWidths.reduce((sum, cur) => sum + cur, 0);
+        return colWidths.map((val) => val / colWBase * width);
+    }
+    getRowHeights() {
+        const frame = this.frame;
+        const height = frame.height;
+        const rowHeights = this.rowHeights;
+        const rowHBase = rowHeights.reduce((sum, cur) => sum + cur, 0);
+        return rowHeights.map((val) => val / rowHBase * height);
+    }
+    insertRow(idx: number, height: number) {
+        tableInsertRow(this, idx, height);
+    }
+    removeRow(idx: number): TableCell[] {
+        return tableRemoveRow(this, idx);
+    }
+    insertCol(idx: number, width: number) {
+        tableInsertCol(this, idx, width);
+    }
+    removeCol(idx: number): TableCell[] {
+        return tableRemoveCol(this, idx);
+    }
+
+    setColWidth(idx: number, width: number) {
+        const colWidths = this.colWidths;
+        colWidths[idx] = width;
+    }
+
+    setRowHeight(idx: number, height: number) {
+        const rowHeights = this.rowHeights;
+        rowHeights[idx] = height;
+    }
+
+    setFrameSize(w: number, h: number) {
+        super.setFrameSize(w, h)
     }
 }
