@@ -72,7 +72,7 @@ import {
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
 import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
@@ -503,16 +503,38 @@ export class CMDExecuter {
                 api.shapeModifyFixedRadius(shape as GroupShape, undefined)
             }
         }
-        else if (opId === SHAPE_ATTR_ID.cellContent) {
+        else if (opId === SHAPE_ATTR_ID.cellContentType) {
             if (op.type === OpType.IdSet && value) {
-                let { type, content } = JSON.parse(value);
-                if (type === types.TableCellType.Text) {
-                    content = importText(content);
-                }
-                api.tableSetCellContent(shape as TableCell, type, content);
+                api.tableSetCellContentType(shape as TableCell, value as types.TableCellType);
             }
             else if (!value || op.type === OpType.IdRemove) {
-                api.tableSetCellContent(shape as TableCell, undefined, "");
+                api.tableSetCellContentType(shape as TableCell, undefined);
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.cellContentText) {
+            if (op.type === OpType.IdSet && value) {
+                const text = importText(JSON.parse(value))
+                api.tableSetCellContentText(shape as TableCell, text);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.tableSetCellContentText(shape as TableCell, undefined);
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.cellContentImage) {
+            if (op.type === OpType.IdSet && value) {
+                api.tableSetCellContentImage(shape as TableCell, value);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.tableSetCellContentImage(shape as TableCell, undefined);
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.cellSpan) {
+            if (op.type === OpType.IdSet && value) {
+                const { rowSpan, colSpan } = JSON.parse(value);
+                api.tableModifyCellSpan(shape as TableCell, rowSpan, colSpan);
+            }
+            else if (!value || op.type === OpType.IdRemove) {
+                api.tableModifyCellSpan(shape as TableCell, 1, 1);
             }
         }
         // todo
@@ -575,6 +597,12 @@ export class CMDExecuter {
                 api.addBorderAt(shape.style, border, (op as ArrayOpInsert).start);
             }
         }
+        else if (arrayAttr === TABLE_COL_WIDTHS_ID) {
+
+        }
+        else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
+
+        }
         else {
             console.error("not implemented ", arrayAttr)
         }
@@ -598,6 +626,12 @@ export class CMDExecuter {
             if (op.type === OpType.ArrayRemove) {
                 api.deleteBorderAt(shape.style, (op as ArrayOpRemove).start)
             }
+        }
+        else if (arrayAttr === TABLE_COL_WIDTHS_ID) {
+
+        }
+        else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
+
         }
         else {
             console.error("not implemented ", arrayAttr)
@@ -729,6 +763,12 @@ export class CMDExecuter {
             else {
                 console.error("not implemented ", op)
             }
+        }
+        else if (arrayAttr === TABLE_COL_WIDTHS_ID) {
+
+        }
+        else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
+            
         }
         else {
             console.error("not implemented ", arrayAttr)

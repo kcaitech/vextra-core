@@ -28,7 +28,10 @@ export const SHAPE_ATTR_ID = {
     textTransform: "textTransform",
 
     // table
-    cellContent: "cellContent"
+    cellContentType: "cellContentType",
+    cellContentText: "cellContentText",
+    cellContentImage: "cellContentImage",
+    cellSpan: "cellSpan"
 }
 
 export const FILLS_ID = "fills"
@@ -80,3 +83,8 @@ export const POINTS_ATTR_ID = {
     to: "to",
     point: "point",
 }
+
+export const TABLE_ROW_HEIGHTS_ID = "tblRowHeights"
+
+export const TABLE_COL_WIDTHS_ID = "tblColWidths"
+

@@ -52,6 +52,8 @@ function _merge(l: Cmd, r: Cmd): MERGE_STATE {
                 lcmd.value = rcmd.value;
                 return MERGE_STATE.MERGED;
             }
+        case CmdType.ShapeArrayAttrModify2:
+            return MERGE_STATE.BREAK;
         case CmdType.ShapeArrayAttrMove:
             return MERGE_STATE.BREAK;;
         case CmdType.ShapeArrayAttrDelete:

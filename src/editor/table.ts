@@ -34,7 +34,9 @@ export class TableEditor extends ShapeEditor {
 
     setCellContentImage(cell: TableCell, ref: string) {
         const api = this.__repo.start('setCellContentImage', {});
-        api.tableSetCellContent(this.__page, cell, TableCellType.Image, ref);
+        api.tableSetCellContentType(this.__page, cell, TableCellType.Image);
+        api.tableSetCellContentImage(this.__page, cell, ref);
+        api.tableSetCellContentText(this.__page, cell, undefined);
         this.__repo.commit();
     }
 
@@ -42,7 +44,12 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start('setCellContentText', {});
         const _text = newText();
         if (text && text.length > 0) _text.insertText(text, 0);
-        api.tableSetCellContent(this.__page, cell, TableCellType.Text, _text);
+        api.tableSetCellContentType(this.__page, cell, TableCellType.Text);
+        api.tableSetCellContentText(this.__page, cell, _text);
+        api.tableSetCellContentImage(this.__page, cell, undefined);
         this.__repo.commit();
     }
+
+    // fix col || row size || table frame
+    
 }

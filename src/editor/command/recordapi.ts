@@ -3,20 +3,20 @@ import {
     PageCmdInsert, PageCmdModify, PageCmdMove, PageCmdDelete,
     ShapeArrayAttrMove, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
     ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
-    TextCmdInsert, TextCmdRemove, TextCmdModify,
+    TextCmdInsert, TextCmdRemove, TextCmdModify, ShapeArrayAttrModify2,
 } from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportText } from "../../io/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, Shape, PathShape, PathShape2 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
-import { RectShape, TableCell, TableCellType } from "../../data/classes";
+import { RectShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
@@ -900,33 +900,91 @@ export class Api {
             })
         })
     }
-    tableSetCellContent(page: Page, cell: TableCell, contentType: TableCellType | undefined, content: string | Text) {
+
+    // table
+    tableSetCellContentType(page: Page, cell: TableCell, contentType: TableCellType | undefined) {
         this.checkShapeAtPage(page, cell);
         this.__trap(() => {
-            const originType = cell.cellType === TableCellType.None ? undefined : cell.cellType;
-            contentType = contentType === TableCellType.None ? undefined : contentType;
-
-            // if (originType !== cell.cellType) {
-            const originContent = ((type: TableCellType | undefined) => {
-                if (type === TableCellType.Text) return exportText(cell.text!);
-                if (type === TableCellType.Image) return cell.imageRef!;
-            })(originType);
-
-            let content4cmd;
-            cell.cellType = contentType;
-            if (contentType === TableCellType.Image && typeof content === 'string') {
-                cell.imageRef = content;
-                content4cmd = content;
+            const origin = cell.cellType;
+            if (origin !== contentType && (origin ?? TableCellType.None) !== (contentType ?? TableCellType.None)) {
+                basicapi.tableSetCellContentType(cell, contentType);
+                this.addCmd(ShapeCmdModify.Make(page.id, cell.id, SHAPE_ATTR_ID.cellContentType, contentType, origin))
             }
-            else if (contentType === TableCellType.Text && content instanceof Text) {
-                cell.text = content;
-                content4cmd = exportText(content);
-            }
+        })
+    }
 
-            this.addCmd(ShapeCmdModify.Make(page.id, cell.id, SHAPE_ATTR_ID.cellContent,
-                { type: contentType, content: content4cmd },
-                { type: originType, content: originContent }))
-            // }
+    tableSetCellContentText(page: Page, cell: TableCell, text: Text | undefined) {
+        this.checkShapeAtPage(page, cell);
+        this.__trap(() => {
+            const origin = cell.text && exportText(cell.text);
+            if (origin !== text) { // undefined
+                basicapi.tableSetCellContentText(cell, text);
+                this.addCmd(ShapeCmdModify.Make(page.id, cell.id, SHAPE_ATTR_ID.cellContentText, text && exportText(text), origin))
+            }
+        })
+    }
+
+    tableSetCellContentImage(page: Page, cell: TableCell, ref: string | undefined) {
+        this.checkShapeAtPage(page, cell);
+        this.__trap(() => {
+            const origin = cell.imageRef;
+            if (origin !== ref) {
+                basicapi.tableSetCellContentImage(cell, ref);
+                this.addCmd(ShapeCmdModify.Make(page.id, cell.id, SHAPE_ATTR_ID.cellContentImage, ref, origin))
+            }
+        })
+    }
+
+    tableModifyColWidth(page: Page, table: TableShape, idx: number, width: number) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            const origin = table.colWidths[idx];
+            basicapi.tableModifyColWidth(table, idx, width);
+            this.addCmd(ShapeArrayAttrModify2.Make(page.id, table.id, TABLE_COL_WIDTHS_ID, idx, "", width, origin));
+        })
+    }
+
+    tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            const origin = table.rowHeights[idx];
+            basicapi.tableModifyRowHeight(table, idx, height);
+            this.addCmd(ShapeArrayAttrModify2.Make(page.id, table.id, TABLE_ROW_HEIGHTS_ID, idx, "", height, origin));
+        })
+    }
+
+    tableInsertRow(page: Page, table: TableShape, idx: number, height: number) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            basicapi.tableInsertRow(table, idx, height);
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, table.id, TABLE_ROW_HEIGHTS_ID, "", idx, height));
+        })
+    }
+
+    tableRemoveRow(page: Page, table: TableShape, idx: number) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+            // basicapi.tableRemoveRow(table, idx); // origin // undo?
+            // this.addCmd(ShapeArrayAttrRemove.Make(page.id, table.id, TABLE_ROW_HEIGHTS_ID, "", idx));
+        })
+    }
+
+    tableInsertCol(page: Page, table: TableShape, idx: number, width: number) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+        })
+    }
+
+    tableRemoveCol(page: Page, table: TableShape, idx: number) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+        })
+    }
+
+    tableModifyCellSpan(page: Page, cell: TableCell, rowSpan: number, celSpan: number) {
+        this.checkShapeAtPage(page, cell);
+        this.__trap(() => {
         })
     }
 }
