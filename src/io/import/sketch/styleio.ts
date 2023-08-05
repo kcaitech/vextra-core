@@ -92,14 +92,14 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         }
     })(data['windingRule']);
 
-    const blur: Blur = ((d) => {
-        return new Blur(
-            false,
-            new Point2D(0, 0), // {x: 0, y: 0},
-            0,
-            BlurType.Gaussian
-        );
-    })(data['blur']);
+    // const blur: Blur = ((d) => {
+    //     return new Blur(
+    //         false,
+    //         new Point2D(0, 0), // {x: 0, y: 0},
+    //         0,
+    //         BlurType.Gaussian
+    //     );
+    // })(data['blur']);
 
     const borderOptions: BorderOptions = ((d: IJSON) => {
         return new BorderOptions(
@@ -173,9 +173,9 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         const startMarkerType: MarkerType = getMarkerType(data['startMarkerType']);
         const endMarkerType: MarkerType = getMarkerType(data['endMarkerType']);
 
-        const border = new Border(uuid(), isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType);
+        const border = new Border(uuid(), isEnabled, fillType, color, position, thickness, borderStyle, startMarkerType, endMarkerType);
         border.gradient = gradient;
-
+        border.contextSettings = contextSettings;
         return border;
     });
 
@@ -216,9 +216,10 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             imageRef = ref.substring(ref.indexOf('/') + 1);
         }
 
-        const fill = new Fill(uuid(), isEnabled, fillType, color, contextSettings);
+        const fill = new Fill(uuid(), isEnabled, fillType, color);
         fill.gradient = gradient;
         fill.imageRef = imageRef;
+        fill.contextSettings = contextSettings;
         fill.setImageMgr(ctx.mediasMgr);
         return fill;
     });
@@ -230,16 +231,15 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
     //     return d; // todo
     // });
 
-    const style: Style = new Style(//shape, 
-        miterLimit,
-        windingRule,
-        blur,
-        borderOptions,
+    const style: Style = new Style(
         new BasicArray<Border>(...borders),
-        contextSettings,
-        new BasicArray<Fill>(...fills),
-        new BasicArray<Shadow>(),
-        new BasicArray<Shadow>());
-    // return makePair(style, gradients);
+        new BasicArray<Fill>(...fills));
+
+    style.miterLimit = miterLimit;
+    style.windingRule = windingRule;
+    // style.blur = blur;
+    style.borderOptions = borderOptions;
+    style.contextSettings = contextSettings;
+
     return style;
 }

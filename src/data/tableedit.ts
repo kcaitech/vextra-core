@@ -1,29 +1,14 @@
 import { uuid } from "../basic/uuid";
-import { Blur, BorderOptions, ContextSettings, Point2D, Shadow, ShapeFrame } from "./baseclasses";
+import { ShapeFrame } from "./baseclasses";
 import { BasicArray } from "./basic";
 import { Border, Fill, Style } from "./style";
 import { TableCell, TableShape } from "./table";
-import { BlendMode, BlurType, LineCapStyle, LineJoinStyle, ShapeType, WindingRule } from "./typesdefine";
+import { ShapeType } from "./typesdefine";
 
 function newCell(): TableCell {
     return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
-        0,
-        WindingRule.EvenOdd,
-        new Blur(
-            true,
-            new Point2D(0, 0),
-            0,
-            BlurType.Gaussian
-        ),
-        new BorderOptions(true, LineCapStyle.Butt, LineJoinStyle.Bevel),
         new BasicArray<Border>(),
-        new ContextSettings(
-            BlendMode.Color,
-            1
-        ),
-        new BasicArray<Fill>(),
-        new BasicArray<Shadow>(),
-        new BasicArray<Shadow>()
+        new BasicArray<Fill>()
     ))
 }
 

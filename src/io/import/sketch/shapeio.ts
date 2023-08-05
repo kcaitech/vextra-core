@@ -118,13 +118,11 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun): Art
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
 
     if (hasBackgroundColor && backgroundColor) {
-        const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-        const fill = new Fill(uuid(), true, FillType.SolidColor, backgroundColor, contextSettings);
+        const fill = new Fill(uuid(), true, FillType.SolidColor, backgroundColor);
         style.fills.length = 0;
         style.fills.push(fill);
     } else {
-        const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-        const fill = new Fill(uuid(), true, FillType.SolidColor, new Color(1, 255, 255, 255), contextSettings);
+        const fill = new Fill(uuid(), true, FillType.SolidColor, new Color(1, 255, 255, 255));
         style.fills.length = 0;
         style.fills.push(fill);
     }

@@ -72,9 +72,9 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
     const ret = {
         typeId: source.typeId,
         miterLimit: source.miterLimit,
-        windingRule: exportWindingRule(source.windingRule, ctx),
-        blur: exportBlur(source.blur, ctx),
-        borderOptions: exportBorderOptions(source.borderOptions, ctx),
+        windingRule: source.windingRule && exportWindingRule(source.windingRule, ctx),
+        blur: source.blur && exportBlur(source.blur, ctx),
+        borderOptions: source.borderOptions && exportBorderOptions(source.borderOptions, ctx),
         borders: (() => {
             const ret = []
             for (let i = 0, len = source.borders.length; i < len; i++) {
@@ -84,7 +84,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
             return ret
         })(),
         colorControls: source.colorControls && exportColorControls(source.colorControls, ctx),
-        contextSettings: exportContextSettings(source.contextSettings, ctx),
+        contextSettings: source.contextSettings && exportContextSettings(source.contextSettings, ctx),
         fills: (() => {
             const ret = []
             for (let i = 0, len = source.fills.length; i < len; i++) {
@@ -93,7 +93,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
             }
             return ret
         })(),
-        innerShadows: (() => {
+        innerShadows: source.innerShadows && (() => {
             const ret = []
             for (let i = 0, len = source.innerShadows.length; i < len; i++) {
                 const r = exportShadow(source.innerShadows[i], ctx)
@@ -101,7 +101,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
             }
             return ret
         })(),
-        shadows: (() => {
+        shadows: source.shadows && (() => {
             const ret = []
             for (let i = 0, len = source.shadows.length; i < len; i++) {
                 const r = exportShadow(source.shadows[i], ctx)
@@ -196,7 +196,7 @@ export function exportShadow(source: types.Shadow, ctx?: IExportContext): types.
         isEnabled: source.isEnabled,
         blurRadius: source.blurRadius,
         color: exportColor(source.color, ctx),
-        contextSettings: exportGraphicsContextSettings(source.contextSettings, ctx),
+        contextSettings: source.contextSettings && exportGraphicsContextSettings(source.contextSettings, ctx),
         offsetX: source.offsetX,
         offsetY: source.offsetY,
         spread: source.spread,
@@ -330,7 +330,7 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
         isEnabled: source.isEnabled,
         fillType: exportFillType(source.fillType, ctx),
         color: exportColor(source.color, ctx),
-        contextSettings: exportContextSettings(source.contextSettings, ctx),
+        contextSettings: source.contextSettings && exportContextSettings(source.contextSettings, ctx),
         gradient: source.gradient && exportGradient(source.gradient, ctx),
         imageRef: source.imageRef,
     }
@@ -528,7 +528,7 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
         isEnabled: source.isEnabled,
         fillType: exportFillType(source.fillType, ctx),
         color: exportColor(source.color, ctx),
-        contextSettings: exportContextSettings(source.contextSettings, ctx),
+        contextSettings: source.contextSettings && exportContextSettings(source.contextSettings, ctx),
         position: exportBorderPosition(source.position, ctx),
         thickness: source.thickness,
         gradient: source.gradient && exportGradient(source.gradient, ctx),

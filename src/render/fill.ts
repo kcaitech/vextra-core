@@ -7,7 +7,7 @@ import { objectId } from "../basic/objectid";
 const handler: { [key: string]: (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string) => any } = {};
 handler[FillType.SolidColor] = function (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string): any {
     const color = fill.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity ?? 1;
     return h("path", {
         d: path,
         fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
@@ -21,7 +21,7 @@ handler[FillType.SolidColor] = function (h: Function, style: Style, frame: Shape
 handler[FillType.Gradient] = function (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string): any {
     const color = fill.color;
     // const frame = shape.frame;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity ?? 1;
     const elArr = new Array();
     const g_ = renderGradient(h, fill.gradient as Gradient, frame);
     if (g_.node) {

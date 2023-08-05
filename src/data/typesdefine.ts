@@ -66,16 +66,16 @@ export enum TableCellType {
 /* style */
 export type Style = {
     typeId: string
-    miterLimit: number
-    windingRule: WindingRule
-    blur: Blur
-    borderOptions: BorderOptions
+    miterLimit?: number
+    windingRule?: WindingRule
+    blur?: Blur
+    borderOptions?: BorderOptions
     borders: Border[]
     colorControls?: ColorControls
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     fills: Fill[]
-    innerShadows: Shadow[]
-    shadows: Shadow[]
+    innerShadows?: Shadow[]
+    shadows?: Shadow[]
 }
 /* strikethrough types */
 export enum StrikethroughType {
@@ -163,7 +163,7 @@ export type Shadow = {
     isEnabled: boolean
     blurRadius: number
     color: Color
-    contextSettings: GraphicsContextSettings
+    contextSettings?: GraphicsContextSettings
     offsetX: number
     offsetY: number
     spread: number
@@ -250,7 +250,7 @@ export type Fill = {
     isEnabled: boolean
     fillType: FillType
     color: Color
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
 }
@@ -390,7 +390,7 @@ export type Border = {
     isEnabled: boolean
     fillType: FillType
     color: Color
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     position: BorderPosition
     thickness: number
     gradient?: Gradient

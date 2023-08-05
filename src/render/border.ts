@@ -155,7 +155,7 @@ handler[BorderPosition.Inner] = function (h: Function, style: Style, frame: Shap
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
         const color = border.color;
-        const opacity = style.contextSettings.opacity;
+        const opacity = style.contextSettings?.opacity ?? 1;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
@@ -194,7 +194,7 @@ handler[BorderPosition.Center] = function (h: Function, style: Style, frame: Sha
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
         const color = border.color;
-        const opacity = style.contextSettings.opacity;
+        const opacity = style.contextSettings?.opacity ?? 1;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
@@ -225,7 +225,7 @@ handler[BorderPosition.Outer] = function (h: Function, style: Style, frame: Shap
     }
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
-        const opacity = style.contextSettings.opacity;
+        const opacity = style.contextSettings?.opacity ?? 1;
         const color = border.color;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     } else {

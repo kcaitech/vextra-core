@@ -100,37 +100,23 @@ export class Text extends Basic {
  */
 export class Style extends Basic {
     typeId = 'style'
-    miterLimit: number
-    windingRule: WindingRule
-    blur: Blur
-    borderOptions: BorderOptions
+    miterLimit?: number
+    windingRule?: WindingRule
+    blur?: Blur
+    borderOptions?: BorderOptions
     borders: BasicArray<Border >
     colorControls?: ColorControls
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     fills: BasicArray<Fill >
-    innerShadows: BasicArray<Shadow >
-    shadows: BasicArray<Shadow >
+    innerShadows?: BasicArray<Shadow >
+    shadows?: BasicArray<Shadow >
     constructor(
-        miterLimit: number,
-        windingRule: WindingRule,
-        blur: Blur,
-        borderOptions: BorderOptions,
         borders: BasicArray<Border >,
-        contextSettings: ContextSettings,
-        fills: BasicArray<Fill >,
-        innerShadows: BasicArray<Shadow >,
-        shadows: BasicArray<Shadow >
+        fills: BasicArray<Fill >
     ) {
         super()
-        this.miterLimit = miterLimit
-        this.windingRule = windingRule
-        this.blur = blur
-        this.borderOptions = borderOptions
         this.borders = borders
-        this.contextSettings = contextSettings
         this.fills = fills
-        this.innerShadows = innerShadows
-        this.shadows = shadows
     }
 }
 /**
@@ -241,7 +227,7 @@ export class Shadow extends Basic {
     isEnabled: boolean
     blurRadius: number
     color: Color
-    contextSettings: GraphicsContextSettings
+    contextSettings?: GraphicsContextSettings
     offsetX: number
     offsetY: number
     spread: number
@@ -249,7 +235,6 @@ export class Shadow extends Basic {
         isEnabled: boolean,
         blurRadius: number,
         color: Color,
-        contextSettings: GraphicsContextSettings,
         offsetX: number,
         offsetY: number,
         spread: number
@@ -258,7 +243,6 @@ export class Shadow extends Basic {
         this.isEnabled = isEnabled
         this.blurRadius = blurRadius
         this.color = color
-        this.contextSettings = contextSettings
         this.offsetX = offsetX
         this.offsetY = offsetY
         this.spread = spread
@@ -394,22 +378,20 @@ export class Fill extends Basic {
     isEnabled: boolean
     fillType: FillType
     color: Color
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
     constructor(
         id: string,
         isEnabled: boolean,
         fillType: FillType,
-        color: Color,
-        contextSettings: ContextSettings
+        color: Color
     ) {
         super()
         this.id = id
         this.isEnabled = isEnabled
         this.fillType = fillType
         this.color = color
-        this.contextSettings = contextSettings
     }
 }
 /**
@@ -664,7 +646,7 @@ export class Border extends Basic {
     isEnabled: boolean
     fillType: FillType
     color: Color
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     position: BorderPosition
     thickness: number
     gradient?: Gradient
@@ -676,7 +658,6 @@ export class Border extends Basic {
         isEnabled: boolean,
         fillType: FillType,
         color: Color,
-        contextSettings: ContextSettings,
         position: BorderPosition,
         thickness: number,
         borderStyle: BorderStyle,
@@ -688,7 +669,6 @@ export class Border extends Basic {
         this.isEnabled = isEnabled
         this.fillType = fillType
         this.color = color
-        this.contextSettings = contextSettings
         this.position = position
         this.thickness = thickness
         this.borderStyle = borderStyle

@@ -32,8 +32,7 @@
         "id",
         "isEnabled",
         "fillType",
-        "color",
-        "contextSettings"
+        "color"
     ],
     "additionalProperties": false
 }

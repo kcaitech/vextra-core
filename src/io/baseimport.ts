@@ -72,10 +72,6 @@ export function importTableCellType(source: types.TableCellType, ctx?: IImportCo
 /* style */
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
     const ret: impl.Style = new impl.Style (
-        source.miterLimit,
-        importWindingRule(source.windingRule, ctx),
-        importBlur(source.blur, ctx),
-        importBorderOptions(source.borderOptions, ctx),
         (() => {
             const ret = new BasicArray<impl.Border>()
             for (let i = 0, len = source.borders && source.borders.length; i < len; i++) {
@@ -84,7 +80,6 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
             }
             return ret
         })(),
-        importContextSettings(source.contextSettings, ctx),
         (() => {
             const ret = new BasicArray<impl.Fill>()
             for (let i = 0, len = source.fills && source.fills.length; i < len; i++) {
@@ -92,25 +87,30 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
                 if (r) ret.push(r)
             }
             return ret
-        })(),
-        (() => {
-            const ret = new BasicArray<impl.Shadow>()
-            for (let i = 0, len = source.innerShadows && source.innerShadows.length; i < len; i++) {
-                const r = importShadow(source.innerShadows[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        (() => {
-            const ret = new BasicArray<impl.Shadow>()
-            for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
-                const r = importShadow(source.shadows[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
         })()
     )
+    if (source.miterLimit !== undefined) ret.miterLimit = source.miterLimit
+    if (source.windingRule !== undefined) ret.windingRule = importWindingRule(source.windingRule, ctx)
+    if (source.blur !== undefined) ret.blur = importBlur(source.blur, ctx)
+    if (source.borderOptions !== undefined) ret.borderOptions = importBorderOptions(source.borderOptions, ctx)
     if (source.colorControls !== undefined) ret.colorControls = importColorControls(source.colorControls, ctx)
+    if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
+    if (source.innerShadows !== undefined) ret.innerShadows = (() => {
+        const ret = new BasicArray<impl.Shadow>()
+        for (let i = 0, len = source.innerShadows && source.innerShadows.length; i < len; i++) {
+            const r = importShadow(source.innerShadows[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
+    if (source.shadows !== undefined) ret.shadows = (() => {
+        const ret = new BasicArray<impl.Shadow>()
+        for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
+            const r = importShadow(source.shadows[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -196,11 +196,11 @@ export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.S
         source.isEnabled,
         source.blurRadius,
         importColor(source.color, ctx),
-        importGraphicsContextSettings(source.contextSettings, ctx),
         source.offsetX,
         source.offsetY,
         source.spread
     )
+    if (source.contextSettings !== undefined) ret.contextSettings = importGraphicsContextSettings(source.contextSettings, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -324,9 +324,9 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
         source.id,
         source.isEnabled,
         importFillType(source.fillType, ctx),
-        importColor(source.color, ctx),
-        importContextSettings(source.contextSettings, ctx)
+        importColor(source.color, ctx)
     )
+    if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
     if (ctx) ctx.afterImport(ret)
@@ -523,13 +523,13 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
         source.isEnabled,
         importFillType(source.fillType, ctx),
         importColor(source.color, ctx),
-        importContextSettings(source.contextSettings, ctx),
         importBorderPosition(source.position, ctx),
         source.thickness,
         importBorderStyle(source.borderStyle, ctx),
         importMarkerType(source.startMarkerType, ctx),
         importMarkerType(source.endMarkerType, ctx)
     )
+    if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
