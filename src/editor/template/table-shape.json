@@ -12,22 +12,6 @@
     },
     "style": {
         "typeId": "style",
-        "miterLimit": 0,
-        "windingRule": "non-zero",
-        "blur": {
-            "isEnabled": false,
-            "center": {
-                "x": 0,
-                "y": 0
-            },
-            "saturation": 0,
-            "type": "gaussian"
-        },
-        "borderOptions": {
-            "isEnabled": false,
-            "lineCapStyle": "butt",
-            "lineJoinStyle": "miter"
-        },
         "borders": [
             {
                 "id": "4f0e6459-9d3c-4e71-9f60-3f11b2db7d0e",
@@ -39,10 +23,6 @@
                     "green": 0,
                     "blue": 0
                 },
-                "contextSettings": {
-                    "blenMode": "normal",
-                    "opacity": 1
-                },
                 "position": "center",
                 "thickness": 1,
                 "borderStyle": {
@@ -53,13 +33,7 @@
                 "endMarkerType": "line"
             }
         ],
-        "contextSettings": {
-            "blenMode": "normal",
-            "opacity": 1
-        },
-        "fills": [],
-        "innerShadows": [],
-        "shadows": []
+        "fills": []
     },
     "childs": [],
     "rowHeights": [],

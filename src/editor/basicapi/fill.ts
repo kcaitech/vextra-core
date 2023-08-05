@@ -37,7 +37,9 @@ export function setFillEnable(style: Style, idx: number, enable: boolean) {
 
 export function addFill(style: Style, fill: Fill) {
     const { isEnabled, color, contextSettings, fillType } = fill;
-    style.fills.unshift(new Fill(uuid(), isEnabled, fillType, color, contextSettings));
+    const _fill = new Fill(uuid(), isEnabled, fillType, color);
+    _fill.contextSettings = contextSettings;
+    style.fills.unshift(_fill);
 }
 export function deleteFillByIndex(style: Style, idx: number) {
     style.fills.splice(idx, 1);
@@ -52,7 +54,8 @@ export function replaceFills(style: Style, fills: Fill[]) {
     for (let i = 0; i < fills.length; i++) {
         const f_sim = fills[i];
         const { isEnabled, fillType, color, contextSettings } = f_sim;
-        const _f = new Fill(uuid(), isEnabled, fillType, color, contextSettings);
+        const _f = new Fill(uuid(), isEnabled, fillType, color);
+        _f.contextSettings = contextSettings;
         style.fills.push(_f);
     }
 }

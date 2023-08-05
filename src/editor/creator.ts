@@ -41,9 +41,8 @@ export function newDocument(documentName: string, repo: Repository): Document {
 export function newPage(name: string): Page {
     templage_page.id = uuid();
     templage_page.name = name;
-    const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 239, 239, 239);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
     const page = importPage(templage_page as types.Page)
     page.style.fills.push(fill);
     return page;
@@ -59,17 +58,11 @@ export function newGroupShape(name: string, style?: Style): GroupShape {
 }
 
 export function newStyle(): Style {
-    const windingRule = types.WindingRule.EvenOdd;
-    const blur = new Blur(false, new Point2D(0, 0), 0, types.BlurType.Gaussian);
-    const borderOptions = new BorderOptions(false, types.LineCapStyle.Butt, types.LineJoinStyle.Miter);
     const borders = new BasicArray<Border>();
-    const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 216, 216, 216);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
     const fills = new BasicArray<Fill>();
-    const innerShadows = new BasicArray<Shadow>();
-    const shadows = new BasicArray<Shadow>();
-    const style = new Style(10, windingRule, blur, borderOptions, borders, contextSettings, fills, innerShadows, shadows);
+    const style = new Style(borders, fills);
     style.fills.push(fill);
     return style;
 }
@@ -81,7 +74,7 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     const artboard = importArtboard(template_artboard as types.Artboard);
     const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 255, 255, 255);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
     artboard.style.fills.push(fill);
     artboard.isVisible = true;
     artboard.isLocked = false;

@@ -133,7 +133,7 @@ export class Api {
         if (!item) return;
         const contextSettings = new ContextSettings(BlendMode.Normal, 1);
         const fillColor = new Color(1, 239, 239, 239);
-        const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
+        const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
         const pre = item.style.fills[0];
         const save = this.repo.transactCtx.settrap;
         this.repo.transactCtx.settrap = false;
