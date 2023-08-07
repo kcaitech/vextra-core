@@ -194,7 +194,7 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
         next.updated = true;
         next.changed = changed;
     }
-    page.notify('collect'); // 收集辅助线采用的关键点位
+    page.__collect.notify('collect'); // 收集辅助线采用的关键点位
 }
 
 export function exportShape(shape: Shape): Object {

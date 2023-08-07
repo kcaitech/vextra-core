@@ -461,11 +461,9 @@ export class Controller {
         }
         const stick = (dx: number, dy: number) => {
             status = Status.Pending;
-            if (shapes.length === 1) {
-                const s = shapes[0];
-                translate(api, page, s, dx, dy);
-            } else {
-                // todo
+            for (let i = 0; i < shapes.length; i++) {
+                if (shapes[i].isLocked) continue; // 🔒住不让动
+                translate(api, page, shapes[i], dx, dy);
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
