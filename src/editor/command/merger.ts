@@ -1,5 +1,5 @@
 import { arrayEquals } from "../../coop/data/basic";
-import { Cmd, CmdType, IdOpNone, IdOpRemove, IdOpSet, OpType, PageCmdModify, ShapeArrayAttrModify, ShapeCmdModify } from "../../coop/data/classes";
+import { Cmd, CmdType, IdOpNone, IdOpSet, OpType, PageCmdModify, ShapeArrayAttrModify, ShapeCmdModify } from "../../coop/data/classes";
 
 enum MERGE_STATE {
     CONTINUE = 0,
@@ -18,8 +18,8 @@ function _merge(l: Cmd, r: Cmd): MERGE_STATE {
             {
                 const lcmd = l as PageCmdModify;
                 const rcmd = r as PageCmdModify;
-                const lop = lcmd.ops[0] as (IdOpSet | IdOpRemove | IdOpNone);
-                const rop = rcmd.ops[0] as (IdOpSet | IdOpRemove | IdOpNone);
+                const lop = lcmd.ops[0] as (IdOpSet | IdOpNone);
+                const rop = rcmd.ops[0] as (IdOpSet | IdOpNone);
                 if (!arrayEquals(lop.targetId, rop.targetId) || lop.opId !== rop.opId) {
                     return MERGE_STATE.CONTINUE;
                 }
@@ -39,8 +39,8 @@ function _merge(l: Cmd, r: Cmd): MERGE_STATE {
             {
                 const lcmd = l as ShapeArrayAttrModify;
                 const rcmd = r as ShapeArrayAttrModify;
-                const lop = lcmd.ops[0] as (IdOpSet | IdOpRemove | IdOpNone);
-                const rop = rcmd.ops[0] as (IdOpSet | IdOpRemove | IdOpNone);
+                const lop = lcmd.ops[0] as (IdOpSet | IdOpNone);
+                const rop = rcmd.ops[0] as (IdOpSet | IdOpNone);
                 if (!arrayEquals(lop.targetId, rop.targetId) || lop.opId !== rop.opId) {
                     return MERGE_STATE.CONTINUE;
                 }
@@ -75,8 +75,8 @@ function _merge(l: Cmd, r: Cmd): MERGE_STATE {
             {
                 const lcmd = l as ShapeCmdModify;
                 const rcmd = r as ShapeCmdModify;
-                const lop = lcmd.ops[0] as (IdOpSet | IdOpRemove | IdOpNone);
-                const rop = rcmd.ops[0] as (IdOpSet | IdOpRemove | IdOpNone);
+                const lop = lcmd.ops[0] as (IdOpSet | IdOpNone);
+                const rop = rcmd.ops[0] as (IdOpSet | IdOpNone);
                 if (!arrayEquals(lop.targetId, rop.targetId) || lop.opId !== rop.opId) {
                     return MERGE_STATE.CONTINUE;
                 }
