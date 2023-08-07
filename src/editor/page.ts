@@ -233,8 +233,7 @@ export class PageEditor {
 
     private cloneStyle(style: Style): Style {
         const _this = this;
-        const ctx: IImportContext = new class implements IImportContext {};
-        ctx.document = this.__document;
+        const ctx: IImportContext = new class implements IImportContext { document: Document = _this.__document };
         return importStyle(style, ctx);
     }
 

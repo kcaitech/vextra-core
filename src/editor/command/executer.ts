@@ -77,8 +77,7 @@ type TextShapeLike = Shape & { text: Text }
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
-    const ctx: IImportContext = new class implements IImportContext { }
-    ctx.document = document;
+    const ctx: IImportContext = new class implements IImportContext { document: Document = document };
     // if (source.typeId == 'shape') {
     //     return importShape(source as types.Shape, ctx)
     // }
