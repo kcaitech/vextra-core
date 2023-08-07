@@ -233,13 +233,9 @@ export class PageEditor {
 
     private cloneStyle(style: Style): Style {
         const _this = this;
-        return importStyle(style, new class implements IImportContext {
-            afterImport(obj: any): void {
-                if (obj instanceof Fill) {
-                    obj.setImageMgr(_this.__document.mediasMgr)
-                }
-            }
-        });
+        const ctx: IImportContext = new class implements IImportContext {};
+        ctx.document = this.__document;
+        return importStyle(style, ctx);
     }
 
     flattenShapes(shapes: Shape[], name?: string): PathShape | PathShape2 | false {

@@ -48,15 +48,11 @@ import {
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
-    ImageShape,
-    SymbolRefShape,
     GroupShape,
     Page,
     Shape,
     TextShape,
     RectShape,
-    Artboard,
-    SymbolShape,
     Color,
     PathShape,
     TextHorAlign,
@@ -65,8 +61,6 @@ import {
     BulletNumbersType,
     TextTransformType,
     BulletNumbersBehavior,
-    Fill,
-    FlattenShape,
     TableCell,
     Text
 } from "../../data/classes";
@@ -83,23 +77,8 @@ type TextShapeLike = Shape & { text: Text }
 
 function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
-    const ctx = new class implements IImportContext {
-        afterImport(obj: any): void {
-            if (obj instanceof ImageShape || obj instanceof Fill || obj instanceof TableCell) {
-                obj.setImageMgr(document.mediasMgr)
-            } else if (obj instanceof SymbolRefShape) {
-                obj.setSymbolMgr(document.symbolsMgr)
-                // } else if (obj instanceof ArtboardRef) {
-                //     obj.setArtboardMgr(document.artboardMgr)
-            } else if (obj instanceof Artboard) {
-                document.artboardMgr.add(obj.id, obj);
-            } else if (obj instanceof SymbolShape) {
-                document.symbolsMgr.add(obj.id, obj);
-            } else if (obj instanceof FlattenShape) {
-                obj.isBoolOpShape = true;
-            }
-        }
-    }
+    const ctx: IImportContext = new class implements IImportContext { }
+    ctx.document = document;
     // if (source.typeId == 'shape') {
     //     return importShape(source as types.Shape, ctx)
     // }
