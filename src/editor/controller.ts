@@ -18,10 +18,6 @@ interface PageXY { // 页面坐标系的xy
     x: number
     y: number
 }
-export interface AspectRatio {
-    x: number
-    y: number
-}
 export interface ControllerOrigin { // 页面坐标系的xy
     x: number
     y: number
@@ -79,6 +75,7 @@ export interface AsyncLineAction {
 export interface AsyncTransfer {
     migrate: (targetParent: GroupShape) => void;
     trans: (start: PageXY, end: PageXY) => void;
+    stick: (dx: number, dy: number) => void;
     transByWheel: (dx: number, dy: number) => void;
     close: () => undefined;
 }
@@ -462,6 +459,17 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
+        const stick = (dx: number, dy: number) => {
+            status = Status.Pending;
+            if (shapes.length === 1) {
+                const s = shapes[0];
+                translate(api, page, s, dx, dy);
+            } else {
+                // todo
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
         const transByWheel = (dx: number, dy: number) => {
             status = Status.Pending;
             for (let i = 0; i < shapes.length; i++) {
@@ -479,7 +487,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { migrate, trans, close, transByWheel }
+        return { migrate, trans, stick, close, transByWheel }
     }
 }
 function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
