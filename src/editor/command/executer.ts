@@ -14,10 +14,13 @@ import {
     ShapeArrayAttrModify,
     ShapeArrayAttrMove,
     PageCmdMove,
-    TextCmdMove,
     ShapeOpMove,
     IdOpSet,
-    ShapeOpRemove
+    ShapeOpRemove,
+    ShapeArrayAttrModify2,
+    TableCmdInsert,
+    TableCmdRemove,
+    TableOpInsert
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 import {
@@ -62,14 +65,15 @@ import {
     TextTransformType,
     BulletNumbersBehavior,
     TableCell,
-    Text
+    Text,
+    TableShape
 } from "../../data/classes";
 
 import * as api from "../basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
-import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
+import { ArrayOpInsert, ArrayOpRemove, TableOpTarget } from "../../coop/data/basictypes";
 import { updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 
@@ -190,9 +194,6 @@ export class CMDExecuter {
             case CmdType.TextModify:
                 this.textModify(cmd as TextCmdModify);
                 break;
-            case CmdType.TextMove:
-                this.textMove(cmd as TextCmdMove);
-                break;
             case CmdType.ShapeDelete:
                 this.shapeDelete(cmd as ShapeCmdRemove, needUpdateFrame);
                 break;
@@ -207,6 +208,12 @@ export class CMDExecuter {
                 break;
             case CmdType.Group:
                 this.cmdGroup(cmd as CmdGroup, needUpdateFrame);
+                break;
+            case CmdType.TableInsert:
+                this.tableInsert(cmd as TableCmdInsert);
+                break;
+            case CmdType.TableDelete:
+                this.tableDelete(cmd as TableCmdRemove);
                 break;
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
@@ -243,6 +250,9 @@ export class CMDExecuter {
                 case CmdType.ShapeArrayAttrModify:
                     this.shapeArrAttrModify(cmd as ShapeArrayAttrModify);
                     break;
+                case CmdType.ShapeArrayAttrModify2:
+                    this.shapeArrAttrModify2(cmd as ShapeArrayAttrModify2);
+                    break;
                 case CmdType.ShapeArrayAttrMove:
                     this.shapeArrAttrMove(cmd as ShapeArrayAttrMove);
                     break;
@@ -255,8 +265,11 @@ export class CMDExecuter {
                 case CmdType.TextModify:
                     this.textModify(cmd as TextCmdModify);
                     break;
-                case CmdType.TextMove:
-                    this.textMove(cmd as TextCmdMove);
+                case CmdType.TableInsert:
+                    this.tableInsert(cmd as TableCmdInsert);
+                    break;
+                case CmdType.TableDelete:
+                    this.tableDelete(cmd as TableCmdRemove);
                     break;
                 default:
                     throw new Error("unknow cmd type:" + cmd.type)
@@ -652,14 +665,84 @@ export class CMDExecuter {
                 console.error("not implemented ", op)
             }
         }
-        else if (arrayAttr === TABLE_COL_WIDTHS_ID) {
-
-        }
-        else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
-
-        }
         else {
             console.error("not implemented ", arrayAttr)
+        }
+    }
+    shapeArrAttrModify2(cmd: ShapeArrayAttrModify2) {
+        const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
+        const op = cmd.ops[0]
+        const shapeId = op.targetId[0]
+        const shape = page.getShape(shapeId, true);
+        if (!shape) {
+            throw new Error("shape not find")
+        }
+        if (op.type !== OpType.ArrayAttr) {
+            return;
+        }
+        const value = cmd.value;
+        const idx = op.start;
+        const arrayAttr = cmd.arrayAttr;
+        if (arrayAttr === TABLE_COL_WIDTHS_ID) {
+            const width = value && JSON.parse(value);
+            if (width) api.tableModifyColWidth(shape as TableShape, idx, width);
+        }
+        else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
+            const height = value && JSON.parse(value);
+            if (height) api.tableModifyRowHeight(shape as TableShape, idx, height);
+        }
+    }
+    tableInsert(cmd: TableCmdInsert) {
+        const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
+        const op = cmd.ops[0] as TableOpInsert
+        const shapeId = op.targetId[0]
+        const shape = page.getShape(shapeId, true);
+        if (!shape) {
+            throw new Error("shape not find")
+        }
+        if (op.type !== OpType.TableInsert) {
+            return;
+        }
+        const target = op.target;
+        const _this = this;
+        const ctx = new class implements IImportContext { document: Document = _this.__document }
+        if (target === TableOpTarget.Row) {
+            const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
+            const height = JSON.parse(cmd.data);
+            api.tableInsertRow(shape as TableShape, op.index, height, data);
+        }
+        else if (target === TableOpTarget.Col) {
+            const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
+            const width = JSON.parse(cmd.data);
+            api.tableInsertCol(shape as TableShape, op.index, width, data);
+        }
+        else {
+            throw new Error("unknow table target " + target)
+        }
+    }
+    tableDelete(cmd: TableCmdRemove) {
+        const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
+        const op = cmd.ops[0]
+        const shapeId = op.targetId[0]
+        const shape = page.getShape(shapeId, true);
+        if (!shape) {
+            throw new Error("shape not find")
+        }
+        if (op.type !== OpType.TableRemove) {
+            return;
+        }
+        const target = op.target;
+        if (target === TableOpTarget.Row) {
+            api.tableRemoveRow(shape as TableShape, op.index);
+        }
+        else if (target === TableOpTarget.Col) {
+            api.tableRemoveCol(shape as TableShape, op.index);
+        }
+        else {
+            throw new Error("unknow table target " + target)
         }
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove) {
@@ -742,137 +825,90 @@ export class CMDExecuter {
         if (!(shape instanceof TextShape)) {
             throw new Error("shape type wrong")
         }
+        if (op.type !== OpType.ArrayAttr) {
+            return;
+        }
         const attrId = cmd.attrId
         const value = cmd.value;
         const shapetext = (shape as TextShapeLike).text;
         if (attrId === TEXT_ATTR_ID.color) {
-            if (op.type === OpType.ArrayAttr) {
-                const color = (value && importColor(JSON.parse(value))) as Color | undefined;
-                api.textModifyColor(shapetext, op.start, op.length, color)
-            }
+            const color = (value && importColor(JSON.parse(value))) as Color | undefined;
+            api.textModifyColor(shapetext, op.start, op.length, color)
         }
         else if (attrId === TEXT_ATTR_ID.fontName) {
-            if (op.type === OpType.ArrayAttr) {
-                api.textModifyFontName(shapetext, op.start, op.length, value)
-            }
+            api.textModifyFontName(shapetext, op.start, op.length, value)
         }
         else if (attrId === TEXT_ATTR_ID.fontSize) {
-            if (op.type === OpType.ArrayAttr) {
-                const fontSize = value && JSON.parse(value);
-                api.textModifyFontSize(shapetext, op.start, op.length, fontSize)
-            }
+            const fontSize = value && JSON.parse(value);
+            api.textModifyFontSize(shapetext, op.start, op.length, fontSize)
         }
         else if (attrId === TEXT_ATTR_ID.spanKerning) {
-            if (op.type === OpType.ArrayAttr) {
-                const kerning = value && JSON.parse(value);
-                api.textModifySpanKerning(shapetext, kerning, op.start, op.length)
-            }
+            const kerning = value && JSON.parse(value);
+            api.textModifySpanKerning(shapetext, kerning, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.paraKerning) {
-            if (op.type === OpType.ArrayAttr) {
-                const kerning = value && JSON.parse(value);
-                api.textModifyParaKerning(shapetext, kerning, op.start, op.length)
-            }
+            const kerning = value && JSON.parse(value);
+            api.textModifyParaKerning(shapetext, kerning, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.textHorAlign) {
-            if (op.type === OpType.ArrayAttr) {
-                const textHorAlign = value as TextHorAlign;
-                api.textModifyHorAlign(shapetext, textHorAlign, op.start, op.length)
-            }
+            const textHorAlign = value as TextHorAlign;
+            api.textModifyHorAlign(shapetext, textHorAlign, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.textMaxLineheight) {
-            if (op.type === OpType.ArrayAttr) {
-                const maxLineHeight = value && JSON.parse(value);
-                api.textModifyMaxLineHeight(shapetext, maxLineHeight, op.start, op.length)
-            }
+            const maxLineHeight = value && JSON.parse(value);
+            api.textModifyMaxLineHeight(shapetext, maxLineHeight, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.textMinLineheight) {
-            if (op.type === OpType.ArrayAttr) {
-                const minLineHeight = value && JSON.parse(value);
-                api.textModifyMinLineHeight(shapetext, minLineHeight, op.start, op.length)
-            }
+            const minLineHeight = value && JSON.parse(value);
+            api.textModifyMinLineHeight(shapetext, minLineHeight, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.paraSpacing) {
-            if (op.type === OpType.ArrayAttr) {
-                const paraSpacing = value && JSON.parse(value);
-                api.textModifyParaSpacing(shapetext, paraSpacing, op.start, op.length)
-            }
+            const paraSpacing = value && JSON.parse(value);
+            api.textModifyParaSpacing(shapetext, paraSpacing, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.bold) {
-            if (op.type === OpType.ArrayAttr) {
-                const bold = value && JSON.parse(value);
-                api.textModifyBold(shapetext, bold, op.start, op.length)
-            }
+            const bold = value && JSON.parse(value);
+            api.textModifyBold(shapetext, bold, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.italic) {
-            if (op.type === OpType.ArrayAttr) {
-                const italic = value && JSON.parse(value);
-                api.textModifyItalic(shapetext, italic, op.start, op.length)
-            }
+            const italic = value && JSON.parse(value);
+            api.textModifyItalic(shapetext, italic, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.underline) {
-            if (op.type === OpType.ArrayAttr) {
-                api.textModifyUnderline(shapetext, value as UnderlineType, op.start, op.length)
-            }
+            api.textModifyUnderline(shapetext, value as UnderlineType, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.strikethrough) {
-            if (op.type === OpType.ArrayAttr) {
-                api.textModifyStrikethrough(shapetext, value as StrikethroughType, op.start, op.length)
-            }
+            api.textModifyStrikethrough(shapetext, value as StrikethroughType, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.bulletNumbersType) {
-            if (op.type === OpType.ArrayAttr) {
-                api.textModifyBulletNumbersType(shapetext, value as BulletNumbersType, op.start, op.length)
-            }
+            api.textModifyBulletNumbersType(shapetext, value as BulletNumbersType, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.bulletNumbersStart) {
-            if (op.type === OpType.ArrayAttr) {
-                const start = value && JSON.parse(value) || 0;
-                api.textModifyBulletNumbersStart(shapetext, start, op.start, op.length)
-            }
+            const start = value && JSON.parse(value) || 0;
+            api.textModifyBulletNumbersStart(shapetext, start, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.bulletNumbersBehavior) {
-            if (op.type === OpType.ArrayAttr) {
-                const inherit = value as BulletNumbersBehavior;
-                api.textModifyBulletNumbersBehavior(shapetext, inherit, op.start, op.length)
-            }
+            const inherit = value as BulletNumbersBehavior;
+            api.textModifyBulletNumbersBehavior(shapetext, inherit, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.highlightColor) {
-            if (op.type === OpType.ArrayAttr) {
-                const color = (value && importColor(JSON.parse(value))) as Color | undefined;
-                api.textModifyHighlightColor(shapetext, op.start, op.length, color)
-            }
+            const color = (value && importColor(JSON.parse(value))) as Color | undefined;
+            api.textModifyHighlightColor(shapetext, op.start, op.length, color)
         }
         else if (attrId === TEXT_ATTR_ID.spanTransform) {
-            if (op.type === OpType.ArrayAttr) {
-                const transform = value as TextTransformType | undefined;
-                api.textModifySpanTransfrom(shapetext, transform, op.start, op.length)
-            }
+            const transform = value as TextTransformType | undefined;
+            api.textModifySpanTransfrom(shapetext, transform, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.paraTransform) {
-            if (op.type === OpType.ArrayAttr) {
-                const transform = value as TextTransformType | undefined;
-                api.textModifyParaTransfrom(shapetext, transform, op.start, op.length)
-            }
+            const transform = value as TextTransformType | undefined;
+            api.textModifyParaTransfrom(shapetext, transform, op.start, op.length)
         }
         else if (attrId === TEXT_ATTR_ID.indent) {
-            if (op.type === OpType.ArrayAttr) {
-                const indent = value && JSON.parse(value) || undefined;
-                api.textModifyParaIndent(shapetext, indent, op.start, op.length)
-            }
+            const indent = value && JSON.parse(value) || undefined;
+            api.textModifyParaIndent(shapetext, indent, op.start, op.length)
         }
         else {
             console.error("not implemented ", attrId)
         }
-    }
-
-    textMove(cmd: TextCmdMove) {
-        throw new Error("not implemented")
-        // const page = this.__document.pagesMgr.getSync(cmd.blockId);
-        // const op = cmd.ops[0]
-        // const shapeId = op.targetId[0]
-        // const shape = page && page.getShape(shapeId, true);
-        // if (!page || !shape || !(shape instanceof TextShape)) return;
-        // todo
     }
 }

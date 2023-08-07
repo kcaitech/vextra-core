@@ -4,12 +4,14 @@ import {
     ShapeArrayAttrMove, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
     ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
     TextCmdInsert, TextCmdRemove, TextCmdModify, ShapeArrayAttrModify2,
+    TableCmdInsert, TableCmdRemove,
+    TableOpTarget
 } from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportText } from "../../io/baseexport";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, Shape, PathShape, PathShape2 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
@@ -953,38 +955,52 @@ export class Api {
         })
     }
 
-    tableInsertRow(page: Page, table: TableShape, idx: number, height: number) {
+    tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data: any[]) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            basicapi.tableInsertRow(table, idx, height);
-            this.addCmd(ShapeArrayAttrInsert.Make(page.id, table.id, TABLE_ROW_HEIGHTS_ID, "", idx, height));
+            basicapi.tableInsertRow(table, idx, height, data);
+            const data1 = data.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
+            this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, height, TableOpTarget.Row));
         })
     }
 
     tableRemoveRow(page: Page, table: TableShape, idx: number) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
-            // basicapi.tableRemoveRow(table, idx); // origin // undo?
-            // this.addCmd(ShapeArrayAttrRemove.Make(page.id, table.id, TABLE_ROW_HEIGHTS_ID, "", idx));
+            const origin = table.rowHeights[idx];
+            const del = basicapi.tableRemoveRow(table, idx);
+            const data1 = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
+            this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, data1, origin, TableOpTarget.Row));
         })
     }
 
-    tableInsertCol(page: Page, table: TableShape, idx: number, width: number) {
+    tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data: any[]) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
+            basicapi.tableInsertCol(table, idx, width, data);
+            const data1 = data.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
+            this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, width, TableOpTarget.Col));
         })
     }
 
     tableRemoveCol(page: Page, table: TableShape, idx: number) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
+            const origin = table.colWidths[idx];
+            const del = basicapi.tableRemoveCol(table, idx);
+            const data1 = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
+            this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, data1, origin, TableOpTarget.Col));
         })
     }
 
-    tableModifyCellSpan(page: Page, cell: TableCell, rowSpan: number, celSpan: number) {
+    tableModifyCellSpan(page: Page, cell: TableCell, rowSpan: number, colSpan: number) {
         this.checkShapeAtPage(page, cell);
         this.__trap(() => {
+            const origin = { rowSpan: cell.rowSpan, colSpan: cell.colSpan };
+            if ((origin.rowSpan ?? 1) !== rowSpan || (origin.colSpan ?? 1) !== colSpan) {
+                basicapi.tableModifyCellSpan(cell, rowSpan, colSpan);
+                this.addCmd(ShapeCmdModify.Make(page.id, cell.id, SHAPE_ATTR_ID.cellSpan, { rowSpan, colSpan }, origin))
+            }
         })
     }
 }
