@@ -59,10 +59,8 @@ export function export_shape(shapes: Shape[]) {
 
 // 从剪切板导入图形
 export function import_shape(document: Document, source: { index: number, content: types.Shape }[]) {
-    const ctx = new class implements IImportContext {
-        document?: Document;
-    }
-    ctx.document = document;
+    const ctx: IImportContext = new class implements IImportContext { document: Document = document };
+
     // const ctx = new class implements IImportContext {
     //     afterImport(obj: any): void {
     //         if (obj instanceof ImageShape || obj instanceof Fill || obj instanceof TableCell) {

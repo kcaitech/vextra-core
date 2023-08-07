@@ -70,11 +70,11 @@ handler['$ref'] = function (schema: any, className: string, attrname: string, le
     className = schema.className ?? className
     filename = schema.filename ?? filename
     if (schema == '#') {
-        return 'adaptor.export' + className + '(' + attrname + ', ctx)'
+        return '(adaptor.export' + className + ' || export' +  className + ')(' + attrname + ', ctx)'
     }
     else if (schema.endsWith(schemaext)) {
         className = fileName2TypeName(extractRefFileName(schema))
-        return 'adaptor.export' + className + '(' + attrname + ', ctx)'
+        return '(adaptor.export' + className + ' || export' +  className + ')(' + attrname + ', ctx)'
     }
     else {
         throw new Error('unknow schema : ' + schema)
@@ -155,7 +155,7 @@ ${indent(level)}    }`
         if (typename) {
             ret += `
 ${indent(level)}    if (${attrname}.typeId == '${filename}') {
-${indent(level)}        return adaptor.export${typename}(${attrname} as types.${typename}, ctx)
+${indent(level)}        return (adaptor.export${typename} || export${typename})(${attrname} as types.${typename}, ctx)
 ${indent(level)}    }`
         }
     }

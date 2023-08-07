@@ -121,8 +121,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
 
     const document = new Document(meta.id, versionId ?? "", meta.lastCmdId, meta.name, meta.pagesList, gurad);
-    const ctx: IImportContext = new class implements IImportContext { };
-    ctx.document = document;
+    const ctx: IImportContext = new class implements IImportContext { document: Document = document };
 
     // const document_syms = new ResourceMgr<DocumentSyms[]>();
     // document_syms.setLoader((id: string) => loader.loadDocumentSyms(ctx, ""));

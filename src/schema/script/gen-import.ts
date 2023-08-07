@@ -112,11 +112,11 @@ handler['$ref'] = function (schema: any, className: string, attrname: string, le
     className = schema.className ?? className
     filename = schema.filename ?? filename
     if (schema == '#') {
-        return 'adaptor.import' + className + '(' + attrname + ', ctx)'
+        return '(adaptor.import' + className + ' || import' + className + ')(' + attrname + ', ctx)'
     }
     else if (schema.endsWith(schemaext)) {
         className = fileName2TypeName(extractRefFileName(schema))
-        return 'adaptor.import' + className + '(' + attrname + ', ctx)'
+        return '(adaptor.import' + className + ' || import' + className + ')(' + attrname + ', ctx)'
     }
     else {
         throw new Error("unknow schema : " + schema)
@@ -198,7 +198,7 @@ handler['oneOf'] = function (schema: any, className: string, attrname: string, l
         if (typename) {
             ret += `
 ${indent(level)}    if (${attrname}.typeId == '${filename}') {
-${indent(level)}        return import${typename}(${attrname} as types.${typename}, ctx)
+${indent(level)}        return (adaptor.import${typename} || import${typename})(${attrname} as types.${typename}, ctx)
 ${indent(level)}    }`
         }
     }
@@ -300,7 +300,7 @@ export function genimport(schemadir: string, outfile: string, implpath: string, 
     fs.appendFileSync(outfile,
         `
 export interface IImportContext {
-    document?: impl.Document
+    document: impl.Document
 }
 `)
     order.sort((a, b) => a.order - b.order)
