@@ -1,4 +1,4 @@
-import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL } from "./frame";
+import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL } from "./frame";
 import { Shape, GroupShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
@@ -288,33 +288,13 @@ export class Controller {
             } else if (type === CtrlElementType.RectLB) {
                 adjustLB2(api, page, shape, end.x, end.y);
             } else if (type === CtrlElementType.RectTop) {
-                const m = shape.matrix2Root();
-                const p1 = m.inverseCoord(start.x, start.y);
-                const p2 = m.inverseCoord(end.x, end.y);
-                const dy = p2.y - p1.y;
-                const { x, y } = m.computeCoord(0, dy);
-                adjustLT2(api, page, shape, x, y);
+                scaleByT(api, page, shape, end);
             } else if (type === CtrlElementType.RectRight) {
-                const m = shape.matrix2Root();
-                const p1 = m.inverseCoord(start.x, start.y);
-                const p2 = m.inverseCoord(end.x, end.y);
-                const dx = p2.x - p1.x;
-                const { x, y } = m.computeCoord(shape.frame.width + dx, 0);
-                adjustRT2(api, page, shape, x, y);
+                scaleByR(api, page, shape, end);
             } else if (type === CtrlElementType.RectBottom) {
-                const m = shape.matrix2Root();
-                const p1 = m.inverseCoord(start.x, start.y);
-                const p2 = m.inverseCoord(end.x, end.y);
-                const dy = p2.y - p1.y;
-                const { x, y } = m.computeCoord(shape.frame.width, shape.frame.height + dy);
-                adjustRB2(api, page, shape, x, y);
+                scaleByB(api, page, shape, end);
             } else if (type === CtrlElementType.RectLeft) {
-                const m = shape.matrix2Root();
-                const p1 = m.inverseCoord(start.x, start.y);
-                const p2 = m.inverseCoord(end.x, end.y);
-                const dx = p2.x - p1.x;
-                const { x, y } = m.computeCoord(dx, shape.frame.height);
-                adjustLB2(api, page, shape, x, y);
+                scaleByL(api, page, shape, end);
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;

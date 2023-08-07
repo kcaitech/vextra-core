@@ -4,7 +4,10 @@ import { GroupShape, PathShape, Shape, TextShape } from "../data/shape";
 import { Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils";
 import { TableShape } from "../data/table";
-
+interface PageXY {
+    x: number
+    y: number
+}
 export interface Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
     shapeModifyY(page: Page, shape: Shape, y: number): void;
@@ -507,7 +510,203 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
 
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
+/**
+ * @description 自由缩放
+ */
+export function scaleByT(api: Api, page: Page, s: Shape, p: PageXY) {
+    const parent = s.parent;
+    if (!parent) return;
+    const f = s.frame;
+    const t = s.matrix2Root().inverseCoord(p.x, p.y);
+    const m2p = s.matrix2Parent();
+    const cur = m2p.computeCoord2(0, 0);
+    const target = m2p.computeCoord2(0, t.y);
+    let dx = target.x - cur.x;
+    let dy = target.y - cur.y;
+    // 没有变换时, w,h可以简单算出
+    let w = f.width - dx;
+    let h = f.height - dy;
+    const saverb = m2p.computeCoord2(f.width, f.height);
+    const matrixarr = m2p.toArray();
+    matrixarr[4] = target.x;
+    matrixarr[5] = target.y;
+    const m2 = new Matrix(matrixarr);
+    const wh = m2.inverseCoord(saverb.x, saverb.y);
+    w = wh.x;
+    h = wh.y;
+    if (w < 0) {
+        api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal)
+        if (s.rotation) {
+            api.shapeModifyRotate(page, s, 360 - s.rotation);
+        }
+        w = -w;
+    }
+    if (h < 0) {
+        api.shapeModifyVFlip(page, s, !s.isFlippedVertical)
+        if (s.rotation) {
+            api.shapeModifyRotate(page, s, 360 - s.rotation);
+        }
+        h = -h;
+    }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
+    const cx1 = w / 2;
+    const cy1 = h / 2;
+    const m1 = new Matrix();
+    m1.trans(-cx1, -cy1);
+    if (s.rotation) m1.rotate(s.rotation / 180 * Math.PI);
+    if (s.isFlippedHorizontal) m1.flipHoriz();
+    if (s.isFlippedVertical) m1.flipVert();
+    m1.trans(cx1, cy1);
+    m1.trans(f.x, f.y);
+    const xy1 = m1.computeCoord2(0, 0);
+    dx = target.x - xy1.x;
+    dy = target.y - xy1.y;
 
+    setFrame(page, s, f.x + dx, f.y + dy, w, h, api);
+}
+export function scaleByR(api: Api, page: Page, s: Shape, p: PageXY) {
+    const parent = s.parent;
+    if (!parent) return;
+    const f = s.frame;
+    const t = s.matrix2Root().inverseCoord(p.x, p.y);
+    const m2p = s.matrix2Parent();
+    const cur = m2p.computeCoord2(f.width, 0);
+    const target = m2p.computeCoord2(t.x, 0);
+
+    let dx = 0;
+    let dy = target.y - cur.y;
+    const xy2 = m2p.inverseCoord(target.x, target.y);
+    let w = xy2.x;
+    let h = f.height - xy2.y;
+    const savelb = m2p.computeCoord2(0, f.height)
+    const m = m2p;
+    h = (m.m00 * (savelb.y - target.y) - m.m10 * (savelb.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01)
+    w = (target.x - savelb.x + m.m01 * h) / m.m00;
+    if (w < 0) {
+        api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal)
+        if (s.rotation) {
+            api.shapeModifyRotate(page, s, 360 - s.rotation);
+        }
+        w = -w;
+    }
+    if (h < 0) {
+        api.shapeModifyVFlip(page, s, !s.isFlippedVertical)
+        if (s.rotation) {
+            api.shapeModifyRotate(page, s, 360 - s.rotation);
+        }
+        h = -h;
+    }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
+    const cx1 = w / 2;
+    const cy1 = h / 2;
+    const m1 = new Matrix();
+    m1.trans(-cx1, -cy1);
+    if (s.rotation) m1.rotate(s.rotation / 180 * Math.PI);
+    if (s.isFlippedHorizontal) m1.flipHoriz();
+    if (s.isFlippedVertical) m1.flipVert();
+    m1.trans(cx1, cy1);
+    m1.trans(f.x, f.y);
+    const xy1 = m1.computeCoord2(w, 0);
+    dx = target.x - xy1.x;
+    dy = target.y - xy1.y;
+    setFrame(page, s, f.x + dx, f.y + dy, w, h, api);
+}
+export function scaleByB(api: Api, page: Page, s: Shape, p: PageXY) {
+    const parent = s.parent;
+    if (!parent) return;
+    const f = s.frame;
+    const t = s.matrix2Root().inverseCoord(p.x, p.y);
+    const m2p = s.matrix2Parent();
+    const target = m2p.computeCoord2(f.width, t.y);
+    let dx = 0;
+    let dy = 0;
+    const xy2 = m2p.inverseCoord(target.x, target.y);
+    let w = f.width - xy2.x;
+    let h = f.height - xy2.y;
+    const savelt = m2p.computeCoord2(0, 0);
+    const m = m2p;
+    h = -(m.m00 * (savelt.y - target.y) - m.m10 * (savelt.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01);
+    w = (target.x - savelt.x + m.m01 * -h) / m.m00;
+    if (w < 0) {
+        api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+        if (s.rotation) {
+            api.shapeModifyRotate(page, s, 360 - s.rotation);
+        }
+        w = -w;
+    }
+    if (h < 0) {
+        api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+        if (s.rotation) {
+            api.shapeModifyRotate(page, s, 360 - s.rotation);
+        }
+        h = -h;
+    }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
+
+    const cx1 = w / 2;
+    const cy1 = h / 2;
+    const m1 = new Matrix();
+    m1.trans(-cx1, -cy1);
+    if (s.rotation) m1.rotate(s.rotation / 180 * Math.PI);
+    if (s.isFlippedHorizontal) m1.flipHoriz();
+    if (s.isFlippedVertical) m1.flipVert();
+    m1.trans(cx1, cy1);
+    m1.trans(f.x, f.y);
+    const xy1 = m1.computeCoord2(w, h);
+    dx = target.x - xy1.x;
+    dy = target.y - xy1.y;
+    setFrame(page, s, f.x + dx, f.y + dy, w, h, api);
+}
+export function scaleByL(api: Api, page: Page, s: Shape, p: PageXY) {
+    const parent = s.parent;
+    if (!parent) return;
+    const f = s.frame;
+    const t = s.matrix2Root().inverseCoord(p.x, p.y);
+    const m2p = s.matrix2Parent();
+    const cur = m2p.computeCoord2(0, f.height);
+    const target = m2p.computeCoord2(t.x, f.height);
+    let dx = target.x - cur.x;
+    let dy = 0;
+    const xy2 = m2p.inverseCoord(target.x, target.y);
+    let w = f.width - xy2.x;
+    let h = xy2.y;
+    const savert = m2p.computeCoord(f.width, 0);
+    const m = m2p;
+    h = (m.m00 * (savert.y - target.y) - m.m10 * (savert.x - target.x)) / (m.m10 * m.m01 - m.m00 * m.m11);
+    w = (savert.x - target.x + m.m01 * h) / m.m00;
+    if (w < 0) {
+        api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal)
+        if (s.rotation) {
+            api.shapeModifyRotate(page, s, 360 - s.rotation);
+        }
+        w = -w;
+    }
+    if (h < 0) {
+        api.shapeModifyVFlip(page, s, !s.isFlippedVertical)
+        if (s.rotation) {
+            api.shapeModifyRotate(page, s, 360 - s.rotation);
+        }
+        h = -h;
+    }
+    if (w < minimum_WH) w = minimum_WH;
+    if (h < minimum_WH) h = minimum_WH;
+    const cx1 = w / 2;
+    const cy1 = h / 2;
+    const m1 = new Matrix();
+    m1.trans(-cx1, -cy1);
+    if (s.rotation) m1.rotate(s.rotation / 180 * Math.PI);
+    if (s.isFlippedHorizontal) m1.flipHoriz();
+    if (s.isFlippedVertical) m1.flipVert();
+    m1.trans(cx1, cy1);
+    m1.trans(f.x, f.y);
+    const xy1 = m1.computeCoord2(0, h);
+    dx = target.x - xy1.x;
+    dy = target.y - xy1.y;
+    setFrame(page, s, f.x + dx, f.y + dy, w, h, api);
+}
 /**
  * @description 等比缩放
  * @param { number } scale 缩放比例
