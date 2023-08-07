@@ -166,14 +166,14 @@ export class TableShape extends GroupShape implements classes.TableShape {
         const rowHBase = rowHeights.reduce((sum, cur) => sum + cur, 0);
         return rowHeights.map((val) => val / rowHBase * height);
     }
-    insertRow(idx: number, height: number) {
-        tableInsertRow(this, idx, height);
+    insertRow(idx: number, height: number, data?: any[]) {
+        tableInsertRow(this, idx, height, data);
     }
     removeRow(idx: number): TableCell[] {
         return tableRemoveRow(this, idx);
     }
-    insertCol(idx: number, width: number) {
-        tableInsertCol(this, idx, width);
+    insertCol(idx: number, width: number, data?: any[]) {
+        tableInsertCol(this, idx, width, data);
     }
     removeCol(idx: number): TableCell[] {
         return tableRemoveCol(this, idx);

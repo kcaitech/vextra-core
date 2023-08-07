@@ -12,12 +12,13 @@ function newCell(): TableCell {
     ))
 }
 
-export function tableInsertRow(table: TableShape, idx: number, height: number) {
+export function tableInsertRow(table: TableShape, idx: number, height: number, data?: any[]) {
     table.rowHeights.splice(idx, 0, height);
     const childs = table.childs as BasicArray<TableCell>;
     const row = [];
     for (let i = 0, count = table.colWidths.length; i < count; ++i) {
-        row.push(newCell());
+        const cell = data && data[i] || newCell();
+        row.push(cell);
     }
     childs.splice(idx * table.colWidths.length, 0, ...row);
 }
@@ -29,12 +30,13 @@ export function tableRemoveRow(table: TableShape, idx: number) {
     return childs.splice(idx * colCount, colCount);
 }
 
-export function tableInsertCol(table: TableShape, idx: number, width: number) {
+export function tableInsertCol(table: TableShape, idx: number, width: number, data?: any[]) {
     table.colWidths.splice(idx, 0, width);
     const childs = table.childs as BasicArray<TableCell>;
     const colCount = table.colWidths.length;
     for (let i = 0, count = table.rowHeights.length; i < count; ++i) {
-        childs.splice(i * colCount + idx + i, 0, newCell());
+        const cell = data && data[i] || newCell();
+        childs.splice(i * colCount + idx + i, 0, cell);
     }
 }
 
