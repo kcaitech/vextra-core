@@ -3,11 +3,13 @@
  * 可修改schema后在schema目录运行node script生成
  */
 
+import * as adaptor from "./exportadaptor"
 import * as types from "../data/typesdefine"
 
 
 export interface IExportContext {
-    afterExport(obj: any): void
+    symbols?:Set<string>
+    medias?:Set<string>
 }
 /* winding rule */
 export function exportWindingRule(source: types.WindingRule, ctx?: IExportContext): types.WindingRule {
@@ -20,7 +22,6 @@ export function exportUserInfo(source: types.UserInfo, ctx?: IExportContext): ty
         userNickname: source.userNickname,
         avatar: source.avatar,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* underline types */
@@ -33,14 +34,13 @@ export function exportText(source: types.Text, ctx?: IExportContext): types.Text
         paras: (() => {
             const ret = []
             for (let i = 0, len = source.paras.length; i < len; i++) {
-                const r = exportPara(source.paras[i], ctx)
+                const r = adaptor.exportPara(source.paras[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        attr: source.attr && exportTextAttr(source.attr, ctx),
+        attr: source.attr && adaptor.exportTextAttr(source.attr, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* text vertical alignment */
@@ -72,23 +72,23 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
     const ret = {
         typeId: source.typeId,
         miterLimit: source.miterLimit,
-        windingRule: source.windingRule && exportWindingRule(source.windingRule, ctx),
-        blur: source.blur && exportBlur(source.blur, ctx),
-        borderOptions: source.borderOptions && exportBorderOptions(source.borderOptions, ctx),
+        windingRule: source.windingRule && adaptor.exportWindingRule(source.windingRule, ctx),
+        blur: source.blur && adaptor.exportBlur(source.blur, ctx),
+        borderOptions: source.borderOptions && adaptor.exportBorderOptions(source.borderOptions, ctx),
         borders: (() => {
             const ret = []
             for (let i = 0, len = source.borders.length; i < len; i++) {
-                const r = exportBorder(source.borders[i], ctx)
+                const r = adaptor.exportBorder(source.borders[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        colorControls: source.colorControls && exportColorControls(source.colorControls, ctx),
-        contextSettings: source.contextSettings && exportContextSettings(source.contextSettings, ctx),
+        colorControls: source.colorControls && adaptor.exportColorControls(source.colorControls, ctx),
+        contextSettings: source.contextSettings && adaptor.exportContextSettings(source.contextSettings, ctx),
         fills: (() => {
             const ret = []
             for (let i = 0, len = source.fills.length; i < len; i++) {
-                const r = exportFill(source.fills[i], ctx)
+                const r = adaptor.exportFill(source.fills[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -96,7 +96,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
         innerShadows: source.innerShadows && (() => {
             const ret = []
             for (let i = 0, len = source.innerShadows.length; i < len; i++) {
-                const r = exportShadow(source.innerShadows[i], ctx)
+                const r = adaptor.exportShadow(source.innerShadows[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -104,13 +104,12 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
         shadows: source.shadows && (() => {
             const ret = []
             for (let i = 0, len = source.shadows.length; i < len; i++) {
-                const r = exportShadow(source.shadows[i], ctx)
+                const r = adaptor.exportShadow(source.shadows[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* strikethrough types */
@@ -121,9 +120,8 @@ export function exportStrikethroughType(source: types.StrikethroughType, ctx?: I
 export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop {
     const ret = {
         position: source.position,
-        color: source.color && exportColor(source.color, ctx),
+        color: source.color && adaptor.exportColor(source.color, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* span attr */
@@ -131,18 +129,17 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
     const ret = {
         fontName: source.fontName,
         fontSize: source.fontSize,
-        color: source.color && exportColor(source.color, ctx),
-        strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
-        underline: source.underline && exportUnderlineType(source.underline, ctx),
+        color: source.color && adaptor.exportColor(source.color, ctx),
+        strikethrough: source.strikethrough && adaptor.exportStrikethroughType(source.strikethrough, ctx),
+        underline: source.underline && adaptor.exportUnderlineType(source.underline, ctx),
         bold: source.bold,
         italic: source.italic,
-        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
-        highlight: source.highlight && exportColor(source.highlight, ctx),
+        bulletNumbers: source.bulletNumbers && adaptor.exportBulletNumbers(source.bulletNumbers, ctx),
+        highlight: source.highlight && adaptor.exportColor(source.highlight, ctx),
         kerning: source.kerning,
-        transform: source.transform && exportTextTransformType(source.transform, ctx),
+        transform: source.transform && adaptor.exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* shape */
@@ -150,27 +147,26 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     const ret = {
         typeId: source.typeId,
         id: source.id,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         name: source.name,
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* shape types */
@@ -187,7 +183,6 @@ export function exportShapeFrame(source: types.ShapeFrame, ctx?: IExportContext)
         width: source.width,
         height: source.height,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* shadow */
@@ -195,13 +190,12 @@ export function exportShadow(source: types.Shadow, ctx?: IExportContext): types.
     const ret = {
         isEnabled: source.isEnabled,
         blurRadius: source.blurRadius,
-        color: exportColor(source.color, ctx),
-        contextSettings: source.contextSettings && exportGraphicsContextSettings(source.contextSettings, ctx),
+        color: adaptor.exportColor(source.color, ctx),
+        contextSettings: source.contextSettings && adaptor.exportGraphicsContextSettings(source.contextSettings, ctx),
         offsetX: source.offsetX,
         offsetY: source.offsetY,
         spread: source.spread,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* resize type */
@@ -214,7 +208,6 @@ export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): type
         x: source.x,
         y: source.y,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* path segment */
@@ -223,14 +216,13 @@ export function exportPathSegment(source: types.PathSegment, ctx?: IExportContex
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = exportCurvePoint(source.points[i], ctx)
+                const r = adaptor.exportCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
         isClosed: source.isClosed,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* para */
@@ -240,14 +232,13 @@ export function exportPara(source: types.Para, ctx?: IExportContext): types.Para
         spans: (() => {
             const ret = []
             for (let i = 0, len = source.spans.length; i < len; i++) {
-                const r = exportSpan(source.spans[i], ctx)
+                const r = adaptor.exportSpan(source.spans[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        attr: source.attr && exportParaAttr(source.attr, ctx),
+        attr: source.attr && adaptor.exportParaAttr(source.attr, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* page list item */
@@ -257,7 +248,6 @@ export function exportPageListItem(source: types.PageListItem, ctx?: IExportCont
         name: source.name,
         versionId: source.versionId,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* override list item */
@@ -269,14 +259,13 @@ export function exportOverrideItem(source: types.OverrideItem, ctx?: IExportCont
                 return source.value
             }
             if (source.value.typeId == 'style') {
-                return exportStyle(source.value as types.Style, ctx)
+                return adaptor.exportStyle(source.value as types.Style, ctx)
             }
             {
                 console.error(source.value)
             }
         })(),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* marker type */
@@ -294,29 +283,27 @@ export function exportLineCapStyle(source: types.LineCapStyle, ctx?: IExportCont
 /* graphics contex settings */
 export function exportGraphicsContextSettings(source: types.GraphicsContextSettings, ctx?: IExportContext): types.GraphicsContextSettings {
     const ret = {
-        blendMode: exportBlendMode(source.blendMode, ctx),
+        blendMode: adaptor.exportBlendMode(source.blendMode, ctx),
         opacity: source.opacity,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* gradient */
 export function exportGradient(source: types.Gradient, ctx?: IExportContext): types.Gradient {
     const ret = {
         elipseLength: source.elipseLength,
-        from: exportPoint2D(source.from, ctx),
-        to: exportPoint2D(source.to, ctx),
+        from: adaptor.exportPoint2D(source.from, ctx),
+        to: adaptor.exportPoint2D(source.to, ctx),
         stops: (() => {
             const ret = []
             for (let i = 0, len = source.stops.length; i < len; i++) {
-                const r = exportStop(source.stops[i], ctx)
+                const r = adaptor.exportStop(source.stops[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        gradientType: exportGradientType(source.gradientType, ctx),
+        gradientType: adaptor.exportGradientType(source.gradientType, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* gradient type */
@@ -328,13 +315,12 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
     const ret = {
         id: source.id,
         isEnabled: source.isEnabled,
-        fillType: exportFillType(source.fillType, ctx),
-        color: exportColor(source.color, ctx),
-        contextSettings: source.contextSettings && exportContextSettings(source.contextSettings, ctx),
-        gradient: source.gradient && exportGradient(source.gradient, ctx),
+        fillType: adaptor.exportFillType(source.fillType, ctx),
+        color: adaptor.exportColor(source.color, ctx),
+        contextSettings: source.contextSettings && adaptor.exportContextSettings(source.contextSettings, ctx),
+        gradient: source.gradient && adaptor.exportGradient(source.gradient, ctx),
         imageRef: source.imageRef,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* fill types */
@@ -351,7 +337,7 @@ export function exportExportOptions(source: types.ExportOptions, ctx?: IExportCo
         exportFormats: (() => {
             const ret = []
             for (let i = 0, len = source.exportFormats.length; i < len; i++) {
-                const r = exportExportFormat(source.exportFormats[i], ctx)
+                const r = adaptor.exportExportFormat(source.exportFormats[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -367,20 +353,18 @@ export function exportExportOptions(source: types.ExportOptions, ctx?: IExportCo
         childOptions: source.childOptions,
         shouldTrim: source.shouldTrim,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* export format */
 export function exportExportFormat(source: types.ExportFormat, ctx?: IExportContext): types.ExportFormat {
     const ret = {
         absoluteSize: source.absoluteSize,
-        fileFormat: source.fileFormat && exportExportFileFormat(source.fileFormat, ctx),
+        fileFormat: source.fileFormat && adaptor.exportExportFileFormat(source.fileFormat, ctx),
         name: source.name,
-        namingScheme: source.namingScheme && exportExportFormatNameingScheme(source.namingScheme, ctx),
+        namingScheme: source.namingScheme && adaptor.exportExportFormatNameingScheme(source.namingScheme, ctx),
         scale: source.scale,
-        visibleScaleType: source.visibleScaleType && exportExportVisibleScaleType(source.visibleScaleType, ctx),
+        visibleScaleType: source.visibleScaleType && adaptor.exportExportVisibleScaleType(source.visibleScaleType, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* export format nameing scheme */
@@ -399,7 +383,6 @@ export function exportEllipse(source: types.Ellipse, ctx?: IExportContext): type
         rx: source.rx,
         ry: source.ry,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* document syms */
@@ -415,7 +398,6 @@ export function exportDocumentSyms(source: types.DocumentSyms, ctx?: IExportCont
             return ret
         })(),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* document meta */
@@ -426,14 +408,13 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
         pagesList: (() => {
             const ret = []
             for (let i = 0, len = source.pagesList.length; i < len; i++) {
-                const r = exportPageListItem(source.pagesList[i], ctx)
+                const r = adaptor.exportPageListItem(source.pagesList[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
         lastCmdId: source.lastCmdId,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* curve point */
@@ -441,14 +422,13 @@ export function exportCurvePoint(source: types.CurvePoint, ctx?: IExportContext)
     const ret = {
         id: source.id,
         cornerRadius: source.cornerRadius,
-        curveFrom: exportPoint2D(source.curveFrom, ctx),
-        curveTo: exportPoint2D(source.curveTo, ctx),
+        curveFrom: adaptor.exportPoint2D(source.curveFrom, ctx),
+        curveTo: adaptor.exportPoint2D(source.curveTo, ctx),
         hasCurveFrom: source.hasCurveFrom,
         hasCurveTo: source.hasCurveTo,
-        curveMode: exportCurveMode(source.curveMode, ctx),
-        point: exportPoint2D(source.point, ctx),
+        curveMode: adaptor.exportCurveMode(source.curveMode, ctx),
+        point: adaptor.exportPoint2D(source.point, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* curve mode */
@@ -458,10 +438,9 @@ export function exportCurveMode(source: types.CurveMode, ctx?: IExportContext): 
 /* context settings */
 export function exportContextSettings(source: types.ContextSettings, ctx?: IExportContext): types.ContextSettings {
     const ret = {
-        blenMode: exportBlendMode(source.blenMode, ctx),
+        blenMode: adaptor.exportBlendMode(source.blenMode, ctx),
         opacity: source.opacity,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* comment */
@@ -469,15 +448,14 @@ export function exportComment(source: types.Comment, ctx?: IExportContext): type
     const ret = {
         pageId: source.pageId,
         id: source.id,
-        frame: exportShapeFrame(source.frame, ctx),
-        user: exportUserInfo(source.user, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        user: adaptor.exportUserInfo(source.user, ctx),
         createAt: source.createAt,
         content: source.content,
-        parasiticBody: exportShape(source.parasiticBody, ctx),
+        parasiticBody: adaptor.exportShape(source.parasiticBody, ctx),
         parentId: source.parentId,
         rootId: source.rootId,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* color */
@@ -488,7 +466,6 @@ export function exportColor(source: types.Color, ctx?: IExportContext): types.Co
         green: source.green,
         blue: source.blue,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* color controls */
@@ -500,17 +477,15 @@ export function exportColorControls(source: types.ColorControls, ctx?: IExportCo
         hue: source.hue,
         saturation: source.saturation,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* bullet numbers */
 export function exportBulletNumbers(source: types.BulletNumbers, ctx?: IExportContext): types.BulletNumbers {
     const ret = {
-        behavior: source.behavior && exportBulletNumbersBehavior(source.behavior, ctx),
+        behavior: source.behavior && adaptor.exportBulletNumbersBehavior(source.behavior, ctx),
         offset: source.offset,
-        type: exportBulletNumbersType(source.type, ctx),
+        type: adaptor.exportBulletNumbersType(source.type, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* bullet & item number types */
@@ -526,17 +501,16 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
     const ret = {
         id: source.id,
         isEnabled: source.isEnabled,
-        fillType: exportFillType(source.fillType, ctx),
-        color: exportColor(source.color, ctx),
-        contextSettings: source.contextSettings && exportContextSettings(source.contextSettings, ctx),
-        position: exportBorderPosition(source.position, ctx),
+        fillType: adaptor.exportFillType(source.fillType, ctx),
+        color: adaptor.exportColor(source.color, ctx),
+        contextSettings: source.contextSettings && adaptor.exportContextSettings(source.contextSettings, ctx),
+        position: adaptor.exportBorderPosition(source.position, ctx),
         thickness: source.thickness,
-        gradient: source.gradient && exportGradient(source.gradient, ctx),
-        borderStyle: exportBorderStyle(source.borderStyle, ctx),
-        startMarkerType: exportMarkerType(source.startMarkerType, ctx),
-        endMarkerType: exportMarkerType(source.endMarkerType, ctx),
+        gradient: source.gradient && adaptor.exportGradient(source.gradient, ctx),
+        borderStyle: adaptor.exportBorderStyle(source.borderStyle, ctx),
+        startMarkerType: adaptor.exportMarkerType(source.startMarkerType, ctx),
+        endMarkerType: adaptor.exportMarkerType(source.endMarkerType, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* border style */
@@ -545,7 +519,6 @@ export function exportBorderStyle(source: types.BorderStyle, ctx?: IExportContex
         length: source.length,
         gap: source.gap,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* border position */
@@ -556,10 +529,9 @@ export function exportBorderPosition(source: types.BorderPosition, ctx?: IExport
 export function exportBorderOptions(source: types.BorderOptions, ctx?: IExportContext): types.BorderOptions {
     const ret = {
         isEnabled: source.isEnabled,
-        lineCapStyle: exportLineCapStyle(source.lineCapStyle, ctx),
-        lineJoinStyle: exportLineJoinStyle(source.lineJoinStyle, ctx),
+        lineCapStyle: adaptor.exportLineCapStyle(source.lineCapStyle, ctx),
+        lineJoinStyle: adaptor.exportLineJoinStyle(source.lineJoinStyle, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* bool op types */
@@ -570,13 +542,12 @@ export function exportBoolOp(source: types.BoolOp, ctx?: IExportContext): types.
 export function exportBlur(source: types.Blur, ctx?: IExportContext): types.Blur {
     const ret = {
         isEnabled: source.isEnabled,
-        center: exportPoint2D(source.center, ctx),
+        center: adaptor.exportPoint2D(source.center, ctx),
         motionAngle: source.motionAngle,
         radius: source.radius,
         saturation: source.saturation,
-        type: exportBlurType(source.type, ctx),
+        type: adaptor.exportBlurType(source.type, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* blur types */
@@ -593,27 +564,26 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        text: exportText(source.text, ctx),
+        text: adaptor.exportText(source.text, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* table shape */
@@ -622,19 +592,19 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
@@ -643,7 +613,7 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
         childs: (() => {
             const ret = []
             for (let i = 0, len = source.childs.length; i < len; i++) {
-                const r = exportTableCell(source.childs[i], ctx)
+                const r = adaptor.exportTableCell(source.childs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -665,7 +635,6 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
             return ret
         })(),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* table cell */
@@ -674,31 +643,30 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        cellType: source.cellType && exportTableCellType(source.cellType, ctx),
-        text: source.text && exportText(source.text, ctx),
+        cellType: source.cellType && adaptor.exportTableCellType(source.cellType, ctx),
+        text: source.text && adaptor.exportText(source.text, ctx),
         imageRef: source.imageRef,
         rowSpan: source.rowSpan,
         colSpan: source.colSpan,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* symbol ref shape */
@@ -707,19 +675,19 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
@@ -729,13 +697,12 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         overrides: source.overrides && (() => {
             const ret = []
             for (let i = 0, len = source.overrides.length; i < len; i++) {
-                const r = exportOverrideItem(source.overrides[i], ctx)
+                const r = adaptor.exportOverrideItem(source.overrides[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* span attr */
@@ -743,19 +710,18 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
     const ret = {
         fontName: source.fontName,
         fontSize: source.fontSize,
-        color: source.color && exportColor(source.color, ctx),
-        strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
-        underline: source.underline && exportUnderlineType(source.underline, ctx),
+        color: source.color && adaptor.exportColor(source.color, ctx),
+        strikethrough: source.strikethrough && adaptor.exportStrikethroughType(source.strikethrough, ctx),
+        underline: source.underline && adaptor.exportUnderlineType(source.underline, ctx),
         bold: source.bold,
         italic: source.italic,
-        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
-        highlight: source.highlight && exportColor(source.highlight, ctx),
+        bulletNumbers: source.bulletNumbers && adaptor.exportBulletNumbers(source.bulletNumbers, ctx),
+        highlight: source.highlight && adaptor.exportColor(source.highlight, ctx),
         kerning: source.kerning,
-        transform: source.transform && exportTextTransformType(source.transform, ctx),
+        transform: source.transform && adaptor.exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
         length: source.length,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* path shape */
@@ -764,19 +730,19 @@ export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext)
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
@@ -785,14 +751,13 @@ export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext)
         pathsegs: (() => {
             const ret = []
             for (let i = 0, len = source.pathsegs.length; i < len; i++) {
-                const r = exportPathSegment(source.pathsegs[i], ctx)
+                const r = adaptor.exportPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
         fixedRadius: source.fixedRadius,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* path shape */
@@ -801,19 +766,19 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
@@ -822,7 +787,7 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {
-                const r = exportCurvePoint(source.points[i], ctx)
+                const r = adaptor.exportCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -830,7 +795,6 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
         isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* rect shape */
@@ -839,36 +803,35 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
         points: (() => {
                 const ret = []
                 for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                    const r = adaptor.exportCurvePoint(source.points[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
         isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* span attr */
@@ -876,50 +839,48 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
     const ret = {
         fontName: source.fontName,
         fontSize: source.fontSize,
-        color: source.color && exportColor(source.color, ctx),
-        strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
-        underline: source.underline && exportUnderlineType(source.underline, ctx),
+        color: source.color && adaptor.exportColor(source.color, ctx),
+        strikethrough: source.strikethrough && adaptor.exportStrikethroughType(source.strikethrough, ctx),
+        underline: source.underline && adaptor.exportUnderlineType(source.underline, ctx),
         bold: source.bold,
         italic: source.italic,
-        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
-        highlight: source.highlight && exportColor(source.highlight, ctx),
+        bulletNumbers: source.bulletNumbers && adaptor.exportBulletNumbers(source.bulletNumbers, ctx),
+        highlight: source.highlight && adaptor.exportColor(source.highlight, ctx),
         kerning: source.kerning,
-        transform: source.transform && exportTextTransformType(source.transform, ctx),
+        transform: source.transform && adaptor.exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
-        alignment: source.alignment && exportTextHorAlign(source.alignment, ctx),
+        alignment: source.alignment && adaptor.exportTextHorAlign(source.alignment, ctx),
         paraSpacing: source.paraSpacing,
         minimumLineHeight: source.minimumLineHeight,
         maximumLineHeight: source.maximumLineHeight,
         indent: source.indent,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* text attr */
 export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): types.TextAttr {
     const ret = {
-        alignment: source.alignment && exportTextHorAlign(source.alignment, ctx),
+        alignment: source.alignment && adaptor.exportTextHorAlign(source.alignment, ctx),
         paraSpacing: source.paraSpacing,
         minimumLineHeight: source.minimumLineHeight,
         maximumLineHeight: source.maximumLineHeight,
         indent: source.indent,
         fontName: source.fontName,
         fontSize: source.fontSize,
-        color: source.color && exportColor(source.color, ctx),
-        strikethrough: source.strikethrough && exportStrikethroughType(source.strikethrough, ctx),
-        underline: source.underline && exportUnderlineType(source.underline, ctx),
+        color: source.color && adaptor.exportColor(source.color, ctx),
+        strikethrough: source.strikethrough && adaptor.exportStrikethroughType(source.strikethrough, ctx),
+        underline: source.underline && adaptor.exportUnderlineType(source.underline, ctx),
         bold: source.bold,
         italic: source.italic,
-        bulletNumbers: source.bulletNumbers && exportBulletNumbers(source.bulletNumbers, ctx),
-        highlight: source.highlight && exportColor(source.highlight, ctx),
+        bulletNumbers: source.bulletNumbers && adaptor.exportBulletNumbers(source.bulletNumbers, ctx),
+        highlight: source.highlight && adaptor.exportColor(source.highlight, ctx),
         kerning: source.kerning,
-        transform: source.transform && exportTextTransformType(source.transform, ctx),
+        transform: source.transform && adaptor.exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
-        verAlign: source.verAlign && exportTextVerAlign(source.verAlign, ctx),
-        orientation: source.orientation && exportTextOrientation(source.orientation, ctx),
-        textBehaviour: source.textBehaviour && exportTextBehaviour(source.textBehaviour, ctx),
+        verAlign: source.verAlign && adaptor.exportTextVerAlign(source.verAlign, ctx),
+        orientation: source.orientation && adaptor.exportTextOrientation(source.orientation, ctx),
+        textBehaviour: source.textBehaviour && adaptor.exportTextBehaviour(source.textBehaviour, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* page */
@@ -928,19 +889,19 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
@@ -954,49 +915,49 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                         return source.childs[i]
                     }
                     if (source.childs[i].typeId == 'shape') {
-                        return exportShape(source.childs[i] as types.Shape, ctx)
+                        return adaptor.exportShape(source.childs[i] as types.Shape, ctx)
                     }
                     if (source.childs[i].typeId == 'flatten-shape') {
-                        return exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                        return adaptor.exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
                     }
                     if (source.childs[i].typeId == 'group-shape') {
-                        return exportGroupShape(source.childs[i] as types.GroupShape, ctx)
+                        return adaptor.exportGroupShape(source.childs[i] as types.GroupShape, ctx)
                     }
                     if (source.childs[i].typeId == 'image-shape') {
-                        return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                        return adaptor.exportImageShape(source.childs[i] as types.ImageShape, ctx)
                     }
                     if (source.childs[i].typeId == 'path-shape') {
-                        return exportPathShape(source.childs[i] as types.PathShape, ctx)
+                        return adaptor.exportPathShape(source.childs[i] as types.PathShape, ctx)
                     }
                     if (source.childs[i].typeId == 'rect-shape') {
-                        return exportRectShape(source.childs[i] as types.RectShape, ctx)
+                        return adaptor.exportRectShape(source.childs[i] as types.RectShape, ctx)
                     }
                     if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                        return adaptor.exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
                     }
                     if (source.childs[i].typeId == 'text-shape') {
-                        return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                        return adaptor.exportTextShape(source.childs[i] as types.TextShape, ctx)
                     }
                     if (source.childs[i].typeId == 'oval-shape') {
-                        return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                        return adaptor.exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
                     if (source.childs[i].typeId == 'line-shape') {
-                        return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                        return adaptor.exportLineShape(source.childs[i] as types.LineShape, ctx)
                     }
                     if (source.childs[i].typeId == 'artboard') {
-                        return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                        return adaptor.exportArtboard(source.childs[i] as types.Artboard, ctx)
                     }
                     if (source.childs[i].typeId == 'symbol-shape') {
-                        return exportSymbolShape(source.childs[i] as types.SymbolShape, ctx)
+                        return adaptor.exportSymbolShape(source.childs[i] as types.SymbolShape, ctx)
                     }
                     if (source.childs[i].typeId == 'line-shape') {
-                        return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                        return adaptor.exportLineShape(source.childs[i] as types.LineShape, ctx)
                     }
                     if (source.childs[i].typeId == 'oval-shape') {
-                        return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                        return adaptor.exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
                     if (source.childs[i].typeId == 'table-shape') {
-                        return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                        return adaptor.exportTableShape(source.childs[i] as types.TableShape, ctx)
                     }
                     {
                         console.error(source.childs[i])
@@ -1007,7 +968,6 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
             return ret
         })(),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* oval shape */
@@ -1016,37 +976,36 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
         points: (() => {
                 const ret = []
                 for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                    const r = adaptor.exportCurvePoint(source.points[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
         isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        ellipse: exportEllipse(source.ellipse, ctx),
+        ellipse: adaptor.exportEllipse(source.ellipse, ctx),
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* line shape */
@@ -1055,36 +1014,35 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
         points: (() => {
                 const ret = []
                 for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                    const r = adaptor.exportCurvePoint(source.points[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
         isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* image shape */
@@ -1093,29 +1051,29 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
         points: (() => {
                 const ret = []
                 for (let i = 0, len = source.points.length; i < len; i++) {
-                    const r = exportCurvePoint(source.points[i], ctx)
+                    const r = adaptor.exportCurvePoint(source.points[i], ctx)
                     if (r) ret.push(r)
                 }
                 return ret
             })(),
         isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
@@ -1123,7 +1081,6 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         imageRef: source.imageRef,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* group shape */
@@ -1132,19 +1089,19 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
@@ -1158,40 +1115,40 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                         return source.childs[i]
                     }
                     if (source.childs[i].typeId == 'group-shape') {
-                        return exportGroupShape(source.childs[i] as types.GroupShape, ctx)
+                        return adaptor.exportGroupShape(source.childs[i] as types.GroupShape, ctx)
                     }
                     if (source.childs[i].typeId == 'shape') {
-                        return exportShape(source.childs[i] as types.Shape, ctx)
+                        return adaptor.exportShape(source.childs[i] as types.Shape, ctx)
                     }
                     if (source.childs[i].typeId == 'flatten-shape') {
-                        return exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                        return adaptor.exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
                     }
                     if (source.childs[i].typeId == 'image-shape') {
-                        return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                        return adaptor.exportImageShape(source.childs[i] as types.ImageShape, ctx)
                     }
                     if (source.childs[i].typeId == 'path-shape') {
-                        return exportPathShape(source.childs[i] as types.PathShape, ctx)
+                        return adaptor.exportPathShape(source.childs[i] as types.PathShape, ctx)
                     }
                     if (source.childs[i].typeId == 'rect-shape') {
-                        return exportRectShape(source.childs[i] as types.RectShape, ctx)
+                        return adaptor.exportRectShape(source.childs[i] as types.RectShape, ctx)
                     }
                     if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                        return adaptor.exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
                     }
                     if (source.childs[i].typeId == 'text-shape') {
-                        return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                        return adaptor.exportTextShape(source.childs[i] as types.TextShape, ctx)
                     }
                     if (source.childs[i].typeId == 'artboard') {
-                        return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                        return adaptor.exportArtboard(source.childs[i] as types.Artboard, ctx)
                     }
                     if (source.childs[i].typeId == 'line-shape') {
-                        return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                        return adaptor.exportLineShape(source.childs[i] as types.LineShape, ctx)
                     }
                     if (source.childs[i].typeId == 'oval-shape') {
-                        return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                        return adaptor.exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                     }
                     if (source.childs[i].typeId == 'table-shape') {
-                        return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                        return adaptor.exportTableShape(source.childs[i] as types.TableShape, ctx)
                     }
                     {
                         console.error(source.childs[i])
@@ -1204,7 +1161,6 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* symbol shape */
@@ -1213,9 +1169,9 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
         childs: (() => {
                 const ret = []
                 for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1224,40 +1180,40 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                             return source.childs[i]
                         }
                         if (source.childs[i].typeId == 'group-shape') {
-                            return exportGroupShape(source.childs[i] as types.GroupShape, ctx)
+                            return adaptor.exportGroupShape(source.childs[i] as types.GroupShape, ctx)
                         }
                         if (source.childs[i].typeId == 'shape') {
-                            return exportShape(source.childs[i] as types.Shape, ctx)
+                            return adaptor.exportShape(source.childs[i] as types.Shape, ctx)
                         }
                         if (source.childs[i].typeId == 'flatten-shape') {
-                            return exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                            return adaptor.exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
                         }
                         if (source.childs[i].typeId == 'image-shape') {
-                            return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                            return adaptor.exportImageShape(source.childs[i] as types.ImageShape, ctx)
                         }
                         if (source.childs[i].typeId == 'path-shape') {
-                            return exportPathShape(source.childs[i] as types.PathShape, ctx)
+                            return adaptor.exportPathShape(source.childs[i] as types.PathShape, ctx)
                         }
                         if (source.childs[i].typeId == 'rect-shape') {
-                            return exportRectShape(source.childs[i] as types.RectShape, ctx)
+                            return adaptor.exportRectShape(source.childs[i] as types.RectShape, ctx)
                         }
                         if (source.childs[i].typeId == 'symbol-ref-shape') {
-                            return exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                            return adaptor.exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
                         }
                         if (source.childs[i].typeId == 'text-shape') {
-                            return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                            return adaptor.exportTextShape(source.childs[i] as types.TextShape, ctx)
                         }
                         if (source.childs[i].typeId == 'artboard') {
-                            return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                            return adaptor.exportArtboard(source.childs[i] as types.Artboard, ctx)
                         }
                         if (source.childs[i].typeId == 'line-shape') {
-                            return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                            return adaptor.exportLineShape(source.childs[i] as types.LineShape, ctx)
                         }
                         if (source.childs[i].typeId == 'oval-shape') {
-                            return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                            return adaptor.exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                         }
                         if (source.childs[i].typeId == 'table-shape') {
-                            return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                            return adaptor.exportTableShape(source.childs[i] as types.TableShape, ctx)
                         }
                         {
                             console.error(source.childs[i])
@@ -1269,23 +1225,22 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
             })(),
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* flatten shape */
@@ -1294,9 +1249,9 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
         childs: (() => {
                 const ret = []
                 for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1305,40 +1260,40 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                             return source.childs[i]
                         }
                         if (source.childs[i].typeId == 'group-shape') {
-                            return exportGroupShape(source.childs[i] as types.GroupShape, ctx)
+                            return adaptor.exportGroupShape(source.childs[i] as types.GroupShape, ctx)
                         }
                         if (source.childs[i].typeId == 'shape') {
-                            return exportShape(source.childs[i] as types.Shape, ctx)
+                            return adaptor.exportShape(source.childs[i] as types.Shape, ctx)
                         }
                         if (source.childs[i].typeId == 'flatten-shape') {
-                            return exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                            return adaptor.exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
                         }
                         if (source.childs[i].typeId == 'image-shape') {
-                            return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                            return adaptor.exportImageShape(source.childs[i] as types.ImageShape, ctx)
                         }
                         if (source.childs[i].typeId == 'path-shape') {
-                            return exportPathShape(source.childs[i] as types.PathShape, ctx)
+                            return adaptor.exportPathShape(source.childs[i] as types.PathShape, ctx)
                         }
                         if (source.childs[i].typeId == 'rect-shape') {
-                            return exportRectShape(source.childs[i] as types.RectShape, ctx)
+                            return adaptor.exportRectShape(source.childs[i] as types.RectShape, ctx)
                         }
                         if (source.childs[i].typeId == 'symbol-ref-shape') {
-                            return exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                            return adaptor.exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
                         }
                         if (source.childs[i].typeId == 'text-shape') {
-                            return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                            return adaptor.exportTextShape(source.childs[i] as types.TextShape, ctx)
                         }
                         if (source.childs[i].typeId == 'artboard') {
-                            return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                            return adaptor.exportArtboard(source.childs[i] as types.Artboard, ctx)
                         }
                         if (source.childs[i].typeId == 'line-shape') {
-                            return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                            return adaptor.exportLineShape(source.childs[i] as types.LineShape, ctx)
                         }
                         if (source.childs[i].typeId == 'oval-shape') {
-                            return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                            return adaptor.exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                         }
                         if (source.childs[i].typeId == 'table-shape') {
-                            return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                            return adaptor.exportTableShape(source.childs[i] as types.TableShape, ctx)
                         }
                         {
                             console.error(source.childs[i])
@@ -1350,23 +1305,22 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
             })(),
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }
 /* artboard shape */
@@ -1375,9 +1329,9 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
         typeId: source.typeId,
         id: source.id,
         name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
+        type: adaptor.exportShapeType(source.type, ctx),
+        frame: adaptor.exportShapeFrame(source.frame, ctx),
+        style: adaptor.exportStyle(source.style, ctx),
         childs: (() => {
                 const ret = []
                 for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1386,40 +1340,40 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                             return source.childs[i]
                         }
                         if (source.childs[i].typeId == 'group-shape') {
-                            return exportGroupShape(source.childs[i] as types.GroupShape, ctx)
+                            return adaptor.exportGroupShape(source.childs[i] as types.GroupShape, ctx)
                         }
                         if (source.childs[i].typeId == 'shape') {
-                            return exportShape(source.childs[i] as types.Shape, ctx)
+                            return adaptor.exportShape(source.childs[i] as types.Shape, ctx)
                         }
                         if (source.childs[i].typeId == 'flatten-shape') {
-                            return exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                            return adaptor.exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
                         }
                         if (source.childs[i].typeId == 'image-shape') {
-                            return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                            return adaptor.exportImageShape(source.childs[i] as types.ImageShape, ctx)
                         }
                         if (source.childs[i].typeId == 'path-shape') {
-                            return exportPathShape(source.childs[i] as types.PathShape, ctx)
+                            return adaptor.exportPathShape(source.childs[i] as types.PathShape, ctx)
                         }
                         if (source.childs[i].typeId == 'rect-shape') {
-                            return exportRectShape(source.childs[i] as types.RectShape, ctx)
+                            return adaptor.exportRectShape(source.childs[i] as types.RectShape, ctx)
                         }
                         if (source.childs[i].typeId == 'symbol-ref-shape') {
-                            return exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                            return adaptor.exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
                         }
                         if (source.childs[i].typeId == 'text-shape') {
-                            return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                            return adaptor.exportTextShape(source.childs[i] as types.TextShape, ctx)
                         }
                         if (source.childs[i].typeId == 'artboard') {
-                            return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                            return adaptor.exportArtboard(source.childs[i] as types.Artboard, ctx)
                         }
                         if (source.childs[i].typeId == 'line-shape') {
-                            return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                            return adaptor.exportLineShape(source.childs[i] as types.LineShape, ctx)
                         }
                         if (source.childs[i].typeId == 'oval-shape') {
-                            return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                            return adaptor.exportOvalShape(source.childs[i] as types.OvalShape, ctx)
                         }
                         if (source.childs[i].typeId == 'table-shape') {
-                            return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                            return adaptor.exportTableShape(source.childs[i] as types.TableShape, ctx)
                         }
                         {
                             console.error(source.childs[i])
@@ -1431,22 +1385,21 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
             })(),
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        boolOp: source.boolOp && adaptor.exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        exportOptions: source.exportOptions && adaptor.exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        resizingType: source.resizingType && adaptor.exportResizeType(source.resizingType, ctx),
         rotation: source.rotation,
         constrainerProportions: source.constrainerProportions,
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
     }
-    if (ctx) ctx.afterExport(source)
     return ret
 }

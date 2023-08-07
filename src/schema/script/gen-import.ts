@@ -97,7 +97,7 @@ handler['object'] = function (schema: any, className: string, attrname: string, 
         ret += handler['type'](v.schema, v.className, attrname + '.' + k, level, v.filename, allschemas)
         ret += '\n'
     })
-    ret += indent(level) + 'if (ctx) ctx.afterImport(ret)\n'
+    // ret += indent(level) + 'if (ctx) ctx.afterImport(ret)\n'
     ret += indent(level) + 'return ret\n'
     return ret
 }
@@ -112,11 +112,11 @@ handler['$ref'] = function (schema: any, className: string, attrname: string, le
     className = schema.className ?? className
     filename = schema.filename ?? filename
     if (schema == '#') {
-        return 'import' + className + '(' + attrname + ', ctx)'
+        return 'adaptor.import' + className + '(' + attrname + ', ctx)'
     }
     else if (schema.endsWith(schemaext)) {
         className = fileName2TypeName(extractRefFileName(schema))
-        return 'import' + className + '(' + attrname + ', ctx)'
+        return 'adaptor.import' + className + '(' + attrname + ', ctx)'
     }
     else {
         throw new Error("unknow schema : " + schema)
@@ -284,7 +284,7 @@ function importTypes(schema: any, className: string, attrname: string, level: nu
     return ret;
 }
 
-export function genimport(schemadir: string, outfile: string, implpath: string, typedefs: string, arrayimpl?: string) {
+export function genimport(schemadir: string, outfile: string, implpath: string, typedefs: string, adaptor: string, arrayimpl?: string) {
     handler.schemadir = schemadir;
     const all = loadSchemas(schemadir);
     const order = orderSchemas(all);
@@ -295,11 +295,12 @@ export function genimport(schemadir: string, outfile: string, implpath: string, 
     fs.appendFileSync(outfile, headTips);
     fs.appendFileSync(outfile, `import * as impl from "${implpath}"\n`);
     fs.appendFileSync(outfile, `import * as types from "${typedefs}"\n`);
+    fs.appendFileSync(outfile, `import * as adaptor from "${adaptor}"\n`);
     if (arrayimpl) fs.appendFileSync(outfile, `import { BasicArray } from "${arrayimpl}"\n\n`);
     fs.appendFileSync(outfile,
         `
 export interface IImportContext {
-    afterImport(obj: any): void
+    document?: impl.Document
 }
 `)
     order.sort((a, b) => a.order - b.order)

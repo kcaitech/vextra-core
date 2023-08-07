@@ -1,4 +1,4 @@
-import { BoolOp, FlattenShape, GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
@@ -15,7 +15,7 @@ export class Page extends GroupShape implements classes.Page {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
+        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     ) {
         super(
             id,

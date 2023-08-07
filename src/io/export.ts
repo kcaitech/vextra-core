@@ -28,25 +28,6 @@ export interface ExFromJson {
 }
 
 class ExfContext implements IExportContext {
-    afterExport(obj: any): void {
-        if (!obj.typeId) {
-            //
-        }
-        else if (obj.typeId === 'symbol-shape') {
-            this.symbols.add(obj.refId)
-            // this.allsymbols.add(obj.refId)
-        }
-        else if (obj.typeId === 'image-shape') {
-            this.medias.add(obj.imageRef)
-        }
-        else if (obj.typeId === 'fill' || obj.typeId === 'table-cell') {
-            if (obj.imageRef) this.medias.add(obj.imageRef)
-        }
-        // else if (obj.typeId === 'artboard-ref') {
-        //     this.artboards.add(obj.refId)
-        //     this.allartboards.add(obj.refId)
-        // }
-    }
 
     symbols = new Set<string>()
     // artboards = new Set<string>()
