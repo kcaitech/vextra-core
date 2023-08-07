@@ -2,10 +2,8 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { newImageShape, newText, newTextShape } from "./creator";
-import { ShapeFrame, TableCellType } from "../data/baseclasses";
-import { ResourceMgr } from "../data/basic";
-import { Text } from "data/text";
+import { newText } from "./creator";
+import { TableCellType } from "../data/baseclasses";
 
 export class TableEditor extends ShapeEditor {
 
@@ -50,6 +48,35 @@ export class TableEditor extends ShapeEditor {
         this.__repo.commit();
     }
 
-    // fix col || row size || table frame
-    
+    setColWidth(idx: number, width: number) {
+
+    }
+
+    adjColWidth(fromIdx: number, toIdx: number, width: number) {
+
+    }
+
+    setRowHeight(idx: number, height: number) {
+
+    }
+
+    adjRowHeight(fromIdx: number, toIdx: number, height: number) {
+
+    }
+
+    insertRow(idx: number, height: number, data?: any[]) {
+
+    }
+
+    removeRow(idx: number) {
+
+    }
+
+    insertCol(idx: number, width: number, data?: any[]) {
+
+    }
+
+    removeCol(idx: number) {
+
+    }
 }
