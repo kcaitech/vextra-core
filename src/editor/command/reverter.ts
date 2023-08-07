@@ -27,7 +27,11 @@ import {
     ShapeOpNone,
     ShapeOpRemove,
     ShapeOpMove,
-    CmdGroup
+    CmdGroup,
+    TableCmdInsert,
+    TableCmdRemove,
+    TableOpRemove,
+    TableOpInsert
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 
@@ -259,6 +263,30 @@ export class CMDReverter {
         ret.value = cmd.origin;
         ret.origin = cmd.value;
         return ret;
+    }
+    tableInsert(cmd: TableCmdInsert): TableCmdRemove {
+        const op = cmd.ops[0];
+        if (op.type === OpType.TableInsert) {
+            const removeOp = TableOpRemove.Make(op.targetId[0], op.index, op.data, op.target);
+            const ret = new TableCmdRemove(CmdType.TableDelete, uuid(), cmd.blockId, [removeOp], cmd.data);
+            return ret;
+        }
+        else {
+            const ret = new TableCmdRemove(CmdType.TableDelete, uuid(), cmd.blockId, [op], cmd.data);
+            return ret;
+        }
+    }
+    tableRemove(cmd: TableCmdRemove): TableCmdInsert {
+        const op = cmd.ops[0];
+        if (op.type === OpType.TableRemove) {
+            const removeOp = TableOpInsert.Make(op.targetId[0], op.index, op.data, op.target);
+            const ret = new TableCmdInsert(CmdType.TableDelete, uuid(), cmd.blockId, [removeOp], cmd.data);
+            return ret;
+        }
+        else {
+            const ret = new TableCmdInsert(CmdType.TableDelete, uuid(), cmd.blockId, [op], cmd.data);
+            return ret;
+        }
     }
 
     cmdGroup(cmd: CmdGroup): CmdGroup {
