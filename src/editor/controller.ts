@@ -58,7 +58,7 @@ export interface AsyncCreator {
 }
 export interface AsyncBaseAction {
     executeRotate: (deg: number) => void;
-    executeScale: (type: CtrlElementType, start: PageXY, end: PageXY) => void;
+    executeScale: (type: CtrlElementType, end: PageXY) => void;
     executeErScale: (type: CtrlElementType, scale: number) => void
     close: () => undefined;
 }
@@ -277,7 +277,7 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
-        const executeScale = (type: CtrlElementType, start: PageXY, end: PageXY) => {
+        const executeScale = (type: CtrlElementType, end: PageXY) => {
             status = Status.Pending;
             if (type === CtrlElementType.RectLT) {
                 adjustLT2(api, page, shape, end.x, end.y);
