@@ -8,8 +8,8 @@ import { Text } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
-import { locateCell } from "./tablelocate";
-export { TableLayout } from "./tablelayout";
+import { indexOfCell, locateCell } from "./tablelocate";
+export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
 export class TableCell extends Shape implements classes.TableCell {
@@ -86,11 +86,23 @@ export class TableCell extends Shape implements classes.TableCell {
         super.setFrameSize(w, h);
         if (this.text) this.text.updateSize(this.frame.width, this.frame.height)
     }
+
     getLayout(): TextLayout | undefined {
-        if (this.text) {
-            this.text.updateSize(this.frame.width, this.frame.height);
-            return this.text.getLayout();
+        if (!this.text) return;
+        const table = this.parent as TableShape;
+        const indexCell = indexOfCell(table, this);
+        if (!indexCell || !indexCell.visible) return;
+
+        const total = table.colWidths.reduce((pre, cur) => pre + cur, 0);
+        const colSpan = this.colSpan ?? 1;
+        let weight = table.colWidths[indexCell.colIdx];
+        for (let i = 1; i < colSpan; ++i) {
+            weight += table.colWidths[indexCell.colIdx + i];
         }
+
+        const width = weight / total * table.frame.width;
+        this.text.updateSize(width, 0);
+        return this.text.getLayout();
     }
 
     setContentType(contentType: TableCellType | undefined) {
@@ -110,6 +122,7 @@ export class TableCell extends Shape implements classes.TableCell {
         colSpan = colSpan && colSpan <= 1 ? undefined : colSpan;
         this.rowSpan = rowSpan;
         this.colSpan = colSpan;
+        if (this.text) this.text.reLayout();
     }
 }
 
@@ -217,5 +230,9 @@ export class TableShape extends GroupShape implements classes.TableShape {
 
     locateCell(x: number, y: number): TableGridItem | undefined {
         return locateCell(this.getLayout(), x, y);
+    }
+
+    indexOfCell(cell: TableCell) {
+        return indexOfCell(this, cell);
     }
 }
