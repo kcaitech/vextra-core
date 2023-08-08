@@ -6,8 +6,9 @@ import { GroupShape, Shape } from "./shape";
 import { Path } from "./path";
 import { Text } from "./text"
 import { TextLayout } from "./textlayout";
-import { TableLayout, layoutTable } from "./tablelayout";
+import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
+import { locateCell } from "./tablelocate";
 export { TableLayout } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
@@ -210,7 +211,11 @@ export class TableShape extends GroupShape implements classes.TableShape {
         this.reLayout();
     }
 
-    reLayout() {
+    private reLayout() {
         this.__layout = undefined;
+    }
+
+    locateCell(x: number, y: number): TableGridItem | undefined {
+        return locateCell(this.getLayout(), x, y);
     }
 }
