@@ -116,6 +116,8 @@ export class TableShape extends GroupShape implements classes.TableShape {
     typeId = 'table-shape'
     rowHeights: BasicArray<number>
     colWidths: BasicArray<number>
+
+    private __layout?: TableLayout;
     constructor(
         id: string,
         name: string,
@@ -150,7 +152,8 @@ export class TableShape extends GroupShape implements classes.TableShape {
         return new Path(path);
     }
     getLayout(): TableLayout {
-        return layoutTable(this);
+        if (!this.__layout) this.__layout = layoutTable(this);
+        return this.__layout;
     }
     getColWidths() {
         const frame = this.frame;
@@ -168,28 +171,41 @@ export class TableShape extends GroupShape implements classes.TableShape {
     }
     insertRow(idx: number, height: number, data?: any[]) {
         tableInsertRow(this, idx, height, data);
+        this.reLayout();
     }
     removeRow(idx: number): TableCell[] {
-        return tableRemoveRow(this, idx);
+        const ret = tableRemoveRow(this, idx);
+        this.reLayout();
+        return ret;
     }
     insertCol(idx: number, width: number, data?: any[]) {
         tableInsertCol(this, idx, width, data);
+        this.reLayout();
     }
     removeCol(idx: number): TableCell[] {
-        return tableRemoveCol(this, idx);
+        const ret = tableRemoveCol(this, idx);
+        this.reLayout();
+        return ret;
     }
 
     setColWidth(idx: number, width: number) {
         const colWidths = this.colWidths;
         colWidths[idx] = width;
+        this.reLayout();
     }
 
     setRowHeight(idx: number, height: number) {
         const rowHeights = this.rowHeights;
         rowHeights[idx] = height;
+        this.reLayout();
     }
 
     setFrameSize(w: number, h: number) {
-        super.setFrameSize(w, h)
+        super.setFrameSize(w, h);
+        this.reLayout();
+    }
+
+    reLayout() {
+        this.__layout = undefined;
     }
 }
