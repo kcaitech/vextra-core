@@ -72,6 +72,7 @@ export class Api {
                 case CmdType.ShapeArrayAttrDelete:
                 case CmdType.ShapeArrayAttrInsert:
                 case CmdType.ShapeArrayAttrModify:
+                case CmdType.ShapeArrayAttrModify2:
                 case CmdType.ShapeArrayAttrMove:
                     group.cmds.push(c as any);
                     break;
@@ -964,7 +965,7 @@ export class Api {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
             const origin = table.rowHeights[idx];
-            basicapi.tableModifyRowHeight(table, idx, height);
+            basicapi.tableModifyRowHeight(page, table, idx, height);
             this.addCmd(ShapeArrayAttrModify2.Make(page.id, table.id, TABLE_ROW_HEIGHTS_ID, idx, "", height, origin));
         })
     }

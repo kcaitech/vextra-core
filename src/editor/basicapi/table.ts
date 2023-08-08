@@ -1,5 +1,6 @@
 import { Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
+import { Page } from "../../data/classes";
 
 export function tableSetCellContentType(cell: TableCell, contentType: TableCellType | undefined) {
     cell.setContentType(contentType);
@@ -17,7 +18,7 @@ export function tableModifyColWidth(table: TableShape, idx: number, width: numbe
     table.setColWidth(idx, width);
 }
 
-export function tableModifyRowHeight(table: TableShape, idx: number, height: number) {
+export function tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number) {
     table.setRowHeight(idx, height);
 }
 

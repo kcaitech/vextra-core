@@ -3,7 +3,7 @@ import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { newText } from "./creator";
-import { TableCellType } from "../data/baseclasses";
+import { TableCellType, TextBehaviour } from "../data/baseclasses";
 
 export class TableEditor extends ShapeEditor {
 
@@ -43,6 +43,7 @@ export class TableEditor extends ShapeEditor {
 
     setCellContentText(cell: TableCell, text?: string) {
         const _text = newText();
+        _text.setTextBehaviour(TextBehaviour.Fixed);
         if (text && text.length > 0) _text.insertText(text, 0);
         const api = this.__repo.start('setCellContentText', {});
         try {

@@ -19,6 +19,7 @@ export interface Api {
     shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
     shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
     shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
+    tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
 }
 
 const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
@@ -175,7 +176,7 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
                 }
             }
             api.shapeModifyWH(page, shape, w, h)
-            fixTextShapeFrameByLayout(api, page, shape, shape.text);
+            fixTextShapeFrameByLayout(api, page, shape);
         }
         else if (shape instanceof GroupShape) {
             const saveW = frame.width;

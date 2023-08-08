@@ -13,24 +13,26 @@ import {
     Text, Shape,
     TextTransformType,
     TextVerAlign,
-    UnderlineType
+    UnderlineType,
+    TextShape,
+    TableCell
 } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
-import { fixTextShapeFrameByLayout } from "./utils";
+import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils";
 
-type TextShape = Shape & { text: Text }
+type TextShapeLike = Shape & { text: Text }
 
 export class TextShapeEditor extends ShapeEditor {
 
     private __cachedSpanAttr?: SpanAttrSetter;
 
-    constructor(shape: TextShape, page: Page, repo: CoopRepository) {
+    constructor(shape: TextShapeLike, page: Page, repo: CoopRepository) {
         super(shape, page, repo);
     }
-    get shape(): TextShape {
-        return this.__shape as TextShape;
+    get shape(): TextShapeLike {
+        return this.__shape as TextShapeLike;
     }
 
     public resetCachedSpanAttr() {
@@ -46,7 +48,8 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     private fixFrameByLayout(api: Api) {
-        fixTextShapeFrameByLayout(api, this.__page, this.shape, this.shape.text)
+        if (this.shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, this.shape);
+        else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.shape);
     }
 
     public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape

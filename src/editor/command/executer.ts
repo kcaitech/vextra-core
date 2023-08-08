@@ -702,7 +702,7 @@ export class CMDExecuter {
         }
         else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
             const height = value && JSON.parse(value);
-            if (height) api.tableModifyRowHeight(shape as TableShape, idx, height);
+            if (height) api.tableModifyRowHeight(page, shape as TableShape, idx, height);
         }
     }
     tableInsert(cmd: TableCmdInsert) {
@@ -792,11 +792,11 @@ export class CMDExecuter {
         if (!shape) {
             throw new Error("shape not find")
         }
-        if (!(shape instanceof TextShape)) {
-            throw new Error("shape type wrong")
-        }
         const text = cmd.parseText();
         const shapetext = (shape as TextShapeLike).text;
+        if (!(shapetext instanceof Text)) {
+            throw new Error("shape type wrong")
+        }
         if (text.type === "simple") {
             let attr;
             if (text.attr) attr = importSpanAttr(text.attr);
@@ -834,15 +834,15 @@ export class CMDExecuter {
         if (!shape) {
             throw new Error("shape not find")
         }
-        if (!(shape instanceof TextShape)) {
-            throw new Error("shape type wrong")
-        }
         if (op.type !== OpType.ArrayAttr) {
             return;
         }
         const attrId = cmd.attrId
         const value = cmd.value;
         const shapetext = (shape as TextShapeLike).text;
+        if (!(shapetext instanceof Text)) {
+            throw new Error("shape type wrong")
+        }
         if (attrId === TEXT_ATTR_ID.color) {
             const color = (value && importColor(JSON.parse(value))) as Color | undefined;
             api.textModifyColor(shapetext, op.start, op.length, color)
