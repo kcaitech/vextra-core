@@ -4,9 +4,7 @@ import * as classes from "./baseclasses"
 import { BasicArray, Watchable } from "./basic";
 import { Artboard } from "./artboard";
 import { TableCell, TableShape } from "./table";
-class Collect { }
-class PageCollectNotify extends Watchable(Collect) {
-    private type = 0;
+class PageCollectNotify extends Watchable(Object) {
     constructor() {
         super();
     }
