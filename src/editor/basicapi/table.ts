@@ -21,7 +21,7 @@ export function tableModifyRowHeight(table: TableShape, idx: number, height: num
     table.setRowHeight(idx, height);
 }
 
-export function tableInsertRow(table: TableShape, idx: number, height: number, data?: any[]) {
+export function tableInsertRow(table: TableShape, idx: number, height: number, data?: TableCell[]) {
     table.insertRow(idx, height, data);
 }
 
@@ -29,7 +29,7 @@ export function tableRemoveRow(table: TableShape, idx: number) {
     return table.removeRow(idx);
 }
 
-export function tableInsertCol(table: TableShape, idx: number, width: number, data?: any[]) {
+export function tableInsertCol(table: TableShape, idx: number, width: number, data?: TableCell[]) {
     table.insertCol(idx, width, data);
 }
 

@@ -85,6 +85,24 @@ export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, ne
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     }
 }
+export function shapeModifyWidth(page: Page, shape: Shape, w: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    const frame = shape.frame;
+    if (w !== frame.width) {
+        // frame.width = w;
+        // frame.height = h;
+        shape.setFrameSize(w, frame.height);
+        if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    }
+}
+export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    const frame = shape.frame;
+    if (h !== frame.height) {
+        // frame.width = w;
+        // frame.height = h;
+        shape.setFrameSize(frame.width, h);
+        if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    }
+}
 export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     if (rotate !== shape.rotation) {
         shape.rotation = rotate;

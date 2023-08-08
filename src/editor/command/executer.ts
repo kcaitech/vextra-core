@@ -360,6 +360,18 @@ export class CMDExecuter {
                 api.shapeModifyY(page, shape, y, needUpdateFrame)
             }
         }
+        else if (opId === SHAPE_ATTR_ID.width) {
+            if (value) {
+                const wh = JSON.parse(value)
+                api.shapeModifyWidth(page, shape, wh, needUpdateFrame)
+            }
+        }
+        else if (opId === SHAPE_ATTR_ID.height) {
+            if (value) {
+                const wh = JSON.parse(value)
+                api.shapeModifyHeight(page, shape, wh, needUpdateFrame)
+            }
+        }
         else if (opId === SHAPE_ATTR_ID.size) {
             if (value) {
                 const wh = JSON.parse(value)

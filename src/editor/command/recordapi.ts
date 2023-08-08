@@ -215,15 +215,29 @@ export class Api {
         }
     }
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number) {
+        this.shapeModifyWidth(page, shape, w);
+        this.shapeModifyHeight(page, shape, h);
+    }
+    shapeModifyWidth(page: Page, shape: Shape, w: number) {
         this.checkShapeAtPage(page, shape);
         const frame = shape.frame;
-        if (w !== frame.width || h !== frame.height) {
+        if (w !== frame.width) {
             this.__trap(() => {
-                const save = { w: frame.width, h: frame.height }
-                // frame.width = w;
-                // frame.height = h;
-                shape.setFrameSize(w, h);
-                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.size, { w, h }, save))
+                const save = frame.width;
+                shape.setFrameSize(w, frame.height);
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.width, w, save))
+                this.needUpdateFrame.push({ page, shape });
+            })
+        }
+    }
+    shapeModifyHeight(page: Page, shape: Shape, h: number) {
+        this.checkShapeAtPage(page, shape);
+        const frame = shape.frame;
+        if (h !== frame.height) {
+            this.__trap(() => {
+                const save = frame.height;
+                shape.setFrameSize(frame.width, h);
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.height, h, save))
                 this.needUpdateFrame.push({ page, shape });
             })
         }
@@ -955,7 +969,7 @@ export class Api {
         })
     }
 
-    tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data: any[]) {
+    tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data: TableCell[]) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
             basicapi.tableInsertRow(table, idx, height, data);
@@ -974,7 +988,7 @@ export class Api {
         })
     }
 
-    tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data: any[]) {
+    tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data: TableCell[]) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
             basicapi.tableInsertCol(table, idx, width, data);

@@ -6,7 +6,9 @@ export const PAGE_ATTR_ID = {
 export const SHAPE_ATTR_ID = {
     x: "x", // 对象的位置，相对于父节点
     y: "y", // 对象的位置，相对于父节点
-    size: "size", // 对象的大小
+    size: "size", // 对象的大小 // deprecate
+    width: "width",
+    height: "height",
     hflip: "hflip",
     vflip: "vflip",
     rotate: "rotate",
