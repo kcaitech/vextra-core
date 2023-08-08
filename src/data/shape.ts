@@ -48,6 +48,10 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.style = style
     }
 
+    get childsVisible(): boolean {
+        return false;
+    }
+
     getPath(fixedRadius?: number): Path {
         return new Path();
     }
@@ -213,6 +217,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
         )
         this.childs = childs;
         (childs as any).typeId = "childs";
+    }
+
+    get childsVisible(): boolean {
+        return true;
     }
 
     removeChild(shape: Shape): boolean {

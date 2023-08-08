@@ -139,6 +139,11 @@ export class TableShape extends GroupShape implements classes.TableShape {
         this.rowHeights = rowHeights
         this.colWidths = colWidths
     }
+
+    get childsVisible(): boolean {
+        return false;
+    }
+
     getPath(): Path {
         const x = 0;
         const y = 0;
