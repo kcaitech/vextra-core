@@ -22,7 +22,21 @@ export function locateCell(layout: TableLayout, x: number, y: number): TableGrid
     }
 }
 
-class BitGrid {
+export function locateCellByCell(layout: TableLayout, cell: TableCell): TableGridItem | undefined {
+    const grid = layout.grid;
+    for (let ri = 0, rlen = grid.length; ri < rlen; ++ri) {
+        const row = grid[ri];
+        for (let ci = 0, clen = row.length; ci < clen; ++ci) {
+            const cl = row[ci];
+            if (cl.cell.id === cell.id) {
+                return cl;
+            }
+        }
+        break;
+    }
+}
+
+export class BitGrid {
     private grid: Int8Array[] = [];
     constructor(width: number, height: number) {
         for (let i = 0; i < height; i++) {

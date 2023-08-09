@@ -8,11 +8,15 @@ import { Text } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
-import { indexOfCell, locateCell } from "./tablelocate";
+import { indexOfCell, locateCell, locateCellByCell } from "./tablelocate";
+import { MinCellSize } from "editor/tableadjust";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
+
 export class TableCell extends Shape implements classes.TableCell {
+    static MinCellSize = 10;
+
     typeId = 'table-cell'
     cellType?: TableCellType
     text?: Text
@@ -124,6 +128,11 @@ export class TableCell extends Shape implements classes.TableCell {
         this.colSpan = colSpan;
         if (this.text) this.text.reLayout();
     }
+
+    // minWidth(): number {
+    //     if (this.cellType !== TableCellType.Text) return MinCellSize;
+
+    // }
 }
 
 export class TableShape extends GroupShape implements classes.TableShape {
@@ -230,6 +239,10 @@ export class TableShape extends GroupShape implements classes.TableShape {
 
     locateCell(x: number, y: number): TableGridItem | undefined {
         return locateCell(this.getLayout(), x, y);
+    }
+
+    locateCell2(cell: TableCell): TableGridItem | undefined {
+        return locateCellByCell(this.getLayout(), cell);
     }
 
     indexOfCell(cell: TableCell) {
