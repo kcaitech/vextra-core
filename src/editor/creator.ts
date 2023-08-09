@@ -187,7 +187,7 @@ export function newComment(user: UserInfo, createAt: string, pageId: string, fra
     return comment;
 }
 
-export function newImageShape(name: string, frame: ShapeFrame, ref?: string, mediasMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>): ImageShape {
+export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>, ref?: string): ImageShape {
     const id = uuid();
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
@@ -197,14 +197,12 @@ export function newImageShape(name: string, frame: ShapeFrame, ref?: string, med
     const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
     curvePoint.push(p1, p2, p3, p4);
     const img = new ImageShape(id, name, types.ShapeType.Image, frame, style, curvePoint, true, ref || '');
-    if (mediasMgr) {
-        img.setImageMgr(mediasMgr);
-    }
+    img.setImageMgr(mediasMgr);
     addCommonAttr(img);
     return img;
 }
 
-export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>): TableShape {
+export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>): TableShape {
     template_table_shape.id = uuid();
     template_table_shape.name = name // i18n
     const table = importTableShape(template_table_shape as types.TableShape);
@@ -216,7 +214,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     for (let ci = 0; ci < cellCount; ci++) {
         template_table_cell.id = uuid();
         const cell = importTableCell(template_table_cell as types.TableCell);
-        if (mediasMgr) cell.setImageMgr(mediasMgr);
+        cell.setImageMgr(mediasMgr);
         table.childs.push(cell);
     }
 
