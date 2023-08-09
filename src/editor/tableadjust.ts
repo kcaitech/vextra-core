@@ -1,8 +1,8 @@
 
-import { TableShape } from "../data/table";
+import { TableCell, TableShape } from "../data/table";
 import { Api } from "./command/recordapi";
 
-export const MinCellSize = 10;
+export const MinCellSize = TableCell.MinCellSize;
 
 export function adjColum(table: TableShape, fromIdx: number, toIdx: number, dx: number, api: Api) {
     if (dx === 0 || fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
