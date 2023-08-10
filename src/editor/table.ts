@@ -83,7 +83,45 @@ export class TableEditor extends ShapeEditor {
 
     // 合并单元格
     mergeCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
-        // 不规则怎么处理
+        const api = this.__repo.start('mergeCells', {});
+        try {
+            const cells = this.shape.getTableCells(rowStart, rowStart, colStart, colStart, false);
+            const cellsVisible = this.shape.getTableCells(rowStart, rowEnd, colStart, colEnd, true);
+
+            if (cells.length === 0) {
+                throw new Error("not find cell")
+            }
+            if (cellsVisible.length === 0 || cellsVisible[0].id !== cells[0].id) {
+                throw new Error("cell not visible")
+            }
+
+            const cell = cells[0];
+            api.tableModifyCellSpan(this.__page, cell, rowEnd - rowStart + 1, colEnd - colStart + 1);
+            // merge content
+            cellsVisible.forEach((c) => {
+                if ((c.cellType ?? TableCellType.None) === TableCellType.None) return;
+                if (c.cellType === TableCellType.Image) {
+                    // 图片咋搞？
+                    if ((cell.cellType ?? TableCellType.None) === TableCellType.None) {
+                        api.tableSetCellContentType(this.__page, c, TableCellType.Image);
+                        api.tableSetCellContentImage(this.__page, cell, c.imageRef);
+                    }
+                }
+                else if (c.cellType === TableCellType.Text) {
+                    if (cell.cellType === TableCellType.Text) {
+                        api.insertComplexText(this.__page, cell as any, cell.text!.length, c.text!);
+                    }
+                }
+                api.tableSetCellContentType(this.__page, c, undefined);
+                api.tableSetCellContentImage(this.__page, c, undefined);
+                api.tableSetCellContentText(this.__page, c, undefined);
+            })
+
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
     }
 
     setCellContentImage(cell: TableCell, ref: string) {
