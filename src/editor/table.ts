@@ -4,6 +4,7 @@ import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { newText } from "./creator";
 import { TableCellType, TextBehaviour } from "../data/baseclasses";
+import { adjColum, adjRow } from "./tableadjust";
 
 export class TableEditor extends ShapeEditor {
 
@@ -17,7 +18,15 @@ export class TableEditor extends ShapeEditor {
 
     // 水平拆分单元格
     horSplitCell(cell: TableCell) {
+        if (cell.colSpan && cell.colSpan > 1) {
 
+        }
+        else {
+            // 当前列后插入列
+            // 将当前列可见的单元格，colSpan+1
+            // 当前单元格colSpan-1
+            
+        }
     }
     // 垂直拆分单元格
     verSplitCell(cell: TableCell) {
@@ -74,8 +83,21 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
+    /**
+     * 
+     * @param fromIdx 
+     * @param toIdx 
+     * @param width table坐标系空间宽度
+     */
     adjColWidth(fromIdx: number, toIdx: number, width: number) {
-
+        const api = this.__repo.start('adjColWidth', {});
+        try {
+            adjColum(this.__page, this.shape, fromIdx, toIdx, width, api);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
     }
 
     // 调整行高
@@ -95,8 +117,21 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
+    /**
+     * 
+     * @param fromIdx 
+     * @param toIdx 
+     * @param height table坐标系空间长度
+     */
     adjRowHeight(fromIdx: number, toIdx: number, height: number) {
-
+        const api = this.__repo.start('adjColWidth', {});
+        try {
+            adjRow(this.__page, this.shape, fromIdx, toIdx, height, api);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
     }
 
     insertRow(idx: number, height: number, data?: TableCell[]) {
