@@ -18,23 +18,72 @@ export class TableEditor extends ShapeEditor {
 
     // 水平拆分单元格
     horSplitCell(cell: TableCell) {
-        if (cell.colSpan && cell.colSpan > 1) {
+        const api = this.__repo.start("horSplitCell", {});
+        try {
+            if (cell.rowSpan && cell.rowSpan > 1) {
+                api.tableModifyCellSpan(this.__page, cell, cell.rowSpan - 1, cell.colSpan || 1);
+            }
+            else {
+                // 当前行后插入行
+                // 将当前行可见的单元格，rowSpan+1
+                // 当前单元格rowSpan-1
+                const indexCell = this.shape.indexOfCell(cell);
+                if (!indexCell) {
+                    throw new Error("cell not inside table")
+                }
+                const weight = this.shape.rowHeights[indexCell.rowIdx] / 2;
+                api.tableInsertRow(this.__page, this.shape, indexCell.rowIdx + 1, weight, []);
+                api.tableModifyRowHeight(this.__page, this.shape, indexCell.rowIdx, weight);
 
-        }
-        else {
-            // 当前列后插入列
-            // 将当前列可见的单元格，colSpan+1
-            // 当前单元格colSpan-1
-            
+                const cells = this.shape.getTableCells(indexCell.rowIdx, indexCell.rowIdx, 0, this.shape.colWidths.length, true);
+                cells.forEach((c) => {
+                    if (c.id !== cell.id) {
+                        api.tableModifyCellSpan(this.__page, c, (c.rowSpan || 1) + 1, c.colSpan || 1);
+                    }
+                });
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
     // 垂直拆分单元格
     verSplitCell(cell: TableCell) {
+        const api = this.__repo.start("verSplitCell", {});
+        try {
+            if (cell.colSpan && cell.colSpan > 1) {
+                api.tableModifyCellSpan(this.__page, cell, cell.rowSpan || 1, cell.colSpan - 1);
+            }
+            else {
+                // 当前列后插入列
+                // 将当前列可见的单元格，colSpan+1
+                // 当前单元格colSpan-1
+                const indexCell = this.shape.indexOfCell(cell);
+                if (!indexCell) {
+                    throw new Error("cell not inside table")
+                }
+                const weight = this.shape.colWidths[indexCell.colIdx] / 2;
+                api.tableInsertCol(this.__page, this.shape, indexCell.colIdx + 1, weight, []);
+                api.tableModifyColWidth(this.__page, this.shape, indexCell.colIdx, weight);
 
+                const cells = this.shape.getTableCells(0, this.shape.rowHeights.length, indexCell.colIdx, indexCell.colIdx, true);
+                cells.forEach((c) => {
+                    if (c.id !== cell.id) {
+                        api.tableModifyCellSpan(this.__page, c, c.rowSpan || 1, (c.colSpan || 1) + 1);
+                    }
+                });
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
     }
-    // 合并单元格
-    mergeCells(cells: TableCell[]) {
 
+    // 合并单元格
+    mergeCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+        // 不规则怎么处理
     }
 
     setCellContentImage(cell: TableCell, ref: string) {
