@@ -1,3 +1,4 @@
+import { BitGrid } from "../basic/bitgrid";
 import { BasicArray } from "./basic";
 import { TableLayout, TableShape } from "./table";
 import { TableGridItem } from "./tablelayout";
@@ -36,29 +37,6 @@ export function locateCellByCell(layout: TableLayout, cell: TableCell): TableGri
     }
 }
 
-export class BitGrid {
-    private grid: Int8Array[] = [];
-    constructor(width: number, height: number) {
-        for (let i = 0; i < height; i++) {
-            this.grid.push(new Int8Array(Math.ceil(width / 8)))
-        }
-    }
-    setBit(x: number, y: number) {
-        const arr = this.grid[y];
-        const i = Math.floor(x / 8);
-        const offset = x % 8;
-        const val = arr[i];
-        arr[i] = val | (1 << offset);
-    }
-    isSet(x: number, y: number) {
-        const arr = this.grid[y];
-        const i = Math.floor(x / 8);
-        const offset = x % 8;
-        const val = arr[i];
-        return !!(val & (1 << offset));
-    }
-}
-
 export function indexOfCell(table: TableShape, cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
     const rowHeights = table.rowHeights;
     const colWidths = table.colWidths;
@@ -78,7 +56,7 @@ export function indexOfCell(table: TableShape, cell: TableCell): { rowIdx: numbe
                     visible: !grid.isSet(ri, ci)
                 }
             }
-            else {
+            else if (!grid.isSet(ri, ci)) {
                 const rowSpan = c.rowSpan || 1;
                 const colSpan = c.colSpan || 1;
                 for (let i = 0; i < rowSpan; ++i) {

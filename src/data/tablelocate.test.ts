@@ -1,5 +1,5 @@
 import * as chai from 'chai'
-import { BitGrid } from './tablelocate';
+import { BitGrid } from "../basic/bitgrid";
 const assert = chai.assert;
 
 test("bit grid", () => {

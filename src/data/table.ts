@@ -10,6 +10,7 @@ import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
 import { indexOfCell, locateCell, locateCellByCell } from "./tablelocate";
 import { MinCellSize } from "editor/tableadjust";
+import { getTableCells, getTableVisibleCells } from "./tableread";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
@@ -247,5 +248,19 @@ export class TableShape extends GroupShape implements classes.TableShape {
 
     indexOfCell(cell: TableCell) {
         return indexOfCell(this, cell);
+    }
+
+    /**
+     * [rowStart, rowEnd], [colStart, colEnd] 左闭右闭区间
+     * @param rowStart 
+     * @param rowEnd 
+     * @param colStart 
+     * @param colEnd 
+     * @param visible 
+     * @returns 
+     */
+    getTableCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number, visible: boolean = true) {
+        if (visible) return getTableVisibleCells(this, rowStart, rowEnd, colStart, colEnd);
+        return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
     }
 }
