@@ -9,14 +9,12 @@ import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
 import { indexOfCell, locateCell, locateCellByCell } from "./tablelocate";
-import { MinCellSize } from "editor/tableadjust";
 import { getTableCells, getTableVisibleCells } from "./tableread";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
 
 export class TableCell extends Shape implements classes.TableCell {
-    static MinCellSize = 10;
 
     typeId = 'table-cell'
     cellType?: TableCellType
@@ -129,11 +127,6 @@ export class TableCell extends Shape implements classes.TableCell {
         this.colSpan = colSpan;
         if (this.text) this.text.reLayout();
     }
-
-    // minWidth(): number {
-    //     if (this.cellType !== TableCellType.Text) return MinCellSize;
-
-    // }
 }
 
 export class TableShape extends GroupShape implements classes.TableShape {
