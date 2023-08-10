@@ -29,7 +29,7 @@ export {
 import * as classes from "./baseclasses"
 import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
 import { TextLayout, layoutText } from "./textlayout";
-import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
+import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 import { _travelTextPara } from "./texttravel";

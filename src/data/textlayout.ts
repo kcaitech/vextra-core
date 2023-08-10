@@ -1,7 +1,7 @@
 import { BulletNumbersType, Text, TextBehaviour } from "./text";
 import { Para, Span, SpanAttr, TextHorAlign, TextVerAlign } from "./text";
 import { BasicArray } from "./basic"
-import { layoutBulletNumber } from "./textlayoutbn";
+import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
 import { gPal } from "../basic/pal";
 

@@ -1,7 +1,8 @@
 // 文本编辑时的增量排版
 
-import { ParaAttrSetter, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "./classes";
+import { ParaAttrSetter, SpanAttrSetter, Text } from "./classes";
 import { BulletNumbersLayout, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
+import { TextBehaviour, TextHorAlign, TextVerAlign } from "./typesdefine";
 
 export function layoutAtInsert(text: Text,
     layoutWidth: number,
