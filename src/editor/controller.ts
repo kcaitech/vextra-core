@@ -1,4 +1,4 @@
-import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2 } from "./frame";
+import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL } from "./frame";
 import { Shape, GroupShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
@@ -15,10 +15,6 @@ import { Artboard } from "../data/artboard";
 import { Color } from "../data/style";
 import { afterModifyGroupShapeWH } from "./frame";
 interface PageXY { // 页面坐标系的xy
-    x: number
-    y: number
-}
-export interface AspectRatio {
     x: number
     y: number
 }
@@ -62,7 +58,8 @@ export interface AsyncCreator {
 }
 export interface AsyncBaseAction {
     executeRotate: (deg: number) => void;
-    executeScale: (type: CtrlElementType, start: PageXY, end: PageXY) => void;
+    executeScale: (type: CtrlElementType, end: PageXY) => void;
+    executeErScale: (type: CtrlElementType, scale: number) => void
     close: () => undefined;
 }
 export interface AsyncMultiAction {
@@ -78,6 +75,7 @@ export interface AsyncLineAction {
 export interface AsyncTransfer {
     migrate: (targetParent: GroupShape) => void;
     trans: (start: PageXY, end: PageXY) => void;
+    stick: (dx: number, dy: number) => void;
     transByWheel: (dx: number, dy: number) => void;
     close: () => undefined;
 }
@@ -279,7 +277,7 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
-        const executeScale = (type: CtrlElementType, start: PageXY, end: PageXY) => {
+        const executeScale = (type: CtrlElementType, end: PageXY) => {
             status = Status.Pending;
             if (type === CtrlElementType.RectLT) {
                 adjustLT2(api, page, shape, end.x, end.y);
@@ -290,33 +288,27 @@ export class Controller {
             } else if (type === CtrlElementType.RectLB) {
                 adjustLB2(api, page, shape, end.x, end.y);
             } else if (type === CtrlElementType.RectTop) {
-                const m = shape.matrix2Root();
-                const p1 = m.inverseCoord(start.x, start.y);
-                const p2 = m.inverseCoord(end.x, end.y);
-                const dy = p2.y - p1.y;
-                const { x, y } = m.computeCoord(0, dy);
-                adjustLT2(api, page, shape, x, y);
+                scaleByT(api, page, shape, end);
             } else if (type === CtrlElementType.RectRight) {
-                const m = shape.matrix2Root();
-                const p1 = m.inverseCoord(start.x, start.y);
-                const p2 = m.inverseCoord(end.x, end.y);
-                const dx = p2.x - p1.x;
-                const { x, y } = m.computeCoord(shape.frame.width + dx, 0);
-                adjustRT2(api, page, shape, x, y);
+                scaleByR(api, page, shape, end);
             } else if (type === CtrlElementType.RectBottom) {
-                const m = shape.matrix2Root();
-                const p1 = m.inverseCoord(start.x, start.y);
-                const p2 = m.inverseCoord(end.x, end.y);
-                const dy = p2.y - p1.y;
-                const { x, y } = m.computeCoord(shape.frame.width, shape.frame.height + dy);
-                adjustRB2(api, page, shape, x, y);
+                scaleByB(api, page, shape, end);
             } else if (type === CtrlElementType.RectLeft) {
-                const m = shape.matrix2Root();
-                const p1 = m.inverseCoord(start.x, start.y);
-                const p2 = m.inverseCoord(end.x, end.y);
-                const dx = p2.x - p1.x;
-                const { x, y } = m.computeCoord(dx, shape.frame.height);
-                adjustLB2(api, page, shape, x, y);
+                scaleByL(api, page, shape, end);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const executeErScale = (type: CtrlElementType, scale: number) => {
+            status = Status.Pending;
+            if (type === CtrlElementType.RectTop) {
+                erScaleByT(api, page, shape, scale);
+            } else if (type === CtrlElementType.RectRight) {
+                erScaleByR(api, page, shape, scale);
+            } else if (type === CtrlElementType.RectBottom) {
+                erScaleByB(api, page, shape, scale);
+            } else if (type === CtrlElementType.RectLeft) {
+                erScaleByL(api, page, shape, scale);
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -329,7 +321,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { executeRotate, executeScale, close };
+        return { executeRotate, executeScale, executeErScale, close };
     }
     // 多对象的异步编辑
     public asyncMultiEditor(shapes: Shape[], page: Page): AsyncMultiAction {
@@ -447,6 +439,15 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
+        const stick = (dx: number, dy: number) => {
+            status = Status.Pending;
+            for (let i = 0; i < shapes.length; i++) {
+                if (shapes[i].isLocked) continue; // 🔒住不让动
+                translate(api, page, shapes[i], dx, dy);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
         const transByWheel = (dx: number, dy: number) => {
             status = Status.Pending;
             for (let i = 0; i < shapes.length; i++) {
@@ -464,7 +465,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { migrate, trans, close, transByWheel }
+        return { migrate, trans, stick, close, transByWheel }
     }
 }
 function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
