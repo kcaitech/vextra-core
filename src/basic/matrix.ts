@@ -84,6 +84,10 @@ export class Matrix {
         const m = this.m_matrix
         return { x: m[0] * x + m[2] * y + m[4], y: m[1] * x + m[3] * y + m[5] };
     }
+    computeCoord2(x: number, y: number): { x: number, y: number } { // 减去判断
+        const m = this.m_matrix
+        return { x: m[0] * x + m[2] * y + m[4], y: m[1] * x + m[3] * y + m[5] };
+    }
     computeRef(dx: number, dy: number) {
         const m = this.m_matrix
         return { x: m[0] * dx + m[2] * dy, y: m[1] * dx + m[3] * dy };

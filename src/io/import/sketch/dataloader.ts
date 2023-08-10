@@ -2,6 +2,7 @@ import { Document, Page, Shape, SymbolShape } from "../../../data/classes";
 import { IJSON, LzData } from "../../lzdata";
 import { LoadContext } from "./basic";
 import { importArtboard, importGroupShape, importImage, importPage, importPathShape, importRectShape, importShapeGroupShape, importSymbol, importSymbolRef, importTextShape } from "./shapeio";
+import {base64Encode} from "../../../basic/utils";
 
 
 function updatePageFrame(p: Page) {
@@ -146,7 +147,7 @@ export class DataLoader {
         }
         const data = binaryString.join('');
 
-        const base64 = window.btoa(data);
+        const base64 = base64Encode(data);
 
         let url = '';
         const ext = id.substring(id.lastIndexOf('.') + 1);

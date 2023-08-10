@@ -18,8 +18,8 @@ export class Document extends Watchable(DocumentMeta) {
 
     constructor(
         id: string,
-        versionId: string,
-        lastCmdId: string,
+        versionId: string, // 版本id
+        lastCmdId: string, // 此版本最后一个cmd的id
         name: string,
         pagesList: BasicArray<PageListItem>,
         guard: IDataGuard

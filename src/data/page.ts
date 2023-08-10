@@ -1,14 +1,20 @@
 import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
-import { BasicArray } from "./basic";
+import { BasicArray, Watchable } from "./basic";
 import { Artboard } from "./artboard";
 import { TableCell } from "./classes";
+class PageCollectNotify extends Watchable(Object) {
+    constructor() {
+        super();
+    }
+}
 export class Page extends GroupShape implements classes.Page {
     typeId = 'page';
     artboards: Map<string, Artboard> = new Map();
     shapes: Map<string, Shape> = new Map();
     __allshapes: Map<string, WeakRef<Shape>> = new Map(); // 包含被删除的
+    __collect: PageCollectNotify = new PageCollectNotify();
     constructor(
         id: string,
         name: string,

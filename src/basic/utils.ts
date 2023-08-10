@@ -14,12 +14,6 @@ export function createHorizontalBox(points: [number, number][]) {
     return { top, bottom, left, right };
 }
 
-export function castObjectToClass<T>(obj: Object, prototype: T): T {
-    // return Object.assign(Object.create(prototype as any), obj);
-    Object.setPrototypeOf(obj, prototype as any);
-    return obj as T;
-}
-
 export function getFormatFromBase64(base64: string) {
     const fileheader = new Map([
         ['data:image/svg+xml', 'svg'],
@@ -38,4 +32,8 @@ export function base64ToDataUrl(format: string, base64: string) {
         ['png', `data:image/png;base64,${base64}`]
     ])
     return de_fileheader.get(format) || '';
+}
+
+export function base64Encode(data: string): string {
+    return typeof window !== "undefined" ? window.btoa(data) : Buffer.from(data).toString("base64")
 }
