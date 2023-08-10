@@ -2,7 +2,7 @@ import { BasicArray } from "./basic";
 import { ShapeFrame } from "./shape";
 import { TableCell, TableShape } from "./table";
 
-export type TableGridItem = { cell: TableCell, index: { row: number, col: number }, frame: ShapeFrame }
+export type TableGridItem = { cell: TableCell, index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
 
 export type TableLayout = {
     grid: TableGridItem[][],
@@ -49,6 +49,10 @@ export function layoutTable(table: TableShape): TableLayout {
                     row: ri,
                     col: ci
                 },
+                span: {
+                    row: 1,
+                    col: 1
+                },
                 frame: new ShapeFrame(colX, rowY, 0, 0)
             }
 
@@ -67,6 +71,8 @@ export function layoutTable(table: TableShape): TableLayout {
                 }
                 break;
             }
+            d.span.row = rowSpan;
+            d.span.col = colSpan;
 
             let dwidth = 0;
             let dheight = 0;
