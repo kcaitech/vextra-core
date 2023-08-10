@@ -42,8 +42,6 @@ export function layoutTable(table: TableShape): TableLayout {
             }
 
             const cell = cells[celli];
-            const rowSpan = cell.rowSpan || 1;
-            const colSpan = cell.colSpan || 1;
 
             const d: TableGridItem = {
                 cell,
@@ -52,6 +50,22 @@ export function layoutTable(table: TableShape): TableLayout {
                     col: ci
                 },
                 frame: new ShapeFrame(colX, rowY, 0, 0)
+            }
+
+            // fix span
+            const rowSpan = cell.rowSpan || 1;
+            let colSpan = cell.colSpan || 1;
+            // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
+            for (;;) {
+                if (!grid[ri]) break;
+                const _gr = grid[ri];
+                for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
+                    if (_gr[_ci]) {
+                        colSpan = _ci - ci;
+                        break;
+                    }
+                }
+                break;
             }
 
             let dwidth = 0;

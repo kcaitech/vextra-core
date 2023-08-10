@@ -50,8 +50,16 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
         for (let ci = 0, colLen = colWidths.length; ci < colLen && celli < cellLen; ++ci, ++celli) {
             if (grid.isSet(ri, ci)) continue;
             const c = cells[celli];
+            // fix span
             const rowSpan = c.rowSpan || 1;
-            const colSpan = c.colSpan || 1;
+            let colSpan = c.colSpan || 1;
+            // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
+            for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
+                if (grid.isSet(ri, _ci)) {
+                    colSpan = _ci - ci;
+                    break;
+                }
+            }
             for (let i = 0; i < rowSpan; ++i) {
                 for (let j = 0; j < colSpan; ++j) {
                     grid.setBit(ri + i, ci + j);
@@ -63,8 +71,16 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
         for (let ci = 0, colLen = colWidths.length; ci < colLen && celli < cellLen && ci < colStart; ++ci, ++celli) {
             if (grid.isSet(ri, ci)) continue;
             const c = cells[celli];
+            // fix span
             const rowSpan = c.rowSpan || 1;
-            const colSpan = c.colSpan || 1;
+            let colSpan = c.colSpan || 1;
+            // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
+            for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
+                if (grid.isSet(ri, _ci)) {
+                    colSpan = _ci - ci;
+                    break;
+                }
+            }
             for (let i = 0; i < rowSpan; ++i) {
                 for (let j = 0; j < colSpan; ++j) {
                     grid.setBit(ri + i, ci + j);
@@ -75,8 +91,16 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             if (grid.isSet(ri, ci)) continue;
             const c = cells[celli];
             ret.push(c);
+            // fix span
             const rowSpan = c.rowSpan || 1;
-            const colSpan = c.colSpan || 1;
+            let colSpan = c.colSpan || 1;
+            // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
+            for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
+                if (grid.isSet(ri, _ci)) {
+                    colSpan = _ci - ci;
+                    break;
+                }
+            }
             for (let i = 0; i < rowSpan; ++i) {
                 for (let j = 0; j < colSpan; ++j) {
                     grid.setBit(ri + i, ci + j);
@@ -86,8 +110,16 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
         for (let ci = colEnd + 1, colLen = colWidths.length; ci < colLen && celli < cellLen; ++ci, ++celli) {
             if (grid.isSet(ri, ci)) continue;
             const c = cells[celli];
+            // fix span
             const rowSpan = c.rowSpan || 1;
-            const colSpan = c.colSpan || 1;
+            let colSpan = c.colSpan || 1;
+            // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
+            for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
+                if (grid.isSet(ri, _ci)) {
+                    colSpan = _ci - ci;
+                    break;
+                }
+            }
             for (let i = 0; i < rowSpan; ++i) {
                 for (let j = 0; j < colSpan; ++j) {
                     grid.setBit(ri + i, ci + j);

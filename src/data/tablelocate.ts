@@ -57,8 +57,17 @@ export function indexOfCell(table: TableShape, cell: TableCell): { rowIdx: numbe
                 }
             }
             else if (!grid.isSet(ri, ci)) {
+                // fix span
                 const rowSpan = c.rowSpan || 1;
-                const colSpan = c.colSpan || 1;
+                let colSpan = c.colSpan || 1;
+                // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
+                for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
+                    if (grid.isSet(ri, _ci)) {
+                        colSpan = _ci - ci;
+                        break;
+                    }
+                }
+
                 for (let i = 0; i < rowSpan; ++i) {
                     for (let j = 0; j < colSpan; ++j) {
                         grid.setBit(ri + i, ci + j);
