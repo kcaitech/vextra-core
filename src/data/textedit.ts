@@ -239,7 +239,7 @@ function insertTextParas(shapetext: Text, paras: Para[], index: number) {
             const span = spans[j];
             const text = para.text.slice(idx, idx + span.length);
             insertSimpleText(shapetext, text, index + idx, { attr: span, paraAttr: para.attr });
-            idx += span.length;
+            idx += text.length; // span有可能错？
         }
         if (idx < para.length) {
             const text = para.text.slice(idx);
