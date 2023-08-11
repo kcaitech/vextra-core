@@ -49,7 +49,10 @@ test("inc layout insert", () => {
     text.deleteText(1, 1);
     chai.assert.equal(text.getText(0, Number.MAX_VALUE), "a12\n3\nbc\n");
 
-    text.deleteText(1, 5);
+    text.insertText("\n", 4);
+    chai.assert.equal(text.getText(0, Number.MAX_VALUE), "a12\n\n3\nbc\n");
+
+    text.deleteText(1, 6);
     chai.assert.equal(text.getText(0, Number.MAX_VALUE), "abc\n");
 
 })
