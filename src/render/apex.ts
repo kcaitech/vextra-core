@@ -50,7 +50,7 @@ apexe[MarkerType.OpenArrow] = function (h: Function, style: Style, frame: ShapeF
         'stroke-linejoin': 'round'
     }
     const a = { x: frame.width, y: frame.height };
-    const af = { w: range * 3, h: range * 3 };
+    const af = { w: range * 6, h: range * 6 };
     body_props1.d = `M0 0 h${af.w} v${af.h} h${-af.w} z`;
     body_props2.d = `M0 0 L${af.w / 2} ${af.h / 2} L0 ${af.h}`;
     const r = getHorizontalAngle({ x: 0, y: 0 }, a);
@@ -150,7 +150,7 @@ apexs[MarkerType.OpenArrow] = function (h: Function, style: Style, frame: ShapeF
         'stroke-linejoin': 'round'
     }
     const a = { x: frame.width, y: frame.height };
-    const af = { w: range * 3, h: range * 3 };
+    const af = { w: range * 6, h: range * 6 };
     body_props1.d = `M0 0 h${af.w} v${af.h} h${-af.w} z`;
     body_props2.d = `M${af.w} 0 L${af.w / 2} ${af.h / 2} L${af.w}  ${af.h}`;
     const r = getHorizontalAngle({ x: 0, y: 0 }, a);
