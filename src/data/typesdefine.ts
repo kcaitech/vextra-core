@@ -198,14 +198,11 @@ export type OverrideItem = {
 }
 /* marker type */
 export enum MarkerType {
-    OpenArrow = 'open-arrow',
-    FilledArrow = 'filled-arrow',
     Line = 'line',
-    OpenCircle = 'open-circle',
+    FilledArrow = 'filled-arrow',
+    OpenArrow = 'open-arrow',
     FilledCircle = 'filled-circle',
-    OpenSquare = 'open-square',
     FilledSquare = 'filled-square',
-    FallT = 'fall-t',
 }
 /* line join style */
 export enum LineJoinStyle {

@@ -162,10 +162,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
                 case 0: return MarkerType.Line;
                 case 1: return MarkerType.OpenArrow;
                 case 2: return MarkerType.FilledArrow;
-                case 3: return MarkerType.FallT;
-                case 4: return MarkerType.OpenCircle;
                 case 5: return MarkerType.FilledCircle;
-                case 6: return MarkerType.OpenSquare;
                 case 7: return MarkerType.FilledSquare;
                 default: return MarkerType.Line;
             }
