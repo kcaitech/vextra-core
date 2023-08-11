@@ -59,7 +59,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
         ab_props.x = 0, ab_props.y = 0;
         if (b_len) {
             const path = shape.getPath().toString();
-            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style, frame, path)]);
+            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style, frame, path)], h('use', { 'xlink:href': '#arrow1' }));
         } else {
             return h("g", props, [h('svg', ab_props, childs)]);
         }
