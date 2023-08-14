@@ -15,7 +15,7 @@ apexe[MarkerType.FilledArrow] = function (h: Function, style: Style, frame: Shap
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
-        fill: 'none',
+        fill: 'rgba(255, 0, 0, 0.4)',
     }
     const body_props2: any = {
         stroke: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")",
@@ -30,7 +30,7 @@ apexe[MarkerType.FilledArrow] = function (h: Function, style: Style, frame: Shap
     const s: any = {}
     s.transform = "translate(" + a.x + "px," + a.y + "px) "
     s.transform += "rotate(" + r + "deg) "
-    s.transform += "translate(" + (- af.w / 2) + "px," + (- af.h / 2) + "px) ";
+    s.transform += "translate(" + (- af.w) + "px," + (- af.h / 2) + "px) ";
     g_props.style = s;
     return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
 }
@@ -50,7 +50,7 @@ apexe[MarkerType.OpenArrow] = function (h: Function, style: Style, frame: ShapeF
         'stroke-linejoin': 'round'
     }
     const a = { x: frame.width, y: frame.height };
-    const af = { w: range * 6, h: range * 6 };
+    const af = { w: range * 4, h: range * 4 };
     body_props1.d = `M0 0 h${af.w} v${af.h} h${-af.w} z`;
     body_props2.d = `M0 0 L${af.w / 2} ${af.h / 2} L0 ${af.h}`;
     const r = getHorizontalAngle({ x: 0, y: 0 }, a);
@@ -81,7 +81,10 @@ apexe[MarkerType.FilledCircle] = function (h: Function, style: Style, frame: Sha
     body_props2.cx = r, body_props2.cy = r, body_props2.r = r;
     const g_props: any = {};
     const s: any = {}
-    s.transform = "translate(" + (a.x - af.w / 2) + "px," + (a.y - af.h / 2) + "px) ";
+    const deg = getHorizontalAngle({ x: 0, y: 0 }, a);
+    s.transform = "translate(" + a.x + "px," + a.y + "px) "
+    s.transform += "rotate(" + deg + "deg) "
+    s.transform += "translate(" + (- af.w) + "px," + (- af.h / 2) + "px) ";
     g_props.style = s;
     return h('g', g_props, [h("path", body_props1), h("circle", body_props2)]);
 }
@@ -106,7 +109,7 @@ apexe[MarkerType.FilledSquare] = function (h: Function, style: Style, frame: Sha
     const s: any = {}
     s.transform = "translate(" + a.x + "px," + a.y + "px) "
     s.transform += "rotate(" + r + "deg) "
-    s.transform += "translate(" + (- af.w / 2) + "px," + (- af.h / 2) + "px) ";
+    s.transform += "translate(" + (- af.w) + "px," + (- af.h / 2) + "px) ";
     g_props.style = s;
     return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
 }
@@ -130,7 +133,7 @@ apexs[MarkerType.FilledArrow] = function (h: Function, style: Style, frame: Shap
     const g_props: any = {};
     const s: any = {}
     s.transform = "rotate(" + r + "deg) "
-    s.transform += "translate(" + (- af.w / 2) + "px," + (- af.h / 2) + "px) ";
+    s.transform += "translate(0px," + (- af.h / 2) + "px) ";
     g_props.style = s;
     return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
 }
@@ -150,7 +153,7 @@ apexs[MarkerType.OpenArrow] = function (h: Function, style: Style, frame: ShapeF
         'stroke-linejoin': 'round'
     }
     const a = { x: frame.width, y: frame.height };
-    const af = { w: range * 6, h: range * 6 };
+    const af = { w: range * 4, h: range * 4 };
     body_props1.d = `M0 0 h${af.w} v${af.h} h${-af.w} z`;
     body_props2.d = `M${af.w} 0 L${af.w / 2} ${af.h / 2} L${af.w}  ${af.h}`;
     const r = getHorizontalAngle({ x: 0, y: 0 }, a);
@@ -179,7 +182,10 @@ apexs[MarkerType.FilledCircle] = function (h: Function, style: Style, frame: Sha
     body_props2.cx = r, body_props2.cy = r, body_props2.r = r;
     const g_props: any = {};
     const s: any = {}
-    s.transform = "translate(" + (-r) + "px," + (-r) + "px) ";
+    const a = { x: frame.width, y: frame.height };
+    const deg = getHorizontalAngle({ x: 0, y: 0 }, a);
+    s.transform = "rotate(" + deg + "deg) "
+    s.transform += "translate(0px," + (- af.h / 2) + "px) ";
     g_props.style = s;
     return h('g', g_props, [h("path", body_props1), h("circle", body_props2)]);
 }
@@ -203,7 +209,7 @@ apexs[MarkerType.FilledSquare] = function (h: Function, style: Style, frame: Sha
     const g_props: any = {};
     const s: any = {}
     s.transform = "rotate(" + r + "deg) "
-    s.transform += "translate(" + (- af.w / 2) + "px," + (- af.h / 2) + "px) ";
+    s.transform += "translate(0px," + (- af.h / 2) + "px) ";
     g_props.style = s;
     return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
 }
