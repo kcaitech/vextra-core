@@ -1,5 +1,5 @@
 import * as chai from 'chai'
-import { toLetterNumber, toRomanNumber } from './textlayoutbn';
+import { toLetterNumber, toRomanNumber } from './textbnlayout';
 
 const assert = chai.assert;
 
