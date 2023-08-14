@@ -57,7 +57,7 @@ export function newGroupShape(name: string, style?: Style): GroupShape {
     return group;
 }
 
-export function newDefaultFill(): Fill {
+export function newSolidColorFill(): Fill {
     const fillColor = new Color(1, 216, 216, 216);
     const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
     return fill;
@@ -65,8 +65,7 @@ export function newDefaultFill(): Fill {
 
 export function newStyle(): Style {
     const borders = new BasicArray<Border>();
-    const fillColor = new Color(1, 216, 216, 216);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
+    const fill = newSolidColorFill();
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills);
     style.fills.push(fill);

@@ -2,7 +2,7 @@ import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/sh
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape } from "./creator";
+import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
@@ -206,6 +206,9 @@ export class PageEditor {
         // copy fill and borders
         const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
         const style: Style = this.cloneStyle(copyStyle);
+        if (style.fills.length === 0) {
+            style.fills.push(newSolidColorFill()); // 自动添加个填充
+        }
         const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
         if (borderStyle !== copyStyle) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
