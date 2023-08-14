@@ -60,6 +60,7 @@ export class ParaLayout extends Array<Line> {
 }
 
 export class TextLayout {
+    public xOffset: number = 0;
     public yOffset: number = 0;
     public paras: ParaLayout[] = [];
     public contentHeight: number = 0;
@@ -519,13 +520,20 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
     //     // return Number.MAX_VALUE
     // })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
 
+    const padding = text.attr?.padding;
+    const paddingLeft = padding?.left ?? 0;
+    const paddingTop = padding?.top ?? 0;
+    const paddingRight = padding?.right ?? 0;
+    const paddingBottom = padding?.bottom ?? 0;
+
     const paras: ParaLayout[] = []
     let contentHeight = 0;
     let contentWidth = 0;
     const preBulletNumbers: BulletNumbersLayout[] = [];
+    const coreLayoutWidth = layoutWidth - paddingLeft - paddingRight;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, preBulletNumbers);
+        const paraLayout = layoutPara(text, para, coreLayoutWidth, preBulletNumbers);
         if (i > 0) {
             const prePara = text.paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -539,7 +547,7 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
 
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = paras[i];
@@ -553,10 +561,10 @@ export function layoutText(text: Text, layoutWidth: number, layoutHeight: number
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
         switch (align) {
-            case TextVerAlign.Top: return 0;
-            case TextVerAlign.Middle: return (layoutHeight - contentHeight) / 2;
-            case TextVerAlign.Bottom: return layoutHeight - contentHeight;
+            case TextVerAlign.Top: return paddingTop;
+            case TextVerAlign.Middle: return (layoutHeight - contentHeight - paddingTop - paddingBottom) / 2;
+            case TextVerAlign.Bottom: return layoutHeight - contentHeight - paddingBottom;
         }
     })(vAlign);
-    return { yOffset, paras, contentHeight, contentWidth }
+    return { xOffset: paddingLeft, yOffset, paras, contentHeight, contentWidth }
 }

@@ -106,13 +106,14 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
 export function renderTextLayout(h: Function, textlayout: TextLayout) {
     const childs = [];
 
-    const { yOffset, paras } = textlayout;
+    const { xOffset, yOffset, paras } = textlayout;
     const pc = paras.length;
     for (let i = 0; i < pc; i++) {
         const lines = paras[i];
 
         for (let lineIndex = 0, lineCount = lines.length; lineIndex < lineCount; lineIndex++) {
             const line = lines[lineIndex];
+            const lineX = line.x + xOffset;
             const lineY = yOffset + lines.yOffset + line.y;
             // 收集下划线、删除线、高亮
             let preUnderlineGIdx = Number.NEGATIVE_INFINITY;
@@ -136,7 +137,7 @@ export function renderTextLayout(h: Function, textlayout: TextLayout) {
                         continue;
                     }
                     gText.push(graph.char);
-                    gX.push(graph.x + line.x);
+                    gX.push(graph.x + lineX);
                 }
 
                 const span = garr.attr;
@@ -175,15 +176,15 @@ export function renderTextLayout(h: Function, textlayout: TextLayout) {
                 }
             }
             // 高亮
-            renderDecorateRects(h, line.x, lineY, line.lineHeight, hightlights, childs);
+            renderDecorateRects(h, lineX, lineY, line.lineHeight, hightlights, childs);
 
             childs.push(...linechilds);
 
             // 下划线、删除线
             const strikethroughY = lineY + (line.lineHeight) / 2;
             const underlineY = lineY + line.lineHeight;
-            renderDecorateLines(h, line.x, strikethroughY, strikethrouths, childs);
-            renderDecorateLines(h, line.x, underlineY, underlines, childs);
+            renderDecorateLines(h, lineX, strikethroughY, strikethrouths, childs);
+            renderDecorateLines(h, lineX, underlineY, underlines, childs);
         }
     }
     return childs;
