@@ -1,7 +1,8 @@
 // 文本编辑时的增量排版
 
-import { ParaAttrSetter, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "./classes";
+import { ParaAttrSetter, SpanAttrSetter, Text } from "./classes";
 import { BulletNumbersLayout, TextLayout, fixLineHorAlign, layoutPara } from "./textlayout";
+import { TextBehaviour, TextHorAlign, TextVerAlign } from "./typesdefine";
 
 export function layoutAtInsert(text: Text,
     layoutWidth: number,
@@ -22,7 +23,7 @@ export function layoutAtInsert(text: Text,
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (index < paraLayout.graphCount) break;
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 1")
         index -= paraLayout.graphCount;
         if (i > 0) {
             const prePara = paras[i - 1];
@@ -58,7 +59,7 @@ export function layoutAtInsert(text: Text,
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 2")
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -69,7 +70,7 @@ export function layoutAtInsert(text: Text,
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
     }
 
-    if (parascount !== parasLayout.length) throw new Error("layout and data Not match")
+    if (parascount !== parasLayout.length) throw new Error("layout and data Not match 3")
 
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
@@ -123,7 +124,7 @@ export function layoutAtDelete(text: Text,
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (index < paraLayout.graphCount) break;
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 4")
         index -= paraLayout.graphCount;
         if (i > 0) {
             const prePara = paras[i - 1];
@@ -159,7 +160,7 @@ export function layoutAtDelete(text: Text,
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 5")
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -170,7 +171,7 @@ export function layoutAtDelete(text: Text,
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
     }
 
-    if (parascount !== parasLayout.length) throw new Error("layout and data Not match")
+    if (parascount !== parasLayout.length) throw new Error("layout and data Not match 6")
 
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
@@ -225,7 +226,7 @@ export function layoutAtFormat(text: Text,
         const para = paras[i];
         const paraLayout = parasLayout[i];
         if (index < paraLayout.graphCount) break;
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 7")
         index -= paraLayout.graphCount;
         if (i > 0) {
             const prePara = paras[i - 1];
@@ -259,7 +260,7 @@ export function layoutAtFormat(text: Text,
     for (let len2 = parasLayout.length; i < parascount && i < len2; i++) {
         const para = paras[i];
         const paraLayout = parasLayout[i];
-        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match")
+        if (para.length !== paraLayout.graphCount) throw new Error("layout and data Not match 8")
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -270,7 +271,7 @@ export function layoutAtFormat(text: Text,
         contentWidth = Math.max(paraLayout.paraWidth, contentWidth);
     }
 
-    if (parascount !== parasLayout.length) throw new Error("layout and data Not match")
+    if (parascount !== parasLayout.length) throw new Error("layout and data Not match 9")
 
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;

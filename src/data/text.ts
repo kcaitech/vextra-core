@@ -29,7 +29,7 @@ export {
 import * as classes from "./baseclasses"
 import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
 import { TextLayout, layoutText } from "./textlayout";
-import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textincrementlayout";
+import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 import { _travelTextPara } from "./texttravel";
@@ -268,6 +268,9 @@ export class Text extends Basic implements classes.Text {
      * @param len 
      */
     alignParaRange(index: number, len: number): { index: number, len: number } {
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
         const ret = { index, len };
         for (let i = 0, plen = this.paras.length; i < plen; i++) {
             const p = this.paras[i];
@@ -298,15 +301,24 @@ export class Text extends Basic implements classes.Text {
         }, 0);
     }
     getText(index: number, count: number): string {
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
         return getSimpleText(this, index, count);
     }
     getTextWithFormat(index: number, count: number): Text {
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
         return getTextWithFmt(this, index, count);
     }
     getDefaultTextFormat(): TextAttr | undefined {
         return this.attr;
     }
     getTextFormat(index: number, count: number, cachedAttr?: SpanAttrSetter): AttrGetter {
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
         return getTextFormat(this, index, count, cachedAttr);
     }
     getUsedFontNames(fontNames?: Set<string>): Set<string> {
@@ -314,26 +326,37 @@ export class Text extends Basic implements classes.Text {
     }
 
     insertText(text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
-        // this.reLayout(); // todo
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
         insertSimpleText(this, text, index, props);
         if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, index, text.length, this.__layout);
     }
     composingInputUpdate(index: number) {
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
         if (this.__layout) this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, index, 1, this.__layout);
     }
     insertFormatText(text: Text, index: number) {
-        // this.reLayout(); // todo
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
         insertComplexText(this, text, index);
         if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, index, text.length, this.__layout);
     }
     formatText(index: number, length: number, props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
-        // this.reLayout(); // todo
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
         const ret = formatText(this, index, length, props)
         if (this.__layout) this.__layout = layoutAtFormat(this, this.__layoutWidth, this.__frameHeight, index, length, this.__layout, props);
         return ret;
     }
     deleteText(index: number, count: number): Text | undefined {
-        // this.reLayout(); // todo
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
         const ret = deleteText(this, index, count);
         if (ret && this.__layout) {
             const paras = ret.paras;
