@@ -13,8 +13,8 @@ import template_table_shape from "./template/table-shape.json"
 import template_table_cell from "./template/table-cell.json"
 import template_text from "./template/text.json"
 import {
-    Blur, Point2D, BorderOptions, ContextSettings, CurvePoint,
-    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
+    Point2D, CurvePoint,
+    Color, Border, Style, Fill, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
     Text
 } from "../data/classes";
 import { BasicArray } from "../data/basic";
@@ -57,6 +57,12 @@ export function newGroupShape(name: string, style?: Style): GroupShape {
     return group;
 }
 
+export function newDefaultFill(): Fill {
+    const fillColor = new Color(1, 216, 216, 216);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
+    return fill;
+}
+
 export function newStyle(): Style {
     const borders = new BasicArray<Border>();
     const fillColor = new Color(1, 216, 216, 216);
@@ -72,7 +78,6 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     template_artboard.name = name;
     template_artboard.frame = frame;
     const artboard = importArtboard(template_artboard as types.Artboard);
-    const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 255, 255, 255);
     const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
     artboard.style.fills.push(fill);
