@@ -1,0 +1,72 @@
+{
+    "description": "style",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "style"
+        },
+        "miterLimit": {
+            "type": "number",
+            "default": 0
+        },
+        "windingRule": {
+            "$ref": "./winding-rule.json"
+        },
+        "blur": {
+            "$ref": "./blur.json"
+        },
+        "borderOptions": {
+            "$ref": "./border-options.json"
+        },
+        "borders": {
+            "type": "array",
+            "items": {
+                "$ref": "./border.json"
+            }
+        },
+        "colorControls": {
+            "$ref": "./color-controls.json"
+        },
+        "contextSettings": {
+            "$ref": "./context-settings.json"
+        },
+        "fills": {
+            "type": "array",
+            "items": {
+                "$ref": "./fill.json"
+            }
+        },
+        "innerShadows": {
+            "type": "array",
+            "items": {
+                "$ref": "./shadow.json"
+            }
+        },
+        "shadows": {
+            "type": "array",
+            "items": {
+                "$ref": "./shadow.json"
+            }
+        },
+        "startMarkerType": {
+            "$ref": "./marker-type.json"
+        },
+        "endMarkerType": {
+            "$ref": "./marker-type.json"
+        }
+    },
+    "required": [
+        "typeId",
+        "miterLimit",
+        "windingRule",
+        "blur",
+        "borderOptions",
+        "borders",
+        "contextSettings",
+        "fills",
+        "innerShadows",
+        "shadows"
+    ],
+    "additionalProperties": false
+}

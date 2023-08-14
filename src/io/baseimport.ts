@@ -107,6 +107,8 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         })()
     )
     if (source.colorControls !== undefined) ret.colorControls = importColorControls(source.colorControls, ctx)
+    if (source.startMarkerType !== undefined) ret.startMarkerType = importMarkerType(source.startMarkerType, ctx)
+    if (source.endMarkerType !== undefined) ret.endMarkerType = importMarkerType(source.endMarkerType, ctx)
     if (ctx) ctx.afterImport(ret)
     return ret
 }
@@ -522,9 +524,7 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
         importContextSettings(source.contextSettings, ctx),
         importBorderPosition(source.position, ctx),
         source.thickness,
-        importBorderStyle(source.borderStyle, ctx),
-        importMarkerType(source.startMarkerType, ctx),
-        importMarkerType(source.endMarkerType, ctx)
+        importBorderStyle(source.borderStyle, ctx)
     )
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (ctx) ctx.afterImport(ret)

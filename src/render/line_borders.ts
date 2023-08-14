@@ -5,7 +5,7 @@ import { render as ra } from "./apex";
 function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
     return Math.atan2(B.y - A.y, B.x - A.x)
 }
-function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType: MarkerType, endMarkerType: MarkerType): any {
+function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.thickness;
     const body_props: any = {
         d: path,
@@ -44,7 +44,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
 export function render(h: Function, style: Style, path: string, shape: Shape): Array<any> {
     const bc = style.borders.length;
     let elArr = new Array();
-    const sm = style.borders[0].startMarkerType, em = style.borders[0].endMarkerType;
+    const sm = style.startMarkerType, em = style.endMarkerType;
     for (let i = 0; i < bc; i++) {
         const border: Border = style.borders[i];
         if (!border.isEnabled) continue;

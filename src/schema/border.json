@@ -33,12 +33,6 @@
         },
         "borderStyle": {
             "$ref": "./border-style.json"
-        },
-        "startMarkerType": {
-            "$ref": "./marker-type.json"
-        },
-        "endMarkerType": {
-            "$ref": "./marker-type.json"
         }
     },
     "required": [
@@ -49,9 +43,7 @@
         "contextSettings",
         "position",
         "thickness",
-        "borderStyle",
-        "startMarkerType",
-        "endMarkerType"
+        "borderStyle"
     ],
     "additionalProperties": false
 }

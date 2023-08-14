@@ -70,6 +70,8 @@ export type Style = {
     fills: Fill[]
     innerShadows: Shadow[]
     shadows: Shadow[]
+    startMarkerType?: MarkerType
+    endMarkerType?: MarkerType
 }
 /* strikethrough types */
 export enum StrikethroughType {
@@ -386,8 +388,6 @@ export type Border = {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
-    startMarkerType: MarkerType
-    endMarkerType: MarkerType
 }
 /* border style */
 export type BorderStyle = {

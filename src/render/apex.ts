@@ -197,12 +197,12 @@ apexs[MarkerType.FilledSquare] = function (h: Function, style: Style, frame: Sha
     return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
 }
 
-export function render(h: Function, style: Style, frame: ShapeFrame, b: Border, r: number, sm: MarkerType, em: MarkerType): Array<any> {
+export function render(h: Function, style: Style, frame: ShapeFrame, b: Border, r: number, sm?: MarkerType, em?: MarkerType): Array<any> {
     const elArr = new Array();
-    if (em !== MarkerType.Line) {
+    if (em && em !== MarkerType.Line) {
         elArr.push(apexe[em](h, style, frame, b, r))
     }
-    if (sm !== MarkerType.Line) {
+    if (sm && sm !== MarkerType.Line) {
         elArr.push(apexs[sm](h, style, frame, b, r))
     }
     return elArr;
