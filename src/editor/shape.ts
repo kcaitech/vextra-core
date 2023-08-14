@@ -190,15 +190,21 @@ export class ShapeEditor {
             this.__repo.commit();
         }
     }
-    public setBorderApexStyle(idx: number, apexStyle: MarkerType, isEnd: boolean) {
-        const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderApexStyle", {});
-            if (isEnd) {
-                api.setBorderEndMarkerType(this.__page, this.__shape, idx, apexStyle)
-            } else {
-                api.setBorderStartMarkerType(this.__page, this.__shape, idx, apexStyle)
-            }
+    public setMarkerType(mt: MarkerType, isEnd: boolean) {
+        const api = this.__repo.start("setMarkerType", {});
+        if (isEnd) {
+            api.shapeModifyEndMarkerType(this.__page, this.__shape, mt);
+        } else {
+            api.shapeModifyStartMarkerType(this.__page, this.__shape, mt);
+        }
+        this.__repo.commit();
+    }
+    public exchangeMarkerType() {
+        const { endMarkerType, startMarkerType } = this.__shape.style;
+        if (endMarkerType !== startMarkerType) {
+            const api = this.__repo.start("exchangeMarkerType", {});
+            api.shapeModifyEndMarkerType(this.__page, this.__shape, startMarkerType || MarkerType.Line);
+            api.shapeModifyStartMarkerType(this.__page, this.__shape, endMarkerType || MarkerType.Line);
             this.__repo.commit();
         }
     }

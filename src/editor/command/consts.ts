@@ -20,7 +20,8 @@ export const SHAPE_ATTR_ID = {
     boolop: "boolop",
     isboolopshape: "isboolopshape",
     fixedRadius: "fixedRadius",
-
+    startMarkerType: "startMarkerType",
+    endMarkerType: "endMarkerType",
     // text shape
     textBehaviour: "textBehaviour",
     textVerAlign: "textVerAlign",

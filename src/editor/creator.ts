@@ -2,9 +2,9 @@ import { v4 as uuid } from "uuid";
 import { Page } from "../data/page";
 import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
-import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, FlattenShape, PathShape2, PathSegment } from "../data/shape";
+import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment } from "../data/shape";
 import * as types from "../data/typesdefine"
-import { importGroupShape, importPage, importArtboard, importTextShape, importText, importFlattenShape, importTableShape, importTableCell } from "../io/baseimport";
+import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape, importTableCell } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
@@ -67,7 +67,7 @@ export function newStyle(): Style {
     const fills = new BasicArray<Fill>();
     const innerShadows = new BasicArray<Shadow>();
     const shadows = new BasicArray<Shadow>();
-    const style = new Style(10, windingRule, blur, borderOptions, borders, contextSettings, fills, innerShadows, shadows);
+    const style = new Style(10, windingRule, blur, borderOptions, borders, contextSettings, fills, innerShadows, shadows, types.MarkerType.Line, types.MarkerType.Line);
     style.fills.push(fill);
     return style;
 }
@@ -149,7 +149,7 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const id = uuid();
     const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
-    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), contextSettings, types.BorderPosition.Center, 1, new BorderStyle(0, 0), types.MarkerType.Line, types.MarkerType.Line);
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), contextSettings, types.BorderPosition.Center, 1, new BorderStyle(0, 0));
     style.borders.push(border);
     const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, curvePoint, true);
     addCommonAttr(shape);
@@ -158,14 +158,14 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
 
 export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const style = newStyle();
+    style.endMarkerType = types.MarkerType.OpenArrow;
     const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(0, 0));
     const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const id = uuid();
     const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
-    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), contextSettings, types.BorderPosition.Center, 1, new BorderStyle(0, 0), types.MarkerType.Line, types.MarkerType.OpenArrow);
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), contextSettings, types.BorderPosition.Center, 1, new BorderStyle(0, 0));
     style.borders.push(border);
-    const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, curvePoint, true);
+    const shape = new LineShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, true);
     addCommonAttr(shape);
     return shape;
 }

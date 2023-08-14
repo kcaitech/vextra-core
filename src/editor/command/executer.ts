@@ -426,7 +426,7 @@ export class CMDExecuter {
         }
         else if (opId === SHAPE_ATTR_ID.radius) {
             if (op.type === OpType.IdSet && value) {
-                const v = (JSON.parse(value) as {lt: number, rt: number, rb: number, lb: number});
+                const v = (JSON.parse(value) as { lt: number, rt: number, rb: number, lb: number });
                 api.shapeModifyRadius(shape as RectShape, v.lt, v.rt, v.rb, v.lb)
             }
         }
@@ -438,8 +438,15 @@ export class CMDExecuter {
             else if (op.type === OpType.IdRemove) {
                 api.shapeModifyConstrainerProportions(shape, false)
             }
-        }
-        else if (opId === SHAPE_ATTR_ID.textBehaviour) {
+        } else if (opId === SHAPE_ATTR_ID.startMarkerType) {
+            if (op.type === OpType.IdSet && value) {
+                api.shapeModifyStartMarkerType(shape, value as types.MarkerType)
+            }
+        } else if (opId === SHAPE_ATTR_ID.endMarkerType) {
+            if (op.type === OpType.IdSet && value) {
+                api.shapeModifyEndMarkerType(shape, value as types.MarkerType)
+            }
+        } else if (opId === SHAPE_ATTR_ID.textBehaviour) {
             if (op.type === OpType.IdSet && value) {
                 const textBehaviour = value as types.TextBehaviour
                 api.shapeModifyTextBehaviour(page, shape as TextShape, textBehaviour);
@@ -748,16 +755,6 @@ export class CMDExecuter {
                 if (op.type === OpType.IdSet && value) {
                     const style = importBorderStyle(JSON.parse(value));
                     api.setBorderStyle(shape.style, borderIdx, style)
-                }
-            }
-            else if (opId === BORDER_ATTR_ID.startMarkerType) {
-                if (op.type === OpType.IdSet && value) {
-                    api.setBorderStartMarkerType(shape.style, borderIdx, value as any)
-                }
-            }
-            else if (opId === BORDER_ATTR_ID.endMarkerType) {
-                if (op.type === OpType.IdSet && value) {
-                    api.setBorderEndMarkerType(shape.style, borderIdx, value as any)
                 }
             }
             // todo
