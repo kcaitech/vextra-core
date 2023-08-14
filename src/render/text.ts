@@ -2,7 +2,7 @@
 
 import { DefaultColor, isColorEqual } from "./basic";
 import { TextShape, Path, Color } from '../data/classes';
-import { GraphArray } from "../data/textlayout";
+import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
@@ -103,10 +103,10 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
     }
 }
 
-function renderText(h: Function, shape: TextShape) {
+export function renderTextLayout(h: Function, textlayout: TextLayout) {
     const childs = [];
 
-    const { yOffset, paras } = shape.getLayout();
+    const { yOffset, paras } = textlayout;
     const pc = paras.length;
     for (let i = 0; i < pc; i++) {
         const lines = paras[i];
@@ -199,7 +199,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
     childs.push(...fillR(h, shape.style.fills, frame, path));
 
     // text
-    childs.push(...renderText(h, shape));
+    childs.push(...renderTextLayout(h, shape.getLayout()));
 
     // border
     childs.push(...borderR(h, shape.style.borders, frame, path));
