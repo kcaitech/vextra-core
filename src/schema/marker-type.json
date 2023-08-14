@@ -5,7 +5,9 @@
         "filled-arrow",
         "open-arrow",
         "filled-circle",
-        "filled-square"
+        "filled-square",
+        "round",
+        "square"
     ],
     "default": "open-arrow"
 }

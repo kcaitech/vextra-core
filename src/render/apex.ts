@@ -104,6 +104,56 @@ apexe[MarkerType.FilledSquare] = function (h: Function, style: Style, frame: Sha
     g_props.style = s;
     return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
 }
+apexe[MarkerType.Round] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
+    const color = border.color;
+    const opacity = style.contextSettings.opacity;
+    const range = border.thickness;
+    const body_props1: any = {
+        stroke: 'none',
+        fill: 'none',
+    }
+    const body_props2: any = {
+        stroke: "none",
+        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")",
+    }
+    const a = { x: frame.width, y: frame.height };
+    const af = { w: range, h: range };
+    body_props1.d = `M0 0 h${af.w} v${af.h} h${-af.w} z`;
+    const rr = range / 2;
+    body_props2.d = `M0 0  a${rr},${rr} 0 0 1 0,${2 * rr}  z`;
+    const g_props: any = {};
+    const s: any = {}
+    s.transform = "translate(" + a.x + "px," + a.y + "px) "
+    s.transform += "rotate(" + rad + "rad) "
+    s.transform += "translate(0px," + (-rr) + "px) ";
+    g_props.style = s;
+    return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
+}
+apexe[MarkerType.Square] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
+    const color = border.color;
+    const opacity = style.contextSettings.opacity;
+    const range = border.thickness;
+    const body_props1: any = {
+        stroke: 'none',
+        fill: 'none',
+    }
+    const body_props2: any = {
+        stroke: "none",
+        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")",
+    }
+    const a = { x: frame.width, y: frame.height };
+    const af = { w: range, h: range };
+    body_props1.d = `M0 0 h${af.w} v${af.h} h${-af.w} z`;
+    const rr = range / 2;
+    body_props2.d = `M0 0  h${rr} v${2 * rr} h${-rr}  z`;
+    const g_props: any = {};
+    const s: any = {}
+    s.transform = "translate(" + a.x + "px," + a.y + "px) "
+    s.transform += "rotate(" + rad + "rad) "
+    s.transform += "translate(0px," + (-rr) + "px) ";
+    g_props.style = s;
+    return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
+}
 apexs[MarkerType.FilledArrow] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
     const opacity = style.contextSettings.opacity;
@@ -193,6 +243,53 @@ apexs[MarkerType.FilledSquare] = function (h: Function, style: Style, frame: Sha
     const s: any = {}
     s.transform = "rotate(" + rad + "rad) "
     s.transform += "translate(0px," + (- af.h / 2) + "px) ";
+    g_props.style = s;
+    return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
+}
+apexs[MarkerType.Round] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
+    const color = border.color;
+    const opacity = style.contextSettings.opacity;
+    const range = border.thickness;
+    const body_props1: any = {
+        stroke: 'none',
+        fill: 'none',
+    }
+    const body_props2: any = {
+        stroke: "none",
+        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")",
+    }
+    const a = { x: frame.width, y: frame.height };
+    const af = { w: range, h: range };
+    body_props1.d = `M0 0 h${af.w} v${af.h} h${-af.w} z`;
+    const rr = range / 2;
+    body_props2.d = `M${range} ${0}  a${rr},${rr} 0 0 0 0,${2 * rr}  z`;
+    const g_props: any = {};
+    const s: any = {}
+    s.transform = "rotate(" + rad + "rad) "
+    s.transform += "translate(" + (-range) + "px," + (-rr) + "px) ";
+    g_props.style = s;
+    return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
+}
+apexs[MarkerType.Square] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
+    const color = border.color;
+    const opacity = style.contextSettings.opacity;
+    const range = border.thickness;
+    const body_props1: any = {
+        stroke: 'none',
+        fill: 'none',
+    }
+    const body_props2: any = {
+        stroke: "none",
+        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")",
+    }
+    const af = { w: range, h: range };
+    body_props1.d = `M0 0 h${af.w} v${af.h} h${-af.w} z`;
+    const rr = range / 2;
+    body_props2.d = `M${range} ${0}  h${-rr} v${2 * rr} h${rr}  z`;
+    const g_props: any = {};
+    const s: any = {}
+    s.transform = "rotate(" + rad + "rad) "
+    s.transform += "translate(" + (-range) + "px," + (-rr) + "px) ";
     g_props.style = s;
     return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
 }

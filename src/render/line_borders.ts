@@ -26,10 +26,10 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         let s = { x: 0, y: 0 }, e = { x: f.width, y: f.height };
         const r = getHorizontalRadians(s, e);
         const g_cs: any[] = ra(h, style, f, border, r, startMarkerType, endMarkerType);
-        if (startMarkerType !== MarkerType.Line && startMarkerType !== MarkerType.OpenArrow) {
+        if (startMarkerType !== MarkerType.Line && startMarkerType !== MarkerType.OpenArrow && startMarkerType !== MarkerType.Round && startMarkerType !== MarkerType.Square) {
             s.x = 2 * t * Math.cos(r), s.y = 2 * t * Math.sin(r);
         }
-        if (endMarkerType !== MarkerType.Line && endMarkerType !== MarkerType.OpenArrow) {
+        if (endMarkerType !== MarkerType.Line && endMarkerType !== MarkerType.OpenArrow && endMarkerType !== MarkerType.Round && endMarkerType !== MarkerType.Square) {
             e.x -= 2 * t * Math.cos(r), e.y -= 2 * t * Math.sin(r);
         }
         body_props.d = `M ${s.x} ${s.y} L ${e.x} ${e.y} L${s.x} ${s.y} Z`;

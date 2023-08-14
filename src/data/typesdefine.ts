@@ -205,6 +205,8 @@ export enum MarkerType {
     OpenArrow = 'open-arrow',
     FilledCircle = 'filled-circle',
     FilledSquare = 'filled-square',
+    Round = 'round',
+    Square = 'square',
 }
 /* line join style */
 export enum LineJoinStyle {
