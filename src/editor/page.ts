@@ -102,6 +102,9 @@ export interface BorderStyleAction {
     index: number
     value: BorderStyle
 }
+function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
+    return Math.atan2(B.y - A.y, B.x - A.x)
+}
 export class PageEditor {
     private __repo: CoopRepository;
     private __page: Page;
@@ -926,6 +929,23 @@ export class PageEditor {
             for (let i = 0; i < shapes.length; i++) {
                 const s = shapes[i];
                 if (s instanceof RectShape) api.shapeModifyRadius(this.__page, s, lt, rt, rb, lb);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setLinesLength(shapes: Shape[], v: number) {
+        try {
+            const api = this.__repo.start('setLinesLength', {});
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const s = shapes[i];
+                if (s.type !== ShapeType.Line) continue;
+                const o1 = s.matrix2Parent().computeCoord2(0, 0);
+                const f = s.frame, r = getHorizontalRadians({ x: 0, y: 0 }, { x: f.width, y: f.height });
+                api.shapeModifyWH(this.__page, s, v * Math.cos(r), v * Math.sin(r));
+                api.shapeModifyX(this.__page, s, o1.x);
+                api.shapeModifyY(this.__page, s, o1.y);
             }
             this.__repo.commit();
         } catch (error) {
