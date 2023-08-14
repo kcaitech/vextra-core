@@ -36,15 +36,20 @@ export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeTyp
     const childs = [];
     const path = shape.getPath().toString();
     // fill
-    childs.push(...fillR(h, shape.style, frame, path));
+    childs.push(...fillR(h, shape.style.fills, frame, path));
     // border
-    childs.push(...borderR(h, shape.style, frame, path));
+    childs.push(...borderR(h, shape.style.borders, frame, path));
 
     // symbol
     childs.push(...renderSym(h, sym, comsMap, shape.frame)); // 有缩放
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
+
+    const contextSettings = shape.style.contextSettings;
+    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+        props.opacity = contextSettings.opacity;
+    }
 
     if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
         const cx = frame.x + frame.width / 2;

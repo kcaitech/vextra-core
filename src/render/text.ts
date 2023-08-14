@@ -2,8 +2,10 @@
 
 import { DefaultColor, isColorEqual } from "./basic";
 import { TextShape, Path, Color } from '../data/classes';
-import { GraphArray, TextLayout } from "../data/textlayout";
+import { GraphArray } from "../data/textlayout";
 import { gPal } from "../basic/pal";
+import { render as fillR } from "./fill";
+import { render as borderR } from "./border";
 
 
 function toRGBA(color: Color): string {
@@ -101,11 +103,11 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
     }
 }
 
-export function renderTextLayout(h: Function, layout: TextLayout) {
-    const { yOffset, paras } = layout;
-    const pc = paras.length;
+function renderText(h: Function, shape: TextShape) {
+    const childs = [];
 
-    const childs = []
+    const { yOffset, paras } = shape.getLayout();
+    const pc = paras.length;
     for (let i = 0; i < pc; i++) {
         const lines = paras[i];
 
@@ -188,14 +190,27 @@ export function renderTextLayout(h: Function, layout: TextLayout) {
 }
 
 export function render(h: Function, shape: TextShape, reflush?: number) {
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+    if (!shape.isVisible) return null;
 
-    const childs = renderTextLayout(h, shape.getLayout());
-
+    const childs = []
     const frame = shape.frame;
+    const path = shape.getPath().toString();
+    // fill
+    childs.push(...fillR(h, shape.style.fills, frame, path));
+
+    // text
+    childs.push(...renderText(h, shape));
+
+    // border
+    childs.push(...borderR(h, shape.style.borders, frame, path));
+
     const props: any = {}
     if (reflush) props.reflush = reflush;
+
+    const contextSettings = shape.style.contextSettings;
+    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+        props.opacity = contextSettings.opacity;
+    }
 
     if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
         const cx = frame.x + frame.width / 2;
@@ -214,7 +229,6 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
 
     return h('g', props, childs);
 }
-
 
 //
 // for test text path

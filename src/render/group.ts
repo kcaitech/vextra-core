@@ -24,6 +24,11 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     const props: any = {}
     if (reflush) props.reflush = reflush;
 
+    const contextSettings = shape.style.contextSettings;
+    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+        props.opacity = contextSettings.opacity;
+    }
+
     if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
         const cx = frame.x + frame.width / 2;
         const cy = frame.y + frame.height / 2;

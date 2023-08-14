@@ -4,24 +4,21 @@ import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "../basic/objectid";
 
-const handler: { [key: string]: (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string) => any } = {};
-handler[FillType.SolidColor] = function (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string): any {
+const handler: { [key: string]: (h: Function, frame: ShapeFrame, fill: Fill, path: string) => any } = {};
+handler[FillType.SolidColor] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
     const color = fill.color;
-    const opacity = style.contextSettings?.opacity ?? 1;
     return h("path", {
         d: path,
         fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
-        "fill-opacity": (color ? color.alpha : 1) * opacity,
+        "fill-opacity": (color ? color.alpha : 1),
         stroke: 'none',
         'stroke-width': 0,
         "fill-rule": "evenodd",
     });
 }
 
-handler[FillType.Gradient] = function (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string): any {
+handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
     const color = fill.color;
-    // const frame = shape.frame;
-    const opacity = style.contextSettings?.opacity ?? 1;
     const elArr = new Array();
     const g_ = renderGradient(h, fill.gradient as Gradient, frame);
     if (g_.node) {
@@ -43,7 +40,7 @@ handler[FillType.Gradient] = function (h: Function, style: Style, frame: ShapeFr
         elArr.push(h('path', {
             d: path,
             fill: "url(#" + gid + ")",
-            "fill-opacity": (color ? color.alpha : 1) * opacity,
+            "fill-opacity": (color ? color.alpha : 1),
             stroke: 'none',
             'stroke-width': 0,
             "fill-rule": "evenodd",
@@ -55,7 +52,7 @@ handler[FillType.Gradient] = function (h: Function, style: Style, frame: ShapeFr
     return h("g", elArr);
 }
 
-handler[FillType.Pattern] = function (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string): any {
+handler[FillType.Pattern] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
     const id = "clippath-fill-" + objectId(fill);
     const cp = clippathR(h, id, path);
 
@@ -72,19 +69,16 @@ handler[FillType.Pattern] = function (h: Function, style: Style, frame: ShapeFra
     return h("g", [cp, img]);
 }
 
-export function render(h: Function, style: Style, frame: ShapeFrame, path: string): Array<any> {
-    // const style = shape.style;
-    const fillsCount = style.fills.length;
+export function render(h: Function, fills: Fill[], frame: ShapeFrame, path: string): Array<any> {
+    const fillsCount = fills.length;
     const elArr = new Array();
-    // path = path || shape.getPath(true).toString();
-
     for (let i = 0; i < fillsCount; i++) {
-        const fill = style.fills[i];
+        const fill = fills[i];
         if (!fill.isEnabled) {
             continue;
         }
         const fillType = fill.fillType;
-        elArr.push(handler[fillType](h, style, frame, fill, path));
+        elArr.push(handler[fillType](h, frame, fill, path));
     }
     return elArr;
 }
