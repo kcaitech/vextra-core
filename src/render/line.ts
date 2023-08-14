@@ -1,6 +1,5 @@
 import { Shape } from "../data/classes";
 import { render as renderB } from "./line_borders";
-import { render as renderA } from "./apex";
 
 export function render(h: Function, shape: Shape, reflush?: number) {
     if (!shape.isVisible) return;
@@ -24,7 +23,7 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     let childs = new Array();
     if (shape.style.borders.length) {
         const path = shape.getPath().toString();
-        childs = childs.concat(renderB(h, shape.style, path)).concat(renderA(h, shape.style, frame));
+        childs = childs.concat(renderB(h, shape.style, path, shape));
         return h('g', props, childs);
     } else {
         props.stroke = '#000000', props['stroke-width'] = 1, props.d = shape.getPath().toString();

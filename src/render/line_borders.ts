@@ -1,9 +1,11 @@
 
 
-import { Border, FillType, Style } from "../data/classes";
-
-
-function handler(h: Function, style: Style, border: Border, path: string): any {
+import { Border, FillType, MarkerType, Shape, Style } from "../data/classes";
+import { render as ra } from "./apex";
+function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
+    return Math.atan2(B.y - A.y, B.x - A.x)
+}
+function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType: MarkerType, endMarkerType: MarkerType): any {
     const thickness = border.thickness;
     const body_props: any = {
         d: path,
@@ -19,19 +21,36 @@ function handler(h: Function, style: Style, border: Border, path: string): any {
         const opacity = style.contextSettings.opacity;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     }
-    return h('path', body_props);
+    if (endMarkerType !== MarkerType.Line || startMarkerType !== MarkerType.Line) {
+        const f = shape.frame, t = border.thickness;
+        let s = { x: 0, y: 0 }, e = { x: f.width, y: f.height };
+        const r = getHorizontalRadians(s, e);
+        const g_cs: any[] = ra(h, style, f, border, r, startMarkerType, endMarkerType);
+        if (startMarkerType !== MarkerType.Line && startMarkerType !== MarkerType.OpenArrow) {
+            s.x = 2 * t * Math.cos(r), s.y = 2 * t * Math.sin(r);
+        }
+        if (endMarkerType !== MarkerType.Line && endMarkerType !== MarkerType.OpenArrow) {
+            e.x -= 2 * t * Math.cos(r), e.y -= 2 * t * Math.sin(r);
+        }
+        body_props.d = `M ${s.x} ${s.y} L ${e.x} ${e.y} L${s.x} ${s.y} Z`;
+        g_cs.push(h('path', body_props));
+        return g_cs;
+    } else {
+        return h('path', body_props);
+    }
 }
 
 
-export function render(h: Function, style: Style, path: string): Array<any> {
+export function render(h: Function, style: Style, path: string, shape: Shape): Array<any> {
     const bc = style.borders.length;
-    const elArr = new Array();
+    let elArr = new Array();
+    const sm = style.borders[0].startMarkerType, em = style.borders[0].endMarkerType;
     for (let i = 0; i < bc; i++) {
         const border: Border = style.borders[i];
         if (!border.isEnabled) continue;
         const fillType = border.fillType;
         (fillType === FillType.SolidColor) && (() => {
-            elArr.push(handler(h, style, border, path));
+            elArr = elArr.concat(handler(h, style, border, path, shape, sm, em));
         })()
     }
     return elArr;
