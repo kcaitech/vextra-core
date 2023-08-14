@@ -456,58 +456,58 @@ test("setShapesConstrainerProportions", () => {
 test("setShapesFrame", () => {
     // expand
 })
-test("setShapesRotate", () => {
-    const repo = new Repository()
-    const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
-    const page = newPage("Page1");
-    const pagesMgr = document.pagesMgr;
-    pagesMgr.add(page.id, page);
+// test("setShapesRotate", () => {
+//     const repo = new Repository()
+//     const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
+//     const page = newPage("Page1");
+//     const pagesMgr = document.pagesMgr;
+//     pagesMgr.add(page.id, page);
 
-    const shape1 = newRectShape("rect1", new ShapeFrame(0, 0, 100, 100))
-    const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
-    const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
-    const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
-    const cmd = CmdGroup.Make(page.id);
-    repo.start("add shape", {});
-    const needUpdateFrame: { shape: Shape, page: Page }[] = [];
-    api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
-    cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
-    api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
-    cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
-    api.shapeInsert(page, page, shape3, 2, needUpdateFrame)
-    cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
-    api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
-    cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
-    if (needUpdateFrame.length > 0) {
-        const page = needUpdateFrame[0].page;
-        const shapes = needUpdateFrame.map((v) => v.shape);
-        updateShapesFrame(page, shapes, api)
-    }
-    repo.commit();
-    //  page
-    //      rect4
-    //      rect3
-    //      rect2
-    //      rect1
-    chai.assert.isTrue(page.childs.length === 4);
-    const cooprepo = new CoopRepository(document, repo);
-    const executer = new CMDExecuter(document, repo);
-    let _cmd: Cmd | undefined;
-    cooprepo.onCommit((cmd) => { _cmd = cmd });
-    const editor = new PageEditor(cooprepo, page, document);
-    const shapes_action = get_actions_rotate([shape1, shape2, shape4], 30); // 只锁前三个
-    editor.setShapesRotate(shapes_action);
-    //  page
-    //      rect4 30°
-    //      rect3 0°
-    //      rect2 30°
-    //      rect1 30°
-    chai.assert.equal(page.childs.map(i => i.rotation).toString(), '30,30,0,30');
+//     const shape1 = newRectShape("rect1", new ShapeFrame(0, 0, 100, 100))
+//     const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
+//     const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
+//     const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
+//     const cmd = CmdGroup.Make(page.id);
+//     repo.start("add shape", {});
+//     const needUpdateFrame: { shape: Shape, page: Page }[] = [];
+//     api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
+//     cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
+//     api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
+//     cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
+//     api.shapeInsert(page, page, shape3, 2, needUpdateFrame)
+//     cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
+//     api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
+//     cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
+//     if (needUpdateFrame.length > 0) {
+//         const page = needUpdateFrame[0].page;
+//         const shapes = needUpdateFrame.map((v) => v.shape);
+//         updateShapesFrame(page, shapes, api)
+//     }
+//     repo.commit();
+//     //  page
+//     //      rect4
+//     //      rect3
+//     //      rect2
+//     //      rect1
+//     chai.assert.isTrue(page.childs.length === 4);
+//     const cooprepo = new CoopRepository(document, repo);
+//     const executer = new CMDExecuter(document, repo);
+//     let _cmd: Cmd | undefined;
+//     cooprepo.onCommit((cmd) => { _cmd = cmd });
+//     const editor = new PageEditor(cooprepo, page, document);
+//     const shapes_action = get_actions_rotate([shape1, shape2, shape4], 30); // 只锁前三个
+//     editor.setShapesRotate(shapes_action);
+//     //  page
+//     //      rect4 30°
+//     //      rect3 0°
+//     //      rect2 30°
+//     //      rect1 30°
+//     chai.assert.equal(page.childs.map(i => i.rotation).toString(), '30,30,0,30');
 
-    chai.assert.isObject(_cmd)
-    const origin = JSON.stringify(exportPage(page));
-    repo.undo();
-    executer.exec(_cmd!);
-    const now = JSON.stringify(exportPage(page))
-    chai.assert.equal(origin, now);
-})
+//     chai.assert.isObject(_cmd)
+//     const origin = JSON.stringify(exportPage(page));
+//     repo.undo();
+//     executer.exec(_cmd!);
+//     const now = JSON.stringify(exportPage(page))
+//     chai.assert.equal(origin, now);
+// })

@@ -105,6 +105,14 @@ export interface BorderStyleAction {
 function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
     return Math.atan2(B.y - A.y, B.x - A.x)
 }
+export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
+    const deltaX = B.x - A.x;
+    const deltaY = B.y - A.y;
+    const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+    const angle = (angleInDegrees + 360) % 360;
+    return angle;
+}
+
 export class PageEditor {
     private __repo: CoopRepository;
     private __page: Page;
@@ -692,15 +700,22 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-    setShapesRotate(actions: RotateAdjust[]) {
+    setShapesRotate(shapes: Shape[], v: number) {
         try {
-            const api = this.__repo.start('RotateAdjust', {});
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                api.shapeModifyRotate(this.__page, target, value);
+            const api = this.__repo.start('setShapesRotate', {});
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const s = shapes[i];
+                if (s.type === ShapeType.Line) {
+                    const f = s.frame, m2p = s.matrix2Parent(), lt = m2p.computeCoord2(0, 0), rb = m2p.computeCoord2(f.width, f.height);
+                    const real_r = getHorizontalAngle(lt, rb);
+                    api.shapeModifyRotate(this.__page, s, v - Number(real_r.toFixed(2)));
+                } else {
+                    api.shapeModifyRotate(this.__page, s, v);
+                }
             }
             this.__repo.commit();
         } catch (error) {
+            console.log(error);
             this.__repo.rollback();
         }
     }
