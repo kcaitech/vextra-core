@@ -91,14 +91,14 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         }
     })(data['windingRule']);
 
-    const blur: Blur = ((d) => {
-        return new Blur(
-            false,
-            new Point2D(0, 0), // {x: 0, y: 0},
-            0,
-            BlurType.Gaussian
-        );
-    })(data['blur']);
+    // const blur: Blur = ((d) => {
+    //     return new Blur(
+    //         false,
+    //         new Point2D(0, 0), // {x: 0, y: 0},
+    //         0,
+    //         BlurType.Gaussian
+    //     );
+    // })(data['blur']);
 
     const borderOptions: BorderOptions = ((d: IJSON) => {
         return new BorderOptions(
@@ -155,9 +155,10 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             }
             return bs
         })(data['borderOptions'].dashPattern);
-        const border = new Border(uuid(), isEnabled, fillType, color, contextSettings, position, thickness, borderStyle);
-        border.gradient = gradient;
 
+        const border = new Border(uuid(), isEnabled, fillType, color, position, thickness, borderStyle);
+        border.gradient = gradient;
+        border.contextSettings = contextSettings;
         return border;
     });
     const getMarkerType = (st: number): MarkerType => {
@@ -210,24 +211,25 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             imageRef = ref.substring(ref.indexOf('/') + 1);
         }
 
-        const fill = new Fill(uuid(), isEnabled, fillType, color, contextSettings);
+        const fill = new Fill(uuid(), isEnabled, fillType, color);
         fill.gradient = gradient;
         fill.imageRef = imageRef;
+        fill.contextSettings = contextSettings;
         fill.setImageMgr(ctx.mediasMgr);
         return fill;
     });
-    const style: Style = new Style(//shape, 
-        miterLimit,
-        windingRule,
-        blur,
-        borderOptions,
+
+    const style: Style = new Style(
         new BasicArray<Border>(...borders),
-        contextSettings,
-        new BasicArray<Fill>(...fills),
-        new BasicArray<Shadow>(),
-        new BasicArray<Shadow>(),
-        startMarkerType,
-        endMarkerType);
-    // return makePair(style, gradients);
+        new BasicArray<Fill>(...fills));
+    style.startMarkerType = startMarkerType;
+    style.endMarkerType = endMarkerType;
+
+    style.miterLimit = miterLimit;
+    style.windingRule = windingRule;
+    // style.blur = blur;
+    style.borderOptions = borderOptions;
+    style.contextSettings = contextSettings;
+
     return style;
 }

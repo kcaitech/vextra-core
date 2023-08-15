@@ -4,7 +4,9 @@ import { render as borderR } from "./border";
 import { render as clippathR } from "./clippath"
 
 export function render(h: Function, shape: ImageShape, url: string, reflush?: number) {
-    if (!shape.isVisible) return;
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const frame = shape.frame;
 
     const path = shape.getPath().toString();
@@ -24,9 +26,14 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
     childs.push(img);
 
     // border
-    childs.push(...borderR(h, shape.style, frame, path));
+    childs.push(...borderR(h, shape.style.borders, frame, path));
 
     const props: any = {}
+    const contextSettings = shape.style.contextSettings;
+    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+        props.opacity = contextSettings.opacity;
+    }
+
     props.width = frame.width;
     props.height = frame.height;
     if (!shape.isNoTransform()) {

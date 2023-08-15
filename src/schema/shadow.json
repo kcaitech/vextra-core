@@ -1,0 +1,41 @@
+{
+    "description": "shadow",
+    "type": "object",
+    "properties": {
+        "isEnabled": {
+            "type": "boolean",
+            "default": false
+        },
+        "blurRadius": {
+            "type": "number",
+            "default": 0
+        },
+        "color": {
+            "$ref": "./color.json"
+        },
+        "contextSettings": {
+            "$ref": "./graphics-context-settings.json"
+        },
+        "offsetX": {
+            "type": "number",
+            "default": 0
+        },
+        "offsetY": {
+            "type": "number",
+            "default": 0
+        },
+        "spread": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "isEnabled",
+        "blurRadius",
+        "color",
+        "offsetX",
+        "offsetY",
+        "spread"
+    ],
+    "additionalProperties": false
+}

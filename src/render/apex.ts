@@ -6,7 +6,7 @@ const apexs: { [key: string]: (h: Function, style: Style, frame: ShapeFrame, bor
 
 apexe[MarkerType.FilledArrow] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -30,7 +30,7 @@ apexe[MarkerType.FilledArrow] = function (h: Function, style: Style, frame: Shap
 }
 apexe[MarkerType.OpenArrow] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -57,7 +57,7 @@ apexe[MarkerType.OpenArrow] = function (h: Function, style: Style, frame: ShapeF
 }
 apexe[MarkerType.FilledCircle] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -82,7 +82,7 @@ apexe[MarkerType.FilledCircle] = function (h: Function, style: Style, frame: Sha
 }
 apexe[MarkerType.FilledSquare] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -106,7 +106,7 @@ apexe[MarkerType.FilledSquare] = function (h: Function, style: Style, frame: Sha
 }
 apexe[MarkerType.Round] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -131,7 +131,7 @@ apexe[MarkerType.Round] = function (h: Function, style: Style, frame: ShapeFrame
 }
 apexe[MarkerType.Square] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -156,7 +156,7 @@ apexe[MarkerType.Square] = function (h: Function, style: Style, frame: ShapeFram
 }
 apexs[MarkerType.FilledArrow] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -178,7 +178,7 @@ apexs[MarkerType.FilledArrow] = function (h: Function, style: Style, frame: Shap
 }
 apexs[MarkerType.OpenArrow] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -203,7 +203,7 @@ apexs[MarkerType.OpenArrow] = function (h: Function, style: Style, frame: ShapeF
 }
 apexs[MarkerType.FilledCircle] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -226,7 +226,7 @@ apexs[MarkerType.FilledCircle] = function (h: Function, style: Style, frame: Sha
 }
 apexs[MarkerType.FilledSquare] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -248,7 +248,7 @@ apexs[MarkerType.FilledSquare] = function (h: Function, style: Style, frame: Sha
 }
 apexs[MarkerType.Round] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
@@ -272,7 +272,7 @@ apexs[MarkerType.Round] = function (h: Function, style: Style, frame: ShapeFrame
 }
 apexs[MarkerType.Square] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;
-    const opacity = style.contextSettings.opacity;
+    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',

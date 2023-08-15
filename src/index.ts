@@ -6,7 +6,7 @@ export * from "./basic/pal"
 export * from "./data/basic"
 export * from "./data/classes"
 export * from "./data/transact"
-export * from "./data/model"
+export * from "./data/consts"
 
 // io
 export * from "./io"
@@ -22,6 +22,7 @@ export * from "./editor/document"
 export * from "./editor/page"
 export * from "./editor/shape"
 export * from "./editor/textshape"
+export * from "./editor/table"
 export * from "./editor/controller"
 
 export * from "./service/shapedirlist"

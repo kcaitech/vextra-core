@@ -48,6 +48,10 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.style = style
     }
 
+    get childsVisible(): boolean {
+        return false;
+    }
+
     getPath(fixedRadius?: number): Path {
         return new Path();
     }
@@ -215,6 +219,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
         (childs as any).typeId = "childs";
     }
 
+    get childsVisible(): boolean {
+        return true;
+    }
+
     removeChild(shape: Shape): boolean {
         const idx = this.indexOfChild(shape);
         if (idx >= 0) {
@@ -279,26 +287,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
     }
 }
 
+/**
+ * @deprecated
+ */
 export class FlattenShape extends GroupShape implements classes.FlattenShape {
-    typeId = 'group-shape'; // 转为groupshape
-    constructor(
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
-    ) {
-        super(
-            id,
-            name,
-            type,
-            frame,
-            style,
-            childs
-        )
-        this.isBoolOpShape = true; // io 时这个是延后设置的，所以无效
-    }
 }
 
 export class PathShape extends Shape implements classes.PathShape {
@@ -356,7 +348,7 @@ export class PathShape extends Shape implements classes.PathShape {
 
 export class PathShape2 extends Shape implements classes.PathShape2 {
     typeId = 'path-shape2'
-    pathsegs: BasicArray<PathSegment >
+    pathsegs: BasicArray<PathSegment>
     fixedRadius?: number
     constructor(
         id: string,
@@ -364,7 +356,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        pathsegs: BasicArray<PathSegment >
+        pathsegs: BasicArray<PathSegment>
     ) {
         super(
             id,
@@ -473,18 +465,6 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         )
         this.imageRef = imageRef
         this.isClosed = true;
-        if (points.length === 0) { // 兼容旧数据
-            // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
-            const id1 = "b259921b-4eba-461d-afc3-c4c58c1fa337"
-            const id2 = "62ea3ee3-3378-4602-a918-7e05f426bb8e"
-            const id3 = "1519da3c-c692-4e1d-beb4-01a85cc56738"
-            const id4 = "e857f541-4e7f-491b-96e6-2ca38f1d4c09"
-            const p1 = new CurvePoint(id1, 0, new classes.Point2D(0, 0), new classes.Point2D(0, 0), false, false, classes.CurveMode.Straight, new classes.Point2D(0, 0)); // lt
-            const p2 = new CurvePoint(id2, 0, new classes.Point2D(1, 0), new classes.Point2D(1, 0), false, false, classes.CurveMode.Straight, new classes.Point2D(1, 0)); // rt
-            const p3 = new CurvePoint(id3, 0, new classes.Point2D(1, 1), new classes.Point2D(1, 1), false, false, classes.CurveMode.Straight, new classes.Point2D(1, 1)); // rb
-            const p4 = new CurvePoint(id4, 0, new classes.Point2D(0, 1), new classes.Point2D(0, 1), false, false, classes.CurveMode.Straight, new classes.Point2D(0, 1)); // lb
-            points.push(p1, p2, p3, p4);
-        }
     }
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
@@ -494,7 +474,9 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     }
     // image shape
     async loadImage(): Promise<string> {
+        console.log('__cacheData', this.__cacheData);
         if (this.__cacheData) return this.__cacheData.base64;
+        console.log('this.__imageMgr', this.__imageMgr);
         this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
         return this.__cacheData && this.__cacheData.base64 || "";
     }

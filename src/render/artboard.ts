@@ -5,7 +5,9 @@ import { Artboard, ShapeType, Color } from '../data/classes';
 const defaultColor = Color.DefaultColor;
 // artboard单独一个svg节点，需要设置overflow
 export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any>, reflush?: number) {
-    if (!shape.isVisible) return;
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const ab_props: any = {
         version: "1.1",
         xmlns: "http://www.w3.org/2000/svg",
@@ -15,6 +17,12 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
         reflush,
         overflow: "hidden"
     }
+
+    const contextSettings = shape.style.contextSettings;
+    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+        ab_props.opacity = contextSettings.opacity;
+    }
+
     const childs = [];
     const frame = shape.frame;
     ab_props.width = frame.width, ab_props.height = frame.height;
@@ -39,7 +47,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
             props.transform = `translate(${frame.x},${frame.y})`;
             const path = shape.getPath().toString();
             ab_props.x = 0, ab_props.y = 0;
-            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style, frame, path)]);
+            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
         } else {
             ab_props.x = frame.x, ab_props.y = frame.y;
             return h('svg', ab_props, childs);
@@ -59,7 +67,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
         ab_props.x = 0, ab_props.y = 0;
         if (b_len) {
             const path = shape.getPath().toString();
-            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style, frame, path)], h('use', { 'xlink:href': '#arrow1' }));
+            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
         } else {
             return h("g", props, [h('svg', ab_props, childs)]);
         }

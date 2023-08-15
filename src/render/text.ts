@@ -1,9 +1,11 @@
 
 
 import { DefaultColor, isColorEqual } from "./basic";
-import { TextShape, Path, Color  } from '../data/classes';
-import { GraphArray } from "../data/textlayout";
+import { TextShape, Path, Color } from '../data/classes';
+import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
+import { render as fillR } from "./fill";
+import { render as borderR } from "./border";
 
 
 function toRGBA(color: Color): string {
@@ -101,12 +103,11 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
     }
 }
 
-export function render(h: Function, shape: TextShape, reflush?: number) {
-    if (!shape.isVisible) return null;
-    const { yOffset, paras } = shape.getLayout();
-    const pc = paras.length;
+export function renderTextLayout(h: Function, textlayout: TextLayout) {
+    const childs = [];
 
-    const childs = []
+    const { yOffset, paras } = textlayout;
+    const pc = paras.length;
     for (let i = 0; i < pc; i++) {
         const lines = paras[i];
 
@@ -185,10 +186,31 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
             renderDecorateLines(h, line.x, underlineY, underlines, childs);
         }
     }
+    return childs;
+}
 
+export function render(h: Function, shape: TextShape, reflush?: number) {
+    if (!shape.isVisible) return null;
+
+    const childs = []
     const frame = shape.frame;
+    const path = shape.getPath().toString();
+    // fill
+    childs.push(...fillR(h, shape.style.fills, frame, path));
+
+    // text
+    childs.push(...renderTextLayout(h, shape.getLayout()));
+
+    // border
+    childs.push(...borderR(h, shape.style.borders, frame, path));
+
     const props: any = {}
     if (reflush) props.reflush = reflush;
+
+    const contextSettings = shape.style.contextSettings;
+    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+        props.opacity = contextSettings.opacity;
+    }
 
     if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
         const cx = frame.x + frame.width / 2;
@@ -207,7 +229,6 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
 
     return h('g', props, childs);
 }
-
 
 //
 // for test text path

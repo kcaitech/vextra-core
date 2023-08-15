@@ -7,19 +7,26 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     //     // todo 只画selection
     //     return;
     // }
-    if (!shape.isVisible) return;
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const frame = shape.frame;
     const childs = [];
     const path = shape.getPath().toString();
     // fill
-    childs.push(...fillR(h, shape.style, frame, path));
+    childs.push(...fillR(h, shape.style.fills, frame, path));
     // border
-    childs.push(...borderR(h, shape.style, frame, path));
+    childs.push(...borderR(h, shape.style.borders, frame, path));
 
 
     const props: any = {}
     if (reflush) {
         props.reflush = reflush;
+    }
+
+    const contextSettings = shape.style.contextSettings;
+    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+        props.opacity = contextSettings.opacity;
     }
 
     if (shape.isNoTransform()) {

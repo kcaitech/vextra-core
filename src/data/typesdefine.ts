@@ -57,19 +57,25 @@ export enum TextBehaviour {
     Fixed = 'fixed',
     FixWidthAndHeight = 'fixWidthAndHeight',
 }
+/* table cell types */
+export enum TableCellType {
+    None = 'none',
+    Text = 'text',
+    Image = 'image',
+}
 /* style */
 export type Style = {
     typeId: string
-    miterLimit: number
-    windingRule: WindingRule
-    blur: Blur
-    borderOptions: BorderOptions
+    miterLimit?: number
+    windingRule?: WindingRule
+    blur?: Blur
+    borderOptions?: BorderOptions
     borders: Border[]
     colorControls?: ColorControls
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     fills: Fill[]
-    innerShadows: Shadow[]
-    shadows: Shadow[]
+    innerShadows?: Shadow[]
+    shadows?: Shadow[]
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
 }
@@ -159,7 +165,7 @@ export type Shadow = {
     isEnabled: boolean
     blurRadius: number
     color: Color
-    contextSettings: GraphicsContextSettings
+    contextSettings?: GraphicsContextSettings
     offsetX: number
     offsetY: number
     spread: number
@@ -245,7 +251,7 @@ export type Fill = {
     isEnabled: boolean
     fillType: FillType
     color: Color
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
 }
@@ -385,7 +391,7 @@ export type Border = {
     isEnabled: boolean
     fillType: FillType
     color: Color
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     position: BorderPosition
     thickness: number
     gradient?: Gradient
@@ -460,10 +466,16 @@ export type TextShape = Shape & {
 /* table shape */
 export type TableShape = Shape & {
     childs: TableCell[]
+    rowHeights: number[]
+    colWidths: number[]
 }
 /* table cell */
 export type TableCell = Shape & {
-    child?: (ImageShape | TextShape)
+    cellType?: TableCellType
+    text?: Text
+    imageRef?: string
+    rowSpan?: number
+    colSpan?: number
 }
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {

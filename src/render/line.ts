@@ -2,10 +2,18 @@ import { Shape } from "../data/classes";
 import { render as renderB } from "./line_borders";
 
 export function render(h: Function, shape: Shape, reflush?: number) {
-    if (!shape.isVisible) return;
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const frame = shape.frame;
     const props: any = {}
     if (reflush) props.reflush = reflush;
+
+    const contextSettings = shape.style.contextSettings;
+    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+        props.opacity = contextSettings.opacity;
+    }
+
     if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
         const cx = frame.x + frame.width / 2;
         const cy = frame.y + frame.height / 2;

@@ -70,11 +70,11 @@ handler['$ref'] = function (schema: any, className: string, attrname: string, le
     className = schema.className ?? className
     filename = schema.filename ?? filename
     if (schema == '#') {
-        return 'export' + className + '(' + attrname + ', ctx)'
+        return '(adaptor.export' + className + ' || export' +  className + ')(' + attrname + ', ctx)'
     }
     else if (schema.endsWith(schemaext)) {
         className = fileName2TypeName(extractRefFileName(schema))
-        return 'export' + className + '(' + attrname + ', ctx)'
+        return '(adaptor.export' + className + ' || export' +  className + ')(' + attrname + ', ctx)'
     }
     else {
         throw new Error('unknow schema : ' + schema)
@@ -155,7 +155,7 @@ ${indent(level)}    }`
         if (typename) {
             ret += `
 ${indent(level)}    if (${attrname}.typeId == '${filename}') {
-${indent(level)}        return export${typename}(${attrname} as types.${typename}, ctx)
+${indent(level)}        return (adaptor.export${typename} || export${typename})(${attrname} as types.${typename}, ctx)
 ${indent(level)}    }`
         }
     }
@@ -257,7 +257,7 @@ function exportTypes(schema: any, className: string, attrname: string, level: nu
         ret += indent(level + 1) + 'const ret = {\n'
         ret += handler['object'](schema, className, 'source', level + 1, filename, allschemas)
         ret += indent(level + 1) + '}\n'
-        ret += indent(level + 1) + 'if (ctx) ctx.afterExport(source)\n'
+        // ret += indent(level + 1) + 'if (ctx) ctx.afterExport(source)\n'
         ret += indent(level + 1) + 'return ret\n'
     }
     ret += indent(level) + '}'
@@ -265,7 +265,7 @@ function exportTypes(schema: any, className: string, attrname: string, level: nu
     return ret;
 }
 
-export function genexport(schemadir: string, outfile: string, typedefs: string) {
+export function genexport(schemadir: string, outfile: string, typedefs: string, adaptor: string) {
     handler.schemadir = schemadir;
     const all = loadSchemas(schemadir);
     const order = orderSchemas(all);
@@ -273,12 +273,14 @@ export function genexport(schemadir: string, outfile: string, typedefs: string) 
 
     if (fs.existsSync(outfile)) fs.rmSync(outfile)
     fs.appendFileSync(outfile, headTips);
+    fs.appendFileSync(outfile, `import * as adaptor from "${adaptor}"\n`);
     fs.appendFileSync(outfile, `import * as types from "${typedefs}"\n\n`);
 
     fs.appendFileSync(outfile,
         `
 export interface IExportContext {
-    afterExport(obj: any): void
+    symbols?:Set<string>
+    medias?:Set<string>
 }
 `
     )

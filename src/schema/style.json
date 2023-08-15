@@ -58,15 +58,8 @@
     },
     "required": [
         "typeId",
-        "miterLimit",
-        "windingRule",
-        "blur",
-        "borderOptions",
         "borders",
-        "contextSettings",
-        "fills",
-        "innerShadows",
-        "shadows"
+        "fills"
     ],
     "additionalProperties": false
 }

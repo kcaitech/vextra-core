@@ -2,7 +2,8 @@ import { DirTree, Iter, Node } from "./dirtree";
 
 export interface DirItem {
     id: string,
-    childs?: DirItem[]
+    childs?: DirItem[],
+    childsVisible: boolean,
 }
 
 class NodeData<T extends DirItem> {
@@ -132,7 +133,7 @@ export class FoldDirTree<T extends DirItem> {
 
     private __unfold(node: NodeType<T>, data: T): boolean {
         const childs = node.__data.data.childs as T[] | undefined;
-        if (!childs) return false;
+        if (!childs || !node.__data.data.childsVisible) return false;
         const arr = childs.map((c) => new NodeData(c))
         if (this.__revertChilds) arr.reverse()
         const ret = this.__dirtree.insertArr(node, 0, arr);

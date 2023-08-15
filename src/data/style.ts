@@ -57,7 +57,7 @@ export class Border extends Basic implements classes.Border {
     isEnabled: boolean
     fillType: FillType
     color: Color
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     position: BorderPosition
     thickness: number
     gradient?: Gradient
@@ -67,7 +67,6 @@ export class Border extends Basic implements classes.Border {
         isEnabled: boolean,
         fillType: FillType,
         color: Color,
-        contextSettings: ContextSettings,
         position: BorderPosition,
         thickness: number,
         borderStyle: BorderStyle,
@@ -77,7 +76,6 @@ export class Border extends Basic implements classes.Border {
         this.isEnabled = isEnabled
         this.fillType = fillType
         this.color = color
-        this.contextSettings = contextSettings
         this.position = position
         this.thickness = thickness
         this.borderStyle = borderStyle
@@ -90,7 +88,7 @@ export class Fill extends Basic implements classes.Fill {
     isEnabled: boolean
     fillType: FillType
     color: Color
-    contextSettings: ContextSettings
+    contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
 
@@ -101,15 +99,13 @@ export class Fill extends Basic implements classes.Fill {
         id: string,
         isEnabled: boolean,
         fillType: FillType,
-        color: Color,
-        contextSettings: ContextSettings
+        color: Color
     ) {
         super()
         this.id = id
         this.isEnabled = isEnabled
         this.fillType = fillType
         this.color = color
-        this.contextSettings = contextSettings
     }
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
@@ -127,44 +123,29 @@ export class Fill extends Basic implements classes.Fill {
 }
 
 export class Style extends Basic implements classes.Style {
+
+    static DefaultWindingRule = WindingRule.EvenOdd;
+
     typeId = 'style'
-    miterLimit: number
-    windingRule: WindingRule
-    blur: Blur
-    borderOptions: BorderOptions
-    borders: BasicArray<Border>
+    miterLimit?: number
+    windingRule?: WindingRule
+    blur?: Blur
+    borderOptions?: BorderOptions
+    borders: BasicArray<Border >
     colorControls?: ColorControls
-    contextSettings: ContextSettings
-    fills: BasicArray<Fill>
-    innerShadows: BasicArray<Shadow>
-    shadows: BasicArray<Shadow>
-    startMarkerType: MarkerType | undefined
-    endMarkerType: MarkerType | undefined
+    contextSettings?: ContextSettings
+    fills: BasicArray<Fill >
+    innerShadows?: BasicArray<Shadow >
+    shadows?: BasicArray<Shadow >
+    startMarkerType?: MarkerType
+    endMarkerType?: MarkerType
     constructor(
-        miterLimit: number,
-        windingRule: WindingRule,
-        blur: Blur,
-        borderOptions: BorderOptions,
-        borders: BasicArray<Border>,
-        contextSettings: ContextSettings,
-        fills: BasicArray<Fill>,
-        innerShadows: BasicArray<Shadow>,
-        shadows: BasicArray<Shadow>,
-        startMarkerType?: MarkerType,
-        endMarkerType?: MarkerType
+        borders: BasicArray<Border >,
+        fills: BasicArray<Fill >
     ) {
         super()
-        this.miterLimit = miterLimit
-        this.windingRule = windingRule
-        this.blur = blur
-        this.borderOptions = borderOptions
         this.borders = borders
-        this.contextSettings = contextSettings
         this.fills = fills
-        this.innerShadows = innerShadows
-        this.shadows = shadows
-        this.startMarkerType = startMarkerType
-        this.endMarkerType = endMarkerType
         borders.setTypeId("borders");
         fills.setTypeId("fills");
     }

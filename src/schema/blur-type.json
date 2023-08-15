@@ -1,0 +1,10 @@
+{
+    "description": "blur types",
+    "enum": [
+        "gaussian",
+        "motion",
+        "zoom",
+        "background"
+    ],
+    "default": "gaussian"
+}

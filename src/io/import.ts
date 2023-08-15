@@ -1,10 +1,8 @@
-import {Artboard} from "../data/artboard";
-import {Page} from "../data/page";
-import {FlattenShape, ImageShape, SymbolRefShape, SymbolShape, TextShape} from "../data/shape";
-import {IImportContext, importDocumentMeta, importDocumentSyms, importPage} from "./baseimport";
+import { Page } from "../data/page";
+import { IImportContext, importDocumentMeta, importDocumentSyms, importPage } from "./baseimport";
 import * as types from "../data/typesdefine"
-import {IDataGuard} from "../data/basic";
-import {Document, DocumentMeta, DocumentSyms} from "../data/document";
+import { IDataGuard } from "../data/basic";
+import { Document, DocumentMeta, DocumentSyms } from "../data/document";
 import * as storage from "./storage";
 import {base64Encode, base64ToDataUrl} from "../basic/utils";
 import {Fill} from "../data/style";
@@ -14,7 +12,7 @@ interface IJSON {
 }
 
 interface IDataLoader {
-    loadDocumentMeta(ctx: IImportContext, id: string): Promise<DocumentMeta>
+    loadDocumentMeta(id: string): Promise<DocumentMeta>
 
     loadDocumentSyms(ctx: IImportContext, id: string): Promise<DocumentSyms[]>
 
@@ -58,9 +56,9 @@ export class DataLoader implements IDataLoader {
         this.documentPath = documentPath;
     }
 
-    async loadDocumentMeta(ctx: IImportContext, versionId?: string): Promise<DocumentMeta> {
+    async loadDocumentMeta(versionId?: string): Promise<DocumentMeta> {
         const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/document-meta.json`, versionId)
-        return importDocumentMeta(json as types.DocumentMeta, ctx)
+        return importDocumentMeta(json as types.DocumentMeta, undefined)
     }
 
     async loadDocumentSyms(ctx: IImportContext, id: string, versionId?: string): Promise<DocumentSyms[]> {
@@ -112,38 +110,19 @@ export class DataLoader implements IDataLoader {
         } else {
             console.log('imageExt', ext);
         }
-        return {buff: buffer, base64: url}
+        return { buff: buffer, base64: url }
     }
 }
 
 export async function importDocument(storage: storage.IStorage, documentPath: string, fid: string, versionId: string, gurad: IDataGuard) {
     const loader = new DataLoader(storage, documentPath);
 
-    const meta = await loader.loadDocumentMeta(new class implements IImportContext {
-        afterImport(obj: any): void {
-            // throw new Error("Method not implemented.");
-        }
-    }, versionId);
+
+    const meta = await loader.loadDocumentMeta(versionId);
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
 
     const document = new Document(meta.id, versionId ?? "", meta.lastCmdId, meta.name, meta.pagesList, gurad);
-    const ctx = new class implements IImportContext {
-        afterImport(obj: any): void {
-            if (obj instanceof ImageShape || obj instanceof Fill) {
-                obj.setImageMgr(document.mediasMgr)
-            } else if (obj instanceof SymbolRefShape) {
-                obj.setSymbolMgr(document.symbolsMgr)
-                // } else if (obj instanceof ArtboardRef) {
-                //     obj.setArtboardMgr(document.artboardMgr)
-            } else if (obj instanceof Artboard) {
-                document.artboardMgr.add(obj.id, obj);
-            } else if (obj instanceof SymbolShape) {
-                document.symbolsMgr.add(obj.id, obj);
-            } else if (obj instanceof FlattenShape) {
-                obj.isBoolOpShape = true;
-            }
-        }
-    }
+    const ctx: IImportContext = new class implements IImportContext { document: Document = document };
 
     // const document_syms = new ResourceMgr<DocumentSyms[]>();
     // document_syms.setLoader((id: string) => loader.loadDocumentSyms(ctx, ""));

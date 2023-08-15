@@ -1,9 +1,9 @@
-import { BoolOp, FlattenShape, GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, Watchable } from "./basic";
 import { Artboard } from "./artboard";
-import { TableCell, TableShape } from "./table";
+import { TableCell } from "./classes";
 class PageCollectNotify extends Watchable(Object) {
     constructor() {
         super();
@@ -21,7 +21,7 @@ export class Page extends GroupShape implements classes.Page {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
+        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
     ) {
         super(
             id,
@@ -42,7 +42,7 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Artboard) {
             this.artboards.set(shape.id, shape as Artboard);
         }
-        if (recursive && (shape instanceof GroupShape || shape instanceof TableShape || shape instanceof TableCell)) {
+        if (recursive && (shape instanceof GroupShape)) {
             const childs = shape.childs;
             childs.forEach((c) => this.onAddShape(c))
         }
@@ -52,7 +52,7 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Artboard) {
             this.artboards.delete(shape.id);
         }
-        if (recursive && (shape instanceof GroupShape || shape instanceof TableShape || shape instanceof TableCell)) {
+        if (recursive && (shape instanceof GroupShape)) {
             const childs = shape.childs;
             childs.forEach((c) => this.onRemoveShape(c))
         }
@@ -84,11 +84,11 @@ export class Page extends GroupShape implements classes.Page {
 
         while (stack.length > 0) {
             const shape = stack.pop();
-            if (shape instanceof GroupShape || shape instanceof TableShape || shape instanceof TableCell) {
+            if (shape instanceof GroupShape) {
                 stack.push(...shape.childs);
             }
-            else if (shape instanceof TextShape) {
-                shape.text.getUsedFontNames(ret);
+            else if (shape instanceof TextShape || shape instanceof TableCell) {
+                if (shape.text) shape.text.getUsedFontNames(ret);
             }
         }
 

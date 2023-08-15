@@ -18,7 +18,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
     const fillType = border.fillType;
     if (fillType === FillType.SolidColor) {
         const color = border.color;
-        const opacity = style.contextSettings.opacity;
+        const opacity = style.contextSettings?.opacity || 1;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     }
     if (endMarkerType !== MarkerType.Line || startMarkerType !== MarkerType.Line) {
