@@ -706,8 +706,11 @@ export class PageEditor {
                 const s = shapes[i];
                 if (s.type === ShapeType.Line) {
                     const f = s.frame, m2p = s.matrix2Parent(), lt = m2p.computeCoord2(0, 0), rb = m2p.computeCoord2(f.width, f.height);
-                    const real_r = getHorizontalAngle(lt, rb);
-                    api.shapeModifyRotate(this.__page, s, v - Number(real_r.toFixed(2)));
+                    const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
+                    let dr = v - real_r;
+                    if (s.isFlippedHorizontal) dr = -dr;
+                    if (s.isFlippedVertical) dr = -dr;
+                    api.shapeModifyRotate(this.__page, s, (s.rotation || 0) + dr);
                 } else {
                     api.shapeModifyRotate(this.__page, s, v);
                 }
