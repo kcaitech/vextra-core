@@ -22,7 +22,7 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
                 const path = cellLayout.cell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();
                 const child = cellLayout.cell;
-                const fill = fillR(h, child.style, cellLayout.frame, pathstr);
+                const fill = fillR(h, child.style.fills, cellLayout.frame, pathstr);
                 nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, fill));
 
                 // content
@@ -32,7 +32,7 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
     }
 
     // border
-    nodes.push(...borderR(h, shape.style, frame, path));
+    nodes.push(...borderR(h, shape.style.borders, frame, path));
     for (let i = 0, len = layout.grid.length; i < len; ++i) {
         const row = layout.grid[i];
         for (let j = 0, len = row.length; j < len; ++j) {
@@ -42,8 +42,8 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
                 const pathstr = path.toString();
                 const child = cellLayout.cell;
                 const style = child.style.borders.length > 0 ? child.style : shape.style;
-                const fill = borderR(h, style, cellLayout.frame, pathstr)
-                nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, fill));
+                const border = borderR(h, style.borders, cellLayout.frame, pathstr)
+                nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));
             }
         }
     }

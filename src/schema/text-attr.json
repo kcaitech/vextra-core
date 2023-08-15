@@ -1,0 +1,25 @@
+{
+    "description": "text attr",
+    "type": "object",
+    "properties": {
+        "verAlign": {
+            "$ref": "./text-ver-align.json"
+        },
+        "orientation": {
+            "$ref": "./text-orientation.json"
+        },
+        "textBehaviour": {
+            "$ref": "./text-behaviour.json"
+        },
+        "padding": {
+            "$ref": "./padding.json"
+        }
+    },
+    "required": [],
+    "additionalProperties": false,
+    "allOf": [
+        {
+            "$ref": "./para-attr.json"
+        }
+    ]
+}

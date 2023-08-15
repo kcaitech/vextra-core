@@ -4,6 +4,8 @@ import { DefaultColor, isColorEqual } from "./basic";
 import { TextShape, Path, Color } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
+import { render as fillR } from "./fill";
+import { render as borderR } from "./border";
 
 
 function toRGBA(color: Color): string {
@@ -101,16 +103,17 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
     }
 }
 
-export function renderTextLayout(h: Function, layout: TextLayout) {
-    const { yOffset, paras } = layout;
-    const pc = paras.length;
+export function renderTextLayout(h: Function, textlayout: TextLayout) {
+    const childs = [];
 
-    const childs = []
+    const { xOffset, yOffset, paras } = textlayout;
+    const pc = paras.length;
     for (let i = 0; i < pc; i++) {
         const lines = paras[i];
 
         for (let lineIndex = 0, lineCount = lines.length; lineIndex < lineCount; lineIndex++) {
             const line = lines[lineIndex];
+            const lineX = line.x + xOffset;
             const lineY = yOffset + lines.yOffset + line.y;
             // 收集下划线、删除线、高亮
             let preUnderlineGIdx = Number.NEGATIVE_INFINITY;
@@ -134,7 +137,7 @@ export function renderTextLayout(h: Function, layout: TextLayout) {
                         continue;
                     }
                     gText.push(graph.char);
-                    gX.push(graph.x + line.x);
+                    gX.push(graph.x + lineX);
                 }
 
                 const span = garr.attr;
@@ -173,29 +176,42 @@ export function renderTextLayout(h: Function, layout: TextLayout) {
                 }
             }
             // 高亮
-            renderDecorateRects(h, line.x, lineY, line.lineHeight, hightlights, childs);
+            renderDecorateRects(h, lineX, lineY, line.lineHeight, hightlights, childs);
 
             childs.push(...linechilds);
 
             // 下划线、删除线
             const strikethroughY = lineY + (line.lineHeight) / 2;
             const underlineY = lineY + line.lineHeight;
-            renderDecorateLines(h, line.x, strikethroughY, strikethrouths, childs);
-            renderDecorateLines(h, line.x, underlineY, underlines, childs);
+            renderDecorateLines(h, lineX, strikethroughY, strikethrouths, childs);
+            renderDecorateLines(h, lineX, underlineY, underlines, childs);
         }
     }
     return childs;
 }
 
 export function render(h: Function, shape: TextShape, reflush?: number) {
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+    if (!shape.isVisible) return null;
 
-    const childs = renderTextLayout(h, shape.getLayout());
-
+    const childs = []
     const frame = shape.frame;
+    const path = shape.getPath().toString();
+    // fill
+    childs.push(...fillR(h, shape.style.fills, frame, path));
+
+    // text
+    childs.push(...renderTextLayout(h, shape.getLayout()));
+
+    // border
+    childs.push(...borderR(h, shape.style.borders, frame, path));
+
     const props: any = {}
     if (reflush) props.reflush = reflush;
+
+    const contextSettings = shape.style.contextSettings;
+    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+        props.opacity = contextSettings.opacity;
+    }
 
     if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
         const cx = frame.x + frame.width / 2;
@@ -214,7 +230,6 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
 
     return h('g', props, childs);
 }
-
 
 //
 // for test text path

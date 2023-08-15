@@ -109,18 +109,12 @@ export function render(h: Function, shape: GroupShape, reflush?: number, consume
 
     // fill
     if (shape.style.fills.length > 0) {
-        childs.push(...fillR(h, shape.style, frame, pathstr));
-    // } else if (shape.childs[0]) {
-    //     const child0 = shape.childs[0];
-    //     childs.push(...fillR(h, findUsableFillStyle(child0), frame, pathstr));
+        childs.push(...fillR(h, shape.style.fills, frame, pathstr));
     }
 
     // border
     if (shape.style.borders.length > 0) {
-        childs.push(...borderR(h, shape.style, frame, pathstr));
-    // } else if (shape.childs[0]) {
-    //     const child0 = shape.childs[0];
-    //     childs.push(...borderR(h, findUsableBorderStyle(child0), frame, pathstr));
+        childs.push(...borderR(h, shape.style.borders, frame, pathstr));
     }
 
     // ----------------------------------------------------------
@@ -128,6 +122,11 @@ export function render(h: Function, shape: GroupShape, reflush?: number, consume
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
+
+    const contextSettings = shape.style.contextSettings;
+    if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+        props.opacity = contextSettings.opacity;
+    }
 
     if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
         const cx = frame.x + frame.width / 2;

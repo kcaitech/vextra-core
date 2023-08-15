@@ -249,6 +249,16 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
     if (source.versionId !== undefined) ret.versionId = source.versionId
     return ret
 }
+/* padding */
+export function importPadding(source: types.Padding, ctx?: IImportContext): impl.Padding {
+    const ret: impl.Padding = new impl.Padding (
+    )
+    if (source.left !== undefined) ret.left = source.left
+    if (source.top !== undefined) ret.top = source.top
+    if (source.right !== undefined) ret.right = source.right
+    if (source.bottom !== undefined) ret.bottom = source.bottom
+    return ret
+}
 /* override list item */
 export function importOverrideItem(source: types.OverrideItem, ctx?: IImportContext): impl.OverrideItem {
     const ret: impl.OverrideItem = new impl.OverrideItem (
@@ -868,6 +878,7 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     if (source.verAlign !== undefined) ret.verAlign = (adaptor.importTextVerAlign || importTextVerAlign)(source.verAlign, ctx)
     if (source.orientation !== undefined) ret.orientation = (adaptor.importTextOrientation || importTextOrientation)(source.orientation, ctx)
     if (source.textBehaviour !== undefined) ret.textBehaviour = (adaptor.importTextBehaviour || importTextBehaviour)(source.textBehaviour, ctx)
+    if (source.padding !== undefined) ret.padding = (adaptor.importPadding || importPadding)(source.padding, ctx)
     return ret
 }
 /* page */

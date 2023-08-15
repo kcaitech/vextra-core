@@ -4,10 +4,10 @@ import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
 import { Shape, Border, Gradient, BorderPosition, FillType, GradientType, Style, ShapeFrame } from "../data/classes";
 
-const handler: { [key: string]: (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string) => any } = {};
-const angularHandler: { [key: string]: (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string) => any } = {};
+const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
+const angularHandler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
 
-angularHandler[BorderPosition.Inner] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
+angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
     const clipId = "clippath-border" + objectId(border);
     const maskId = "mask-border" + objectId(border);
     // const frame = shape.frame;
@@ -53,7 +53,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, style: Style, fram
     ]);
 }
 
-angularHandler[BorderPosition.Center] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
+angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
     const maskId = "mask-border" + objectId(border);
     // const frame = shape.frame;
     const thickness = border.thickness;
@@ -90,7 +90,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, style: Style, fra
     ])
 }
 
-angularHandler[BorderPosition.Outer] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
+angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
     // const frame = shape.frame;
     const thickness = border.thickness;
 
@@ -135,7 +135,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, style: Style, fram
     ]);
 }
 
-handler[BorderPosition.Inner] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
+handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
     const clipId = "clippath-border" + objectId(border);
     // const frame = shape.frame;
     const thickness = border.thickness;
@@ -155,8 +155,7 @@ handler[BorderPosition.Inner] = function (h: Function, style: Style, frame: Shap
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
         const color = border.color;
-        const opacity = style.contextSettings?.opacity ?? 1;
-        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
         body_props.stroke = "url(#" + g_.id + ")";
@@ -176,7 +175,7 @@ handler[BorderPosition.Inner] = function (h: Function, style: Style, frame: Shap
     return h("g", elArr);
 }
 
-handler[BorderPosition.Center] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
+handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
     // const frame = shape.frame;
     const thickness = border.thickness;
     let g_;
@@ -194,8 +193,7 @@ handler[BorderPosition.Center] = function (h: Function, style: Style, frame: Sha
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
         const color = border.color;
-        const opacity = style.contextSettings?.opacity ?? 1;
-        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
         body_props.stroke = "url(#" + g_.id + ")";
@@ -208,7 +206,7 @@ handler[BorderPosition.Center] = function (h: Function, style: Style, frame: Sha
     }
 }
 
-handler[BorderPosition.Outer] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, path: string): any {
+handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
     // const frame = shape.frame;
     const thickness = border.thickness;
 
@@ -225,9 +223,8 @@ handler[BorderPosition.Outer] = function (h: Function, style: Style, frame: Shap
     }
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
-        const opacity = style.contextSettings?.opacity ?? 1;
         const color = border.color;
-        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
         body_props.stroke = "url(#" + g_.id + ")";
@@ -256,14 +253,11 @@ handler[BorderPosition.Outer] = function (h: Function, style: Style, frame: Shap
     return (h("g", elArr));
 }
 
-export function render(h: Function, style: Style, frame: ShapeFrame, path: string): Array<any> {
-    // const style = shape.style;
-    const bc = style.borders.length;
-    // path = path || shape.getPath(true).toString();
-
+export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string): Array<any> {
+    const bc = borders.length;
     const elArr = new Array();
     for (let i = 0; i < bc; i++) {
-        const border: Border = style.borders[i];
+        const border: Border = borders[i];
         if (!border.isEnabled) {
             continue;
         }
@@ -272,9 +266,9 @@ export function render(h: Function, style: Style, frame: ShapeFrame, path: strin
         const gradientType = border.gradient && border.gradient.gradientType;
 
         fillType == FillType.Gradient && gradientType == GradientType.Angular && (() => {
-            elArr.push(angularHandler[position](h, style, frame, border, path));
+            elArr.push(angularHandler[position](h, frame, border, path));
         })() || (fillType == FillType.SolidColor || fillType == FillType.Gradient) && (() => {
-            elArr.push(handler[position](h, style, frame, border, path));
+            elArr.push(handler[position](h, frame, border, path));
         })() || fillType == FillType.Pattern && (() => {
             return true; // todo
         })

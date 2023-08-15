@@ -315,6 +315,20 @@ export class PageListItem extends Basic {
     }
 }
 /**
+ * padding 
+ */
+export class Padding extends Basic {
+    typeId = 'padding'
+    left?: number
+    top?: number
+    right?: number
+    bottom?: number
+    constructor(
+    ) {
+        super()
+    }
+}
+/**
  * override list item 
  */
 export class OverrideItem extends Basic {
@@ -956,6 +970,7 @@ export class TextAttr extends ParaAttr {
     verAlign?: TextVerAlign
     orientation?: TextOrientation
     textBehaviour?: TextBehaviour
+    padding?: Padding
     constructor(
     ) {
         super(

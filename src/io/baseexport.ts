@@ -250,6 +250,16 @@ export function exportPageListItem(source: types.PageListItem, ctx?: IExportCont
     }
     return ret
 }
+/* padding */
+export function exportPadding(source: types.Padding, ctx?: IExportContext): types.Padding {
+    const ret = {
+        left: source.left,
+        top: source.top,
+        right: source.right,
+        bottom: source.bottom,
+    }
+    return ret
+}
 /* override list item */
 export function exportOverrideItem(source: types.OverrideItem, ctx?: IExportContext): types.OverrideItem {
     const ret = {
@@ -880,6 +890,7 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
         verAlign: source.verAlign && (adaptor.exportTextVerAlign || exportTextVerAlign)(source.verAlign, ctx),
         orientation: source.orientation && (adaptor.exportTextOrientation || exportTextOrientation)(source.orientation, ctx),
         textBehaviour: source.textBehaviour && (adaptor.exportTextBehaviour || exportTextBehaviour)(source.textBehaviour, ctx),
+        padding: source.padding && (adaptor.exportPadding || exportPadding)(source.padding, ctx),
     }
     return ret
 }
