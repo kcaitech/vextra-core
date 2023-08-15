@@ -55,6 +55,7 @@ export interface AsyncCreator {
     setFrameByWheel: (point: PageXY) => void;
     collect: (page: Page, shapes: Shape[], target: Artboard) => void;
     close: () => undefined;
+    init_table: (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, row: number, col: number) => Shape | undefined;
 }
 export interface AsyncBaseAction {
     executeRotate: (deg: number) => void;
@@ -92,7 +93,7 @@ export class Controller {
         this.__repo = repo;
         this.__document = document;
     }
-    create(type: ShapeType, name: string, frame: ShapeFrame, ref?: string): Shape {
+    create(type: ShapeType, name: string, frame: ShapeFrame): Shape {
         switch (type) {
             case ShapeType.Artboard: return newArtboard(name, frame);
             case ShapeType.Rectangle: return newRectShape(name, frame);
@@ -103,8 +104,6 @@ export class Controller {
                 shape.frame = frame;
                 return shape;
             }
-            case ShapeType.Image: return newImageShape(name, frame, this.__document.mediasMgr, ref);
-            case ShapeType.Table: return newTable(name, frame, 3, 3, this.__document.mediasMgr);
             default: return newRectShape(name, frame);
         }
     }
@@ -149,7 +148,7 @@ export class Controller {
                 const format = getFormatFromBase64(media.base64);
                 const ref = `${v4()}.${format}`;
                 this.__document.mediasMgr.add(ref, media);
-                const shape = this.create(ShapeType.Image, name, frame, ref);
+                const shape = newImageShape(name, frame, this.__document.mediasMgr, ref);
                 const xy = parent.frame2Root();
                 shape.frame.x -= xy.x;
                 shape.frame.y -= xy.y;
@@ -159,6 +158,20 @@ export class Controller {
                 status = Status.Fulfilled;
                 return newShape
             }
+        }
+        const init_table = (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, row: number, col: number): Shape | undefined => {
+            savepage = page;
+            status = Status.Pending;
+            const shape = newTable(name, frame, row, col, this.__document.mediasMgr);
+            const xy = parent.frame2Root();
+            shape.frame.x -= xy.x;
+            shape.frame.y -= xy.y;
+            api.shapeInsert(page, parent, shape, parent.childs.length);
+            newShape = parent.childs.at(-1);
+            if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+            return newShape
         }
         const init_text = (page: Page, parent: GroupShape, frame: ShapeFrame, content: string): Shape | undefined => {
             status = Status.Pending;
@@ -277,7 +290,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { init, init_media, init_text, init_arrow, setFrame, setFrameByWheel, collect, close }
+        return { init, init_media, init_text, init_arrow, setFrame, setFrameByWheel, collect, close, init_table }
     }
     // 单个图形异步编辑
     public asyncRectEditor(shape: Shape, page: Page): AsyncBaseAction {
