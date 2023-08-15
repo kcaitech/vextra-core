@@ -11,9 +11,12 @@ import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import template_table_shape from "./template/table-shape.json"
 import template_table_cell from "./template/table-cell.json"
+import template_text from "./template/text.json"
 import {
-    Blur, Point2D, BorderOptions, ContextSettings, CurvePoint,
-    Color, Border, Style, Fill, Shadow, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path, BorderStyle
+    Point2D, CurvePoint,
+    Color, Border, Style, Fill, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
+    Text,
+    BorderStyle
 } from "../data/classes";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
@@ -39,9 +42,8 @@ export function newDocument(documentName: string, repo: Repository): Document {
 export function newPage(name: string): Page {
     templage_page.id = uuid();
     templage_page.name = name;
-    const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 239, 239, 239);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
     const page = importPage(templage_page as types.Page)
     page.style.fills.push(fill);
     return page;
@@ -56,18 +58,17 @@ export function newGroupShape(name: string, style?: Style): GroupShape {
     return group;
 }
 
-export function newStyle(): Style {
-    const windingRule = types.WindingRule.EvenOdd;
-    const blur = new Blur(false, new Point2D(0, 0), 0, types.BlurType.Gaussian);
-    const borderOptions = new BorderOptions(false, types.LineCapStyle.Butt, types.LineJoinStyle.Miter);
-    const borders = new BasicArray<Border>();
-    const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
+export function newSolidColorFill(): Fill {
     const fillColor = new Color(1, 216, 216, 216);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
+    return fill;
+}
+
+export function newStyle(): Style {
+    const borders = new BasicArray<Border>();
+    const fill = newSolidColorFill();
     const fills = new BasicArray<Fill>();
-    const innerShadows = new BasicArray<Shadow>();
-    const shadows = new BasicArray<Shadow>();
-    const style = new Style(10, windingRule, blur, borderOptions, borders, contextSettings, fills, innerShadows, shadows, types.MarkerType.Line, types.MarkerType.Line);
+    const style = new Style(borders, fills);
     style.fills.push(fill);
     return style;
 }
@@ -77,9 +78,8 @@ export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     template_artboard.name = name;
     template_artboard.frame = frame;
     const artboard = importArtboard(template_artboard as types.Artboard);
-    const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
     const fillColor = new Color(1, 255, 255, 255);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
     artboard.style.fills.push(fill);
     artboard.isVisible = true;
     artboard.isLocked = false;
@@ -148,8 +148,7 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const id = uuid();
-    const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
-    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), contextSettings, types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
     style.borders.push(border);
     const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, curvePoint, true);
     addCommonAttr(shape);
@@ -162,20 +161,24 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(0, 0));
     const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const contextSettings = new ContextSettings(types.BlendMode.Normal, 1);
-    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), contextSettings, types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
     style.borders.push(border);
     const shape = new LineShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, true);
     addCommonAttr(shape);
     return shape;
 }
 
+export function newText(): Text {
+    return importText(template_text);
+}
+
 // 后续需要传入字体、字号、颜色信息
-export function newTextShape(name: string): TextShape {
+export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
     const textshape: TextShape = importTextShape(template_text_shape as types.TextShape);
+    if (frame) textshape.frame = frame;
     addCommonAttr(textshape);
     return textshape;
 }
@@ -195,7 +198,7 @@ export function newComment(user: UserInfo, createAt: string, pageId: string, fra
     return comment;
 }
 
-export function newImageShape(name: string, frame: ShapeFrame, ref?: string, mediasMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>): ImageShape {
+export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>, ref?: string): ImageShape {
     const id = uuid();
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
@@ -205,34 +208,37 @@ export function newImageShape(name: string, frame: ShapeFrame, ref?: string, med
     const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
     curvePoint.push(p1, p2, p3, p4);
     const img = new ImageShape(id, name, types.ShapeType.Image, frame, style, curvePoint, true, ref || '');
-    if (mediasMgr) {
-        img.setImageMgr(mediasMgr);
-    }
+    img.setImageMgr(mediasMgr);
     addCommonAttr(img);
     return img;
 }
 
-export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number): TableShape {
+export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>): TableShape {
     template_table_shape.id = uuid();
     template_table_shape.name = name // i18n
     const table = importTableShape(template_table_shape as types.TableShape);
     table.frame = frame;
     addCommonAttr(table)
+
     // cells
-    const cellWidth = frame.width / columCount;
-    const cellHeight = frame.height / rowCount;
-    for (let ci = 0, y = 0; ci < columCount; ci++) {
-        for (let ri = 0, x = 0; ri < rowCount; ri++) {
-            template_table_cell.id = uuid();
-            const cell = importTableCell(template_table_cell as types.TableCell);
-            cell.frame.width = cellWidth;
-            cell.frame.height = cellHeight;
-            cell.frame.x = x;
-            cell.frame.y = y;
-            table.childs.push(cell);
-            x += cellWidth;
-        }
-        y += cellHeight;
+    const cellCount = columCount * rowCount;
+    for (let ci = 0; ci < cellCount; ci++) {
+        template_table_cell.id = uuid();
+        const cell = importTableCell(template_table_cell as types.TableCell);
+        cell.setImageMgr(mediasMgr);
+        table.childs.push(cell);
     }
+
+    // 行高
+    const rowHeight = 1 / rowCount;
+    for (let ri = 0; ri < rowCount; ri++) {
+        table.rowHeights.push(rowHeight);
+    }
+    // 列宽
+    const colWidth = 1 / columCount;
+    for (let ci = 0; ci < columCount; ci++) {
+        table.colWidths.push(colWidth);
+    }
+
     return table;
 }

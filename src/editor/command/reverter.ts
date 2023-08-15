@@ -13,7 +13,6 @@ import {
     TextCmdRemove,
     TextCmdInsert,
     TextCmdModify,
-    TextCmdMove,
     ShapeCmdRemove,
     ShapeCmdInsert,
     ShapeCmdModify,
@@ -24,12 +23,15 @@ import {
     ArrayOpInsert,
     IdOpNone,
     IdOpSet,
-    IdOpRemove,
     ShapeOpInsert,
     ShapeOpNone,
     ShapeOpRemove,
     ShapeOpMove,
-    CmdGroup
+    CmdGroup,
+    TableCmdInsert,
+    TableCmdRemove,
+    TableOpRemove,
+    TableOpInsert
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 
@@ -65,8 +67,6 @@ export class CMDReverter {
                 return this.textInsert(cmd as TextCmdInsert);
             case CmdType.TextModify:
                 return this.textModify(cmd as TextCmdModify);
-            case CmdType.TextMove:
-                return this.textMove(cmd as TextCmdMove);
             case CmdType.ShapeDelete:
                 return this.shapeDelete(cmd as ShapeCmdRemove);
             case CmdType.ShapeInsert:
@@ -106,9 +106,6 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.IdSet) {
-            op = IdOpRemove.Make(cmdop.targetId, cmdop.opId)
-        }
-        else if (cmdop.type === OpType.IdRemove) {
             op = IdOpSet.Make(cmdop.targetId, cmdop.opId)
         }
         else {
@@ -144,8 +141,8 @@ export class CMDReverter {
     shapeArrAttrModify(cmd: ShapeArrayAttrModify): ShapeArrayAttrModify {
         const cmdop = cmd.ops[0];
         let op;
-        if (cmdop.type === OpType.IdSet || cmdop.type === OpType.IdRemove) {
-            op = cmd.origin ? IdOpSet.Make(cmdop.targetId, cmdop.opId) : IdOpRemove.Make(cmdop.targetId, cmdop.opId);
+        if (cmdop.type === OpType.IdSet) {
+            op = IdOpSet.Make(cmdop.targetId, cmdop.opId);
         }
         else {
             op = IdOpNone.Make(cmdop.targetId, cmdop.opId)
@@ -208,8 +205,8 @@ export class CMDReverter {
     shapeModify(cmd: ShapeCmdModify): ShapeCmdModify {
         const cmdop = cmd.ops[0];
         let op;
-        if (cmdop.type === OpType.IdSet || cmdop.type === OpType.IdRemove) {
-            op = cmd.origin ? IdOpSet.Make(cmdop.targetId, cmdop.opId) : IdOpRemove.Make(cmdop.targetId, cmdop.opId)
+        if (cmdop.type === OpType.IdSet) {
+            op = IdOpSet.Make(cmdop.targetId, cmdop.opId);
         }
         else {
             op = IdOpNone.Make(cmdop.targetId, cmdop.opId)
@@ -267,14 +264,28 @@ export class CMDReverter {
         ret.origin = cmd.value;
         return ret;
     }
-    textMove(cmd: TextCmdMove): TextCmdMove {
-        const op0 = cmd.ops[0] as ArrayOpRemove;
-        const op1 = cmd.ops[1] as ArrayOpInsert;
-        if (op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
-            return TextCmdMove.Make(cmd.blockId, op0.targetId[0], op1.start, op0.length, op0.start);
+    tableInsert(cmd: TableCmdInsert): TableCmdRemove {
+        const op = cmd.ops[0];
+        if (op.type === OpType.TableInsert) {
+            const removeOp = TableOpRemove.Make(op.targetId[0], op.index, op.data, op.target);
+            const ret = new TableCmdRemove(CmdType.TableDelete, uuid(), cmd.blockId, [removeOp], cmd.data);
+            return ret;
         }
         else {
-            return new TextCmdMove(CmdType.TextMove, uuid(), cmd.blockId, [op0, op1]);
+            const ret = new TableCmdRemove(CmdType.TableDelete, uuid(), cmd.blockId, [op], cmd.data);
+            return ret;
+        }
+    }
+    tableRemove(cmd: TableCmdRemove): TableCmdInsert {
+        const op = cmd.ops[0];
+        if (op.type === OpType.TableRemove) {
+            const removeOp = TableOpInsert.Make(op.targetId[0], op.index, op.data, op.target);
+            const ret = new TableCmdInsert(CmdType.TableDelete, uuid(), cmd.blockId, [removeOp], cmd.data);
+            return ret;
+        }
+        else {
+            const ret = new TableCmdInsert(CmdType.TableDelete, uuid(), cmd.blockId, [op], cmd.data);
+            return ret;
         }
     }
 
@@ -292,9 +303,7 @@ export class CMDReverter {
                 case CmdType.TextModify:
                     revert.push(this.textModify(cmd as TextCmdModify));
                     break;
-                case CmdType.TextMove:
-                    revert.push(this.textMove(cmd as TextCmdMove));
-                    break;
+
                 case CmdType.ShapeDelete:
                 case CmdType.ShapeInsert:
                 case CmdType.ShapeModify:

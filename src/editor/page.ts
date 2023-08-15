@@ -1,14 +1,14 @@
-import { Shape, GroupShape, ShapeFrame, TextShape, PathShape2, RectShape } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape } from "./creator";
+import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style } from "../data/classes";
+import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -18,6 +18,7 @@ import { IImportContext, importBorder, importStyle } from "../io/baseimport";
 import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
+import { TableEditor } from "./table";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -216,6 +217,9 @@ export class PageEditor {
         // copy fill and borders
         const copyStyle = findUsableFillStyle(shapes[shapes.length - 1]);
         const style: Style = this.cloneStyle(copyStyle);
+        if (style.fills.length === 0) {
+            style.fills.push(newSolidColorFill()); // 自动添加个填充
+        }
         const borderStyle = findUsableBorderStyle(shapes[shapes.length - 1]);
         if (borderStyle !== copyStyle) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
@@ -243,13 +247,8 @@ export class PageEditor {
 
     private cloneStyle(style: Style): Style {
         const _this = this;
-        return importStyle(style, new class implements IImportContext {
-            afterImport(obj: any): void {
-                if (obj instanceof Fill) {
-                    obj.setImageMgr(_this.__document.mediasMgr)
-                }
-            }
-        });
+        const ctx: IImportContext = new class implements IImportContext { document: Document = _this.__document };
+        return importStyle(style, ctx);
     }
 
     flattenShapes(shapes: Shape[], name?: string): PathShape | PathShape2 | false {
@@ -971,7 +970,10 @@ export class PageEditor {
     editor4Shape(shape: Shape): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo);
     }
-    editor4TextShape(shape: TextShape): TextShapeEditor {
+    editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
         return new TextShapeEditor(shape, this.__page, this.__repo);
+    }
+    editor4Table(shape: TableShape): TableEditor {
+        return new TableEditor(shape, this.__page, this.__repo);
     }
 }

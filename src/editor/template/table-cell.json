@@ -12,26 +12,7 @@
     },
     "style": {
         "typeId": "style",
-        "miterLimit": 0,
-        "windingRule": "non-zero",
-        "blur": {
-            "isEnabled": false,
-            "center": { "x": 0, "y": 0 },
-            "saturation": 0,
-            "type": "gaussian"
-        },
-        "borderOptions": {
-            "isEnabled": false,
-            "lineCapStyle": "butt",
-            "lineJoinStyle": "miter"
-        },
         "borders": [],
-        "contextSettings": {
-            "blenMode": "normal",
-            "opacity": 0
-        },
-        "fills": [],
-        "innerShadows": [],
-        "shadows": []
+        "fills": []
     }
 }

@@ -12,27 +12,30 @@
     },
     "style": {
         "typeId": "style",
-        "miterLimit": 0,
-        "windingRule": "non-zero",
-        "blur": {
-            "isEnabled": false,
-            "center": { "x": 0, "y": 0 },
-            "saturation": 0,
-            "type": "gaussian"
-        },
-        "borderOptions": {
-            "isEnabled": false,
-            "lineCapStyle": "butt",
-            "lineJoinStyle": "miter"
-        },
-        "borders": [],
-        "contextSettings": {
-            "blenMode": "normal",
-            "opacity": 0
-        },
-        "fills": [],
-        "innerShadows": [],
-        "shadows": []
+        "borders": [
+            {
+                "id": "4f0e6459-9d3c-4e71-9f60-3f11b2db7d0e",
+                "isEnabled": true,
+                "fillType": "solid-color",
+                "color": {
+                    "alpha": 0.5,
+                    "red": 0,
+                    "green": 0,
+                    "blue": 0
+                },
+                "position": "center",
+                "thickness": 1,
+                "borderStyle": {
+                    "length": 0,
+                    "gap": 0
+                },
+                "startMarkerType": "line",
+                "endMarkerType": "line"
+            }
+        ],
+        "fills": []
     },
-    "childs": []
+    "childs": [],
+    "rowHeights": [],
+    "colWidths": []
 }

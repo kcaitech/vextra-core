@@ -93,7 +93,7 @@ export class Controller {
         this.__repo = repo;
         this.__document = document;
     }
-    create(type: ShapeType, name: string, frame: ShapeFrame, ref?: string, mediasMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>): Shape {
+    create(type: ShapeType, name: string, frame: ShapeFrame, ref?: string): Shape {
         switch (type) {
             case ShapeType.Artboard: return newArtboard(name, frame);
             case ShapeType.Rectangle: return newRectShape(name, frame);
@@ -104,8 +104,8 @@ export class Controller {
                 shape.frame = frame;
                 return shape;
             }
-            case ShapeType.Image: return newImageShape(name, frame, ref, mediasMgr);
-            case ShapeType.Table: return newTable(name, frame, 3, 3);
+            case ShapeType.Image: return newImageShape(name, frame, this.__document.mediasMgr, ref);
+            case ShapeType.Table: return newTable(name, frame, 3, 3, this.__document.mediasMgr);
             default: return newRectShape(name, frame);
         }
     }
@@ -150,7 +150,7 @@ export class Controller {
                 const format = getFormatFromBase64(media.base64);
                 const ref = `${v4()}.${format}`;
                 this.__document.mediasMgr.add(ref, media);
-                const shape = this.create(ShapeType.Image, name, frame, ref, this.__document.mediasMgr);
+                const shape = this.create(ShapeType.Image, name, frame, ref);
                 const xy = parent.frame2Root();
                 shape.frame.x -= xy.x;
                 shape.frame.y -= xy.y;

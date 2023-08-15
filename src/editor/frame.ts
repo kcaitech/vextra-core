@@ -1,9 +1,13 @@
 import { Page } from "data/page";
 import { Matrix } from "../basic/matrix";
 import { GroupShape, PathShape, Shape, TextShape } from "../data/shape";
+import { Text } from "../data/text"
 import { Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils";
 import { TableShape } from "../data/table";
+
+type TextShapeLike = Shape & { text: Text }
+
 interface PageXY {
     x: number
     y: number
@@ -15,10 +19,11 @@ export interface Api {
     shapeModifyRotate(page: Page, shape: Shape, rotate: number): void;
     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined): void;
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined): void;
-    shapeModifyTextBehaviour(page: Page, shape: TextShape, textBehaviour: TextBehaviour): void;
+    shapeModifyTextBehaviour(page: Page, shape: TextShapeLike, textBehaviour: TextBehaviour): void;
     shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
     shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
     shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
+    tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
 }
 
 const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
