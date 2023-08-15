@@ -19,6 +19,9 @@
             "items": {
                 "type": "number"
             }
+        },
+        "textAttr": {
+            "$ref": "./text-attr.json"
         }
     },
     "required": [

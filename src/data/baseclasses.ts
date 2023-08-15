@@ -781,6 +781,7 @@ export class TableShape extends Shape {
     childs: BasicArray<TableCell >
     rowHeights: BasicArray<number >
     colWidths: BasicArray<number >
+    textAttr?: TextAttr
     constructor(
         id: string,
         name: string,

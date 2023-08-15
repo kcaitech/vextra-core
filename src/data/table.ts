@@ -4,7 +4,7 @@ import { BasicArray, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
 import { GroupShape, Shape } from "./shape";
 import { Path } from "./path";
-import { Text } from "./text"
+import { Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
@@ -133,6 +133,7 @@ export class TableShape extends GroupShape implements classes.TableShape {
     typeId = 'table-shape'
     rowHeights: BasicArray<number>
     colWidths: BasicArray<number>
+    textAttr?: TextAttr // 文本默认属性
 
     private __layout?: TableLayout;
     constructor(
@@ -227,7 +228,7 @@ export class TableShape extends GroupShape implements classes.TableShape {
         this.reLayout();
     }
 
-    private reLayout() {
+    reLayout() {
         this.__layout = undefined;
     }
 
