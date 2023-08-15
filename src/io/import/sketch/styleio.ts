@@ -80,7 +80,6 @@ function importGradient(data: IJSON): Gradient {
 }
 
 export function importStyle(ctx: LoadContext, data: IJSON): Style {
-
     // const gradients = env.gradients;
     const miterLimit: number = data['miterLimit'];
 
@@ -157,27 +156,23 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             return bs
         })(data['borderOptions'].dashPattern);
 
-        const getMarkerType = (st: number): MarkerType => {
-            switch (st) {
-                case 0: return MarkerType.Line;
-                case 1: return MarkerType.OpenArrow;
-                case 2: return MarkerType.FilledArrow;
-                case 3: return MarkerType.FallT;
-                case 4: return MarkerType.OpenCircle;
-                case 5: return MarkerType.FilledCircle;
-                case 6: return MarkerType.OpenSquare;
-                case 7: return MarkerType.FilledSquare;
-                default: return MarkerType.Line;
-            }
-        }
-        const startMarkerType: MarkerType = getMarkerType(data['startMarkerType']);
-        const endMarkerType: MarkerType = getMarkerType(data['endMarkerType']);
-
-        const border = new Border(uuid(), isEnabled, fillType, color, position, thickness, borderStyle, startMarkerType, endMarkerType);
+        const border = new Border(uuid(), isEnabled, fillType, color, position, thickness, borderStyle);
         border.gradient = gradient;
         border.contextSettings = contextSettings;
         return border;
     });
+    const getMarkerType = (st: number): MarkerType => {
+        switch (st) {
+            case 0: return MarkerType.Line;
+            case 1: return MarkerType.OpenArrow;
+            case 2: return MarkerType.FilledArrow;
+            case 5: return MarkerType.FilledCircle;
+            case 7: return MarkerType.FilledSquare;
+            default: return MarkerType.Line;
+        }
+    }
+    const startMarkerType: MarkerType = getMarkerType(data['startMarkerType']);
+    const endMarkerType: MarkerType = getMarkerType(data['endMarkerType']);
 
     const contextSettings: ContextSettings = importContextSettings(data['contextSettings']);
     const fills: Fill[] = (data['fills'] || []).map((d: IJSON) => {
@@ -224,16 +219,11 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         return fill;
     });
 
-    // const innerShadows: object[] = (data['innerShadows'] || []).map((d: object) => {
-    //     return d;// todo
-    // });
-    // const shadows: object[] = (data['shadows'] || []).map((d: object) => {
-    //     return d; // todo
-    // });
-
     const style: Style = new Style(
         new BasicArray<Border>(...borders),
         new BasicArray<Fill>(...fills));
+    style.startMarkerType = startMarkerType;
+    style.endMarkerType = endMarkerType;
 
     style.miterLimit = miterLimit;
     style.windingRule = windingRule;

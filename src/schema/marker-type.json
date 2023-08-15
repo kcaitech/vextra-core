@@ -1,0 +1,13 @@
+{
+    "description": "marker type",
+    "enum": [
+        "line",
+        "filled-arrow",
+        "open-arrow",
+        "filled-circle",
+        "filled-square",
+        "round",
+        "square"
+    ],
+    "default": "open-arrow"
+}

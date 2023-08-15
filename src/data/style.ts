@@ -62,8 +62,6 @@ export class Border extends Basic implements classes.Border {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
-    startMarkerType: MarkerType
-    endMarkerType: MarkerType
     constructor(
         id: string,
         isEnabled: boolean,
@@ -72,8 +70,6 @@ export class Border extends Basic implements classes.Border {
         position: BorderPosition,
         thickness: number,
         borderStyle: BorderStyle,
-        startMarkerType: MarkerType,
-        endMarkerType: MarkerType
     ) {
         super()
         this.id = id
@@ -83,8 +79,6 @@ export class Border extends Basic implements classes.Border {
         this.position = position
         this.thickness = thickness
         this.borderStyle = borderStyle
-        this.startMarkerType = startMarkerType
-        this.endMarkerType = endMarkerType
     }
 }
 
@@ -143,6 +137,8 @@ export class Style extends Basic implements classes.Style {
     fills: BasicArray<Fill >
     innerShadows?: BasicArray<Shadow >
     shadows?: BasicArray<Shadow >
+    startMarkerType?: MarkerType
+    endMarkerType?: MarkerType
     constructor(
         borders: BasicArray<Border >,
         fills: BasicArray<Fill >

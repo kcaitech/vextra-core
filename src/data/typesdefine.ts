@@ -76,6 +76,8 @@ export type Style = {
     fills: Fill[]
     innerShadows?: Shadow[]
     shadows?: Shadow[]
+    startMarkerType?: MarkerType
+    endMarkerType?: MarkerType
 }
 /* strikethrough types */
 export enum StrikethroughType {
@@ -204,14 +206,13 @@ export type OverrideItem = {
 }
 /* marker type */
 export enum MarkerType {
-    OpenArrow = 'open-arrow',
-    FilledArrow = 'filled-arrow',
     Line = 'line',
-    OpenCircle = 'open-circle',
+    FilledArrow = 'filled-arrow',
+    OpenArrow = 'open-arrow',
     FilledCircle = 'filled-circle',
-    OpenSquare = 'open-square',
     FilledSquare = 'filled-square',
-    FallT = 'fall-t',
+    Round = 'round',
+    Square = 'square',
 }
 /* line join style */
 export enum LineJoinStyle {
@@ -395,8 +396,6 @@ export type Border = {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
-    startMarkerType: MarkerType
-    endMarkerType: MarkerType
 }
 /* border style */
 export type BorderStyle = {
