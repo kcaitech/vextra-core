@@ -28,9 +28,7 @@
                 "borderStyle": {
                     "length": 0,
                     "gap": 0
-                },
-                "startMarkerType": "line",
-                "endMarkerType": "line"
+                }
             }
         ],
         "fills": []
