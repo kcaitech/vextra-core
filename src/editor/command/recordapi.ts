@@ -1018,4 +1018,51 @@ export class Api {
             }
         })
     }
+    tableModifyTextColor(page: Page, table: TableShape, color: Color | undefined) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
+    }
+    tableModifyTextHighlightColor(page: Page, table: TableShape, color: Color | undefined) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
+    }
+    tableModifyTextFontName(page: Page, table: TableShape, fontName: string) {
+    }
+    tableModifyTextFontSize(page: Page, table: TableShape, fontSize: number) {
+    }
+    tableModifyTextVerAlign(page: Page, table: TableShape, verAlign: TextVerAlign) {
+
+    }
+    tableModifyTextHorAlign(page: Page, teble: TableShape, horAlign: TextHorAlign) {
+
+    }
+    tableModifyTextMinLineHeight(page: Page, table: TableShape, lineHeight: number) {
+    }
+    tableModifyTextMaxLineHeight(page: Page, table: TableShape, lineHeight: number) {
+    }
+    tableModifyTextKerning(page: Page, table: TableShape, kerning: number) {
+
+    }
+    tableModifyTextParaSpacing(page: Page, table: TableShape, paraSpacing: number) {
+
+    }
+    tableModifyTextUnderline(page: Page, table: TableShape, underline: UnderlineType | undefined) {
+
+    }
+    tableModifyTextStrikethrough(page: Page, table: TableShape, strikethrough: StrikethroughType | undefined) {
+
+    }
+    tableModifyTextBold(page: Page, table: TableShape, bold: boolean) {
+
+    }
+    tableModifyTextItalic(page: Page, table: TableShape, italic: boolean) {
+
+    }
+    tableModifyTextTransform(page: Page, table: TableShape, transform: TextTransformType | undefined) {
+
+    }
 }

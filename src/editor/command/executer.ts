@@ -48,7 +48,7 @@ import {
     importTableShape,
     importPathShape2,
     importTableCell
-} from "../../io/baseimport";
+} from "../../io/importadaptor";
 import * as types from "../../data/typesdefine"
 import {
     GroupShape,
