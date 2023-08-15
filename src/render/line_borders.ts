@@ -14,7 +14,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         'stroke-width': thickness
     }
     const { length, gap } = border.borderStyle;
-    if (length || gap) body_props['stroke-dasharray'] = `${length}, ${gap}`
+    if (length || gap) body_props['stroke-dasharray'] = `${length}, ${gap}`;
     const fillType = border.fillType;
     if (fillType === FillType.SolidColor) {
         const color = border.color;
@@ -32,7 +32,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         if (endMarkerType && endMarkerType !== MarkerType.Line && endMarkerType !== MarkerType.OpenArrow && endMarkerType !== MarkerType.Round && endMarkerType !== MarkerType.Square) {
             e.x -= 2 * t * Math.cos(r), e.y -= 2 * t * Math.sin(r);
         }
-        body_props.d = `M ${s.x} ${s.y} L ${e.x} ${e.y} L${s.x} ${s.y} Z`;
+        body_props.d = `M ${s.x} ${s.y} L ${e.x} ${e.y}`;
         g_cs.push(h('path', body_props));
         return g_cs;
     } else {
