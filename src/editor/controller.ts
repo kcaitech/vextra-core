@@ -187,29 +187,7 @@ export class Controller {
             if (!newShape || !savepage) return;
             status = Status.Pending;
             if (newShape.type === ShapeType.Line) {
-                const { x: sx, y: sy } = anchor;
-                const { x: px, y: py } = point;
-                if (newShape.isFlippedHorizontal) {
-                    if ((px - sx) > 0) {
-                        api.shapeModifyHFlip(savepage, newShape, !newShape.isFlippedHorizontal)
-                    }
-                } else {
-                    if ((px - sx) < 0) {
-                        api.shapeModifyHFlip(savepage, newShape, !newShape.isFlippedHorizontal)
-                    }
-                }
-                if (newShape.isFlippedVertical) {
-                    if ((py - sy) > 0) {
-                        api.shapeModifyVFlip(savepage, newShape, !newShape.isFlippedVertical)
-                    }
-                } else {
-                    if ((py - sy) < 0) {
-                        api.shapeModifyVFlip(savepage, newShape, !newShape.isFlippedVertical)
-                    }
-                }
-                const height = Math.abs(py - sy);
-                const width = Math.abs(px - sx);
-                expandTo(api, savepage, newShape, width, height);
+                adjustRB2(api, savepage, newShape, point.x, point.y);
             } else {
                 const { x: sx, y: sy } = anchor;
                 const { x: px, y: py } = point;
