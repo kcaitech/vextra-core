@@ -474,9 +474,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     }
     // image shape
     async loadImage(): Promise<string> {
-        console.log('__cacheData', this.__cacheData);
         if (this.__cacheData) return this.__cacheData.base64;
-        console.log('this.__imageMgr', this.__imageMgr);
         this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
         return this.__cacheData && this.__cacheData.base64 || "";
     }
