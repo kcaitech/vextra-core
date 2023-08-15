@@ -59,7 +59,8 @@ export interface AsyncCreator {
 export interface AsyncBaseAction {
     executeRotate: (deg: number) => void;
     executeScale: (type: CtrlElementType, end: PageXY) => void;
-    executeErScale: (type: CtrlElementType, scale: number) => void
+    executeErScale: (type: CtrlElementType, scale: number) => void;
+    executeScaleDirectional: (type: CtrlElementType, end: PageXY) => void;
     close: () => undefined;
 }
 export interface AsyncMultiAction {
@@ -304,6 +305,7 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
+        const executeScaleDirectional = (type: CtrlElementType, end: PageXY) => { }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
@@ -312,7 +314,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { executeRotate, executeScale, executeErScale, close };
+        return { executeRotate, executeScale, executeErScale, executeScaleDirectional, close };
     }
     // 多对象的异步编辑
     public asyncMultiEditor(shapes: Shape[], page: Page): AsyncMultiAction {
@@ -564,4 +566,7 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
     }
     if (s instanceof GroupShape && s.type === ShapeType.Group) afterModifyGroupShapeWH(api, page, s, sx, sy);
+}
+function reset_position(api: Api, s: Shape) {
+
 }
