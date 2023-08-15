@@ -22,7 +22,8 @@ export const SHAPE_ATTR_ID = {
     boolop: "boolop",
     isboolopshape: "isboolopshape",
     fixedRadius: "fixedRadius",
-
+    startMarkerType: "startMarkerType",
+    endMarkerType: "endMarkerType",
     // text shape
     textBehaviour: "textBehaviour",
     textVerAlign: "textVerAlign",
@@ -51,8 +52,6 @@ export const BORDER_ATTR_ID = {
     thickness: "thickness",
     position: "position",
     borderStyle: "borderStyle",
-    startMarkerType: "startMarkerType",
-    endMarkerType: "endMarkerType"
 }
 
 export const TEXT_ATTR_ID = {

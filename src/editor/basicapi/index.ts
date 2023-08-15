@@ -3,7 +3,7 @@ import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, PathShape, PathShape2, RectShape, Shape } from "../../data/shape";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
-import { BoolOp, BulletNumbersBehavior, BulletNumbersType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BoolOp, BulletNumbersBehavior, BulletNumbersType, MarkerType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 
 export * from "./fill";
 export * from "./border";
@@ -83,6 +83,18 @@ export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, ne
         // frame.height = h;
         shape.setFrameSize(w, h);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    }
+}
+export function shapeModifyStartMarkerType(shape: Shape, mt: MarkerType) {
+    const style = shape.style;
+    if (mt !== style.startMarkerType) {
+        style.startMarkerType = mt;
+    }
+}
+export function shapeModifyEndMarkerType(shape: Shape, mt: MarkerType) {
+    const style = shape.style;
+    if (mt !== style.endMarkerType) {
+        style.endMarkerType = mt;
     }
 }
 export function shapeModifyWidth(page: Page, shape: Shape, w: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {

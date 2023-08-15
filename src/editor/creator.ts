@@ -15,7 +15,8 @@ import template_text from "./template/text.json"
 import {
     Point2D, CurvePoint,
     Color, Border, Style, Fill, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
-    Text
+    Text,
+    BorderStyle
 } from "../data/classes";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
@@ -147,6 +148,8 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const id = uuid();
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+    style.borders.push(border);
     const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, curvePoint, true);
     addCommonAttr(shape);
     return shape;
@@ -154,9 +157,13 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
 
 export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const style = newStyle();
-    const curvePoint = new BasicArray<CurvePoint>();
-    const id = uuid();
-    const shape = new PathShape(id, name, types.ShapeType.Line, frame, style, curvePoint, true);
+    style.endMarkerType = types.MarkerType.OpenArrow;
+    const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(0, 0));
+    const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
+    const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+    style.borders.push(border);
+    const shape = new LineShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, true);
     addCommonAttr(shape);
     return shape;
 }

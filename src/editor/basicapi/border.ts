@@ -25,13 +25,6 @@ export function setBorderPosition(style: Style, idx: number, position: BorderPos
 export function setBorderStyle(style: Style, idx: number, borderStyle: BorderStyle) {
     style.borders[idx].borderStyle = borderStyle;
 }
-export function setBorderStartMarkerType(style: Style, idx: number, type: MarkerType) {
-    style.borders[idx].startMarkerType = type;
-}
-
-export function setBorderEndMarkerType(style: Style, idx: number, type: MarkerType) {
-    style.borders[idx].endMarkerType = type;
-}
 
 export function deleteBorderAt(style: Style, idx: number) {
     return style.borders.splice(idx, 1)[0];

@@ -103,6 +103,17 @@ export interface BorderStyleAction {
     index: number
     value: BorderStyle
 }
+function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
+    return Math.atan2(B.y - A.y, B.x - A.x)
+}
+export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
+    const deltaX = B.x - A.x;
+    const deltaY = B.y - A.y;
+    const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+    const angle = (angleInDegrees + 360) % 360;
+    return angle;
+}
+
 export class PageEditor {
     private __repo: CoopRepository;
     private __page: Page;
@@ -688,15 +699,25 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-    setShapesRotate(actions: RotateAdjust[]) {
+    setShapesRotate(shapes: Shape[], v: number) {
         try {
-            const api = this.__repo.start('RotateAdjust', {});
-            for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
-                api.shapeModifyRotate(this.__page, target, value);
+            const api = this.__repo.start('setShapesRotate', {});
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const s = shapes[i];
+                if (s.type === ShapeType.Line) {
+                    const f = s.frame, m2p = s.matrix2Parent(), lt = m2p.computeCoord2(0, 0), rb = m2p.computeCoord2(f.width, f.height);
+                    const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
+                    let dr = v - real_r;
+                    if (s.isFlippedHorizontal) dr = -dr;
+                    if (s.isFlippedVertical) dr = -dr;
+                    api.shapeModifyRotate(this.__page, s, (s.rotation || 0) + dr);
+                } else {
+                    api.shapeModifyRotate(this.__page, s, v);
+                }
             }
             this.__repo.commit();
         } catch (error) {
+            console.log(error);
             this.__repo.rollback();
         }
     }
@@ -928,6 +949,24 @@ export class PageEditor {
             }
             this.__repo.commit();
         } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setLinesLength(shapes: Shape[], v: number) {
+        try {
+            const api = this.__repo.start('setLinesLength', {});
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const s = shapes[i];
+                if (s.type !== ShapeType.Line) continue;
+                const o1 = s.matrix2Root().computeCoord2(0, 0);
+                const f = s.frame, r = getHorizontalRadians({ x: 0, y: 0 }, { x: f.width, y: f.height });
+                api.shapeModifyWH(this.__page, s, v * Math.cos(r), v * Math.sin(r));
+                const o2 = s.matrix2Root().computeCoord2(0, 0);
+                translate(api, this.__page, s, o1.x - o2.x, o1.y - o2.y);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
             this.__repo.rollback();
         }
     }

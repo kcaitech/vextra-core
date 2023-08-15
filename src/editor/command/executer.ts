@@ -419,8 +419,17 @@ export class CMDExecuter {
             }
         }
         else if (opId === SHAPE_ATTR_ID.constrainerProportions) {
-            const isLock = value && JSON.parse(value)
-            api.shapeModifyConstrainerProportions(shape, isLock ?? false);
+                const isLock = value && JSON.parse(value) || false;
+                api.shapeModifyConstrainerProportions(shape, isLock);
+            
+        } else if (opId === SHAPE_ATTR_ID.startMarkerType) {
+            if (value) {
+                api.shapeModifyStartMarkerType(shape, value as types.MarkerType)
+            }
+        } else if (opId === SHAPE_ATTR_ID.endMarkerType) {
+            if (value) {
+                api.shapeModifyEndMarkerType(shape, value as types.MarkerType)
+            }
         }
         else if (opId === SHAPE_ATTR_ID.textBehaviour) {
             const textBehaviour = value as types.TextBehaviour
@@ -628,16 +637,6 @@ export class CMDExecuter {
                 if (value) {
                     const style = importBorderStyle(JSON.parse(value));
                     api.setBorderStyle(shape.style, borderIdx, style)
-                }
-            }
-            else if (opId === BORDER_ATTR_ID.startMarkerType) {
-                if (value) {
-                    api.setBorderStartMarkerType(shape.style, borderIdx, value as any)
-                }
-            }
-            else if (opId === BORDER_ATTR_ID.endMarkerType) {
-                if (value) {
-                    api.setBorderEndMarkerType(shape.style, borderIdx, value as any)
                 }
             }
             // todo

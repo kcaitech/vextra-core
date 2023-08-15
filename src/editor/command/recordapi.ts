@@ -243,6 +243,28 @@ export class Api {
             })
         }
     }
+    shapeModifyStartMarkerType(page: Page, shape: Shape, mt: MarkerType) {
+        this.checkShapeAtPage(page, shape);
+        const style = shape.style;
+        if (mt !== style.startMarkerType) {
+            this.__trap(() => {
+                const save = style.startMarkerType;
+                style.startMarkerType = mt;
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.startMarkerType, mt, save))
+            })
+        }
+    }
+    shapeModifyEndMarkerType(page: Page, shape: Shape, mt: MarkerType) {
+        this.checkShapeAtPage(page, shape);
+        const style = shape.style;
+        if (mt !== style.endMarkerType) {
+            this.__trap(() => {
+                const save = style.endMarkerType;
+                style.endMarkerType = mt;
+                this.addCmd(ShapeCmdModify.Make(page.id, shape.id, SHAPE_ATTR_ID.endMarkerType, mt, save))
+            })
+        }
+    }
     shapeModifyRotate(page: Page, shape: Shape, rotate: number) {
         this.checkShapeAtPage(page, shape);
         if (rotate !== shape.rotation) {
@@ -537,28 +559,6 @@ export class Api {
                 const save = border.borderStyle;
                 border.borderStyle = borderStyle
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, shape.id, BORDER_ID, border.id, BORDER_ATTR_ID.borderStyle, exportBorderStyle(borderStyle), exportBorderStyle(save)));
-            })
-        }
-    }
-    setBorderStartMarkerType(page: Page, shape: Shape, idx: number, type: MarkerType) {
-        this.checkShapeAtPage(page, shape);
-        const border = shape.style.borders[idx];
-        if (border) {
-            this.__trap(() => {
-                const save = border.startMarkerType;
-                border.startMarkerType = type
-                this.addCmd(ShapeArrayAttrModify.Make(page.id, shape.id, BORDER_ID, border.id, BORDER_ATTR_ID.startMarkerType, type, save));
-            })
-        }
-    }
-    setBorderEndMarkerType(page: Page, shape: Shape, idx: number, type: MarkerType) {
-        this.checkShapeAtPage(page, shape);
-        const border = shape.style.borders[idx];
-        if (border) {
-            this.__trap(() => {
-                const save = border.endMarkerType;
-                border.endMarkerType = type
-                this.addCmd(ShapeArrayAttrModify.Make(page.id, shape.id, BORDER_ID, border.id, BORDER_ATTR_ID.endMarkerType, type, save));
             })
         }
     }

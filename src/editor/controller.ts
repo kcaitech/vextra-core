@@ -3,12 +3,11 @@ import { Shape, GroupShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
-import { newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape } from "./creator";
+import { newArrowShape, newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape } from "./creator";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
-import { ResourceMgr } from "../data/basic";
 import { Api } from "./command/recordapi";
 import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
@@ -51,6 +50,7 @@ export interface AsyncCreator {
     init: (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame) => Shape | undefined;
     init_media: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: { buff: Uint8Array, base64: string }) => Shape | undefined;
     init_text: (page: Page, parent: GroupShape, frame: ShapeFrame, content: string) => Shape | undefined;
+    init_arrow: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame) => Shape | undefined;
     setFrame: (point: PageXY) => void;
     setFrameByWheel: (point: PageXY) => void;
     collect: (page: Page, shapes: Shape[], target: Artboard) => void;
@@ -123,8 +123,21 @@ export class Controller {
             shape.frame.x -= xy.x;
             shape.frame.y -= xy.y;
             api.shapeInsert(page, parent, shape, parent.childs.length);
-            newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
+            newShape = parent.childs.at(-1);
             if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+            return newShape
+        }
+        const init_arrow = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame): Shape | undefined => {
+            savepage = page;
+            status = Status.Pending;
+            const shape = newArrowShape(name, frame);
+            const xy = parent.frame2Root();
+            shape.frame.x -= xy.x;
+            shape.frame.y -= xy.y;
+            api.shapeInsert(page, parent, shape, parent.childs.length);
+            newShape = parent.childs.at(-1);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
             return newShape
@@ -141,7 +154,7 @@ export class Controller {
                 shape.frame.x -= xy.x;
                 shape.frame.y -= xy.y;
                 api.shapeInsert(page, parent, shape, parent.childs.length)
-                newShape = parent.childs.at(-1); // 需要把proxy代理之后的shape返回，否则无法触发notify
+                newShape = parent.childs.at(-1);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
@@ -264,7 +277,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { init, init_media, init_text, setFrame, setFrameByWheel, collect, close }
+        return { init, init_media, init_text, init_arrow, setFrame, setFrameByWheel, collect, close }
     }
     // 单个图形异步编辑
     public asyncRectEditor(shape: Shape, page: Page): AsyncBaseAction {
