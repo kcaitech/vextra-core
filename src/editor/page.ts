@@ -456,8 +456,13 @@ export class PageEditor {
         }
     }
     /**
-     * 参数可选的创建并插入图形
+     * @description 参数可选的创建并插入图形
      * @param ex_params 包含某一些属性的特定参数
+     *  is_arrow?: 箭头(style)
+     *  rotation?: 初始化角度
+     *  target_xy?: 插入位置(frame)
+     *  media?: 静态资源
+     *  ...
      * @returns 
      */
     create2(page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, ex_params: any) {
