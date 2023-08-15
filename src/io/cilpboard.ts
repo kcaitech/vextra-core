@@ -1,10 +1,9 @@
-import { FlattenShape, GroupShape, ImageShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../data/shape";
+import { GroupShape, Shape, ShapeType, TextShape } from "../data/shape";
 import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText } from "./baseexport";
 import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText } from "./baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
-import { Artboard, Fill, TableCell } from "../data/classes";
 import { newTextShape, newTextShapeByText } from "../editor/creator";
 
 function set_childs_id(shapes: Shape[]) {
