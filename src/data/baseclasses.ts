@@ -110,6 +110,8 @@ export class Style extends Basic {
     fills: BasicArray<Fill >
     innerShadows?: BasicArray<Shadow >
     shadows?: BasicArray<Shadow >
+    startMarkerType?: MarkerType
+    endMarkerType?: MarkerType
     constructor(
         borders: BasicArray<Border >,
         fills: BasicArray<Fill >
@@ -665,8 +667,6 @@ export class Border extends Basic {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
-    startMarkerType: MarkerType
-    endMarkerType: MarkerType
     constructor(
         id: string,
         isEnabled: boolean,
@@ -674,9 +674,7 @@ export class Border extends Basic {
         color: Color,
         position: BorderPosition,
         thickness: number,
-        borderStyle: BorderStyle,
-        startMarkerType: MarkerType,
-        endMarkerType: MarkerType
+        borderStyle: BorderStyle
     ) {
         super()
         this.id = id
@@ -686,8 +684,6 @@ export class Border extends Basic {
         this.position = position
         this.thickness = thickness
         this.borderStyle = borderStyle
-        this.startMarkerType = startMarkerType
-        this.endMarkerType = endMarkerType
     }
 }
 /**

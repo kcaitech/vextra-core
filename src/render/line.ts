@@ -1,17 +1,11 @@
-import { Color, Shape } from "../data/classes";
+import { Shape } from "../data/classes";
+import { render as renderB } from "./line_borders";
 
 export function render(h: Function, shape: Shape, reflush?: number) {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
 
     const frame = shape.frame;
-    const path = shape.getPath();
-    const border = shape.style.borders.at(-1);
-    const borderColor = shape.style.borders.at(-1)?.color || new Color(1, 0, 0, 0);
-    const stroke = borderColor.toHex();
-    const fillColor = shape.style.fills.at(-1)?.color || new Color(1, 0, 0, 0);
-    const fill = fillColor.toHex();
-
     const props: any = {}
     if (reflush) props.reflush = reflush;
 
@@ -34,10 +28,13 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     else {
         props.transform = `translate(${frame.x},${frame.y})`
     }
-    props.d = path;
-    props["fill-opacity"] = fillColor.alpha;
-    props.fill = fill;
-    props.stroke = stroke;
-    props["stroke-width"] = border?.thickness || 1;
-    return h('path', props);
+    let childs = new Array();
+    if (shape.style.borders.length) {
+        const path = shape.getPath().toString();
+        childs = childs.concat(renderB(h, shape.style, path, shape));
+        return h('g', props, childs);
+    } else {
+        props.stroke = '#000000', props['stroke-width'] = 1, props.d = shape.getPath().toString();
+        return h('path', props);
+    }
 }

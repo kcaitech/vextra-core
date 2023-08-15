@@ -48,6 +48,12 @@
             "items": {
                 "$ref": "./shadow.json"
             }
+        },
+        "startMarkerType": {
+            "$ref": "./marker-type.json"
+        },
+        "endMarkerType": {
+            "$ref": "./marker-type.json"
         }
     },
     "required": [

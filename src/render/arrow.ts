@@ -21,8 +21,6 @@ handler[MarkerType.FilledArrow] = function (h: Function, shape: Shape, fill: str
 }
 
 export function render(h: Function, shape: Shape, path?: string): Array<any> {
-    const startMarker = shape.style.borders[0].startMarkerType
-
     const border = shape.style.borders.at(-1);
     const borderColor = shape.style.borders.at(-1)?.color || new Color(1, 0, 0, 0);
     const stroke = borderColor.toHex();

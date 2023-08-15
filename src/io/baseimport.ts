@@ -110,6 +110,8 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         }
         return ret
     })()
+    if (source.startMarkerType !== undefined) ret.startMarkerType = (adaptor.importMarkerType || importMarkerType)(source.startMarkerType, ctx)
+    if (source.endMarkerType !== undefined) ret.endMarkerType = (adaptor.importMarkerType || importMarkerType)(source.endMarkerType, ctx)
     return ret
 }
 /* strikethrough types */
@@ -509,9 +511,7 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
         (adaptor.importColor || importColor)(source.color, ctx),
         (adaptor.importBorderPosition || importBorderPosition)(source.position, ctx),
         source.thickness,
-        (adaptor.importBorderStyle || importBorderStyle)(source.borderStyle, ctx),
-        (adaptor.importMarkerType || importMarkerType)(source.startMarkerType, ctx),
-        (adaptor.importMarkerType || importMarkerType)(source.endMarkerType, ctx)
+        (adaptor.importBorderStyle || importBorderStyle)(source.borderStyle, ctx)
     )
     if (source.contextSettings !== undefined) ret.contextSettings = (adaptor.importContextSettings || importContextSettings)(source.contextSettings, ctx)
     if (source.gradient !== undefined) ret.gradient = (adaptor.importGradient || importGradient)(source.gradient, ctx)

@@ -109,6 +109,8 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
             }
             return ret
         })(),
+        startMarkerType: source.startMarkerType && (adaptor.exportMarkerType || exportMarkerType)(source.startMarkerType, ctx),
+        endMarkerType: source.endMarkerType && (adaptor.exportMarkerType || exportMarkerType)(source.endMarkerType, ctx),
     }
     return ret
 }
@@ -518,8 +520,6 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
         thickness: source.thickness,
         gradient: source.gradient && (adaptor.exportGradient || exportGradient)(source.gradient, ctx),
         borderStyle: (adaptor.exportBorderStyle || exportBorderStyle)(source.borderStyle, ctx),
-        startMarkerType: (adaptor.exportMarkerType || exportMarkerType)(source.startMarkerType, ctx),
-        endMarkerType: (adaptor.exportMarkerType || exportMarkerType)(source.endMarkerType, ctx),
     }
     return ret
 }
