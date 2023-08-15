@@ -26,12 +26,12 @@ const arrayimpl = "../data/basic"
 // const schemadir = path.resolve('./')
 // const outdir = path.resolve('../io/')
 // const outfile = path.join(outdir, 'baseexport' + typesext)
-const exportadaptor = "./exportadaptor"
-genexport(schemadir, path.join(path.resolve('../io/'), 'baseexport' + typesext), typedefs, exportadaptor)
+// const exportadaptor = "./exportadaptor"
+genexport(schemadir, path.join(path.resolve('../io/'), 'baseexport' + typesext), typedefs)
 
 // const typesext = '.ts'
 // const schemadir = path.resolve('./')
 // const outdir = path.resolve('../io/')
 // const outfile = path.join(outdir, 'baseimport' + typesext)
-const importadaptor = "./importadaptor"
-genimport(schemadir, path.join(path.resolve('../io/'), 'baseimport' + typesext), implpath, typedefs, importadaptor, arrayimpl)
+// const importadaptor = "./importadaptor"
+genimport(schemadir, path.join(path.resolve('../io/'), 'baseimport' + typesext), implpath, typedefs, arrayimpl)

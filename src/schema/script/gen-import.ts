@@ -1,4 +1,5 @@
 import { loadSchemas, mergeAllOf, orderSchemas } from "../../script/schema/basic"
+import { inject } from "./import-inject"
 
 const fs = require("fs")
 const path = require("path")
@@ -11,13 +12,15 @@ const schemaext = '.json'
 // const outfile = path.join(outdir, 'baseimport' + typesext)
 
 
-const handler: {[key: string]:(schema: any, className: string, attrname: string, level: number, filename: string, allschemas: Map<string, {
-    schema: any,
-    dependsOn: Set<string>,
-    className: string,
-    filename: string,
-    filepath: string
-}>) => string} & { schemadir?: string } = {}
+const handler: {
+    [key: string]: (schema: any, className: string, attrname: string, level: number, filename: string, allschemas: Map<string, {
+        schema: any,
+        dependsOn: Set<string>,
+        className: string,
+        filename: string,
+        filepath: string
+    }>) => string
+} & { schemadir?: string } = {}
 handler['object'] = function (schema: any, className: string, attrname: string, level: number, filename: string, allschemas: Map<string, {
     schema: any,
     dependsOn: Set<string>,
@@ -28,7 +31,7 @@ handler['object'] = function (schema: any, className: string, attrname: string, 
     className = schema.className ?? className
     filename = schema.filename ?? filename
     let required = new Set<string>()
-    let requiredArray:any[][] = []
+    let requiredArray: any[][] = []
     let props = new Map<string, {
         schema: any,
         className: string,
@@ -97,7 +100,12 @@ handler['object'] = function (schema: any, className: string, attrname: string, 
         ret += handler['type'](v.schema, v.className, attrname + '.' + k, level, v.filename, allschemas)
         ret += '\n'
     })
-    // ret += indent(level) + 'if (ctx) ctx.afterImport(ret)\n'
+
+    // inject
+    if (inject[className] && inject[className]['after']) {
+        ret += inject[className]['after']
+    }
+
     ret += indent(level) + 'return ret\n'
     return ret
 }
@@ -112,11 +120,11 @@ handler['$ref'] = function (schema: any, className: string, attrname: string, le
     className = schema.className ?? className
     filename = schema.filename ?? filename
     if (schema == '#') {
-        return '(adaptor.import' + className + ' || import' + className + ')(' + attrname + ', ctx)'
+        return 'import' + className + '(' + attrname + ', ctx)'
     }
     else if (schema.endsWith(schemaext)) {
         className = fileName2TypeName(extractRefFileName(schema))
-        return '(adaptor.import' + className + ' || import' + className + ')(' + attrname + ', ctx)'
+        return 'import' + className + '(' + attrname + ', ctx)'
     }
     else {
         throw new Error("unknow schema : " + schema)
@@ -177,9 +185,9 @@ handler['oneOf'] = function (schema: any, className: string, attrname: string, l
     filename = schema.filename ?? filename
     let ret = `(() => {\n`
 
-// ${indent(level)}    if (typeof ${attrname} != 'object') {
-// ${indent(level)}        return ${attrname}
-// ${indent(level)}    }
+    // ${indent(level)}    if (typeof ${attrname} != 'object') {
+    // ${indent(level)}        return ${attrname}
+    // ${indent(level)}    }
 
     for (let i = 0; i < schema.length; i++) {
         let s = schema[i]
@@ -198,7 +206,7 @@ handler['oneOf'] = function (schema: any, className: string, attrname: string, l
         if (typename) {
             ret += `
 ${indent(level)}    if (${attrname}.typeId == '${filename}') {
-${indent(level)}        return (adaptor.import${typename} || import${typename})(${attrname} as types.${typename}, ctx)
+${indent(level)}        return import${typename}(${attrname} as types.${typename}, ctx)
 ${indent(level)}    }`
         }
     }
@@ -273,18 +281,29 @@ function importTypes(schema: any, className: string, attrname: string, level: nu
     ret += indent(level) + 'export function '
     ret += 'import' + className + '(source: types.' + className + ', ctx?: IImportContext)'
     ret += ': impl.' + className + ' {\n'
+
+    // inject
+    if (inject[className] && inject[className]['before']) {
+        ret += inject[className]['before']
+    }
+
     if (schema.enum) {
         ret += indent(level + 1) + 'return source\n'
     }
     else {
-        ret += handler['object'](schema, className, 'source', level + 1, filename, allschemas)
+        if (inject[className] && inject[className]['content']) {
+            ret += inject[className]['content']
+        }
+        else {
+            ret += handler['object'](schema, className, 'source', level + 1, filename, allschemas)
+        }
     }
     ret += indent(level) + '}'
     ret += '\n'
     return ret;
 }
 
-export function genimport(schemadir: string, outfile: string, implpath: string, typedefs: string, adaptor: string, arrayimpl?: string) {
+export function genimport(schemadir: string, outfile: string, implpath: string, typedefs: string, arrayimpl?: string) {
     handler.schemadir = schemadir;
     const all = loadSchemas(schemadir);
     const order = orderSchemas(all);
@@ -295,7 +314,6 @@ export function genimport(schemadir: string, outfile: string, implpath: string, 
     fs.appendFileSync(outfile, headTips);
     fs.appendFileSync(outfile, `import * as impl from "${implpath}"\n`);
     fs.appendFileSync(outfile, `import * as types from "${typedefs}"\n`);
-    fs.appendFileSync(outfile, `import * as adaptor from "${adaptor}"\n`);
     if (arrayimpl) fs.appendFileSync(outfile, `import { BasicArray } from "${arrayimpl}"\n\n`);
     fs.appendFileSync(outfile,
         `

@@ -5,7 +5,6 @@ import { IDataGuard } from "../data/basic";
 import { Document, DocumentMeta, DocumentSyms } from "../data/document";
 import * as storage from "./storage";
 import {base64Encode, base64ToDataUrl} from "../basic/utils";
-import {Fill} from "../data/style";
 
 interface IJSON {
     [key: string]: any
