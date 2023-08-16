@@ -120,12 +120,22 @@ export class TableCell extends Shape implements classes.TableCell {
     setContentImage(ref: string | undefined) {
         this.imageRef = ref;
     }
+
+    // 这个设计不太好？
     setCellSpan(rowSpan: number | undefined, colSpan: number | undefined) {
         rowSpan = rowSpan && rowSpan <= 1 ? undefined : rowSpan;
         colSpan = colSpan && colSpan <= 1 ? undefined : colSpan;
         this.rowSpan = rowSpan;
         this.colSpan = colSpan;
         if (this.text) this.text.reLayout();
+        const parent = this.parent;
+        if (parent) (parent as TableShape).reLayout();
+    }
+
+    onRollback(): void {
+        if (this.text) this.text.reLayout();
+        const parent = this.parent;
+        if (parent) (parent as TableShape).reLayout();
     }
 }
 
@@ -225,6 +235,10 @@ export class TableShape extends GroupShape implements classes.TableShape {
 
     setFrameSize(w: number, h: number) {
         super.setFrameSize(w, h);
+        this.reLayout();
+    }
+
+    onRollback(): void {
         this.reLayout();
     }
 
