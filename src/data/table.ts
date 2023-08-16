@@ -202,7 +202,7 @@ export class TableShape extends GroupShape implements classes.TableShape {
         const rowHBase = rowHeights.reduce((sum, cur) => sum + cur, 0);
         return rowHeights.map((val) => val / rowHBase * height);
     }
-    insertRow(idx: number, height: number, data?: any[]) {
+    insertRow(idx: number, height: number, data: TableCell[]) {
         tableInsertRow(this, idx, height, data);
         this.reLayout();
     }
@@ -211,7 +211,7 @@ export class TableShape extends GroupShape implements classes.TableShape {
         this.reLayout();
         return ret;
     }
-    insertCol(idx: number, width: number, data?: any[]) {
+    insertCol(idx: number, width: number, data: TableCell[]) {
         tableInsertCol(this, idx, width, data);
         this.reLayout();
     }
