@@ -55,7 +55,7 @@ export interface AsyncCreator {
     setFrameByWheel: (point: PageXY) => void;
     collect: (page: Page, shapes: Shape[], target: Artboard) => void;
     close: () => undefined;
-    init_table: (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, row: number, col: number) => Shape | undefined;
+    init_table: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, row: number, col: number) => Shape | undefined;
 }
 export interface AsyncBaseAction {
     executeRotate: (deg: number) => void;
@@ -159,7 +159,7 @@ export class Controller {
                 return newShape
             }
         }
-        const init_table = (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, row: number, col: number): Shape | undefined => {
+        const init_table = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, row: number, col: number): Shape | undefined => {
             savepage = page;
             status = Status.Pending;
             const shape = newTable(name, frame, row, col, this.__document.mediasMgr);
