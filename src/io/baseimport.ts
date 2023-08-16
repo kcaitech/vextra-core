@@ -638,7 +638,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.textAttr !== undefined) ret.textAttr = (adaptor.importTextAttr || importTextAttr)(source.textAttr, ctx)
+    if (source.textAttr !== undefined) ret.textAttr = importTextAttr(source.textAttr, ctx)
     return ret
 }
 /* table cell */

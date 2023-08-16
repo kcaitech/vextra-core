@@ -645,7 +645,7 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
             }
             return ret
         })(),
-        textAttr: source.textAttr && (adaptor.exportTextAttr || exportTextAttr)(source.textAttr, ctx),
+        textAttr: source.textAttr && exportTextAttr(source.textAttr, ctx),
     }
     return ret
 }
