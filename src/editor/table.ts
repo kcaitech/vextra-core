@@ -128,7 +128,6 @@ export class TableEditor extends ShapeEditor {
             console.error(e);
             this.__repo.rollback();
         }
-        this.shape.reLayout();
     }
 
     setCellContentImage(cell: TableCell, ref: string) {
