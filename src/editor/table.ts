@@ -5,8 +5,8 @@ import { CoopRepository } from "./command/cooprepo";
 import { newText } from "./creator";
 import { StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
-import { Color } from "data/style";
-import { importTextAttr } from "io/importadaptor";
+import { Color } from "../data/style";
+import { importTextAttr } from "../io/baseimport";
 import { fixTableShapeFrameByLayout } from "./utils";
 import { Api } from "./command/recordapi";
 
