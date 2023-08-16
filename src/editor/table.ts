@@ -3,8 +3,12 @@ import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { newText } from "./creator";
-import { TableCellType, TextBehaviour } from "../data/baseclasses";
+import { StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
+import { Color } from "data/style";
+import { importTextAttr } from "io/importadaptor";
+import { fixTableShapeFrameByLayout } from "./utils";
+import { Api } from "./command/recordapi";
 
 export class TableEditor extends ShapeEditor {
 
@@ -141,6 +145,9 @@ export class TableEditor extends ShapeEditor {
         const _text = newText();
         _text.setTextBehaviour(TextBehaviour.Fixed);
         _text.setPadding(5, 0, 3, 0);
+        if (this.shape.textAttr) { // todo
+            _text.attr = importTextAttr(this.shape.textAttr);
+        }
         if (text && text.length > 0) _text.insertText(text, 0);
         const api = this.__repo.start('setCellContentText', {});
         try {
@@ -276,5 +283,286 @@ export class TableEditor extends ShapeEditor {
             console.error(e);
             this.__repo.rollback();
         }
+    }
+
+    private fixFrameByLayout(cell: TableCell, api: Api) {
+        fixTableShapeFrameByLayout(api, this.__page, cell);
+    }
+
+    // text attr
+    public setTextColor(color: Color | undefined) {
+        const api = this.__repo.start("setTableTextColor", {});
+        try {
+            api.tableModifyTextColor(this.__page, this.shape, color);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyColor(this.__page, cell as any, 0, cell.text.length, color);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextHighlightColor(color: Color | undefined) {
+        const api = this.__repo.start("setTableTextHighlightColor", {});
+        try {
+            api.tableModifyTextHighlightColor(this.__page, this.shape, color);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyHighlightColor(this.__page, cell as any, 0, cell.text.length, color);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextFontName(fontName: string) {
+        const api = this.__repo.start("setTableTextFontName", {});
+        try {
+            api.tableModifyTextFontName(this.__page, this.shape, fontName);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyFontName(this.__page, cell as any, 0, cell.text.length, fontName);
+                    this.fixFrameByLayout(cell, api);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextFontSize(fontSize: number) {
+        const api = this.__repo.start("setTableTextFontSize", {});
+        try {
+            api.tableModifyTextFontSize(this.__page, this.shape, fontSize);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyFontSize(this.__page, cell as any, 0, cell.text.length, fontSize);
+                    this.fixFrameByLayout(cell, api);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    // 对象属性
+    public setTextVerAlign(verAlign: TextVerAlign) {
+        const api = this.__repo.start("setTableTextVerAlign", {});
+        try {
+            api.tableModifyTextVerAlign(this.__page, this.shape, verAlign);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.shapeModifyTextVerAlign(this.__page, cell as any, verAlign);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    // 段属性
+    public setTextHorAlign(horAlign: TextHorAlign) {
+        const api = this.__repo.start("setTableTextHorAlign", {});
+        try {
+            api.tableModifyTextHorAlign(this.__page, this.shape, horAlign);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyHorAlign(this.__page, cell as any, horAlign, 0, cell.text.length);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public setLineHeight(lineHeight: number) {
+        const api = this.__repo.start("setLineHeight", {});
+        try {
+            api.tableModifyTextMinLineHeight(this.__page, this.shape, lineHeight);
+            api.tableModifyTextMaxLineHeight(this.__page, this.shape, lineHeight);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    const length = cell.text.length;
+                    api.textModifyMinLineHeight(this.__page, cell as any, lineHeight, 0, length);
+                    api.textModifyMaxLineHeight(this.__page, cell as any, lineHeight, 0, length);
+                    this.fixFrameByLayout(cell, api);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    // 字间距 段属性
+    public setCharSpacing(kerning: number) {
+        const api = this.__repo.start("setTableCharSpace", {});
+        try {
+            api.tableModifyTextKerning(this.__page, this.shape, kerning);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyKerning(this.__page, cell as any, kerning, 0, cell.text.length);
+                    this.fixFrameByLayout(cell, api);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    // 段间距 段属性
+    public setParaSpacing(paraSpacing: number) {
+        const api = this.__repo.start("setTableParaSpacing", {});
+        try {
+            api.tableModifyTextParaSpacing(this.__page, this.shape, paraSpacing);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyParaSpacing(this.__page, cell as any, paraSpacing, 0, cell.text.length);
+                    this.fixFrameByLayout(cell, api);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public setTextUnderline(underline: boolean) {
+        const api = this.__repo.start("setTableTextUnderline", {});
+        try {
+            api.tableModifyTextUnderline(this.__page, this.shape, underline ? UnderlineType.Single : undefined);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyUnderline(this.__page, cell as any, underline ? UnderlineType.Single : undefined, 0, cell.text.length);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public setTextStrikethrough(strikethrough: boolean) {
+        const api = this.__repo.start("setTableTextStrikethrough", {});
+        try {
+            api.tableModifyTextStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyStrikethrough(this.__page, cell as any, strikethrough ? StrikethroughType.Single : undefined, 0, cell.text.length);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public setTextBold(bold: boolean) {
+        const api = this.__repo.start("setTableTextBold", {});
+        try {
+            api.tableModifyTextBold(this.__page, this.shape, bold);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyBold(this.__page, cell as any, bold, 0, cell.text.length);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public setTextItalic(italic: boolean) {
+        const api = this.__repo.start("setTableTextItalic", {});
+        try {
+            api.tableModifyTextItalic(this.__page, this.shape, italic);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyItalic(this.__page, cell as any, italic, 0, cell.text.length);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public setTextTransform(transform: TextTransformType | undefined) {
+        const api = this.__repo.start("setTableTextTransform", {});
+        try {
+            api.tableModifyTextTransform(this.__page, this.shape, transform);
+            const cells = this.shape.childs as any as TableCell[];
+            cells.forEach((cell) => {
+                if (cell.cellType === TableCellType.Text && cell.text) {
+                    api.textModifyTransform(this.__page, cell as any, transform, 0, cell.text.length);
+                    this.fixFrameByLayout(cell, api);
+                }
+            })
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
     }
 }

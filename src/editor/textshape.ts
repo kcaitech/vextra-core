@@ -307,7 +307,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.highlightIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextColor", {});
+        const api = this.__repo.start("setTextHighlightColor", {});
         try {
             api.textModifyHighlightColor(this.__page, this.shape, index, len, color)
             this.__repo.commit();
