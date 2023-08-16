@@ -25,6 +25,9 @@ export class Basic {
     notify(...args: any[]): void {
         this.__parent && this.__parent.notify(this.typeId, ...args);
     }
+
+    onRollback() { // 非正常事务中，需要清空一些缓存数据
+    }
 }
 
 export class BasicArray<T> extends Array<T> {
