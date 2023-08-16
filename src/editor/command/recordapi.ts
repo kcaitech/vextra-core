@@ -74,6 +74,8 @@ export class Api {
                 case CmdType.ShapeArrayAttrModify:
                 case CmdType.ShapeArrayAttrModify2:
                 case CmdType.ShapeArrayAttrMove:
+                case CmdType.TableDelete:
+                case CmdType.TableInsert:
                     group.cmds.push(c as any);
                     break;
                 default: throw new Error("unknow group type:" + c.type)
@@ -973,7 +975,7 @@ export class Api {
     tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data: TableCell[]) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            basicapi.tableInsertRow(table, idx, height, data);
+            basicapi.tableInsertRow(page, table, idx, height, data);
             const data1 = data.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
             this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, height, TableOpTarget.Row));
         })
@@ -992,7 +994,7 @@ export class Api {
     tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data: TableCell[]) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            basicapi.tableInsertCol(table, idx, width, data);
+            basicapi.tableInsertCol(page, table, idx, width, data);
             const data1 = data.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
             this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, width, TableOpTarget.Col));
         })

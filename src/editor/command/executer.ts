@@ -722,12 +722,12 @@ export class CMDExecuter {
         if (target === TableOpTarget.Row) {
             const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
             const height = JSON.parse(cmd.data);
-            api.tableInsertRow(shape as TableShape, op.index, height, data);
+            api.tableInsertRow(page, shape as TableShape, op.index, height, data);
         }
         else if (target === TableOpTarget.Col) {
             const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
             const width = JSON.parse(cmd.data);
-            api.tableInsertCol(shape as TableShape, op.index, width, data);
+            api.tableInsertCol(page, shape as TableShape, op.index, width, data);
         }
         else {
             throw new Error("unknow table target " + target)

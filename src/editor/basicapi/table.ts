@@ -1,6 +1,8 @@
 import { Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
-import { Color, Page, StrikethroughType, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
+import { Border, Color, Fill, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
+import { uuid } from "../../basic/uuid";
+import { BasicArray } from "../../data/basic";
 
 export function tableSetCellContentType(cell: TableCell, contentType: TableCellType | undefined) {
     cell.setContentType(contentType);
@@ -21,17 +23,42 @@ export function tableModifyColWidth(table: TableShape, idx: number, width: numbe
 export function tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number) {
     table.setRowHeight(idx, height);
 }
-
-export function tableInsertRow(table: TableShape, idx: number, height: number, data?: TableCell[]) {
+function newCell(): TableCell {
+    return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
+        new BasicArray<Border>(),
+        new BasicArray<Fill>()
+    ))
+}
+export function tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data?: TableCell[]) {
+    if (!data || data.length === 0) {
+        data = [];
+        const count = table.colWidths.length;
+        for (let i = 0; i < count; ++i) {
+            data.push(newCell());
+        }
+    }
     table.insertRow(idx, height, data);
+    data.forEach((cell) => {
+        page.onAddShape(cell);
+    })
 }
 
 export function tableRemoveRow(table: TableShape, idx: number) {
     return table.removeRow(idx);
 }
 
-export function tableInsertCol(table: TableShape, idx: number, width: number, data?: TableCell[]) {
+export function tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data?: TableCell[]) {
+    if (!data || data.length === 0) {
+        data = [];
+        const count = table.rowHeights.length;
+        for (let i = 0; i < count; ++i) {
+            data.push(newCell());
+        }
+    }
     table.insertCol(idx, width, data);
+    data.forEach((cell) => {
+        page.onAddShape(cell);
+    })
 }
 
 export function tableRemoveCol(table: TableShape, idx: number) {
