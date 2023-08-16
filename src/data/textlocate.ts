@@ -10,11 +10,12 @@ export class TextLocate {
 }
 
 export function locateText(layout: TextLayout, x: number, y: number): TextLocate {
-    const { yOffset, paras } = layout;
+    const { xOffset, yOffset, paras } = layout;
     const ret = new TextLocate();
     // index line
     if (y < yOffset) return ret;
     y -= yOffset;
+    x -= xOffset;
     let index = 0;
     let before = false; // 在行尾时为true
     for (let pi = 0, plen = paras.length; pi < plen; pi++) {
@@ -189,6 +190,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
 
         for (let li = 0, llen = p.length; li < llen; li++) {
             const line = p[li];
+            const lineX = layout.xOffset + line.x;
             const lineY = layout.yOffset + p.yOffset + line.y;
             if ((cursorAtBefore && index === line.graphCount)) {
                 if (line.length === 0) break; // error
@@ -196,7 +198,7 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 if (span.length === 0) break; // error
                 const graph = span[span.length - 1];
                 const y = lineY + (line.lineHeight - graph.ch) / 2;
-                const x = line.x + graph.x + graph.cw;
+                const x = lineX + graph.x + graph.cw;
                 const p0 = { x, y };
                 const p1 = { x, y: y + graph.ch };
                 const ret = makeCursorLocate(layout, pi, li, line.length - 1, [p0, p1])
@@ -217,15 +219,15 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 // 光标的大小应该与即将输入的文本大小一致
                 // x
                 let graph = span[index];
-                let x = line.x + graph.x;
+                let x = lineX + graph.x;
                 let y = lineY + (line.lineHeight - graph.ch) / 2;
                 let ch = graph.ch;
                 if (index > 0) {
                     const preGraph = span[index - 1];
                     if (isNewLineCharCode(graph.char.charCodeAt(0))) {
-                        x = line.x + preGraph.x + preGraph.cw;
+                        x = lineX + preGraph.x + preGraph.cw;
                     } else {
-                        x = line.x + (preGraph.x + preGraph.cw + graph.x) / 2;
+                        x = lineX + (preGraph.x + preGraph.cw + graph.x) / 2;
                     }
                     y = lineY + (line.lineHeight - preGraph.ch) / 2;
                     ch = preGraph.ch;
@@ -234,9 +236,9 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                     const preSpan = line[i - 1];
                     const preGraph = preSpan[preSpan.length - 1];
                     if (isNewLineCharCode(graph.char.charCodeAt(0))) {
-                        x = line.x + preGraph.x + preGraph.cw;
+                        x = lineX + preGraph.x + preGraph.cw;
                     } else {
-                        x = line.x + (preGraph.x + preGraph.cw + graph.x) / 2;
+                        x = lineX + (preGraph.x + preGraph.cw + graph.x) / 2;
                     }
                     y = lineY + (line.lineHeight - preGraph.ch) / 2;
                     ch = preGraph.ch;
@@ -270,7 +272,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
             const span1 = line[line.length - 1];
             const graph0 = span0[0];
             const graph1 = span1[span1.length - 1];
-            const x = graph0.x + line.x;
+            const x = layout.xOffset + graph0.x + line.x;
             const w = graph1.x + graph1.cw - graph0.x;
 
             points.push(
@@ -291,10 +293,12 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
 
         const span = line[si];
         const graph = span[gi];
-        const minX = graph.x + line.x;
-        const minY = layout.yOffset + p.yOffset + line.y; // + (line.lineHeight - graph.ch) / 2;
-        const maxY = layout.yOffset + p.yOffset + line.y + line.lineHeight;
-        let maxX = graph.x + graph.cw + line.x;
+        const lineX = layout.xOffset + line.x;
+        const lineY = layout.yOffset + p.yOffset + line.y;
+        const minX = lineX + graph.x;
+        const minY = lineY; // + (line.lineHeight - graph.ch) / 2;
+        const maxY = lineY + line.lineHeight;
+        let maxX = lineX + graph.x + graph.cw;
 
         for (let i = si, len = line.length; i < len && count > 0; i++) {
             const span = line[i];
@@ -302,7 +306,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
             const last = Math.min(span.length - 1, gi + count - 1);
             const graph = span[last]; // 同一span里的字符都有相同的大小属性,取最后一个就行
 
-            maxX = graph.x + graph.cw + line.x;
+            maxX = lineX + graph.x + graph.cw;
 
             // const y = line.y + (line.lineHeight - graph.ch) / 2;
             // if (minY > y) minY = y;

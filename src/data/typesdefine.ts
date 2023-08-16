@@ -199,6 +199,13 @@ export type PageListItem = {
     name: string
     versionId?: string
 }
+/* padding */
+export type Padding = {
+    left?: number
+    top?: number
+    right?: number
+    bottom?: number
+}
 /* override list item */
 export type OverrideItem = {
     id: string
@@ -468,6 +475,7 @@ export type TableShape = Shape & {
     childs: TableCell[]
     rowHeights: number[]
     colWidths: number[]
+    textAttr?: TextAttr
 }
 /* table cell */
 export type TableCell = Shape & {
@@ -513,6 +521,7 @@ export type TextAttr = ParaAttr & {
     verAlign?: TextVerAlign
     orientation?: TextOrientation
     textBehaviour?: TextBehaviour
+    padding?: Padding
 }
 /* page */
 export type Page = Shape & {
