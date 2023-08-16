@@ -92,8 +92,8 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             const c = cells[celli];
             ret.push(c);
             // fix span
-            const rowSpan = c.rowSpan || 1;
-            let colSpan = c.colSpan || 1;
+            const rowSpan = Math.min(c.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(c.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
                 if (grid.isSet(ri, _ci)) {
@@ -111,8 +111,8 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             if (grid.isSet(ri, ci)) continue;
             const c = cells[celli];
             // fix span
-            const rowSpan = c.rowSpan || 1;
-            let colSpan = c.colSpan || 1;
+            const rowSpan = Math.min(c.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(c.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
                 if (grid.isSet(ri, _ci)) {
