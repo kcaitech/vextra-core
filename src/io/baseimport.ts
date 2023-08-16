@@ -884,6 +884,7 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     if (source.verAlign !== undefined) ret.verAlign = importTextVerAlign(source.verAlign, ctx)
     if (source.orientation !== undefined) ret.orientation = importTextOrientation(source.orientation, ctx)
     if (source.textBehaviour !== undefined) ret.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)
+    if (source.padding !== undefined) ret.padding = importPadding(source.padding, ctx)
     return ret
 }
 /* page */

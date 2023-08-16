@@ -894,6 +894,7 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
         verAlign: source.verAlign && exportTextVerAlign(source.verAlign, ctx),
         orientation: source.orientation && exportTextOrientation(source.orientation, ctx),
         textBehaviour: source.textBehaviour && exportTextBehaviour(source.textBehaviour, ctx),
+        padding: source.padding && exportPadding(source.padding, ctx),
     }
     return ret
 }
