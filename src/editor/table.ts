@@ -142,12 +142,9 @@ export class TableEditor extends ShapeEditor {
     }
 
     setCellContentText(cell: TableCell, text?: string) {
-        const _text = newText();
+        const _text = newText(this.shape.textAttr);
         _text.setTextBehaviour(TextBehaviour.Fixed);
         _text.setPadding(5, 0, 3, 0);
-        if (this.shape.textAttr) { // todo
-            _text.attr = importTextAttr(this.shape.textAttr);
-        }
         if (text && text.length > 0) _text.insertText(text, 0);
         const api = this.__repo.start('setCellContentText', {});
         try {

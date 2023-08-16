@@ -34,7 +34,10 @@ export const SHAPE_ATTR_ID = {
     cellContentType: "cellContentType",
     cellContentText: "cellContentText",
     cellContentImage: "cellContentImage",
-    cellSpan: "cellSpan"
+    cellSpan: "cellSpan",
+    tableTextColor: "tableTextColor",
+    tableTextHighlight: "tableTextHighlight",
+    
 }
 
 export const FILLS_ID = "fills"

@@ -1018,10 +1018,14 @@ export class Api {
             }
         })
     }
+
+    // text
     tableModifyTextColor(page: Page, table: TableShape, color: Color | undefined) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.color ? exportColor(table.textAttr?.color) : undefined;
+            basicapi.tableModifyTextColor(table, color);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextColor, color ? exportColor(color) : undefined, origin));
         })
     }
     tableModifyTextHighlightColor(page: Page, table: TableShape, color: Color | undefined) {
@@ -1031,38 +1035,81 @@ export class Api {
         })
     }
     tableModifyTextFontName(page: Page, table: TableShape, fontName: string) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextFontSize(page: Page, table: TableShape, fontSize: number) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextVerAlign(page: Page, table: TableShape, verAlign: TextVerAlign) {
-
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
-    tableModifyTextHorAlign(page: Page, teble: TableShape, horAlign: TextHorAlign) {
-
+    tableModifyTextHorAlign(page: Page, table: TableShape, horAlign: TextHorAlign) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextMinLineHeight(page: Page, table: TableShape, lineHeight: number) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextMaxLineHeight(page: Page, table: TableShape, lineHeight: number) {
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextKerning(page: Page, table: TableShape, kerning: number) {
-
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextParaSpacing(page: Page, table: TableShape, paraSpacing: number) {
-
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextUnderline(page: Page, table: TableShape, underline: UnderlineType | undefined) {
-
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextStrikethrough(page: Page, table: TableShape, strikethrough: StrikethroughType | undefined) {
-
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextBold(page: Page, table: TableShape, bold: boolean) {
-
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextItalic(page: Page, table: TableShape, italic: boolean) {
-
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
     tableModifyTextTransform(page: Page, table: TableShape, transform: TextTransformType | undefined) {
-
+        this.checkShapeAtPage(page, table);
+        this.__trap(() => {
+            // todo
+        })
     }
 }
