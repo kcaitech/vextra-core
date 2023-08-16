@@ -50,20 +50,20 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
-
-    if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
-        const cx = frame.x + frame.width / 2;
-        const cy = frame.y + frame.height / 2;
-        const style: any = {}
-        style.transform = "translate(" + cx + "px," + cy + "px) "
-        if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
-        if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
-        if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
-        style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
-        props.style = style;
-    }
-    else {
-        props.transform = `translate(${frame.x},${frame.y})`
-    }
+    // if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
+    //     const cx = frame.x + frame.width / 2;
+    //     const cy = frame.y + frame.height / 2;
+    //     const style: any = {}
+    //     style.transform = "translate(" + cx + "px," + cy + "px) "
+    //     if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
+    //     if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
+    //     if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
+    //     style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
+    //     props.style = style;
+    // }
+    // else {
+    //     props.transform = `translate(${frame.x},${frame.y})`
+    // }
+    props.transform = `translate(${frame.x},${frame.y})`;
     return h('g', props, nodes);
 }
