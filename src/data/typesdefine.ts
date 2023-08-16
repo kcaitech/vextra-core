@@ -475,6 +475,7 @@ export type TableShape = Shape & {
     childs: TableCell[]
     rowHeights: number[]
     colWidths: number[]
+    textAttr?: TextAttr
 }
 /* table cell */
 export type TableCell = Shape & {
