@@ -2,9 +2,9 @@ import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/sh
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape } from "./creator";
+import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape } from "./creator";
 import { Document } from "../data/document";
-import { translateTo, translate, expand } from "./frame";
+import { translateTo, translate, expand, adjustLT2 } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
@@ -455,9 +455,49 @@ export class PageEditor {
             default: return newRectShape(name, frame);
         }
     }
-    createGroup() {
-        return newGroupShape('tool-group');
+    /**
+     * @description 参数可选的创建并插入图形
+     * @param ex_params 包含某一些属性的特定参数
+     *  is_arrow?: 箭头(style)
+     *  rotation?: 初始化角度
+     *  target_xy?: 插入位置(frame)
+     *  media?: 静态资源
+     *  ...
+     * @returns 
+     */
+    create2(page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, ex_params: any) {
+        const { is_arrow, rotation, target_xy } = ex_params;
+        let new_s: Shape | undefined;
+        switch (type) {
+            case ShapeType.Artboard: new_s = newArtboard(name, frame); break;
+            case ShapeType.Rectangle: new_s = newRectShape(name, frame); break;
+            case ShapeType.Oval: new_s = newOvalShape(name, frame); break;
+            case ShapeType.Line: new_s = is_arrow ? newArrowShape(name, frame) : newLineShape(name, frame); break;
+            default: new_s = newRectShape(name, frame);
+        }
+        if (!new_s) return false;
+        const api = this.__repo.start("create2", {});
+        const m_p2r = parent.matrix2Root();
+        try {
+            const index = parent.childs.length;
+            const xy = m_p2r.computeCoord2(0, 0);
+            new_s.frame.x -= xy.x, new_s.frame.y -= xy.y;
+            if (rotation) {
+                new_s.rotation = rotation;
+            }
+            new_s = api.shapeInsert(this.__page, parent, new_s, index);
+            if (target_xy) {
+                translateTo(api, page, new_s, target_xy.x, target_xy.y);
+            }
+            this.__repo.commit();
+            return new_s;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+            return false;
+        }
     }
+
     // 移动shape到目标Group的指定位置
     move(shape: Shape, target: GroupShape, to: number): boolean {
         const parent = shape.parent as GroupShape | undefined;
