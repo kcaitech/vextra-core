@@ -593,7 +593,7 @@ export class Api {
         this.checkShapeAtPage(page, shape);
         this.__trap(() => {
             basicapi.insertComplexText(shape.text, text, idx)
-            this.addCmd(TextCmdInsert.Make(page.id, shape.id, idx, text.length, { type: "complex", text, length: text.length }))
+            this.addCmd(TextCmdInsert.Make(page.id, shape.id, idx, text.length, { type: "complex", text: exportText(text), length: text.length }))
         })
     }
     deleteText(page: Page, shape: TextShapeLike, idx: number, len: number) {

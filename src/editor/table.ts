@@ -6,7 +6,6 @@ import { newText } from "./creator";
 import { StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
 import { Color } from "../data/style";
-import { importTextAttr } from "../io/baseimport";
 import { fixTableShapeFrameByLayout } from "./utils";
 import { Api } from "./command/recordapi";
 
@@ -113,7 +112,10 @@ export class TableEditor extends ShapeEditor {
                 }
                 else if (c.cellType === TableCellType.Text) {
                     if (cell.cellType === TableCellType.Text) {
-                        api.insertComplexText(this.__page, cell as any, cell.text!.length, c.text!);
+                        if (c.text) {
+                            const clen = c.text.length;
+                            if (clen > 1) api.insertComplexText(this.__page, cell as any, cell.text!.length - 1, c.text!);
+                        }
                     }
                 }
                 api.tableSetCellContentType(this.__page, c, undefined);
@@ -126,6 +128,7 @@ export class TableEditor extends ShapeEditor {
             console.error(e);
             this.__repo.rollback();
         }
+        this.shape.reLayout();
     }
 
     setCellContentImage(cell: TableCell, ref: string) {

@@ -4,14 +4,13 @@ import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
 import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment } from "../data/shape";
 import * as types from "../data/typesdefine"
-import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape, importTableCell, importParaAttr, importSpan } from "../io/baseimport";
+import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape, importTableCell } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import template_table_shape from "./template/table-shape.json"
 import template_table_cell from "./template/table-cell.json"
-import template_text from "./template/text.json"
 import {
     Point2D, CurvePoint,
     Color, Border, Style, Fill, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
@@ -27,7 +26,7 @@ import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
 import { TableShape } from "../data/table";
-import { mergeParaAttr, mergeSpanAttr } from "data/textutils";
+import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {
