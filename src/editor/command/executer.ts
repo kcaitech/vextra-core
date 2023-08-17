@@ -747,10 +747,10 @@ export class CMDExecuter {
         }
         const target = op.target;
         if (target === TableOpTarget.Row) {
-            api.tableRemoveRow(shape as TableShape, op.index);
+            api.tableRemoveRow(page, shape as TableShape, op.index);
         }
         else if (target === TableOpTarget.Col) {
-            api.tableRemoveCol(shape as TableShape, op.index);
+            api.tableRemoveCol(page, shape as TableShape, op.index);
         }
         else {
             throw new Error("unknow table target " + target)

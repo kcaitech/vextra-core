@@ -31,8 +31,12 @@ export function tableInsertRow(page: Page, table: TableShape, idx: number, heigh
     })
 }
 
-export function tableRemoveRow(table: TableShape, idx: number) {
-    return table.removeRow(idx);
+export function tableRemoveRow(page: Page, table: TableShape, idx: number) {
+    const ret = table.removeRow(idx);
+    ret.forEach((cell) => {
+        page.onRemoveShape(cell);
+    })
+    return ret;
 }
 
 export function tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data: TableCell[]) {
@@ -42,8 +46,12 @@ export function tableInsertCol(page: Page, table: TableShape, idx: number, width
     })
 }
 
-export function tableRemoveCol(table: TableShape, idx: number) {
-    return table.removeCol(idx);
+export function tableRemoveCol(page: Page, table: TableShape, idx: number) {
+    const ret = table.removeCol(idx);
+    ret.forEach((cell) => {
+        page.onRemoveShape(cell);
+    })
+    return ret;
 }
 
 export function tableModifyCellSpan(cell: TableCell, rowSpan: number | undefined, colSpan: number | undefined) {

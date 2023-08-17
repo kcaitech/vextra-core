@@ -19,6 +19,17 @@ export class TableEditor extends ShapeEditor {
         return this.__shape as TableShape;
     }
 
+    splitCell(cell: TableCell, rowCount: number, colCount: number) {
+        const api = this.__repo.start("splitCell", {});
+        try {
+
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
     // 水平拆分单元格
     horSplitCell(cell: TableCell) {
         const api = this.__repo.start("horSplitCell", {});
@@ -41,6 +52,7 @@ export class TableEditor extends ShapeEditor {
                     for (let i = 0; i < count; ++i) {
                         data.push(newCell());
                     }
+                    data[indexCell.colIdx].colSpan = cell.colSpan;
                 }
                 api.tableInsertRow(this.__page, this.shape, indexCell.rowIdx + 1, weight, data);
                 api.tableModifyRowHeight(this.__page, this.shape, indexCell.rowIdx, weight);
@@ -62,7 +74,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("verSplitCell", {});
         try {
             if (cell.colSpan && cell.colSpan > 1) {
-                api.tableModifyCellSpan(this.__page, cell, cell.rowSpan || 1, cell.colSpan - 1);
+                api.tableModifyCellSpan(this.__page, cell, cell.rowSpan || 1, cell.colSpan - 1); // 平分？
             }
             else {
                 // 当前列后插入列
@@ -79,6 +91,7 @@ export class TableEditor extends ShapeEditor {
                     for (let i = 0; i < count; ++i) {
                         data.push(newCell());
                     }
+                    data[indexCell.rowIdx].rowSpan = cell.rowSpan;
                 }
                 api.tableInsertCol(this.__page, this.shape, indexCell.colIdx + 1, weight, data);
                 api.tableModifyColWidth(this.__page, this.shape, indexCell.colIdx, weight);

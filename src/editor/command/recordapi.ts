@@ -976,7 +976,7 @@ export class Api {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
             basicapi.tableInsertRow(page, table, idx, height, data);
-            const data1 = data.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
+            const data1 = data.map((cell) => exportTableCell(cell));
             this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, height, TableOpTarget.Row));
         })
     }
@@ -985,7 +985,7 @@ export class Api {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
             const origin = table.rowHeights[idx];
-            const del = basicapi.tableRemoveRow(table, idx);
+            const del = basicapi.tableRemoveRow(page, table, idx);
             const data1 = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
             this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, data1, origin, TableOpTarget.Row));
         })
@@ -995,7 +995,7 @@ export class Api {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
             basicapi.tableInsertCol(page, table, idx, width, data);
-            const data1 = data.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
+            const data1 = data.map((cell) => exportTableCell(cell));
             this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, width, TableOpTarget.Col));
         })
     }
@@ -1004,7 +1004,7 @@ export class Api {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
             const origin = table.colWidths[idx];
-            const del = basicapi.tableRemoveCol(table, idx);
+            const del = basicapi.tableRemoveCol(page, table, idx);
             const data1 = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
             this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, data1, origin, TableOpTarget.Col));
         })
