@@ -16,7 +16,8 @@ import {
     Point2D, CurvePoint,
     Color, Border, Style, Fill, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
     Text,
-    BorderStyle
+    BorderStyle,
+    Shadow
 } from "../data/classes";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
@@ -68,7 +69,7 @@ export function newStyle(): Style {
     const borders = new BasicArray<Border>();
     const fill = newSolidColorFill();
     const fills = new BasicArray<Fill>();
-    const style = new Style(borders, fills);
+    const style = new Style(borders, fills, new BasicArray<Shadow>());
     style.fills.push(fill);
     return style;
 }
