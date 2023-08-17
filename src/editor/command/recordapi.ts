@@ -11,8 +11,8 @@ import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportShadow, exportTableCell, exportText } from "../../io/baseexport";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHADOW_ID, SHAPE_ATTR_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, Shape, PathShape, PathShape2 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
@@ -580,6 +580,20 @@ export class Api {
                 shape.style.borders.splice(idx2, 0, border);
                 this.addCmd(ShapeArrayAttrMove.Make(page.id, shape.id, BORDER_ID, idx, idx2))
             }
+        })
+    }
+    addShadow(page: Page, shape: Shape) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const shadow = basicapi.addShadow(shape.style);
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, shape.id, SHADOW_ID, shadow.id, shape.style.shadows.length, exportShadow(shadow)))
+        })
+    }
+    deleteShadowAt(page: Page, shape: Shape, idx: number) {
+        this.checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const shadow = basicapi.deleteShadowAt(shape.style, idx);
+            if (shadow) this.addCmd(ShapeArrayAttrRemove.Make(page.id, shape.id, SHADOW_ID, shadow.id, idx, exportShadow(shadow)));
         })
     }
     insertSimpleText(page: Page, shape: TextShapeLike, idx: number, text: string, attr?: SpanAttr) {

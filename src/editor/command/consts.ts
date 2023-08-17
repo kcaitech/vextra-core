@@ -45,6 +45,7 @@ export const FILLS_ATTR_ID = {
 }
 
 export const BORDER_ID = "border"
+export const SHADOW_ID = "shadow"
 
 export const BORDER_ATTR_ID = {
     enable: "enable",

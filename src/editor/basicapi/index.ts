@@ -7,6 +7,7 @@ import { BoolOp, BulletNumbersBehavior, BulletNumbersType, MarkerType, Point2D, 
 
 export * from "./fill";
 export * from "./border";
+export * from "./shadow";
 export * from "./table";
 
 type TextShapeLike = Shape & { text: Text }
