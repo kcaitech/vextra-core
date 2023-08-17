@@ -19,13 +19,14 @@ import {
     Span,
     ParaAttr,
     TextAttr,
-    BorderStyle
+    BorderStyle,
+    ShapeType
 } from "../data/classes";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
-import { TableShape } from "../data/table";
+import { TableCell, TableShape } from "../data/table";
 import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
@@ -229,6 +230,13 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     img.setImageMgr(mediasMgr);
     addCommonAttr(img);
     return img;
+}
+
+export function newCell(): TableCell {
+    return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
+        new BasicArray<Border>(),
+        new BasicArray<Fill>()
+    ))
 }
 
 export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>): TableShape {

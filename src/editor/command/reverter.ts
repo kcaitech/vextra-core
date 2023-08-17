@@ -31,7 +31,9 @@ import {
     TableCmdInsert,
     TableCmdRemove,
     TableOpRemove,
-    TableOpInsert
+    TableOpInsert,
+    ShapeArrayAttrModify2,
+    ArrayOpAttr
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 
@@ -57,6 +59,8 @@ export class CMDReverter {
                 return this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
             case CmdType.ShapeArrayAttrModify:
                 return this.shapeArrAttrModify(cmd as ShapeArrayAttrModify);
+            case CmdType.ShapeArrayAttrModify2:
+                return this.shapeArrAttrModify2(cmd as ShapeArrayAttrModify2);
             case CmdType.ShapeArrayAttrMove:
                 return this.shapeArrAttrMove(cmd as ShapeArrayAttrMove);
             case CmdType.ShapeArrayAttrDelete:
@@ -77,6 +81,9 @@ export class CMDReverter {
                 return this.shapeMove(cmd as ShapeCmdMove);
             case CmdType.Group:
                 return this.cmdGroup(cmd as CmdGroup);
+            case CmdType.TableDelete:
+            case CmdType.TableInsert:
+
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
         }
@@ -137,6 +144,20 @@ export class CMDReverter {
             op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, cmdop.length)
         }
         return new ShapeArrayAttrRemove(CmdType.ShapeArrayAttrDelete, uuid(), cmd.blockId, [op], cmd.arrayAttrId);
+    }
+    shapeArrAttrModify2(cmd: ShapeArrayAttrModify2): ShapeArrayAttrModify2 {
+        const cmdop = cmd.ops[0];
+        let op;
+        if (cmdop.type === OpType.ArrayAttr) {
+            op = ArrayOpAttr.Make(cmdop.targetId, cmdop.start, cmdop.length);
+        }
+        else {
+            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, cmdop.length)
+        }
+        const ret = new ShapeArrayAttrModify2(CmdType.ShapeArrayAttrModify2, uuid(), cmd.blockId, [op], cmd.attrId);
+        ret.value = cmd.origin;
+        ret.origin = cmd.value;
+        return ret;
     }
     shapeArrAttrModify(cmd: ShapeArrayAttrModify): ShapeArrayAttrModify {
         const cmdop = cmd.ops[0];
@@ -293,33 +314,8 @@ export class CMDReverter {
         const ret = CmdGroup.Make(cmd.blockId);
         const revert = ret.cmds;
         cmd.cmds.slice(0).reverse().forEach((cmd) => {
-            switch (cmd.type) {
-                case CmdType.TextInsert:
-                    revert.push(this.textInsert(cmd as TextCmdInsert));
-                    break;
-                case CmdType.TextDelete:
-                    revert.push(this.textDelete(cmd as TextCmdRemove));
-                    break;
-                case CmdType.TextModify:
-                    revert.push(this.textModify(cmd as TextCmdModify));
-                    break;
-
-                case CmdType.ShapeDelete:
-                case CmdType.ShapeInsert:
-                case CmdType.ShapeModify:
-                case CmdType.ShapeMove:
-                case CmdType.ShapeArrayAttrDelete:
-                case CmdType.ShapeArrayAttrInsert:
-                case CmdType.ShapeArrayAttrModify:
-                case CmdType.ShapeArrayAttrMove:
-                    {
-                        const r = this.revert(cmd);
-                        if (r) revert.push(r as any)
-                        break;
-                    }
-                default:
-                    throw new Error("unknow cmd type: " + cmd.type)
-            }
+            const r = this.revert(cmd);
+            if (r) revert.push(r as any)
         });
         return ret;
     }

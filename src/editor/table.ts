@@ -2,7 +2,7 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { newText } from "./creator";
+import { newCell, newText } from "./creator";
 import { StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
 import { Color } from "../data/style";
@@ -35,10 +35,16 @@ export class TableEditor extends ShapeEditor {
                     throw new Error("cell not inside table")
                 }
                 const weight = this.shape.rowHeights[indexCell.rowIdx] / 2;
-                api.tableInsertRow(this.__page, this.shape, indexCell.rowIdx + 1, weight, []);
+                const data = [];
+                {
+                    const count = this.shape.colWidths.length;
+                    for (let i = 0; i < count; ++i) {
+                        data.push(newCell());
+                    }
+                }
+                api.tableInsertRow(this.__page, this.shape, indexCell.rowIdx + 1, weight, data);
                 api.tableModifyRowHeight(this.__page, this.shape, indexCell.rowIdx, weight);
-
-                const cells = this.shape.getTableCells(indexCell.rowIdx, indexCell.rowIdx, 0, this.shape.colWidths.length, true);
+                const cells = this.shape.getVisibleCells(indexCell.rowIdx, indexCell.rowIdx, 0, this.shape.colWidths.length);
                 cells.forEach((c) => {
                     if (c.id !== cell.id) {
                         api.tableModifyCellSpan(this.__page, c, (c.rowSpan || 1) + 1, c.colSpan || 1);
@@ -67,10 +73,16 @@ export class TableEditor extends ShapeEditor {
                     throw new Error("cell not inside table")
                 }
                 const weight = this.shape.colWidths[indexCell.colIdx] / 2;
-                api.tableInsertCol(this.__page, this.shape, indexCell.colIdx + 1, weight, []);
+                const data = [];
+                {
+                    const count = this.shape.rowHeights.length;
+                    for (let i = 0; i < count; ++i) {
+                        data.push(newCell());
+                    }
+                }
+                api.tableInsertCol(this.__page, this.shape, indexCell.colIdx + 1, weight, data);
                 api.tableModifyColWidth(this.__page, this.shape, indexCell.colIdx, weight);
-
-                const cells = this.shape.getTableCells(0, this.shape.rowHeights.length, indexCell.colIdx, indexCell.colIdx, true);
+                const cells = this.shape.getVisibleCells(0, this.shape.rowHeights.length, indexCell.colIdx, indexCell.colIdx);
                 cells.forEach((c) => {
                     if (c.id !== cell.id) {
                         api.tableModifyCellSpan(this.__page, c, c.rowSpan || 1, (c.colSpan || 1) + 1);
@@ -88,8 +100,8 @@ export class TableEditor extends ShapeEditor {
     mergeCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
         const api = this.__repo.start('mergeCells', {});
         try {
-            const cells = this.shape.getTableCells(rowStart, rowStart, colStart, colStart, false);
-            const cellsVisible = this.shape.getTableCells(rowStart, rowEnd, colStart, colEnd, true);
+            const cells = this.shape.getCells(rowStart, rowStart, colStart, colStart);
+            const cellsVisible = this.shape.getVisibleCells(rowStart, rowEnd, colStart, colEnd);
 
             if (cells.length === 0) {
                 throw new Error("not find cell")
@@ -233,7 +245,14 @@ export class TableEditor extends ShapeEditor {
         const weight = height / this.shape.frame.height * total;
         const api = this.__repo.start('insertRow', {});
         try {
-            api.tableInsertRow(this.__page, this.shape, idx, weight, data ?? []);
+            if (!data || data.length == 0) {
+                data = [];
+                const count = this.shape.colWidths.length;
+                for (let i = 0; i < count; ++i) {
+                    data.push(newCell());
+                }
+            }
+            api.tableInsertRow(this.__page, this.shape, idx, weight, data);
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height + height);
             this.__repo.commit();
         } catch (e) {
@@ -261,6 +280,13 @@ export class TableEditor extends ShapeEditor {
         const weight = width / this.shape.frame.width * total;
         const api = this.__repo.start('insertCol', {});
         try {
+            if (!data || data.length == 0) {
+                data = [];
+                const count = this.shape.rowHeights.length;
+                for (let i = 0; i < count; ++i) {
+                    data.push(newCell());
+                }
+            }
             api.tableInsertCol(this.__page, this.shape, idx, weight, data ?? []);
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width + width, this.shape.frame.height);
             this.__repo.commit();

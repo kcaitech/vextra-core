@@ -23,20 +23,8 @@ export function tableModifyColWidth(table: TableShape, idx: number, width: numbe
 export function tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number) {
     table.setRowHeight(idx, height);
 }
-function newCell(): TableCell {
-    return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
-        new BasicArray<Border>(),
-        new BasicArray<Fill>()
-    ))
-}
-export function tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data?: TableCell[]) {
-    if (!data || data.length === 0) {
-        data = [];
-        const count = table.colWidths.length;
-        for (let i = 0; i < count; ++i) {
-            data.push(newCell());
-        }
-    }
+
+export function tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data: TableCell[]) {
     table.insertRow(idx, height, data);
     data.forEach((cell) => {
         page.onAddShape(cell);
@@ -47,14 +35,7 @@ export function tableRemoveRow(table: TableShape, idx: number) {
     return table.removeRow(idx);
 }
 
-export function tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data?: TableCell[]) {
-    if (!data || data.length === 0) {
-        data = [];
-        const count = table.rowHeights.length;
-        for (let i = 0; i < count; ++i) {
-            data.push(newCell());
-        }
-    }
+export function tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data: TableCell[]) {
     table.insertCol(idx, width, data);
     data.forEach((cell) => {
         page.onAddShape(cell);
