@@ -101,7 +101,7 @@ export function layoutTable(table: TableShape): TableLayout {
         grid,
         width,
         height,
-        rowHeights: rowHeights.slice(0),
-        colWidths: colWidths.slice(0)
+        rowHeights: rowHeights.map((w) => w / rowHBase * height),
+        colWidths: colWidths.map((w) => w / colWBase * width)
     }
 }
