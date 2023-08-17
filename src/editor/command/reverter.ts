@@ -82,8 +82,9 @@ export class CMDReverter {
             case CmdType.Group:
                 return this.cmdGroup(cmd as CmdGroup);
             case CmdType.TableDelete:
+                return this.tableRemove(cmd as TableCmdRemove);
             case CmdType.TableInsert:
-
+                return this.tableInsert(cmd as TableCmdInsert);
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
         }
