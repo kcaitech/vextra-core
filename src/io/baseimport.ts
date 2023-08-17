@@ -85,6 +85,14 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
                 if (r) ret.push(r)
             }
             return ret
+        })(),
+        (() => {
+            const ret = new BasicArray<impl.Shadow>()
+            for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
+                const r = importShadow(source.shadows[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
         })()
     )
     if (source.miterLimit !== undefined) ret.miterLimit = source.miterLimit
@@ -97,14 +105,6 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         const ret = new BasicArray<impl.Shadow>()
         for (let i = 0, len = source.innerShadows && source.innerShadows.length; i < len; i++) {
             const r = importShadow(source.innerShadows[i], ctx)
-            if (r) ret.push(r)
-        }
-        return ret
-    })()
-    if (source.shadows !== undefined) ret.shadows = (() => {
-        const ret = new BasicArray<impl.Shadow>()
-        for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
-            const r = importShadow(source.shadows[i], ctx)
             if (r) ret.push(r)
         }
         return ret
@@ -188,6 +188,7 @@ export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext)
 /* shadow */
 export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.Shadow {
     const ret: impl.Shadow = new impl.Shadow (
+        source.id,
         source.isEnabled,
         source.blurRadius,
         importColor(source.color, ctx),

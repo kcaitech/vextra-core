@@ -1,14 +1,15 @@
 import { uuid } from "../basic/uuid";
 import { ShapeFrame } from "./baseclasses";
 import { BasicArray } from "./basic";
-import { Border, Fill, Style } from "./style";
+import { Border, Fill, Style, Shadow } from "./style";
 import { TableCell, TableShape } from "./table";
 import { ShapeType } from "./typesdefine";
 
 function newCell(): TableCell {
     return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
         new BasicArray<Border>(),
-        new BasicArray<Fill>()
+        new BasicArray<Fill>(),
+        new BasicArray<Shadow>()
     ))
 }
 

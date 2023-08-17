@@ -131,21 +131,23 @@ export class Style extends Basic implements classes.Style {
     windingRule?: WindingRule
     blur?: Blur
     borderOptions?: BorderOptions
-    borders: BasicArray<Border >
+    borders: BasicArray<Border>
     colorControls?: ColorControls
     contextSettings?: ContextSettings
-    fills: BasicArray<Fill >
-    innerShadows?: BasicArray<Shadow >
-    shadows?: BasicArray<Shadow >
+    fills: BasicArray<Fill>
+    innerShadows?: BasicArray<Shadow>
+    shadows: BasicArray<Shadow>
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     constructor(
-        borders: BasicArray<Border >,
-        fills: BasicArray<Fill >
+        borders: BasicArray<Border>,
+        fills: BasicArray<Fill>,
+        shadows: BasicArray<Shadow>,
     ) {
         super()
         this.borders = borders
         this.fills = fills
+        this.shadows = shadows
         borders.setTypeId("borders");
         fills.setTypeId("fills");
     }

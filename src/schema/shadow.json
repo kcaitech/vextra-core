@@ -2,6 +2,12 @@
     "description": "shadow",
     "type": "object",
     "properties": {
+        "id": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 36,
+            "default": "$uuid"
+        },
         "isEnabled": {
             "type": "boolean",
             "default": false
@@ -30,6 +36,7 @@
         }
     },
     "required": [
+        "id",
         "isEnabled",
         "blurRadius",
         "color",

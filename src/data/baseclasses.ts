@@ -109,16 +109,18 @@ export class Style extends Basic {
     contextSettings?: ContextSettings
     fills: BasicArray<Fill >
     innerShadows?: BasicArray<Shadow >
-    shadows?: BasicArray<Shadow >
+    shadows: BasicArray<Shadow >
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     constructor(
         borders: BasicArray<Border >,
-        fills: BasicArray<Fill >
+        fills: BasicArray<Fill >,
+        shadows: BasicArray<Shadow >
     ) {
         super()
         this.borders = borders
         this.fills = fills
+        this.shadows = shadows
     }
 }
 /**
@@ -226,6 +228,7 @@ export class ShapeFrame extends Basic {
  */
 export class Shadow extends Basic {
     typeId = 'shadow'
+    id: string
     isEnabled: boolean
     blurRadius: number
     color: Color
@@ -234,6 +237,7 @@ export class Shadow extends Basic {
     offsetY: number
     spread: number
     constructor(
+        id: string,
         isEnabled: boolean,
         blurRadius: number,
         color: Color,
@@ -242,6 +246,7 @@ export class Shadow extends Basic {
         spread: number
     ) {
         super()
+        this.id = id
         this.isEnabled = isEnabled
         this.blurRadius = blurRadius
         this.color = color
