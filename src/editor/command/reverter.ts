@@ -32,7 +32,6 @@ import {
     TableCmdRemove,
     TableOpRemove,
     TableOpInsert,
-    ShapeArrayAttrModify2,
     ArrayOpAttr
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
@@ -59,8 +58,6 @@ export class CMDReverter {
                 return this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
             case CmdType.ShapeArrayAttrModify:
                 return this.shapeArrAttrModify(cmd as ShapeArrayAttrModify);
-            case CmdType.ShapeArrayAttrModify2:
-                return this.shapeArrAttrModify2(cmd as ShapeArrayAttrModify2);
             case CmdType.ShapeArrayAttrMove:
                 return this.shapeArrAttrMove(cmd as ShapeArrayAttrMove);
             case CmdType.ShapeArrayAttrDelete:
@@ -146,20 +143,7 @@ export class CMDReverter {
         }
         return new ShapeArrayAttrRemove(CmdType.ShapeArrayAttrDelete, uuid(), cmd.blockId, [op], cmd.arrayAttrId);
     }
-    shapeArrAttrModify2(cmd: ShapeArrayAttrModify2): ShapeArrayAttrModify2 {
-        const cmdop = cmd.ops[0];
-        let op;
-        if (cmdop.type === OpType.ArrayAttr) {
-            op = ArrayOpAttr.Make(cmdop.targetId, cmdop.start, cmdop.length);
-        }
-        else {
-            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, cmdop.length)
-        }
-        const ret = new ShapeArrayAttrModify2(CmdType.ShapeArrayAttrModify2, uuid(), cmd.blockId, [op], cmd.attrId);
-        ret.value = cmd.origin;
-        ret.origin = cmd.value;
-        return ret;
-    }
+
     shapeArrAttrModify(cmd: ShapeArrayAttrModify): ShapeArrayAttrModify {
         const cmdop = cmd.ops[0];
         let op;

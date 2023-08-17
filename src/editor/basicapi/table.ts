@@ -67,7 +67,7 @@ export function tableModifyTextHighlightColor(table: TableShape, color: Color | 
     if (!table.textAttr) table.textAttr = new TextAttr();
     table.textAttr.highlight = color;
 }
-export function tableModifyTextFontName(table: TableShape, fontName: string) {
+export function tableModifyTextFontName(table: TableShape, fontName: string | undefined) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     table.textAttr.fontName = fontName;
 }
@@ -75,7 +75,7 @@ export function tableModifyTextFontSize(table: TableShape, fontSize: number) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     table.textAttr.fontSize = fontSize;
 }
-export function tableModifyTextVerAlign(table: TableShape, verAlign: TextVerAlign) {
+export function tableModifyTextVerAlign(table: TableShape, verAlign: TextVerAlign | undefined) {
     if (!table.textAttr) table.textAttr = new TextAttr();
     table.textAttr.verAlign = verAlign;
 }

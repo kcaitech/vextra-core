@@ -37,7 +37,19 @@ export const SHAPE_ATTR_ID = {
     cellSpan: "cellSpan",
     tableTextColor: "tableTextColor",
     tableTextHighlight: "tableTextHighlight",
-    
+    tableTextFontName: "tableTextFontName",
+    tableTextFontSize: "tableTextFontSize",
+    tableTextVerAlign: "tableTextVerAlign",
+    tableTextHorAlign: "tableTextHorAlign",
+    tableTextMinLineHeight: "tableTextMinLineHeight",
+    tableTextMaxLineHeight: "tableTextMaxLineHeight",
+    tableTextKerning: "tableTextKerning",
+    tableTextParaSpacing: "tableTextParaSpacing",
+    tableTextUnderline: "tableTextUnderline",
+    tableTextStrikethrough: "tableTextStrikethrough",
+    tableTextBold: "tableTextBold",
+    tableTextItalic: "tableTextItalic",
+    tableTextTransform: "tableTextTransform",
 }
 
 export const FILLS_ID = "fills"

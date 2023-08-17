@@ -3,7 +3,7 @@ import {
     PageCmdInsert, PageCmdModify, PageCmdMove, PageCmdDelete,
     ShapeArrayAttrMove, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
     ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
-    TextCmdInsert, TextCmdRemove, TextCmdModify, ShapeArrayAttrModify2,
+    TextCmdInsert, TextCmdRemove, TextCmdModify,
     TableCmdInsert, TableCmdRemove,
     TableOpTarget
 } from "../../coop/data/classes";
@@ -60,26 +60,7 @@ export class Api {
         this.cmds.forEach((c) => {
             if (c.blockId !== blockId) throw new Error("blockid not equal");
             c.unitId = group.unitId;
-            switch (c.type) {
-                case CmdType.TextDelete:
-                case CmdType.TextInsert:
-                case CmdType.TextModify:
-                case CmdType.TextMove:
-                case CmdType.ShapeDelete:
-                case CmdType.ShapeInsert:
-                case CmdType.ShapeModify:
-                case CmdType.ShapeMove:
-                case CmdType.ShapeArrayAttrDelete:
-                case CmdType.ShapeArrayAttrInsert:
-                case CmdType.ShapeArrayAttrModify:
-                case CmdType.ShapeArrayAttrModify2:
-                case CmdType.ShapeArrayAttrMove:
-                case CmdType.TableDelete:
-                case CmdType.TableInsert:
-                    group.cmds.push(c as any);
-                    break;
-                default: throw new Error("unknow group type:" + c.type)
-            }
+            group.cmds.push(c as any);
         })
         return group;
     }
@@ -959,7 +940,8 @@ export class Api {
         this.__trap(() => {
             const origin = table.colWidths[idx];
             basicapi.tableModifyColWidth(table, idx, width);
-            this.addCmd(ShapeArrayAttrModify2.Make(page.id, table.id, TABLE_COL_WIDTHS_ID, idx, "", width, origin));
+            // 错的！
+            // this.addCmd(ShapeArrayAttrModify2.Make(page.id, table.id, TABLE_COL_WIDTHS_ID, idx, "", width, origin));
         })
     }
 
@@ -968,7 +950,7 @@ export class Api {
         this.__trap(() => {
             const origin = table.rowHeights[idx];
             basicapi.tableModifyRowHeight(page, table, idx, height);
-            this.addCmd(ShapeArrayAttrModify2.Make(page.id, table.id, TABLE_ROW_HEIGHTS_ID, idx, "", height, origin));
+            // this.addCmd(ShapeArrayAttrModify2.Make(page.id, table.id, TABLE_ROW_HEIGHTS_ID, idx, "", height, origin));
         })
     }
 
@@ -1033,85 +1015,113 @@ export class Api {
     tableModifyTextHighlightColor(page: Page, table: TableShape, color: Color | undefined) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.highlight ? exportColor(table.textAttr?.highlight) : undefined;
+            basicapi.tableModifyTextHighlightColor(table, color);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextHighlight, color ? exportColor(color) : undefined, origin));
         })
     }
     tableModifyTextFontName(page: Page, table: TableShape, fontName: string) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.fontName;
+            basicapi.tableModifyTextFontName(table, fontName);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextFontName, fontName, origin));
         })
     }
     tableModifyTextFontSize(page: Page, table: TableShape, fontSize: number) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.fontSize;
+            basicapi.tableModifyTextFontSize(table, fontSize);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextFontSize, fontSize, origin));
         })
     }
     tableModifyTextVerAlign(page: Page, table: TableShape, verAlign: TextVerAlign) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.verAlign;
+            basicapi.tableModifyTextVerAlign(table, verAlign);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextVerAlign, verAlign, origin));
         })
     }
     tableModifyTextHorAlign(page: Page, table: TableShape, horAlign: TextHorAlign) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.alignment;
+            basicapi.tableModifyTextHorAlign(table, horAlign);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextHorAlign, horAlign, origin));
         })
     }
     tableModifyTextMinLineHeight(page: Page, table: TableShape, lineHeight: number) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.minimumLineHeight;
+            basicapi.tableModifyTextMinLineHeight(table, lineHeight);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextMinLineHeight, lineHeight, origin));
         })
     }
     tableModifyTextMaxLineHeight(page: Page, table: TableShape, lineHeight: number) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.maximumLineHeight;
+            basicapi.tableModifyTextMaxLineHeight(table, lineHeight);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextMaxLineHeight, lineHeight, origin));
         })
     }
     tableModifyTextKerning(page: Page, table: TableShape, kerning: number) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.kerning;
+            basicapi.tableModifyTextKerning(table, kerning);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextKerning, kerning, origin));
         })
     }
     tableModifyTextParaSpacing(page: Page, table: TableShape, paraSpacing: number) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.paraSpacing;
+            basicapi.tableModifyTextParaSpacing(table, paraSpacing);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextParaSpacing, paraSpacing, origin));
         })
     }
     tableModifyTextUnderline(page: Page, table: TableShape, underline: UnderlineType | undefined) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.underline;
+            basicapi.tableModifyTextUnderline(table, underline);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextUnderline, underline, origin));
         })
     }
     tableModifyTextStrikethrough(page: Page, table: TableShape, strikethrough: StrikethroughType | undefined) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.strikethrough;
+            basicapi.tableModifyTextStrikethrough(table, strikethrough);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextStrikethrough, strikethrough, origin));
         })
     }
     tableModifyTextBold(page: Page, table: TableShape, bold: boolean) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.bold;
+            basicapi.tableModifyTextBold(table, bold);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextBold, bold, origin));
         })
     }
     tableModifyTextItalic(page: Page, table: TableShape, italic: boolean) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.italic;
+            basicapi.tableModifyTextItalic(table, italic);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextItalic, italic, origin));
         })
     }
     tableModifyTextTransform(page: Page, table: TableShape, transform: TextTransformType | undefined) {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
-            // todo
+            const origin = table.textAttr?.transform;
+            basicapi.tableModifyTextTransform(table, transform);
+            this.addCmd(ShapeCmdModify.Make(page.id, table.id, SHAPE_ATTR_ID.tableTextTransform, transform, origin));
         })
     }
 }
