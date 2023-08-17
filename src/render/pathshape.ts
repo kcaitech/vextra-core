@@ -1,6 +1,8 @@
 import { PathShape } from "../data/classes";
 import { render as fillR } from "./fill";
-import { render as borderR } from "./border"
+import { render as borderR } from "./border";
+import { render as shadowR } from "./shadow";
+
 
 export function render(h: Function, shape: PathShape, reflush?: number) {
     // if (this.data.boolOp != BoolOp.None) {
@@ -54,6 +56,17 @@ export function render(h: Function, shape: PathShape, reflush?: number) {
         return h('path', props);
     }
     else {
-        return h("g", props, childs);
+        if (shape.style.shadows.length) {
+            const ex_props = Object.assign({}, props);
+            delete props.style;
+            delete props.transform;
+            const fliter_id = `dorp-shadow-${shape.id.slice(0, 4)}`
+            const shadow = shadowR(h, fliter_id);
+            props.filter = `url(#${fliter_id})`;
+            const body = h("g", props, childs);
+            return h("g", ex_props, [shadow, body]);
+        } else {
+            return h("g", props, childs);
+        }
     }
 }
