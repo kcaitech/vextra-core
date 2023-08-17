@@ -14,10 +14,10 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
     const path = shape.getPath().toString();
 
     // fill & content
-    for (let i = 0, len = layout.grid.length; i < len; ++i) {
-        const row = layout.grid[i];
-        for (let j = 0, len = row.length; j < len; ++j) {
-            const cellLayout = row[j];
+    for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
+
+        for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
+            const cellLayout = layout.grid.get(i, j);
             if (cellLayout.index.row === i && cellLayout.index.col === j) {
                 const path = cellLayout.cell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();
@@ -33,10 +33,10 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
 
     // border
     nodes.push(...borderR(h, shape.style.borders, frame, path));
-    for (let i = 0, len = layout.grid.length; i < len; ++i) {
-        const row = layout.grid[i];
-        for (let j = 0, len = row.length; j < len; ++j) {
-            const cellLayout = row[j];
+    for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
+
+        for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
+            const cellLayout = layout.grid.get(i, j);
             if (cellLayout.index.row === i && cellLayout.index.col === j) {
                 const path = cellLayout.cell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();

@@ -38,7 +38,7 @@ export function tableInsertCol(table: TableShape, idx: number, width: number, da
     for (let i = 0, count = table.rowHeights.length; i < count; ++i) {
         const cell = data[i];
         if (!cell) throw new Error("cell is undefined")
-        childs.splice(i * colCount + idx + i, 0, cell);
+        childs.splice(i * colCount + idx, 0, cell);
     }
 }
 

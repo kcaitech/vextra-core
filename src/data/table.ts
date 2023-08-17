@@ -9,7 +9,7 @@ import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
 import { indexOfCell, locateCell, locateCellByCell } from "./tablelocate";
-import { getTableCells, getTableVisibleCells } from "./tableread";
+import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
@@ -267,8 +267,31 @@ export class TableShape extends GroupShape implements classes.TableShape {
      * @param visible 
      * @returns 
      */
-    getTableCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number, visible: boolean = true) {
-        if (visible) return getTableVisibleCells(this, rowStart, rowEnd, colStart, colEnd);
+    getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
         return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
+    }
+
+    /**
+     * 获取未被覆盖的单元格
+     * @param rowStart 
+     * @param rowEnd 
+     * @param colStart 
+     * @param colEnd 
+     * @returns 
+     */
+    getNotCoveredCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+        return getTableNotCoveredCells(this, rowStart, rowEnd, colStart, colEnd);
+    }
+
+    /**
+     * 获取用户可见的单元格
+     * @param rowStart 
+     * @param rowEnd 
+     * @param colStart 
+     * @param colEnd 
+     * @returns 
+     */
+    getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+        return getTableVisibleCells(this, rowStart, rowEnd, colStart, colEnd);
     }
 }
