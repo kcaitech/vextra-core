@@ -68,7 +68,7 @@ import * as api from "../basicapi"
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
-import { ArrayOpInsert, ArrayOpRemove, TableOpTarget } from "../../coop/data/basictypes";
+import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
 import { updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { CMDHandler } from "./handler";
@@ -501,21 +501,20 @@ export class CMDExecuter {
         if (op.type !== OpType.TableInsert) {
             return;
         }
-        const target = op.target;
         const _this = this;
         const ctx = new class implements IImportContext { document: Document = _this.__document }
-        if (target === TableOpTarget.Row) {
+        if (op.tableIdx.rowIdx >= 0) {
             const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
             const height = JSON.parse(cmd.data);
-            api.tableInsertRow(page, shape as TableShape, op.index, height, data);
+            api.tableInsertRow(page, shape as TableShape, op.tableIdx.rowIdx, height, data);
         }
-        else if (target === TableOpTarget.Col) {
+        else if (op.tableIdx.colIdx >= 0) {
             const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
             const width = JSON.parse(cmd.data);
-            api.tableInsertCol(page, shape as TableShape, op.index, width, data);
+            api.tableInsertCol(page, shape as TableShape, op.tableIdx.colIdx, width, data);
         }
         else {
-            throw new Error("unknow table target " + target)
+            throw new Error("unknow table target " + op.tableIdx)
         }
     }
     tableDelete(cmd: TableCmdRemove) {
@@ -530,15 +529,14 @@ export class CMDExecuter {
         if (op.type !== OpType.TableRemove) {
             return;
         }
-        const target = op.target;
-        if (target === TableOpTarget.Row) {
-            api.tableRemoveRow(page, shape as TableShape, op.index);
+        if (op.tableIdx.rowIdx >= 0) {
+            api.tableRemoveRow(page, shape as TableShape, op.tableIdx.rowIdx);
         }
-        else if (target === TableOpTarget.Col) {
-            api.tableRemoveCol(page, shape as TableShape, op.index);
+        else if (op.tableIdx.colIdx >= 0) {
+            api.tableRemoveCol(page, shape as TableShape, op.tableIdx.colIdx);
         }
         else {
-            throw new Error("unknow table target " + target)
+            throw new Error("unknow table target " + op.tableIdx)
         }
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove) {

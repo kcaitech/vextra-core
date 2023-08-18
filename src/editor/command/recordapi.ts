@@ -4,8 +4,7 @@ import {
     ShapeArrayAttrMove, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
     ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
     TextCmdInsert, TextCmdRemove, TextCmdModify,
-    TableCmdInsert, TableCmdRemove,
-    TableOpTarget
+    TableCmdInsert, TableCmdRemove
 } from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
@@ -940,7 +939,7 @@ export class Api {
         this.__trap(() => {
             const origin = table.colWidths[idx];
             basicapi.tableModifyColWidth(table, idx, width);
-            // 错的！
+            // 错的！todo
             // this.addCmd(ShapeArrayAttrModify2.Make(page.id, table.id, TABLE_COL_WIDTHS_ID, idx, "", width, origin));
         })
     }
@@ -959,7 +958,7 @@ export class Api {
         this.__trap(() => {
             basicapi.tableInsertRow(page, table, idx, height, data);
             const data1 = data.map((cell) => exportTableCell(cell));
-            this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, height, TableOpTarget.Row));
+            this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, height, "row"));
         })
     }
 
@@ -969,7 +968,7 @@ export class Api {
             const origin = table.rowHeights[idx];
             const del = basicapi.tableRemoveRow(page, table, idx);
             const data1 = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
-            this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, data1, origin, TableOpTarget.Row));
+            this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, data1, origin, "row"));
         })
     }
 
@@ -978,7 +977,7 @@ export class Api {
         this.__trap(() => {
             basicapi.tableInsertCol(page, table, idx, width, data);
             const data1 = data.map((cell) => exportTableCell(cell));
-            this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, width, TableOpTarget.Col));
+            this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, width, "col"));
         })
     }
 
@@ -988,7 +987,7 @@ export class Api {
             const origin = table.colWidths[idx];
             const del = basicapi.tableRemoveCol(page, table, idx);
             const data1 = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
-            this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, data1, origin, TableOpTarget.Col));
+            this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, data1, origin, "col"));
         })
     }
 

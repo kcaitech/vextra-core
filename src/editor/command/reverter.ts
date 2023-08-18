@@ -273,7 +273,7 @@ export class CMDReverter {
     tableInsert(cmd: TableCmdInsert): TableCmdRemove {
         const op = cmd.ops[0];
         if (op.type === OpType.TableInsert) {
-            const removeOp = TableOpRemove.Make(op.targetId[0], op.index, op.data, op.target);
+            const removeOp = TableOpRemove.Make(op.targetId[0], op.tableIdx, (op as TableOpInsert).data);
             const ret = new TableCmdRemove(CmdType.TableDelete, uuid(), cmd.blockId, [removeOp], cmd.data);
             return ret;
         }
@@ -285,7 +285,7 @@ export class CMDReverter {
     tableRemove(cmd: TableCmdRemove): TableCmdInsert {
         const op = cmd.ops[0];
         if (op.type === OpType.TableRemove) {
-            const removeOp = TableOpInsert.Make(op.targetId[0], op.index, op.data, op.target);
+            const removeOp = TableOpInsert.Make(op.targetId[0], op.tableIdx, (op as TableOpRemove).data);
             const ret = new TableCmdInsert(CmdType.TableDelete, uuid(), cmd.blockId, [removeOp], cmd.data);
             return ret;
         }
