@@ -141,7 +141,13 @@ export class CMDExecuter {
         const save = this.__repo.transactCtx.settrap;
         try {
             this.__repo.transactCtx.settrap = false;
-            this._exec(cmd);
+            const needUpdateFrame: { shape: Shape, page: Page }[] = [];
+            this._exec(cmd, needUpdateFrame);
+            if (needUpdateFrame.length > 0) {
+                const page = needUpdateFrame[0].page;
+                const shapes = needUpdateFrame.map((v) => v.shape);
+                updateShapesFrame(page, shapes, api)
+            }
             this.__repo.commit();
             return true;
         }
@@ -156,8 +162,7 @@ export class CMDExecuter {
         }
     }
 
-    private _exec(cmd: Cmd) {
-        const needUpdateFrame: { shape: Shape, page: Page }[] = [];
+    private _exec(cmd: Cmd, needUpdateFrame: { shape: Shape, page: Page }[]) {
         switch (cmd.type) {
             case CmdType.PageInsert:
                 this.pageInsert(cmd as PageCmdInsert);
@@ -217,17 +222,11 @@ export class CMDExecuter {
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
         }
-
-        if (needUpdateFrame.length > 0) {
-            const page = needUpdateFrame[0].page;
-            const shapes = needUpdateFrame.map((v) => v.shape);
-            updateShapesFrame(page, shapes, api)
-        }
     }
 
     cmdGroup(cmdGroup: CmdGroup, needUpdateFrame: { shape: Shape, page: Page }[]) {
         cmdGroup.cmds.forEach((cmd) => {
-            this._exec(cmd);
+            this._exec(cmd, needUpdateFrame);
         })
     }
 
