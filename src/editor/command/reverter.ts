@@ -32,7 +32,9 @@ import {
     TableCmdRemove,
     TableOpRemove,
     TableOpInsert,
-    ArrayOpAttr
+    TableCmdModify,
+    TableOpModify,
+    TableOpNone
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 
@@ -82,6 +84,8 @@ export class CMDReverter {
                 return this.tableRemove(cmd as TableCmdRemove);
             case CmdType.TableInsert:
                 return this.tableInsert(cmd as TableCmdInsert);
+            case CmdType.TableModify:
+                return this.tableModify(cmd as TableCmdModify);
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
         }
@@ -282,15 +286,29 @@ export class CMDReverter {
             return ret;
         }
     }
+    tableModify(cmd: TableCmdModify): TableCmdModify {
+        const cmdop = cmd.ops[0];
+        let op;
+        if (cmdop.type === OpType.TableModify) {
+            op = TableOpModify.Make(cmdop.targetId[0], cmdop.tableIdx, (cmdop as TableOpModify).opId);
+        }
+        else {
+            op = TableOpNone.Make(cmdop.targetId[0], cmdop.tableIdx)
+        }
+        const ret = new TableCmdModify(CmdType.TableModify, uuid(), cmd.blockId, [op], cmd.attrId)
+        ret.value = cmd.origin;
+        ret.origin = cmd.value;
+        return ret;
+    }
     tableRemove(cmd: TableCmdRemove): TableCmdInsert {
         const op = cmd.ops[0];
         if (op.type === OpType.TableRemove) {
             const removeOp = TableOpInsert.Make(op.targetId[0], op.tableIdx, (op as TableOpRemove).data);
-            const ret = new TableCmdInsert(CmdType.TableDelete, uuid(), cmd.blockId, [removeOp], cmd.data);
+            const ret = new TableCmdInsert(CmdType.TableInsert, uuid(), cmd.blockId, [removeOp], cmd.data);
             return ret;
         }
         else {
-            const ret = new TableCmdInsert(CmdType.TableDelete, uuid(), cmd.blockId, [op], cmd.data);
+            const ret = new TableCmdInsert(CmdType.TableInsert, uuid(), cmd.blockId, [op], cmd.data);
             return ret;
         }
     }

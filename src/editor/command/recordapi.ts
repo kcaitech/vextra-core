@@ -4,7 +4,7 @@ import {
     ShapeArrayAttrMove, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
     ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
     TextCmdInsert, TextCmdRemove, TextCmdModify,
-    TableCmdInsert, TableCmdRemove
+    TableCmdInsert, TableCmdRemove, TableCmdModify
 } from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
@@ -938,9 +938,8 @@ export class Api {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
             const origin = table.colWidths[idx];
-            basicapi.tableModifyColWidth(table, idx, width);
-            // 错的！todo
-            // this.addCmd(ShapeArrayAttrModify2.Make(page.id, table.id, TABLE_COL_WIDTHS_ID, idx, "", width, origin));
+            basicapi.tableModifyColWidth(page, table, idx, width);
+            this.addCmd(TableCmdModify.Make(page.id, table.id, idx, "col", width, origin));
         })
     }
 
@@ -949,7 +948,7 @@ export class Api {
         this.__trap(() => {
             const origin = table.rowHeights[idx];
             basicapi.tableModifyRowHeight(page, table, idx, height);
-            // this.addCmd(ShapeArrayAttrModify2.Make(page.id, table.id, TABLE_ROW_HEIGHTS_ID, idx, "", height, origin));
+            this.addCmd(TableCmdModify.Make(page.id, table.id, idx, "row", height, origin));
         })
     }
 

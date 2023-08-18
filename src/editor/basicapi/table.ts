@@ -16,7 +16,7 @@ export function tableSetCellContentImage(cell: TableCell, ref: string | undefine
     cell.setContentImage(ref);
 }
 
-export function tableModifyColWidth(table: TableShape, idx: number, width: number) {
+export function tableModifyColWidth(page: Page, table: TableShape, idx: number, width: number) {
     table.setColWidth(idx, width);
 }
 

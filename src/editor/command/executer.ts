@@ -18,7 +18,8 @@ import {
     ShapeOpRemove,
     TableCmdInsert,
     TableCmdRemove,
-    TableOpInsert
+    TableOpInsert,
+    TableCmdModify
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 import {
@@ -218,6 +219,9 @@ export class CMDExecuter {
                 break;
             case CmdType.TableDelete:
                 this.tableDelete(cmd as TableCmdRemove);
+                break;
+            case CmdType.TableModify:
+                this.tableModify(cmd as TableCmdModify);
                 break;
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
@@ -534,6 +538,29 @@ export class CMDExecuter {
         }
         else if (op.tableIdx.colIdx >= 0) {
             api.tableRemoveCol(page, shape as TableShape, op.tableIdx.colIdx);
+        }
+        else {
+            throw new Error("unknow table target " + op.tableIdx)
+        }
+    }
+    tableModify(cmd: TableCmdModify) {
+        const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
+        const op = cmd.ops[0]
+        const shapeId = op.targetId[0]
+        const shape = page.getShape(shapeId, true);
+        if (!shape) {
+            throw new Error("shape not find")
+        }
+        if (op.type !== OpType.TableModify) {
+            return;
+        }
+        const value = cmd.value;
+        if (op.tableIdx.rowIdx >= 0) {
+            if (value) api.tableModifyRowHeight(page, shape as TableShape, op.tableIdx.rowIdx, JSON.parse(value));
+        }
+        else if (op.tableIdx.colIdx >= 0) {
+            if (value) api.tableModifyColWidth(page, shape as TableShape, op.tableIdx.colIdx, JSON.parse(value));
         }
         else {
             throw new Error("unknow table target " + op.tableIdx)
