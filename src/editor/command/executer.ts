@@ -21,7 +21,8 @@ import {
     TableOpInsert,
     TableCmdModify,
     TableOpRemove,
-    TableOpModify
+    TableOpModify,
+    TableIndex
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 import {
@@ -332,10 +333,19 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0]
+        if (op.type === OpType.None) return;
         const shapeId = op.targetId[0] as string;
-        const shape = page.getShape(shapeId, true);
-        if (!shape) {
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
             throw new Error("shape not find")
+        }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
+            const index = op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
         }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
@@ -358,10 +368,19 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0]
+        if (op.type === OpType.None) return;
         const shapeId = op.targetId[0] as string;
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) {
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
             throw new Error("shape not find")
+        }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
+            const index = op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
         }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
@@ -382,13 +401,21 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const _op = cmd.ops[0]
-        const shapeId = _op.targetId[0] as string;
-        const shape = page.getShape(shapeId, true);
-        if (!shape) {
-            throw new Error("shape not find")
-        }
         if (_op.type !== OpType.IdSet) {
             return;
+        }
+        const shapeId = _op.targetId[0] as string;
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
+            throw new Error("shape not find")
+        }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
+            const index = _op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
         }
         const op = _op as IdOpSet;
         const arrayAttr = cmd.arrayAttr;
@@ -567,9 +594,17 @@ export class CMDExecuter {
         const op0 = cmd.ops[0]
         const op1 = cmd.ops[1]
         const shapeId = op0.targetId[0] as string;
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) {
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
             throw new Error("shape not find")
+        }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && op0.targetId[1] instanceof TableIndex) {
+            const index = op0.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
         }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
@@ -595,12 +630,20 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const _op = cmd.ops[0]
+        if (_op.type !== OpType.ArrayInsert) return;
         const shapeId = _op.targetId[0] as string;
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) {
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
             throw new Error("shape not find")
         }
-        if (_op.type !== OpType.ArrayInsert) return;
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
+            const index = _op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
+        }
         const op = _op as ArrayOpInsert;
         const text = cmd.parseText();
         const shapetext = (shape as TextShapeLike).text;
@@ -624,12 +667,20 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const _op = cmd.ops[0]
+        if (_op.type !== OpType.ArrayRemove) return;
         const shapeId = _op.targetId[0] as string;
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) {
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
             throw new Error("shape not find")
         }
-        if (_op.type !== OpType.ArrayRemove) return;
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
+            const index = _op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
+        }
         const op = _op as ArrayOpRemove;
         const shapetext = (shape as TextShapeLike).text;
         if (!(shapetext instanceof Text)) {
@@ -641,13 +692,21 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const _op = cmd.ops[0]
-        const shapeId = _op.targetId[0] as string;
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) {
-            throw new Error("shape not find")
-        }
         if (_op.type !== OpType.ArrayAttr) {
             return;
+        }
+        const shapeId = _op.targetId[0] as string;
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
+            throw new Error("shape not find")
+        }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
+            const index = _op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
         }
         const op = _op as ArrayOpAttr;
         const attrId = cmd.attrId

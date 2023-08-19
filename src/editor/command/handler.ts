@@ -1,4 +1,4 @@
-import { Cmd, CmdType, OpType, ShapeCmdModify } from "../../coop"
+import { Cmd, CmdType, OpType, ShapeCmdModify, TableIndex } from "../../coop"
 import { Document, GroupShape, Page, RectShape, Shape, TableCell, Text, TextTransformType, TableShape } from "../../data/classes"
 import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
@@ -30,21 +30,29 @@ export class CMDHandler {
     private handleShapeModify(document: Document, cmd: ShapeCmdModify, needUpdateFrame: UpdateFrameArray) {
         const pageId = cmd.blockId;
         const op = cmd.ops[0];
-        const shapeId = op.targetId[0] as string;
+        if ((op.type !== OpType.IdSet)) return;
         const page = document.pagesMgr.getSync(pageId)
         if (!page) return;
-        const shape = page.getShape(shapeId, true);
-        if (!shape) {
-            throw new Error("shape modify not find shape")
+        const shapeId = op.targetId[0] as string;
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
+            throw new Error("shape not find")
         }
-        if ((op.type === OpType.IdSet)) {
-            const _op = op as IdOpSet;
-            const value = cmd.value;
-            const handlerMap = this._handlers.get(cmd.type) as Map<string, ShapeModifyHandler>;
-            const handler = handlerMap.get(_op.opId);
-            if (!handler) throw new Error("unknow opId " + _op.opId);
-            handler(page, shape, value, needUpdateFrame);
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
+            const index = op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
         }
+
+        const _op = op as IdOpSet;
+        const value = cmd.value;
+        const handlerMap = this._handlers.get(cmd.type) as Map<string, ShapeModifyHandler>;
+        const handler = handlerMap.get(_op.opId);
+        if (!handler) throw new Error("unknow opId " + _op.opId);
+        handler(page, shape, value, needUpdateFrame);
     }
 
     private regist(handlers: (ShapeModifyHandlerArray)[]) {
