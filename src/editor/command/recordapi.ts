@@ -11,7 +11,7 @@ import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, Shape, PathShape, PathShape2 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
@@ -22,6 +22,7 @@ import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
+import { TableOpTarget } from "../../coop/data/classes";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -939,7 +940,7 @@ export class Api {
         this.__trap(() => {
             const origin = table.colWidths[idx];
             basicapi.tableModifyColWidth(page, table, idx, width);
-            this.addCmd(TableCmdModify.Make(page.id, table.id, idx, "col", width, origin));
+            this.addCmd(TableCmdModify.Make(page.id, table.id, idx, TableOpTarget.Col, width, origin));
         })
     }
 
@@ -948,7 +949,7 @@ export class Api {
         this.__trap(() => {
             const origin = table.rowHeights[idx];
             basicapi.tableModifyRowHeight(page, table, idx, height);
-            this.addCmd(TableCmdModify.Make(page.id, table.id, idx, "row", height, origin));
+            this.addCmd(TableCmdModify.Make(page.id, table.id, idx, TableOpTarget.Row, height, origin));
         })
     }
 
@@ -956,8 +957,8 @@ export class Api {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
             basicapi.tableInsertRow(page, table, idx, height, data);
-            const data1 = data.map((cell) => exportTableCell(cell));
-            this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, height, "row"));
+            const cells = data.map((cell) => exportTableCell(cell));
+            this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, TableOpTarget.Row, cells, height));
         })
     }
 
@@ -966,8 +967,8 @@ export class Api {
         this.__trap(() => {
             const origin = table.rowHeights[idx];
             const del = basicapi.tableRemoveRow(page, table, idx);
-            const data1 = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
-            this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, data1, origin, "row"));
+            const cells = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
+            this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, TableOpTarget.Row, cells, origin));
         })
     }
 
@@ -975,8 +976,8 @@ export class Api {
         this.checkShapeAtPage(page, table);
         this.__trap(() => {
             basicapi.tableInsertCol(page, table, idx, width, data);
-            const data1 = data.map((cell) => exportTableCell(cell));
-            this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, data1, width, "col"));
+            const cells = data.map((cell) => exportTableCell(cell));
+            this.addCmd(TableCmdInsert.Make(page.id, table.id, idx, TableOpTarget.Col, cells, width));
         })
     }
 
@@ -985,8 +986,8 @@ export class Api {
         this.__trap(() => {
             const origin = table.colWidths[idx];
             const del = basicapi.tableRemoveCol(page, table, idx);
-            const data1 = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
-            this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, data1, origin, "col"));
+            const cells = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
+            this.addCmd(TableCmdRemove.Make(page.id, table.id, idx, TableOpTarget.Col, cells, origin));
         })
     }
 

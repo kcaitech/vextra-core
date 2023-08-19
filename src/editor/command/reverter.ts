@@ -19,12 +19,9 @@ import {
     ShapeCmdMove,
     OpType,
     ArrayOpRemove,
-    ArrayOpNone,
     ArrayOpInsert,
-    IdOpNone,
     IdOpSet,
     ShapeOpInsert,
-    ShapeOpNone,
     ShapeOpRemove,
     ShapeOpMove,
     CmdGroup,
@@ -34,7 +31,7 @@ import {
     TableOpInsert,
     TableCmdModify,
     TableOpModify,
-    TableOpNone
+    NoneOp
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 
@@ -95,9 +92,10 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ShapeInsert) {
-            op = ShapeOpRemove.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
+            const _op = cmdop as ShapeOpInsert;
+            op = ShapeOpRemove.Make(cmdop.targetId[0] as string, _op.shapeId, _op.index)
         } else {
-            op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
+            op = NoneOp.Make(cmdop.targetId)
         }
         return new PageCmdDelete(CmdType.PageDelete, uuid(), cmd.blockId, [op], cmd.pageId, cmd.data);
     }
@@ -105,20 +103,22 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ShapeRemove) {
-            op = ShapeOpInsert.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index);
+            const _op = cmdop as ShapeOpRemove;
+            op = ShapeOpInsert.Make(cmdop.targetId[0] as string, _op.shapeId, _op.index);
         } else {
-            op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index);
+            op = NoneOp.Make(cmdop.targetId);
         }
-        return new PageCmdInsert(CmdType.PageInsert, uuid(), cmd.blockId, [op], cmdop.shapeId, cmd.data);
+        return new PageCmdInsert(CmdType.PageInsert, uuid(), cmd.blockId, [op], cmd.pageId, cmd.data);
     }
     pageModify(cmd: PageCmdModify): PageCmdModify {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.IdSet) {
-            op = IdOpSet.Make(cmdop.targetId, cmdop.opId)
+            const _op = cmdop as IdOpSet;
+            op = IdOpSet.Make(cmdop.targetId, _op.opId)
         }
         else {
-            op = IdOpNone.Make(cmdop.targetId, cmdop.opId)
+            op = NoneOp.Make(cmdop.targetId)
         }
         const ret = new PageCmdModify(CmdType.PageModify, uuid(), cmd.blockId, [op], cmd.attrId)
         ret.value = cmd.origin;
@@ -126,13 +126,14 @@ export class CMDReverter {
         return ret;
     }
     pageMove(cmd: PageCmdMove): PageCmdMove {
-        const cmdop = cmd.ops[0] as ShapeOpMove;
+        const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ShapeMove) {
-            op = ShapeOpRemove.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
+            const _op = cmdop as ShapeOpMove;
+            op = ShapeOpMove.Make(_op.targetId2[0] as string, _op.shapeId, _op.index2, cmdop.targetId[0] as string, _op.index)
         }
         else {
-            op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
+            op = NoneOp.Make(cmdop.targetId)
         }
         return new PageCmdMove(CmdType.PageMove, uuid(), cmd.blockId, [op]);
     }
@@ -141,9 +142,10 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ArrayInsert) {
-            op = ArrayOpRemove.Make(cmdop.targetId, cmdop.start, cmdop.length)
+            const _op = cmdop as ArrayOpInsert;
+            op = ArrayOpRemove.Make(cmdop.targetId, _op.start, _op.length)
         } else {
-            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, cmdop.length)
+            op = NoneOp.Make(cmdop.targetId)
         }
         return new ShapeArrayAttrRemove(CmdType.ShapeArrayAttrDelete, uuid(), cmd.blockId, [op], cmd.arrayAttrId);
     }
@@ -152,10 +154,11 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.IdSet) {
-            op = IdOpSet.Make(cmdop.targetId, cmdop.opId);
+            const _op = cmdop as IdOpSet;
+            op = IdOpSet.Make(cmdop.targetId, _op.opId);
         }
         else {
-            op = IdOpNone.Make(cmdop.targetId, cmdop.opId)
+            op = NoneOp.Make(cmdop.targetId)
         }
         const ret = new ShapeArrayAttrModify(CmdType.ShapeArrayAttrModify, uuid(), cmd.blockId, [op], cmd.attrId)
         ret.value = cmd.origin;
@@ -163,16 +166,18 @@ export class CMDReverter {
         return ret;
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove): ShapeArrayAttrMove {
-        const cmdop0 = cmd.ops[0] as ArrayOpRemove;
-        const cmdop1 = cmd.ops[1] as ArrayOpInsert;
+        const cmdop0 = cmd.ops[0];
+        const cmdop1 = cmd.ops[1];
         let op0, op1;
         if (cmdop0.type === OpType.ArrayRemove && cmdop1.type === OpType.ArrayInsert) {
+            const cmdop0 = cmd.ops[0] as ArrayOpRemove;
+            const cmdop1 = cmd.ops[1] as ArrayOpInsert;
             op0 = ArrayOpRemove.Make(cmdop1.targetId, cmdop1.start, cmdop1.length)
             op1 = ArrayOpInsert.Make(cmdop0.targetId, cmdop0.start, cmdop0.length)
         }
         else {
-            op0 = ArrayOpNone.Make(cmdop1.targetId, cmdop1.start, cmdop1.length)
-            op1 = ArrayOpNone.Make(cmdop0.targetId, cmdop0.start, cmdop0.length)
+            op0 = NoneOp.Make(cmdop1.targetId)
+            op1 = NoneOp.Make(cmdop0.targetId)
         }
         return new ShapeArrayAttrMove(CmdType.ShapeArrayAttrMove, uuid(), cmd.blockId, [op0, op1]);
     }
@@ -180,9 +185,10 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ArrayRemove) {
-            op = ArrayOpInsert.Make(cmdop.targetId, cmdop.start, 1)
+            const _op = cmdop as ArrayOpRemove;
+            op = ArrayOpInsert.Make(cmdop.targetId, _op.start, _op.length)
         } else {
-            op = ArrayOpNone.Make(cmdop.targetId, cmdop.start, 1)
+            op = NoneOp.Make(cmdop.targetId);
         }
 
         if (!cmd.origin) throw new Error("cmd origin not exist")
@@ -196,9 +202,10 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ShapeRemove) {
-            op = ShapeOpInsert.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index);
+            const _op = cmdop as ShapeOpRemove;
+            op = ShapeOpInsert.Make(cmdop.targetId[0] as string, _op.shapeId, _op.index);
         } else {
-            op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index);
+            op = NoneOp.Make(cmdop.targetId);
         }
         return new ShapeCmdInsert(CmdType.ShapeInsert, uuid(), cmd.blockId, [op], cmd.data);
     }
@@ -206,9 +213,10 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.ShapeInsert) {
-            op = ShapeOpRemove.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
+            const _op = cmdop as ShapeOpInsert;
+            op = ShapeOpRemove.Make(cmdop.targetId[0] as string, _op.shapeId, _op.index)
         } else {
-            op = ShapeOpNone.Make(cmdop.targetId[0], cmdop.shapeId, cmdop.index)
+            op = NoneOp.Make(cmdop.targetId)
         }
         return new ShapeCmdRemove(CmdType.ShapeDelete, uuid(), cmd.blockId, [op], cmd.data);
     }
@@ -216,10 +224,11 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.IdSet) {
-            op = IdOpSet.Make(cmdop.targetId, cmdop.opId);
+            const _op = cmdop as IdOpSet;
+            op = IdOpSet.Make(cmdop.targetId, _op.opId);
         }
         else {
-            op = IdOpNone.Make(cmdop.targetId, cmdop.opId)
+            op = NoneOp.Make(cmdop.targetId)
         }
         const ret = new ShapeCmdModify(CmdType.ShapeModify, uuid(), cmd.blockId, [op], cmd.attrId)
         ret.value = cmd.origin;
@@ -231,11 +240,10 @@ export class CMDReverter {
         let op;
         if (cmdop.type === OpType.ShapeMove) {
             const _op = cmdop as ShapeOpMove;
-            op = ShapeOpMove.Make(_op.targetId2[0], _op.shapeId, _op.index2, _op.targetId[0], _op.index)
+            op = ShapeOpMove.Make(_op.targetId2[0] as string, _op.shapeId, _op.index2, _op.targetId[0] as string, _op.index)
         }
         else {
-            const _op = cmdop as ShapeOpNone;
-            op = ShapeOpNone.Make(_op.targetId[0], _op.shapeId, _op.index)
+            op = NoneOp.Make(cmdop.targetId)
         }
         return new ShapeCmdMove(CmdType.ShapeMove, uuid(), cmd.blockId, [op]);
     }
@@ -250,14 +258,16 @@ export class CMDReverter {
             if (!origin) {
                 throw new Error("text remove cmd has not origin")
             }
-            const shapeId = op.targetId[0];
-            return TextCmdInsert.Make(cmd.blockId, shapeId, op.start, origin.length, origin);
+            const _op = op as ArrayOpRemove;
+            const shapeId = op.targetId[0] as string;
+            return TextCmdInsert.Make(cmd.blockId, shapeId, _op.start, origin.length, origin);
         }
     }
     textInsert(cmd: TextCmdInsert): TextCmdRemove {
         const op = cmd.ops[0];
         if (op.type === OpType.ArrayInsert) {
-            const removeOp = ArrayOpRemove.Make(op.targetId, op.start, op.length);
+            const _op = op as ArrayOpInsert;
+            const removeOp = ArrayOpRemove.Make(op.targetId, _op.start, _op.length);
             const ret = new TextCmdRemove(CmdType.TextDelete, uuid(), cmd.blockId, [removeOp]);
             ret.origin = cmd.text;
             return ret;
@@ -277,7 +287,8 @@ export class CMDReverter {
     tableInsert(cmd: TableCmdInsert): TableCmdRemove {
         const op = cmd.ops[0];
         if (op.type === OpType.TableInsert) {
-            const removeOp = TableOpRemove.Make(op.targetId[0], op.tableIdx, (op as TableOpInsert).data);
+            const _op = op as TableOpInsert;
+            const removeOp = TableOpRemove.Make(op.targetId[0] as string, _op.index, _op.opTarget, _op.data);
             const ret = new TableCmdRemove(CmdType.TableDelete, uuid(), cmd.blockId, [removeOp], cmd.data);
             return ret;
         }
@@ -290,12 +301,13 @@ export class CMDReverter {
         const cmdop = cmd.ops[0];
         let op;
         if (cmdop.type === OpType.TableModify) {
-            op = TableOpModify.Make(cmdop.targetId[0], cmdop.tableIdx, (cmdop as TableOpModify).opId);
+            const _op = cmdop as TableOpModify;
+            op = TableOpModify.Make(cmdop.targetId[0] as string, _op.index, _op.opTarget);
         }
         else {
-            op = TableOpNone.Make(cmdop.targetId[0], cmdop.tableIdx)
+            op = NoneOp.Make(cmdop.targetId);
         }
-        const ret = new TableCmdModify(CmdType.TableModify, uuid(), cmd.blockId, [op], cmd.attrId)
+        const ret = new TableCmdModify(CmdType.TableModify, uuid(), cmd.blockId, [op])
         ret.value = cmd.origin;
         ret.origin = cmd.value;
         return ret;
@@ -303,7 +315,8 @@ export class CMDReverter {
     tableRemove(cmd: TableCmdRemove): TableCmdInsert {
         const op = cmd.ops[0];
         if (op.type === OpType.TableRemove) {
-            const removeOp = TableOpInsert.Make(op.targetId[0], op.tableIdx, (op as TableOpRemove).data);
+            const _op = op as TableOpRemove;
+            const removeOp = TableOpInsert.Make(op.targetId[0] as string, _op.index, _op.opTarget, _op.data);
             const ret = new TableCmdInsert(CmdType.TableInsert, uuid(), cmd.blockId, [removeOp], cmd.data);
             return ret;
         }

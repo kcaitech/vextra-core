@@ -4,6 +4,7 @@ import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
 import { importColor, importText } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
+import { IdOpSet } from "coop/data/basictypes";
 
 export type TextShapeLike = Shape & { text: Text }
 export type UpdateFrameArray = { shape: Shape, page: Page }[];
@@ -29,7 +30,7 @@ export class CMDHandler {
     private handleShapeModify(document: Document, cmd: ShapeCmdModify, needUpdateFrame: UpdateFrameArray) {
         const pageId = cmd.blockId;
         const op = cmd.ops[0];
-        const shapeId = op.targetId[0]
+        const shapeId = op.targetId[0] as string;
         const page = document.pagesMgr.getSync(pageId)
         if (!page) return;
         const shape = page.getShape(shapeId, true);
@@ -37,10 +38,11 @@ export class CMDHandler {
             throw new Error("shape modify not find shape")
         }
         if ((op.type === OpType.IdSet)) {
+            const _op = op as IdOpSet;
             const value = cmd.value;
             const handlerMap = this._handlers.get(cmd.type) as Map<string, ShapeModifyHandler>;
-            const handler = handlerMap.get(op.opId);
-            if (!handler) throw new Error("unknow opId " + op.opId);
+            const handler = handlerMap.get(_op.opId);
+            if (!handler) throw new Error("unknow opId " + _op.opId);
             handler(page, shape, value, needUpdateFrame);
         }
     }

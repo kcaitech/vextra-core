@@ -19,7 +19,9 @@ import {
     TableCmdInsert,
     TableCmdRemove,
     TableOpInsert,
-    TableCmdModify
+    TableCmdModify,
+    TableOpRemove,
+    TableOpModify
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 import {
@@ -66,10 +68,10 @@ import {
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
-import { ArrayOpInsert, ArrayOpRemove } from "../../coop/data/basictypes";
+import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
 import { updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { CMDHandler } from "./handler";
@@ -237,25 +239,27 @@ export class CMDExecuter {
     pageInsert(cmd: PageCmdInsert) {
         const op = cmd.ops[0];
         if (op.type === OpType.ShapeInsert) {
+            const _op = op as ShapeOpInsert;
             const page = importPage(JSON.parse(cmd.data));
-            api.pageInsert(this.__document, page, op.index)
+            api.pageInsert(this.__document, page, _op.index)
         }
     }
     pageDelete(cmd: PageCmdDelete) {
         const op = cmd.ops[0];
         if (op.type === OpType.ShapeRemove) { // oss需要保存历史版本以undo
+            const _op = op as ShapeOpRemove;
             // check
-            const item = this.__document.pagesList[op.index];
+            const item = this.__document.pagesList[_op.index];
             if (item && item.id !== cmd.pageId) throw new Error("page id not equals: " + item.id + " " + cmd.pageId)
 
-            api.pageDelete(this.__document, op.index)
+            api.pageDelete(this.__document, _op.index)
         }
     }
     pageModify(cmd: PageCmdModify) {
         // 参见consts.ts PAGE_ATTR_ID
         const op = cmd.ops[0];
         if (op.type === OpType.IdSet) {// 以pagelist为准
-            const pageId = op.targetId[0]
+            const pageId = op.targetId[0] as string;
             const opId = (op as IdOpSet).opId;
             if (opId === PAGE_ATTR_ID.name) {
                 if (cmd.value) api.pageModifyName(this.__document, pageId, cmd.value)
@@ -273,20 +277,21 @@ export class CMDExecuter {
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
         const op = cmd.ops[0];
-        const parentId = op.targetId[0]
+        const parentId = op.targetId[0] as string;
         if (page && op.type === OpType.ShapeInsert) { // 后续page加载后需要更新！
             const parent = page.getShape(parentId, true);
             if (!parent || !(parent instanceof GroupShape)) {
                 throw new Error("shape insert, parent error")
             }
+            const _op = op as ShapeOpInsert;
             const shape = importShape(cmd.data, this.__document)
-            api.shapeInsert(page, parent, shape, op.index, needUpdateFrame)
+            api.shapeInsert(page, parent, shape, _op.index, needUpdateFrame)
         }
     }
     shapeDelete(cmd: ShapeCmdRemove, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const pageId = cmd.blockId;
         const op = cmd.ops[0];
-        const parentId = op.targetId[0]
+        const parentId = op.targetId[0] as string;
         const page = this.__document.pagesMgr.getSync(pageId)
         if (page && op.type === OpType.ShapeRemove) {
             const parent = page.getShape(parentId, true);
@@ -296,11 +301,12 @@ export class CMDExecuter {
             // check
             const shapeop = op as ShapeOpRemove;
             const shapeid = shapeop.shapeId;
-            const shape = parent.childs[op.index];
+            const _op = op as ShapeOpRemove;
+            const shape = parent.childs[_op.index];
             if (shape && shape.id !== shapeid) {
                 throw new Error("shape id not equals: " + shape.id + " " + shapeid);
             }
-            api.shapeDelete(page, parent, op.index, needUpdateFrame)
+            api.shapeDelete(page, parent, _op.index, needUpdateFrame)
         }
     }
 
@@ -311,8 +317,8 @@ export class CMDExecuter {
         const op = cmd.ops[0];
         if (op.type === OpType.ShapeMove) {
             const moveOp = op as ShapeOpMove;
-            const parentId = moveOp.targetId[0];
-            const parentId2 = moveOp.targetId2[0];
+            const parentId = moveOp.targetId[0] as string;;
+            const parentId2 = moveOp.targetId2[0] as string;
             const parent = page.getShape(parentId, true);
             const parent2 = page.getShape(parentId2, true);
             if (!parent || !parent2) {
@@ -326,7 +332,7 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
+        const shapeId = op.targetId[0] as string;
         const shape = page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
@@ -344,12 +350,6 @@ export class CMDExecuter {
                 api.addBorderAt(shape.style, border, (op as ArrayOpInsert).start);
             }
         }
-        else if (arrayAttr === TABLE_COL_WIDTHS_ID) {
-            // todo
-        }
-        else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
-            // todo
-        }
         else {
             console.error("not implemented ", arrayAttr)
         }
@@ -358,7 +358,7 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
+        const shapeId = op.targetId[0] as string;
         const shape = page && page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
@@ -374,12 +374,6 @@ export class CMDExecuter {
                 api.deleteBorderAt(shape.style, (op as ArrayOpRemove).start)
             }
         }
-        else if (arrayAttr === TABLE_COL_WIDTHS_ID) {
-            // todo
-        }
-        else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
-            // todo
-        }
         else {
             console.error("not implemented ", arrayAttr)
         }
@@ -387,15 +381,16 @@ export class CMDExecuter {
     shapeArrAttrModify(cmd: ShapeArrayAttrModify) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
+        const _op = cmd.ops[0]
+        const shapeId = _op.targetId[0] as string;
         const shape = page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
         }
-        if (op.type !== OpType.IdSet) {
+        if (_op.type !== OpType.IdSet) {
             return;
         }
+        const op = _op as IdOpSet;
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             const fillId = cmd.arrayAttrId;
@@ -497,7 +492,7 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0] as TableOpInsert
-        const shapeId = op.targetId[0]
+        const shapeId = op.targetId[0] as string;
         const shape = page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
@@ -507,25 +502,25 @@ export class CMDExecuter {
         }
         const _this = this;
         const ctx = new class implements IImportContext { document: Document = _this.__document }
-        if (op.tableIdx.rowIdx >= 0) {
+        if (op.opTarget === TableOpTarget.Row) {
             const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
             const height = JSON.parse(cmd.data);
-            api.tableInsertRow(page, shape as TableShape, op.tableIdx.rowIdx, height, data);
+            api.tableInsertRow(page, shape as TableShape, op.index, height, data);
         }
-        else if (op.tableIdx.colIdx >= 0) {
+        else if (op.opTarget === TableOpTarget.Col) {
             const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
             const width = JSON.parse(cmd.data);
-            api.tableInsertCol(page, shape as TableShape, op.tableIdx.colIdx, width, data);
+            api.tableInsertCol(page, shape as TableShape, op.index, width, data);
         }
         else {
-            throw new Error("unknow table target " + op.tableIdx)
+            throw new Error("unknow table target " + op.opTarget)
         }
     }
     tableDelete(cmd: TableCmdRemove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
+        const op = cmd.ops[0] as TableOpRemove
+        const shapeId = op.targetId[0] as string;
         const shape = page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
@@ -533,21 +528,21 @@ export class CMDExecuter {
         if (op.type !== OpType.TableRemove) {
             return;
         }
-        if (op.tableIdx.rowIdx >= 0) {
-            api.tableRemoveRow(page, shape as TableShape, op.tableIdx.rowIdx);
+        if (op.opTarget === TableOpTarget.Row) {
+            api.tableRemoveRow(page, shape as TableShape, op.index);
         }
-        else if (op.tableIdx.colIdx >= 0) {
-            api.tableRemoveCol(page, shape as TableShape, op.tableIdx.colIdx);
+        else if (op.opTarget === TableOpTarget.Col) {
+            api.tableRemoveCol(page, shape as TableShape, op.index);
         }
         else {
-            throw new Error("unknow table target " + op.tableIdx)
+            throw new Error("unknow table target " + op.opTarget)
         }
     }
     tableModify(cmd: TableCmdModify) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
+        const op = cmd.ops[0] as TableOpModify;
+        const shapeId = op.targetId[0] as string;
         const shape = page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
@@ -556,22 +551,22 @@ export class CMDExecuter {
             return;
         }
         const value = cmd.value;
-        if (op.tableIdx.rowIdx >= 0) {
-            if (value) api.tableModifyRowHeight(page, shape as TableShape, op.tableIdx.rowIdx, JSON.parse(value));
+        if (op.opTarget === TableOpTarget.Row) {
+            if (value) api.tableModifyRowHeight(page, shape as TableShape, op.index, JSON.parse(value));
         }
-        else if (op.tableIdx.colIdx >= 0) {
-            if (value) api.tableModifyColWidth(page, shape as TableShape, op.tableIdx.colIdx, JSON.parse(value));
+        else if (op.opTarget === TableOpTarget.Col) {
+            if (value) api.tableModifyColWidth(page, shape as TableShape, op.index, JSON.parse(value));
         }
         else {
-            throw new Error("unknow table target " + op.tableIdx)
+            throw new Error("unknow table target " + op.opTarget)
         }
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op0 = cmd.ops[0] as ArrayOpRemove
-        const op1 = cmd.ops[1] as ArrayOpInsert
-        const shapeId = op0.targetId[0]
+        const op0 = cmd.ops[0]
+        const op1 = cmd.ops[1]
+        const shapeId = op0.targetId[0] as string;
         const shape = page && page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
@@ -579,11 +574,15 @@ export class CMDExecuter {
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
+                const op0 = cmd.ops[0] as ArrayOpRemove
+                const op1 = cmd.ops[1] as ArrayOpInsert
                 api.moveFill(shape.style, op0.start, op1.start)
             }
         }
         else if (arrayAttr === BORDER_ID) {
             if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
+                const op0 = cmd.ops[0] as ArrayOpRemove
+                const op1 = cmd.ops[1] as ArrayOpInsert
                 api.moveBorder(shape.style, op0.start, op1.start)
             }
         }
@@ -595,12 +594,14 @@ export class CMDExecuter {
     textInsert(cmd: TextCmdInsert) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
+        const _op = cmd.ops[0]
+        const shapeId = _op.targetId[0] as string;
         const shape = page && page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
         }
+        if (_op.type !== OpType.ArrayInsert) return;
+        const op = _op as ArrayOpInsert;
         const text = cmd.parseText();
         const shapetext = (shape as TextShapeLike).text;
         if (!(shapetext instanceof Text)) {
@@ -622,12 +623,14 @@ export class CMDExecuter {
     textDelete(cmd: TextCmdRemove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
+        const _op = cmd.ops[0]
+        const shapeId = _op.targetId[0] as string;
         const shape = page && page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
         }
+        if (_op.type !== OpType.ArrayRemove) return;
+        const op = _op as ArrayOpRemove;
         const shapetext = (shape as TextShapeLike).text;
         if (!(shapetext instanceof Text)) {
             throw new Error("shape type wrong")
@@ -637,15 +640,16 @@ export class CMDExecuter {
     textModify(cmd: TextCmdModify) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
+        const _op = cmd.ops[0]
+        const shapeId = _op.targetId[0] as string;
         const shape = page && page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
         }
-        if (op.type !== OpType.ArrayAttr) {
+        if (_op.type !== OpType.ArrayAttr) {
             return;
         }
+        const op = _op as ArrayOpAttr;
         const attrId = cmd.attrId
         const value = cmd.value;
         const shapetext = (shape as TextShapeLike).text;
