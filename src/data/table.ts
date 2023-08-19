@@ -255,7 +255,7 @@ export class TableShape extends Shape implements classes.TableShape {
         return locateCellByCell(this.getLayout(), cell);
     }
 
-    indexOfCell(cell: TableCell) {
+    indexOfCell(cell: TableCell) { // todo 需要优化
         return indexOfCell(this, cell);
     }
 
@@ -270,6 +270,11 @@ export class TableShape extends Shape implements classes.TableShape {
      */
     getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
         return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
+    }
+
+    getCellAt(rowIdx: number, colIdx: number) {
+        const index = rowIdx * this.colWidths.length + colIdx;
+        return this.childs[index];
     }
 
     /**
