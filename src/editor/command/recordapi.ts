@@ -35,7 +35,7 @@ function genShapeId(shape: Shape): Array<string | TableIndex> {
         const table = shape.parent as TableShape;
         const index = table.indexOfCell(shape);
         if (!index) throw new Error("Cant find cell");
-        return [shape.id, new TableIndex(index.rowIdx, index.colIdx)]
+        return [table.id, new TableIndex(index.rowIdx, index.colIdx)]
     }
     return [shape.id]
 }
