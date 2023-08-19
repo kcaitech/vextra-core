@@ -259,8 +259,8 @@ export class CMDReverter {
                 throw new Error("text remove cmd has not origin")
             }
             const _op = op as ArrayOpRemove;
-            const shapeId = op.targetId[0] as string;
-            return TextCmdInsert.Make(cmd.blockId, shapeId, _op.start, origin.length, origin);
+            const opinsert = ArrayOpInsert.Make(_op.targetId, _op.start, origin.length)
+            return new TextCmdInsert(CmdType.TextInsert, uuid(), cmd.blockId, [opinsert], JSON.stringify(origin))
         }
     }
     textInsert(cmd: TextCmdInsert): TextCmdRemove {
