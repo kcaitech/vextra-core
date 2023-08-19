@@ -774,7 +774,7 @@ export class TextShape extends Shape {
  */
 export class TableShape extends Shape {
     typeId = 'table-shape'
-    childs: BasicArray<TableCell >
+    childs: BasicArray<(undefined | TableCell) >
     rowHeights: BasicArray<number >
     colWidths: BasicArray<number >
     textAttr?: TextAttr
@@ -784,7 +784,7 @@ export class TableShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<TableCell >,
+        childs: BasicArray<(undefined | TableCell) >,
         rowHeights: BasicArray<number >,
         colWidths: BasicArray<number >
     ) {

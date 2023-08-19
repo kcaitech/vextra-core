@@ -221,6 +221,9 @@ handler['type'] = function (schema: any, className: string, level: number, filen
     else if (schema.type == 'boolean') {
         return 'boolean'
     }
+    else if (schema.type == 'undefined') {
+        return 'undefined'
+    }
     else if (schema.type == 'object') {
         return handler['object'](schema, className, level, filename, allschemas)
     }

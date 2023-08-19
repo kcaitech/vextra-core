@@ -139,8 +139,9 @@ export class TableCell extends Shape implements classes.TableCell {
     }
 }
 
-export class TableShape extends GroupShape implements classes.TableShape {
+export class TableShape extends Shape implements classes.TableShape {
     typeId = 'table-shape'
+    childs: BasicArray<(TableCell | undefined) >
     rowHeights: BasicArray<number>
     colWidths: BasicArray<number>
     textAttr?: TextAttr // 文本默认属性
@@ -152,7 +153,7 @@ export class TableShape extends GroupShape implements classes.TableShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<TableCell>,
+        childs: BasicArray<(TableCell | undefined) >,
         rowHeights: BasicArray<number>,
         colWidths: BasicArray<number>
     ) {
@@ -162,10 +163,10 @@ export class TableShape extends GroupShape implements classes.TableShape {
             ShapeType.Table,
             frame,
             style,
-            childs
         )
         this.rowHeights = rowHeights
         this.colWidths = colWidths
+        this.childs = childs;
     }
 
     get childsVisible(): boolean {

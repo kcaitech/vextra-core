@@ -266,14 +266,15 @@ export function exportOverrideItem(source: types.OverrideItem, ctx?: IExportCont
     const ret = {
         id: source.id,
         value: (() => {
-            if (typeof source.value != 'object') {
-                return source.value
+            const val = source.value;
+            if (typeof val != 'object') {
+                return val
             }
-            if (source.value.typeId == 'style') {
-                return exportStyle(source.value as types.Style, ctx)
+            if (val.typeId == 'style') {
+                return exportStyle(val as types.Style, ctx)
             }
             {
-                console.error(source.value)
+                console.error(val)
             }
         })(),
     }
@@ -624,8 +625,19 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
         childs: (() => {
             const ret = []
             for (let i = 0, len = source.childs.length; i < len; i++) {
-                const r = exportTableCell(source.childs[i], ctx)
-                if (r) ret.push(r)
+                const r = (() => {
+                    const val = source.childs[i];
+                    if (typeof val != 'object') {
+                        return val
+                    }
+                    if (val.typeId == 'table-cell') {
+                        return exportTableCell(val as types.TableCell, ctx)
+                    }
+                    {
+                        console.error(val)
+                    }
+                })()
+                ret.push(r)
             }
             return ret
         })(),
@@ -926,56 +938,57 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
             const ret = []
             for (let i = 0, len = source.childs.length; i < len; i++) {
                 const r = (() => {
-                    if (typeof source.childs[i] != 'object') {
-                        return source.childs[i]
+                    const val = source.childs[i];
+                    if (typeof val != 'object') {
+                        return val
                     }
-                    if (source.childs[i].typeId == 'shape') {
-                        return exportShape(source.childs[i] as types.Shape, ctx)
+                    if (val.typeId == 'shape') {
+                        return exportShape(val as types.Shape, ctx)
                     }
-                    if (source.childs[i].typeId == 'flatten-shape') {
-                        return exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                    if (val.typeId == 'flatten-shape') {
+                        return exportFlattenShape(val as types.FlattenShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'group-shape') {
-                        return exportGroupShape(source.childs[i] as types.GroupShape, ctx)
+                    if (val.typeId == 'group-shape') {
+                        return exportGroupShape(val as types.GroupShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'image-shape') {
-                        return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                    if (val.typeId == 'image-shape') {
+                        return exportImageShape(val as types.ImageShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'path-shape') {
-                        return exportPathShape(source.childs[i] as types.PathShape, ctx)
+                    if (val.typeId == 'path-shape') {
+                        return exportPathShape(val as types.PathShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'rect-shape') {
-                        return exportRectShape(source.childs[i] as types.RectShape, ctx)
+                    if (val.typeId == 'rect-shape') {
+                        return exportRectShape(val as types.RectShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'text-shape') {
-                        return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                    if (val.typeId == 'text-shape') {
+                        return exportTextShape(val as types.TextShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    if (val.typeId == 'oval-shape') {
+                        return exportOvalShape(val as types.OvalShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'line-shape') {
-                        return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                    if (val.typeId == 'line-shape') {
+                        return exportLineShape(val as types.LineShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'artboard') {
-                        return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                    if (val.typeId == 'artboard') {
+                        return exportArtboard(val as types.Artboard, ctx)
                     }
-                    if (source.childs[i].typeId == 'symbol-shape') {
-                        return exportSymbolShape(source.childs[i] as types.SymbolShape, ctx)
+                    if (val.typeId == 'symbol-shape') {
+                        return exportSymbolShape(val as types.SymbolShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'line-shape') {
-                        return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                    if (val.typeId == 'line-shape') {
+                        return exportLineShape(val as types.LineShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    if (val.typeId == 'oval-shape') {
+                        return exportOvalShape(val as types.OvalShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'table-shape') {
-                        return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                    if (val.typeId == 'table-shape') {
+                        return exportTableShape(val as types.TableShape, ctx)
                     }
                     {
-                        console.error(source.childs[i])
+                        console.error(val)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1128,47 +1141,48 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
             const ret = []
             for (let i = 0, len = source.childs.length; i < len; i++) {
                 const r = (() => {
-                    if (typeof source.childs[i] != 'object') {
-                        return source.childs[i]
+                    const val = source.childs[i];
+                    if (typeof val != 'object') {
+                        return val
                     }
-                    if (source.childs[i].typeId == 'group-shape') {
-                        return exportGroupShape(source.childs[i] as types.GroupShape, ctx)
+                    if (val.typeId == 'group-shape') {
+                        return exportGroupShape(val as types.GroupShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'shape') {
-                        return exportShape(source.childs[i] as types.Shape, ctx)
+                    if (val.typeId == 'shape') {
+                        return exportShape(val as types.Shape, ctx)
                     }
-                    if (source.childs[i].typeId == 'flatten-shape') {
-                        return exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                    if (val.typeId == 'flatten-shape') {
+                        return exportFlattenShape(val as types.FlattenShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'image-shape') {
-                        return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                    if (val.typeId == 'image-shape') {
+                        return exportImageShape(val as types.ImageShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'path-shape') {
-                        return exportPathShape(source.childs[i] as types.PathShape, ctx)
+                    if (val.typeId == 'path-shape') {
+                        return exportPathShape(val as types.PathShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'rect-shape') {
-                        return exportRectShape(source.childs[i] as types.RectShape, ctx)
+                    if (val.typeId == 'rect-shape') {
+                        return exportRectShape(val as types.RectShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'text-shape') {
-                        return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                    if (val.typeId == 'text-shape') {
+                        return exportTextShape(val as types.TextShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'artboard') {
-                        return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                    if (val.typeId == 'artboard') {
+                        return exportArtboard(val as types.Artboard, ctx)
                     }
-                    if (source.childs[i].typeId == 'line-shape') {
-                        return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                    if (val.typeId == 'line-shape') {
+                        return exportLineShape(val as types.LineShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    if (val.typeId == 'oval-shape') {
+                        return exportOvalShape(val as types.OvalShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'table-shape') {
-                        return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                    if (val.typeId == 'table-shape') {
+                        return exportTableShape(val as types.TableShape, ctx)
                     }
                     {
-                        console.error(source.childs[i])
+                        console.error(val)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1193,47 +1207,48 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 const ret = []
                 for (let i = 0, len = source.childs.length; i < len; i++) {
                     const r = (() => {
-                        if (typeof source.childs[i] != 'object') {
-                            return source.childs[i]
+                        const val = source.childs[i];
+                        if (typeof val != 'object') {
+                            return val
                         }
-                        if (source.childs[i].typeId == 'group-shape') {
-                            return exportGroupShape(source.childs[i] as types.GroupShape, ctx)
+                        if (val.typeId == 'group-shape') {
+                            return exportGroupShape(val as types.GroupShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'shape') {
-                            return exportShape(source.childs[i] as types.Shape, ctx)
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
                         }
-                        if (source.childs[i].typeId == 'flatten-shape') {
-                            return exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                        if (val.typeId == 'flatten-shape') {
+                            return exportFlattenShape(val as types.FlattenShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'image-shape') {
-                            return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                        if (val.typeId == 'image-shape') {
+                            return exportImageShape(val as types.ImageShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'path-shape') {
-                            return exportPathShape(source.childs[i] as types.PathShape, ctx)
+                        if (val.typeId == 'path-shape') {
+                            return exportPathShape(val as types.PathShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'rect-shape') {
-                            return exportRectShape(source.childs[i] as types.RectShape, ctx)
+                        if (val.typeId == 'rect-shape') {
+                            return exportRectShape(val as types.RectShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'symbol-ref-shape') {
-                            return exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                        if (val.typeId == 'symbol-ref-shape') {
+                            return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'text-shape') {
-                            return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                        if (val.typeId == 'text-shape') {
+                            return exportTextShape(val as types.TextShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'artboard') {
-                            return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                        if (val.typeId == 'artboard') {
+                            return exportArtboard(val as types.Artboard, ctx)
                         }
-                        if (source.childs[i].typeId == 'line-shape') {
-                            return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                        if (val.typeId == 'line-shape') {
+                            return exportLineShape(val as types.LineShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'oval-shape') {
-                            return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                        if (val.typeId == 'oval-shape') {
+                            return exportOvalShape(val as types.OvalShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'table-shape') {
-                            return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                        if (val.typeId == 'table-shape') {
+                            return exportTableShape(val as types.TableShape, ctx)
                         }
                         {
-                            console.error(source.childs[i])
+                            console.error(val)
                         }
                     })()
                     if (r) ret.push(r)
@@ -1275,47 +1290,48 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                 const ret = []
                 for (let i = 0, len = source.childs.length; i < len; i++) {
                     const r = (() => {
-                        if (typeof source.childs[i] != 'object') {
-                            return source.childs[i]
+                        const val = source.childs[i];
+                        if (typeof val != 'object') {
+                            return val
                         }
-                        if (source.childs[i].typeId == 'group-shape') {
-                            return exportGroupShape(source.childs[i] as types.GroupShape, ctx)
+                        if (val.typeId == 'group-shape') {
+                            return exportGroupShape(val as types.GroupShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'shape') {
-                            return exportShape(source.childs[i] as types.Shape, ctx)
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
                         }
-                        if (source.childs[i].typeId == 'flatten-shape') {
-                            return exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                        if (val.typeId == 'flatten-shape') {
+                            return exportFlattenShape(val as types.FlattenShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'image-shape') {
-                            return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                        if (val.typeId == 'image-shape') {
+                            return exportImageShape(val as types.ImageShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'path-shape') {
-                            return exportPathShape(source.childs[i] as types.PathShape, ctx)
+                        if (val.typeId == 'path-shape') {
+                            return exportPathShape(val as types.PathShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'rect-shape') {
-                            return exportRectShape(source.childs[i] as types.RectShape, ctx)
+                        if (val.typeId == 'rect-shape') {
+                            return exportRectShape(val as types.RectShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'symbol-ref-shape') {
-                            return exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                        if (val.typeId == 'symbol-ref-shape') {
+                            return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'text-shape') {
-                            return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                        if (val.typeId == 'text-shape') {
+                            return exportTextShape(val as types.TextShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'artboard') {
-                            return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                        if (val.typeId == 'artboard') {
+                            return exportArtboard(val as types.Artboard, ctx)
                         }
-                        if (source.childs[i].typeId == 'line-shape') {
-                            return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                        if (val.typeId == 'line-shape') {
+                            return exportLineShape(val as types.LineShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'oval-shape') {
-                            return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                        if (val.typeId == 'oval-shape') {
+                            return exportOvalShape(val as types.OvalShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'table-shape') {
-                            return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                        if (val.typeId == 'table-shape') {
+                            return exportTableShape(val as types.TableShape, ctx)
                         }
                         {
-                            console.error(source.childs[i])
+                            console.error(val)
                         }
                     })()
                     if (r) ret.push(r)
@@ -1355,47 +1371,48 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                 const ret = []
                 for (let i = 0, len = source.childs.length; i < len; i++) {
                     const r = (() => {
-                        if (typeof source.childs[i] != 'object') {
-                            return source.childs[i]
+                        const val = source.childs[i];
+                        if (typeof val != 'object') {
+                            return val
                         }
-                        if (source.childs[i].typeId == 'group-shape') {
-                            return exportGroupShape(source.childs[i] as types.GroupShape, ctx)
+                        if (val.typeId == 'group-shape') {
+                            return exportGroupShape(val as types.GroupShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'shape') {
-                            return exportShape(source.childs[i] as types.Shape, ctx)
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
                         }
-                        if (source.childs[i].typeId == 'flatten-shape') {
-                            return exportFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                        if (val.typeId == 'flatten-shape') {
+                            return exportFlattenShape(val as types.FlattenShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'image-shape') {
-                            return exportImageShape(source.childs[i] as types.ImageShape, ctx)
+                        if (val.typeId == 'image-shape') {
+                            return exportImageShape(val as types.ImageShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'path-shape') {
-                            return exportPathShape(source.childs[i] as types.PathShape, ctx)
+                        if (val.typeId == 'path-shape') {
+                            return exportPathShape(val as types.PathShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'rect-shape') {
-                            return exportRectShape(source.childs[i] as types.RectShape, ctx)
+                        if (val.typeId == 'rect-shape') {
+                            return exportRectShape(val as types.RectShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'symbol-ref-shape') {
-                            return exportSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                        if (val.typeId == 'symbol-ref-shape') {
+                            return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'text-shape') {
-                            return exportTextShape(source.childs[i] as types.TextShape, ctx)
+                        if (val.typeId == 'text-shape') {
+                            return exportTextShape(val as types.TextShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'artboard') {
-                            return exportArtboard(source.childs[i] as types.Artboard, ctx)
+                        if (val.typeId == 'artboard') {
+                            return exportArtboard(val as types.Artboard, ctx)
                         }
-                        if (source.childs[i].typeId == 'line-shape') {
-                            return exportLineShape(source.childs[i] as types.LineShape, ctx)
+                        if (val.typeId == 'line-shape') {
+                            return exportLineShape(val as types.LineShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'oval-shape') {
-                            return exportOvalShape(source.childs[i] as types.OvalShape, ctx)
+                        if (val.typeId == 'oval-shape') {
+                            return exportOvalShape(val as types.OvalShape, ctx)
                         }
-                        if (source.childs[i].typeId == 'table-shape') {
-                            return exportTableShape(source.childs[i] as types.TableShape, ctx)
+                        if (val.typeId == 'table-shape') {
+                            return exportTableShape(val as types.TableShape, ctx)
                         }
                         {
-                            console.error(source.childs[i])
+                            console.error(val)
                         }
                     })()
                     if (r) ret.push(r)

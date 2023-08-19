@@ -472,7 +472,7 @@ export type TextShape = Shape & {
 }
 /* table shape */
 export type TableShape = Shape & {
-    childs: TableCell[]
+    childs: (undefined | TableCell)[]
     rowHeights: number[]
     colWidths: number[]
     textAttr?: TextAttr
