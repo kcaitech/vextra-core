@@ -47,7 +47,8 @@ import {
     importPoint2D,
     importTableShape,
     importPathShape2,
-    importTableCell
+    importTableCell,
+    importShadow
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -70,7 +71,7 @@ import {
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHADOW_ID, SHAPE_ATTR_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
 import { ArrayOpInsert, ArrayOpRemove, TableOpTarget } from "../../coop/data/basictypes";
@@ -419,9 +420,9 @@ export class CMDExecuter {
             }
         }
         else if (opId === SHAPE_ATTR_ID.constrainerProportions) {
-                const isLock = value && JSON.parse(value) || false;
-                api.shapeModifyConstrainerProportions(shape, isLock);
-            
+            const isLock = value && JSON.parse(value) || false;
+            api.shapeModifyConstrainerProportions(shape, isLock);
+
         } else if (opId === SHAPE_ATTR_ID.startMarkerType) {
             if (value) {
                 api.shapeModifyStartMarkerType(shape, value as types.MarkerType)
@@ -537,6 +538,11 @@ export class CMDExecuter {
         else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
 
         }
+        else if (arrayAttr === SHADOW_ID) {
+            if (op.type === OpType.ArrayInsert) {
+                api.addShadow(shape.style);
+            }
+        }
         else {
             console.error("not implemented ", arrayAttr)
         }
@@ -566,6 +572,11 @@ export class CMDExecuter {
         }
         else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
 
+        }
+        else if (arrayAttr === SHADOW_ID) {
+            if (op.type === OpType.ArrayRemove) {
+                api.deleteShadowAt(shape.style, (op as ArrayOpRemove).start)
+            }
         }
         else {
             console.error("not implemented ", arrayAttr)

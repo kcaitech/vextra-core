@@ -12,7 +12,7 @@ export function setShadowEnable(style: Style, idx: number, enable: boolean) {
 }
 
 export function addShadow(style: Style) {
-  const s = new Shadow(uuid(), true, 4, new Color(0.4, 0, 0, 0), 2, 2, 2);
+  const s = new Shadow(uuid(), true, 4, new Color(0.8, 80, 80, 80), 2, 2, 4);
   style.shadows.unshift(s);
   return s;
 }
