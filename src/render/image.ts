@@ -52,12 +52,13 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
         props.transform = `translate(${frame.x},${frame.y})`
     }
     if (reflush) props.reflush = reflush;
-    if (shape.style.shadows.length) {
+    const shadows = shape.style.shadows;
+    if (shadows.length) {
         const ex_props = Object.assign({}, props);
         delete props.style;
         delete props.transform;
         const fliter_id = `dorp-shadow-${shape.id.slice(0, 4)}`
-        const shadow = shadowR(h, fliter_id);
+        const shadow = shadowR(h, fliter_id, shadows[0]);
         props.filter = `url(#${fliter_id})`;
         const body = h("g", props, childs);
         return h("g", ex_props, [shadow, body]);
