@@ -302,12 +302,12 @@ export class CMDReverter {
         let op;
         if (cmdop.type === OpType.TableModify) {
             const _op = cmdop as TableOpModify;
-            op = TableOpModify.Make(cmdop.targetId[0] as string, _op.index, _op.opTarget);
+            op = TableOpModify.Make(cmdop.targetId[0] as string, _op.index, _op.opTarget, _op.opId);
         }
         else {
             op = NoneOp.Make(cmdop.targetId);
         }
-        const ret = new TableCmdModify(CmdType.TableModify, uuid(), cmd.blockId, [op])
+        const ret = new TableCmdModify(CmdType.TableModify, uuid(), cmd.blockId, [op], cmd.attrId)
         ret.value = cmd.origin;
         ret.origin = cmd.value;
         return ret;

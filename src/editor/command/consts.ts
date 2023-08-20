@@ -101,3 +101,8 @@ export const POINTS_ATTR_ID = {
     to: "to",
     point: "point",
 }
+
+export const TABLE_ATTR_ID = {
+    rowHeight: "rowHeight",
+    colWidth: "colWidth",
+}

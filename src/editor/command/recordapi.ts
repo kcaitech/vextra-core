@@ -11,7 +11,7 @@ import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, Shape, PathShape, PathShape2 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
@@ -27,6 +27,10 @@ import { TableOpTarget } from "../../coop/data/classes";
 type TextShapeLike = Shape & { text: Text }
 
 function checkShapeAtPage(page: Page, obj: Shape) {
+    if (obj instanceof TableCell) {
+        const table = obj.parent as TableShape;
+        if (!page.getShape(table.id)) throw new Error("shape not inside page")
+    }
     if (!page.getShape(obj.id)) throw new Error("shape not inside page")
 }
 
@@ -951,7 +955,7 @@ export class Api {
         this.__trap(() => {
             const origin = table.colWidths[idx];
             basicapi.tableModifyColWidth(page, table, idx, width);
-            this.addCmd(TableCmdModify.Make(page.id, table.id, idx, TableOpTarget.Col, width, origin));
+            this.addCmd(TableCmdModify.Make(page.id, table.id, idx, TableOpTarget.Col, TABLE_ATTR_ID.colWidth, width, origin));
         })
     }
 
@@ -960,7 +964,7 @@ export class Api {
         this.__trap(() => {
             const origin = table.rowHeights[idx];
             basicapi.tableModifyRowHeight(page, table, idx, height);
-            this.addCmd(TableCmdModify.Make(page.id, table.id, idx, TableOpTarget.Row, height, origin));
+            this.addCmd(TableCmdModify.Make(page.id, table.id, idx, TableOpTarget.Row, TABLE_ATTR_ID.rowHeight, height, origin));
         })
     }
 

@@ -69,7 +69,7 @@ import {
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
 import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
@@ -578,11 +578,16 @@ export class CMDExecuter {
             return;
         }
         const value = cmd.value;
+        const opId = op.opId;
         if (op.opTarget === TableOpTarget.Row) {
-            if (value) api.tableModifyRowHeight(page, shape as TableShape, op.index, JSON.parse(value));
+            if (opId === TABLE_ATTR_ID.rowHeight) {
+                if (value) api.tableModifyRowHeight(page, shape as TableShape, op.index, JSON.parse(value));
+            }
         }
         else if (op.opTarget === TableOpTarget.Col) {
-            if (value) api.tableModifyColWidth(page, shape as TableShape, op.index, JSON.parse(value));
+            if (opId === TABLE_ATTR_ID.colWidth) {
+                if (value) api.tableModifyColWidth(page, shape as TableShape, op.index, JSON.parse(value));
+            }
         }
         else {
             throw new Error("unknow table target " + op.opTarget)
