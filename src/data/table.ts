@@ -285,14 +285,19 @@ export class TableShape extends Shape implements classes.TableShape {
         return item;
     }
 
-    indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
-        // cell indexs
+    private getCellIndexs() {
         if (this.__cellIndexs.size === 0) {
             this.childs.forEach((c, i) => {
                 if (c) this.__cellIndexs.set(c.id, i);
             })
         }
-        const index = this.__cellIndexs.get(cell.id) ?? -1;
+        return this.__cellIndexs;
+    }
+
+    indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
+        // cell indexs
+        const cellIndexs = this.getCellIndexs();
+        const index = cellIndexs.get(cell.id) ?? -1;
         if (index < 0) return;
         const rowIdx = Math.ceil(index / this.colCount);
         const colIdx = index % this.colCount;
@@ -323,12 +328,16 @@ export class TableShape extends Shape implements classes.TableShape {
         const index = rowIdx * this.colWidths.length + colIdx;
         const cell = this.childs[index];
         if (!cell && initCell) {
-            this.childs[index] = newCell();
-            // add to index
-            const cell = this.childs[index];
-            this.__cellIndexs.set(cell!.id, index);
-            return cell;
+            return this.initCell(index);
         }
+        return cell;
+    }
+
+    private initCell(index: number) {
+        this.childs[index] = newCell();
+        // add to index
+        const cell = this.childs[index];
+        this.getCellIndexs().set(cell!.id, index);
         return cell;
     }
 
