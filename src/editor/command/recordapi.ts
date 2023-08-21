@@ -1,5 +1,5 @@
 import {
-    Cmd, 
+    Cmd,
     PageCmdInsert, PageCmdModify, PageCmdMove, PageCmdDelete,
     ShapeArrayAttrMove, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
     ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
@@ -921,10 +921,8 @@ export class Api {
         this.__trap(() => {
             const cell = table.getCellAt(rowIdx, colIdx);
             const origin = cell?.cellType;
-            if (origin !== contentType && (origin ?? TableCellType.None) !== (contentType ?? TableCellType.None)) {
-                basicapi.tableSetCellContentType(table, rowIdx, colIdx, contentType);
-                this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentType, contentType, origin))
-            }
+            basicapi.tableSetCellContentType(table, rowIdx, colIdx, contentType);
+            this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentType, contentType, origin))
         })
     }
 

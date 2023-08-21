@@ -3,15 +3,8 @@ import { TableCell, TableCellType, TableShape } from "../../data/table";
 import { Color, Page, StrikethroughType, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
 
 export function tableSetCellContentType(table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
-    if (contentType && contentType !== TableCellType.None) {
-        const cell = table.getCellAt(rowIdx, colIdx, true);
-        cell!.setContentType(contentType);
-        return;
-    }
-    const cell = table.getCellAt(rowIdx, colIdx);
-    if (cell && cell.cellType && cell.cellType !== TableCellType.None) {
-        cell.setContentType(contentType);
-    }
+    const cell = table.getCellAt(rowIdx, colIdx, true);
+    cell!.setContentType(contentType);
 }
 
 export function tableSetCellContentText(table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
