@@ -1,19 +1,27 @@
 import { Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
-import { Border, Color, Fill, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
-import { uuid } from "../../basic/uuid";
-import { BasicArray } from "../../data/basic";
+import { Color, Page, StrikethroughType, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
 
-export function tableSetCellContentType(cell: TableCell, contentType: TableCellType | undefined) {
-    cell.setContentType(contentType);
+export function tableSetCellContentType(table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
+    if (contentType && contentType !== TableCellType.None) {
+        const cell = table.getCellAt(rowIdx, colIdx, true);
+        cell!.setContentType(contentType);
+        return;
+    }
+    const cell = table.getCellAt(rowIdx, colIdx);
+    if (cell && cell.cellType && cell.cellType !== TableCellType.None) {
+        cell.setContentType(contentType);
+    }
 }
 
-export function tableSetCellContentText(cell: TableCell, text: Text | undefined) {
-    cell.setContentText(text);
+export function tableSetCellContentText(table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
+    const cell = table.getCellAt(rowIdx, colIdx, true);
+    cell!.setContentText(text);
 }
 
-export function tableSetCellContentImage(cell: TableCell, ref: string | undefined) {
-    cell.setContentImage(ref);
+export function tableSetCellContentImage(table: TableShape, rowIdx: number, colIdx: number, ref: string | undefined) {
+    const cell = table.getCellAt(rowIdx, colIdx, true);
+    cell!.setContentImage(ref);
 }
 
 export function tableModifyColWidth(page: Page, table: TableShape, idx: number, width: number) {
@@ -54,8 +62,11 @@ export function tableRemoveCol(page: Page, table: TableShape, idx: number) {
     return ret;
 }
 
-export function tableModifyCellSpan(cell: TableCell, rowSpan: number | undefined, colSpan: number | undefined) {
-    cell.setCellSpan(rowSpan, colSpan);
+export function tableModifyCellSpan(table: TableShape, rowIdx: number, colIdx: number, rowSpan: number | undefined, colSpan: number | undefined) {
+    if ((rowSpan ?? 1) > 1 || (colSpan ?? 1) > 1) {
+        const cell = table.getCellAt(rowIdx, colIdx, true);
+        cell!.setCellSpan(rowSpan, colSpan);
+    }
 }
 
 // text

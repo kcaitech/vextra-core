@@ -1,5 +1,5 @@
 import { Cmd, CmdType, OpType, ShapeCmdModify, TableIndex } from "../../coop"
-import { Document, GroupShape, Page, RectShape, Shape, TableCell, Text, TextTransformType, TableShape } from "../../data/classes"
+import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape } from "../../data/classes"
 import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
 import { importColor, importText } from "../../io/baseimport";
@@ -52,7 +52,7 @@ export class CMDHandler {
         const handlerMap = this._handlers.get(cmd.type) as Map<string, ShapeModifyHandler>;
         const handler = handlerMap.get(_op.opId);
         if (!handler) throw new Error("unknow opId " + _op.opId);
-        handler(page, shape, value, needUpdateFrame);
+        handler(cmd, page, shape, value, needUpdateFrame);
     }
 
     private regist(handlers: (ShapeModifyHandlerArray)[]) {
@@ -79,7 +79,7 @@ export class CMDHandler {
     }
 }
 
-export type ShapeModifyHandler = (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => void;
+export type ShapeModifyHandler = (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => void;
 
 export type ShapeModifyHandlerArray = {
     cmdType: CmdType.ShapeModify,
@@ -95,130 +95,138 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
         handlers: [
             {
                 opId: SHAPE_ATTR_ID.cellContentType,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    api.tableSetCellContentType(shape as TableCell, value as types.TableCellType);
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const op = cmd.ops[0];
+                    const index = op.targetId[1] as TableIndex;
+                    api.tableSetCellContentType(shape as TableShape, index.rowIdx, index.colIdx, value as types.TableCellType);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.cellContentText,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const op = cmd.ops[0];
+                    const index = op.targetId[1] as TableIndex;
                     const text = value ? importText(JSON.parse(value)) : undefined;
-                    api.tableSetCellContentText(shape as TableCell, text);
+                    api.tableSetCellContentText(shape as TableShape, index.rowIdx, index.colIdx, text);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.cellContentImage,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    api.tableSetCellContentImage(shape as TableCell, value);
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const op = cmd.ops[0];
+                    const index = op.targetId[1] as TableIndex;
+                    api.tableSetCellContentImage(shape as TableShape, index.rowIdx, index.colIdx, value);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.cellSpan,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const op = cmd.ops[0];
+                    const index = op.targetId[1] as TableIndex;
                     const val = value && JSON.parse(value);
                     const rowSpan = val?.rowSpan;
                     const colSpan = val?.colSpan;
-                    api.tableModifyCellSpan(shape as TableCell, rowSpan ?? 1, colSpan ?? 1);
+                    api.tableModifyCellSpan(shape as TableShape, index.rowIdx, index.colIdx, rowSpan ?? 1, colSpan ?? 1);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextColor,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const color = value ? importColor(JSON.parse(value)) : undefined;
                     api.tableModifyTextColor(shape as TableShape, color);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextHighlight,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const color = value ? importColor(JSON.parse(value)) : undefined;
                     api.tableModifyTextHighlightColor(shape as TableShape, color);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextFontName,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     api.tableModifyTextFontName(shape as TableShape, value);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextFontSize,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const fontSize = value ? JSON.parse(value) : undefined;
                     api.tableModifyTextFontSize(shape as TableShape, fontSize);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextVerAlign,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     api.tableModifyTextVerAlign(shape as TableShape, value as types.TextVerAlign);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextHorAlign,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     api.tableModifyTextHorAlign(shape as TableShape, value as types.TextHorAlign);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextMinLineHeight,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const lineHeight = value ? JSON.parse(value) : undefined;
                     api.tableModifyTextMinLineHeight(shape as TableShape, lineHeight);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextMaxLineHeight,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const lineHeight = value ? JSON.parse(value) : undefined;
                     api.tableModifyTextMaxLineHeight(shape as TableShape, lineHeight);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextKerning,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const kerning = value ? JSON.parse(value) : undefined;
                     api.tableModifyTextKerning(shape as TableShape, kerning);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextParaSpacing,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const spacing = value ? JSON.parse(value) : undefined;
                     api.tableModifyTextParaSpacing(shape as TableShape, spacing);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextUnderline,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const underline = value ? JSON.parse(value) : undefined;
                     api.tableModifyTextUnderline(shape as TableShape, underline);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextStrikethrough,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const striketrouth = value ? JSON.parse(value) : undefined;
                     api.tableModifyTextStrikethrough(shape as TableShape, striketrouth);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextBold,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const bold = value ? JSON.parse(value) : undefined;
                     api.tableModifyTextBold(shape as TableShape, bold);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextItalic,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const italic = value ? JSON.parse(value) : undefined;
                     api.tableModifyTextItalic(shape as TableShape, italic);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.tableTextTransform,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     api.tableModifyTextTransform(shape as TableShape, value as TextTransformType);
                 }
             },
@@ -232,7 +240,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
         handlers: [
             {
                 opId: SHAPE_ATTR_ID.x,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const x = JSON.parse(value)
                         api.shapeModifyX(page, shape, x, needUpdateFrame)
@@ -241,7 +249,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.y,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const y = JSON.parse(value)
                         api.shapeModifyY(page, shape, y, needUpdateFrame)
@@ -250,7 +258,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.width,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const wh = JSON.parse(value)
                         api.shapeModifyWidth(page, shape, wh, needUpdateFrame)
@@ -259,7 +267,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.height,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const wh = JSON.parse(value)
                         api.shapeModifyHeight(page, shape, wh, needUpdateFrame)
@@ -268,7 +276,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.size,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const wh = JSON.parse(value)
                         api.shapeModifyWH(page, shape, wh.w, wh.h, needUpdateFrame)
@@ -277,7 +285,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.rotate,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const rotate = JSON.parse(value)
                         api.shapeModifyRotate(page, shape, rotate, needUpdateFrame)
@@ -286,7 +294,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.name,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const name = value;
                         api.shapeModifyName(shape, name)
@@ -295,35 +303,35 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.hflip,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const hflip = value && JSON.parse(value)
                     api.shapeModifyHFlip(page, shape, hflip, needUpdateFrame)
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.vflip,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const vflip = value && JSON.parse(value)
                     api.shapeModifyVFlip(page, shape, vflip, needUpdateFrame)
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.visible,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isVisible = value && JSON.parse(value)
                     api.shapeModifyVisible(shape, isVisible ?? false);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.lock,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isLock = value && JSON.parse(value)
                     api.shapeModifyLock(shape, isLock ?? false);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.resizingConstraint,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const v = JSON.parse(value);
                         api.shapeModifyResizingConstraint(shape, v)
@@ -332,7 +340,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.radius,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const v = (JSON.parse(value) as { lt: number, rt: number, rb: number, lb: number });
                         api.shapeModifyRadius(shape as RectShape, v.lt, v.rt, v.rb, v.lb)
@@ -341,14 +349,14 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.constrainerProportions,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isLock = value && JSON.parse(value) || false;
                     api.shapeModifyConstrainerProportions(shape, isLock);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.startMarkerType,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         api.shapeModifyStartMarkerType(shape, value as types.MarkerType)
                     }
@@ -356,7 +364,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.endMarkerType,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         api.shapeModifyEndMarkerType(shape, value as types.MarkerType)
                     }
@@ -365,20 +373,20 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
 
             {
                 opId: SHAPE_ATTR_ID.boolop,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     api.shapeModifyBoolOp(shape, value as types.BoolOp);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.isboolopshape,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isOpShape = value && JSON.parse(value);
                     api.shapeModifyBoolOpShape(shape as GroupShape, isOpShape);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.fixedRadius,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const fixedRadius = value && JSON.parse(value);
                     api.shapeModifyFixedRadius(shape as GroupShape, fixedRadius);
                 }
@@ -394,14 +402,14 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
         handlers: [
             {
                 opId: SHAPE_ATTR_ID.textBehaviour,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const textBehaviour = value as types.TextBehaviour
                     api.shapeModifyTextBehaviour(page, shape as TextShapeLike, textBehaviour ?? types.TextBehaviour.Flexible);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.textVerAlign,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const textVerAlign = value as types.TextVerAlign
                     const text = (shape as TextShapeLike).text;
                     api.shapeModifyTextVerAlign(text, textVerAlign ?? types.TextVerAlign.Top);
@@ -409,7 +417,7 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.textTransform,
-                handler: (page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const text = (shape as TextShapeLike).text;
                     api.shapeModifyTextTransform(text, value as TextTransformType);
                 }

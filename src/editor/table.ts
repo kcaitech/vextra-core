@@ -2,7 +2,7 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { newCell, newText } from "./creator";
+import { newText } from "./creator";
 import { StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
 import { Color } from "../data/style";
@@ -20,49 +20,71 @@ export class TableEditor extends ShapeEditor {
         return this.__shape as TableShape;
     }
 
-    splitCell(cell: TableCell, rowCount: number, colCount: number) {
-        const api = this.__repo.start("splitCell", {});
-        try {
-
-            this.__repo.commit();
-        } catch (e) {
-            console.error(e);
-            this.__repo.rollback();
-        }
-    }
-
     // 水平拆分单元格
-    horSplitCell(cell: TableCell) {
+    horSplitCell(rowIdx: number, colIdx: number) {
+
+        const layout = this.shape.getLayout();
+        const cellLayout = layout.grid.get(rowIdx, colIdx);
         const api = this.__repo.start("horSplitCell", {});
         try {
-            if (cell.rowSpan && cell.rowSpan > 1) {
-                api.tableModifyCellSpan(this.__page, cell, cell.rowSpan - 1, cell.colSpan || 1);
+
+            if (cellLayout.cell && (cellLayout.cell.rowSpan ?? 1) > 1) {
+                const cell = cellLayout.cell;
+                const rowSpan = cell.rowSpan ?? 1;
+                if (rowSpan > 2) {
+                    // 找到比较居中的分隔线
+                    let total = 0;
+                    const rowStart = cellLayout.index.row;
+                    for (let i = rowStart, end = rowStart + rowSpan; i < end; ++i) {
+                        total += this.shape.rowHeights[i];
+                    }
+                    total /= 2;
+                    let topSpan = 0;
+                    let cur = 0;
+                    for (let i = rowStart, end = rowStart + rowSpan; i < end; ++i) {
+                        cur += this.shape.rowHeights[i];
+                        if (cur >= total) {
+                            topSpan = i - rowStart + 1;
+                            break;
+                        }
+                    }
+
+                    topSpan = Math.min(topSpan, rowSpan -1);
+                    api.tableModifyCellSpan(this.__page, this.shape, rowIdx, colIdx, topSpan, cell.colSpan ?? 1);
+
+                    const bottomSpan = rowSpan - topSpan;
+                    const colSpan = cell.colSpan || 1;
+                    if (bottomSpan > 1 || colSpan > 1) {
+                        const rowIdx = cellLayout.index.row + topSpan;
+                        const colIdx = cellLayout.index.col;
+
+                        api.tableModifyCellSpan(this.__page, this.shape, rowIdx, colIdx, bottomSpan, colSpan);
+                    }
+                }
+                else {
+                    api.tableModifyCellSpan(this.__page, this.shape, rowIdx, colIdx, rowSpan - 1, cell.colSpan ?? 1);
+                    if ((cell.colSpan ?? 1) > 1) {
+                        api.tableModifyCellSpan(this.__page, this.shape, rowIdx + 1, colIdx, 1, cell.colSpan ?? 1);
+                    }
+                }
             }
             else {
                 // 当前行后插入行
                 // 将当前行可见的单元格，rowSpan+1
                 // 当前单元格rowSpan-1
-                const indexCell = this.shape.indexOfCell(cell);
-                if (!indexCell) {
-                    throw new Error("cell not inside table")
-                }
-                const weight = this.shape.rowHeights[indexCell.rowIdx] / 2;
-                const data = [];
-                {
-                    const count = this.shape.colWidths.length;
-                    for (let i = 0; i < count; ++i) {
-                        data.push(newCell());
-                    }
-                    data[indexCell.colIdx].colSpan = cell.colSpan;
-                }
-                api.tableInsertRow(this.__page, this.shape, indexCell.rowIdx + 1, weight, data);
-                api.tableModifyRowHeight(this.__page, this.shape, indexCell.rowIdx, weight);
-                const cells = this.shape.getVisibleCells(indexCell.rowIdx, indexCell.rowIdx, 0, this.shape.colWidths.length);
+
+                const weight = this.shape.rowHeights[rowIdx] / 2;
+
+                api.tableInsertRow(this.__page, this.shape, rowIdx + 1, weight, []);
+                api.tableModifyRowHeight(this.__page, this.shape, rowIdx, weight);
+                const cells = this.shape.getVisibleCells(rowIdx, rowIdx, 0, this.shape.colWidths.length);
                 cells.forEach((c) => {
-                    if (c.id !== cell.id) {
-                        api.tableModifyCellSpan(this.__page, c, (c.rowSpan || 1) + 1, c.colSpan || 1);
+                    if (c.rowIdx !== rowIdx && c.colIdx !== colIdx) {
+                        api.tableModifyCellSpan(this.__page, this.shape, c.rowIdx, c.colIdx, (c.cell?.rowSpan ?? 1) + 1, c.cell?.colSpan ?? 1);
                     }
                 });
+                const cell = this.shape.getCellAt(rowIdx, colIdx);
+                api.tableModifyCellSpan(this.__page, this.shape, rowIdx + 1, colIdx, 1, cell?.colSpan ?? 1);
             }
             this.__repo.commit();
         } catch (e) {
@@ -71,37 +93,67 @@ export class TableEditor extends ShapeEditor {
         }
     }
     // 垂直拆分单元格
-    verSplitCell(cell: TableCell) {
+    verSplitCell(rowIdx: number, colIdx: number) {
+        const layout = this.shape.getLayout();
+        const cellLayout = layout.grid.get(rowIdx, colIdx);
         const api = this.__repo.start("verSplitCell", {});
         try {
-            if (cell.colSpan && cell.colSpan > 1) {
-                api.tableModifyCellSpan(this.__page, cell, cell.rowSpan || 1, cell.colSpan - 1); // 平分？
+            if (cellLayout.cell && (cellLayout.cell.colSpan ?? 1) > 1) {
+                const cell = cellLayout.cell;
+                const colSpan = cell.colSpan ?? 1;
+                if (colSpan > 2) {
+                    // 找到比较居中的分隔线
+                    let total = 0;
+                    const colStart = cellLayout.index.col;
+                    for (let i = colStart, end = colStart + colSpan; i < end; ++i) {
+                        total += this.shape.colWidths[i];
+                    }
+                    total /= 2;
+                    let leftSpan = 0;
+                    let cur = 0;
+                    for (let i = colStart, end = colStart + colSpan; i < end; ++i) {
+                        cur += this.shape.rowHeights[i];
+                        if (cur >= total) {
+                            leftSpan = i - colStart + 1;
+                            break;
+                        }
+                    }
+
+                    leftSpan = Math.min(leftSpan, colSpan -1);
+                    api.tableModifyCellSpan(this.__page, this.shape, rowIdx, colIdx, cell.rowSpan ?? 1, leftSpan);
+
+                    const rightSpan = colSpan - leftSpan;
+                    const rowSpan = cell.rowSpan || 1;
+                    if (rightSpan > 1 || rowSpan > 1) {
+                        const rowIdx = cellLayout.index.row;
+                        const colIdx = cellLayout.index.col + leftSpan;
+
+                        api.tableModifyCellSpan(this.__page, this.shape, rowIdx, colIdx, rowSpan, rightSpan);
+                    }
+                }
+                else {
+                    api.tableModifyCellSpan(this.__page, this.shape, rowIdx, colIdx, cell.rowSpan ?? 1, colSpan - 1);
+                    if ((cell.rowSpan ?? 1) > 1) {
+                        api.tableModifyCellSpan(this.__page, this.shape, rowIdx, colIdx + 1, (cell.rowSpan ?? 1), 1);
+                    }
+                }
             }
             else {
                 // 当前列后插入列
                 // 将当前列可见的单元格，colSpan+1
                 // 当前单元格colSpan-1
-                const indexCell = this.shape.indexOfCell(cell);
-                if (!indexCell) {
-                    throw new Error("cell not inside table")
-                }
-                const weight = this.shape.colWidths[indexCell.colIdx] / 2;
-                const data = [];
-                {
-                    const count = this.shape.rowHeights.length;
-                    for (let i = 0; i < count; ++i) {
-                        data.push(newCell());
-                    }
-                    data[indexCell.rowIdx].rowSpan = cell.rowSpan;
-                }
-                api.tableInsertCol(this.__page, this.shape, indexCell.colIdx + 1, weight, data);
-                api.tableModifyColWidth(this.__page, this.shape, indexCell.colIdx, weight);
-                const cells = this.shape.getVisibleCells(0, this.shape.rowHeights.length, indexCell.colIdx, indexCell.colIdx);
+                const weight = this.shape.colWidths[colIdx] / 2;
+
+                api.tableInsertCol(this.__page, this.shape, colIdx + 1, weight, []);
+                api.tableModifyColWidth(this.__page, this.shape, colIdx, weight);
+                const cells = this.shape.getVisibleCells(0, this.shape.rowCount, colIdx, colIdx);
                 cells.forEach((c) => {
-                    if (c.id !== cell.id) {
-                        api.tableModifyCellSpan(this.__page, c, c.rowSpan || 1, (c.colSpan || 1) + 1);
+                    if (c.rowIdx !== rowIdx && c.colIdx !== colIdx) {
+                        api.tableModifyCellSpan(this.__page, this.shape, c.rowIdx, c.colIdx, (c.cell?.rowSpan ?? 1), (c.cell?.colSpan ?? 1) + 1);
                     }
                 });
+                const cell = this.shape.getCellAt(rowIdx, colIdx);
+                api.tableModifyCellSpan(this.__page, this.shape, rowIdx, colIdx + 1, (cell?.rowSpan ?? 1), 1);
             }
             this.__repo.commit();
         } catch (e) {
@@ -120,33 +172,33 @@ export class TableEditor extends ShapeEditor {
             if (cells.length === 0) {
                 throw new Error("not find cell")
             }
-            if (cellsVisible.length === 0 || cellsVisible[0].id !== cells[0].id) {
+            if (cellsVisible.length === 0 || (cellsVisible[0].rowIdx !== cells[0].rowIdx && cellsVisible[0].colIdx !== cells[0].colIdx)) {
                 throw new Error("cell not visible")
             }
 
             const cell = cells[0];
-            api.tableModifyCellSpan(this.__page, cell, rowEnd - rowStart + 1, colEnd - colStart + 1);
+            api.tableModifyCellSpan(this.__page, this.shape, rowStart, colStart, rowEnd - rowStart + 1, colEnd - colStart + 1);
             // merge content
             cellsVisible.forEach((c) => {
-                if ((c.cellType ?? TableCellType.None) === TableCellType.None) return;
-                if (c.cellType === TableCellType.Image) {
+                if (!c.cell || (c.cell.cellType ?? TableCellType.None) === TableCellType.None) return;
+                if (c.cell.cellType === TableCellType.Image) {
                     // 图片咋搞？
-                    if ((cell.cellType ?? TableCellType.None) === TableCellType.None) {
-                        api.tableSetCellContentType(this.__page, c, TableCellType.Image);
-                        api.tableSetCellContentImage(this.__page, cell, c.imageRef);
+                    if ((cell.cell?.cellType ?? TableCellType.None) === TableCellType.None) {
+                        api.tableSetCellContentType(this.__page, this.shape, c.rowIdx, c.colIdx, TableCellType.Image);
+                        api.tableSetCellContentImage(this.__page, this.shape, cell.rowIdx, cell.colIdx, c.cell.imageRef);
                     }
                 }
-                else if (c.cellType === TableCellType.Text) {
-                    if (cell.cellType === TableCellType.Text) {
-                        if (c.text) {
-                            const clen = c.text.length;
-                            if (clen > 1) api.insertComplexText(this.__page, cell as any, cell.text!.length - 1, c.text!);
+                else if (c.cell.cellType === TableCellType.Text) {
+                    if (cell.cell?.cellType === TableCellType.Text) {
+                        if (c.cell.text) {
+                            const clen = c.cell.text.length;
+                            if (clen > 1) api.insertComplexText(this.__page, cell as any, cell.cell.text!.length - 1, c.cell.text!);
                         }
                     }
                 }
-                api.tableSetCellContentType(this.__page, c, undefined);
-                api.tableSetCellContentImage(this.__page, c, undefined);
-                api.tableSetCellContentText(this.__page, c, undefined);
+                api.tableSetCellContentType(this.__page, this.shape, c.rowIdx, c.colIdx, undefined);
+                api.tableSetCellContentImage(this.__page, this.shape, c.rowIdx, c.colIdx, undefined);
+                api.tableSetCellContentText(this.__page, this.shape, c.rowIdx, c.colIdx, undefined);
             })
 
             this.__repo.commit();
@@ -156,12 +208,12 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    setCellContentImage(cell: TableCell, ref: string) {
+    setCellContentImage(rowIdx: number, colIdx: number, ref: string) {
         const api = this.__repo.start('setCellContentImage', {});
         try {
-            api.tableSetCellContentType(this.__page, cell, TableCellType.Image);
-            api.tableSetCellContentImage(this.__page, cell, ref);
-            api.tableSetCellContentText(this.__page, cell, undefined);
+            api.tableSetCellContentType(this.__page, this.shape, rowIdx, colIdx, TableCellType.Image);
+            api.tableSetCellContentImage(this.__page, this.shape, rowIdx, colIdx, ref);
+            api.tableSetCellContentText(this.__page, this.shape, rowIdx, colIdx, undefined);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -169,16 +221,16 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    setCellContentText(cell: TableCell, text?: string) {
+    setCellContentText(rowIdx: number, colIdx: number, text?: string) {
         const _text = newText(this.shape.textAttr);
         _text.setTextBehaviour(TextBehaviour.Fixed);
         _text.setPadding(5, 0, 3, 0);
         if (text && text.length > 0) _text.insertText(text, 0);
         const api = this.__repo.start('setCellContentText', {});
         try {
-            api.tableSetCellContentType(this.__page, cell, TableCellType.Text);
-            api.tableSetCellContentText(this.__page, cell, _text);
-            api.tableSetCellContentImage(this.__page, cell, undefined);
+            api.tableSetCellContentType(this.__page, this.shape, rowIdx, colIdx, TableCellType.Text);
+            api.tableSetCellContentText(this.__page, this.shape, rowIdx, colIdx, _text);
+            api.tableSetCellContentImage(this.__page, this.shape, rowIdx, colIdx, undefined);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -259,14 +311,7 @@ export class TableEditor extends ShapeEditor {
         const weight = height / this.shape.frame.height * total;
         const api = this.__repo.start('insertRow', {});
         try {
-            if (!data || data.length == 0) {
-                data = [];
-                const count = this.shape.colWidths.length;
-                for (let i = 0; i < count; ++i) {
-                    data.push(newCell());
-                }
-            }
-            api.tableInsertRow(this.__page, this.shape, idx, weight, data);
+            api.tableInsertRow(this.__page, this.shape, idx, weight, data ?? []);
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height + height);
             this.__repo.commit();
         } catch (e) {
@@ -305,13 +350,6 @@ export class TableEditor extends ShapeEditor {
         const weight = width / this.shape.frame.width * total;
         const api = this.__repo.start('insertCol', {});
         try {
-            if (!data || data.length == 0) {
-                data = [];
-                const count = this.shape.rowHeights.length;
-                for (let i = 0; i < count; ++i) {
-                    data.push(newCell());
-                }
-            }
             api.tableInsertCol(this.__page, this.shape, idx, weight, data ?? []);
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width + width, this.shape.frame.height);
             this.__repo.commit();

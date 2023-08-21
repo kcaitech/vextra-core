@@ -1,5 +1,5 @@
 import {
-    Cmd, CmdType,
+    Cmd, 
     PageCmdInsert, PageCmdModify, PageCmdMove, PageCmdDelete,
     ShapeArrayAttrMove, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
     ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
@@ -27,19 +27,19 @@ import { TableOpTarget } from "../../coop/data/classes";
 type TextShapeLike = Shape & { text: Text }
 
 function checkShapeAtPage(page: Page, obj: Shape) {
-    if (obj instanceof TableCell) {
-        obj = obj.parent as Shape;
-    }
+    // if (obj instanceof TableCell) {
+    //     obj = obj.parent as Shape;
+    // }
     if (!page.getShape(obj.id)) throw new Error("shape not inside page")
 }
 
 function genShapeId(shape: Shape): Array<string | TableIndex> {
-    if (shape instanceof TableCell) {
-        const table = shape.parent as TableShape;
-        const index = table.indexOfCell(shape);
-        if (!index) throw new Error("Cant find cell");
-        return [table.id, new TableIndex(index.rowIdx, index.colIdx)]
-    }
+    // if (shape instanceof TableCell) {
+    //     const table = shape.parent as TableShape;
+    //     const index = table.indexOfCell(shape);
+    //     if (!index) throw new Error("Cant find cell");
+    //     return [table.id, new TableIndex(index.rowIdx, index.colIdx)]
+    // }
     return [shape.id]
 }
 
@@ -916,35 +916,38 @@ export class Api {
     }
 
     // table
-    tableSetCellContentType(page: Page, cell: TableCell, contentType: TableCellType | undefined) {
-        checkShapeAtPage(page, cell);
+    tableSetCellContentType(page: Page, table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
+        checkShapeAtPage(page, table);
         this.__trap(() => {
-            const origin = cell.cellType;
+            const cell = table.getCellAt(rowIdx, colIdx);
+            const origin = cell?.cellType;
             if (origin !== contentType && (origin ?? TableCellType.None) !== (contentType ?? TableCellType.None)) {
-                basicapi.tableSetCellContentType(cell, contentType);
-                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(cell), SHAPE_ATTR_ID.cellContentType, contentType, origin))
+                basicapi.tableSetCellContentType(table, rowIdx, colIdx, contentType);
+                this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentType, contentType, origin))
             }
         })
     }
 
-    tableSetCellContentText(page: Page, cell: TableCell, text: Text | undefined) {
-        checkShapeAtPage(page, cell);
+    tableSetCellContentText(page: Page, table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
+        checkShapeAtPage(page, table);
         this.__trap(() => {
-            const origin = cell.text && exportText(cell.text);
+            const cell = table.getCellAt(rowIdx, colIdx);
+            const origin = cell?.text && exportText(cell.text);
             if (origin !== text) { // undefined
-                basicapi.tableSetCellContentText(cell, text);
-                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(cell), SHAPE_ATTR_ID.cellContentText, text && exportText(text), origin))
+                basicapi.tableSetCellContentText(table, rowIdx, colIdx, text);
+                this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentText, text && exportText(text), origin))
             }
         })
     }
 
-    tableSetCellContentImage(page: Page, cell: TableCell, ref: string | undefined) {
-        checkShapeAtPage(page, cell);
+    tableSetCellContentImage(page: Page, table: TableShape, rowIdx: number, colIdx: number, ref: string | undefined) {
+        checkShapeAtPage(page, table);
         this.__trap(() => {
-            const origin = cell.imageRef;
+            const cell = table.getCellAt(rowIdx, colIdx);
+            const origin = cell?.imageRef;
             if (origin !== ref) {
-                basicapi.tableSetCellContentImage(cell, ref);
-                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(cell), SHAPE_ATTR_ID.cellContentImage, ref, origin))
+                basicapi.tableSetCellContentImage(table, rowIdx, colIdx, ref);
+                this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentImage, ref, origin))
             }
         })
     }
@@ -1005,13 +1008,14 @@ export class Api {
         })
     }
 
-    tableModifyCellSpan(page: Page, cell: TableCell, rowSpan: number, colSpan: number) {
-        checkShapeAtPage(page, cell);
+    tableModifyCellSpan(page: Page, table: TableShape, rowIdx: number, colIdx: number, rowSpan: number, colSpan: number) {
+        checkShapeAtPage(page, table);
         this.__trap(() => {
-            const origin = { rowSpan: cell.rowSpan, colSpan: cell.colSpan };
+            const cell = table.getCellAt(rowIdx, colIdx);
+            const origin = { rowSpan: cell?.rowSpan, colSpan: cell?.colSpan };
             if ((origin.rowSpan ?? 1) !== rowSpan || (origin.colSpan ?? 1) !== colSpan) {
-                basicapi.tableModifyCellSpan(cell, rowSpan, colSpan);
-                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(cell), SHAPE_ATTR_ID.cellSpan, { rowSpan, colSpan }, origin))
+                basicapi.tableModifyCellSpan(table, rowIdx, colIdx, rowSpan, colSpan);
+                this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellSpan, { rowSpan, colSpan }, origin))
             }
         })
     }
