@@ -647,6 +647,8 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.textAttr !== undefined) ret.textAttr = importTextAttr(source.textAttr, ctx)
+    // inject code
+    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
 }
 /* table cell */
@@ -678,8 +680,6 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
     if (source.rowSpan !== undefined) ret.rowSpan = source.rowSpan
     if (source.colSpan !== undefined) ret.colSpan = source.colSpan
-    // inject code
-    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
 }
 /* symbol ref shape */

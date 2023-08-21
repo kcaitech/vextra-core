@@ -22,6 +22,9 @@ export class TableCell extends Shape implements classes.TableCell {
     imageRef?: string
     rowSpan?: number
     colSpan?: number
+
+    private __cacheData?: { buff: Uint8Array, base64: string };
+
     constructor(
         id: string,
         name: string,
@@ -50,7 +53,7 @@ export class TableCell extends Shape implements classes.TableCell {
         return new Path(path);
     }
 
-    getPathOfFrame(frame: ShapeFrame): Path {
+    static getPathOfFrame(frame: ShapeFrame): Path {
         const x = 0;
         const y = 0;
         const w = frame.width;
@@ -71,16 +74,15 @@ export class TableCell extends Shape implements classes.TableCell {
     }
 
     // image
-    setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
-        this.__imageMgr = imageMgr;
-    }
     peekImage() {
         return this.__cacheData?.base64;
     }
     // image shape
     async loadImage(): Promise<string> {
         if (this.__cacheData) return this.__cacheData.base64;
-        this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
+        if (!this.imageRef) return "";
+        const mediaMgr = (this.parent as TableShape).__imageMgr;
+        this.__cacheData = mediaMgr && await mediaMgr.get(this.imageRef)
         return this.__cacheData && this.__cacheData.base64 || "";
     }
 
@@ -153,6 +155,7 @@ export class TableShape extends Shape implements classes.TableShape {
     colWidths: BasicArray<number>
     textAttr?: TextAttr // 文本默认属性
 
+    __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __layout?: TableLayout;
     constructor(
         id: string,
@@ -174,6 +177,10 @@ export class TableShape extends Shape implements classes.TableShape {
         this.rowHeights = rowHeights
         this.colWidths = colWidths
         this.childs = childs;
+    }
+
+    setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
+        this.__imageMgr = imageMgr;
     }
 
     get childsVisible(): boolean {

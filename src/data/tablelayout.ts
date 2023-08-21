@@ -26,12 +26,12 @@ export function layoutTable(table: TableShape): TableLayout {
     const colWBase = colWidths.reduce((sum, cur) => sum + cur, 0);
     const cellIndexs = new Map<string, { rowIdx: number, colIdx: number, visible: boolean }>();
 
-    let celli = 0, cellLen = cells.length;
+    let celli = 0;
 
-    for (let ri = 0, rowLen = rowHeights.length, rowY = 0; ri < rowLen && celli < cellLen; ++ri) {
+    for (let ri = 0, rowLen = rowHeights.length, rowY = 0; ri < rowLen; ++ri) {
         const rowHeight = rowHeights[ri] / rowHBase * height;
 
-        for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen && celli < cellLen; ++ci, ++celli) {
+        for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen; ++ci, ++celli) {
             const cell = cells[celli];
             const visible = !grid.get(ri, ci);
             if (cell) cellIndexs.set(cell.id, { rowIdx: ri, colIdx: ci, visible })
