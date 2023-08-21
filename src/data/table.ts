@@ -274,22 +274,21 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
-        const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCell | undefined });
-        item.cell = this.getCellAt(item.index.row, item.index.col);
+        const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCell | undefined }) | undefined;
+        if (item) item.cell = this.getCellAt(item.index.row, item.index.col);
         return item;
     }
 
     locateCell2(cell: TableCell): (TableGridItem & { cell: TableCell | undefined }) | undefined {
         const index = this.indexOfCell(cell);
-        if (index && index.visible) {
-            const item = this.getLayout().grid.get(index.rowIdx, index.colIdx);
-            const cell = this.getCellAt(index.rowIdx, index.colIdx);
-            return {
-                index: item.index,
-                frame: item.frame,
-                span: item.span,
-                cell
-            }
+        if (!index || !index.visible) return;
+        const item = this.getLayout().grid.get(index.rowIdx, index.colIdx);
+        if (!item) return;
+        return {
+            index: item.index,
+            frame: item.frame,
+            span: item.span,
+            cell
         }
     }
 
