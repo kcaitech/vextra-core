@@ -678,7 +678,6 @@ export class TableEditor extends ShapeEditor {
             text.setPadding(5, 0, 3, 0);
             api.tableSetCellContentType(this.__page, cell, TableCellType.Text);
             api.tableSetCellContentText(this.__page, cell, text);
-            console.log('type-set', cell.cellType);
             this.__repo.commit();
         } catch (error) {
             console.error(error);
