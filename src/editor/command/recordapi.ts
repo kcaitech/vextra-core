@@ -27,19 +27,19 @@ import { TableOpTarget } from "../../coop/data/classes";
 type TextShapeLike = Shape & { text: Text }
 
 function checkShapeAtPage(page: Page, obj: Shape) {
-    // if (obj instanceof TableCell) {
-    //     obj = obj.parent as Shape;
-    // }
+    if (obj instanceof TableCell) {
+        obj = obj.parent as Shape;
+    }
     if (!page.getShape(obj.id)) throw new Error("shape not inside page")
 }
 
 function genShapeId(shape: Shape): Array<string | TableIndex> {
-    // if (shape instanceof TableCell) {
-    //     const table = shape.parent as TableShape;
-    //     const index = table.indexOfCell(shape);
-    //     if (!index) throw new Error("Cant find cell");
-    //     return [table.id, new TableIndex(index.rowIdx, index.colIdx)]
-    // }
+    if (shape instanceof TableCell) {
+        const table = shape.parent as TableShape;
+        const index = table.indexOfCell(shape);
+        if (!index) throw new Error("Cant find cell");
+        return [table.id, new TableIndex(index.rowIdx, index.colIdx)]
+    }
     return [shape.id]
 }
 
