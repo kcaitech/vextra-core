@@ -8,7 +8,7 @@ import { Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
-import { locateCell, locateCellByCell } from "./tablelocate";
+import { locateCell } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 import { uuid } from "../basic/uuid";
 export { TableLayout, TableGridItem } from "./tablelayout";
@@ -280,9 +280,17 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     locateCell2(cell: TableCell): (TableGridItem & { cell: TableCell | undefined }) | undefined {
-        const item = locateCellByCell(this, this.getLayout(), cell) as (TableGridItem & { cell: TableCell | undefined });
-        item.cell = this.getCellAt(item.index.row, item.index.col);
-        return item;
+        const index = this.indexOfCell(cell);
+        if (index && index.visible) {
+            const item = this.getLayout().grid.get(index.rowIdx, index.colIdx);
+            const cell = this.getCellAt(index.rowIdx, index.colIdx);
+            return {
+                index: item.index,
+                frame: item.frame,
+                span: item.span,
+                cell
+            }
+        }
     }
 
     private getCellIndexs() {
@@ -299,7 +307,7 @@ export class TableShape extends Shape implements classes.TableShape {
         const cellIndexs = this.getCellIndexs();
         const index = cellIndexs.get(cell.id) ?? -1;
         if (index < 0) return;
-        const rowIdx = Math.ceil(index / this.colCount);
+        const rowIdx = Math.floor(index / this.colCount);
         const colIdx = index % this.colCount;
 
         const layout = this.getLayout();

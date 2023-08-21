@@ -20,19 +20,18 @@ export function locateCell(layout: TableLayout, x: number, y: number): TableGrid
     }
 }
 
-export function locateCellByCell(table: TableShape, layout: TableLayout, cell: TableCell): TableGridItem | undefined {
-    const grid = layout.grid;
-    for (let ri = 0, rlen = grid.rowCount; ri < rlen; ++ri) {
-        for (let ci = 0, clen = grid.colCount; ci < clen; ++ci) {
-            const cl = grid.get(ri, ci);
-            const c = table.getCellAt(ri, ci);
-            if (c && c.id === cell.id) {
-                return cl;
-            }
-        }
-        break;
-    }
-}
+// export function locateCellByCell(table: TableShape, layout: TableLayout, cell: TableCell): TableGridItem | undefined {
+//     const grid = layout.grid;
+//     for (let ri = 0, rlen = grid.rowCount; ri < rlen; ++ri) {
+//         for (let ci = 0, clen = grid.colCount; ci < clen; ++ci) {
+//             const cl = grid.get(ri, ci);
+//             const c = table.getCellAt(ri, ci);
+//             if (c && c.id === cell.id) {
+//                 return cl;
+//             }
+//         }
+//     }
+// }
 
 // export function indexOfCell(table: TableShape, cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
 //     const rowHeights = table.rowHeights;
