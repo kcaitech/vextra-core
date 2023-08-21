@@ -49,7 +49,7 @@ export class TableEditor extends ShapeEditor {
                         }
                     }
 
-                    topSpan = Math.min(topSpan, rowSpan -1);
+                    topSpan = Math.min(topSpan, rowSpan - 1);
                     api.tableModifyCellSpan(this.__page, this.shape, rowIdx, colIdx, topSpan, cell.colSpan ?? 1);
 
                     const bottomSpan = rowSpan - topSpan;
@@ -119,7 +119,7 @@ export class TableEditor extends ShapeEditor {
                         }
                     }
 
-                    leftSpan = Math.min(leftSpan, colSpan -1);
+                    leftSpan = Math.min(leftSpan, colSpan - 1);
                     api.tableModifyCellSpan(this.__page, this.shape, rowIdx, colIdx, cell.rowSpan ?? 1, leftSpan);
 
                     const rightSpan = colSpan - leftSpan;
@@ -714,8 +714,8 @@ export class TableEditor extends ShapeEditor {
             const text = newText(this.shape.textAttr);
             text.setTextBehaviour(TextBehaviour.Fixed);
             text.setPadding(5, 0, 3, 0);
-            api.tableSetCellContentType(this.__page, cell, TableCellType.Text);
-            api.tableSetCellContentText(this.__page, cell, text);
+            api.tableSetCellContentType(this.__page, this.shape, rowIdx, colIdx, TableCellType.Text);
+            api.tableSetCellContentText(this.__page, this.shape, rowIdx, colIdx, text);
             this.__repo.commit();
         } catch (error) {
             console.error(error);
