@@ -7,7 +7,7 @@ export function tableInsertRow(table: TableShape, idx: number, height: number, d
     const row = [];
     for (let i = 0, count = table.colWidths.length; i < count; ++i) {
         const cell = data[i];
-        if (!cell) throw new Error("cell is undefined")
+        // if (!cell) throw new Error("cell is undefined")
         row.push(cell);
     }
     childs.splice(idx * table.colWidths.length, 0, ...row);
@@ -26,7 +26,7 @@ export function tableInsertCol(table: TableShape, idx: number, width: number, da
     const colCount = table.colWidths.length;
     for (let i = 0, count = table.rowHeights.length; i < count; ++i) {
         const cell = data[i];
-        if (!cell) throw new Error("cell is undefined")
+        // if (!cell) throw new Error("cell is undefined")
         childs.splice(i * colCount + idx, 0, cell);
     }
 }

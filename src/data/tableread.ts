@@ -1,6 +1,5 @@
-import { TableShape } from "./typesdefine";
 import { BitGrid, Grid } from "../basic/grid";
-import { TableCell } from "./table";
+import { TableShape, TableCell } from "./table";
 import { BasicArray } from "./basic";
 /**
  * 
@@ -11,22 +10,26 @@ import { BasicArray } from "./basic";
  * @param colEnd 
  * @param visible 
  */
-export function getTableCells(table: TableShape, rowStart: number, rowEnd: number, colStart: number, colEnd: number): TableCell[] {
+export function getTableCells(table: TableShape, rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
     const rowHeights = table.rowHeights;
     const colWidths = table.colWidths;
 
-    const cells: TableCell[] = table.childs as (BasicArray<TableCell>);
+    const cells = table.childs;
     const cellLen = cells.length;
     let celli = 0;
 
-    const ret: TableCell[] = [];
+    const ret: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] = [];
     celli += rowStart * rowHeights.length;
 
     for (let ri = rowStart, rowLen = rowHeights.length; ri < rowLen && celli < cellLen && ri <= rowEnd; ++ri) {
         celli += colStart;
         for (let ci = colStart, colLen = colWidths.length; ci < colLen && celli < cellLen && ci <= colEnd; ++ci, ++celli) {
             const c = cells[celli];
-            ret.push(c);
+            ret.push({
+                cell: c,
+                rowIdx: ri,
+                colIdx: ci
+            });
         }
         celli += colWidths.length - colEnd - 1;
     }
@@ -35,25 +38,25 @@ export function getTableCells(table: TableShape, rowStart: number, rowEnd: numbe
 }
 
 // 获取这些行列中可见的表格，用于选中行列等。
-export function getTableNotCoveredCells(table: TableShape, rowStart: number, rowEnd: number, colStart: number, colEnd: number): TableCell[] {
+export function getTableNotCoveredCells(table: TableShape, rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
 
     const rowHeights = table.rowHeights;
     const colWidths = table.colWidths;
     const grid: BitGrid = new BitGrid(rowHeights.length, colWidths.length);
 
-    const cells: TableCell[] = table.childs as (BasicArray<TableCell>);
+    const cells = table.childs;
     const cellLen = cells.length;
     let celli = 0;
 
-    const ret: TableCell[] = [];
+    const ret: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] = [];
 
     for (let ri = 0, rowLen = rowHeights.length; ri < rowLen && celli < cellLen && ri < rowStart; ++ri) {
         for (let ci = 0, colLen = colWidths.length; ci < colLen && celli < cellLen; ++ci, ++celli) {
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
             // fix span
-            const rowSpan = Math.min(c.rowSpan || 1, rowLen - ri)
-            let colSpan = Math.min(c.colSpan || 1, colLen - ci);
+            const rowSpan = Math.min(c?.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(c?.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
                 if (grid.get(ri, _ci)) {
@@ -73,8 +76,8 @@ export function getTableNotCoveredCells(table: TableShape, rowStart: number, row
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
             // fix span
-            const rowSpan = Math.min(c.rowSpan || 1, rowLen - ri)
-            let colSpan = Math.min(c.colSpan || 1, colLen - ci);
+            const rowSpan = Math.min(c?.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(c?.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
                 if (grid.get(ri, _ci)) {
@@ -91,10 +94,14 @@ export function getTableNotCoveredCells(table: TableShape, rowStart: number, row
         for (let ci = colStart, colLen = colWidths.length; ci < colLen && celli < cellLen && ci <= colEnd; ++ci, ++celli) {
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
-            ret.push(c);
+            ret.push({
+                cell: c,
+                rowIdx: ri,
+                colIdx: ci
+            });
             // fix span
-            const rowSpan = Math.min(c.rowSpan || 1, rowLen - ri)
-            let colSpan = Math.min(c.colSpan || 1, colLen - ci);
+            const rowSpan = Math.min(c?.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(c?.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
                 if (grid.get(ri, _ci)) {
@@ -112,8 +119,8 @@ export function getTableNotCoveredCells(table: TableShape, rowStart: number, row
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
             // fix span
-            const rowSpan = Math.min(c.rowSpan || 1, rowLen - ri)
-            let colSpan = Math.min(c.colSpan || 1, colLen - ci);
+            const rowSpan = Math.min(c?.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(c?.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
                 if (grid.get(ri, _ci)) {
@@ -133,13 +140,13 @@ export function getTableNotCoveredCells(table: TableShape, rowStart: number, row
 }
 
 // 获取用户实际看见的单元格
-export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd: number, colStart: number, colEnd: number): TableCell[] {
+export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
 
     const rowHeights = table.rowHeights;
     const colWidths = table.colWidths;
-    const grid: Grid<TableCell> = new Grid<TableCell>(rowHeights.length, colWidths.length);
+    const grid: Grid<TableCell | boolean> = new Grid<TableCell | boolean>(rowHeights.length, colWidths.length);
 
-    const cells: TableCell[] = table.childs as (BasicArray<TableCell>);
+    const cells = table.childs;
     const cellLen = cells.length;
     let celli = 0;
 
@@ -148,8 +155,8 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
             // fix span
-            const rowSpan = Math.min(c.rowSpan || 1, rowLen - ri)
-            let colSpan = Math.min(c.colSpan || 1, colLen - ci);
+            const rowSpan = Math.min(c?.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(c?.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
                 if (grid.get(ri, _ci)) {
@@ -159,7 +166,7 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             }
             for (let i = 0; i < rowSpan; ++i) {
                 for (let j = 0; j < colSpan; ++j) {
-                    grid.set(ri + i, ci + j, c);
+                    grid.set(ri + i, ci + j, c ?? true);
                 }
             }
         }
@@ -169,8 +176,8 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
             // fix span
-            const rowSpan = Math.min(c.rowSpan || 1, rowLen - ri)
-            let colSpan = Math.min(c.colSpan || 1, colLen - ci);
+            const rowSpan = Math.min(c?.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(c?.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
                 if (grid.get(ri, _ci)) {
@@ -180,7 +187,7 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             }
             for (let i = 0; i < rowSpan; ++i) {
                 for (let j = 0; j < colSpan; ++j) {
-                    grid.set(ri + i, ci + j, c);
+                    grid.set(ri + i, ci + j, c ?? true);
                 }
             }
         }
@@ -189,8 +196,8 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             const c = cells[celli];
             // ret.push(c);
             // fix span
-            const rowSpan = Math.min(c.rowSpan || 1, rowLen - ri)
-            let colSpan = Math.min(c.colSpan || 1, colLen - ci);
+            const rowSpan = Math.min(c?.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(c?.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
                 if (grid.get(ri, _ci)) {
@@ -200,7 +207,7 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             }
             for (let i = 0; i < rowSpan; ++i) {
                 for (let j = 0; j < colSpan; ++j) {
-                    grid.set(ri + i, ci + j, c);
+                    grid.set(ri + i, ci + j, c ?? true);
                 }
             }
         }
@@ -208,8 +215,8 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
             // fix span
-            const rowSpan = Math.min(c.rowSpan || 1, rowLen - ri)
-            let colSpan = Math.min(c.colSpan || 1, colLen - ci);
+            const rowSpan = Math.min(c?.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(c?.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
                 if (grid.get(ri, _ci)) {
@@ -219,20 +226,33 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             }
             for (let i = 0; i < rowSpan; ++i) {
                 for (let j = 0; j < colSpan; ++j) {
-                    grid.set(ri + i, ci + j, c);
+                    grid.set(ri + i, ci + j, c ?? true);
                 }
             }
         }
     }
 
-    const ret: TableCell[] = [];
+    const ret: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] = [];
     const added: Set<string> = new Set();
     for (let ri = rowStart, rowLen = rowHeights.length; ri < rowLen && ri <= rowEnd; ++ri) {
         for (let ci = colStart, colLen = colWidths.length; ci < colLen && ci <= colEnd; ++ci) {
-            const c: TableCell = grid.get(ri, ci);
-            if (added.has(c.id)) continue;
-            ret.push(c);
-            added.add(c.id);
+            const c: TableCell | boolean = grid.get(ri, ci);
+            if (typeof c === 'boolean') {
+                ret.push({
+                    cell: undefined,
+                    rowIdx: ri,
+                    colIdx: ci
+                });
+            }
+            else {
+                if (added.has(c.id)) continue;
+                ret.push({
+                    cell: c,
+                    rowIdx: ri,
+                    colIdx: ci
+                });
+                added.add(c.id);
+            }
         }
     }
     return ret;

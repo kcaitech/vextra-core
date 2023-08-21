@@ -1,4 +1,4 @@
-import { Style } from "./style";
+import { Border, Fill, Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
@@ -139,6 +139,13 @@ export class TableCell extends Shape implements classes.TableCell {
     }
 }
 
+export function newCell(): TableCell {
+    return new TableCell("", "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
+        new BasicArray<Border>(),
+        new BasicArray<Fill>()
+    ))
+}
+
 export class TableShape extends Shape implements classes.TableShape {
     typeId = 'table-shape'
     childs: BasicArray<(TableCell | undefined) >
@@ -171,6 +178,14 @@ export class TableShape extends Shape implements classes.TableShape {
 
     get childsVisible(): boolean {
         return false;
+    }
+
+    get rowCount() {
+        return this.rowHeights.length;
+    }
+
+    get colCount() {
+        return this.colWidths.length;
     }
 
     getPath(): Path {
@@ -269,13 +284,21 @@ export class TableShape extends Shape implements classes.TableShape {
      * @param visible 
      * @returns 
      */
-    getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+    getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
         return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
     }
 
-    getCellAt(rowIdx: number, colIdx: number) {
+    getCellAt(rowIdx: number, colIdx: number, initCell: boolean = false): (TableCell | undefined) {
+        if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
+            throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
+        }
         const index = rowIdx * this.colWidths.length + colIdx;
-        return this.childs[index];
+        const cell = this.childs[index];
+        if (!cell && initCell) {
+            this.childs[index] = newCell();
+            return this.childs[index];
+        }
+        return cell;
     }
 
     /**
@@ -286,7 +309,7 @@ export class TableShape extends Shape implements classes.TableShape {
      * @param colEnd 
      * @returns 
      */
-    getNotCoveredCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+    getNotCoveredCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
         return getTableNotCoveredCells(this, rowStart, rowEnd, colStart, colEnd);
     }
 
@@ -298,7 +321,7 @@ export class TableShape extends Shape implements classes.TableShape {
      * @param colEnd 
      * @returns 
      */
-    getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+    getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
         return getTableVisibleCells(this, rowStart, rowEnd, colStart, colEnd);
     }
 }

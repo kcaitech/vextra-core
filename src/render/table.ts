@@ -18,7 +18,7 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
 
         for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
             const cellLayout = layout.grid.get(i, j);
-            if (cellLayout.index.row === i && cellLayout.index.col === j) {
+            if (cellLayout.cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                 const path = cellLayout.cell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();
                 const child = cellLayout.cell;
@@ -37,7 +37,7 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
 
         for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
             const cellLayout = layout.grid.get(i, j);
-            if (cellLayout.index.row === i && cellLayout.index.col === j) {
+            if (cellLayout.cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                 const path = cellLayout.cell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();
                 const child = cellLayout.cell;

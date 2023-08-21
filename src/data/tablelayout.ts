@@ -1,9 +1,8 @@
 import { Grid } from "../basic/grid";
-import { BasicArray } from "./basic";
 import { ShapeFrame } from "./shape";
 import { TableCell, TableShape } from "./table";
 
-export type TableGridItem = { cell: TableCell, index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
+export type TableGridItem = { cell: TableCell | undefined, index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
 
 export type TableLayout = {
     grid: Grid<TableGridItem>,
@@ -17,7 +16,7 @@ export type TableLayout = {
 export function layoutTable(table: TableShape): TableLayout {
     const frame = table.frame;
     const grid: Grid<TableGridItem> = new Grid<TableGridItem>(table.rowHeights.length, table.colWidths.length);
-    const cells: TableCell[] = table.childs as (BasicArray<TableCell>);
+    const cells = table.childs;
 
     const width = frame.width;
     const height = frame.height;
@@ -35,7 +34,7 @@ export function layoutTable(table: TableShape): TableLayout {
         for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen && celli < cellLen; ++ci, ++celli) {
             const cell = cells[celli];
             const visible = !grid.get(ri, ci);
-            cellIndexs.set(cell.id, { rowIdx: ri, colIdx: ci, visible })
+            if (cell) cellIndexs.set(cell.id, { rowIdx: ri, colIdx: ci, visible })
 
             const colWidth = colWidths[ci] / colWBase * width;
             if (!visible) {
@@ -57,8 +56,8 @@ export function layoutTable(table: TableShape): TableLayout {
             }
 
             // fix span
-            const rowSpan = Math.min(cell.rowSpan || 1, rowLen - ri)
-            let colSpan = Math.min(cell.colSpan || 1, colLen - ci);
+            const rowSpan = Math.min(cell?.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(cell?.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (; ;) {
                 for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
