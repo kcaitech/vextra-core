@@ -218,20 +218,20 @@ export class TableShape extends Shape implements classes.TableShape {
         const rowHBase = rowHeights.reduce((sum, cur) => sum + cur, 0);
         return rowHeights.map((val) => val / rowHBase * height);
     }
-    insertRow(idx: number, height: number, data: TableCell[]) {
+    insertRow(idx: number, height: number, data: (TableCell | undefined)[]) {
         tableInsertRow(this, idx, height, data);
         this.reLayout();
     }
-    removeRow(idx: number): TableCell[] {
+    removeRow(idx: number): (TableCell | undefined)[] {
         const ret = tableRemoveRow(this, idx);
         this.reLayout();
         return ret;
     }
-    insertCol(idx: number, width: number, data: TableCell[]) {
+    insertCol(idx: number, width: number, data: (TableCell | undefined)[]) {
         tableInsertCol(this, idx, width, data);
         this.reLayout();
     }
-    removeCol(idx: number): TableCell[] {
+    removeCol(idx: number): (TableCell | undefined)[] {
         const ret = tableRemoveCol(this, idx);
         this.reLayout();
         return ret;
