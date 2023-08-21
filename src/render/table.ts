@@ -22,7 +22,7 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
         for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
             const cellLayout = layout.grid.get(i, j);
             if (cellLayout.cell && cellLayout.index.row === i && cellLayout.index.col === j) {
-                const path = cellLayout.cell.getPathOfFrame(cellLayout.frame);
+                const path = TableCell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();
                 const child = cellLayout.cell;
                 const fill = fillR(h, child.style.fills, cellLayout.frame, pathstr);
