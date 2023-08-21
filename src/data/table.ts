@@ -2,13 +2,13 @@ import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
-import { GroupShape, Shape } from "./shape";
+import { Shape } from "./shape";
 import { Path } from "./path";
 import { Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
-import { indexOfCell, locateCell, locateCellByCell } from "./tablelocate";
+import { locateCell, locateCellByCell } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
@@ -93,7 +93,7 @@ export class TableCell extends Shape implements classes.TableCell {
     getLayout(): TextLayout | undefined {
         if (!this.text) return;
         const table = this.parent as TableShape;
-        const indexCell = indexOfCell(table, this);
+        const indexCell = table.indexOfCell(this);
         if (!indexCell || !indexCell.visible) return;
 
         const total = table.colWidths.reduce((pre, cur) => pre + cur, 0);
@@ -256,7 +256,8 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     indexOfCell(cell: TableCell) { // todo 需要优化
-        return indexOfCell(this, cell);
+        const cellIndexs = this.getLayout().cellIndexs;
+        return cellIndexs.get(cell.id); //indexOfCell(this, cell);
     }
 
     /**
