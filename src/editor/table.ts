@@ -274,12 +274,18 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    removeRow(idx: number) {
+    removeRow(idx: number, idxEnd?: number) {
+        idxEnd = idxEnd ?? idx;
         const total = this.shape.rowHeights.reduce((pre, h) => pre + h, 0);
-        const curHeight = this.shape.rowHeights[idx] / total * this.shape.frame.height;
         const api = this.__repo.start('removeRow', {});
         try {
-            api.tableRemoveRow(this.__page, this.shape, idx);
+            let removeWeight = 0;
+            let count = idxEnd - idx + 1;
+            for (; count > 0; --count) {
+                removeWeight += this.shape.rowHeights[idx];
+                api.tableRemoveRow(this.__page, this.shape, idx);
+            }
+            const curHeight = removeWeight / total * this.shape.frame.height;
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height - curHeight);
             this.__repo.commit();
         } catch (e) {
@@ -309,12 +315,18 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    removeCol(idx: number) {
+    removeCol(idx: number, idxEnd?: number) {
+        idxEnd = idxEnd ?? idx;
         const total = this.shape.colWidths.reduce((pre, w) => pre + w, 0);
-        const curWidth = this.shape.colWidths[idx] / total * this.shape.frame.width;
         const api = this.__repo.start('removeCol', {});
         try {
-            api.tableRemoveCol(this.__page, this.shape, idx);
+            let removeWeight = 0;
+            let count = idxEnd - idx + 1;
+            for (; count > 0; --count) {
+                removeWeight += this.shape.colWidths[idx];
+                api.tableRemoveCol(this.__page, this.shape, idx);
+            }
+            const curWidth = removeWeight / total * this.shape.frame.width;
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width - curWidth, this.shape.frame.height);
             this.__repo.commit();
         } catch (e) {
