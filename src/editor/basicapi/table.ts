@@ -3,15 +3,8 @@ import { TableCell, TableCellType, TableShape } from "../../data/table";
 import { Color, Page, StrikethroughType, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
 
 export function tableSetCellContentType(table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
-    if (contentType && contentType !== TableCellType.None) {
-        const cell = table.getCellAt(rowIdx, colIdx, true);
-        cell!.setContentType(contentType);
-        return;
-    }
-    const cell = table.getCellAt(rowIdx, colIdx);
-    if (cell && cell.cellType && cell.cellType !== TableCellType.None) {
-        cell.setContentType(contentType);
-    }
+    const cell = table.getCellAt(rowIdx, colIdx, true);
+    cell!.setContentType(contentType);
 }
 
 export function tableSetCellContentText(table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
@@ -32,32 +25,32 @@ export function tableModifyRowHeight(page: Page, table: TableShape, idx: number,
     table.setRowHeight(idx, height);
 }
 
-export function tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data: TableCell[]) {
+export function tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data: (TableCell | undefined)[]) {
     table.insertRow(idx, height, data);
     data.forEach((cell) => {
-        page.onAddShape(cell);
+        if (cell) page.onAddShape(cell);
     })
 }
 
 export function tableRemoveRow(page: Page, table: TableShape, idx: number) {
     const ret = table.removeRow(idx);
     ret.forEach((cell) => {
-        page.onRemoveShape(cell);
+        if (cell) page.onRemoveShape(cell);
     })
     return ret;
 }
 
-export function tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data: TableCell[]) {
+export function tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data: (TableCell | undefined)[]) {
     table.insertCol(idx, width, data);
     data.forEach((cell) => {
-        page.onAddShape(cell);
+        if (cell) page.onAddShape(cell);
     })
 }
 
 export function tableRemoveCol(page: Page, table: TableShape, idx: number) {
     const ret = table.removeCol(idx);
     ret.forEach((cell) => {
-        page.onRemoveShape(cell);
+        if (cell) page.onRemoveShape(cell);
     })
     return ret;
 }

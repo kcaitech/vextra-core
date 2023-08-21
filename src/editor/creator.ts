@@ -237,14 +237,16 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     table.frame = frame;
     addCommonAttr(table)
 
+    table.setImageMgr(mediasMgr);
+
     // cells
-    const cellCount = columCount * rowCount;
-    for (let ci = 0; ci < cellCount; ci++) {
-        template_table_cell.id = uuid();
-        const cell = importTableCell(template_table_cell as types.TableCell);
-        cell.setImageMgr(mediasMgr);
-        table.childs.push(cell);
-    }
+    // const cellCount = columCount * rowCount;
+    // for (let ci = 0; ci < cellCount; ci++) {
+    //     template_table_cell.id = uuid();
+        // const cell = importTableCell(template_table_cell as types.TableCell);
+        // cell.setImageMgr(mediasMgr);
+        // table.childs.push(cell);
+    // }
 
     // 行高
     const rowHeight = 1 / rowCount;
