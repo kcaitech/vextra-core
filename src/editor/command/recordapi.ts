@@ -28,8 +28,7 @@ type TextShapeLike = Shape & { text: Text }
 
 function checkShapeAtPage(page: Page, obj: Shape) {
     if (obj instanceof TableCell) {
-        const table = obj.parent as TableShape;
-        if (!page.getShape(table.id)) throw new Error("shape not inside page")
+        obj = obj.parent as Shape;
     }
     if (!page.getShape(obj.id)) throw new Error("shape not inside page")
 }
