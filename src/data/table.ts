@@ -158,6 +158,8 @@ export class TableShape extends Shape implements classes.TableShape {
 
     __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __layout?: TableLayout;
+    private __cellIndexs: Map<string, number> = new Map();
+
     constructor(
         id: string,
         name: string,
@@ -268,6 +270,7 @@ export class TableShape extends Shape implements classes.TableShape {
 
     reLayout() {
         this.__layout = undefined;
+        this.__cellIndexs.clear();
     }
 
     locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
@@ -282,9 +285,22 @@ export class TableShape extends Shape implements classes.TableShape {
         return item;
     }
 
-    indexOfCell(cell: TableCell) { // todo 需要优化
-        const cellIndexs = this.getLayout().cellIndexs;
-        return cellIndexs.get(cell.id); //indexOfCell(this, cell);
+    indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
+        // cell indexs
+        if (this.__cellIndexs.size === 0) {
+            this.childs.forEach((c, i) => {
+                if (c) this.__cellIndexs.set(c.id, i);
+            })
+        }
+        const index = this.__cellIndexs.get(cell.id) ?? -1;
+        if (index < 0) return;
+        const rowIdx = Math.ceil(index / this.colCount);
+        const colIdx = index % this.colCount;
+
+        const layout = this.getLayout();
+        const item = layout.grid.get(rowIdx, colIdx);
+        const visible = item.index.row === rowIdx && item.index.col === colIdx;
+        return { rowIdx, colIdx, visible }
     }
 
     /**
@@ -308,7 +324,10 @@ export class TableShape extends Shape implements classes.TableShape {
         const cell = this.childs[index];
         if (!cell && initCell) {
             this.childs[index] = newCell();
-            return this.childs[index];
+            // add to index
+            const cell = this.childs[index];
+            this.__cellIndexs.set(cell!.id, index);
+            return cell;
         }
         return cell;
     }

@@ -10,7 +10,6 @@ export type TableLayout = {
     height: number,
     rowHeights: number[],
     colWidths: number[],
-    cellIndexs: Map<string, { rowIdx: number, colIdx: number, visible: boolean }>
 }
 
 export function layoutTable(table: TableShape): TableLayout {
@@ -24,7 +23,6 @@ export function layoutTable(table: TableShape): TableLayout {
     const rowHBase = rowHeights.reduce((sum, cur) => sum + cur, 0);
     const colWidths = table.colWidths;
     const colWBase = colWidths.reduce((sum, cur) => sum + cur, 0);
-    const cellIndexs = new Map<string, { rowIdx: number, colIdx: number, visible: boolean }>();
 
     let celli = 0;
 
@@ -34,7 +32,6 @@ export function layoutTable(table: TableShape): TableLayout {
         for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen; ++ci, ++celli) {
             const cell = cells[celli];
             const visible = !grid.get(ri, ci);
-            if (cell) cellIndexs.set(cell.id, { rowIdx: ri, colIdx: ci, visible })
 
             const colWidth = colWidths[ci] / colWBase * width;
             if (!visible) {
@@ -102,7 +99,6 @@ export function layoutTable(table: TableShape): TableLayout {
         width,
         height,
         rowHeights: rowHeights.map((w) => w / rowHBase * height),
-        colWidths: colWidths.map((w) => w / colWBase * width),
-        cellIndexs
+        colWidths: colWidths.map((w) => w / colWBase * width)
     }
 }
