@@ -8,8 +8,9 @@ import { Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
-import { locateCell } from "./tablelocate";
+import { locateCell, locateCellByCell } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
+import { uuid } from "../basic/uuid";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
@@ -142,7 +143,7 @@ export class TableCell extends Shape implements classes.TableCell {
 }
 
 export function newCell(): TableCell {
-    return new TableCell("", "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
+    return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
         new BasicArray<Border>(),
         new BasicArray<Fill>()
     ))
@@ -275,9 +276,11 @@ export class TableShape extends Shape implements classes.TableShape {
         return item;
     }
 
-    // locateCell2(cell: TableCell): TableGridItem | undefined {
-    //     return locateCellByCell(this.getLayout(), cell);
-    // }
+    locateCell2(cell: TableCell): (TableGridItem & { cell: TableCell | undefined }) | undefined {
+        const item = locateCellByCell(this, this.getLayout(), cell) as (TableGridItem & { cell: TableCell | undefined });
+        item.cell = this.getCellAt(item.index.row, item.index.col);
+        return item;
+    }
 
     indexOfCell(cell: TableCell) { // todo 需要优化
         const cellIndexs = this.getLayout().cellIndexs;
