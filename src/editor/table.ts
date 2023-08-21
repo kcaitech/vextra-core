@@ -707,8 +707,6 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
     public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
-        const cell = this.shape.getCellAt(rowIdx, colIdx);
-        if (!cell) return false;
         const api = this.__repo.start("initCell", {});
         try {
             const text = newText(this.shape.textAttr);
