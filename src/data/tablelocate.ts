@@ -21,18 +21,18 @@ export function locateCell(layout: TableLayout, x: number, y: number): TableGrid
     }
 }
 
-export function locateCellByCell(layout: TableLayout, cell: TableCell): TableGridItem | undefined {
-    const grid = layout.grid;
-    for (let ri = 0, rlen = grid.rowCount; ri < rlen; ++ri) {
-        for (let ci = 0, clen = grid.colCount; ci < clen; ++ci) {
-            const cl = grid.get(ri, ci);
-            if (cl.cell && cl.cell.id === cell.id) {
-                return cl;
-            }
-        }
-        break;
-    }
-}
+// export function locateCellByCell(layout: TableLayout, cell: TableCell): TableGridItem | undefined {
+//     const grid = layout.grid;
+//     for (let ri = 0, rlen = grid.rowCount; ri < rlen; ++ri) {
+//         for (let ci = 0, clen = grid.colCount; ci < clen; ++ci) {
+//             const cl = grid.get(ri, ci);
+//             if (cl.cell && cl.cell.id === cell.id) {
+//                 return cl;
+//             }
+//         }
+//         break;
+//     }
+// }
 
 // export function indexOfCell(table: TableShape, cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
 //     const rowHeights = table.rowHeights;

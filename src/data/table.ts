@@ -8,7 +8,7 @@ import { Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
-import { locateCell, locateCellByCell } from "./tablelocate";
+import { locateCell } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
@@ -150,7 +150,7 @@ export function newCell(): TableCell {
 
 export class TableShape extends Shape implements classes.TableShape {
     typeId = 'table-shape'
-    childs: BasicArray<(TableCell | undefined) >
+    childs: BasicArray<(TableCell | undefined)>
     rowHeights: BasicArray<number>
     colWidths: BasicArray<number>
     textAttr?: TextAttr // 文本默认属性
@@ -163,7 +163,7 @@ export class TableShape extends Shape implements classes.TableShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(TableCell | undefined) >,
+        childs: BasicArray<(TableCell | undefined)>,
         rowHeights: BasicArray<number>,
         colWidths: BasicArray<number>
     ) {
@@ -269,13 +269,15 @@ export class TableShape extends Shape implements classes.TableShape {
         this.__layout = undefined;
     }
 
-    locateCell(x: number, y: number): TableGridItem | undefined {
-        return locateCell(this.getLayout(), x, y);
+    locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
+        const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCell | undefined });
+        item.cell = this.getCellAt(item.index.row, item.index.col);
+        return item;
     }
 
-    locateCell2(cell: TableCell): TableGridItem | undefined {
-        return locateCellByCell(this.getLayout(), cell);
-    }
+    // locateCell2(cell: TableCell): TableGridItem | undefined {
+    //     return locateCellByCell(this.getLayout(), cell);
+    // }
 
     indexOfCell(cell: TableCell) { // todo 需要优化
         const cellIndexs = this.getLayout().cellIndexs;

@@ -21,10 +21,11 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
 
         for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
             const cellLayout = layout.grid.get(i, j);
-            if (cellLayout.cell && cellLayout.index.row === i && cellLayout.index.col === j) {
+            const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
+            if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                 const path = TableCell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();
-                const child = cellLayout.cell;
+                const child = cell;
                 const fill = fillR(h, child.style.fills, cellLayout.frame, pathstr);
                 nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, fill));
 
@@ -43,7 +44,7 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
             if (cellLayout.index.row === i && cellLayout.index.col === j) {
                 const path = TableCell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();
-                const child = cellLayout.cell;
+                const child = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);// cellLayout.cell;
                 const style = child && child.style.borders.length > 0 ? child.style : shape.style;
                 const border = borderR(h, style.borders, cellLayout.frame, pathstr)
                 nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));

@@ -2,7 +2,7 @@ import { Grid } from "../basic/grid";
 import { ShapeFrame } from "./shape";
 import { TableCell, TableShape } from "./table";
 
-export type TableGridItem = { cell: TableCell | undefined, index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
+export type TableGridItem = { index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
 
 export type TableLayout = {
     grid: Grid<TableGridItem>,
@@ -43,7 +43,6 @@ export function layoutTable(table: TableShape): TableLayout {
             }
 
             const d: TableGridItem = {
-                cell,
                 index: {
                     row: ri,
                     col: ci
