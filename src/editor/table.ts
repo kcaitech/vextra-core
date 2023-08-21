@@ -25,11 +25,12 @@ export class TableEditor extends ShapeEditor {
 
         const layout = this.shape.getLayout();
         const cellLayout = layout.grid.get(rowIdx, colIdx);
+        const cell = this.shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
         const api = this.__repo.start("horSplitCell", {});
         try {
 
-            if (cellLayout.cell && (cellLayout.cell.rowSpan ?? 1) > 1) {
-                const cell = cellLayout.cell;
+            if (cell && (cell.rowSpan ?? 1) > 1) {
+                // const cell = cellLayout.cell;
                 const rowSpan = cell.rowSpan ?? 1;
                 if (rowSpan > 2) {
                     // 找到比较居中的分隔线
@@ -96,10 +97,11 @@ export class TableEditor extends ShapeEditor {
     verSplitCell(rowIdx: number, colIdx: number) {
         const layout = this.shape.getLayout();
         const cellLayout = layout.grid.get(rowIdx, colIdx);
+        const cell = this.shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
         const api = this.__repo.start("verSplitCell", {});
         try {
-            if (cellLayout.cell && (cellLayout.cell.colSpan ?? 1) > 1) {
-                const cell = cellLayout.cell;
+            if (cell && (cell.colSpan ?? 1) > 1) {
+                // const cell = cellLayout.cell;
                 const colSpan = cell.colSpan ?? 1;
                 if (colSpan > 2) {
                     // 找到比较居中的分隔线
