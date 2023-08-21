@@ -289,4 +289,8 @@ export class ShapeEditor {
             }
         }
     }
+
+    public isDeleted() {
+        return !this.__page.getShape(this.__shape.id);
+    }
 }
