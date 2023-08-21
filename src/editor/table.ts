@@ -8,6 +8,7 @@ import { adjColum, adjRow } from "./tableadjust";
 import { Color } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils";
 import { Api } from "./command/recordapi";
+import { importText } from "io/baseimport";
 
 export class TableEditor extends ShapeEditor {
 
@@ -602,5 +603,22 @@ export class TableEditor extends ShapeEditor {
             this.__repo.rollback();
         }
         return false;
+    }
+    public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
+        const cell = this.shape.getCellAt(rowIdx, colIdx);
+        if (!cell) return false;
+        const api = this.__repo.start("initCell", {});
+        try {
+            const text = newText(this.shape.textAttr);
+            text.setTextBehaviour(TextBehaviour.Fixed);
+            text.setPadding(5, 0, 3, 0);
+            api.tableSetCellContentType(this.__page, cell, TableCellType.Text);
+            api.tableSetCellContentText(this.__page, cell, text);
+            console.log('type-set', cell.cellType);
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
     }
 }
