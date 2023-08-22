@@ -711,6 +711,7 @@ export class TableEditor extends ShapeEditor {
         }
         return false;
     }
+
     public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
         const api = this.__repo.start("initCell", {});
         try {
@@ -729,86 +730,211 @@ export class TableEditor extends ShapeEditor {
     // fill
     public addFill(fill: Fill, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("addFill", {});
-        api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length);
-        this.__repo.commit();
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.addFillAt(this.__page, cell.cell, fill, cell.cell.style.fills.length);
+                })
+            }
+            else {
+                api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
     }
     public setFillColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const fill: Fill = this.__shape.style.fills[idx];
-        if (fill) {
-            const api = this.__repo.start("setFillColor", {});
-            api.setFillColor(this.__page, this.__shape, idx, color)
+        if (!fill) return;
+
+        const api = this.__repo.start("setFillColor", {});
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.setFillColor(this.__page, cell.cell, idx, color)
+                })
+            }
+            else {
+                api.setFillColor(this.__page, this.__shape, idx, color)
+            }
             this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
         }
     }
 
     public setFillEnable(idx: number, value: boolean, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setFillEnable", {});
-        api.setFillEnable(this.__page, this.__shape, idx, value);
-        this.__repo.commit();
-
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.setFillEnable(this.__page, cell.cell, idx, value);
+                })
+            }
+            else {
+                api.setFillEnable(this.__page, this.__shape, idx, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
     }
     public deleteFill(idx: number, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const fill = this.__shape.style.fills[idx];
-        if (fill) {
-            const api = this.__repo.start("deleteFill", {});
-            api.deleteFillAt(this.__page, this.__shape, idx);
+        if (!fill) return;
+        const api = this.__repo.start("deleteFill", {});
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.deleteFillAt(this.__page, cell.cell, idx);
+                })
+            }
+            else {
+                api.deleteFillAt(this.__page, this.__shape, idx);
+            }
             this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
         }
     }
 
     // border
     public setBorderEnable(idx: number, isEnabled: boolean, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderEnable", {});
-            api.setBorderEnable(this.__page, this.__shape, idx, isEnabled);
+        if (!border) return;
+        const api = this.__repo.start("setBorderEnable", {});
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.setBorderEnable(this.__page, cell.cell, idx, isEnabled);
+                })
+            }
+            else {
+                api.setBorderEnable(this.__page, this.__shape, idx, isEnabled);
+            }
             this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
         }
     }
     public setBorderColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderColor", {});
-            api.setBorderColor(this.__page, this.__shape, idx, color);
+        if (!border) return;
+
+        const api = this.__repo.start("setBorderColor", {});
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.setBorderColor(this.__page, cell.cell, idx, color);
+                })
+            }
+            else {
+                api.setBorderColor(this.__page, this.__shape, idx, color);
+            }
             this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
         }
     }
     public setBorderThickness(idx: number, thickness: number, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderThickness", {});
-            api.setBorderThickness(this.__page, this.__shape, idx, thickness);
+        if (!border) return;
+        const api = this.__repo.start("setBorderThickness", {});
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.setBorderThickness(this.__page, cell.cell, idx, thickness);
+                })
+            }
+            else {
+                api.setBorderThickness(this.__page, this.__shape, idx, thickness);
+            }
             this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
         }
     }
     public setBorderPosition(idx: number, position: BorderPosition, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderPosition", {});
-            api.setBorderPosition(this.__page, this.__shape, idx, position);
+        if (!border) return;
+        const api = this.__repo.start("setBorderPosition", {});
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.setBorderPosition(this.__page, cell.cell, idx, position);
+                })
+            }
+            else {
+                api.setBorderPosition(this.__page, this.__shape, idx, position);
+            }
             this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
         }
     }
     public setBorderStyle(idx: number, borderStyle: BorderStyle, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderStyle", {});
-            api.setBorderStyle(this.__page, this.__shape, idx, borderStyle);
+        if (!border) return;
+        const api = this.__repo.start("setBorderStyle", {});
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.setBorderStyle(this.__page, cell.cell, idx, borderStyle);
+                })
+            }
+            else {
+                api.setBorderStyle(this.__page, this.__shape, idx, borderStyle);
+            }
             this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
         }
     }
 
     public deleteBorder(idx: number, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("deleteBorder", {});
-            api.deleteBorderAt(this.__page, this.__shape, idx)
+        if (!border) return;
+        const api = this.__repo.start("deleteBorder", {});
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.deleteBorderAt(this.__page, cell.cell, idx)
+                })
+            }
+            else {
+                api.deleteBorderAt(this.__page, this.__shape, idx)
+            }
             this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
         }
     }
     public addBorder(border: Border, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("addBorder", {});
-        api.addBorderAt(this.__page, this.__shape, border, this.__shape.style.borders.length);
-        this.__repo.commit();
+        try {
+            if (range) {
+                this.shape.getCells(range.rowStart, range.rowEnd, range.celStart, range.celEnd).forEach((cell) => {
+                    if (cell.cell) api.addBorderAt(this.__page, cell.cell, border, cell.cell.style.borders.length);
+                })
+            }
+            else {
+                api.addBorderAt(this.__page, this.__shape, border, this.__shape.style.borders.length);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
     }
 }
