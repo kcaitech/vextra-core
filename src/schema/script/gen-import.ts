@@ -197,7 +197,7 @@ ${indent(level)}    const val = ${attrname}`
         if (s.type === 'undefined') {
             ret += `
 ${indent(level)}    if (!val) {
-${indent(level)}        return val
+${indent(level)}        return val ?? undefined
 ${indent(level)}    }`
 
             break;

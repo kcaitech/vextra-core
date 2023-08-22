@@ -63,8 +63,8 @@ inject['Fill']['after'] = `\
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 `
-inject['TableCell'] = {};
-inject['TableCell']['after'] = `\
+inject['TableShape'] = {};
+inject['TableShape']['after'] = `\
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 `

@@ -1,4 +1,4 @@
-import { TableShape } from "../data/classes";
+import { TableCell, TableShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { render as rCell } from "./tablecell";
@@ -13,15 +13,19 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
     const nodes = [];
     const path = shape.getPath().toString();
 
-    // fill & content
+    // table fill
+    nodes.push(...fillR(h, shape.style.fills, frame, path));
+
+    // cells fill & content
     for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
 
         for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
             const cellLayout = layout.grid.get(i, j);
-            if (cellLayout.index.row === i && cellLayout.index.col === j) {
-                const path = cellLayout.cell.getPathOfFrame(cellLayout.frame);
+            const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
+            if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
+                const path = TableCell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();
-                const child = cellLayout.cell;
+                const child = cell;
                 const fill = fillR(h, child.style.fills, cellLayout.frame, pathstr);
                 nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, fill));
 
@@ -38,10 +42,10 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
         for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
             const cellLayout = layout.grid.get(i, j);
             if (cellLayout.index.row === i && cellLayout.index.col === j) {
-                const path = cellLayout.cell.getPathOfFrame(cellLayout.frame);
+                const path = TableCell.getPathOfFrame(cellLayout.frame);
                 const pathstr = path.toString();
-                const child = cellLayout.cell;
-                const style = child.style.borders.length > 0 ? child.style : shape.style;
+                const child = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);// cellLayout.cell;
+                const style = child && child.style.borders.length > 0 ? child.style : shape.style;
                 const border = borderR(h, style.borders, cellLayout.frame, pathstr)
                 nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));
             }

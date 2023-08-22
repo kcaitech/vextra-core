@@ -1,9 +1,8 @@
 import { Grid } from "../basic/grid";
-import { BasicArray } from "./basic";
 import { ShapeFrame } from "./shape";
 import { TableCell, TableShape } from "./table";
 
-export type TableGridItem = { cell: TableCell, index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
+export type TableGridItem = { index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
 
 export type TableLayout = {
     grid: Grid<TableGridItem>,
@@ -16,7 +15,7 @@ export type TableLayout = {
 export function layoutTable(table: TableShape): TableLayout {
     const frame = table.frame;
     const grid: Grid<TableGridItem> = new Grid<TableGridItem>(table.rowHeights.length, table.colWidths.length);
-    const cells: TableCell[] = table.childs as (BasicArray<TableCell>);
+    const cells = table.childs;
 
     const width = frame.width;
     const height = frame.height;
@@ -25,24 +24,22 @@ export function layoutTable(table: TableShape): TableLayout {
     const colWidths = table.colWidths;
     const colWBase = colWidths.reduce((sum, cur) => sum + cur, 0);
 
-    let celli = 0, cellLen = cells.length;
+    let celli = 0;
 
-    for (let ri = 0, rowLen = rowHeights.length, rowY = 0; ri < rowLen && celli < cellLen; ++ri) {
+    for (let ri = 0, rowLen = rowHeights.length, rowY = 0; ri < rowLen; ++ri) {
         const rowHeight = rowHeights[ri] / rowHBase * height;
 
-        for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen && celli < cellLen; ++ci, ++celli) {
+        for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen; ++ci, ++celli) {
+            const cell = cells[celli];
+            const visible = !grid.get(ri, ci);
 
             const colWidth = colWidths[ci] / colWBase * width;
-
-            if (grid.get(ri, ci)) {
+            if (!visible) {
                 colX += colWidth;
                 continue;
             }
 
-            const cell = cells[celli];
-
             const d: TableGridItem = {
-                cell,
                 index: {
                     row: ri,
                     col: ci
@@ -55,8 +52,8 @@ export function layoutTable(table: TableShape): TableLayout {
             }
 
             // fix span
-            const rowSpan = Math.min(cell.rowSpan || 1, rowLen - ri)
-            let colSpan = Math.min(cell.colSpan || 1, colLen - ci);
+            const rowSpan = Math.min(cell?.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(cell?.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
             for (; ;) {
                 for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
