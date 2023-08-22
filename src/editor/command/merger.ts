@@ -88,6 +88,12 @@ function _merge(l: Cmd, r: Cmd): MERGE_STATE {
             }
         case CmdType.ShapeMove:
             return MERGE_STATE.BREAK;
+        case CmdType.TableInsert:
+            return MERGE_STATE.BREAK;
+        case CmdType.TableDelete:
+            return MERGE_STATE.BREAK;
+        case CmdType.TableModify:
+            return MERGE_STATE.BREAK;
         default:
             throw new Error("unknow cmd type:" + l.type)
     }
