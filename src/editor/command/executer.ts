@@ -530,12 +530,12 @@ export class CMDExecuter {
         const _this = this;
         const ctx = new class implements IImportContext { document: Document = _this.__document }
         if (op.opTarget === TableOpTarget.Row) {
-            const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
+            const data = op.data.map((cell) => cell ? importTableCell(cell, ctx) : undefined);
             const height = JSON.parse(cmd.data);
             api.tableInsertRow(page, shape as TableShape, op.index, height, data);
         }
         else if (op.opTarget === TableOpTarget.Col) {
-            const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
+            const data = op.data.map((cell) => cell ? importTableCell(cell, ctx) : undefined);
             const width = JSON.parse(cmd.data);
             api.tableInsertCol(page, shape as TableShape, op.index, width, data);
         }
