@@ -185,6 +185,12 @@ export class CoopRepository {
             l(isRemote);
         })
     }
+    normalRollback(isRemote: boolean = false) {
+        this.__repo.normalRollback();
+        this.__rollbackListener.forEach((l) => {
+            l(isRemote);
+        })
+    }
 
     onCommit(listener: (cmd: Cmd, isRemote: boolean) => void) {
         const _listeners = this.__commitListener;

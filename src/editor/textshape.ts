@@ -263,7 +263,7 @@ export class TextShapeEditor extends ShapeEditor {
         if (del > 0) api.deleteText(this.__page, this.shape, index, del);
     }
     public composingInputUpdate(text: string): boolean {
-        this.__repo.rollback();
+        this.__repo.normalRollback();
         const api = this.__repo.start("composingInput", {});
         if (this.__composingDel > 0) api.deleteText(this.__page, this.shape, this.__composingIndex, this.__composingDel);
         if (text.length > 0) api.insertSimpleText(this.__page, this.shape, this.__composingIndex, text, this.__composingAttr);
@@ -273,7 +273,7 @@ export class TextShapeEditor extends ShapeEditor {
         return true;
     }
     public composingInputEnd(text: string): boolean {
-        this.__repo.rollback();
+        this.__repo.normalRollback();
         this.__composingStarted = false;
         return !!this.insertText2(text, this.__composingIndex, this.__composingDel, this.__composingAttr);
     }
@@ -307,7 +307,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.highlightIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextColor", {});
+        const api = this.__repo.start("setTextHighlightColor", {});
         try {
             api.textModifyHighlightColor(this.__page, this.shape, index, len, color)
             this.__repo.commit();

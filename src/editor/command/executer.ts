@@ -4,7 +4,6 @@ import {
     PageCmdModify,
     ShapeCmdRemove,
     ShapeCmdInsert,
-    ShapeCmdModify,
     ShapeCmdMove,
     TextCmdModify,
     TextCmdRemove,
@@ -17,10 +16,13 @@ import {
     ShapeOpMove,
     IdOpSet,
     ShapeOpRemove,
-    ShapeArrayAttrModify2,
     TableCmdInsert,
     TableCmdRemove,
-    TableOpInsert
+    TableOpInsert,
+    TableCmdModify,
+    TableOpRemove,
+    TableOpModify,
+    TableIndex
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 import {
@@ -55,8 +57,6 @@ import {
     GroupShape,
     Page,
     Shape,
-    TextShape,
-    RectShape,
     Color,
     PathShape,
     TextHorAlign,
@@ -65,18 +65,18 @@ import {
     BulletNumbersType,
     TextTransformType,
     BulletNumbersBehavior,
-    TableCell,
     Text,
     TableShape
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHADOW_ID, SHAPE_ATTR_ID, TABLE_COL_WIDTHS_ID, TABLE_ROW_HEIGHTS_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHADOW_ID, SHAPE_ATTR_ID, TEXT_ATTR_ID, TABLE_ATTR_ID } from "./consts";
 import { Repository } from "../../data/transact";
-import { Cmd, CmdType, IdOp, OpType } from "../../coop/data/classes";
-import { ArrayOpInsert, ArrayOpRemove, TableOpTarget } from "../../coop/data/basictypes";
+import { Cmd, CmdType, OpType } from "../../coop/data/classes";
+import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
 import { updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
+import { CMDHandler } from "./handler";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -134,9 +134,11 @@ function importShape(data: string, document: Document) {
 export class CMDExecuter {
     private __document: Document;
     private __repo: Repository;
+    private __handler: CMDHandler;
     constructor(document: Document, repo: Repository) {
         this.__document = document;
         this.__repo = repo;
+        this.__handler = new CMDHandler();
     }
 
     exec(cmd: Cmd): boolean {
@@ -144,7 +146,13 @@ export class CMDExecuter {
         const save = this.__repo.transactCtx.settrap;
         try {
             this.__repo.transactCtx.settrap = false;
-            this._exec(cmd);
+            const needUpdateFrame: { shape: Shape, page: Page }[] = [];
+            this._exec(cmd, needUpdateFrame);
+            if (needUpdateFrame.length > 0) {
+                const page = needUpdateFrame[0].page;
+                const shapes = needUpdateFrame.map((v) => v.shape);
+                updateShapesFrame(page, shapes, api)
+            }
             this.__repo.commit();
             return true;
         }
@@ -159,8 +167,7 @@ export class CMDExecuter {
         }
     }
 
-    private _exec(cmd: Cmd) {
-        const needUpdateFrame: { shape: Shape, page: Page }[] = [];
+    private _exec(cmd: Cmd, needUpdateFrame: { shape: Shape, page: Page }[]) {
         switch (cmd.type) {
             case CmdType.PageInsert:
                 this.pageInsert(cmd as PageCmdInsert);
@@ -202,7 +209,8 @@ export class CMDExecuter {
                 this.shapeInsert(cmd as ShapeCmdInsert, needUpdateFrame);
                 break;
             case CmdType.ShapeModify:
-                this.shapeModify(cmd as ShapeCmdModify, needUpdateFrame);
+                // this.shapeModify(cmd as ShapeCmdModify, needUpdateFrame);
+                this.__handler.handle(this.__document, cmd, needUpdateFrame);
                 break;
             case CmdType.ShapeMove:
                 this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
@@ -216,90 +224,44 @@ export class CMDExecuter {
             case CmdType.TableDelete:
                 this.tableDelete(cmd as TableCmdRemove);
                 break;
+            case CmdType.TableModify:
+                this.tableModify(cmd as TableCmdModify);
+                break;
             default:
                 throw new Error("unknow cmd type:" + cmd.type)
-        }
-
-        if (needUpdateFrame.length > 0) {
-            const page = needUpdateFrame[0].page;
-            const shapes = needUpdateFrame.map((v) => v.shape);
-            updateShapesFrame(page, shapes, api)
         }
     }
 
     cmdGroup(cmdGroup: CmdGroup, needUpdateFrame: { shape: Shape, page: Page }[]) {
         cmdGroup.cmds.forEach((cmd) => {
-            switch (cmd.type) {
-                case CmdType.ShapeInsert:
-                    this.shapeInsert(cmd as ShapeCmdInsert, needUpdateFrame);
-                    break;
-                case CmdType.ShapeDelete:
-                    this.shapeDelete(cmd as ShapeCmdRemove, needUpdateFrame);
-                    break;
-                case CmdType.ShapeModify:
-                    this.shapeModify(cmd as ShapeCmdModify, needUpdateFrame);
-                    break;
-                case CmdType.ShapeMove:
-                    this.shapeMove(cmd as ShapeCmdMove, needUpdateFrame);
-                    break;
-                case CmdType.ShapeArrayAttrInsert:
-                    this.shapeArrAttrInsert(cmd as ShapeArrayAttrInsert);
-                    break;
-                case CmdType.ShapeArrayAttrDelete:
-                    this.shapeArrAttrDelete(cmd as ShapeArrayAttrInsert);
-                    break;
-                case CmdType.ShapeArrayAttrModify:
-                    this.shapeArrAttrModify(cmd as ShapeArrayAttrModify);
-                    break;
-                case CmdType.ShapeArrayAttrModify2:
-                    this.shapeArrAttrModify2(cmd as ShapeArrayAttrModify2);
-                    break;
-                case CmdType.ShapeArrayAttrMove:
-                    this.shapeArrAttrMove(cmd as ShapeArrayAttrMove);
-                    break;
-                case CmdType.TextInsert:
-                    this.textInsert(cmd as TextCmdInsert);
-                    break;
-                case CmdType.TextDelete:
-                    this.textDelete(cmd as TextCmdRemove);
-                    break;
-                case CmdType.TextModify:
-                    this.textModify(cmd as TextCmdModify);
-                    break;
-                case CmdType.TableInsert:
-                    this.tableInsert(cmd as TableCmdInsert);
-                    break;
-                case CmdType.TableDelete:
-                    this.tableDelete(cmd as TableCmdRemove);
-                    break;
-                default:
-                    throw new Error("unknow cmd type:" + cmd.type)
-            }
+            this._exec(cmd, needUpdateFrame);
         })
     }
 
     pageInsert(cmd: PageCmdInsert) {
         const op = cmd.ops[0];
         if (op.type === OpType.ShapeInsert) {
+            const _op = op as ShapeOpInsert;
             const page = importPage(JSON.parse(cmd.data));
-            api.pageInsert(this.__document, page, op.index)
+            api.pageInsert(this.__document, page, _op.index)
         }
     }
     pageDelete(cmd: PageCmdDelete) {
         const op = cmd.ops[0];
         if (op.type === OpType.ShapeRemove) { // oss需要保存历史版本以undo
+            const _op = op as ShapeOpRemove;
             // check
-            const item = this.__document.pagesList[op.index];
+            const item = this.__document.pagesList[_op.index];
             if (item && item.id !== cmd.pageId) throw new Error("page id not equals: " + item.id + " " + cmd.pageId)
 
-            api.pageDelete(this.__document, op.index)
+            api.pageDelete(this.__document, _op.index)
         }
     }
     pageModify(cmd: PageCmdModify) {
         // 参见consts.ts PAGE_ATTR_ID
         const op = cmd.ops[0];
         if (op.type === OpType.IdSet) {// 以pagelist为准
-            const pageId = op.targetId[0]
+            const pageId = op.targetId[0] as string;
             const opId = (op as IdOpSet).opId;
             if (opId === PAGE_ATTR_ID.name) {
                 if (cmd.value) api.pageModifyName(this.__document, pageId, cmd.value)
@@ -317,20 +279,21 @@ export class CMDExecuter {
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
         const op = cmd.ops[0];
-        const parentId = op.targetId[0]
+        const parentId = op.targetId[0] as string;
         if (page && op.type === OpType.ShapeInsert) { // 后续page加载后需要更新！
             const parent = page.getShape(parentId, true);
             if (!parent || !(parent instanceof GroupShape)) {
                 throw new Error("shape insert, parent error")
             }
+            const _op = op as ShapeOpInsert;
             const shape = importShape(cmd.data, this.__document)
-            api.shapeInsert(page, parent, shape, op.index, needUpdateFrame)
+            api.shapeInsert(page, parent, shape, _op.index, needUpdateFrame)
         }
     }
     shapeDelete(cmd: ShapeCmdRemove, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const pageId = cmd.blockId;
         const op = cmd.ops[0];
-        const parentId = op.targetId[0]
+        const parentId = op.targetId[0] as string;
         const page = this.__document.pagesMgr.getSync(pageId)
         if (page && op.type === OpType.ShapeRemove) {
             const parent = page.getShape(parentId, true);
@@ -340,158 +303,15 @@ export class CMDExecuter {
             // check
             const shapeop = op as ShapeOpRemove;
             const shapeid = shapeop.shapeId;
-            const shape = parent.childs[op.index];
+            const _op = op as ShapeOpRemove;
+            const shape = parent.childs[_op.index];
             if (shape && shape.id !== shapeid) {
                 throw new Error("shape id not equals: " + shape.id + " " + shapeid);
             }
-            api.shapeDelete(page, parent, op.index, needUpdateFrame)
+            api.shapeDelete(page, parent, _op.index, needUpdateFrame)
         }
     }
-    private _shapeModify(page: Page, shape: Shape, op: IdOp, value: string | undefined, needUpdateFrame: { shape: Shape, page: Page }[]) {
-        const opId = op.opId;
-        if (opId === SHAPE_ATTR_ID.x) {
-            if (value) {
-                const x = JSON.parse(value)
-                api.shapeModifyX(page, shape, x, needUpdateFrame)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.y) {
-            if (value) {
-                const y = JSON.parse(value)
-                api.shapeModifyY(page, shape, y, needUpdateFrame)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.width) {
-            if (value) {
-                const wh = JSON.parse(value)
-                api.shapeModifyWidth(page, shape, wh, needUpdateFrame)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.height) {
-            if (value) {
-                const wh = JSON.parse(value)
-                api.shapeModifyHeight(page, shape, wh, needUpdateFrame)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.size) {
-            if (value) {
-                const wh = JSON.parse(value)
-                api.shapeModifyWH(page, shape, wh.w, wh.h, needUpdateFrame)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.rotate) {
-            if (value) {
-                const rotate = JSON.parse(value)
-                api.shapeModifyRotate(page, shape, rotate, needUpdateFrame)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.name) {
-            if (value) {
-                const name = value;
-                api.shapeModifyName(shape, name)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.hflip) {
-            const hflip = value && JSON.parse(value)
-            api.shapeModifyHFlip(page, shape, hflip, needUpdateFrame)
-        }
-        else if (opId === SHAPE_ATTR_ID.vflip) {
-            const vflip = value && JSON.parse(value)
-            api.shapeModifyVFlip(page, shape, vflip, needUpdateFrame)
-        }
-        else if (opId === SHAPE_ATTR_ID.visible) {
-            const isVisible = value && JSON.parse(value)
-            api.shapeModifyVisible(shape, isVisible ?? false);
-        }
-        else if (opId === SHAPE_ATTR_ID.lock) {
-            const isLock = value && JSON.parse(value)
-            api.shapeModifyLock(shape, isLock ?? false);
-        }
-        else if (opId === SHAPE_ATTR_ID.resizingConstraint) {
-            if (value) {
-                const v = JSON.parse(value);
-                api.shapeModifyResizingConstraint(shape, v)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.radius) {
-            if (value) {
-                const v = (JSON.parse(value) as { lt: number, rt: number, rb: number, lb: number });
-                api.shapeModifyRadius(shape as RectShape, v.lt, v.rt, v.rb, v.lb)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.constrainerProportions) {
-            const isLock = value && JSON.parse(value) || false;
-            api.shapeModifyConstrainerProportions(shape, isLock);
 
-        } else if (opId === SHAPE_ATTR_ID.startMarkerType) {
-            if (value) {
-                api.shapeModifyStartMarkerType(shape, value as types.MarkerType)
-            }
-        } else if (opId === SHAPE_ATTR_ID.endMarkerType) {
-            if (value) {
-                api.shapeModifyEndMarkerType(shape, value as types.MarkerType)
-            }
-        }
-        else if (opId === SHAPE_ATTR_ID.textBehaviour) {
-            const textBehaviour = value as types.TextBehaviour
-            api.shapeModifyTextBehaviour(page, shape as TextShapeLike, textBehaviour ?? types.TextBehaviour.Flexible);
-        }
-        else if (opId === SHAPE_ATTR_ID.textVerAlign) {
-            const textVerAlign = value as types.TextVerAlign
-            const text = (shape as TextShapeLike).text;
-            api.shapeModifyTextVerAlign(text, textVerAlign ?? types.TextVerAlign.Top);
-        }
-        else if (opId === SHAPE_ATTR_ID.textTransform) {
-            const text = (shape as TextShapeLike).text;
-            api.shapeModifyTextTransform(text, value as TextTransformType);
-        }
-        else if (opId === SHAPE_ATTR_ID.boolop) {
-            api.shapeModifyBoolOp(shape, value as types.BoolOp);
-        }
-        else if (opId === SHAPE_ATTR_ID.isboolopshape) {
-            const isOpShape = value && JSON.parse(value);
-            api.shapeModifyBoolOpShape(shape as GroupShape, isOpShape);
-        }
-        else if (opId === SHAPE_ATTR_ID.fixedRadius) {
-            const fixedRadius = value && JSON.parse(value);
-            api.shapeModifyFixedRadius(shape as GroupShape, fixedRadius);
-        }
-        else if (opId === SHAPE_ATTR_ID.cellContentType) {
-            api.tableSetCellContentType(shape as TableCell, value as types.TableCellType);
-        }
-        else if (opId === SHAPE_ATTR_ID.cellContentText) {
-            const text = value ? importText(JSON.parse(value)) : undefined;
-            api.tableSetCellContentText(shape as TableCell, text);
-        }
-        else if (opId === SHAPE_ATTR_ID.cellContentImage) {
-            api.tableSetCellContentImage(shape as TableCell, value);
-        }
-        else if (opId === SHAPE_ATTR_ID.cellSpan) {
-            const val = value && JSON.parse(value);
-            const rowSpan = val?.rowSpan;
-            const colSpan = val?.colSpan;
-            api.tableModifyCellSpan(shape as TableCell, rowSpan ?? 1, colSpan ?? 1);
-        }
-        // todo
-        else {
-            console.error("not implemented ", op)
-        }
-    }
-    shapeModify(cmd: ShapeCmdModify, needUpdateFrame: { shape: Shape, page: Page }[]) {
-        const pageId = cmd.blockId;
-        const op = cmd.ops[0];
-        const shapeId = op.targetId[0]
-        const page = this.__document.pagesMgr.getSync(pageId)
-        if (!page) return;
-        const shape = page.getShape(shapeId, true);
-        if (!shape) {
-            throw new Error("shape modify not find shape")
-        }
-        if ((op.type === OpType.IdSet)) {
-            const value = cmd.value;
-            this._shapeModify(page, shape, op, value, needUpdateFrame);
-        }
-    }
     shapeMove(cmd: ShapeCmdMove, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
@@ -499,8 +319,8 @@ export class CMDExecuter {
         const op = cmd.ops[0];
         if (op.type === OpType.ShapeMove) {
             const moveOp = op as ShapeOpMove;
-            const parentId = moveOp.targetId[0];
-            const parentId2 = moveOp.targetId2[0];
+            const parentId = moveOp.targetId[0] as string;;
+            const parentId2 = moveOp.targetId2[0] as string;
             const parent = page.getShape(parentId, true);
             const parent2 = page.getShape(parentId2, true);
             if (!parent || !parent2) {
@@ -514,10 +334,19 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
-        const shape = page.getShape(shapeId, true);
-        if (!shape) {
+        if (op.type === OpType.None) return;
+        const shapeId = op.targetId[0] as string;
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
             throw new Error("shape not find")
+        }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
+            const index = op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
         }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
@@ -531,14 +360,7 @@ export class CMDExecuter {
                 const border = importBorder(JSON.parse(cmd.data))
                 api.addBorderAt(shape.style, border, (op as ArrayOpInsert).start);
             }
-        }
-        else if (arrayAttr === TABLE_COL_WIDTHS_ID) {
-
-        }
-        else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
-
-        }
-        else if (arrayAttr === SHADOW_ID) {
+        } else if (arrayAttr === SHADOW_ID) {
             if (op.type === OpType.ArrayInsert) {
                 api.addShadow(shape.style);
             }
@@ -551,10 +373,19 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) {
+        if (op.type === OpType.None) return;
+        const shapeId = op.targetId[0] as string;
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
             throw new Error("shape not find")
+        }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
+            const index = op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
         }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
@@ -566,14 +397,7 @@ export class CMDExecuter {
             if (op.type === OpType.ArrayRemove) {
                 api.deleteBorderAt(shape.style, (op as ArrayOpRemove).start)
             }
-        }
-        else if (arrayAttr === TABLE_COL_WIDTHS_ID) {
-
-        }
-        else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
-
-        }
-        else if (arrayAttr === SHADOW_ID) {
+        } else if (arrayAttr === SHADOW_ID) {
             if (op.type === OpType.ArrayRemove) {
                 api.deleteShadowAt(shape.style, (op as ArrayOpRemove).start)
             }
@@ -585,15 +409,24 @@ export class CMDExecuter {
     shapeArrAttrModify(cmd: ShapeArrayAttrModify) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
-        const shape = page.getShape(shapeId, true);
-        if (!shape) {
-            throw new Error("shape not find")
-        }
-        if (op.type !== OpType.IdSet) {
+        const _op = cmd.ops[0]
+        if (_op.type !== OpType.IdSet) {
             return;
         }
+        const shapeId = _op.targetId[0] as string;
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
+            throw new Error("shape not find")
+        }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
+            const index = _op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
+        }
+        const op = _op as IdOpSet;
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             const fillId = cmd.arrayAttrId;
@@ -691,35 +524,11 @@ export class CMDExecuter {
             console.error("not implemented ", arrayAttr)
         }
     }
-    shapeArrAttrModify2(cmd: ShapeArrayAttrModify2) {
-        const page = this.__document.pagesMgr.getSync(cmd.blockId);
-        if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
-        const shape = page.getShape(shapeId, true);
-        if (!shape) {
-            throw new Error("shape not find")
-        }
-        if (op.type !== OpType.ArrayAttr) {
-            return;
-        }
-        const value = cmd.value;
-        const idx = op.start;
-        const arrayAttr = cmd.arrayAttr;
-        if (arrayAttr === TABLE_COL_WIDTHS_ID) {
-            const width = value && JSON.parse(value);
-            if (width) api.tableModifyColWidth(shape as TableShape, idx, width);
-        }
-        else if (arrayAttr === TABLE_ROW_HEIGHTS_ID) {
-            const height = value && JSON.parse(value);
-            if (height) api.tableModifyRowHeight(page, shape as TableShape, idx, height);
-        }
-    }
     tableInsert(cmd: TableCmdInsert) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0] as TableOpInsert
-        const shapeId = op.targetId[0]
+        const shapeId = op.targetId[0] as string;
         const shape = page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
@@ -727,28 +536,27 @@ export class CMDExecuter {
         if (op.type !== OpType.TableInsert) {
             return;
         }
-        const target = op.target;
         const _this = this;
         const ctx = new class implements IImportContext { document: Document = _this.__document }
-        if (target === TableOpTarget.Row) {
+        if (op.opTarget === TableOpTarget.Row) {
             const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
             const height = JSON.parse(cmd.data);
-            api.tableInsertRow(shape as TableShape, op.index, height, data);
+            api.tableInsertRow(page, shape as TableShape, op.index, height, data);
         }
-        else if (target === TableOpTarget.Col) {
+        else if (op.opTarget === TableOpTarget.Col) {
             const data = op.data.map((cell) => cell && importTableCell(cell, ctx));
             const width = JSON.parse(cmd.data);
-            api.tableInsertCol(shape as TableShape, op.index, width, data);
+            api.tableInsertCol(page, shape as TableShape, op.index, width, data);
         }
         else {
-            throw new Error("unknow table target " + target)
+            throw new Error("unknow table target " + op.opTarget)
         }
     }
     tableDelete(cmd: TableCmdRemove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
+        const op = cmd.ops[0] as TableOpRemove
+        const shapeId = op.targetId[0] as string;
         const shape = page.getShape(shapeId, true);
         if (!shape) {
             throw new Error("shape not find")
@@ -756,35 +564,74 @@ export class CMDExecuter {
         if (op.type !== OpType.TableRemove) {
             return;
         }
-        const target = op.target;
-        if (target === TableOpTarget.Row) {
-            api.tableRemoveRow(shape as TableShape, op.index);
+        if (op.opTarget === TableOpTarget.Row) {
+            api.tableRemoveRow(page, shape as TableShape, op.index);
         }
-        else if (target === TableOpTarget.Col) {
-            api.tableRemoveCol(shape as TableShape, op.index);
+        else if (op.opTarget === TableOpTarget.Col) {
+            api.tableRemoveCol(page, shape as TableShape, op.index);
         }
         else {
-            throw new Error("unknow table target " + target)
+            throw new Error("unknow table target " + op.opTarget)
+        }
+    }
+    tableModify(cmd: TableCmdModify) {
+        const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
+        const op = cmd.ops[0] as TableOpModify;
+        const shapeId = op.targetId[0] as string;
+        const shape = page.getShape(shapeId, true);
+        if (!shape) {
+            throw new Error("shape not find")
+        }
+        if (op.type !== OpType.TableModify) {
+            return;
+        }
+        const value = cmd.value;
+        const opId = op.opId;
+        if (op.opTarget === TableOpTarget.Row) {
+            if (opId === TABLE_ATTR_ID.rowHeight) {
+                if (value) api.tableModifyRowHeight(page, shape as TableShape, op.index, JSON.parse(value));
+            }
+        }
+        else if (op.opTarget === TableOpTarget.Col) {
+            if (opId === TABLE_ATTR_ID.colWidth) {
+                if (value) api.tableModifyColWidth(page, shape as TableShape, op.index, JSON.parse(value));
+            }
+        }
+        else {
+            throw new Error("unknow table target " + op.opTarget)
         }
     }
     shapeArrAttrMove(cmd: ShapeArrayAttrMove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op0 = cmd.ops[0] as ArrayOpRemove
-        const op1 = cmd.ops[1] as ArrayOpInsert
-        const shapeId = op0.targetId[0]
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) {
+        const op0 = cmd.ops[0]
+        const op1 = cmd.ops[1]
+        const shapeId = op0.targetId[0] as string;
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
             throw new Error("shape not find")
+        }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && op0.targetId[1] instanceof TableIndex) {
+            const index = op0.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
         }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
+                const op0 = cmd.ops[0] as ArrayOpRemove
+                const op1 = cmd.ops[1] as ArrayOpInsert
                 api.moveFill(shape.style, op0.start, op1.start)
             }
         }
         else if (arrayAttr === BORDER_ID) {
             if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
+                const op0 = cmd.ops[0] as ArrayOpRemove
+                const op1 = cmd.ops[1] as ArrayOpInsert
                 api.moveBorder(shape.style, op0.start, op1.start)
             }
         }
@@ -796,12 +643,22 @@ export class CMDExecuter {
     textInsert(cmd: TextCmdInsert) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) {
+        const _op = cmd.ops[0]
+        if (_op.type !== OpType.ArrayInsert) return;
+        const shapeId = _op.targetId[0] as string;
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
             throw new Error("shape not find")
         }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
+            const index = _op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
+        }
+        const op = _op as ArrayOpInsert;
         const text = cmd.parseText();
         const shapetext = (shape as TextShapeLike).text;
         if (!(shapetext instanceof Text)) {
@@ -823,12 +680,22 @@ export class CMDExecuter {
     textDelete(cmd: TextCmdRemove) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) {
+        const _op = cmd.ops[0]
+        if (_op.type !== OpType.ArrayRemove) return;
+        const shapeId = _op.targetId[0] as string;
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
             throw new Error("shape not find")
         }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
+            const index = _op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
+        }
+        const op = _op as ArrayOpRemove;
         const shapetext = (shape as TextShapeLike).text;
         if (!(shapetext instanceof Text)) {
             throw new Error("shape type wrong")
@@ -838,15 +705,24 @@ export class CMDExecuter {
     textModify(cmd: TextCmdModify) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
-        const op = cmd.ops[0]
-        const shapeId = op.targetId[0]
-        const shape = page && page.getShape(shapeId, true);
-        if (!shape) {
-            throw new Error("shape not find")
-        }
-        if (op.type !== OpType.ArrayAttr) {
+        const _op = cmd.ops[0]
+        if (_op.type !== OpType.ArrayAttr) {
             return;
         }
+        const shapeId = _op.targetId[0] as string;
+        const _shape = page.getShape(shapeId, true);
+        if (!_shape) {
+            throw new Error("shape not find")
+        }
+        let shape: Shape | undefined = _shape;
+        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
+            const index = _op.targetId[1] as TableIndex;
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            if (!shape) {
+                throw new Error("table cell not find")
+            }
+        }
+        const op = _op as ArrayOpAttr;
         const attrId = cmd.attrId
         const value = cmd.value;
         const shapetext = (shape as TextShapeLike).text;

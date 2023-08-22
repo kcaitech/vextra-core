@@ -31,10 +31,27 @@ export const SHAPE_ATTR_ID = {
     textTransform: "textTransform",
 
     // table
+    tableTextColor: "tableTextColor",
+    tableTextHighlight: "tableTextHighlight",
+    tableTextFontName: "tableTextFontName",
+    tableTextFontSize: "tableTextFontSize",
+    tableTextVerAlign: "tableTextVerAlign",
+    tableTextHorAlign: "tableTextHorAlign",
+    tableTextMinLineHeight: "tableTextMinLineHeight",
+    tableTextMaxLineHeight: "tableTextMaxLineHeight",
+    tableTextKerning: "tableTextKerning",
+    tableTextParaSpacing: "tableTextParaSpacing",
+    tableTextUnderline: "tableTextUnderline",
+    tableTextStrikethrough: "tableTextStrikethrough",
+    tableTextBold: "tableTextBold",
+    tableTextItalic: "tableTextItalic",
+    tableTextTransform: "tableTextTransform",
+
+    // table cell
     cellContentType: "cellContentType",
     cellContentText: "cellContentText",
     cellContentImage: "cellContentImage",
-    cellSpan: "cellSpan"
+    cellSpan: "cellSpan",
 }
 
 export const FILLS_ID = "fills"
@@ -86,7 +103,7 @@ export const POINTS_ATTR_ID = {
     point: "point",
 }
 
-export const TABLE_ROW_HEIGHTS_ID = "tblRowHeights"
-
-export const TABLE_COL_WIDTHS_ID = "tblColWidths"
-
+export const TABLE_ATTR_ID = {
+    rowHeight: "rowHeight",
+    colWidth: "colWidth",
+}

@@ -11,19 +11,24 @@ import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import template_table_shape from "./template/table-shape.json"
 import template_table_cell from "./template/table-cell.json"
-import template_text from "./template/text.json"
 import {
     Point2D, CurvePoint,
     Color, Border, Style, Fill, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
     Text,
+    Shadow,
+    Para,
+    Span,
+    ParaAttr,
+    TextAttr,
     BorderStyle,
-    Shadow
+    ShapeType
 } from "../data/classes";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
-import { TableShape } from "../data/table";
+import { TableCell, TableShape } from "../data/table";
+import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {
@@ -169,8 +174,22 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     return shape;
 }
 
-export function newText(): Text {
-    return importText(template_text);
+export function newText(textAttr?: TextAttr): Text {
+    const text = new Text(new BasicArray());
+    const para = new Para('\n', new BasicArray());
+    para.attr = new ParaAttr();
+    para.attr.minimumLineHeight = 24;
+    text.paras.push(para);
+    const span = new Span(para.length);
+    span.fontName = "PingFangSC-Regular";
+    span.fontSize = 14;
+    span.color = new Color(0.85, 0, 0, 0);
+    para.spans.push(span);
+    if (textAttr) {
+        mergeParaAttr(para, textAttr);
+        mergeSpanAttr(span, textAttr);
+    }
+    return text;
 }
 
 // 后续需要传入字体、字号、颜色信息
@@ -212,6 +231,13 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     img.setImageMgr(mediasMgr);
     addCommonAttr(img);
     return img;
+}
+
+export function newCell(): TableCell {
+    return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
+        new BasicArray<Border>(),
+        new BasicArray<Fill>()
+    ))
 }
 
 export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>): TableShape {
