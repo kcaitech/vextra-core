@@ -194,7 +194,7 @@ export class TableEditor extends ShapeEditor {
                     if (cell.cell?.cellType === TableCellType.Text) {
                         if (c.cell.text) {
                             const clen = c.cell.text.length;
-                            if (clen > 1) api.insertComplexText(this.__page, cell as any, cell.cell.text!.length - 1, c.cell.text!);
+                            if (clen > 1) api.insertComplexText(this.__page, cell.cell as any, cell.cell.text!.length - 1, c.cell.text!);
                         }
                     }
                 }

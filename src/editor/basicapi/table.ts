@@ -56,10 +56,8 @@ export function tableRemoveCol(page: Page, table: TableShape, idx: number) {
 }
 
 export function tableModifyCellSpan(table: TableShape, rowIdx: number, colIdx: number, rowSpan: number | undefined, colSpan: number | undefined) {
-    if ((rowSpan ?? 1) > 1 || (colSpan ?? 1) > 1) {
-        const cell = table.getCellAt(rowIdx, colIdx, true);
-        cell!.setCellSpan(rowSpan, colSpan);
-    }
+    const cell = table.getCellAt(rowIdx, colIdx, true);
+    cell!.setCellSpan(rowSpan, colSpan);
 }
 
 // text

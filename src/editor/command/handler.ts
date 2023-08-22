@@ -39,13 +39,13 @@ export class CMDHandler {
             throw new Error("shape not find")
         }
         let shape: Shape | undefined = _shape;
-        if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-            const index = op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
-            if (!shape) {
-                throw new Error("table cell not find")
-            }
-        }
+        // if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
+        //     const index = op.targetId[1] as TableIndex;
+        //     shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+        //     if (!shape) {
+        //         throw new Error("table cell not find")
+        //     }
+        // }
 
         const _op = op as IdOpSet;
         const value = cmd.value;
