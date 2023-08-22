@@ -604,7 +604,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
                 const r = (() => {
                     const val = source.childs[i]
                     if (!val) {
-                        return val
+                        return val ?? undefined
                     }
                     if (val.typeId == 'table-cell') {
                         return importTableCell(val as types.TableCell, ctx)
