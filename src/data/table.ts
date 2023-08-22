@@ -4,12 +4,12 @@ import { BasicArray, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
 import { GroupShape, Shape } from "./shape";
 import { Path } from "./path";
-import { Text } from "./text"
+import { Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
 import { indexOfCell, locateCell, locateCellByCell } from "./tablelocate";
-import { getTableCells, getTableVisibleCells } from "./tableread";
+import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
@@ -120,19 +120,31 @@ export class TableCell extends Shape implements classes.TableCell {
     setContentImage(ref: string | undefined) {
         this.imageRef = ref;
     }
+
+    // 这个设计不太好？
     setCellSpan(rowSpan: number | undefined, colSpan: number | undefined) {
         rowSpan = rowSpan && rowSpan <= 1 ? undefined : rowSpan;
         colSpan = colSpan && colSpan <= 1 ? undefined : colSpan;
         this.rowSpan = rowSpan;
         this.colSpan = colSpan;
         if (this.text) this.text.reLayout();
+        const parent = this.parent;
+        if (parent) (parent as TableShape).reLayout();
+    }
+
+    onRollback(): void {
+        if (this.text) this.text.reLayout();
+        const parent = this.parent;
+        if (parent) (parent as TableShape).reLayout();
     }
 }
 
-export class TableShape extends GroupShape implements classes.TableShape {
+export class TableShape extends Shape implements classes.TableShape {
     typeId = 'table-shape'
+    childs: BasicArray<(TableCell | undefined) >
     rowHeights: BasicArray<number>
     colWidths: BasicArray<number>
+    textAttr?: TextAttr // 文本默认属性
 
     private __layout?: TableLayout;
     constructor(
@@ -141,7 +153,7 @@ export class TableShape extends GroupShape implements classes.TableShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<TableCell>,
+        childs: BasicArray<(TableCell | undefined) >,
         rowHeights: BasicArray<number>,
         colWidths: BasicArray<number>
     ) {
@@ -151,10 +163,10 @@ export class TableShape extends GroupShape implements classes.TableShape {
             ShapeType.Table,
             frame,
             style,
-            childs
         )
         this.rowHeights = rowHeights
         this.colWidths = colWidths
+        this.childs = childs;
     }
 
     get childsVisible(): boolean {
@@ -191,7 +203,7 @@ export class TableShape extends GroupShape implements classes.TableShape {
         const rowHBase = rowHeights.reduce((sum, cur) => sum + cur, 0);
         return rowHeights.map((val) => val / rowHBase * height);
     }
-    insertRow(idx: number, height: number, data?: any[]) {
+    insertRow(idx: number, height: number, data: TableCell[]) {
         tableInsertRow(this, idx, height, data);
         this.reLayout();
     }
@@ -200,7 +212,7 @@ export class TableShape extends GroupShape implements classes.TableShape {
         this.reLayout();
         return ret;
     }
-    insertCol(idx: number, width: number, data?: any[]) {
+    insertCol(idx: number, width: number, data: TableCell[]) {
         tableInsertCol(this, idx, width, data);
         this.reLayout();
     }
@@ -227,7 +239,11 @@ export class TableShape extends GroupShape implements classes.TableShape {
         this.reLayout();
     }
 
-    private reLayout() {
+    onRollback(): void {
+        this.reLayout();
+    }
+
+    reLayout() {
         this.__layout = undefined;
     }
 
@@ -239,7 +255,7 @@ export class TableShape extends GroupShape implements classes.TableShape {
         return locateCellByCell(this.getLayout(), cell);
     }
 
-    indexOfCell(cell: TableCell) {
+    indexOfCell(cell: TableCell) { // todo 需要优化
         return indexOfCell(this, cell);
     }
 
@@ -252,8 +268,36 @@ export class TableShape extends GroupShape implements classes.TableShape {
      * @param visible 
      * @returns 
      */
-    getTableCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number, visible: boolean = true) {
-        if (visible) return getTableVisibleCells(this, rowStart, rowEnd, colStart, colEnd);
+    getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
         return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
+    }
+
+    getCellAt(rowIdx: number, colIdx: number) {
+        const index = rowIdx * this.colWidths.length + colIdx;
+        return this.childs[index];
+    }
+
+    /**
+     * 获取未被覆盖的单元格
+     * @param rowStart 
+     * @param rowEnd 
+     * @param colStart 
+     * @param colEnd 
+     * @returns 
+     */
+    getNotCoveredCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+        return getTableNotCoveredCells(this, rowStart, rowEnd, colStart, colEnd);
+    }
+
+    /**
+     * 获取用户可见的单元格
+     * @param rowStart 
+     * @param rowEnd 
+     * @param colStart 
+     * @param colEnd 
+     * @returns 
+     */
+    getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+        return getTableVisibleCells(this, rowStart, rowEnd, colStart, colEnd);
     }
 }

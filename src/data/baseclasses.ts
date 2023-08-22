@@ -322,6 +322,20 @@ export class PageListItem extends Basic {
     }
 }
 /**
+ * padding 
+ */
+export class Padding extends Basic {
+    typeId = 'padding'
+    left?: number
+    top?: number
+    right?: number
+    bottom?: number
+    constructor(
+    ) {
+        super()
+    }
+}
+/**
  * override list item 
  */
 export class OverrideItem extends Basic {
@@ -765,16 +779,17 @@ export class TextShape extends Shape {
  */
 export class TableShape extends Shape {
     typeId = 'table-shape'
-    childs: BasicArray<TableCell >
+    childs: BasicArray<(undefined | TableCell) >
     rowHeights: BasicArray<number >
     colWidths: BasicArray<number >
+    textAttr?: TextAttr
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<TableCell >,
+        childs: BasicArray<(undefined | TableCell) >,
         rowHeights: BasicArray<number >,
         colWidths: BasicArray<number >
     ) {
@@ -957,6 +972,7 @@ export class TextAttr extends ParaAttr {
     verAlign?: TextVerAlign
     orientation?: TextOrientation
     textBehaviour?: TextBehaviour
+    padding?: Padding
     constructor(
     ) {
         super(

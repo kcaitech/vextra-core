@@ -135,8 +135,9 @@ handler['oneOf'] = function (schema: any, className: string, attrname: string, l
     filename = schema.filename ?? filename
     // return handler['allOf'](schema, className, attrname, level)
     let ret = `(() => {
-${indent(level)}    if (typeof ${attrname} != 'object') {
-${indent(level)}        return ${attrname}
+${indent(level)}    const val = ${attrname};
+${indent(level)}    if (typeof val != 'object') {
+${indent(level)}        return val
 ${indent(level)}    }`
 
     for (let i = 0; i < schema.length; i++) {
@@ -155,14 +156,14 @@ ${indent(level)}    }`
         }
         if (typename) {
             ret += `
-${indent(level)}    if (${attrname}.typeId == '${filename}') {
-${indent(level)}        return export${typename}(${attrname} as types.${typename}, ctx)
+${indent(level)}    if (val.typeId == '${filename}') {
+${indent(level)}        return export${typename}(val as types.${typename}, ctx)
 ${indent(level)}    }`
         }
     }
     ret += `
 ${indent(level)}    {
-${indent(level)}        console.error(${attrname})
+${indent(level)}        console.error(val)
 ${indent(level)}    }`
     ret += `
 ${indent(level)}})()`
@@ -229,7 +230,7 @@ handler['array'] = function (schema: any, className: string, attrname: string, l
 ${indent(level + 1)}const ret = []
 ${indent(level + 1)}for (let i = 0, len = ${attrname}.length; i < len; i++) {
 ${indent(level + 1)}    const r = ${handler['type'](items, className, attrname + '[i]', level + 2, filename, allschemas)}
-${indent(level + 1)}    if (r) ret.push(r)
+${indent(level + 1)}    ${items.containUndefined ? '' : 'if (r) '}ret.push(r)
 ${indent(level + 1)}}
 ${indent(level + 1)}return ret
 ${indent(level)}})()`

@@ -24,7 +24,8 @@ export {
     BulletNumbers,
     BulletNumbersType,
     BulletNumbersBehavior,
-    TextTransformType
+    TextTransformType,
+    Padding
 } from "./baseclasses";
 import * as classes from "./baseclasses"
 import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
@@ -33,6 +34,8 @@ import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout"
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 import { _travelTextPara } from "./texttravel";
+import { Padding } from "./baseclasses";
+
 /*
  文本框属性
     文本框大小行为
@@ -101,6 +104,7 @@ export class TextAttr extends ParaAttr implements classes.TextAttr {
     verAlign?: TextVerAlign
     orientation?: TextOrientation
     textBehaviour?: TextBehaviour
+    padding?: Padding
     constructor(
     ) {
         super(
@@ -411,6 +415,10 @@ export class Text extends Basic implements classes.Text {
         this.__frameHeight = h;
     }
 
+    onRollback(): void {
+        this.reLayout();
+    }
+
     reLayout() {
         this.__layout = undefined;
     }
@@ -535,5 +543,15 @@ export class Text extends Basic implements classes.Text {
         const ret = setParaIndent(this, indent, index, len);
         this.reLayout(); // todo
         return ret;
+    }
+
+    setPadding(left: number, top: number, right: number, bottom: number) {
+        if (!this.attr) this.attr = new TextAttr();
+        if (!this.attr.padding) this.attr.padding = new Padding();
+        if (left) this.attr.padding.left = left;
+        if (top) this.attr.padding.top = top;
+        if (right) this.attr.padding.right = right;
+        if (bottom) this.attr.padding.bottom = bottom;
+        this.reLayout(); // todo
     }
 }

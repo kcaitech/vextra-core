@@ -1,5 +1,5 @@
 import { objectId, __objidkey } from '../basic/objectid';
-import { castNotifiable, IDataGuard, ISave4Restore, isDataBasicType, Notifiable } from './basic';
+import { Basic, castNotifiable, IDataGuard, ISave4Restore, isDataBasicType, Notifiable } from './basic';
 import { Watchable } from './basic';
 // map 对象record
 interface MapRec {
@@ -367,6 +367,15 @@ class Transact extends Array<Rec> {
             r.swap(ctx, ph);
         }
     }
+    rollback(ctx: TContext, ph: ProxyHandler): void {
+        for (let i = this.length - 1; i >= 0; i--) {
+            const r = this[i];
+            r.swap(ctx, ph);
+            if (r.target instanceof Basic) {
+                r.target.onRollback();
+            }
+        }
+    }
     push(...items: Rec[]): number {
         for (let i = 0, len = items.length; i < len; i++) {
             const a = items[i];
@@ -481,7 +490,18 @@ export class Repository extends Watchable(Object) implements IDataGuard {
         this._commit()
     }
 
-    _rollback() {
+    rollback() {
+        if (this.__context.transact === undefined) {
+            throw new Error();
+        }
+        this.__context.cache.clear();
+        this.__context.transact.rollback(this.__context, this.__ph);
+        this.__context.transact = undefined;
+        this.__context.fireNotify();
+    }
+
+    // 正常业务中的rollback，不会触发Basic.onRollback
+    normalRollback() {
         if (this.__context.transact === undefined) {
             throw new Error();
         }
@@ -489,10 +509,6 @@ export class Repository extends Watchable(Object) implements IDataGuard {
         this.__context.transact.unexec(this.__context, this.__ph);
         this.__context.transact = undefined;
         this.__context.fireNotify();
-    }
-
-    rollback() {
-        this._rollback();
     }
 
     isInTransact() {

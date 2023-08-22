@@ -1,3 +1,4 @@
+import { Grid } from "../basic/grid";
 import { BasicArray } from "./basic";
 import { ShapeFrame } from "./shape";
 import { TableCell, TableShape } from "./table";
@@ -5,7 +6,7 @@ import { TableCell, TableShape } from "./table";
 export type TableGridItem = { cell: TableCell, index: { row: number, col: number }, span: { row: number, col: number }, frame: ShapeFrame }
 
 export type TableLayout = {
-    grid: TableGridItem[][],
+    grid: Grid<TableGridItem>,
     width: number,
     height: number,
     rowHeights: number[],
@@ -14,7 +15,7 @@ export type TableLayout = {
 
 export function layoutTable(table: TableShape): TableLayout {
     const frame = table.frame;
-    const grid: TableGridItem[][] = [];
+    const grid: Grid<TableGridItem> = new Grid<TableGridItem>(table.rowHeights.length, table.colWidths.length);
     const cells: TableCell[] = table.childs as (BasicArray<TableCell>);
 
     const width = frame.width;
@@ -27,16 +28,13 @@ export function layoutTable(table: TableShape): TableLayout {
     let celli = 0, cellLen = cells.length;
 
     for (let ri = 0, rowLen = rowHeights.length, rowY = 0; ri < rowLen && celli < cellLen; ++ri) {
-        if (!grid[ri]) grid[ri] = [];
-        const grow = grid[ri];
-
         const rowHeight = rowHeights[ri] / rowHBase * height;
 
         for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen && celli < cellLen; ++ci, ++celli) {
 
             const colWidth = colWidths[ci] / colWBase * width;
 
-            if (grow[ci]) {
+            if (grid.get(ri, ci)) {
                 colX += colWidth;
                 continue;
             }
@@ -57,14 +55,12 @@ export function layoutTable(table: TableShape): TableLayout {
             }
 
             // fix span
-            const rowSpan = cell.rowSpan || 1;
-            let colSpan = cell.colSpan || 1;
+            const rowSpan = Math.min(cell.rowSpan || 1, rowLen - ri)
+            let colSpan = Math.min(cell.colSpan || 1, colLen - ci);
             // 取最小可用span空间？// 只有colSpan有可能被阻挡 // 只要判断第一行就行
-            for (;;) {
-                if (!grid[ri]) break;
-                const _gr = grid[ri];
+            for (; ;) {
                 for (let _ci = ci + 1, cend = ci + colSpan; _ci < cend; ++_ci) {
-                    if (_gr[_ci]) {
+                    if (grid.get(ri, _ci)) {
                         colSpan = _ci - ci;
                         break;
                     }
@@ -78,13 +74,12 @@ export function layoutTable(table: TableShape): TableLayout {
             let dheight = 0;
             // fill grid
             for (let _ri = ri, rend = ri + rowSpan; _ri < rend; ++_ri) {
-                if (!grid[_ri]) grid[_ri] = [];
-                const _gr = grid[_ri];
                 const rowHeight = rowHeights[_ri] / rowHBase * height;
 
                 let _h = 0;
                 for (let _ci = ci, cend = ci + colSpan; _ci < cend; ++_ci) {
-                    _gr[_ci] = d;
+                    grid.set(_ri, _ci, d)
+
                     if (dwidth === 0) {
                         const colWidth = colWidths[_ci] / colWBase * width;
                         _h += colWidth;
@@ -106,7 +101,7 @@ export function layoutTable(table: TableShape): TableLayout {
         grid,
         width,
         height,
-        rowHeights: rowHeights.slice(0),
-        colWidths: colWidths.slice(0)
+        rowHeights: rowHeights.map((w) => w / rowHBase * height),
+        colWidths: colWidths.map((w) => w / colWBase * width)
     }
 }

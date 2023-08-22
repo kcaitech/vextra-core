@@ -251,15 +251,25 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
     if (source.versionId !== undefined) ret.versionId = source.versionId
     return ret
 }
+/* padding */
+export function importPadding(source: types.Padding, ctx?: IImportContext): impl.Padding {
+    const ret: impl.Padding = new impl.Padding (
+    )
+    if (source.left !== undefined) ret.left = source.left
+    if (source.top !== undefined) ret.top = source.top
+    if (source.right !== undefined) ret.right = source.right
+    if (source.bottom !== undefined) ret.bottom = source.bottom
+    return ret
+}
 /* override list item */
 export function importOverrideItem(source: types.OverrideItem, ctx?: IImportContext): impl.OverrideItem {
     const ret: impl.OverrideItem = new impl.OverrideItem (
         source.id
     )
     if (source.value !== undefined) ret.value = (() => {
-
-        if (source.value.typeId == 'style') {
-            return importStyle(source.value as types.Style, ctx)
+        const val = source.value
+        if (val.typeId == 'style') {
+            return importStyle(val as types.Style, ctx)
         }
     })()
     return ret
@@ -590,10 +600,18 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<impl.TableCell>()
+            const ret = new BasicArray<(undefined | impl.TableCell)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = importTableCell(source.childs[i], ctx)
-                if (r) ret.push(r)
+                const r = (() => {
+                    const val = source.childs[i]
+                    if (!val) {
+                        return val
+                    }
+                    if (val.typeId == 'table-cell') {
+                        return importTableCell(val as types.TableCell, ctx)
+                    }
+                })()
+                ret.push(r)
             }
             return ret
         })(),
@@ -629,6 +647,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.textAttr !== undefined) ret.textAttr = importTextAttr(source.textAttr, ctx)
     return ret
 }
 /* table cell */
@@ -874,6 +893,7 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     if (source.verAlign !== undefined) ret.verAlign = importTextVerAlign(source.verAlign, ctx)
     if (source.orientation !== undefined) ret.orientation = importTextOrientation(source.orientation, ctx)
     if (source.textBehaviour !== undefined) ret.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)
+    if (source.padding !== undefined) ret.padding = importPadding(source.padding, ctx)
     return ret
 }
 /* page */
@@ -888,51 +908,51 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
             const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.SymbolShape | impl.LineShape | impl.OvalShape | impl.TableShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
-
-                    if (source.childs[i].typeId == 'shape') {
-                        return importShape(source.childs[i] as types.Shape, ctx)
+                    const val = source.childs[i]
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
                     }
-                    if (source.childs[i].typeId == 'flatten-shape') {
-                        return importFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'group-shape') {
-                        return importGroupShape(source.childs[i] as types.GroupShape, ctx)
+                    if (val.typeId == 'group-shape') {
+                        return importGroupShape(val as types.GroupShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
+                    if (val.typeId == 'image-shape') {
+                        return importImageShape(val as types.ImageShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'path-shape') {
-                        return importPathShape(source.childs[i] as types.PathShape, ctx)
+                    if (val.typeId == 'path-shape') {
+                        return importPathShape(val as types.PathShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'rect-shape') {
-                        return importRectShape(source.childs[i] as types.RectShape, ctx)
+                    if (val.typeId == 'rect-shape') {
+                        return importRectShape(val as types.RectShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(source.childs[i] as types.TextShape, ctx)
+                    if (val.typeId == 'text-shape') {
+                        return importTextShape(val as types.TextShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    if (val.typeId == 'oval-shape') {
+                        return importOvalShape(val as types.OvalShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'line-shape') {
-                        return importLineShape(source.childs[i] as types.LineShape, ctx)
+                    if (val.typeId == 'line-shape') {
+                        return importLineShape(val as types.LineShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'artboard') {
-                        return importArtboard(source.childs[i] as types.Artboard, ctx)
+                    if (val.typeId == 'artboard') {
+                        return importArtboard(val as types.Artboard, ctx)
                     }
-                    if (source.childs[i].typeId == 'symbol-shape') {
-                        return importSymbolShape(source.childs[i] as types.SymbolShape, ctx)
+                    if (val.typeId == 'symbol-shape') {
+                        return importSymbolShape(val as types.SymbolShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'line-shape') {
-                        return importLineShape(source.childs[i] as types.LineShape, ctx)
+                    if (val.typeId == 'line-shape') {
+                        return importLineShape(val as types.LineShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    if (val.typeId == 'oval-shape') {
+                        return importOvalShape(val as types.OvalShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'table-shape') {
-                        return importTableShape(source.childs[i] as types.TableShape, ctx)
+                    if (val.typeId == 'table-shape') {
+                        return importTableShape(val as types.TableShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1132,42 +1152,42 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
             const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
-
-                    if (source.childs[i].typeId == 'group-shape') {
-                        return importGroupShape(source.childs[i] as types.GroupShape, ctx)
+                    const val = source.childs[i]
+                    if (val.typeId == 'group-shape') {
+                        return importGroupShape(val as types.GroupShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'shape') {
-                        return importShape(source.childs[i] as types.Shape, ctx)
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
                     }
-                    if (source.childs[i].typeId == 'flatten-shape') {
-                        return importFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
+                    if (val.typeId == 'image-shape') {
+                        return importImageShape(val as types.ImageShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'path-shape') {
-                        return importPathShape(source.childs[i] as types.PathShape, ctx)
+                    if (val.typeId == 'path-shape') {
+                        return importPathShape(val as types.PathShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'rect-shape') {
-                        return importRectShape(source.childs[i] as types.RectShape, ctx)
+                    if (val.typeId == 'rect-shape') {
+                        return importRectShape(val as types.RectShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(source.childs[i] as types.TextShape, ctx)
+                    if (val.typeId == 'text-shape') {
+                        return importTextShape(val as types.TextShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'artboard') {
-                        return importArtboard(source.childs[i] as types.Artboard, ctx)
+                    if (val.typeId == 'artboard') {
+                        return importArtboard(val as types.Artboard, ctx)
                     }
-                    if (source.childs[i].typeId == 'line-shape') {
-                        return importLineShape(source.childs[i] as types.LineShape, ctx)
+                    if (val.typeId == 'line-shape') {
+                        return importLineShape(val as types.LineShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    if (val.typeId == 'oval-shape') {
+                        return importOvalShape(val as types.OvalShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'table-shape') {
-                        return importTableShape(source.childs[i] as types.TableShape, ctx)
+                    if (val.typeId == 'table-shape') {
+                        return importTableShape(val as types.TableShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1206,42 +1226,42 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
             const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
-
-                    if (source.childs[i].typeId == 'group-shape') {
-                        return importGroupShape(source.childs[i] as types.GroupShape, ctx)
+                    const val = source.childs[i]
+                    if (val.typeId == 'group-shape') {
+                        return importGroupShape(val as types.GroupShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'shape') {
-                        return importShape(source.childs[i] as types.Shape, ctx)
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
                     }
-                    if (source.childs[i].typeId == 'flatten-shape') {
-                        return importFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
+                    if (val.typeId == 'image-shape') {
+                        return importImageShape(val as types.ImageShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'path-shape') {
-                        return importPathShape(source.childs[i] as types.PathShape, ctx)
+                    if (val.typeId == 'path-shape') {
+                        return importPathShape(val as types.PathShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'rect-shape') {
-                        return importRectShape(source.childs[i] as types.RectShape, ctx)
+                    if (val.typeId == 'rect-shape') {
+                        return importRectShape(val as types.RectShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(source.childs[i] as types.TextShape, ctx)
+                    if (val.typeId == 'text-shape') {
+                        return importTextShape(val as types.TextShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'artboard') {
-                        return importArtboard(source.childs[i] as types.Artboard, ctx)
+                    if (val.typeId == 'artboard') {
+                        return importArtboard(val as types.Artboard, ctx)
                     }
-                    if (source.childs[i].typeId == 'line-shape') {
-                        return importLineShape(source.childs[i] as types.LineShape, ctx)
+                    if (val.typeId == 'line-shape') {
+                        return importLineShape(val as types.LineShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    if (val.typeId == 'oval-shape') {
+                        return importOvalShape(val as types.OvalShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'table-shape') {
-                        return importTableShape(source.childs[i] as types.TableShape, ctx)
+                    if (val.typeId == 'table-shape') {
+                        return importTableShape(val as types.TableShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1289,42 +1309,42 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
             const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
-
-                    if (source.childs[i].typeId == 'group-shape') {
-                        return importGroupShape(source.childs[i] as types.GroupShape, ctx)
+                    const val = source.childs[i]
+                    if (val.typeId == 'group-shape') {
+                        return importGroupShape(val as types.GroupShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'shape') {
-                        return importShape(source.childs[i] as types.Shape, ctx)
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
                     }
-                    if (source.childs[i].typeId == 'flatten-shape') {
-                        return importFlattenShape(source.childs[i] as types.FlattenShape, ctx)
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'image-shape') {
-                        return importImageShape(source.childs[i] as types.ImageShape, ctx)
+                    if (val.typeId == 'image-shape') {
+                        return importImageShape(val as types.ImageShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'path-shape') {
-                        return importPathShape(source.childs[i] as types.PathShape, ctx)
+                    if (val.typeId == 'path-shape') {
+                        return importPathShape(val as types.PathShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'rect-shape') {
-                        return importRectShape(source.childs[i] as types.RectShape, ctx)
+                    if (val.typeId == 'rect-shape') {
+                        return importRectShape(val as types.RectShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(source.childs[i] as types.SymbolRefShape, ctx)
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'text-shape') {
-                        return importTextShape(source.childs[i] as types.TextShape, ctx)
+                    if (val.typeId == 'text-shape') {
+                        return importTextShape(val as types.TextShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'artboard') {
-                        return importArtboard(source.childs[i] as types.Artboard, ctx)
+                    if (val.typeId == 'artboard') {
+                        return importArtboard(val as types.Artboard, ctx)
                     }
-                    if (source.childs[i].typeId == 'line-shape') {
-                        return importLineShape(source.childs[i] as types.LineShape, ctx)
+                    if (val.typeId == 'line-shape') {
+                        return importLineShape(val as types.LineShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'oval-shape') {
-                        return importOvalShape(source.childs[i] as types.OvalShape, ctx)
+                    if (val.typeId == 'oval-shape') {
+                        return importOvalShape(val as types.OvalShape, ctx)
                     }
-                    if (source.childs[i].typeId == 'table-shape') {
-                        return importTableShape(source.childs[i] as types.TableShape, ctx)
+                    if (val.typeId == 'table-shape') {
+                        return importTableShape(val as types.TableShape, ctx)
                     }
                 })()
                 if (r) ret.push(r)

@@ -5,7 +5,15 @@
         "childs": {
             "type": "array",
             "items": {
-                "$ref": "./table-cell.json"
+                "oneOf": [
+                    {
+                        "type": "undefined"
+                    },
+                    {
+                        "$ref": "./table-cell.json"
+                    }
+                ],
+                "containUndefined": true
             }
         },
         "rowHeights": {
@@ -19,6 +27,9 @@
             "items": {
                 "type": "number"
             }
+        },
+        "textAttr": {
+            "$ref": "./text-attr.json"
         }
     },
     "required": [

@@ -1,0 +1,20 @@
+{
+    "description": "padding",
+    "type": "object",
+    "properties": {
+        "left": {
+            "type": "number"
+        },
+        "top": {
+            "type": "number"
+        },
+        "right": {
+            "type": "number"
+        },
+        "bottom": {
+            "type": "number"
+        }
+    },
+    "required": [],
+    "additionalProperties": false
+}

@@ -11,6 +11,14 @@ export function layoutAtInsert(text: Text,
     len: number,
     layout: TextLayout): TextLayout {
     if (len <= 0) return layout;
+
+    const padding = text.attr?.padding;
+    const paddingLeft = padding?.left ?? 0;
+    const paddingTop = padding?.top ?? 0;
+    const paddingRight = padding?.right ?? 0;
+    const paddingBottom = padding?.bottom ?? 0;
+    const coreLayoutWidth = layoutWidth - paddingLeft - paddingRight;
+
     // 找到对应段
     const paras = text.paras;
     const parascount = paras.length;
@@ -39,7 +47,7 @@ export function layoutAtInsert(text: Text,
     const needUpdateCount = paras.length - parasLayout.length + 1;
     for (let j = 0; i < parascount && j < needUpdateCount; j++, i++) {
         const para = paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, preBulletNumbers);
+        const paraLayout = layoutPara(text, para, coreLayoutWidth, preBulletNumbers);
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -74,7 +82,7 @@ export function layoutAtInsert(text: Text,
 
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = parasLayout[i];
@@ -88,11 +96,12 @@ export function layoutAtInsert(text: Text,
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
         switch (align) {
-            case TextVerAlign.Top: return 0;
-            case TextVerAlign.Middle: return (layoutHeight - contentHeight) / 2;
-            case TextVerAlign.Bottom: return layoutHeight - contentHeight;
+            case TextVerAlign.Top: return paddingTop;
+            case TextVerAlign.Middle: return (layoutHeight - contentHeight - paddingTop - paddingBottom) / 2;
+            case TextVerAlign.Bottom: return layoutHeight - contentHeight - paddingBottom;
         }
     })(vAlign);
+    layout.xOffset = paddingLeft;
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;
@@ -112,6 +121,14 @@ export function layoutAtDelete(text: Text,
     len: number,
     layout: TextLayout): TextLayout {
     if (len <= 0) return layout;
+
+    const padding = text.attr?.padding;
+    const paddingLeft = padding?.left ?? 0;
+    const paddingTop = padding?.top ?? 0;
+    const paddingRight = padding?.right ?? 0;
+    const paddingBottom = padding?.bottom ?? 0;
+    const coreLayoutWidth = layoutWidth - paddingLeft - paddingRight;
+
     // 找到对应段
     const paras = text.paras;
     const parascount = paras.length;
@@ -140,7 +157,7 @@ export function layoutAtDelete(text: Text,
     const needUpdateCount = parasLayout.length - paras.length + 1;
     if (i < parascount && needUpdateCount > 0) {
         const para = paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, preBulletNumbers);
+        const paraLayout = layoutPara(text, para, coreLayoutWidth, preBulletNumbers);
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -175,7 +192,7 @@ export function layoutAtDelete(text: Text,
 
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = parasLayout[i];
@@ -189,11 +206,12 @@ export function layoutAtDelete(text: Text,
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
         switch (align) {
-            case TextVerAlign.Top: return 0;
-            case TextVerAlign.Middle: return (layoutHeight - contentHeight) / 2;
-            case TextVerAlign.Bottom: return layoutHeight - contentHeight;
+            case TextVerAlign.Top: return paddingTop;
+            case TextVerAlign.Middle: return (layoutHeight - contentHeight - paddingTop - paddingBottom) / 2;
+            case TextVerAlign.Bottom: return layoutHeight - contentHeight - paddingBottom;
         }
     })(vAlign);
+    layout.xOffset = paddingLeft;
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;
@@ -214,6 +232,14 @@ export function layoutAtFormat(text: Text,
     layout: TextLayout,
     props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): TextLayout {
     if (len <= 0) return layout;
+
+    const padding = text.attr?.padding;
+    const paddingLeft = padding?.left ?? 0;
+    const paddingTop = padding?.top ?? 0;
+    const paddingRight = padding?.right ?? 0;
+    const paddingBottom = padding?.bottom ?? 0;
+    const coreLayoutWidth = layoutWidth - paddingLeft - paddingRight;
+
     // 找到对应段
     const paras = text.paras;
     const parascount = paras.length;
@@ -243,7 +269,7 @@ export function layoutAtFormat(text: Text,
     len += index;
     for (let len2 = parasLayout.length; len >= 0 && i < parascount && i < len2; i++) {
         const para = paras[i];
-        const paraLayout = layoutPara(text, para, layoutWidth, preBulletNumbers);
+        const paraLayout = layoutPara(text, para, coreLayoutWidth, preBulletNumbers);
         if (i > 0) {
             const prePara = paras[i - 1];
             const paraSpacing = prePara.attr?.paraSpacing || 0;
@@ -275,7 +301,7 @@ export function layoutAtFormat(text: Text,
 
     // hor align
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : layoutWidth;
+    const alignWidth = textBehaviour === TextBehaviour.Flexible ? contentWidth : coreLayoutWidth;
     for (let i = 0, pc = text.paras.length; i < pc; i++) {
         const para = text.paras[i];
         const paraLayout = parasLayout[i];
@@ -289,11 +315,12 @@ export function layoutAtFormat(text: Text,
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
         switch (align) {
-            case TextVerAlign.Top: return 0;
-            case TextVerAlign.Middle: return (layoutHeight - contentHeight) / 2;
-            case TextVerAlign.Bottom: return layoutHeight - contentHeight;
+            case TextVerAlign.Top: return paddingTop;
+            case TextVerAlign.Middle: return (layoutHeight - contentHeight - paddingTop - paddingBottom) / 2;
+            case TextVerAlign.Bottom: return layoutHeight - contentHeight - paddingBottom;
         }
     })(vAlign);
+    layout.xOffset = paddingLeft;
     layout.yOffset = yOffset;
     layout.contentHeight = contentHeight;
     layout.contentWidth = contentWidth;
