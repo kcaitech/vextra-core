@@ -3,12 +3,11 @@ import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { newText } from "./creator";
-import { StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
+import { BorderPosition, BorderStyle, ShapeType, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
-import { Color } from "../data/style";
+import { Border, Color, Fill } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils";
 import { Api } from "./command/recordapi";
-import { importText } from "io/baseimport";
 
 export class TableEditor extends ShapeEditor {
 
@@ -437,13 +436,13 @@ export class TableEditor extends ShapeEditor {
     }
 
     // text attr
-    public setTextColor(color: Color | undefined) {
+    public setTextColor(color: Color | undefined, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextColor", {});
         try {
             api.tableModifyTextColor(this.__page, this.shape, color);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyColor(this.__page, cell as any, 0, cell.text.length, color);
                 }
             })
@@ -455,13 +454,13 @@ export class TableEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextHighlightColor(color: Color | undefined) {
+    public setTextHighlightColor(color: Color | undefined, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextHighlightColor", {});
         try {
             api.tableModifyTextHighlightColor(this.__page, this.shape, color);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyHighlightColor(this.__page, cell as any, 0, cell.text.length, color);
                 }
             })
@@ -473,13 +472,13 @@ export class TableEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextFontName(fontName: string) {
+    public setTextFontName(fontName: string, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextFontName", {});
         try {
             api.tableModifyTextFontName(this.__page, this.shape, fontName);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyFontName(this.__page, cell as any, 0, cell.text.length, fontName);
                     this.fixFrameByLayout(cell, api);
                 }
@@ -492,13 +491,13 @@ export class TableEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextFontSize(fontSize: number) {
+    public setTextFontSize(fontSize: number, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextFontSize", {});
         try {
             api.tableModifyTextFontSize(this.__page, this.shape, fontSize);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyFontSize(this.__page, cell as any, 0, cell.text.length, fontSize);
                     this.fixFrameByLayout(cell, api);
                 }
@@ -513,13 +512,13 @@ export class TableEditor extends ShapeEditor {
     }
 
     // 对象属性
-    public setTextVerAlign(verAlign: TextVerAlign) {
+    public setTextVerAlign(verAlign: TextVerAlign, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextVerAlign", {});
         try {
             api.tableModifyTextVerAlign(this.__page, this.shape, verAlign);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.shapeModifyTextVerAlign(this.__page, cell as any, verAlign);
                 }
             })
@@ -533,13 +532,13 @@ export class TableEditor extends ShapeEditor {
     }
 
     // 段属性
-    public setTextHorAlign(horAlign: TextHorAlign) {
+    public setTextHorAlign(horAlign: TextHorAlign, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextHorAlign", {});
         try {
             api.tableModifyTextHorAlign(this.__page, this.shape, horAlign);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyHorAlign(this.__page, cell as any, horAlign, 0, cell.text.length);
                 }
             })
@@ -552,14 +551,14 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
 
-    public setLineHeight(lineHeight: number) {
+    public setLineHeight(lineHeight: number, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setLineHeight", {});
         try {
             api.tableModifyTextMinLineHeight(this.__page, this.shape, lineHeight);
             api.tableModifyTextMaxLineHeight(this.__page, this.shape, lineHeight);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     const length = cell.text.length;
                     api.textModifyMinLineHeight(this.__page, cell as any, lineHeight, 0, length);
                     api.textModifyMaxLineHeight(this.__page, cell as any, lineHeight, 0, length);
@@ -576,13 +575,13 @@ export class TableEditor extends ShapeEditor {
     }
 
     // 字间距 段属性
-    public setCharSpacing(kerning: number) {
+    public setCharSpacing(kerning: number, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableCharSpace", {});
         try {
             api.tableModifyTextKerning(this.__page, this.shape, kerning);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyKerning(this.__page, cell as any, kerning, 0, cell.text.length);
                     this.fixFrameByLayout(cell, api);
                 }
@@ -597,13 +596,13 @@ export class TableEditor extends ShapeEditor {
     }
 
     // 段间距 段属性
-    public setParaSpacing(paraSpacing: number) {
+    public setParaSpacing(paraSpacing: number, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableParaSpacing", {});
         try {
             api.tableModifyTextParaSpacing(this.__page, this.shape, paraSpacing);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyParaSpacing(this.__page, cell as any, paraSpacing, 0, cell.text.length);
                     this.fixFrameByLayout(cell, api);
                 }
@@ -617,13 +616,13 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextUnderline(underline: boolean) {
+    public setTextUnderline(underline: boolean, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextUnderline", {});
         try {
             api.tableModifyTextUnderline(this.__page, this.shape, underline ? UnderlineType.Single : undefined);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyUnderline(this.__page, cell as any, underline ? UnderlineType.Single : undefined, 0, cell.text.length);
                 }
             })
@@ -636,13 +635,13 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextStrikethrough(strikethrough: boolean) {
+    public setTextStrikethrough(strikethrough: boolean, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextStrikethrough", {});
         try {
             api.tableModifyTextStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyStrikethrough(this.__page, cell as any, strikethrough ? StrikethroughType.Single : undefined, 0, cell.text.length);
                 }
             })
@@ -655,13 +654,13 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextBold(bold: boolean) {
+    public setTextBold(bold: boolean, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextBold", {});
         try {
             api.tableModifyTextBold(this.__page, this.shape, bold);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyBold(this.__page, cell as any, bold, 0, cell.text.length);
                 }
             })
@@ -674,13 +673,13 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextItalic(italic: boolean) {
+    public setTextItalic(italic: boolean, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextItalic", {});
         try {
             api.tableModifyTextItalic(this.__page, this.shape, italic);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyItalic(this.__page, cell as any, italic, 0, cell.text.length);
                 }
             })
@@ -693,13 +692,13 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
 
-    public setTextTransform(transform: TextTransformType | undefined) {
+    public setTextTransform(transform: TextTransformType | undefined, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
         const api = this.__repo.start("setTableTextTransform", {});
         try {
             api.tableModifyTextTransform(this.__page, this.shape, transform);
-            const cells = this.shape.childs as any as TableCell[];
+            const cells = this.shape.childs;
             cells.forEach((cell) => {
-                if (cell.cellType === TableCellType.Text && cell.text) {
+                if (cell && cell.cellType === TableCellType.Text && cell.text) {
                     api.textModifyTransform(this.__page, cell as any, transform, 0, cell.text.length);
                     this.fixFrameByLayout(cell, api);
                 }
@@ -725,5 +724,91 @@ export class TableEditor extends ShapeEditor {
             console.error(error);
             this.__repo.rollback();
         }
+    }
+
+    // fill
+    public addFill(fill: Fill, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const api = this.__repo.start("addFill", {});
+        api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length);
+        this.__repo.commit();
+    }
+    public setFillColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const fill: Fill = this.__shape.style.fills[idx];
+        if (fill) {
+            const api = this.__repo.start("setFillColor", {});
+            api.setFillColor(this.__page, this.__shape, idx, color)
+            this.__repo.commit();
+        }
+    }
+
+    public setFillEnable(idx: number, value: boolean, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const api = this.__repo.start("setFillEnable", {});
+        api.setFillEnable(this.__page, this.__shape, idx, value);
+        this.__repo.commit();
+
+    }
+    public deleteFill(idx: number, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const fill = this.__shape.style.fills[idx];
+        if (fill) {
+            const api = this.__repo.start("deleteFill", {});
+            api.deleteFillAt(this.__page, this.__shape, idx);
+            this.__repo.commit();
+        }
+    }
+
+    // border
+    public setBorderEnable(idx: number, isEnabled: boolean, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            const api = this.__repo.start("setBorderEnable", {});
+            api.setBorderEnable(this.__page, this.__shape, idx, isEnabled);
+            this.__repo.commit();
+        }
+    }
+    public setBorderColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            const api = this.__repo.start("setBorderColor", {});
+            api.setBorderColor(this.__page, this.__shape, idx, color);
+            this.__repo.commit();
+        }
+    }
+    public setBorderThickness(idx: number, thickness: number, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            const api = this.__repo.start("setBorderThickness", {});
+            api.setBorderThickness(this.__page, this.__shape, idx, thickness);
+            this.__repo.commit();
+        }
+    }
+    public setBorderPosition(idx: number, position: BorderPosition, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            const api = this.__repo.start("setBorderPosition", {});
+            api.setBorderPosition(this.__page, this.__shape, idx, position);
+            this.__repo.commit();
+        }
+    }
+    public setBorderStyle(idx: number, borderStyle: BorderStyle, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            const api = this.__repo.start("setBorderStyle", {});
+            api.setBorderStyle(this.__page, this.__shape, idx, borderStyle);
+            this.__repo.commit();
+        }
+    }
+
+    public deleteBorder(idx: number, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            const api = this.__repo.start("deleteBorder", {});
+            api.deleteBorderAt(this.__page, this.__shape, idx)
+            this.__repo.commit();
+        }
+    }
+    public addBorder(border: Border, range?: { rowStart: number, rowEnd: number, celStart: number, celEnd: number }) {
+        const api = this.__repo.start("addBorder", {});
+        api.addBorderAt(this.__page, this.__shape, border, this.__shape.style.borders.length);
+        this.__repo.commit();
     }
 }
