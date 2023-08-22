@@ -147,11 +147,11 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
     const grid: Grid<TableCell | boolean> = new Grid<TableCell | boolean>(rowHeights.length, colWidths.length);
 
     const cells = table.childs;
-    const cellLen = cells.length;
+    // const cellLen = cells.length;
     let celli = 0;
 
-    for (let ri = 0, rowLen = rowHeights.length; ri < rowLen && celli < cellLen && ri < rowStart; ++ri) {
-        for (let ci = 0, colLen = colWidths.length; ci < colLen && celli < cellLen; ++ci, ++celli) {
+    for (let ri = 0, rowLen = rowHeights.length; ri < rowLen && ri < rowStart; ++ri) {
+        for (let ci = 0, colLen = colWidths.length; ci < colLen; ++ci, ++celli) {
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
             // fix span
@@ -171,8 +171,8 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
             }
         }
     }
-    for (let ri = rowStart, rowLen = rowHeights.length; ri < rowLen && celli < cellLen && ri <= rowEnd; ++ri) {
-        for (let ci = 0, colLen = colWidths.length; ci < colLen && celli < cellLen && ci < colStart; ++ci, ++celli) {
+    for (let ri = rowStart, rowLen = rowHeights.length; ri < rowLen && ri <= rowEnd; ++ri) {
+        for (let ci = 0, colLen = colWidths.length; ci < colLen && ci < colStart; ++ci, ++celli) {
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
             // fix span
@@ -191,7 +191,7 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
                 }
             }
         }
-        for (let ci = colStart, colLen = colWidths.length; ci < colLen && celli < cellLen && ci <= colEnd; ++ci, ++celli) {
+        for (let ci = colStart, colLen = colWidths.length; ci < colLen && ci <= colEnd; ++ci, ++celli) {
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
             // ret.push(c);
@@ -211,7 +211,7 @@ export function getTableVisibleCells(table: TableShape, rowStart: number, rowEnd
                 }
             }
         }
-        for (let ci = colEnd + 1, colLen = colWidths.length; ci < colLen && celli < cellLen; ++ci, ++celli) {
+        for (let ci = colEnd + 1, colLen = colWidths.length; ci < colLen; ++ci, ++celli) {
             if (grid.get(ri, ci)) continue;
             const c = cells[celli];
             // fix span
