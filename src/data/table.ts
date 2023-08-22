@@ -357,7 +357,7 @@ export class TableShape extends Shape implements classes.TableShape {
      * @returns 
      */
     getNotCoveredCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
-        return getTableNotCoveredCells(this, rowStart, rowEnd, colStart, colEnd);
+        return getTableNotCoveredCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
     }
 
     /**
@@ -369,6 +369,6 @@ export class TableShape extends Shape implements classes.TableShape {
      * @returns 
      */
     getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
-        return getTableVisibleCells(this, rowStart, rowEnd, colStart, colEnd);
+        return getTableVisibleCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
     }
 }
