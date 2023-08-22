@@ -236,7 +236,8 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
 export function newCell(): TableCell {
     return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
         new BasicArray<Border>(),
-        new BasicArray<Fill>()
+        new BasicArray<Fill>(),
+        new BasicArray<Shadow>()
     ))
 }
 
