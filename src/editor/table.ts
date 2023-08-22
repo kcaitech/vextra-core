@@ -183,14 +183,18 @@ export class TableEditor extends ShapeEditor {
             // merge content
             cellsVisible.forEach((c) => {
                 if (!c.cell || (c.cell.cellType ?? TableCellType.None) === TableCellType.None) return;
+                if (c.rowIdx === cell.rowIdx && c.colIdx === cell.colIdx) return;
                 if (c.cell.cellType === TableCellType.Image) {
                     // 图片咋搞？
                     if ((cell.cell?.cellType ?? TableCellType.None) === TableCellType.None) {
-                        api.tableSetCellContentType(this.__page, this.shape, c.rowIdx, c.colIdx, TableCellType.Image);
+                        api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.Image);
                         api.tableSetCellContentImage(this.__page, this.shape, cell.rowIdx, cell.colIdx, c.cell.imageRef);
                     }
                 }
                 else if (c.cell.cellType === TableCellType.Text) {
+                    if ((cell.cell?.cellType ?? TableCellType.None) === TableCellType.None) {
+                        api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.Text);
+                    }
                     if (cell.cell?.cellType === TableCellType.Text) {
                         if (c.cell.text) {
                             const clen = c.cell.text.length;
