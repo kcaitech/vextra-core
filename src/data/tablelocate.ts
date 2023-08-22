@@ -3,19 +3,23 @@ import { TableGridItem } from "./tablelayout";
 
 export function locateCell(layout: TableLayout, x: number, y: number): TableGridItem | undefined {
 
-    const grid = layout.grid;
-    for (let ri = 0, rlen = grid.rowCount; ri < rlen; ++ri) {
-        const c0 = grid.get(ri, 0);
-        const frame = c0.frame;
-        if (y > frame.y + frame.height) continue;
+    let curY = 0;
+    for (let ri = 0, rlen = layout.rowHeights.length; ri < rlen; ++ri) {
 
-        for (let ci = 0, clen = grid.colCount; ci < clen; ++ci) {
-            const cl = grid.get(ri, ci);
-            const frame = cl.frame;
-            if (x > frame.x + frame.width) continue;
+        const rowHeight = layout.rowHeights[ri];
+        curY += rowHeight;
+        if (y > curY) continue;
 
-            return cl;
+        let curX = 0;
+        for (let ci = 0, clen = layout.colWidths.length; ci < clen; ++ci) {
+
+            const colWidth = layout.colWidths[ci];
+            curX += colWidth;
+            if (x > curX) continue;
+
+            return layout.grid.get(ri, ci);
         }
+
         break;
     }
 }
