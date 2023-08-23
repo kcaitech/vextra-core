@@ -1,4 +1,6 @@
 import { GroupShape, ShapeType } from "../data/classes";
+import { render as fillR } from "./fill";
+import { render as borderR } from "./border";
 
 export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>): Array<any> {
     const childs: Array<any> = [];
@@ -18,8 +20,15 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
 
-    const childs: Array<any> = renderGroupChilds(h, shape, comsMap);
     const frame = shape.frame;
+    const path = shape.getPath().toString();
+    const childs: Array<any> = [];
+    // fill
+    childs.push(...fillR(h, shape.style.fills, frame, path));
+    // childs
+    childs.push(...renderGroupChilds(h, shape, comsMap));
+    // border
+    childs.push(...borderR(h, shape.style.borders, frame, path));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
