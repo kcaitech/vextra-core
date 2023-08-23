@@ -919,7 +919,9 @@ export class TableEditor extends ShapeEditor {
             if (range) {
                 const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
                 cells.forEach((cell) => {
-                    if (cell.cell) api.addFillAt(this.__page, cell.cell, fill, cell.cell.style.fills.length);
+                    if (cell.cell) {
+                        api.addFillAt(this.__page, cell.cell, fill, cell.cell.style.fills.length);
+                    }
                     else {
                         api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.None);
                         const c = this.shape.getCellAt(cell.rowIdx, cell.colIdx);
@@ -1116,8 +1118,17 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("addBorder", {});
         try {
             if (range) {
-                this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
-                    if (cell.cell) api.addBorderAt(this.__page, cell.cell, border, cell.cell.style.borders.length);
+                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
+                cells.forEach((cell) => {
+                    if (cell.cell) {
+                        api.addBorderAt(this.__page, cell.cell, border, cell.cell.style.borders.length);
+                    }
+                    else {
+                        api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.None);
+                        const c = this.shape.getCellAt(cell.rowIdx, cell.colIdx);
+                        if (!c) throw new Error("init cell fail?")
+                        api.addBorderAt(this.__page, c, border, c.style.borders.length);
+                    }
                 })
             }
             else {
