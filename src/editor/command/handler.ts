@@ -403,6 +403,14 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.textBehaviour,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const op = cmd.ops[0];
+                    if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
+                        const index = op.targetId[1] as TableIndex;
+                        shape = shape.getCellAt(index.rowIdx, index.colIdx) as Shape;
+                        if (!shape) {
+                            throw new Error("table cell not find")
+                        }
+                    }
                     const textBehaviour = value as types.TextBehaviour
                     api.shapeModifyTextBehaviour(page, shape as TextShapeLike, textBehaviour ?? types.TextBehaviour.Flexible);
                 }
@@ -410,6 +418,14 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.textVerAlign,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const op = cmd.ops[0];
+                    if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
+                        const index = op.targetId[1] as TableIndex;
+                        shape = shape.getCellAt(index.rowIdx, index.colIdx) as Shape;
+                        if (!shape) {
+                            throw new Error("table cell not find")
+                        }
+                    }
                     const textVerAlign = value as types.TextVerAlign
                     const text = (shape as TextShapeLike).text;
                     api.shapeModifyTextVerAlign(text, textVerAlign ?? types.TextVerAlign.Top);
@@ -418,6 +434,14 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.textTransform,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const op = cmd.ops[0];
+                    if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
+                        const index = op.targetId[1] as TableIndex;
+                        shape = shape.getCellAt(index.rowIdx, index.colIdx) as Shape;
+                        if (!shape) {
+                            throw new Error("table cell not find")
+                        }
+                    }
                     const text = (shape as TextShapeLike).text;
                     api.shapeModifyTextTransform(text, value as TextTransformType);
                 }
