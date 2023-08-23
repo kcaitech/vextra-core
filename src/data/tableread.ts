@@ -13,15 +13,14 @@ export function getTableCells(table: TableShape, rowStart: number, rowEnd: numbe
     const colWidths = table.colWidths;
 
     const cells = table.childs;
-    const cellLen = cells.length;
     let celli = 0;
 
     const ret: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] = [];
     celli += rowStart * rowHeights.length;
 
-    for (let ri = rowStart, rowLen = rowHeights.length; ri < rowLen && celli < cellLen && ri <= rowEnd; ++ri) {
+    for (let ri = rowStart, rowLen = rowHeights.length; ri < rowLen && ri <= rowEnd; ++ri) {
         celli += colStart;
-        for (let ci = colStart, colLen = colWidths.length; ci < colLen && celli < cellLen && ci <= colEnd; ++ci, ++celli) {
+        for (let ci = colStart, colLen = colWidths.length; ci < colLen && ci <= colEnd; ++ci, ++celli) {
             const c = cells[celli];
             ret.push({
                 cell: c,

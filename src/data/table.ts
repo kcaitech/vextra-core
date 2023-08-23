@@ -99,15 +99,8 @@ export class TableCell extends Shape implements classes.TableCell {
         const indexCell = table.indexOfCell(this);
         if (!indexCell || !indexCell.visible) return;
 
-        const total = table.colWidths.reduce((pre, cur) => pre + cur, 0);
-        const colSpan = this.colSpan ?? 1;
-        let weight = table.colWidths[indexCell.colIdx];
-        for (let i = 1; i < colSpan; ++i) {
-            weight += table.colWidths[indexCell.colIdx + i];
-        }
-
-        const width = weight / total * table.frame.width;
-        this.text.updateSize(width, 0);
+        const cellLayout = table.getLayout().grid.get(indexCell.rowIdx, indexCell.colIdx);
+        this.text.updateSize(cellLayout.frame.width, cellLayout.frame.height);
         return this.text.getLayout();
     }
 
