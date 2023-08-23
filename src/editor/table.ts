@@ -242,6 +242,26 @@ export class TableEditor extends ShapeEditor {
             this.__repo.rollback();
         }
     }
+    // 批量初始化单元格
+    initCells(rs: number, re: number, cs: number, ce: number) {
+        const api = this.__repo.start('initCells', {});
+        try {
+            for (let r = rs; r <= re; r++) {
+                for (let c = cs; c <= ce; c++) {
+                    const _text = newText(this.shape.textAttr);
+                    _text.setTextBehaviour(TextBehaviour.Fixed);
+                    _text.setPadding(5, 0, 3, 0);
+                    api.tableSetCellContentType(this.__page, this.shape, r, c, TableCellType.Text);
+                    api.tableSetCellContentText(this.__page, this.shape, r, c, _text);
+                    api.tableSetCellContentImage(this.__page, this.shape, r, c, undefined);
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
 
     // 调整列宽
     setColWidth(idx: number, width: number) {
