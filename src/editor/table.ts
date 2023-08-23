@@ -345,6 +345,23 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
+    insertMultiRow(idx: number, height: number, count: number, data?: TableCell[][]) {
+        const total = this.shape.rowHeights.reduce((pre, h) => pre + h, 0);
+        const weight = height / this.shape.frame.height * total;
+        const api = this.__repo.start('insertMultiRow', {});
+        try {
+            for (let i = 0; i < count; ++i) {
+                const d = data && data[i]
+                api.tableInsertRow(this.__page, this.shape, idx + i, weight, d ?? []);
+            }
+            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height + height * count);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
     removeRow(idx: number, idxEnd?: number) {
         idxEnd = idxEnd ?? idx;
         let count = idxEnd - idx + 1;
@@ -377,6 +394,23 @@ export class TableEditor extends ShapeEditor {
         try {
             api.tableInsertCol(this.__page, this.shape, idx, weight, data ?? []);
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width + width, this.shape.frame.height);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    insertMultiCol(idx: number, width: number, count: number, data?: TableCell[][]) {
+        const total = this.shape.colWidths.reduce((pre, h) => pre + h, 0);
+        const weight = width / this.shape.frame.width * total;
+        const api = this.__repo.start('insertMultiCol', {});
+        try {
+            for (let i = 0; i < count; ++i) {
+                const d = data && data[i]
+                api.tableInsertCol(this.__page, this.shape, idx + i, weight, d ?? []);
+            }
+            api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width + width * count, this.shape.frame.height);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
