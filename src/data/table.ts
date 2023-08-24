@@ -77,7 +77,7 @@ export class TableCell extends Shape implements classes.TableCell {
 
     // image
     peekImage() {
-        return this.__cacheData?.base64 || defaut;
+        return this.__cacheData?.base64;
     }
     // image shape
     async loadImage(): Promise<string> {
@@ -85,7 +85,7 @@ export class TableCell extends Shape implements classes.TableCell {
         if (!this.imageRef) return "";
         const mediaMgr = (this.parent as TableShape).__imageMgr;
         this.__cacheData = mediaMgr && await mediaMgr.get(this.imageRef)
-        return this.__cacheData && this.__cacheData.base64 || defaut;
+        return this.__cacheData && this.__cacheData.base64 || "";
     }
 
     // text
