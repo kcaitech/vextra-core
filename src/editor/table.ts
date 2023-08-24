@@ -83,7 +83,7 @@ export class TableEditor extends ShapeEditor {
                 api.tableModifyRowHeight(this.__page, this.shape, rowIdx, weight);
                 const cells = this.shape.getVisibleCells(rowIdx, rowIdx, 0, this.shape.colWidths.length);
                 cells.forEach((c) => {
-                    if (c.rowIdx !== rowIdx && c.colIdx !== colIdx) {
+                    if (c.rowIdx !== rowIdx || c.colIdx !== colIdx) {
                         api.tableModifyCellSpan(this.__page, this.shape, c.rowIdx, c.colIdx, (c.cell?.rowSpan ?? 1) + 1, c.cell?.colSpan ?? 1);
                     }
                 });
@@ -153,7 +153,7 @@ export class TableEditor extends ShapeEditor {
                 api.tableModifyColWidth(this.__page, this.shape, colIdx, weight);
                 const cells = this.shape.getVisibleCells(0, this.shape.rowCount, colIdx, colIdx);
                 cells.forEach((c) => {
-                    if (c.rowIdx !== rowIdx && c.colIdx !== colIdx) {
+                    if (c.rowIdx !== rowIdx || c.colIdx !== colIdx) {
                         api.tableModifyCellSpan(this.__page, this.shape, c.rowIdx, c.colIdx, (c.cell?.rowSpan ?? 1), (c.cell?.colSpan ?? 1) + 1);
                     }
                 });
