@@ -976,6 +976,48 @@ export class TableEditor extends ShapeEditor {
             this.__repo.rollback();
         }
     }
+    public addFill4Multi(fill: Fill, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("addFill4Multi", {});
+        try {
+            const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
+            for (let i = 0, len = cells.length; i < len; i++) {
+                const c = cells[i];
+                if (c.cell) {
+                    api.deleteFills(this.__page, c.cell, 0, c.cell.style.fills.length);
+                    api.addFillAt(this.__page, c.cell, fill, 0);
+                } else {
+                    const init_c = this.shape.getCellAt(c.rowIdx, c.colIdx, true);
+                    if (!init_c) throw new Error("init cell fail?")
+                    api.addFillAt(this.__page, init_c, fill, 0);
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+    public addBorder4Multi(border: Border, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("addBorder4Multi", {});
+        try {
+            const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
+            for (let i = 0, len = cells.length; i < len; i++) {
+                const c = cells[i];
+                if (c.cell) {
+                    api.deleteBorders(this.__page, c.cell, 0, c.cell.style.borders.length);
+                    api.addBorderAt(this.__page, c.cell, border, 0);
+                } else {
+                    const init_c = this.shape.getCellAt(c.rowIdx, c.colIdx, true);
+                    if (!init_c) throw new Error("init cell fail?")
+                    api.addBorderAt(this.__page, init_c, border, 0);
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
     public setFillColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const fill: Fill = this.__shape.style.fills[idx];
         if (!fill) return;
