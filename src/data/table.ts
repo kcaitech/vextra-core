@@ -96,11 +96,16 @@ export class TableCell extends Shape implements classes.TableCell {
     getLayout(): TextLayout | undefined {
         if (!this.text) return;
         const table = this.parent as TableShape;
-        const indexCell = table.indexOfCell(this);
-        if (!indexCell || !indexCell.visible) return;
+        const indexCell = table.indexOfCell2(this);
+        if (!indexCell) return;
 
-        const cellLayout = table.getLayout().grid.get(indexCell.rowIdx, indexCell.colIdx);
-        this.text.updateSize(cellLayout.frame.width, cellLayout.frame.height);
+        const widthWeight = table.colWidths[indexCell.colIdx];
+        const heightWeight = table.rowHeights[indexCell.rowIdx];
+
+        const width = widthWeight / table.widthTotalWeights * table.frame.width;
+        const height = heightWeight / table.heightTotalWeights * table.frame.height;
+        this.text.updateSize(width, height);
+
         return this.text.getLayout();
     }
 
@@ -152,6 +157,8 @@ export class TableShape extends Shape implements classes.TableShape {
     __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __layout?: TableLayout;
     private __cellIndexs: Map<string, number> = new Map();
+    private __heightTotalWeights: number;
+    private __widthTotalWeights: number;
 
     constructor(
         id: string,
@@ -173,6 +180,8 @@ export class TableShape extends Shape implements classes.TableShape {
         this.rowHeights = rowHeights
         this.colWidths = colWidths
         this.childs = childs;
+        this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur, 0);
+        this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur, 0);
     }
 
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
@@ -183,10 +192,15 @@ export class TableShape extends Shape implements classes.TableShape {
         return false;
     }
 
+    get widthTotalWeights() {
+        return this.__widthTotalWeights;
+    }
+    get heightTotalWeights() {
+        return this.__heightTotalWeights;
+    }
     get rowCount() {
         return this.rowHeights.length;
     }
-
     get colCount() {
         return this.colWidths.length;
     }
@@ -221,34 +235,46 @@ export class TableShape extends Shape implements classes.TableShape {
         const rowHBase = rowHeights.reduce((sum, cur) => sum + cur, 0);
         return rowHeights.map((val) => val / rowHBase * height);
     }
-    insertRow(idx: number, height: number, data: (TableCell | undefined)[]) {
-        tableInsertRow(this, idx, height, data);
+    insertRow(idx: number, weight: number, data: (TableCell | undefined)[]) {
+        tableInsertRow(this, idx, weight, data);
+        this.__heightTotalWeights += weight;
         this.reLayout();
     }
     removeRow(idx: number): (TableCell | undefined)[] {
+        const weight = this.rowHeights[idx];
         const ret = tableRemoveRow(this, idx);
+        this.__heightTotalWeights -= weight;
         this.reLayout();
         return ret;
     }
-    insertCol(idx: number, width: number, data: (TableCell | undefined)[]) {
-        tableInsertCol(this, idx, width, data);
+    insertCol(idx: number, weight: number, data: (TableCell | undefined)[]) {
+        tableInsertCol(this, idx, weight, data);
+        this.__widthTotalWeights += weight;
         this.reLayout();
     }
     removeCol(idx: number): (TableCell | undefined)[] {
+        const weight = this.colWidths[idx];
         const ret = tableRemoveCol(this, idx);
+        this.__widthTotalWeights -= weight;
         this.reLayout();
         return ret;
     }
 
-    setColWidth(idx: number, width: number) {
+    setColWidth(idx: number, weight: number) {
         const colWidths = this.colWidths;
-        colWidths[idx] = width;
+        const origin = colWidths[idx];
+        colWidths[idx] = weight;
+        this.__widthTotalWeights -= origin;
+        this.__widthTotalWeights += weight;
         this.reLayout();
     }
 
-    setRowHeight(idx: number, height: number) {
+    setRowHeight(idx: number, weight: number) {
         const rowHeights = this.rowHeights;
-        rowHeights[idx] = height;
+        const origin = rowHeights[idx];
+        rowHeights[idx] = weight;
+        this.__heightTotalWeights -= origin;
+        this.__heightTotalWeights += weight;
         this.reLayout();
     }
 
@@ -292,6 +318,16 @@ export class TableShape extends Shape implements classes.TableShape {
             })
         }
         return this.__cellIndexs;
+    }
+
+    indexOfCell2(cell: TableCell): { rowIdx: number, colIdx: number } | undefined {
+        // cell indexs
+        const cellIndexs = this.getCellIndexs();
+        const index = cellIndexs.get(cell.id) ?? -1;
+        if (index < 0) return;
+        const rowIdx = Math.floor(index / this.colCount);
+        const colIdx = index % this.colCount;
+        return { rowIdx, colIdx }
     }
 
     indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
