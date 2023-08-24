@@ -303,7 +303,7 @@ export class TableEditor extends ShapeEditor {
 
     // 调整行高
     setRowHeight(idx: number, height: number) {
-        const total = this.shape.rowHeights.reduce((pre, h) => pre + h, 0);
+        const total = this.shape.heightTotalWeights;
         const curHeight = this.shape.rowHeights[idx] / total * this.shape.frame.height;
         if (height === curHeight) return;
         const weight = this.shape.rowHeights[idx] * height / curHeight;
@@ -336,7 +336,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     insertRow(idx: number, height: number, data?: TableCell[]) {
-        const total = this.shape.rowHeights.reduce((pre, h) => pre + h, 0);
+        const total = this.shape.heightTotalWeights;
         const weight = height / this.shape.frame.height * total;
         const api = this.__repo.start('insertRow', {});
         try {
@@ -350,7 +350,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     insertMultiRow(idx: number, height: number, count: number, data?: TableCell[][]) {
-        const total = this.shape.rowHeights.reduce((pre, h) => pre + h, 0);
+        const total = this.shape.heightTotalWeights;
         const weight = height / this.shape.frame.height * total;
         const api = this.__repo.start('insertMultiRow', {});
         try {
@@ -374,7 +374,7 @@ export class TableEditor extends ShapeEditor {
             return;
         }
 
-        const total = this.shape.rowHeights.reduce((pre, h) => pre + h, 0);
+        const total = this.shape.heightTotalWeights;
         const api = this.__repo.start('removeRow', {});
         try {
             let removeWeight = 0;
@@ -462,8 +462,8 @@ export class TableEditor extends ShapeEditor {
             return;
         }
 
-        const colTotal = this.shape.colWidths.reduce((pre, w) => pre + w, 0);
-        const rowTotal = this.shape.rowHeights.reduce((pre, h) => pre + h, 0);
+        const colTotal = this.shape.widthTotalWeights;
+        const rowTotal = this.shape.heightTotalWeights;
 
         const api = this.__repo.start('removeRowAndCol', {});
         try {

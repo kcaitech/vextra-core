@@ -1,3 +1,4 @@
+import { float_accuracy } from "basic/consts";
 import { TableShape, Page, Shape, Style, TextBehaviour, Text, TextShape, TableCell } from "../data/classes";
 
 interface _Api {
@@ -48,7 +49,7 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
     const height = heightWeight / table.heightTotalWeights * table.frame.height;
     shape.text.updateSize(width, height);
     const layout = shape.text.getLayout();
-    if (layout && layout.contentHeight > height) {
+    if (layout.contentHeight > (height + float_accuracy)) {
         // set row height
         const rowIdx = indexCell.rowIdx + rowSpan - 1;
         const curHeight = table.rowHeights[rowIdx] / table.heightTotalWeights * table.frame.height;
