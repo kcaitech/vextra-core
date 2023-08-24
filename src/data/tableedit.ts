@@ -21,8 +21,8 @@ export function tableRemoveRow(table: TableShape, idx: number) {
 }
 
 export function tableInsertCol(table: TableShape, idx: number, width: number, data: (TableCell | undefined)[]) {
-    const colCount = table.colWidths.length;
     table.colWidths.splice(idx, 0, width);
+    const colCount = table.colWidths.length;
     const childs = table.childs;
     for (let i = 0, count = table.rowHeights.length; i < count; ++i) {
         const cell = data[i];
