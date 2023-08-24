@@ -3,11 +3,15 @@ import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { newText } from "./creator";
-import { BorderPosition, BorderStyle, ShapeType, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
+import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
 import { Border, Color, Fill } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils";
 import { Api } from "./command/recordapi";
+
+const MinCellSize = TableShape.MinCellSize;
+const MaxColCount = TableShape.MaxColCount;
+const MaxRowCount = TableShape.MaxRowCount;
 
 export class TableEditor extends ShapeEditor {
 

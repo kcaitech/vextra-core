@@ -3,7 +3,7 @@ import { Page } from "data/page";
 import { TableShape } from "../data/table";
 import { Api } from "./command/recordapi";
 
-const MinCellSize = 10;
+const MinCellSize = TableShape.MinCellSize;
 
 /**
  * 
@@ -22,7 +22,7 @@ export function adjColum(page: Page, table: TableShape, fromIdx: number, toIdx: 
     if (fromIdx >= colWidths.length || toIdx >= colWidths.length) {
         return;
     }
-    const total = colWidths.reduce((pre, cur) => pre + cur, 0);
+    const total = table.widthTotalWeights;
     const frame = table.frame;
 
     let fromWidth = colWidths[fromIdx] / total * frame.width;
@@ -63,7 +63,7 @@ export function adjRow(page: Page, table: TableShape, fromIdx: number, toIdx: nu
     if (fromIdx >= rowHeights.length || toIdx >= rowHeights.length) {
         return;
     }
-    const total = rowHeights.reduce((pre, cur) => pre + cur, 0);
+    const total = table.heightTotalWeights;
     const frame = table.frame;
 
     let fromHeight = rowHeights[fromIdx] / total * frame.height;
