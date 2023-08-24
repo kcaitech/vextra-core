@@ -406,7 +406,7 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
                     const op = cmd.ops[0];
                     if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
                         const index = op.targetId[1] as TableIndex;
-                        shape = shape.getCellAt(index.rowIdx, index.colIdx) as Shape;
+                        shape = shape.getCellAt(index.rowIdx, index.colIdx, true) as Shape;
                         if (!shape) {
                             throw new Error("table cell not find")
                         }
@@ -421,7 +421,7 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
                     const op = cmd.ops[0];
                     if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
                         const index = op.targetId[1] as TableIndex;
-                        shape = shape.getCellAt(index.rowIdx, index.colIdx) as Shape;
+                        shape = shape.getCellAt(index.rowIdx, index.colIdx, true) as Shape;
                         if (!shape) {
                             throw new Error("table cell not find")
                         }
@@ -437,7 +437,7 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
                     const op = cmd.ops[0];
                     if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
                         const index = op.targetId[1] as TableIndex;
-                        shape = shape.getCellAt(index.rowIdx, index.colIdx) as Shape;
+                        shape = shape.getCellAt(index.rowIdx, index.colIdx, true) as Shape;
                         if (!shape) {
                             throw new Error("table cell not find")
                         }

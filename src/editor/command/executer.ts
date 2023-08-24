@@ -342,7 +342,7 @@ export class CMDExecuter {
         let shape: Shape | undefined = _shape;
         if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
             const index = op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
             if (!shape) {
                 throw new Error("table cell not find")
             }
@@ -377,7 +377,7 @@ export class CMDExecuter {
         let shape: Shape | undefined = _shape;
         if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
             const index = op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
             if (!shape) {
                 throw new Error("table cell not find")
             }
@@ -412,7 +412,7 @@ export class CMDExecuter {
         let shape: Shape | undefined = _shape;
         if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
             const index = _op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
             if (!shape) {
                 throw new Error("table cell not find")
             }
@@ -606,7 +606,7 @@ export class CMDExecuter {
         let shape: Shape | undefined = _shape;
         if (_shape instanceof TableShape && op0.targetId[1] instanceof TableIndex) {
             const index = op0.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
             if (!shape) {
                 throw new Error("table cell not find")
             }
@@ -644,7 +644,7 @@ export class CMDExecuter {
         let shape: Shape | undefined = _shape;
         if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
             const index = _op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
             if (!shape) {
                 throw new Error("table cell not find")
             }
@@ -681,7 +681,7 @@ export class CMDExecuter {
         let shape: Shape | undefined = _shape;
         if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
             const index = _op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
             if (!shape) {
                 throw new Error("table cell not find")
             }
@@ -708,7 +708,7 @@ export class CMDExecuter {
         let shape: Shape | undefined = _shape;
         if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
             const index = _op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx);
+            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
             if (!shape) {
                 throw new Error("table cell not find")
             }

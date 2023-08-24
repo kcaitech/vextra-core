@@ -19,7 +19,8 @@ import {
     Span,
     ParaAttr,
     TextAttr,
-    BorderStyle} from "../data/classes";
+    BorderStyle
+} from "../data/classes";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
@@ -233,31 +234,21 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
 export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>): TableShape {
     template_table_shape.id = uuid();
     template_table_shape.name = name // i18n
+    template_table_shape.rowHeights.length = 0;
+    template_table_shape.colWidths.length = 0;
+    // 行高
+    for (let ri = 0; ri < rowCount; ri++) {
+        template_table_shape.rowHeights.push(1 as never);
+    }
+    // 列宽
+    for (let ci = 0; ci < columCount; ci++) {
+        template_table_shape.colWidths.push(1 as never);
+    }
     const table = importTableShape(template_table_shape as types.TableShape);
     table.frame = frame;
     addCommonAttr(table)
 
     table.setImageMgr(mediasMgr);
-
-    // cells
-    // const cellCount = columCount * rowCount;
-    // for (let ci = 0; ci < cellCount; ci++) {
-    //     template_table_cell.id = uuid();
-        // const cell = importTableCell(template_table_cell as types.TableCell);
-        // cell.setImageMgr(mediasMgr);
-        // table.childs.push(cell);
-    // }
-
-    // 行高
-    const rowHeight = 1 / rowCount;
-    for (let ri = 0; ri < rowCount; ri++) {
-        table.rowHeights.push(rowHeight);
-    }
-    // 列宽
-    const colWidth = 1 / columCount;
-    for (let ci = 0; ci < columCount; ci++) {
-        table.colWidths.push(colWidth);
-    }
 
     return table;
 }

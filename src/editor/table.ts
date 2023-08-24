@@ -957,8 +957,7 @@ export class TableEditor extends ShapeEditor {
                         api.addFillAt(this.__page, cell.cell, fill, cell.cell.style.fills.length);
                     }
                     else {
-                        api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.None);
-                        const c = this.shape.getCellAt(cell.rowIdx, cell.colIdx);
+                        const c = this.shape.getCellAt(cell.rowIdx, cell.colIdx, true);
                         if (!c) throw new Error("init cell fail?")
                         api.addFillAt(this.__page, c, fill, c.style.fills.length);
                     }
@@ -1158,8 +1157,7 @@ export class TableEditor extends ShapeEditor {
                         api.addBorderAt(this.__page, cell.cell, border, cell.cell.style.borders.length);
                     }
                     else {
-                        api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.None);
-                        const c = this.shape.getCellAt(cell.rowIdx, cell.colIdx);
+                        const c = this.shape.getCellAt(cell.rowIdx, cell.colIdx, true);
                         if (!c) throw new Error("init cell fail?")
                         api.addBorderAt(this.__page, c, border, c.style.borders.length);
                     }
