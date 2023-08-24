@@ -20,9 +20,9 @@ export function layoutTable(table: TableShape): TableLayout {
     const width = frame.width;
     const height = frame.height;
     const rowHeights = table.rowHeights;
-    const rowHBase = rowHeights.reduce((sum, cur) => sum + cur, 0);
+    const rowHBase = table.heightTotalWeights;
     const colWidths = table.colWidths;
-    const colWBase = colWidths.reduce((sum, cur) => sum + cur, 0);
+    const colWBase = table.widthTotalWeights;
 
     let celli = 0;
 

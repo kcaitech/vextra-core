@@ -14,16 +14,16 @@ export function tableInsertRow(table: TableShape, idx: number, height: number, d
 }
 
 export function tableRemoveRow(table: TableShape, idx: number) {
+    const colCount = table.colWidths.length;
     table.rowHeights.splice(idx, 1);
     const childs = table.childs;
-    const colCount = table.colWidths.length;
     return childs.splice(idx * colCount, colCount);
 }
 
 export function tableInsertCol(table: TableShape, idx: number, width: number, data: (TableCell | undefined)[]) {
     table.colWidths.splice(idx, 0, width);
-    const childs = table.childs;
     const colCount = table.colWidths.length;
+    const childs = table.childs;
     for (let i = 0, count = table.rowHeights.length; i < count; ++i) {
         const cell = data[i];
         // if (!cell) throw new Error("cell is undefined")
@@ -32,9 +32,9 @@ export function tableInsertCol(table: TableShape, idx: number, width: number, da
 }
 
 export function tableRemoveCol(table: TableShape, idx: number) {
+    const colCount = table.colWidths.length;
     table.colWidths.splice(idx, 1);
     const childs = table.childs;
-    const colCount = table.colWidths.length;
     const removed = [];
     for (let i = 0, count = table.rowHeights.length; i < count; ++i) {
         removed.push(...childs.splice(i * colCount + idx - i, 1));
