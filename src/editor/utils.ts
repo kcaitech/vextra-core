@@ -29,22 +29,29 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
 export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCell) {
     if (!shape.text) return;
     const table = shape.parent as TableShape;
-    const indexCell = table.indexOfCell(shape);
-    if (!indexCell || !indexCell.visible) return;
+    const indexCell = table.indexOfCell2(shape);
+    if (!indexCell) return;
 
-    const total = table.rowHeights.reduce((pre, cur) => pre + cur, 0);
-    const rowSpan = shape.rowSpan ?? 1;
-    let weight = table.rowHeights[indexCell.rowIdx];
-    for (let i = 1; i < rowSpan; ++i) {
-        weight += table.rowHeights[indexCell.rowIdx + i];
+    const rowSpan = Math.max(shape.rowSpan ?? 1, 1);
+    const colSpan = Math.max(shape.colSpan ?? 1, 1);
+
+    let widthWeight = table.colWidths[indexCell.colIdx];
+    for (let i = 1; i < colSpan; ++i) {
+        widthWeight += table.colWidths[indexCell.colIdx + i];
     }
-    const height = weight / total * table.frame.height;
+    let heightWeight = table.rowHeights[indexCell.rowIdx];
+    for (let i = 1; i < rowSpan; ++i) {
+        heightWeight += table.rowHeights[indexCell.rowIdx + i];
+    }
 
+    const width = widthWeight / table.widthTotalWeights * table.frame.width;
+    const height = heightWeight / table.heightTotalWeights * table.frame.height;
+    shape.text.updateSize(width, height);
     const layout = shape.text.getLayout();
-    if (layout.contentHeight > height) {
+    if (layout && layout.contentHeight > height) {
         // set row height
         const rowIdx = indexCell.rowIdx + rowSpan - 1;
-        const curHeight = table.rowHeights[rowIdx] / total * table.frame.height;
+        const curHeight = table.rowHeights[rowIdx] / table.heightTotalWeights * table.frame.height;
         const weight = (curHeight + layout.contentHeight - height) / curHeight * table.rowHeights[rowIdx];
         api.tableModifyRowHeight(page, table, rowIdx, weight);
         api.shapeModifyWH(page, table, table.frame.width, table.frame.height + layout.contentHeight - height);
