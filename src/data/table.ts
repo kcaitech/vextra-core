@@ -148,6 +148,11 @@ export function newCell(): TableCell {
 }
 
 export class TableShape extends Shape implements classes.TableShape {
+
+    static MinCellSize = 10;
+    static MaxRowCount = 50;
+    static MaxColCount = 50;
+
     typeId = 'table-shape'
     childs: BasicArray<(TableCell | undefined)>
     rowHeights: BasicArray<number>
