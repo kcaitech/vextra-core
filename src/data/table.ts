@@ -208,10 +208,20 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     get widthTotalWeights() {
-        return this.__widthTotalWeights;
+        return this.colWidths.reduce((p, c) => p + c, 0);;
+        // const total = this.colWidths.reduce((p, c) => p + c, 0);
+        // if (total !== this.__widthTotalWeights) {
+        //     console.log(new Error())
+        // }
+        // return this.__widthTotalWeights;
     }
     get heightTotalWeights() {
-        return this.__heightTotalWeights;
+        return this.rowHeights.reduce((p, c) => p + c, 0);
+        // const total = this.rowHeights.reduce((p, c) => p + c, 0);
+        // if (total !== this.__widthTotalWeights) {
+        //     console.log(new Error())
+        // }
+        // return this.__heightTotalWeights;
     }
     get rowCount() {
         return this.rowHeights.length;
@@ -247,7 +257,7 @@ export class TableShape extends Shape implements classes.TableShape {
         const frame = this.frame;
         const height = frame.height;
         const rowHeights = this.rowHeights;
-        const rowHBase = rowHeights.reduce((sum, cur) => sum + cur, 0);
+        const rowHBase = this.heightTotalWeights;
         return rowHeights.map((val) => val / rowHBase * height);
     }
     insertRow(idx: number, weight: number, data: (TableCell | undefined)[]) {
@@ -303,6 +313,9 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     reLayout() {
+        // this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c, 0);
+        // this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c, 0);
+
         this.__layout = undefined;
         this.__cellIndexs.clear();
     }

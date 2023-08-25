@@ -201,6 +201,9 @@ export class Para extends Basic implements classes.Para {
 }
 
 export class Text extends Basic implements classes.Text {
+
+    static DefaultFontSize = 12;
+
     typeId = 'text'
     paras: BasicArray<Para>
     attr?: TextAttr
