@@ -228,6 +228,7 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     const img = new ImageShape(id, name, types.ShapeType.Image, frame, style, curvePoint, true, ref || '');
     img.setImageMgr(mediasMgr);
     addCommonAttr(img);
+    img.style.fills.length = 0;
     return img;
 }
 
