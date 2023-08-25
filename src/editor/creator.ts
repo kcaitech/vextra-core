@@ -247,8 +247,9 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     const table = importTableShape(template_table_shape as types.TableShape);
     table.frame = frame;
     addCommonAttr(table)
-
+    const fillColor = new Color(1, 255, 255, 255);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
+    table.style.fills.push(fill);
     table.setImageMgr(mediasMgr);
-
     return table;
 }
