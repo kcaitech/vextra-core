@@ -970,6 +970,8 @@ export class TableEditor extends ShapeEditor {
                         text.setPadding(5, 0, 3, 0);
                         api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.Text);
                         api.tableSetCellContentText(this.__page, this.shape, cell.rowIdx, cell.colIdx, text);
+                        const init_c = this.shape.getCellAt(cell.rowIdx, cell.colIdx);
+                        if (!init_c) throw new Error("init cell fail?");
                         api.addFillAt(this.__page, cell.cell!, fill, 0);
                     }
                 })
@@ -994,13 +996,15 @@ export class TableEditor extends ShapeEditor {
                     api.addFillAt(this.__page, c.cell, fill, 0);
                 } else {
                     // const init_c = this.shape.getCellAt(c.rowIdx, c.colIdx, true);
-                    // if (!init_c) throw new Error("init cell fail?") trap
+                    // if (!init_c) throw new Error("init cell fail?"); trap
                     const text = newText(this.shape.textAttr);
                     text.setTextBehaviour(TextBehaviour.Fixed);
                     text.setPadding(5, 0, 3, 0);
                     api.tableSetCellContentType(this.__page, this.shape, c.rowIdx, c.colIdx, TableCellType.Text);
                     api.tableSetCellContentText(this.__page, this.shape, c.rowIdx, c.colIdx, text);
-                    api.addFillAt(this.__page, c.cell!, fill, 0);
+                    const init_c = this.shape.getCellAt(c.rowIdx, c.colIdx);
+                    if (!init_c) continue;
+                    api.addFillAt(this.__page, init_c, fill, 0);
                 }
             }
             this.__repo.commit();
@@ -1194,7 +1198,12 @@ export class TableEditor extends ShapeEditor {
                         api.addBorderAt(this.__page, cell.cell, border, cell.cell.style.borders.length);
                     }
                     else {
-                        const c = this.shape.getCellAt(cell.rowIdx, cell.colIdx, true);
+                        const text = newText(this.shape.textAttr);
+                        text.setTextBehaviour(TextBehaviour.Fixed);
+                        text.setPadding(5, 0, 3, 0);
+                        api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.Text);
+                        api.tableSetCellContentText(this.__page, this.shape, cell.rowIdx, cell.colIdx, text);
+                        const c = this.shape.getCellAt(cell.rowIdx, cell.colIdx);
                         if (!c) throw new Error("init cell fail?")
                         api.addBorderAt(this.__page, c, border, c.style.borders.length);
                     }
@@ -1219,8 +1228,13 @@ export class TableEditor extends ShapeEditor {
                     api.deleteBorders(this.__page, c.cell, 0, c.cell.style.borders.length);
                     api.addBorderAt(this.__page, c.cell, border, 0);
                 } else {
-                    const init_c = this.shape.getCellAt(c.rowIdx, c.colIdx, true);
-                    if (!init_c) throw new Error("init cell fail?")
+                    const text = newText(this.shape.textAttr);
+                    text.setTextBehaviour(TextBehaviour.Fixed);
+                    text.setPadding(5, 0, 3, 0);
+                    api.tableSetCellContentType(this.__page, this.shape, c.rowIdx, c.colIdx, TableCellType.Text);
+                    api.tableSetCellContentText(this.__page, this.shape, c.rowIdx, c.colIdx, text);
+                    const init_c = this.shape.getCellAt(c.rowIdx, c.colIdx);
+                    if (!init_c) continue;
                     api.addBorderAt(this.__page, init_c, border, 0);
                 }
             }
