@@ -1,4 +1,4 @@
-import { float_accuracy } from "basic/consts";
+import { float_accuracy } from "../basic/consts";
 import { TableShape, Page, Shape, Style, TextBehaviour, Text, TextShape, TableCell } from "../data/classes";
 
 interface _Api {
