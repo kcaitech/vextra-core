@@ -972,7 +972,7 @@ export class TableEditor extends ShapeEditor {
                         api.tableSetCellContentText(this.__page, this.shape, cell.rowIdx, cell.colIdx, text);
                         const init_c = this.shape.getCellAt(cell.rowIdx, cell.colIdx);
                         if (!init_c) throw new Error("init cell fail?");
-                        api.addFillAt(this.__page, cell.cell!, fill, 0);
+                        api.addFillAt(this.__page, init_c, fill, 0);
                     }
                 })
             }
