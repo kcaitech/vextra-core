@@ -442,6 +442,7 @@ export class Api {
     // 删除一次fill
     deleteFillAt(page: Page, shape: Shape, index: number) {
         checkShapeAtPage(page, shape);
+        if (!shape.style.fills[index]) return;
         this.__trap(() => {
             const fill = basicapi.deleteFillAt(shape.style, index);
             if (fill) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, index, exportFill(fill)));
@@ -463,6 +464,7 @@ export class Api {
     // 删除一次border
     deleteBorderAt(page: Page, shape: Shape, index: number) {
         checkShapeAtPage(page, shape);
+        if (!shape.style.borders[index]) return;
         this.__trap(() => {
             const border = basicapi.deleteBorderAt(shape.style, index);
             if (border) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), BORDER_ID, border.id, index, exportBorder(border)));

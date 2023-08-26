@@ -1014,8 +1014,8 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setFillColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const fill: Fill = this.__shape.style.fills[idx];
-        if (!fill) return;
+        // const fill: Fill = this.__shape.style.fills[idx];
+        // if (!fill) return;
 
         const api = this.__repo.start("setFillColor", {});
         try {
@@ -1052,8 +1052,8 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public deleteFill(idx: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const fill = this.__shape.style.fills[idx];
-        if (!fill) return;
+        // const fill = this.__shape.style.fills[idx];
+        // if (!fill) return;
         const api = this.__repo.start("deleteFill", {});
         try {
             if (range) {
@@ -1073,8 +1073,8 @@ export class TableEditor extends ShapeEditor {
 
     // border
     public setBorderEnable(idx: number, isEnabled: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const border = this.__shape.style.borders[idx];
-        if (!border) return;
+        // const border = this.__shape.style.borders[idx];
+        // if (!border) return;
         const api = this.__repo.start("setBorderEnable", {});
         try {
             if (range) {
@@ -1092,8 +1092,8 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderColor(idx: number, color: Color, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const border = this.__shape.style.borders[idx];
-        if (!border) return;
+        // const border = this.__shape.style.borders[idx];
+        // if (!border) return;
 
         const api = this.__repo.start("setBorderColor", {});
         try {
@@ -1112,8 +1112,8 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderThickness(idx: number, thickness: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const border = this.__shape.style.borders[idx];
-        if (!border) return;
+        // const border = this.__shape.style.borders[idx];
+        // if (!border) return;
         const api = this.__repo.start("setBorderThickness", {});
         try {
             if (range) {
@@ -1131,8 +1131,8 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderPosition(idx: number, position: BorderPosition, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const border = this.__shape.style.borders[idx];
-        if (!border) return;
+        // const border = this.__shape.style.borders[idx];
+        // if (!border) return;
         const api = this.__repo.start("setBorderPosition", {});
         try {
             if (range) {
@@ -1150,8 +1150,8 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setBorderStyle(idx: number, borderStyle: BorderStyle, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const border = this.__shape.style.borders[idx];
-        if (!border) return;
+        // const border = this.__shape.style.borders[idx];
+        // if (!border) return;
         const api = this.__repo.start("setBorderStyle", {});
         try {
             if (range) {
@@ -1170,8 +1170,8 @@ export class TableEditor extends ShapeEditor {
     }
 
     public deleteBorder(idx: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const border = this.__shape.style.borders[idx];
-        if (!border) return;
+        // const border = this.__shape.style.borders[idx];
+        // if (!border) return;
         const api = this.__repo.start("deleteBorder", {});
         try {
             if (range) {
