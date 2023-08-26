@@ -401,7 +401,10 @@ export class TableShape extends Shape implements classes.TableShape {
         this.childs[index] = newCell();
         // add to index
         const cell = this.childs[index];
-        this.getCellIndexs().set(cell!.id, index);
+        // this.getCellIndexs().set(cell!.id, index);
+        if (this.__cellIndexs.size > 0) {
+            this.__cellIndexs.set(cell!.id, index)
+        }
         return cell;
     }
 
@@ -425,7 +428,11 @@ export class TableShape extends Shape implements classes.TableShape {
      * @param colEnd 
      * @returns 
      */
-    getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
+    getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number): {
+        cell: TableCell | undefined,
+        rowIdx: number,
+        colIdx: number
+    }[] {
         return getTableVisibleCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
     }
 }

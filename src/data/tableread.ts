@@ -69,8 +69,21 @@ export function getTableNotCoveredCells(table: TableShape, layout: TableLayout, 
 }
 
 // 获取用户实际看见的单元格
-export function getTableVisibleCells(table: TableShape, layout: TableLayout, rowStart: number, rowEnd: number, colStart: number, colEnd: number): { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] {
-    const ret: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] = [];
+export function getTableVisibleCells(table: TableShape,
+    layout: TableLayout,
+    rowStart: number,
+    rowEnd: number,
+    colStart: number,
+    colEnd: number): {
+        cell: TableCell | undefined,
+        rowIdx: number,
+        colIdx: number
+    }[] {
+    const ret: {
+        cell: TableCell | undefined,
+        rowIdx: number,
+        colIdx: number
+    }[] = [];
     const added: Set<string> = new Set();
     const grid = layout.grid;
     for (let ri = rowStart, rowLen = grid.rowCount; ri < rowLen && ri <= rowEnd; ++ri) {
@@ -80,16 +93,16 @@ export function getTableVisibleCells(table: TableShape, layout: TableLayout, row
             if (!cell) {
                 ret.push({
                     cell: undefined,
-                    rowIdx: ri,
-                    colIdx: ci
+                    rowIdx: c.index.row,
+                    colIdx: c.index.col
                 });
             }
             else {
                 if (added.has(cell.id)) continue;
                 ret.push({
                     cell,
-                    rowIdx: ri,
-                    colIdx: ci
+                    rowIdx: c.index.row,
+                    colIdx: c.index.col
                 });
                 added.add(cell.id);
             }
