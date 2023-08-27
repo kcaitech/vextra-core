@@ -2,7 +2,7 @@ import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2 } from 
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
-import { BoolOp, ShapeType } from "../data/baseclasses";
+import { BoolOp, CurvePoint, ShapeType } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
@@ -219,6 +219,13 @@ export class ShapeEditor {
     public addBorder(border: Border) {
         const api = this.__repo.start("addBorder", {});
         api.addBorderAt(this.__page, this.__shape, border, this.__shape.style.borders.length);
+        this.__repo.commit();
+    }
+
+    // points
+    public addPointAt(point: CurvePoint, idx: number) {
+        const api = this.__repo.start("addPointAt", {});
+        api.addPointAt(this.__page, this.__shape as PathShape, idx, point);
         this.__repo.commit();
     }
 

@@ -10,9 +10,9 @@ import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
-import { GroupShape, Shape, PathShape, PathShape2 } from "../../data/shape";
+import { GroupShape, Shape, PathShape, PathShape2, CurvePoint } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
@@ -579,6 +579,15 @@ export class Api {
             }
         })
     }
+    // points
+    addPointAt(page: Page, shape: PathShape, idx: number, point: CurvePoint) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            basicapi.addPointAt(shape, point, idx)
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), POINTS_ID, point.id, idx, exportCurvePoint(point)))
+        })
+    }
+    // text
     insertSimpleText(page: Page, shape: TextShapeLike, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {

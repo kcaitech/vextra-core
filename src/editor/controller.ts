@@ -1,7 +1,7 @@
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL, pathEdit, update_frame_by_points } from "./frame";
-import { Shape, GroupShape, PathShape } from "../data/shape";
+import { Shape, GroupShape, PathShape, CurvePoint, Point2D } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ShapeType } from "../data/typesdefine";
+import { CurveMode, ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
 import { newArrowShape, newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape } from "./creator";
 import { Page } from "../data/page";
@@ -13,6 +13,7 @@ import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
 import { Color } from "../data/style";
 import { afterModifyGroupShapeWH } from "./frame";
+import { uuid } from "../basic/uuid";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -74,6 +75,7 @@ export interface AsyncLineAction {
     close: () => undefined;
 }
 export interface AsyncPathEditor {
+    addNode: (index: number, raw: { x: number, y: number }) => void;
     execute: (index: number, end: PageXY) => void;
     close: () => undefined;
 }
@@ -480,6 +482,13 @@ export class Controller {
     public asyncPathEditor(shape: Shape, page: Page): AsyncPathEditor {
         const api = this.__repo.start("asyncPathEditor", {});
         let status: Status = Status.Pending;
+        const addNode = (index: number, raw: { x: number, y: number }) => {
+            status === Status.Pending
+            const p = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(raw.x, raw.y));
+            api.addPointAt(page, shape as PathShape, index, p);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
         const execute = (index: number, end: PageXY) => {
             status === Status.Pending
             pathEdit(api, page, shape, index, end);
@@ -497,7 +506,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { execute, close }
+        return { addNode, execute, close }
     }
 }
 function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
