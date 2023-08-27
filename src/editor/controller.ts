@@ -1,4 +1,4 @@
-import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL, pathEdit } from "./frame";
+import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL, pathEdit, update_frame_by_points } from "./frame";
 import { Shape, GroupShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
@@ -487,6 +487,9 @@ export class Controller {
             status = Status.Fulfilled;
         }
         const close = () => {
+            status = Status.Pending;
+            update_frame_by_points(api, page, shape);
+            status = Status.Fulfilled;
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
