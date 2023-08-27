@@ -792,3 +792,7 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
     api.shapeModifyY(page, s, f.y + delta.y);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
 }
+// 路径编辑
+export function pathEdit(api: Api, Page: Page, s: Shape, index: number) {
+
+}
