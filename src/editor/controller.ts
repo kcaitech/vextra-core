@@ -1,4 +1,4 @@
-import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL } from "./frame";
+import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL, pathEdit } from "./frame";
 import { Shape, GroupShape, PathShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ShapeType } from "../data/typesdefine";
@@ -71,6 +71,10 @@ export interface AsyncMultiAction {
 }
 export interface AsyncLineAction {
     execute: (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => void;
+    close: () => undefined;
+}
+export interface AsyncPathEditor {
+    execute: (index: number, end: PageXY) => void;
     close: () => undefined;
 }
 
@@ -472,6 +476,25 @@ export class Controller {
             return undefined;
         }
         return { migrate, trans, stick, close, transByWheel }
+    }
+    public asyncPathEditor(shape: Shape, page: Page): AsyncPathEditor {
+        const api = this.__repo.start("asyncPathEditor", {});
+        let status: Status = Status.Pending;
+        const execute = (index: number, end: PageXY) => {
+            status === Status.Pending
+            pathEdit(api, page, shape, index, end);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return { execute, close }
     }
 }
 function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
