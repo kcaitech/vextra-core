@@ -418,8 +418,8 @@ export class Text extends Basic implements classes.Text {
         this.__frameHeight = h;
     }
 
-    onRollback(): void {
-        this.reLayout();
+    onRollback(from: string): void {
+        if (from !== "composingInput") this.reLayout();
     }
 
     reLayout() {

@@ -208,20 +208,10 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     get widthTotalWeights() {
-        return this.colWidths.reduce((p, c) => p + c, 0);;
-        // const total = this.colWidths.reduce((p, c) => p + c, 0);
-        // if (total !== this.__widthTotalWeights) {
-        //     console.log(new Error())
-        // }
-        // return this.__widthTotalWeights;
+        return this.__widthTotalWeights;
     }
     get heightTotalWeights() {
-        return this.rowHeights.reduce((p, c) => p + c, 0);
-        // const total = this.rowHeights.reduce((p, c) => p + c, 0);
-        // if (total !== this.__widthTotalWeights) {
-        //     console.log(new Error())
-        // }
-        // return this.__heightTotalWeights;
+        return this.__heightTotalWeights;
     }
     get rowCount() {
         return this.rowHeights.length;
@@ -308,14 +298,24 @@ export class TableShape extends Shape implements classes.TableShape {
         this.reLayout();
     }
 
-    onRollback(): void {
-        this.reLayout();
+    onRollback(from: string): void {
+        if (from !== "composingInput") {
+            this.reLayout();
+            return;
+        }
+        const widthTotalWeights = this.colWidths.reduce((p, c) => p + c, 0);
+        const heightTotalWeights = this.rowHeights.reduce((p, c) => p + c, 0);
+        if (this.__widthTotalWeights !== widthTotalWeights ||
+            this.__heightTotalWeights !== heightTotalWeights) {
+            this.__widthTotalWeights = widthTotalWeights;
+            this.__heightTotalWeights = heightTotalWeights;
+            this.__layout = undefined;
+        }
     }
 
     reLayout() {
-        // this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c, 0);
-        // this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c, 0);
-
+        this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c, 0);
+        this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c, 0);
         this.__layout = undefined;
         this.__cellIndexs.clear();
     }
