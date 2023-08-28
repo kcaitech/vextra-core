@@ -8,6 +8,7 @@ import { adjColum, adjRow } from "./tableadjust";
 import { Border, Color, Fill } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils";
 import { Api } from "./command/recordapi";
+import { importBorder, importFill } from "../io/baseimport";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;
@@ -210,7 +211,7 @@ export class TableEditor extends ShapeEditor {
                 api.tableSetCellContentText(this.__page, this.shape, c.rowIdx, c.colIdx, undefined);
             })
             // todo 删除完全被覆盖的行列
-            
+
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -956,10 +957,13 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("addFill", {});
         try {
             if (range) {
+                const imageMgr = fill.getImageMgr();
                 const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
                 cells.forEach((cell) => {
+                    const newfill = importFill(fill);
+                    if (imageMgr) newfill.setImageMgr(imageMgr);
                     if (cell.cell) {
-                        api.addFillAt(this.__page, cell.cell, fill, cell.cell.style.fills.length);
+                        api.addFillAt(this.__page, cell.cell, newfill, cell.cell.style.fills.length);
                     }
                     else {
                         // const c = this.shape.getCellAt(cell.rowIdx, cell.colIdx, true);
@@ -973,7 +977,7 @@ export class TableEditor extends ShapeEditor {
                         api.tableSetCellContentText(this.__page, this.shape, cell.rowIdx, cell.colIdx, text);
                         const init_c = this.shape.getCellAt(cell.rowIdx, cell.colIdx);
                         if (!init_c) throw new Error("init cell fail?");
-                        api.addFillAt(this.__page, init_c, fill, 0);
+                        api.addFillAt(this.__page, init_c, newfill, 0);
                     }
                 })
             }
@@ -989,12 +993,15 @@ export class TableEditor extends ShapeEditor {
     public addFill4Multi(fill: Fill, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("addFill4Multi", {});
         try {
+            const imageMgr = fill.getImageMgr();
             const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
             for (let i = 0, len = cells.length; i < len; i++) {
                 const c = cells[i];
+                const newfill = importFill(fill);
+                if (imageMgr) newfill.setImageMgr(imageMgr);
                 if (c.cell) {
                     api.deleteFills(this.__page, c.cell, 0, c.cell.style.fills.length);
-                    api.addFillAt(this.__page, c.cell, fill, 0);
+                    api.addFillAt(this.__page, c.cell, newfill, 0);
                 } else {
                     // const init_c = this.shape.getCellAt(c.rowIdx, c.colIdx, true);
                     // if (!init_c) throw new Error("init cell fail?"); trap
@@ -1005,7 +1012,7 @@ export class TableEditor extends ShapeEditor {
                     api.tableSetCellContentText(this.__page, this.shape, c.rowIdx, c.colIdx, text);
                     const init_c = this.shape.getCellAt(c.rowIdx, c.colIdx);
                     if (!init_c) continue;
-                    api.addFillAt(this.__page, init_c, fill, 0);
+                    api.addFillAt(this.__page, init_c, newfill, 0);
                 }
             }
             this.__repo.commit();
@@ -1195,8 +1202,9 @@ export class TableEditor extends ShapeEditor {
             if (range) {
                 const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
                 cells.forEach((cell) => {
+                    const newborder = importBorder(border);
                     if (cell.cell) {
-                        api.addBorderAt(this.__page, cell.cell, border, cell.cell.style.borders.length);
+                        api.addBorderAt(this.__page, cell.cell, newborder, cell.cell.style.borders.length);
                     }
                     else {
                         const text = newText(this.shape.textAttr);
@@ -1206,7 +1214,7 @@ export class TableEditor extends ShapeEditor {
                         api.tableSetCellContentText(this.__page, this.shape, cell.rowIdx, cell.colIdx, text);
                         const c = this.shape.getCellAt(cell.rowIdx, cell.colIdx);
                         if (!c) throw new Error("init cell fail?")
-                        api.addBorderAt(this.__page, c, border, c.style.borders.length);
+                        api.addBorderAt(this.__page, c, newborder, c.style.borders.length);
                     }
                 })
             }
@@ -1224,10 +1232,11 @@ export class TableEditor extends ShapeEditor {
         try {
             const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
             for (let i = 0, len = cells.length; i < len; i++) {
+                const newborder = importBorder(border);
                 const c = cells[i];
                 if (c.cell) {
                     api.deleteBorders(this.__page, c.cell, 0, c.cell.style.borders.length);
-                    api.addBorderAt(this.__page, c.cell, border, 0);
+                    api.addBorderAt(this.__page, c.cell, newborder, 0);
                 } else {
                     const text = newText(this.shape.textAttr);
                     text.setTextBehaviour(TextBehaviour.Fixed);
@@ -1236,7 +1245,7 @@ export class TableEditor extends ShapeEditor {
                     api.tableSetCellContentText(this.__page, this.shape, c.rowIdx, c.colIdx, text);
                     const init_c = this.shape.getCellAt(c.rowIdx, c.colIdx);
                     if (!init_c) continue;
-                    api.addBorderAt(this.__page, init_c, border, 0);
+                    api.addBorderAt(this.__page, init_c, newborder, 0);
                 }
             }
             this.__repo.commit();
