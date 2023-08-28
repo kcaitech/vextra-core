@@ -210,6 +210,18 @@ export class TableEditor extends ShapeEditor {
                 api.tableSetCellContentImage(this.__page, this.shape, c.rowIdx, c.colIdx, undefined);
                 api.tableSetCellContentText(this.__page, this.shape, c.rowIdx, c.colIdx, undefined);
             })
+
+            // 清除被合并的单元格的span
+            for (let i = 1; i < cells.length; ++i) {
+                const cell = cells[0];
+                if (cell.cell) {
+                    const colSpan = cell.cell.colSpan ?? 1;
+                    const rowSpan = cell.cell.rowSpan ?? 1;
+                    if (colSpan > 1 || rowSpan > 1) {
+                        api.tableModifyCellSpan(this.__page, this.shape, cell.rowIdx, cell.colIdx, 1, 1);
+                    }
+                }
+            }
             // todo 删除完全被覆盖的行列
 
             this.__repo.commit();
