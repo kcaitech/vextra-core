@@ -370,7 +370,7 @@ export class TableEditor extends ShapeEditor {
 
     removeRow(idx: number, idxEnd?: number) {
         idxEnd = idxEnd ?? idx;
-        let count = idxEnd - idx + 1;
+        const count = idxEnd - idx + 1;
         if (count >= this.shape.rowHeights.length) {
             super.delete();
             return;
@@ -380,9 +380,22 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start('removeRow', {});
         try {
             let removeWeight = 0;
-            for (; count > 0; --count) {
+            for (let i = 0; i < count; ++i) {
                 removeWeight += this.shape.rowHeights[idx];
                 api.tableRemoveRow(this.__page, this.shape, idx);
+            }
+            // modify rowSpan
+            if (idx > 0) {
+                const cells = this.shape.getVisibleCells(idx - 1, idx - 1, 0, this.shape.colCount);
+                cells.forEach((val) => {
+                    if (val.cell) {
+                        let rowSpan = val.cell.rowSpan ?? 1;
+                        if (rowSpan > 1) {
+                            rowSpan = Math.max(1, rowSpan - count);
+                            api.tableModifyCellSpan(this.__page, this.shape, val.rowIdx, val.colIdx, rowSpan, val.cell.colSpan ?? 1);
+                        }
+                    }
+                })
             }
             const curHeight = removeWeight / total * this.shape.frame.height;
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height - curHeight);
@@ -426,7 +439,7 @@ export class TableEditor extends ShapeEditor {
 
     removeCol(idx: number, idxEnd?: number) {
         idxEnd = idxEnd ?? idx;
-        let count = idxEnd - idx + 1;
+        const count = idxEnd - idx + 1;
 
         if (count >= this.shape.colWidths.length) {
             super.delete();
@@ -437,9 +450,22 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start('removeCol', {});
         try {
             let removeWeight = 0;
-            for (; count > 0; --count) {
+            for (let i = 0; i < count; ++i) {
                 removeWeight += this.shape.colWidths[idx];
                 api.tableRemoveCol(this.__page, this.shape, idx);
+            }
+            // modify colSpan
+            if (idx > 0) {
+                const cells = this.shape.getVisibleCells(0, this.shape.rowCount, idx - 1, idx - 1);
+                cells.forEach((val) => {
+                    if (val.cell) {
+                        let colSpan = val.cell.colSpan ?? 1;
+                        if (colSpan > 1) {
+                            colSpan = Math.max(1, colSpan - count);
+                            api.tableModifyCellSpan(this.__page, this.shape, val.rowIdx, val.colIdx, val.cell.rowSpan ?? 1, colSpan);
+                        }
+                    }
+                })
             }
             const curWidth = removeWeight / total * this.shape.frame.width;
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width - curWidth, this.shape.frame.height);
