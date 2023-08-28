@@ -499,7 +499,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextColor", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -528,7 +528,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextHighlightColor", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -557,7 +557,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextFontName", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -588,7 +588,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextFontSize", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -622,7 +622,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextVerAlign", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -654,7 +654,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextHorAlign", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -685,7 +685,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setLineHeight", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -723,7 +723,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableCharSpace", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -756,7 +756,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableParaSpacing", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -788,7 +788,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextUnderline", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -818,7 +818,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextStrikethrough", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -848,7 +848,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextBold", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -878,7 +878,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextItalic", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -908,7 +908,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setTableTextTransform", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
                 cells.forEach((c) => {
                     const cell = c.cell;
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
@@ -956,7 +956,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("addFill", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
                 cells.forEach((cell) => {
                     if (cell.cell) {
                         api.addFillAt(this.__page, cell.cell, fill, cell.cell.style.fills.length);
@@ -989,7 +989,7 @@ export class TableEditor extends ShapeEditor {
     public addFill4Multi(fill: Fill, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("addFill4Multi", {});
         try {
-            const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
+            const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
             for (let i = 0, len = cells.length; i < len; i++) {
                 const c = cells[i];
                 if (c.cell) {
@@ -1021,7 +1021,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setFillColor", {});
         try {
             if (range) {
-                this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) api.setFillColor(this.__page, cell.cell, idx, color)
                 })
             }
@@ -1039,7 +1039,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setFillEnable", {});
         try {
             if (range) {
-                this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) api.setFillEnable(this.__page, cell.cell, idx, value);
                 })
             }
@@ -1058,7 +1058,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("deleteFill", {});
         try {
             if (range) {
-                this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) api.deleteFillAt(this.__page, cell.cell, idx);
                 })
             }
@@ -1079,7 +1079,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setBorderEnable", {});
         try {
             if (range) {
-                this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) api.setBorderEnable(this.__page, cell.cell, idx, isEnabled);
                 })
             }
@@ -1099,7 +1099,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setBorderColor", {});
         try {
             if (range) {
-                this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) api.setBorderColor(this.__page, cell.cell, idx, color);
                 })
             }
@@ -1118,7 +1118,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setBorderThickness", {});
         try {
             if (range) {
-                this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) api.setBorderThickness(this.__page, cell.cell, idx, thickness);
                 })
             }
@@ -1137,7 +1137,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setBorderPosition", {});
         try {
             if (range) {
-                this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) api.setBorderPosition(this.__page, cell.cell, idx, position);
                 })
             }
@@ -1156,7 +1156,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("setBorderStyle", {});
         try {
             if (range) {
-                this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) api.setBorderStyle(this.__page, cell.cell, idx, borderStyle);
                 })
             }
@@ -1176,7 +1176,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("deleteBorder", {});
         try {
             if (range) {
-                this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                     if (cell.cell) api.deleteBorderAt(this.__page, cell.cell, idx)
                 })
             }
@@ -1193,7 +1193,7 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start("addBorder", {});
         try {
             if (range) {
-                const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
                 cells.forEach((cell) => {
                     if (cell.cell) {
                         api.addBorderAt(this.__page, cell.cell, border, cell.cell.style.borders.length);
@@ -1222,7 +1222,7 @@ export class TableEditor extends ShapeEditor {
     public addBorder4Multi(border: Border, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         const api = this.__repo.start("addBorder4Multi", {});
         try {
-            const cells = this.shape.getCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
+            const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
             for (let i = 0, len = cells.length; i < len; i++) {
                 const c = cells[i];
                 if (c.cell) {
