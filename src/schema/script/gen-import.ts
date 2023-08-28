@@ -204,6 +204,20 @@ ${indent(level)}    }`
         }
     }
 
+    // normal type
+    for (let i = 0; i < schema.length; i++) {
+        let s = schema[i]
+
+        if (!s['$ref'] && s.type !== 'undefined') {
+            ret += `
+${indent(level)}    if (typeof val !== 'object') {
+${indent(level)}        return val
+${indent(level)}    }`
+
+            break;
+        }
+    }
+    // ref
     for (let i = 0; i < schema.length; i++) {
         let s = schema[i]
         let typename
@@ -225,6 +239,12 @@ ${indent(level)}        return import${typename}(val as types.${typename}, ctx)
 ${indent(level)}    }`
         }
     }
+    // unknow
+    ret += `
+${indent(level)}    {
+${indent(level)}        throw new Error('unknow val: ' + val)
+${indent(level)}    }`
+    // close
     ret += `
 ${indent(level)}})()`
 

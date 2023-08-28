@@ -265,6 +265,7 @@ export function exportPadding(source: types.Padding, ctx?: IExportContext): type
 export function exportOverrideItem(source: types.OverrideItem, ctx?: IExportContext): types.OverrideItem {
     const ret = {
         id: source.id,
+        attr: source.attr,
         value: (() => {
             const val = source.value;
             if (typeof val != 'object') {
@@ -274,7 +275,7 @@ export function exportOverrideItem(source: types.OverrideItem, ctx?: IExportCont
                 return exportStyle(val as types.Style, ctx)
             }
             {
-                console.error(val)
+                throw new Error('unknow val: ' + val)
             }
         })(),
     }
@@ -634,7 +635,7 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
                         return exportTableCell(val as types.TableCell, ctx)
                     }
                     {
-                        console.error(val)
+                        throw new Error('unknow val: ' + val)
                     }
                 })()
                 ret.push(r)
@@ -988,7 +989,7 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                         return exportTableShape(val as types.TableShape, ctx)
                     }
                     {
-                        console.error(val)
+                        throw new Error('unknow val: ' + val)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1182,7 +1183,7 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                         return exportTableShape(val as types.TableShape, ctx)
                     }
                     {
-                        console.error(val)
+                        throw new Error('unknow val: ' + val)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1248,7 +1249,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                             return exportTableShape(val as types.TableShape, ctx)
                         }
                         {
-                            console.error(val)
+                            throw new Error('unknow val: ' + val)
                         }
                     })()
                     if (r) ret.push(r)
@@ -1331,7 +1332,7 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                             return exportTableShape(val as types.TableShape, ctx)
                         }
                         {
-                            console.error(val)
+                            throw new Error('unknow val: ' + val)
                         }
                     })()
                     if (r) ret.push(r)
@@ -1412,7 +1413,7 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                             return exportTableShape(val as types.TableShape, ctx)
                         }
                         {
-                            console.error(val)
+                            throw new Error('unknow val: ' + val)
                         }
                     })()
                     if (r) ret.push(r)

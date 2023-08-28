@@ -37,6 +37,10 @@ export class Basic {
     onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
         this.__parent && this.__parent.onRollback(from);
     }
+
+    clone(): Basic {
+        throw new Error("not implemented")
+    }
 }
 
 export class BasicArray<T> extends Array<T> {

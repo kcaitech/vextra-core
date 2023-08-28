@@ -1,3 +1,4 @@
+import { uuid } from "../basic/uuid";
 import * as classes from "./baseclasses"
 import { Blur, BorderOptions, ColorControls, ContextSettings, Shadow, WindingRule, FillType, Gradient, BorderPosition, BorderStyle, MarkerType } from "./baseclasses";
 import { Basic, BasicArray, ResourceMgr } from "./basic";
@@ -42,12 +43,14 @@ export class Color extends classes.Color {
         }
         return "#" + toHex(this.red) + toHex(this.green) + toHex(this.blue);
     }
-
     equals(color: Color): boolean {
         return this.alpha === color.alpha &&
             this.blue === color.blue &&
             this.green === color.green &&
             this.red === color.red;
+    }
+    clone(): Color {
+        return new Color(this.alpha, this.red, this.green, this.blue);
     }
 }
 
@@ -109,6 +112,9 @@ export class Fill extends Basic implements classes.Fill {
     }
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
+    }
+    getImageMgr(): ResourceMgr<{ buff: Uint8Array, base64: string }> | undefined {
+        return this.__imageMgr;
     }
     peekImage() {
         return this.__cacheData?.base64;
