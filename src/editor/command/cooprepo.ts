@@ -155,7 +155,7 @@ export class CoopRepository {
     commit() {
         if (!this.isNeedCommit()) {
             console.log("no cmd to commit")
-            this.rollback(false);
+            this.rollback("commit", false);
             return;
         }
         // 
@@ -179,14 +179,8 @@ export class CoopRepository {
             l(cmd, false);
         })
     }
-    rollback(isRemote: boolean = false) {
-        this.__repo.rollback();
-        this.__rollbackListener.forEach((l) => {
-            l(isRemote);
-        })
-    }
-    normalRollback(isRemote: boolean = false) {
-        this.__repo.normalRollback();
+    rollback(from: string = "", isRemote: boolean = false) {
+        this.__repo.rollback(from);
         this.__rollbackListener.forEach((l) => {
             l(isRemote);
         })

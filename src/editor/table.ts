@@ -209,7 +209,8 @@ export class TableEditor extends ShapeEditor {
                 api.tableSetCellContentImage(this.__page, this.shape, c.rowIdx, c.colIdx, undefined);
                 api.tableSetCellContentText(this.__page, this.shape, c.rowIdx, c.colIdx, undefined);
             })
-
+            // todo 删除完全被覆盖的行列
+            
             this.__repo.commit();
         } catch (e) {
             console.error(e);
