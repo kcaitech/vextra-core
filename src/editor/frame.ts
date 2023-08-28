@@ -810,7 +810,7 @@ export function pathEdit(api: Api, page: Page, s: Shape, index: number, end: Pag
         if (!nf) return false;
         const mp = s.matrix2Parent();
         mp.preScale(w, h);
-        if (s.rotation) api.shapeModifyRotate(page, s, 0);
+        if (s.rotation) api.shapeModifyRotate(page, s, 0); // 摆正 是否需要摆正呢
         if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, false);
         if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, false);
         api.shapeModifyX(page, s, nf.x);
@@ -863,7 +863,7 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape) {
         const w = s.frame.width, h = s.frame.height;
         const mp = s.matrix2Parent();
         mp.preScale(w, h);
-        if (s.rotation) api.shapeModifyRotate(page, s, 0);
+        if (s.rotation) api.shapeModifyRotate(page, s, 0);  // 摆正 是否需要摆正呢
         if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, false);
         if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, false);
         api.shapeModifyX(page, s, nf.x);

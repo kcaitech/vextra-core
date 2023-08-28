@@ -365,7 +365,7 @@ export class Controller {
                 // 计算左上角的目标位置
                 const m2r = s.matrix2Root();
                 m2r.multiAtLeft(m);
-                const target_xy = m2r.computeCoord(0, 0); // 目标位置（root）
+                const target_xy = m2r.computeCoord2(0, 0); // 目标位置（root）
                 // 计算集体旋转后的xy
                 let np = new Matrix();
                 const ex = pMap.get(sp.id);
@@ -374,14 +374,14 @@ export class Controller {
                     np = new Matrix(sp.matrix2Root().inverse);
                     pMap.set(sp.id, np);
                 }
-                const sf_common = np.computeCoord(target_xy);
+                const sf_common = np.computeCoord3(target_xy);
                 // 计算自转后的xy
                 const r = s.rotation || 0;
                 let cr = deg;
                 if (s.isFlippedHorizontal) cr = -cr;
                 if (s.isFlippedVertical) cr = -cr;
                 api.shapeModifyRotate(page, s, r + cr);
-                const sf_self = s.matrix2Parent().computeCoord(0, 0);
+                const sf_self = s.matrix2Parent().computeCoord2(0, 0);
                 // 比较集体旋转与自转的xy偏差
                 const delta = { x: sf_common.x - sf_self.x, y: sf_common.y - sf_self.y };
                 api.shapeModifyX(page, s, s.frame.x + delta.x);
@@ -583,7 +583,7 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
     const p = s.parent;
     if (!p) return;
     const m = s.matrix2Root();
-    const lt = m.computeCoord(0, 0);
+    const lt = m.computeCoord2(0, 0);
     const r_o_lt = { x: lt.x - origin1.x, y: lt.y - origin1.y };
     const target_xy = { x: origin2.x + sx * r_o_lt.x, y: origin2.y + sy * r_o_lt.y };
     let np = new Matrix();
@@ -593,7 +593,7 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         np = new Matrix(p.matrix2Root().inverse);
         pMap.set(p.id, np);
     }
-    const xy = np.computeCoord(target_xy);
+    const xy = np.computeCoord3(target_xy);
     if (sx < 0) {
         api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
         sx = -sx;
@@ -604,7 +604,7 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
     }
     if (s.isFlippedHorizontal || s.isFlippedVertical) {
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
-        const self = s.matrix2Parent().computeCoord(0, 0);
+        const self = s.matrix2Parent().computeCoord2(0, 0);
         const delta = { x: xy.x - self.x, y: xy.y - self.y };
         api.shapeModifyX(page, s, s.frame.x + delta.x);
         api.shapeModifyY(page, s, s.frame.y + delta.y);
@@ -614,7 +614,4 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
     }
     if (s instanceof GroupShape && s.type === ShapeType.Group) afterModifyGroupShapeWH(api, page, s, sx, sy);
-}
-function reset_position(api: Api, s: Shape) {
-
 }
