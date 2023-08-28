@@ -5,8 +5,16 @@ export interface Notifiable {
     notify(...args: any[]): void
 }
 
+export interface Rollbackable {
+    onRollback(from: string): void
+}
+
 export function castNotifiable(obj: any): Notifiable | undefined {
     if (obj.__uuid === __uuid) return obj as Notifiable;
+}
+
+export function castRollbackable(obj: any): Rollbackable | undefined {
+    if (obj.__uuid === __uuid) return obj as Rollbackable;
 }
 
 export function isDataBasicType(obj: any): boolean {
@@ -26,7 +34,12 @@ export class Basic {
         this.__parent && this.__parent.notify(this.typeId, ...args);
     }
 
-    onRollback() { // 非正常事务中，需要清空一些缓存数据
+    onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
+        this.__parent && this.__parent.onRollback(from);
+    }
+
+    clone(): Basic {
+        throw new Error("not implemented")
     }
 }
 
@@ -44,6 +57,9 @@ export class BasicArray<T> extends Array<T> {
     setTypeId(typeId: string) {
         this.typeId = typeId;
     }
+    onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
+        this.__parent && this.__parent.onRollback(from);
+    }
 }
 
 export class BasicMap<T0, T1> extends Map<T0, T1> {
@@ -57,6 +73,9 @@ export class BasicMap<T0, T1> extends Map<T0, T1> {
 
     notify(...args: any[]): void {
         this.__parent && this.__parent.notify(this.typeId, ...args);
+    }
+    onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
+        this.__parent && this.__parent.onRollback(from);
     }
 }
 
@@ -80,6 +99,9 @@ export const Watchable = <T extends Constructor>(SuperClass: T) =>
             this.__watcher.forEach(w => {
                 w(...args);
             });
+        }
+        onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
+            this.__parent && this.__parent.onRollback(from);
         }
     }
 

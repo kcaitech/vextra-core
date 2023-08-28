@@ -633,11 +633,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     }
     // overrideValues
     addOverrid(id: string, attr: string, value: any) {
-        // let attrs = this.orrides.get(id);
-        // if (!attrs) {
-        //     attrs = new Map<string, any>();
-        //     this.orrides.set(id, attrs);
-        // }
-        // attrs.set(attr, value);
+        if (!this.overrides) this.overrides = new BasicArray();
+        const item = new OverrideItem(id, attr, value);
+        this.overrides.push(item);
+    }
+    getOverrid(id: string, attr: string): OverrideItem | undefined {
+        if (!this.overrides) return;
+        this.overrides.forEach((item) => {
+            if (item.id === id && item.attr === attr) return item;
+        })
     }
 }

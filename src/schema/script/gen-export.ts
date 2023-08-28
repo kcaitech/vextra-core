@@ -163,7 +163,7 @@ ${indent(level)}    }`
     }
     ret += `
 ${indent(level)}    {
-${indent(level)}        console.error(val)
+${indent(level)}        throw new Error('unknow val: ' + val)
 ${indent(level)}    }`
     ret += `
 ${indent(level)}})()`
