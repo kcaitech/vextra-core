@@ -97,6 +97,7 @@ export class CMDReverter {
         } else {
             op = NoneOp.Make(cmdop.targetId)
         }
+        // todo data要重新获取
         return new PageCmdDelete(CmdType.PageDelete, uuid(), cmd.blockId, [op], cmd.pageId, cmd.data);
     }
     pageDelete(cmd: PageCmdDelete): PageCmdInsert {
@@ -147,7 +148,10 @@ export class CMDReverter {
         } else {
             op = NoneOp.Make(cmdop.targetId)
         }
-        return new ShapeArrayAttrRemove(CmdType.ShapeArrayAttrDelete, uuid(), cmd.blockId, [op], cmd.arrayAttrId);
+        // todo data要重新获取
+        const revert = new ShapeArrayAttrRemove(CmdType.ShapeArrayAttrDelete, uuid(), cmd.blockId, [op], cmd.arrayAttrId);
+        revert.origin = cmd.data;
+        return revert;
     }
 
     shapeArrAttrModify(cmd: ShapeArrayAttrModify): ShapeArrayAttrModify {
@@ -218,6 +222,7 @@ export class CMDReverter {
         } else {
             op = NoneOp.Make(cmdop.targetId)
         }
+        // todo data要重新获取
         return new ShapeCmdRemove(CmdType.ShapeDelete, uuid(), cmd.blockId, [op], cmd.data);
     }
     shapeModify(cmd: ShapeCmdModify): ShapeCmdModify {
@@ -287,6 +292,7 @@ export class CMDReverter {
     tableInsert(cmd: TableCmdInsert): TableCmdRemove {
         const op = cmd.ops[0];
         if (op.type === OpType.TableInsert) {
+            // todo data要重新获取
             const _op = op as TableOpInsert;
             const removeOp = TableOpRemove.Make(op.targetId[0] as string, _op.index, _op.opTarget, _op.data);
             const ret = new TableCmdRemove(CmdType.TableDelete, uuid(), cmd.blockId, [removeOp], cmd.data);

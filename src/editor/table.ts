@@ -1235,6 +1235,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public addBorder(border: Border, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        border.position = BorderPosition.Center; // 只支持居中
         const api = this.__repo.start("addBorder", {});
         try {
             if (range) {
@@ -1266,6 +1267,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public addBorder4Multi(border: Border, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        border.position = BorderPosition.Center; // 只支持居中
         const api = this.__repo.start("addBorder4Multi", {});
         try {
             const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);
