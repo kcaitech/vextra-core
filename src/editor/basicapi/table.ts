@@ -27,31 +27,31 @@ export function tableModifyRowHeight(page: Page, table: TableShape, idx: number,
 
 export function tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data: (TableCell | undefined)[]) {
     table.insertRow(idx, height, data);
-    data.forEach((cell) => {
-        if (cell) page.onAddShape(cell);
-    })
+    // data.forEach((cell) => {
+    //     if (cell) page.onAddShape(cell);
+    // })
 }
 
 export function tableRemoveRow(page: Page, table: TableShape, idx: number) {
     const ret = table.removeRow(idx);
-    ret.forEach((cell) => {
-        if (cell) page.onRemoveShape(cell);
-    })
+    // ret.forEach((cell) => {
+    //     if (cell) page.onRemoveShape(cell);
+    // })
     return ret;
 }
 
 export function tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data: (TableCell | undefined)[]) {
     table.insertCol(idx, width, data);
-    data.forEach((cell) => {
-        if (cell) page.onAddShape(cell);
-    })
+    // data.forEach((cell) => {
+    //     if (cell) page.onAddShape(cell);
+    // })
 }
 
 export function tableRemoveCol(page: Page, table: TableShape, idx: number) {
     const ret = table.removeCol(idx);
-    ret.forEach((cell) => {
-        if (cell) page.onRemoveShape(cell);
-    })
+    // ret.forEach((cell) => {
+    //     if (cell) page.onRemoveShape(cell);
+    // })
     return ret;
 }
 
