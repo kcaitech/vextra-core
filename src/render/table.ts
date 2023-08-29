@@ -36,21 +36,30 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
     }
 
     // border
+    const cell_border_nodes = [];
     nodes.push(...borderR(h, shape.style.borders, frame, path));
     for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
-
         for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
             const cellLayout = layout.grid.get(i, j);
-            if (cellLayout.index.row === i && cellLayout.index.col === j) {
-                const path = TableCell.getPathOfFrame(cellLayout.frame);
-                const pathstr = path.toString();
-                const child = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);// cellLayout.cell;
-                const style = child && child.style.borders.length > 0 ? child.style : shape.style;
+            if (cellLayout.index.row !== i || cellLayout.index.col !== j) continue;
+
+            const child = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);// cellLayout.cell;
+            const path = TableCell.getPathOfFrame(cellLayout.frame);
+            const pathstr = path.toString();
+            if (child && child.style.borders.length > 0) {
+                const style = child.style
+                const border = borderR(h, style.borders, cellLayout.frame, pathstr)
+                cell_border_nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));
+            }
+            else {
+                const style = shape.style;
                 const border = borderR(h, style.borders, cellLayout.frame, pathstr)
                 nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, border));
             }
         }
     }
+    // 单元格的边框要后画
+    nodes.push(...cell_border_nodes);
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
