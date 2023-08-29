@@ -24,7 +24,7 @@ export function locateCell(layout: TableLayout, x: number, y: number): TableGrid
     }
 }
 
-export function locateCellIndex(layout: TableLayout, x: number, y: number): { rowIdx: number, colIdx: number } | undefined {
+export function locateCellIndex(layout: TableLayout, x: number, y: number): { row: number, col: number } | undefined {
 
     let curY = 0;
     for (let ri = 0, rlen = layout.rowHeights.length; ri < rlen; ++ri) {
@@ -40,7 +40,7 @@ export function locateCellIndex(layout: TableLayout, x: number, y: number): { ro
             curX += colWidth;
             if (x > curX) continue;
 
-            return { rowIdx: ri, colIdx: ci }
+            return { row: ri, col: ci }
         }
 
         break;

@@ -326,7 +326,7 @@ export class TableShape extends Shape implements classes.TableShape {
         return item;
     }
 
-    locateCellIndex(x: number, y: number): { rowIdx: number, colIdx: number } | undefined {
+    locateCellIndex(x: number, y: number): { row: number, col: number } | undefined {
         return locateCellIndex(this.getLayout(), x, y);
     }
 
