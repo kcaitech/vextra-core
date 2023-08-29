@@ -24,6 +24,29 @@ export function locateCell(layout: TableLayout, x: number, y: number): TableGrid
     }
 }
 
+export function locateCellIndex(layout: TableLayout, x: number, y: number): { rowIdx: number, colIdx: number } | undefined {
+
+    let curY = 0;
+    for (let ri = 0, rlen = layout.rowHeights.length; ri < rlen; ++ri) {
+
+        const rowHeight = layout.rowHeights[ri];
+        curY += rowHeight;
+        if (y > curY) continue;
+
+        let curX = 0;
+        for (let ci = 0, clen = layout.colWidths.length; ci < clen; ++ci) {
+
+            const colWidth = layout.colWidths[ci];
+            curX += colWidth;
+            if (x > curX) continue;
+
+            return { rowIdx: ri, colIdx: ci }
+        }
+
+        break;
+    }
+}
+
 // export function locateCellByCell(table: TableShape, layout: TableLayout, cell: TableCell): TableGridItem | undefined {
 //     const grid = layout.grid;
 //     for (let ri = 0, rlen = grid.rowCount; ri < rlen; ++ri) {
