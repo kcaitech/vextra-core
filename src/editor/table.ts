@@ -385,7 +385,7 @@ export class TableEditor extends ShapeEditor {
         const count = idxEnd - idx + 1;
         if (count >= this.shape.rowHeights.length) {
             super.delete();
-            return;
+            return 1;
         }
 
         const total = this.shape.heightTotalWeights;
@@ -455,7 +455,7 @@ export class TableEditor extends ShapeEditor {
 
         if (count >= this.shape.colWidths.length) {
             super.delete();
-            return;
+            return 1;
         }
 
         const total = this.shape.colWidths.reduce((pre, w) => pre + w, 0);
