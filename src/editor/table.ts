@@ -500,13 +500,13 @@ export class TableEditor extends ShapeEditor {
         const rowCount = rowEnd - rowStart + 1;
         if (rowCount >= this.shape.rowHeights.length) {
             super.delete();
-            return;
+            return 1;
         }
 
         const colCount = colEnd - colStart + 1;
         if (colCount >= this.shape.colWidths.length) {
             super.delete();
-            return;
+            return 1;
         }
 
         const colTotal = this.shape.widthTotalWeights;
