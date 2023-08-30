@@ -277,7 +277,7 @@ export class TableEditor extends ShapeEditor {
         for (let r = rs; r <= re; r++) {
             for (let c = cs; c <= ce; c++) {
                 const cell = this.shape.getCellAt(r, c);
-                if (cell) continue;
+                if (cell && cell.cellType && cell.cellType !== TableCellType.None) continue;
                 const _text = newText(this.shape.textAttr);
                 _text.setTextBehaviour(TextBehaviour.Fixed);
                 _text.setPadding(5, 0, 3, 0);
