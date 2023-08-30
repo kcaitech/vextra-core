@@ -336,12 +336,17 @@ export class Padding extends Basic {
 export class OverrideItem extends Basic {
     typeId = 'override-item'
     id: string
-    value?: Style
+    attr: string
+    value: (Style | string)
     constructor(
-        id: string
+        id: string,
+        attr: string,
+        value: (Style | string)
     ) {
         super()
         this.id = id
+        this.attr = attr
+        this.value = value
     }
 }
 /**

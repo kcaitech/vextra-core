@@ -209,7 +209,8 @@ export type Padding = {
 /* override list item */
 export type OverrideItem = {
     id: string
-    value?: Style
+    attr: string
+    value: (Style | string)
 }
 /* marker type */
 export enum MarkerType {

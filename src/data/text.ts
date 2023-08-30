@@ -201,6 +201,9 @@ export class Para extends Basic implements classes.Para {
 }
 
 export class Text extends Basic implements classes.Text {
+
+    static DefaultFontSize = 12;
+
     typeId = 'text'
     paras: BasicArray<Para>
     attr?: TextAttr
@@ -415,8 +418,8 @@ export class Text extends Basic implements classes.Text {
         this.__frameHeight = h;
     }
 
-    onRollback(): void {
-        this.reLayout();
+    onRollback(from: string): void {
+        if (from !== "composingInput") this.reLayout();
     }
 
     reLayout() {
@@ -466,12 +469,15 @@ export class Text extends Basic implements classes.Text {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.verAlign = verAlign;
         if (this.__layout) {
+            const padding = this.attr?.padding;
+            const paddingTop = padding?.top ?? 0;
+            const paddingBottom = padding?.bottom ?? 0;
             const vAlign = this.attr?.verAlign ?? TextVerAlign.Top;
             const yOffset: number = ((align: TextVerAlign) => {
                 switch (align) {
-                    case TextVerAlign.Top: return 0;
-                    case TextVerAlign.Middle: return (this.__frameHeight - this.__layout.contentHeight) / 2;
-                    case TextVerAlign.Bottom: return this.__frameHeight - this.__layout.contentHeight;
+                    case TextVerAlign.Top: return paddingTop;
+                    case TextVerAlign.Middle: return (this.__frameHeight - this.__layout.contentHeight - paddingTop - paddingBottom) / 2;
+                    case TextVerAlign.Bottom: return this.__frameHeight - this.__layout.contentHeight - paddingBottom;
                 }
             })(vAlign);
             this.__layout.yOffset = yOffset;

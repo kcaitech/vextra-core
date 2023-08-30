@@ -263,14 +263,21 @@ export function importPadding(source: types.Padding, ctx?: IImportContext): impl
 /* override list item */
 export function importOverrideItem(source: types.OverrideItem, ctx?: IImportContext): impl.OverrideItem {
     const ret: impl.OverrideItem = new impl.OverrideItem (
-        source.id
+        source.id,
+        source.attr,
+        (() => {
+            const val = source.value
+            if (typeof val !== 'object') {
+                return val
+            }
+            if (val.typeId == 'style') {
+                return importStyle(val as types.Style, ctx)
+            }
+            {
+                throw new Error('unknow val: ' + val)
+            }
+        })()
     )
-    if (source.value !== undefined) ret.value = (() => {
-        const val = source.value
-        if (val.typeId == 'style') {
-            return importStyle(val as types.Style, ctx)
-        }
-    })()
     return ret
 }
 /* marker type */
@@ -604,10 +611,13 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
                 const r = (() => {
                     const val = source.childs[i]
                     if (!val) {
-                        return val
+                        return val ?? undefined
                     }
                     if (val.typeId == 'table-cell') {
                         return importTableCell(val as types.TableCell, ctx)
+                    }
+                    {
+                        throw new Error('unknow val: ' + val)
                     }
                 })()
                 ret.push(r)
@@ -647,6 +657,8 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.textAttr !== undefined) ret.textAttr = importTextAttr(source.textAttr, ctx)
+    // inject code
+    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
 }
 /* table cell */
@@ -678,8 +690,6 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
     if (source.rowSpan !== undefined) ret.rowSpan = source.rowSpan
     if (source.colSpan !== undefined) ret.colSpan = source.colSpan
-    // inject code
-    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
 }
 /* symbol ref shape */
@@ -953,6 +963,9 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
                     if (val.typeId == 'table-shape') {
                         return importTableShape(val as types.TableShape, ctx)
                     }
+                    {
+                        throw new Error('unknow val: ' + val)
+                    }
                 })()
                 if (r) ret.push(r)
             }
@@ -1188,6 +1201,9 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                     if (val.typeId == 'table-shape') {
                         return importTableShape(val as types.TableShape, ctx)
                     }
+                    {
+                        throw new Error('unknow val: ' + val)
+                    }
                 })()
                 if (r) ret.push(r)
             }
@@ -1261,6 +1277,9 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                     }
                     if (val.typeId == 'table-shape') {
                         return importTableShape(val as types.TableShape, ctx)
+                    }
+                    {
+                        throw new Error('unknow val: ' + val)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1344,6 +1363,9 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                     }
                     if (val.typeId == 'table-shape') {
                         return importTableShape(val as types.TableShape, ctx)
+                    }
+                    {
+                        throw new Error('unknow val: ' + val)
                     }
                 })()
                 if (r) ret.push(r)

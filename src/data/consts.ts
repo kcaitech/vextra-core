@@ -7,3 +7,7 @@ export const ResizingConstraints = {
     Height: 0b010000,
     Top: 0b100000,
 }
+
+export const OverrideAttrs = {
+    stringValue: "stringValue",
+}

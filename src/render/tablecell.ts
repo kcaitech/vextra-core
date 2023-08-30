@@ -24,7 +24,8 @@ export function render(h: Function, shape: TableCell, frame: ShapeFrame): any {
         childs.push(img);
     }
     else if (cellType === TableCellType.Text) {
-        childs.push(...renderTextLayout(h, shape.getLayout()!))
+        const layout = shape.getLayout();
+        if (layout) childs.push(...renderTextLayout(h, layout))
     }
 
     const props = { transform: `translate(${frame.x},${frame.y})` }
