@@ -273,11 +273,37 @@ export class TableEditor extends ShapeEditor {
     }
 
     // 批量初始化单元格
-    private _initCells(rs: number, re: number, cs: number, ce: number, api: Api) {
+    private _initCells(rs: number, re: number, cs: number, ce: number, api: Api) {        
         for (let r = rs; r <= re; r++) {
             for (let c = cs; c <= ce; c++) {
                 const cell = this.shape.getCellAt(r, c);
                 if (cell && cell.cellType && cell.cellType !== TableCellType.None) continue;
+                const _text = newText(this.shape.textAttr);
+                _text.setTextBehaviour(TextBehaviour.Fixed);
+                _text.setPadding(5, 0, 3, 0);
+                api.tableSetCellContentType(this.__page, this.shape, r, c, TableCellType.Text);
+                api.tableSetCellContentText(this.__page, this.shape, r, c, _text);
+                // api.tableSetCellContentImage(this.__page, this.shape, r, c, undefined);
+            }
+        }
+    }
+    // 重置单元格内容
+    resetCells(rs: number, re: number, cs: number, ce: number) {
+        const api = this.__repo.start('resetCells', {});
+        try {
+            this._resetCells(rs, re, cs, ce, api);
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+
+    private  _resetCells(rs: number, re: number, cs: number, ce: number, api: Api) {
+        for (let r = rs; r <= re; r++) {
+            for (let c = cs; c <= ce; c++) {
+                const cell = this.shape.getCellAt(r, c);
+                if (!cell) continue;
                 const _text = newText(this.shape.textAttr);
                 _text.setTextBehaviour(TextBehaviour.Fixed);
                 _text.setPadding(5, 0, 3, 0);
