@@ -397,8 +397,8 @@ export class TableEditor extends ShapeEditor {
                 api.tableRemoveRow(this.__page, this.shape, idx);
             }
             // modify rowSpan
-            if (idx > 0) {
-                const cells = this.shape.getVisibleCells(idx - 1, idx - 1, 0, this.shape.colCount);
+            if (idx < this.shape.rowCount) {
+                const cells = this.shape.getVisibleCells(idx, idx, 0, this.shape.colCount);
                 cells.forEach((val) => {
                     if (val.cell) {
                         let rowSpan = val.cell.rowSpan ?? 1;
@@ -419,7 +419,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     insertCol(idx: number, width: number, data?: any[]) {
-        const total = this.shape.colWidths.reduce((pre, h) => pre + h, 0);
+        const total = this.shape.widthTotalWeights;
         const weight = width / this.shape.frame.width * total;
         const api = this.__repo.start('insertCol', {});
         try {
@@ -433,7 +433,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     insertMultiCol(idx: number, width: number, count: number, data?: TableCell[][]) {
-        const total = this.shape.colWidths.reduce((pre, h) => pre + h, 0);
+        const total = this.shape.widthTotalWeights;
         const weight = width / this.shape.frame.width * total;
         const api = this.__repo.start('insertMultiCol', {});
         try {
@@ -458,7 +458,7 @@ export class TableEditor extends ShapeEditor {
             return;
         }
 
-        const total = this.shape.colWidths.reduce((pre, w) => pre + w, 0);
+        const total = this.shape.widthTotalWeights;
         const api = this.__repo.start('removeCol', {});
         try {
             let removeWeight = 0;
@@ -467,8 +467,8 @@ export class TableEditor extends ShapeEditor {
                 api.tableRemoveCol(this.__page, this.shape, idx);
             }
             // modify colSpan
-            if (idx > 0) {
-                const cells = this.shape.getVisibleCells(0, this.shape.rowCount, idx - 1, idx - 1);
+            if (idx < this.shape.colCount) {
+                const cells = this.shape.getVisibleCells(0, this.shape.rowCount, idx, idx);
                 cells.forEach((val) => {
                     if (val.cell) {
                         let colSpan = val.cell.colSpan ?? 1;
@@ -490,13 +490,13 @@ export class TableEditor extends ShapeEditor {
 
     removeRowAndCol(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
 
-        let rowCount = rowEnd - rowStart + 1;
+        const rowCount = rowEnd - rowStart + 1;
         if (rowCount >= this.shape.rowHeights.length) {
             super.delete();
             return;
         }
 
-        let colCount = colEnd - colStart + 1;
+        const colCount = colEnd - colStart + 1;
         if (colCount >= this.shape.colWidths.length) {
             super.delete();
             return;
@@ -508,18 +508,46 @@ export class TableEditor extends ShapeEditor {
         const api = this.__repo.start('removeRowAndCol', {});
         try {
             let removeColWeight = 0;
-            for (; colCount > 0; --colCount) {
+            for (let i = 0; i < colCount; ++i) {
                 removeColWeight += this.shape.colWidths[colStart];
                 api.tableRemoveCol(this.__page, this.shape, colStart);
             }
             const removeWidth = removeColWeight / colTotal * this.shape.frame.width;
+            if (colStart < this.shape.colCount) {
+                const idx = colStart;
+                const count = colCount;
+                const cells = this.shape.getVisibleCells(0, this.shape.rowCount, idx, idx);
+                cells.forEach((val) => {
+                    if (val.cell) {
+                        let colSpan = val.cell.colSpan ?? 1;
+                        if (colSpan > 1) {
+                            colSpan = Math.max(1, colSpan - count);
+                            api.tableModifyCellSpan(this.__page, this.shape, val.rowIdx, val.colIdx, val.cell.rowSpan ?? 1, colSpan);
+                        }
+                    }
+                })
+            }
 
             let removeRowWeight = 0;
-            for (; rowCount > 0; --rowCount) {
+            for (let i = 0; i < rowCount; ++i) {
                 removeRowWeight += this.shape.rowHeights[rowStart];
                 api.tableRemoveRow(this.__page, this.shape, rowStart);
             }
             const removeHeight = removeRowWeight / rowTotal * this.shape.frame.height;
+            if (rowStart < this.shape.rowCount) {
+                const idx = rowStart;
+                const count = rowCount;
+                const cells = this.shape.getVisibleCells(idx, idx, 0, this.shape.colCount);
+                cells.forEach((val) => {
+                    if (val.cell) {
+                        let rowSpan = val.cell.rowSpan ?? 1;
+                        if (rowSpan > 1) {
+                            rowSpan = Math.max(1, rowSpan - count);
+                            api.tableModifyCellSpan(this.__page, this.shape, val.rowIdx, val.colIdx, rowSpan, val.cell.colSpan ?? 1);
+                        }
+                    }
+                })
+            }
 
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width - removeWidth, this.shape.frame.height - removeHeight);
             this.__repo.commit();
