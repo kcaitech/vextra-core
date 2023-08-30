@@ -65,7 +65,8 @@ import {
     TextTransformType,
     BulletNumbersBehavior,
     Text,
-    TableShape
+    TableShape,
+    TableCell
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -648,12 +649,15 @@ export class CMDExecuter {
             if (!shape) {
                 throw new Error("table cell not find")
             }
+            if (!(shape as TableCell).text) {
+                throw new Error("table cell has no text")
+            }
         }
         const op = _op as ArrayOpInsert;
         const text = cmd.parseText();
         const shapetext = (shape as TextShapeLike).text;
         if (!(shapetext instanceof Text)) {
-            throw new Error("shape type wrong")
+            throw new Error("shape type wrong, has no text: " + shapetext)
         }
         if (text.type === "simple") {
             let attr;
