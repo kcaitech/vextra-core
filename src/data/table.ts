@@ -8,7 +8,7 @@ import { Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
-import { locateCell } from "./tablelocate";
+import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 import { uuid } from "../basic/uuid";
 export { TableLayout, TableGridItem } from "./tablelayout";
@@ -324,6 +324,10 @@ export class TableShape extends Shape implements classes.TableShape {
         const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCell | undefined }) | undefined;
         if (item) item.cell = this.getCellAt(item.index.row, item.index.col);
         return item;
+    }
+
+    locateCellIndex(x: number, y: number): { row: number, col: number } | undefined {
+        return locateCellIndex(this.getLayout(), x, y);
     }
 
     locateCell2(cell: TableCell): (TableGridItem & { cell: TableCell | undefined }) | undefined {
