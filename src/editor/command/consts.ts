@@ -70,6 +70,7 @@ export const BORDER_ATTR_ID = {
     position: "position",
     borderStyle: "borderStyle",
 }
+export const POINT_ID = "point"
 
 export const TEXT_ATTR_ID = {
     color: "color",
