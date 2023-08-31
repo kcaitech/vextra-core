@@ -63,7 +63,7 @@ class ProxyHandler {
             ignore = true;
         }
         else if (this.__context.transact === undefined) {
-            throw new Error("NOT inside transact!");
+            throw new Error(`NOT inside transact: set '${propertyKey.toString()}'`);
         }
         else if (this.__context.settrap) {
             throw new Error(`inside trap: set '${propertyKey.toString()}'`);
