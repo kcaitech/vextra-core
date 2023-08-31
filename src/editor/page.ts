@@ -450,20 +450,17 @@ export class PageEditor {
      * @param shapes 未进入文档的shape 
      */
     insertShapes1(parent: GroupShape, shapes: Shape[], adjusted = false): Shape[] | false {
-        const p_xy = parent.matrix2Root().computeCoord2(0, 0);
         const api = this.__repo.start("insertShapes", {});
         try {
+            const p_xy = parent.matrix2Root().computeCoord2(0, 0), result: Shape[] = [];
             let index = parent.childs.length;
-            const result: Shape[] = [];
             for (let i = 0, len = shapes.length; i < len; i++) {
-                let shape = shapes[i];
+                const shape = shapes[i];
                 shape.id = uuid();
-                if (!adjusted) {
-                    shape.frame.x -= p_xy.x;
-                    shape.frame.y -= p_xy.y;
-                }
-                api.shapeInsert(this.__page, parent, shape, index) && index++;
-                result.push(parent.childs[index])
+                if (!adjusted) shape.frame.x -= p_xy.x, shape.frame.y -= p_xy.y;
+                api.shapeInsert(this.__page, parent, shape, index);
+                result.push(parent.childs[index]);
+                index++;
             }
             this.__repo.commit();
             return result;
