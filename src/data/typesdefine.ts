@@ -150,6 +150,7 @@ export enum ShapeType {
     Line = 'line',
     Table = 'table',
     TableCell = 'table-cell',
+    OverrideShape = 'override-shape',
 }
 /* shape frame
  * x,y为parent坐标系里的点
@@ -206,11 +207,11 @@ export type Padding = {
     right?: number
     bottom?: number
 }
-/* override list item */
-export type OverrideItem = {
-    id: string
-    attr: string
-    value: (Style | string)
+/* override types */
+export enum OverrideType {
+    StringValue = 'stringValue',
+    Text = 'text',
+    Image = 'image',
 }
 /* marker type */
 export enum MarkerType {
@@ -489,7 +490,7 @@ export type TableCell = Shape & {
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
     refId: string
-    overrides?: OverrideItem[]
+    childs: OverrideShape[]
 }
 /* span attr */
 export type Span = SpanAttr & {
@@ -527,6 +528,16 @@ export type TextAttr = ParaAttr & {
 /* page */
 export type Page = Shape & {
     childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape | TableShape)[]
+}
+/* override shape */
+export type OverrideShape = Shape & {
+    refId: string
+    override_stringValue?: boolean
+    override_text?: boolean
+    override_image?: boolean
+    stringValue?: string
+    text?: Text
+    imageRef?: string
 }
 /* oval shape */
 export type OvalShape = PathShape & {

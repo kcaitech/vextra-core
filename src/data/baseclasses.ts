@@ -15,6 +15,7 @@ export {
     StrikethroughType,
     ShapeType,
     ResizeType,
+    OverrideType,
     MarkerType,
     LineJoinStyle,
     LineCapStyle,
@@ -43,6 +44,7 @@ import {
     StrikethroughType,
     ShapeType,
     ResizeType,
+    OverrideType,
     MarkerType,
     LineJoinStyle,
     LineCapStyle,
@@ -328,25 +330,6 @@ export class Padding extends Basic {
     constructor(
     ) {
         super()
-    }
-}
-/**
- * override list item 
- */
-export class OverrideItem extends Basic {
-    typeId = 'override-item'
-    id: string
-    attr: string
-    value: (Style | string)
-    constructor(
-        id: string,
-        attr: string,
-        value: (Style | string)
-    ) {
-        super()
-        this.id = id
-        this.attr = attr
-        this.value = value
     }
 }
 /**
@@ -837,14 +820,15 @@ export class TableCell extends Shape {
 export class SymbolRefShape extends Shape {
     typeId = 'symbol-ref-shape'
     refId: string
-    overrides?: BasicArray<OverrideItem >
+    childs: BasicArray<OverrideShape >
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        refId: string
+        refId: string,
+        childs: BasicArray<OverrideShape >
     ) {
         super(
             id,
@@ -854,6 +838,7 @@ export class SymbolRefShape extends Shape {
             style
         )
         this.refId = refId
+        this.childs = childs
     }
 }
 /**
@@ -1001,6 +986,36 @@ export class Page extends Shape {
             style
         )
         this.childs = childs
+    }
+}
+/**
+ * override shape 
+ */
+export class OverrideShape extends Shape {
+    typeId = 'override-shape'
+    refId: string
+    override_stringValue?: boolean
+    override_text?: boolean
+    override_image?: boolean
+    stringValue?: string
+    text?: Text
+    imageRef?: string
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        refId: string
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style
+        )
+        this.refId = refId
     }
 }
 /**

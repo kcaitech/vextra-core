@@ -21,7 +21,9 @@
         "line",
 
         "table",
-        "table-cell"
+        "table-cell",
+
+        "override-shape"
     ],
     "default": "path"
 }

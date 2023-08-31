@@ -91,3 +91,8 @@ inject['FlattenShape']['content'] = `\
     return ret;
 `
 
+inject['OverrideShape'] = {};
+inject['OverrideShape']['after'] = `\
+    // inject code
+    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
+`

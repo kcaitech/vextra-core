@@ -22,3 +22,8 @@ inject['TableCell']['after'] = `\
     // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
 `
+inject['OverrideShape'] = {};
+inject['OverrideShape']['after'] = `\
+    // inject code
+    if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
+`

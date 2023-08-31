@@ -261,25 +261,9 @@ export function exportPadding(source: types.Padding, ctx?: IExportContext): type
     }
     return ret
 }
-/* override list item */
-export function exportOverrideItem(source: types.OverrideItem, ctx?: IExportContext): types.OverrideItem {
-    const ret = {
-        id: source.id,
-        attr: source.attr,
-        value: (() => {
-            const val = source.value;
-            if (typeof val != 'object') {
-                return val
-            }
-            if (val.typeId == 'style') {
-                return exportStyle(val as types.Style, ctx)
-            }
-            {
-                throw new Error('unknow val: ' + val)
-            }
-        })(),
-    }
-    return ret
+/* override types */
+export function exportOverrideType(source: types.OverrideType, ctx?: IExportContext): types.OverrideType {
+    return source
 }
 /* marker type */
 export function exportMarkerType(source: types.MarkerType, ctx?: IExportContext): types.MarkerType {
@@ -721,10 +705,10 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         refId: source.refId,
-        overrides: source.overrides && (() => {
+        childs: (() => {
             const ret = []
-            for (let i = 0, len = source.overrides.length; i < len; i++) {
-                const r = exportOverrideItem(source.overrides[i], ctx)
+            for (let i = 0, len = source.childs.length; i < len; i++) {
+                const r = exportOverrideShape(source.childs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -997,6 +981,42 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
             return ret
         })(),
     }
+    return ret
+}
+/* override shape */
+export function exportOverrideShape(source: types.OverrideShape, ctx?: IExportContext): types.OverrideShape {
+    const ret = {
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        refId: source.refId,
+        override_stringValue: source.override_stringValue,
+        override_text: source.override_text,
+        override_image: source.override_image,
+        stringValue: source.stringValue,
+        text: source.text && exportText(source.text, ctx),
+        imageRef: source.imageRef,
+    }
+    // inject code
+    if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
     return ret
 }
 /* oval shape */

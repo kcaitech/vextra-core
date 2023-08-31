@@ -1,0 +1,8 @@
+{
+    "description": "override types",
+    "enum": [
+        "stringValue",
+        "text",
+        "image"
+    ]
+}

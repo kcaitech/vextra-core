@@ -38,7 +38,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
             }))
         }
     }
-    childs.push(...gR(h, shape, comsMap)); // 后代元素放中间
+    childs.push(...gR(h, shape, comsMap, undefined)); // 后代元素放中间
     const b_len = shape.style.borders.length;
     if (shape.isNoTransform()) {
         if (b_len) {

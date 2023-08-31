@@ -260,25 +260,9 @@ export function importPadding(source: types.Padding, ctx?: IImportContext): impl
     if (source.bottom !== undefined) ret.bottom = source.bottom
     return ret
 }
-/* override list item */
-export function importOverrideItem(source: types.OverrideItem, ctx?: IImportContext): impl.OverrideItem {
-    const ret: impl.OverrideItem = new impl.OverrideItem (
-        source.id,
-        source.attr,
-        (() => {
-            const val = source.value
-            if (typeof val !== 'object') {
-                return val
-            }
-            if (val.typeId == 'style') {
-                return importStyle(val as types.Style, ctx)
-            }
-            {
-                throw new Error('unknow val: ' + val)
-            }
-        })()
-    )
-    return ret
+/* override types */
+export function importOverrideType(source: types.OverrideType, ctx?: IImportContext): impl.OverrideType {
+    return source
 }
 /* marker type */
 export function importMarkerType(source: types.MarkerType, ctx?: IImportContext): impl.MarkerType {
@@ -700,7 +684,15 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        source.refId
+        source.refId,
+        (() => {
+            const ret = new BasicArray<impl.OverrideShape>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
+                const r = importOverrideShape(source.childs[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
@@ -717,14 +709,6 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.overrides !== undefined) ret.overrides = (() => {
-        const ret = new BasicArray<impl.OverrideItem>()
-        for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
-            const r = importOverrideItem(source.overrides[i], ctx)
-            if (r) ret.push(r)
-        }
-        return ret
-    })()
     // inject code
     if (ctx?.document) ret.setSymbolMgr(ctx.document.symbolsMgr);
     return ret
@@ -987,6 +971,41 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    return ret
+}
+/* override shape */
+export function importOverrideShape(source: types.OverrideShape, ctx?: IImportContext): impl.OverrideShape {
+    const ret: impl.OverrideShape = new impl.OverrideShape (
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        source.refId
+    )
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.override_stringValue !== undefined) ret.override_stringValue = source.override_stringValue
+    if (source.override_text !== undefined) ret.override_text = source.override_text
+    if (source.override_image !== undefined) ret.override_image = source.override_image
+    if (source.stringValue !== undefined) ret.stringValue = source.stringValue
+    if (source.text !== undefined) ret.text = importText(source.text, ctx)
+    if (source.imageRef !== undefined) ret.imageRef = source.imageRef
+    // inject code
+    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
 }
 /* oval shape */

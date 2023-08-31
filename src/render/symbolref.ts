@@ -1,14 +1,14 @@
-import { ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
+import { OverridesGetter, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
 import { renderGroupChilds } from "./group";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
 
-function renderSym(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame): any {
+function renderSym(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame, overrides: OverridesGetter): any {
     // if (!shape.isVisible) return [];
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
 
-    const childs: Array<any> = renderGroupChilds(h, shape, comsMap);
+    const childs: Array<any> = renderGroupChilds(h, shape, comsMap, overrides);
     const frame = shape.frame;
 
     if (targetFrame.width === frame.width && targetFrame.height === frame.height) {
@@ -41,7 +41,7 @@ export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeTyp
     childs.push(...borderR(h, shape.style.borders, frame, path));
 
     // symbol
-    childs.push(...renderSym(h, sym, comsMap, shape.frame)); // 有缩放
+    childs.push(...renderSym(h, sym, comsMap, shape.frame, shape)); // 有缩放
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
