@@ -8,7 +8,6 @@ import {
     Shape,
     ShapeFrame,
     SymbolShape,
-    SymbolRefShape,
     TextShape,
     ExportFormat
 } from "../../../data/shape";
@@ -18,7 +17,7 @@ import { Page } from "../../../data/page";
 import { importText } from "./textio";
 import { Artboard } from "../../../data/artboard";
 import { Text } from "../../../data/text";
-import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D } from "../../../data/classes"
+import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D, SymbolRefShape } from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";

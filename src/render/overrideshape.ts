@@ -2,7 +2,7 @@ import { ShapeFrame, ShapeType } from "../data/typesdefine";
 import { OverrideShape, Shape } from "../data/classes";
 import { renderTextLayout } from "./text";
 
-function renderOverrideText(h: Function, refShape: Shape, shape: OverrideShape) {
+function renderOverrideText(h: Function, refShape: Shape, shape: OverrideShape, reflush?: number) {
 
     const frame = refShape.frame;
     const childs = [];
@@ -10,12 +10,12 @@ function renderOverrideText(h: Function, refShape: Shape, shape: OverrideShape) 
     const layout = shape.getLayout(refShape);
     if (layout) childs.push(...renderTextLayout(h, layout))
 
-    const props = { transform: `translate(${frame.x},${frame.y})` }
-
+    const props: any = { transform: `translate(${frame.x},${frame.y})` }
+    if (reflush) props.reflush = reflush;
     return h('g', props, childs);
 }
 
-function renderOverrideImage(h: Function, refShape: Shape, shape: OverrideShape) {
+function renderOverrideImage(h: Function, refShape: Shape, shape: OverrideShape, reflush?: number) {
 
     const frame = refShape.frame;
     const childs = [];
@@ -31,20 +31,20 @@ function renderOverrideImage(h: Function, refShape: Shape, shape: OverrideShape)
     });
     childs.push(img);
 
-    const props = { transform: `translate(${frame.x},${frame.y})` }
-
+    const props: any = { transform: `translate(${frame.x},${frame.y})` }
+    if (reflush) props.reflush = reflush;
     return h('g', props, childs);
 }
 
-export function render(h: Function, refShape: Shape, shape: OverrideShape): any {
+export function render(h: Function, refShape: Shape, shape: OverrideShape, reflush?: number): any {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
 
     switch (refShape.type) {
         case ShapeType.Text:
-            return renderOverrideText(h, refShape, shape);
+            return renderOverrideText(h, refShape, shape, reflush);
         case ShapeType.Image:
-            return renderOverrideImage(h, refShape, shape);
+            return renderOverrideImage(h, refShape, shape, reflush);
     }
 
 }
