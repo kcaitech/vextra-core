@@ -450,7 +450,7 @@ export class PageEditor {
      * @param shapes 未进入文档的shape 
      */
     insertShapes1(parent: GroupShape, shapes: Shape[], adjusted = false): Shape[] | false {
-        const api = this.__repo.start("insertShapes", {});
+        const api = this.__repo.start("insertShapes1", {});
         try {
             const p_xy = parent.matrix2Root().computeCoord2(0, 0), result: Shape[] = [];
             let index = parent.childs.length;
@@ -465,7 +465,31 @@ export class PageEditor {
             this.__repo.commit();
             return result;
         } catch (e) {
-            console.log(e)
+            console.log(e);
+            this.__repo.rollback();
+            return false;
+        }
+    }
+    /**
+     * @description 指定容器插入shape
+     * @param shapes 未进入文档的shape
+     * @param actions.index 插入位置
+     */
+    insertShapes2(shapes: Shape[], actions: { parent: GroupShape, index: number }[]): Shape[] | false {
+        const api = this.__repo.start("insertShapes2", {});
+        try {
+            const result: Shape[] = [];
+            for (let i = 0, len = actions.length; i < len; i++) {
+                const shape = shapes[i];
+                const { parent, index } = actions[i];
+                shape.id = uuid();
+                api.shapeInsert(this.__page, parent, shape, index);
+                result.push(parent.childs[index]);
+            }
+            this.__repo.commit();
+            return result;
+        } catch (error) {
+            console.log(error);
             this.__repo.rollback();
             return false;
         }
