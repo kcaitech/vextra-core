@@ -1,6 +1,6 @@
 import { GroupShape, Shape, ShapeType, TextShape } from "../data/shape";
-import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText } from "./baseexport";
-import { importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText, importArtboard } from "./baseimport";
+import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText, exportTableShape } from "./baseexport";
+import { importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText, importArtboard, importTableShape } from "./baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
@@ -36,6 +36,8 @@ export function export_shape(shapes: Shape[]) {
             content = exportArtboard(shape as unknown as types.Artboard);
         } else if (type === ShapeType.Group) {
             content = exportGroupShape(shape as unknown as types.GroupShape);
+        } else if (type === ShapeType.Table) {
+            content = exportTableShape(shape as unknown as types.TableShape);
         }
         if (content) result.push(content);
     }
@@ -89,6 +91,10 @@ export function import_shape(document: Document, source: types.Shape[]) {
                 const childs = (_s as GroupShape).childs;
                 childs && childs.length && set_childs_id(childs);
                 r = importGroupShape(_s as types.GroupShape, ctx);
+            } else if (type === ShapeType.Table) {
+                const childs = (_s as GroupShape).childs;
+                childs && childs.length && set_childs_id(childs);
+                r = importTableShape(_s as types.TableShape, ctx);
             }
             r && result.push(r);
         }
