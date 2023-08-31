@@ -1,9 +1,10 @@
 import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell } from "../../io/baseexport";
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
-import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../../data/shape";
+import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, TextShape } from "../../data/shape";
 import { TableCell, TableShape } from "../../data/table";
 import { Page } from "../../data/page";
+import { SymbolRefShape } from "../../data/classes";
 
 export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
