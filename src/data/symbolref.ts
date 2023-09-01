@@ -155,6 +155,20 @@ export interface OverridesGetter {
     getOverrid(id: string): OverrideShape | undefined;
 }
 
+// 适配左侧导航栏
+function adaptShape(shape: Shape, parent: Shape): Shape {
+    const _parent = parent;
+    const handler = {
+        get: (target: object, propertyKey: PropertyKey, receiver?: any) => {
+            if (propertyKey === 'parent') {
+                return _parent;
+            }
+            const val = Reflect.get(target, propertyKey, receiver);
+            return val;
+        }
+    }
+    return new Proxy<Shape>(shape, handler);
+}
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape, OverridesGetter {
     __data: SymbolShape | undefined
@@ -184,7 +198,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     }
 
     get naviChilds(): Shape[] | undefined {
-        return this.__data?.childs;
+        return this.__data?.childs.map((v) => adaptShape(v, this));
     }
 
     get childs() {
