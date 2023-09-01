@@ -162,7 +162,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
 
     typeId = 'symbol-ref-shape'
     refId: string
-    childs: BasicArray<OverrideShape>
+    overrides: BasicArray<OverrideShape>
     constructor(
         id: string,
         name: string,
@@ -170,7 +170,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         frame: ShapeFrame,
         style: Style,
         refId: string,
-        childs: BasicArray<OverrideShape>
+        overrides: BasicArray<OverrideShape>
     ) {
         super(
             id,
@@ -180,7 +180,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
             style
         )
         this.refId = refId
-        this.childs = childs
+        this.overrides = overrides
     }
     setSymbolMgr(mgr: ResourceMgr<SymbolShape>) {
         this.__symMgr = mgr;
@@ -205,7 +205,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
                 new ShapeFrame(0, 0, 0, 0),
                 new Style(new BasicArray(), new BasicArray()),
                 id);
-            this.childs.push(override);
+            this.overrides.push(override);
         }
 
         switch (attr) {
@@ -223,8 +223,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         }
     }
     getOverrid(id: string): OverrideShape | undefined {
-        for (let i = 0, len = this.childs.length; i < len; ++i) {
-            if (this.childs[i].refId === id) return this.childs[i];
+        for (let i = 0, len = this.overrides.length; i < len; ++i) {
+            if (this.overrides[i].refId === id) return this.overrides[i];
         }
     }
 }

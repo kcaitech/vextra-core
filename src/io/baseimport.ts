@@ -583,6 +583,9 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
 }
 /* table shape */
 export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
+    // inject code
+    // 兼容旧数据
+    if ((source as any).childs) source.datas = (source as any).childs;
     const ret: impl.TableShape = new impl.TableShape (
         source.id,
         source.name,
@@ -591,9 +594,9 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         importStyle(source.style, ctx),
         (() => {
             const ret = new BasicArray<(undefined | impl.TableCell)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
+            for (let i = 0, len = source.datas && source.datas.length; i < len; i++) {
                 const r = (() => {
-                    const val = source.childs[i]
+                    const val = source.datas[i]
                     if (!val) {
                         return val ?? undefined
                     }
@@ -687,8 +690,8 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         source.refId,
         (() => {
             const ret = new BasicArray<impl.OverrideShape>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = importOverrideShape(source.childs[i], ctx)
+            for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
+                const r = importOverrideShape(source.overrides[i], ctx)
                 if (r) ret.push(r)
             }
             return ret

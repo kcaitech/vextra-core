@@ -762,7 +762,7 @@ export class TextShape extends Shape {
  */
 export class TableShape extends Shape {
     typeId = 'table-shape'
-    childs: BasicArray<(undefined | TableCell) >
+    datas: BasicArray<(undefined | TableCell) >
     rowHeights: BasicArray<number >
     colWidths: BasicArray<number >
     textAttr?: TextAttr
@@ -772,7 +772,7 @@ export class TableShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(undefined | TableCell) >,
+        datas: BasicArray<(undefined | TableCell) >,
         rowHeights: BasicArray<number >,
         colWidths: BasicArray<number >
     ) {
@@ -783,7 +783,7 @@ export class TableShape extends Shape {
             frame,
             style
         )
-        this.childs = childs
+        this.datas = datas
         this.rowHeights = rowHeights
         this.colWidths = colWidths
     }
@@ -820,7 +820,7 @@ export class TableCell extends Shape {
 export class SymbolRefShape extends Shape {
     typeId = 'symbol-ref-shape'
     refId: string
-    childs: BasicArray<OverrideShape >
+    overrides: BasicArray<OverrideShape >
     constructor(
         id: string,
         name: string,
@@ -828,7 +828,7 @@ export class SymbolRefShape extends Shape {
         frame: ShapeFrame,
         style: Style,
         refId: string,
-        childs: BasicArray<OverrideShape >
+        overrides: BasicArray<OverrideShape >
     ) {
         super(
             id,
@@ -838,7 +838,7 @@ export class SymbolRefShape extends Shape {
             style
         )
         this.refId = refId
-        this.childs = childs
+        this.overrides = overrides
     }
 }
 /**

@@ -164,7 +164,7 @@ export class TableShape extends Shape implements classes.TableShape {
     static MaxColCount = 50;
 
     typeId = 'table-shape'
-    childs: BasicArray<(TableCell | undefined)>
+    datas: BasicArray<(TableCell | undefined)>
     rowHeights: BasicArray<number>
     colWidths: BasicArray<number>
     textAttr?: TextAttr // 文本默认属性
@@ -181,7 +181,7 @@ export class TableShape extends Shape implements classes.TableShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(TableCell | undefined)>,
+        datas: BasicArray<(TableCell | undefined)>,
         rowHeights: BasicArray<number>,
         colWidths: BasicArray<number>
     ) {
@@ -194,7 +194,7 @@ export class TableShape extends Shape implements classes.TableShape {
         )
         this.rowHeights = rowHeights
         this.colWidths = colWidths
-        this.childs = childs;
+        this.datas = datas;
         this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur, 0);
         this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur, 0);
     }
@@ -345,7 +345,7 @@ export class TableShape extends Shape implements classes.TableShape {
 
     private getCellIndexs() {
         if (this.__cellIndexs.size === 0) {
-            this.childs.forEach((c, i) => {
+            this.datas.forEach((c, i) => {
                 if (c) this.__cellIndexs.set(c.id, i);
             })
         }
@@ -394,7 +394,7 @@ export class TableShape extends Shape implements classes.TableShape {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
         const index = rowIdx * this.colWidths.length + colIdx;
-        const cell = this.childs[index];
+        const cell = this.datas[index];
         if (!cell && initCell) {
             return this.initCell(index);
         }
@@ -402,9 +402,9 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     private initCell(index: number) {
-        this.childs[index] = newCell();
+        this.datas[index] = newCell();
         // add to index
-        const cell = this.childs[index];
+        const cell = this.datas[index];
         // this.getCellIndexs().set(cell!.id, index);
         if (this.__cellIndexs.size > 0) {
             this.__cellIndexs.set(cell!.id, index)

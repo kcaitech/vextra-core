@@ -6,7 +6,7 @@
             "type": "string",
             "default": "$uuid"
         },
-        "childs": {
+        "overrides": {
             "type": "array",
             "items": {
                 "$ref": "./override-shape.json"
@@ -15,7 +15,7 @@
     },
     "required": [
         "refId",
-        "childs"
+        "overrides"
     ],
     "allOf": [
         {

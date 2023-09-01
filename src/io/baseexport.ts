@@ -607,11 +607,11 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        childs: (() => {
+        datas: (() => {
             const ret = []
-            for (let i = 0, len = source.childs.length; i < len; i++) {
+            for (let i = 0, len = source.datas.length; i < len; i++) {
                 const r = (() => {
-                    const val = source.childs[i];
+                    const val = source.datas[i];
                     if (typeof val != 'object') {
                         return val
                     }
@@ -705,10 +705,10 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         refId: source.refId,
-        childs: (() => {
+        overrides: (() => {
             const ret = []
-            for (let i = 0, len = source.childs.length; i < len; i++) {
-                const r = exportOverrideShape(source.childs[i], ctx)
+            for (let i = 0, len = source.overrides.length; i < len; i++) {
+                const r = exportOverrideShape(source.overrides[i], ctx)
                 if (r) ret.push(r)
             }
             return ret

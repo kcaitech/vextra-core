@@ -474,7 +474,7 @@ export type TextShape = Shape & {
 }
 /* table shape */
 export type TableShape = Shape & {
-    childs: (undefined | TableCell)[]
+    datas: (undefined | TableCell)[]
     rowHeights: number[]
     colWidths: number[]
     textAttr?: TextAttr
@@ -490,7 +490,7 @@ export type TableCell = Shape & {
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
     refId: string
-    childs: OverrideShape[]
+    overrides: OverrideShape[]
 }
 /* span attr */
 export type Span = SpanAttr & {

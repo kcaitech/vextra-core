@@ -64,6 +64,11 @@ inject['Fill']['after'] = `\
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 `
 inject['TableShape'] = {};
+inject['TableShape']['before'] = `\
+    // inject code
+    // 兼容旧数据
+    if ((source as any).childs) source.datas = (source as any).childs;
+`
 inject['TableShape']['after'] = `\
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
