@@ -584,7 +584,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextColor(this.__page, this.shape, color);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyColor(this.__page, cell as any, 0, cell.text.length, color);
@@ -614,7 +614,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextHighlightColor(this.__page, this.shape, color);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyHighlightColor(this.__page, cell as any, 0, cell.text.length, color);
@@ -645,7 +645,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextFontName(this.__page, this.shape, fontName);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyFontName(this.__page, cell as any, 0, cell.text.length, fontName);
@@ -677,7 +677,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextFontSize(this.__page, this.shape, fontSize);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyFontSize(this.__page, cell as any, 0, cell.text.length, fontSize);
@@ -711,7 +711,7 @@ export class TableEditor extends ShapeEditor {
             else {
 
                 api.tableModifyTextVerAlign(this.__page, this.shape, verAlign);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.shapeModifyTextVerAlign(this.__page, cell as any, verAlign);
@@ -744,7 +744,7 @@ export class TableEditor extends ShapeEditor {
             else {
 
                 api.tableModifyTextHorAlign(this.__page, this.shape, horAlign);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyHorAlign(this.__page, cell as any, horAlign, 0, cell.text.length);
@@ -779,7 +779,7 @@ export class TableEditor extends ShapeEditor {
             else {
                 api.tableModifyTextMinLineHeight(this.__page, this.shape, lineHeight);
                 api.tableModifyTextMaxLineHeight(this.__page, this.shape, lineHeight);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         const length = cell.text.length;
@@ -815,7 +815,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextKerning(this.__page, this.shape, kerning);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyKerning(this.__page, cell as any, kerning, 0, cell.text.length);
@@ -849,7 +849,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextParaSpacing(this.__page, this.shape, paraSpacing);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyParaSpacing(this.__page, cell as any, paraSpacing, 0, cell.text.length);
@@ -881,7 +881,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextUnderline(this.__page, this.shape, underline ? UnderlineType.Single : undefined);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyUnderline(this.__page, cell as any, underline ? UnderlineType.Single : undefined, 0, cell.text.length);
@@ -912,7 +912,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyStrikethrough(this.__page, cell as any, strikethrough ? StrikethroughType.Single : undefined, 0, cell.text.length);
@@ -943,7 +943,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextBold(this.__page, this.shape, bold);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyBold(this.__page, cell as any, bold, 0, cell.text.length);
@@ -974,7 +974,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextItalic(this.__page, this.shape, italic);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyItalic(this.__page, cell as any, italic, 0, cell.text.length);
@@ -1006,7 +1006,7 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.tableModifyTextTransform(this.__page, this.shape, transform);
-                const cells = this.shape.childs;
+                const cells = this.shape.datas;
                 cells.forEach((cell) => {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyTransform(this.__page, cell as any, transform, 0, cell.text.length);
