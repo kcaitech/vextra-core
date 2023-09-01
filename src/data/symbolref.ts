@@ -182,6 +182,15 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         this.refId = refId
         this.overrides = overrides
     }
+
+    get naviChilds(): Shape[] | undefined {
+        return this.__data?.childs;
+    }
+
+    get childs() {
+        return this.overrides;
+    }
+
     setSymbolMgr(mgr: ResourceMgr<SymbolShape>) {
         this.__symMgr = mgr;
     }

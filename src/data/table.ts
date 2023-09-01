@@ -203,8 +203,12 @@ export class TableShape extends Shape implements classes.TableShape {
         this.__imageMgr = imageMgr;
     }
 
-    get childsVisible(): boolean {
-        return false;
+    get naviChilds(): Shape[] | undefined {
+        return undefined;
+    }
+
+    get childs() {
+        return this.datas;
     }
 
     get widthTotalWeights() {
