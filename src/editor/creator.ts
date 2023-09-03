@@ -255,7 +255,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     table.setImageMgr(mediasMgr);
     return table;
 }
-export function newContact(name: string, frame: ShapeFrame, apex: ContactForm) {
+export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm) {
     const style = newStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
     const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(0, 0));

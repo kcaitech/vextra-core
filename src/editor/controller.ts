@@ -3,7 +3,7 @@ import { Shape, GroupShape, PathShape, CurvePoint, Point2D } from "../data/shape
 import { getFormatFromBase64 } from "../basic/utils";
 import { CurveMode, ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
-import { newArrowShape, newArtboard, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape } from "./creator";
+import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape } from "./creator";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { v4 } from "uuid";
@@ -14,6 +14,7 @@ import { Artboard } from "../data/artboard";
 import { Color } from "../data/style";
 import { afterModifyGroupShapeWH } from "./frame";
 import { uuid } from "../basic/uuid";
+import { ContactForm } from "data/baseclasses";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -52,6 +53,7 @@ export interface AsyncCreator {
     init_media: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: { buff: Uint8Array, base64: string }) => Shape | undefined;
     init_text: (page: Page, parent: GroupShape, frame: ShapeFrame, content: string) => Shape | undefined;
     init_arrow: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame) => Shape | undefined;
+    init_contact: (page: Page, parent: GroupShape, frame: ShapeFrame, name: string, apex?: ContactForm) => Shape | undefined;
     setFrame: (point: PageXY) => void;
     setFrameByWheel: (point: PageXY) => void;
     collect: (page: Page, shapes: Shape[], target: Artboard) => void;
@@ -203,6 +205,19 @@ export class Controller {
                 return newShape
             }
         }
+        const init_contact = (page: Page, parent: GroupShape, frame: ShapeFrame, name: string, apex?: ContactForm): Shape | undefined => {
+            savepage = page;
+            status = Status.Pending;
+            const shape = newContact(name, frame, apex);
+            const xy = parent.frame2Root();
+            shape.frame.x -= xy.x;
+            shape.frame.y -= xy.y;
+            api.shapeInsert(page, parent, shape, parent.childs.length);
+            newShape = parent.childs.at(-1);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+            return newShape
+        }
         const setFrame = (point: PageXY) => {
             if (!newShape || !savepage) return;
             status = Status.Pending;
@@ -275,7 +290,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { init, init_media, init_text, init_arrow, setFrame, setFrameByWheel, collect, close, init_table }
+        return { init, init_media, init_text, init_arrow, init_contact, setFrame, setFrameByWheel, collect, close, init_table }
     }
     // 单个图形异步编辑
     public asyncRectEditor(shape: Shape, page: Page): AsyncBaseAction {
