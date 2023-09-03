@@ -9,6 +9,7 @@ import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
+import { ContactForm } from "./typesdefine";
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
@@ -642,5 +643,27 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         this.overrides.forEach((item) => {
             if (item.id === id && item.attr === attr) return item;
         })
+    }
+}
+export class ContactShape extends PathShape implements classes.ContactShape {
+    typeId = 'contact-shape'
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        points: BasicArray<CurvePoint>,
+        isClosed: boolean
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style,
+            points,
+            isClosed
+        )
     }
 }

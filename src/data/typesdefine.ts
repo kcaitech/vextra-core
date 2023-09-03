@@ -128,6 +128,7 @@ export type Shape = {
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
+    contacts?: ContactShape[]
 }
 /* shape types */
 export enum ShapeType {
@@ -349,6 +350,18 @@ export type ContextSettings = {
     blenMode: BlendMode
     opacity: number
 }
+/* contact type */
+export enum ContactType {
+    Top = 'top',
+    Right = 'right',
+    Bottom = 'bottom',
+    Left = 'left',
+}
+/* border style */
+export type ContactForm = {
+    contactType: ContactType
+    shape: Shape
+}
 /* comment */
 export type Comment = {
     pageId: string
@@ -550,6 +563,14 @@ export type SymbolShape = GroupShape & {
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {
+}
+/* contact shape */
+export type ContactShape = Shape & {
+    points: CurvePoint[]
+    from?: ContactForm
+    to?: ContactForm
+    isClosed: boolean
+    fixedRadius?: number
 }
 /* artboard shape */
 export type Artboard = GroupShape & {

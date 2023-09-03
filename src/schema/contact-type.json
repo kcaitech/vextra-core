@@ -1,0 +1,10 @@
+{
+  "description": "contact type",
+  "enum": [
+    "top",
+    "right",
+    "bottom",
+    "left"
+  ],
+  "default": "left"
+}

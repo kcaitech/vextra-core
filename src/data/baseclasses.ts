@@ -24,6 +24,7 @@ export {
     ExportFormatNameingScheme,
     ExportFileFormat,
     CurveMode,
+    ContactType,
     BulletNumbersType,
     BulletNumbersBehavior,
     BorderPosition,
@@ -52,6 +53,7 @@ import {
     ExportFormatNameingScheme,
     ExportFileFormat,
     CurveMode,
+    ContactType,
     BulletNumbersType,
     BulletNumbersBehavior,
     BorderPosition,
@@ -182,6 +184,7 @@ export class Shape extends Basic {
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
+    contacts?: BasicArray<ContactShape >
     constructor(
         id: string,
         name: string,
@@ -561,6 +564,22 @@ export class ContextSettings extends Basic {
         super()
         this.blenMode = blenMode
         this.opacity = opacity
+    }
+}
+/**
+ * border style 
+ */
+export class ContactForm extends Basic {
+    typeId = 'contact-form'
+    contactType: ContactType
+    shape: Shape
+    constructor(
+        contactType: ContactType,
+        shape: Shape
+    ) {
+        super()
+        this.contactType = contactType
+        this.shape = shape
     }
 }
 /**
@@ -1154,6 +1173,36 @@ export class FlattenShape extends GroupShape {
             style,
             childs
         )
+    }
+}
+/**
+ * contact shape 
+ */
+export class ContactShape extends Shape {
+    typeId = 'contact-shape'
+    points: BasicArray<CurvePoint >
+    from?: ContactForm
+    to?: ContactForm
+    isClosed: boolean
+    fixedRadius?: number
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style
+        )
+        this.points = points
+        this.isClosed = isClosed
     }
 }
 /**

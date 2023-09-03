@@ -1,0 +1,17 @@
+{
+  "description": "border style",
+  "type": "object",
+  "properties": {
+    "contactType": {
+      "$ref": "./contact-type.json"
+    },
+    "shape": {
+      "$ref": "./shape.json"
+    }
+  },
+  "required": [
+    "contactType",
+    "shape"
+  ],
+  "additionalProperties": false
+}
