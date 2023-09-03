@@ -2,7 +2,7 @@ import { v4 as uuid } from "uuid";
 import { Page } from "../data/page";
 import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
-import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment } from "../data/shape";
+import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment, ContactShape } from "../data/shape";
 import * as types from "../data/typesdefine"
 import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape, importTableCell } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
@@ -27,6 +27,7 @@ import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
 import { TableShape } from "../data/table";
 import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
+import { ContactForm } from "data/baseclasses";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {
@@ -253,4 +254,17 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     table.style.fills.push(fill);
     table.setImageMgr(mediasMgr);
     return table;
+}
+export function newContact(name: string, frame: ShapeFrame, apex: ContactForm) {
+    const style = newStyle();
+    style.endMarkerType = types.MarkerType.OpenArrow;
+    const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(0, 0));
+    const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
+    const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+    style.borders.push(border);
+    const shape = new ContactShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, true);
+    if (apex) shape.from = apex;
+    addCommonAttr(shape);
+    return shape;
 }
