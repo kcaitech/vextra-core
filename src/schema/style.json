@@ -52,7 +52,7 @@
         "contacts": {
             "type": "array",
             "items": {
-                "$ref": "./contact-shape.json"
+                "type": "string"
             }
         },
         "startMarkerType": {

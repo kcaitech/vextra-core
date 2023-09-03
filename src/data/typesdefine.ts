@@ -76,7 +76,7 @@ export type Style = {
     fills: Fill[]
     innerShadows?: Shadow[]
     shadows?: Shadow[]
-    contacts?: ContactShape[]
+    contacts?: string[]
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
 }
@@ -151,6 +151,7 @@ export enum ShapeType {
     Line = 'line',
     Table = 'table',
     TableCell = 'table-cell',
+    Contact = 'contact',
 }
 /* shape frame
  * x,y为parent坐标系里的点

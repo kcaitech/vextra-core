@@ -111,7 +111,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
         contacts: source.contacts && (() => {
             const ret = []
             for (let i = 0, len = source.contacts.length; i < len; i++) {
-                const r = exportContactShape(source.contacts[i], ctx)
+                const r = source.contacts[i]
                 if (r) ret.push(r)
             }
             return ret

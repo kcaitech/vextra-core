@@ -12,16 +12,15 @@
         "symbol",
         "symbol-ref",
         "artboard-ref",
-
         "rectangle",
         "triangle",
         "star",
         "polygon",
         "oval",
         "line",
-
         "table",
-        "table-cell"
+        "table-cell",
+        "contact"
     ],
     "default": "path"
 }

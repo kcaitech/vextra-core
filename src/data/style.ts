@@ -1,9 +1,7 @@
 import { uuid } from "../basic/uuid";
 import * as classes from "./baseclasses"
-import { Blur, BorderOptions, ColorControls, ContextSettings, Shadow, WindingRule, FillType, Gradient, BorderPosition, BorderStyle, MarkerType } from "./baseclasses";
+import { Blur, BorderOptions, ColorControls, ContextSettings, Shadow, WindingRule, FillType, Gradient, BorderPosition, BorderStyle, MarkerType, ContactShape } from "./baseclasses";
 import { Basic, BasicArray, ResourceMgr } from "./basic";
-import { ContactShape } from "./shape";
-import { Shape } from "./typesdefine";
 
 export {
     GradientType,
@@ -28,7 +26,7 @@ export {
     GraphicsContextSettings,
     BorderStyle,
     ContactForm,
-    ContactType
+    ContactType,
 } from "./baseclasses"
 
 export class Color extends classes.Color {
@@ -147,7 +145,7 @@ export class Style extends Basic implements classes.Style {
     fills: BasicArray<Fill>
     innerShadows?: BasicArray<Shadow>
     shadows?: BasicArray<Shadow>
-    contacts?: BasicArray<ContactShape>
+    contacts?: BasicArray<string>
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     constructor(

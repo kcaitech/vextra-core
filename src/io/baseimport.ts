@@ -17,7 +17,7 @@ export function importWindingRule(source: types.WindingRule, ctx?: IImportContex
 }
 /* user infomation */
 export function importUserInfo(source: types.UserInfo, ctx?: IImportContext): impl.UserInfo {
-    const ret: impl.UserInfo = new impl.UserInfo(
+    const ret: impl.UserInfo = new impl.UserInfo (
         source.userId,
         source.userNickname,
         source.avatar
@@ -30,7 +30,7 @@ export function importUnderlineType(source: types.UnderlineType, ctx?: IImportCo
 }
 /* text */
 export function importText(source: types.Text, ctx?: IImportContext): impl.Text {
-    const ret: impl.Text = new impl.Text(
+    const ret: impl.Text = new impl.Text (
         (() => {
             const ret = new BasicArray<impl.Para>()
             for (let i = 0, len = source.paras && source.paras.length; i < len; i++) {
@@ -69,7 +69,7 @@ export function importTableCellType(source: types.TableCellType, ctx?: IImportCo
 }
 /* style */
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
-    const ret: impl.Style = new impl.Style(
+    const ret: impl.Style = new impl.Style (
         (() => {
             const ret = new BasicArray<impl.Border>()
             for (let i = 0, len = source.borders && source.borders.length; i < len; i++) {
@@ -110,9 +110,9 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         return ret
     })()
     if (source.contacts !== undefined) ret.contacts = (() => {
-        const ret = new BasicArray<impl.ContactShape>()
+        const ret = new BasicArray<string>()
         for (let i = 0, len = source.contacts && source.contacts.length; i < len; i++) {
-            const r = importContactShape(source.contacts[i], ctx)
+            const r = source.contacts[i]
             if (r) ret.push(r)
         }
         return ret
@@ -127,7 +127,7 @@ export function importStrikethroughType(source: types.StrikethroughType, ctx?: I
 }
 /* stop */
 export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
-    const ret: impl.Stop = new impl.Stop(
+    const ret: impl.Stop = new impl.Stop (
         source.position
     )
     if (source.color !== undefined) ret.color = importColor(source.color, ctx)
@@ -135,7 +135,7 @@ export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop 
 }
 /* span attr */
 export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): impl.SpanAttr {
-    const ret: impl.SpanAttr = new impl.SpanAttr(
+    const ret: impl.SpanAttr = new impl.SpanAttr (
     )
     if (source.fontName !== undefined) ret.fontName = source.fontName
     if (source.fontSize !== undefined) ret.fontSize = source.fontSize
@@ -153,7 +153,7 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
 }
 /* shape */
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
-    const ret: impl.Shape = new impl.Shape(
+    const ret: impl.Shape = new impl.Shape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -185,7 +185,7 @@ export function importShapeType(source: types.ShapeType, ctx?: IImportContext): 
  * x,y为parent坐标系里的点
  * width,height为当前shape的坐标空间大小 */
 export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext): impl.ShapeFrame {
-    const ret: impl.ShapeFrame = new impl.ShapeFrame(
+    const ret: impl.ShapeFrame = new impl.ShapeFrame (
         source.x,
         source.y,
         source.width,
@@ -195,7 +195,7 @@ export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext)
 }
 /* shadow */
 export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.Shadow {
-    const ret: impl.Shadow = new impl.Shadow(
+    const ret: impl.Shadow = new impl.Shadow (
         source.isEnabled,
         source.blurRadius,
         importColor(source.color, ctx),
@@ -212,7 +212,7 @@ export function importResizeType(source: types.ResizeType, ctx?: IImportContext)
 }
 /* point 2d */
 export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl.Point2D {
-    const ret: impl.Point2D = new impl.Point2D(
+    const ret: impl.Point2D = new impl.Point2D (
         source.x,
         source.y
     )
@@ -220,7 +220,7 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
 }
 /* path segment */
 export function importPathSegment(source: types.PathSegment, ctx?: IImportContext): impl.PathSegment {
-    const ret: impl.PathSegment = new impl.PathSegment(
+    const ret: impl.PathSegment = new impl.PathSegment (
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
@@ -235,7 +235,7 @@ export function importPathSegment(source: types.PathSegment, ctx?: IImportContex
 }
 /* para */
 export function importPara(source: types.Para, ctx?: IImportContext): impl.Para {
-    const ret: impl.Para = new impl.Para(
+    const ret: impl.Para = new impl.Para (
         source.text,
         (() => {
             const ret = new BasicArray<impl.Span>()
@@ -251,7 +251,7 @@ export function importPara(source: types.Para, ctx?: IImportContext): impl.Para 
 }
 /* page list item */
 export function importPageListItem(source: types.PageListItem, ctx?: IImportContext): impl.PageListItem {
-    const ret: impl.PageListItem = new impl.PageListItem(
+    const ret: impl.PageListItem = new impl.PageListItem (
         source.id,
         source.name
     )
@@ -260,7 +260,7 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
 }
 /* padding */
 export function importPadding(source: types.Padding, ctx?: IImportContext): impl.Padding {
-    const ret: impl.Padding = new impl.Padding(
+    const ret: impl.Padding = new impl.Padding (
     )
     if (source.left !== undefined) ret.left = source.left
     if (source.top !== undefined) ret.top = source.top
@@ -270,7 +270,7 @@ export function importPadding(source: types.Padding, ctx?: IImportContext): impl
 }
 /* override list item */
 export function importOverrideItem(source: types.OverrideItem, ctx?: IImportContext): impl.OverrideItem {
-    const ret: impl.OverrideItem = new impl.OverrideItem(
+    const ret: impl.OverrideItem = new impl.OverrideItem (
         source.id,
         source.attr,
         (() => {
@@ -302,7 +302,7 @@ export function importLineCapStyle(source: types.LineCapStyle, ctx?: IImportCont
 }
 /* graphics contex settings */
 export function importGraphicsContextSettings(source: types.GraphicsContextSettings, ctx?: IImportContext): impl.GraphicsContextSettings {
-    const ret: impl.GraphicsContextSettings = new impl.GraphicsContextSettings(
+    const ret: impl.GraphicsContextSettings = new impl.GraphicsContextSettings (
         importBlendMode(source.blendMode, ctx),
         source.opacity
     )
@@ -310,7 +310,7 @@ export function importGraphicsContextSettings(source: types.GraphicsContextSetti
 }
 /* gradient */
 export function importGradient(source: types.Gradient, ctx?: IImportContext): impl.Gradient {
-    const ret: impl.Gradient = new impl.Gradient(
+    const ret: impl.Gradient = new impl.Gradient (
         source.elipseLength,
         importPoint2D(source.from, ctx),
         importPoint2D(source.to, ctx),
@@ -332,7 +332,7 @@ export function importGradientType(source: types.GradientType, ctx?: IImportCont
 }
 /* fill */
 export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
-    const ret: impl.Fill = new impl.Fill(
+    const ret: impl.Fill = new impl.Fill (
         source.id,
         source.isEnabled,
         importFillType(source.fillType, ctx),
@@ -355,7 +355,7 @@ export function importExportVisibleScaleType(source: types.ExportVisibleScaleTyp
 }
 /* export options */
 export function importExportOptions(source: types.ExportOptions, ctx?: IImportContext): impl.ExportOptions {
-    const ret: impl.ExportOptions = new impl.ExportOptions(
+    const ret: impl.ExportOptions = new impl.ExportOptions (
         (() => {
             const ret = new BasicArray<impl.ExportFormat>()
             for (let i = 0, len = source.exportFormats && source.exportFormats.length; i < len; i++) {
@@ -379,7 +379,7 @@ export function importExportOptions(source: types.ExportOptions, ctx?: IImportCo
 }
 /* export format */
 export function importExportFormat(source: types.ExportFormat, ctx?: IImportContext): impl.ExportFormat {
-    const ret: impl.ExportFormat = new impl.ExportFormat(
+    const ret: impl.ExportFormat = new impl.ExportFormat (
     )
     if (source.absoluteSize !== undefined) ret.absoluteSize = source.absoluteSize
     if (source.fileFormat !== undefined) ret.fileFormat = importExportFileFormat(source.fileFormat, ctx)
@@ -399,7 +399,7 @@ export function importExportFileFormat(source: types.ExportFileFormat, ctx?: IIm
 }
 /* ellipse attributes */
 export function importEllipse(source: types.Ellipse, ctx?: IImportContext): impl.Ellipse {
-    const ret: impl.Ellipse = new impl.Ellipse(
+    const ret: impl.Ellipse = new impl.Ellipse (
         source.cx,
         source.cy,
         source.rx,
@@ -409,7 +409,7 @@ export function importEllipse(source: types.Ellipse, ctx?: IImportContext): impl
 }
 /* document syms */
 export function importDocumentSyms(source: types.DocumentSyms, ctx?: IImportContext): impl.DocumentSyms {
-    const ret: impl.DocumentSyms = new impl.DocumentSyms(
+    const ret: impl.DocumentSyms = new impl.DocumentSyms (
         source.pageId,
         (() => {
             const ret = new BasicArray<string>()
@@ -424,7 +424,7 @@ export function importDocumentSyms(source: types.DocumentSyms, ctx?: IImportCont
 }
 /* document meta */
 export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
-    const ret: impl.DocumentMeta = new impl.DocumentMeta(
+    const ret: impl.DocumentMeta = new impl.DocumentMeta (
         source.id,
         source.name,
         (() => {
@@ -441,7 +441,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
 }
 /* curve point */
 export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext): impl.CurvePoint {
-    const ret: impl.CurvePoint = new impl.CurvePoint(
+    const ret: impl.CurvePoint = new impl.CurvePoint (
         source.id,
         source.cornerRadius,
         importPoint2D(source.curveFrom, ctx),
@@ -459,7 +459,7 @@ export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): 
 }
 /* context settings */
 export function importContextSettings(source: types.ContextSettings, ctx?: IImportContext): impl.ContextSettings {
-    const ret: impl.ContextSettings = new impl.ContextSettings(
+    const ret: impl.ContextSettings = new impl.ContextSettings (
         importBlendMode(source.blenMode, ctx),
         source.opacity
     )
@@ -471,7 +471,7 @@ export function importContactType(source: types.ContactType, ctx?: IImportContex
 }
 /* border style */
 export function importContactForm(source: types.ContactForm, ctx?: IImportContext): impl.ContactForm {
-    const ret: impl.ContactForm = new impl.ContactForm(
+    const ret: impl.ContactForm = new impl.ContactForm (
         importContactType(source.contactType, ctx),
         importShape(source.shape, ctx)
     )
@@ -479,7 +479,7 @@ export function importContactForm(source: types.ContactForm, ctx?: IImportContex
 }
 /* comment */
 export function importComment(source: types.Comment, ctx?: IImportContext): impl.Comment {
-    const ret: impl.Comment = new impl.Comment(
+    const ret: impl.Comment = new impl.Comment (
         source.pageId,
         source.id,
         importShapeFrame(source.frame, ctx),
@@ -494,7 +494,7 @@ export function importComment(source: types.Comment, ctx?: IImportContext): impl
 }
 /* color */
 export function importColor(source: types.Color, ctx?: IImportContext): impl.Color {
-    const ret: impl.Color = new impl.Color(
+    const ret: impl.Color = new impl.Color (
         source.alpha,
         source.red,
         source.green,
@@ -504,7 +504,7 @@ export function importColor(source: types.Color, ctx?: IImportContext): impl.Col
 }
 /* color controls */
 export function importColorControls(source: types.ColorControls, ctx?: IImportContext): impl.ColorControls {
-    const ret: impl.ColorControls = new impl.ColorControls(
+    const ret: impl.ColorControls = new impl.ColorControls (
         source.isEnabled,
         source.brightness,
         source.contrast,
@@ -515,7 +515,7 @@ export function importColorControls(source: types.ColorControls, ctx?: IImportCo
 }
 /* bullet numbers */
 export function importBulletNumbers(source: types.BulletNumbers, ctx?: IImportContext): impl.BulletNumbers {
-    const ret: impl.BulletNumbers = new impl.BulletNumbers(
+    const ret: impl.BulletNumbers = new impl.BulletNumbers (
         importBulletNumbersType(source.type, ctx)
     )
     if (source.behavior !== undefined) ret.behavior = importBulletNumbersBehavior(source.behavior, ctx)
@@ -532,7 +532,7 @@ export function importBulletNumbersBehavior(source: types.BulletNumbersBehavior,
 }
 /* border */
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
-    const ret: impl.Border = new impl.Border(
+    const ret: impl.Border = new impl.Border (
         source.id,
         source.isEnabled,
         importFillType(source.fillType, ctx),
@@ -547,7 +547,7 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
 }
 /* border style */
 export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContext): impl.BorderStyle {
-    const ret: impl.BorderStyle = new impl.BorderStyle(
+    const ret: impl.BorderStyle = new impl.BorderStyle (
         source.length,
         source.gap
     )
@@ -559,7 +559,7 @@ export function importBorderPosition(source: types.BorderPosition, ctx?: IImport
 }
 /* border options */
 export function importBorderOptions(source: types.BorderOptions, ctx?: IImportContext): impl.BorderOptions {
-    const ret: impl.BorderOptions = new impl.BorderOptions(
+    const ret: impl.BorderOptions = new impl.BorderOptions (
         source.isEnabled,
         importLineCapStyle(source.lineCapStyle, ctx),
         importLineJoinStyle(source.lineJoinStyle, ctx)
@@ -572,7 +572,7 @@ export function importBoolOp(source: types.BoolOp, ctx?: IImportContext): impl.B
 }
 /* blur */
 export function importBlur(source: types.Blur, ctx?: IImportContext): impl.Blur {
-    const ret: impl.Blur = new impl.Blur(
+    const ret: impl.Blur = new impl.Blur (
         source.isEnabled,
         importPoint2D(source.center, ctx),
         source.saturation,
@@ -592,7 +592,7 @@ export function importBlendMode(source: types.BlendMode, ctx?: IImportContext): 
 }
 /* text shape */
 export function importTextShape(source: types.TextShape, ctx?: IImportContext): impl.TextShape {
-    const ret: impl.TextShape = new impl.TextShape(
+    const ret: impl.TextShape = new impl.TextShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -619,7 +619,7 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
 }
 /* table shape */
 export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
-    const ret: impl.TableShape = new impl.TableShape(
+    const ret: impl.TableShape = new impl.TableShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -683,7 +683,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
 }
 /* table cell */
 export function importTableCell(source: types.TableCell, ctx?: IImportContext): impl.TableCell {
-    const ret: impl.TableCell = new impl.TableCell(
+    const ret: impl.TableCell = new impl.TableCell (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -714,7 +714,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
 }
 /* symbol ref shape */
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
-    const ret: impl.SymbolRefShape = new impl.SymbolRefShape(
+    const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -751,7 +751,7 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
 }
 /* span attr */
 export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span {
-    const ret: impl.Span = new impl.Span(
+    const ret: impl.Span = new impl.Span (
         source.length
     )
     if (source.fontName !== undefined) ret.fontName = source.fontName
@@ -770,7 +770,7 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
 }
 /* path shape */
 export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
-    const ret: impl.PathShape2 = new impl.PathShape2(
+    const ret: impl.PathShape2 = new impl.PathShape2 (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -805,7 +805,7 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
 }
 /* path shape */
 export function importPathShape(source: types.PathShape, ctx?: IImportContext): impl.PathShape {
-    const ret: impl.PathShape = new impl.PathShape(
+    const ret: impl.PathShape = new impl.PathShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -841,7 +841,7 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
 }
 /* rect shape */
 export function importRectShape(source: types.RectShape, ctx?: IImportContext): impl.RectShape {
-    const ret: impl.RectShape = new impl.RectShape(
+    const ret: impl.RectShape = new impl.RectShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -877,7 +877,7 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
 }
 /* span attr */
 export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): impl.ParaAttr {
-    const ret: impl.ParaAttr = new impl.ParaAttr(
+    const ret: impl.ParaAttr = new impl.ParaAttr (
     )
     if (source.fontName !== undefined) ret.fontName = source.fontName
     if (source.fontSize !== undefined) ret.fontSize = source.fontSize
@@ -900,7 +900,7 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
 }
 /* text attr */
 export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): impl.TextAttr {
-    const ret: impl.TextAttr = new impl.TextAttr(
+    const ret: impl.TextAttr = new impl.TextAttr (
     )
     if (source.alignment !== undefined) ret.alignment = importTextHorAlign(source.alignment, ctx)
     if (source.paraSpacing !== undefined) ret.paraSpacing = source.paraSpacing
@@ -927,7 +927,7 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
 }
 /* page */
 export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
-    const ret: impl.Page = new impl.Page(
+    const ret: impl.Page = new impl.Page (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1011,7 +1011,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
 }
 /* oval shape */
 export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
-    const ret: impl.OvalShape = new impl.OvalShape(
+    const ret: impl.OvalShape = new impl.OvalShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1048,7 +1048,7 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
 }
 /* line shape */
 export function importLineShape(source: types.LineShape, ctx?: IImportContext): impl.LineShape {
-    const ret: impl.LineShape = new impl.LineShape(
+    const ret: impl.LineShape = new impl.LineShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1135,7 +1135,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         }; // lb
         source.points.push(p1, p2, p3, p4);
     }
-    const ret: impl.ImageShape = new impl.ImageShape(
+    const ret: impl.ImageShape = new impl.ImageShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1174,7 +1174,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
 }
 /* group shape */
 export function importGroupShape(source: types.GroupShape, ctx?: IImportContext): impl.GroupShape {
-    const ret: impl.GroupShape = new impl.GroupShape(
+    const ret: impl.GroupShape = new impl.GroupShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1251,7 +1251,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
 }
 /* symbol shape */
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
-    const ret: impl.SymbolShape = new impl.SymbolShape(
+    const ret: impl.SymbolShape = new impl.SymbolShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1337,7 +1337,7 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
 }
 /* contact shape */
 export function importContactShape(source: types.ContactShape, ctx?: IImportContext): impl.ContactShape {
-    const ret: impl.ContactShape = new impl.ContactShape(
+    const ret: impl.ContactShape = new impl.ContactShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1375,7 +1375,7 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
 }
 /* artboard shape */
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
-    const ret: impl.Artboard = new impl.Artboard(
+    const ret: impl.Artboard = new impl.Artboard (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
