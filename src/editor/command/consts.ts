@@ -107,3 +107,5 @@ export const TABLE_ATTR_ID = {
     rowHeight: "rowHeight",
     colWidth: "colWidth",
 }
+
+export const CONTACTS_ID = "contact"

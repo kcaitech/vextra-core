@@ -1,4 +1,4 @@
-import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2 } from "../data/shape";
+import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2, ContactShape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
@@ -7,6 +7,7 @@ import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
+import { ContactForm } from "data/typesdefine";
 export class ShapeEditor {
     protected __shape: Shape;
     protected __repo: CoopRepository;
@@ -226,6 +227,13 @@ export class ShapeEditor {
     public addPointAt(point: CurvePoint, idx: number) {
         const api = this.__repo.start("addPointAt", {});
         api.addPointAt(this.__page, this.__shape as PathShape, idx, point);
+        this.__repo.commit();
+    }
+
+    // contacts
+    public addContact(contactShape: ContactShape, idx: number) {
+        const api = this.__repo.start("addContact", {});
+        api.addContactAt(this.__page, this.__shape, contactShape, idx);
         this.__repo.commit();
     }
 

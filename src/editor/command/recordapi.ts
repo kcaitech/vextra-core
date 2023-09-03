@@ -11,8 +11,8 @@ import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
-import { GroupShape, Shape, PathShape, PathShape2, CurvePoint } from "../../data/shape";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { GroupShape, Shape, PathShape, PathShape2, CurvePoint, ContactShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
@@ -587,6 +587,14 @@ export class Api {
         this.__trap(() => {
             basicapi.addPointAt(shape, point, idx)
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), POINTS_ID, point.id, idx, exportCurvePoint(point)))
+        })
+    }
+    // contacts
+    addContactAt(page: Page, shape: Shape, contactShape: ContactShape, idx: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            basicapi.addContactShape(shape.style, contactShape.id);
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), CONTACTS_ID, contactShape.id, idx, contactShape.id))
         })
     }
     // text

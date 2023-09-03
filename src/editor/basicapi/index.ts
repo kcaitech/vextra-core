@@ -9,6 +9,8 @@ export * from "./fill";
 export * from "./border";
 export * from "./table";
 export * from "./points";
+export * from "./contact";
+
 
 type TextShapeLike = Shape & { text: Text }
 
