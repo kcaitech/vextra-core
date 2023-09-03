@@ -108,6 +108,14 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
             }
             return ret
         })(),
+        contacts: source.contacts && (() => {
+            const ret = []
+            for (let i = 0, len = source.contacts.length; i < len; i++) {
+                const r = exportContactShape(source.contacts[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         startMarkerType: source.startMarkerType && exportMarkerType(source.startMarkerType, ctx),
         endMarkerType: source.endMarkerType && exportMarkerType(source.endMarkerType, ctx),
     }
@@ -167,14 +175,6 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: source.contacts && (() => {
-            const ret = []
-            for (let i = 0, len = source.contacts.length; i < len; i++) {
-                const r = exportContactShape(source.contacts[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
     }
     return ret
 }
@@ -615,14 +615,6 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         text: exportText(source.text, ctx),
     }
     return ret
@@ -651,14 +643,6 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         childs: (() => {
             const ret = []
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -722,14 +706,6 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         cellType: source.cellType && exportTableCellType(source.cellType, ctx),
         text: source.text && exportText(source.text, ctx),
         imageRef: source.imageRef,
@@ -764,14 +740,6 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         refId: source.refId,
         overrides: source.overrides && (() => {
             const ret = []
@@ -827,14 +795,6 @@ export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext)
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         pathsegs: (() => {
             const ret = []
             for (let i = 0, len = source.pathsegs.length; i < len; i++) {
@@ -871,14 +831,6 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -926,14 +878,6 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
     }
     return ret
 }
@@ -1011,14 +955,6 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         childs: (() => {
             const ret = []
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1117,14 +1053,6 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         ellipse: exportEllipse(source.ellipse, ctx),
     }
     return ret
@@ -1163,14 +1091,6 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
     }
     return ret
 }
@@ -1208,14 +1128,6 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         imageRef: source.imageRef,
     }
     // inject code
@@ -1246,14 +1158,6 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         childs: (() => {
             const ret = []
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1389,14 +1293,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
     }
     // inject code
     if (ctx?.symbols) ctx.symbols.add(ret.id);
@@ -1480,14 +1376,6 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
     }
     return ret
 }
@@ -1515,14 +1403,6 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -1616,14 +1496,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        contacts: (() => {
-                const ret = []
-                for (let i = 0, len = source.contacts.length; i < len; i++) {
-                    const r = exportContactShape(source.contacts[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
     }
     return ret
 }

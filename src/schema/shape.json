@@ -69,12 +69,6 @@
         },
         "shouldBreakMaskChain": {
             "type": "boolean"
-        },
-        "contacts": {
-            "type": "array",
-            "items": {
-                "$ref": "./contact-shape.json"
-            }
         }
     },
     "required": [

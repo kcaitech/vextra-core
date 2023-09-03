@@ -76,6 +76,7 @@ export type Style = {
     fills: Fill[]
     innerShadows?: Shadow[]
     shadows?: Shadow[]
+    contacts?: ContactShape[]
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
 }
@@ -128,7 +129,6 @@ export type Shape = {
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
-    contacts?: ContactShape[]
 }
 /* shape types */
 export enum ShapeType {
