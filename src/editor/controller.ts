@@ -1,5 +1,5 @@
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL, pathEdit, update_frame_by_points } from "./frame";
-import { Shape, GroupShape, PathShape, CurvePoint, Point2D } from "../data/shape";
+import { Shape, GroupShape, PathShape, CurvePoint, Point2D, ContactShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { CurveMode, ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
@@ -283,6 +283,19 @@ export class Controller {
             if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
                 if (newShape.type === ShapeType.Artboard) {
                     api.setFillColor(savepage!, newShape, 0, new Color(1, 255, 255, 255));
+                }
+                console.log('newShape.type', newShape.type);
+                if (newShape.type === ShapeType.Contact) {
+                    console.log('newShape.from', newShape.from);
+
+                    if ((newShape as ContactShape).from) {
+                        const shape1 = savepage?.getShape((newShape as ContactShape).from.shapeId);
+                        console.log('shape1', shape1);
+
+                        if (shape1) {
+                            api.addContactAt(savepage!, shape1, newShape as ContactShape, shape1.style.contacts?.length || 0);
+                        }
+                    }
                 }
                 this.__repo.commit();
             } else {

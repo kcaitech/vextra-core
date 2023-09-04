@@ -49,7 +49,8 @@ import {
     importPoint2D,
     importTableShape,
     importPathShape2,
-    importTableCell
+    importTableCell,
+    importContactShape
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -70,7 +71,7 @@ import {
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
 import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
@@ -127,6 +128,9 @@ function importShape(data: string, document: Document) {
     }
     if (source.typeId == 'table-cell') {
         return importTableCell(source as types.TableCell, ctx)
+    }
+    if (source.typeId == 'contact-shape') {
+        return importContactShape(source as types.ContactShape, ctx)
     }
     throw new Error("unknow shape type: " + source.typeId)
 }
@@ -359,6 +363,12 @@ export class CMDExecuter {
             if (op.type === OpType.ArrayInsert) {
                 const border = importBorder(JSON.parse(cmd.data))
                 api.addBorderAt(shape.style, border, (op as ArrayOpInsert).start);
+            }
+        }
+        else if (arrayAttr === CONTACTS_ID) {
+            if (op.type === OpType.ArrayInsert) {
+                const shapeId = cmd.data;
+                api.addContactShape(shape.style, shapeId);
             }
         }
         else {
