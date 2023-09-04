@@ -28,7 +28,7 @@ const float_accuracy = 1e-7;
 
 function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
     const p: Shape | undefined = shape.parent;
-    if (!p || (p instanceof Artboard)) return false;
+    if (!p || (p instanceof Artboard || p instanceof SymbolRefShape)) return false;
 
     const cf = shape.boundingBox();
     let xychanged = false;
