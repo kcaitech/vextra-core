@@ -123,6 +123,7 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
                 if (!(refShape instanceof TextShape)) throw new Error("refshape is not textshape")
 
                 text = new Text(new BasicArray());
+                text.setTextBehaviour(classes.TextBehaviour.Fixed); // 固定宽高
                 const para = new Para('\n', new BasicArray());
                 para.attr = new ParaAttr();
                 text.paras.push(para);
@@ -215,12 +216,57 @@ class NormalHdl {
     }
 }
 
-class TextHdl {
+class FreezHdl {
+    __target: Object;
+    constructor(target: Object) {
+        this.__target = target;
+    }
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        throw new Error("forbidden");
+    }
+    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
+        throw new Error("forbidden");
+    }
+    get(target: object, propertyKey: PropertyKey, receiver?: any): any {
+        const val = Reflect.get(target, propertyKey, receiver);
+        if (typeof val === 'object' && !propertyKey.toString().startsWith('__')) {
+            return new Proxy<Object>(val, new FreezHdl(val));
+        }
+        return val;
+    }
+}
+
+class ShapeHdl extends FreezHdl {
+    __symRef: SymbolRefShape;
+    __target: Shape;
+    __parent: Shape;
+
+    constructor(symRef: SymbolRefShape, target: Shape, parent: Shape) {
+        super(target);
+        this.__symRef = symRef;
+        this.__target = target;
+        this.__parent = parent;
+    }
+
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const propStr = propertyKey.toString();
+        if (propStr === 'shapeId') return [this.__symRef.id, this.__target.id];
+        if (propStr === 'parent') return this.__parent;
+        if (propStr === 'frame') {
+            const frame = this.__target.frame;
+            return new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+        }
+        return super.get(target, propertyKey, receiver);
+    }
+}
+
+class TextHdl extends FreezHdl {
     __symRef: SymbolRefShape;
     __target: Text;
     __parent: TextShape;
 
     constructor(symRef: SymbolRefShape, target: Text, parent: TextShape) {
+        super(target);
         this.__symRef = symRef;
         this.__target = target;
         this.__parent = parent;
@@ -238,16 +284,7 @@ class TextHdl {
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
         if (propStr === 'parent') return this.__parent;
-
-        const val = Reflect.get(target, propertyKey, receiver);
-        return val;
-    }
-    has(target: object, propertyKey: PropertyKey): boolean {
-        if (target instanceof Map) {
-            return target.has(propertyKey);
-        }
-        const val = Reflect.has(target, propertyKey);
-        return val;
+        return super.get(target, propertyKey, receiver);
     }
 }
 
@@ -259,13 +296,11 @@ class BorderHdl {
 
 }
 
-class GroupShapeHdl {
-    __symRef: SymbolRefShape;
-    __target: GroupShape;
-    __childs: Shape[] = [];
-    __parent: Shape;
+class GroupShapeHdl extends ShapeHdl {
+    __this?: GroupShape;
 
     constructor(symRef: SymbolRefShape, target: GroupShape, parent: Shape) {
+        super(symRef, target, parent);
         this.__symRef = symRef;
         this.__target = target;
         this.__parent = parent;
@@ -282,33 +317,19 @@ class GroupShapeHdl {
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
-        if (propStr === 'shapeId') return [this.__symRef.id, this.__target.id];
-        if (propStr === 'parent') return this.__parent;
-        if (propStr === 'childs') return this.__childs;
-        if (propStr === 'frame') {
-            const frame = this.__target.frame;
-            return new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
-        }
-        const val = Reflect.get(target, propertyKey, receiver);
-        return val;
-    }
-    has(target: object, propertyKey: PropertyKey): boolean {
-        if (target instanceof Map) {
-            return target.has(propertyKey);
-        }
-        const val = Reflect.has(target, propertyKey);
-        return val;
+        if (propStr === 'childs') return (this.__target as GroupShape).childs.map((child) => proxyShape(child, this.__this!, this.__symRef));
+        return super.get(target, propertyKey, receiver);
     }
 }
 
-class TextShapeHdl {
-    __symRef: SymbolRefShape;
-    __target: TextShape;
-    __parent: Shape;
+class TextShapeHdl extends ShapeHdl {
+
     __override: OverrideShape | undefined;
     __text: Text;
+    __stringValueText?: Text;
 
     constructor(symRef: SymbolRefShape, target: TextShape, parent: Shape, override: OverrideShape | undefined) {
+        super(symRef, target, parent);
         this.__symRef = symRef;
         this.__target = target;
         this.__parent = parent;
@@ -327,66 +348,21 @@ class TextShapeHdl {
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
-        if (propStr === 'shapeId') return [this.__symRef.id, this.__target.id];
-        if (propStr === 'parent') return this.__parent;
-        if (propStr === 'frame') {
-            const frame = this.__target.frame;
-            return new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
-        }
+
         if (propStr === 'text') {
-            const text = this.__override && this.__override.getText(this.__target)
-            if (text) return text;
+            if (this.__override) {
+                const text = this.__override.getText(this.__target);
+                if (this.__override.text) return this.__override.text;
+                if (text) {
+                    if (!this.__stringValueText) {
+                        this.__stringValueText = new Proxy<Text>(text, new TextHdl(this.__symRef, text, this.__target as TextShape));
+                    }
+                    return this.__stringValueText;
+                }
+            }
             return this.__text;
         }
-        const val = Reflect.get(target, propertyKey, receiver);
-        return val;
-    }
-    has(target: object, propertyKey: PropertyKey): boolean {
-        if (target instanceof Map) {
-            return target.has(propertyKey);
-        }
-        const val = Reflect.has(target, propertyKey);
-        return val;
-    }
-}
-
-class ShapeHdl {
-    __symRef: SymbolRefShape;
-    __target: Shape;
-    __parent: Shape;
-
-    constructor(symRef: SymbolRefShape, target: Shape, parent: Shape) {
-        this.__symRef = symRef;
-        this.__target = target;
-        this.__parent = parent;
-    }
-    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-        // const ret = Reflect.set(target, propertyKey, value, receiver);
-        // return ret;
-        throw new Error("forbidden");
-    }
-    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
-        // const result = Reflect.deleteProperty(target, propertyKey);
-        // return result;
-        throw new Error("forbidden");
-    }
-    get(target: object, propertyKey: PropertyKey, receiver?: any) {
-        const propStr = propertyKey.toString();
-        if (propStr === 'shapeId') return [this.__symRef.id, this.__target.id];
-        if (propStr === 'parent') return this.__parent;
-        if (propStr === 'frame') {
-            const frame = this.__target.frame;
-            return new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
-        }
-        const val = Reflect.get(target, propertyKey, receiver);
-        return val;
-    }
-    has(target: object, propertyKey: PropertyKey) {
-        if (target instanceof Map) {
-            return target.has(propertyKey);
-        }
-        const val = Reflect.has(target, propertyKey);
-        return val;
+        return super.get(target, propertyKey, receiver);
     }
 }
 
@@ -400,7 +376,8 @@ function proxyShape(shape: Shape, parent: Shape, root: SymbolRefShape): Shape {
     if (shape instanceof GroupShape) {
         const hdl = new GroupShapeHdl(root, shape, parent);
         const ret = new Proxy<GroupShape>(shape, hdl);
-        hdl.__childs = shape.childs.map((child) => proxyShape(child, ret, root));
+        // hdl.__childs = shape.childs.map((child) => proxyShape(child, ret, root));
+        hdl.__this = ret;
         return ret;
     }
 
@@ -441,14 +418,15 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         this.overrides = overrides
     }
 
+    // symbolref需要watch symbol的修改？
     get naviChilds(): Shape[] | undefined {
         return this.__data?.childs.map((v) => proxyShape(v, this, this));
     }
 
-    get childs() {// 作为引用的symbol的parent，需要提供个childs
-        return [];
-        // return this.overrides;
-    }
+    // get childs() {// 作为引用的symbol的parent，需要提供个childs
+    //     return [];
+    //     // return this.overrides;
+    // }
 
     setSymbolMgr(mgr: ResourceMgr<SymbolShape>) {
         this.__symMgr = mgr;
