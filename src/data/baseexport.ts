@@ -3,7 +3,7 @@
  * 可修改schema后在schema目录运行node script生成
  */
 
-import * as types from "../data/typesdefine"
+import * as types from "./typesdefine"
 
 
 export interface IExportContext {

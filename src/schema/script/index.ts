@@ -19,19 +19,19 @@ gentypes(schemadir, path.join(path.resolve('../data/'), 'typesdefine' + typesext
 const basicpath = "./basic";
 genclass(schemadir, path.join(path.resolve('../data/'), 'baseclasses' + typesext), basicpath)
 
-const implpath = "../data/classes"
-const typedefs = "../data/typesdefine"
-const arrayimpl = "../data/basic"
+const implpath = "./classes"
+const typedefs = "./typesdefine"
+const arrayimpl = "./basic"
 // const typesext = '.ts'
 // const schemadir = path.resolve('./')
 // const outdir = path.resolve('../io/')
 // const outfile = path.join(outdir, 'baseexport' + typesext)
 // const exportadaptor = "./exportadaptor"
-genexport(schemadir, path.join(path.resolve('../io/'), 'baseexport' + typesext), typedefs)
+genexport(schemadir, path.join(path.resolve('../data/'), 'baseexport' + typesext), typedefs)
 
 // const typesext = '.ts'
 // const schemadir = path.resolve('./')
 // const outdir = path.resolve('../io/')
 // const outfile = path.join(outdir, 'baseimport' + typesext)
 // const importadaptor = "./importadaptor"
-genimport(schemadir, path.join(path.resolve('../io/'), 'baseimport' + typesext), implpath, typedefs, arrayimpl)
+genimport(schemadir, path.join(path.resolve('../data/'), 'baseimport' + typesext), implpath, typedefs, arrayimpl)

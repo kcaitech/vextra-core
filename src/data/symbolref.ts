@@ -264,19 +264,36 @@ class TextHdl extends FreezHdl {
     __symRef: SymbolRefShape;
     __target: Text;
     __parent: TextShape;
+    __override?: Text;
 
-    constructor(symRef: SymbolRefShape, target: Text, parent: TextShape) {
+    constructor(symRef: SymbolRefShape, target: Text, parent: TextShape, override: Text | undefined) {
         super(target);
         this.__symRef = symRef;
         this.__target = target;
         this.__parent = parent;
+        this.__override = override;
     }
+
+    // buildOverride(): Text {
+
+    // }
+
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        if (this.__override) {
+            return Reflect.set(this.__override, propertyKey, value, receiver);
+        }
+        // 创建override
+
+
+
         // const ret = Reflect.set(target, propertyKey, value, receiver);
         // return ret;
         throw new Error("forbidden");
     }
     deleteProperty(target: object, propertyKey: PropertyKey): boolean {
+        if (this.__override) {
+            return Reflect.deleteProperty(this.__override, propertyKey);
+        }
         // const result = Reflect.deleteProperty(target, propertyKey);
         // return result;
         throw new Error("forbidden");
@@ -334,7 +351,7 @@ class TextShapeHdl extends ShapeHdl {
         this.__target = target;
         this.__parent = parent;
         this.__override = override;
-        this.__text = new Proxy<Text>(target.text, new TextHdl(symRef, target.text, target));
+        this.__text = new Proxy<Text>(target.text, new TextHdl(symRef, target.text, target, override?.text));
     }
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
         // const ret = Reflect.set(target, propertyKey, value, receiver);
@@ -355,7 +372,7 @@ class TextShapeHdl extends ShapeHdl {
                 if (this.__override.text) return this.__override.text;
                 if (text) {
                     if (!this.__stringValueText) {
-                        this.__stringValueText = new Proxy<Text>(text, new TextHdl(this.__symRef, text, this.__target as TextShape));
+                        this.__stringValueText = new Proxy<Text>(text, new TextHdl(this.__symRef, text, this.__target as TextShape, undefined));
                     }
                     return this.__stringValueText;
                 }

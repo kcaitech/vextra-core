@@ -1,4 +1,4 @@
-import { importParaAttr, importTextAttr } from "../io/baseimport";
+import { importParaAttr, importTextAttr } from "./baseimport";
 import { BulletNumbers, Color } from "./classes";
 import { Para, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter } from "./text";
 

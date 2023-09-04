@@ -3,9 +3,9 @@
  * 可修改schema后在schema目录运行node script生成
  */
 
-import * as impl from "../data/classes"
-import * as types from "../data/typesdefine"
-import { BasicArray } from "../data/basic"
+import * as impl from "./classes"
+import * as types from "./typesdefine"
+import { BasicArray } from "./basic"
 
 
 export interface IImportContext {

@@ -14,7 +14,7 @@ import { Document } from "../data/document";
 import { } from "../data/baseclasses";
 import { Page } from "../data/classes";
 import * as types from "../data/typesdefine"
-import { exportPage, IExportContext, exportDocumentMeta } from "./baseexport";
+import { exportPage, IExportContext, exportDocumentMeta } from "../data/baseexport";
 
 export interface ExFromJson {
     document_meta: types.DocumentMeta,
