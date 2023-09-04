@@ -42,6 +42,14 @@ export class TableCell extends Shape implements classes.TableCell {
             style
         )
     }
+
+    get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
+        const table = this.parent as TableShape;
+        const indexCell = table.indexOfCell2(this);
+        if (!indexCell) throw new Error("cell has no index?")
+        return [table.id, indexCell];
+    }
+
     getPath(): Path {
         const x = 0;
         const y = 0;
@@ -207,6 +215,9 @@ export class TableShape extends Shape implements classes.TableShape {
         return undefined;
     }
 
+    /**
+     * @deprecated
+     */
     get childs() {
         return this.datas;
     }

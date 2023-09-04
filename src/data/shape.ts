@@ -48,6 +48,19 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.style = style
     }
 
+    /**
+     * for command
+     */
+    get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
+        return [this.id];
+    }
+    /**
+     * for command
+     */
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): any {
+
+    }
+
     get naviChilds(): Shape[] | undefined {
         return undefined;
     }

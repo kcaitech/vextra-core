@@ -9,7 +9,7 @@ import { Path } from "./path";
 import { TextLayout } from "./textlayout";
 import { uuid } from "../basic/uuid";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
-import { Shape, SymbolShape, TextShape } from "./shape";
+import { GroupShape, Shape, SymbolShape, TextShape } from "./shape";
 
 export class OverrideShape extends Shape implements classes.OverrideShape {
     typeId = 'override-shape'
@@ -110,9 +110,7 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
     //     if (this.text) this.text.updateSize(this.frame.width, this.frame.height)
     // }
 
-    getLayout(refShape: Shape): TextLayout | undefined {
-        const frame = refShape.frame;
-
+    getText(refShape: Shape): Text | undefined {
         let text = this.text;
 
         if (this.stringValue) {
@@ -137,6 +135,13 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
                 this.__stringValue_text = text;
             }
         }
+        return text;
+    }
+
+    getLayout(refShape: Shape): TextLayout | undefined {
+        const frame = refShape.frame;
+
+        const text = this.getText(refShape);
 
         if (!text) return;
         const width = frame.width;
@@ -151,23 +156,262 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
     }
 }
 
+// handlers
+function proxyMapObj(target: Map<any, any>) {
+    return {
+        get(key: any) {
+            const get = Map.prototype.get.bind(target);
+            return get(key);
+        },
+        set(key: any, value: any) {
+            const set_inner = Map.prototype.set.bind(target);
+            set_inner(key, value);
+        },
+        delete(key: any) {
+            const get = Map.prototype.get.bind(target);
+            const ori = get(key)
+            const delete_inner = Map.prototype.delete.bind(target);
+            delete_inner(key);
+        }
+    };
+}
+class NormalHdl {
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        const ret = Reflect.set(target, propertyKey, value, receiver);
+        return ret;
+    }
+    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
+        const result = Reflect.deleteProperty(target, propertyKey);
+        return result;
+    }
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        if (target instanceof Map) { // map对象上的属性和方法都会进入get
+            if (propertyKey === 'get') { // 高频操作，单独提出并置顶，提高响应速度
+                return Reflect.get(target, propertyKey, receiver).bind(target);
+            } else if (propertyKey === 'set' || propertyKey === 'delete') { // 需要进入事务的方法
+                return Reflect.get(proxyMapObj(target), propertyKey);
+            } else if (propertyKey === 'size') { // map对象上唯一的一个可访问属性
+                return target.size;
+            } else if (propertyKey === 'clear') { // todo clear操作为批量删除，也需要进入事务
+                return false;
+            } else { // 其他操作，get、values、has、keys、forEach、entries，不影响数据
+                const val = Reflect.get(target, propertyKey, receiver);
+                if (typeof val === 'function') {
+                    return val.bind(target);
+                }
+                return val;
+            }
+        } else {
+            const val = Reflect.get(target, propertyKey, receiver);
+            return val;
+        }
+    }
+    has(target: object, propertyKey: PropertyKey): boolean {
+        if (target instanceof Map) {
+            return target.has(propertyKey);
+        }
+        const val = Reflect.has(target, propertyKey);
+        return val;
+    }
+}
+
+class TextHdl {
+    __symRef: SymbolRefShape;
+    __target: Text;
+    __parent: TextShape;
+
+    constructor(symRef: SymbolRefShape, target: Text, parent: TextShape) {
+        this.__symRef = symRef;
+        this.__target = target;
+        this.__parent = parent;
+    }
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        // const ret = Reflect.set(target, propertyKey, value, receiver);
+        // return ret;
+        throw new Error("forbidden");
+    }
+    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
+        // const result = Reflect.deleteProperty(target, propertyKey);
+        // return result;
+        throw new Error("forbidden");
+    }
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const propStr = propertyKey.toString();
+        if (propStr === 'parent') return this.__parent;
+
+        const val = Reflect.get(target, propertyKey, receiver);
+        return val;
+    }
+    has(target: object, propertyKey: PropertyKey): boolean {
+        if (target instanceof Map) {
+            return target.has(propertyKey);
+        }
+        const val = Reflect.has(target, propertyKey);
+        return val;
+    }
+}
+
+class FillHdl {
+
+}
+
+class BorderHdl {
+
+}
+
+class GroupShapeHdl {
+    __symRef: SymbolRefShape;
+    __target: GroupShape;
+    __childs: Shape[] = [];
+    __parent: Shape;
+
+    constructor(symRef: SymbolRefShape, target: GroupShape, parent: Shape) {
+        this.__symRef = symRef;
+        this.__target = target;
+        this.__parent = parent;
+    }
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        // const ret = Reflect.set(target, propertyKey, value, receiver);
+        // return ret;
+        throw new Error("forbidden");
+    }
+    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
+        // const result = Reflect.deleteProperty(target, propertyKey);
+        // return result;
+        throw new Error("forbidden");
+    }
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const propStr = propertyKey.toString();
+        if (propStr === 'shapeId') return [this.__symRef.id, this.__target.id];
+        if (propStr === 'parent') return this.__parent;
+        if (propStr === 'childs') return this.__childs;
+        if (propStr === 'frame') {
+            const frame = this.__target.frame;
+            return new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+        }
+        const val = Reflect.get(target, propertyKey, receiver);
+        return val;
+    }
+    has(target: object, propertyKey: PropertyKey): boolean {
+        if (target instanceof Map) {
+            return target.has(propertyKey);
+        }
+        const val = Reflect.has(target, propertyKey);
+        return val;
+    }
+}
+
+class TextShapeHdl {
+    __symRef: SymbolRefShape;
+    __target: TextShape;
+    __parent: Shape;
+    __override: OverrideShape | undefined;
+    __text: Text;
+
+    constructor(symRef: SymbolRefShape, target: TextShape, parent: Shape, override: OverrideShape | undefined) {
+        this.__symRef = symRef;
+        this.__target = target;
+        this.__parent = parent;
+        this.__override = override;
+        this.__text = new Proxy<Text>(target.text, new TextHdl(symRef, target.text, target));
+    }
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        // const ret = Reflect.set(target, propertyKey, value, receiver);
+        // return ret;
+        throw new Error("forbidden");
+    }
+    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
+        // const result = Reflect.deleteProperty(target, propertyKey);
+        // return result;
+        throw new Error("forbidden");
+    }
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const propStr = propertyKey.toString();
+        if (propStr === 'shapeId') return [this.__symRef.id, this.__target.id];
+        if (propStr === 'parent') return this.__parent;
+        if (propStr === 'frame') {
+            const frame = this.__target.frame;
+            return new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+        }
+        if (propStr === 'text') {
+            const text = this.__override && this.__override.getText(this.__target)
+            if (text) return text;
+            return this.__text;
+        }
+        const val = Reflect.get(target, propertyKey, receiver);
+        return val;
+    }
+    has(target: object, propertyKey: PropertyKey): boolean {
+        if (target instanceof Map) {
+            return target.has(propertyKey);
+        }
+        const val = Reflect.has(target, propertyKey);
+        return val;
+    }
+}
+
+class ShapeHdl {
+    __symRef: SymbolRefShape;
+    __target: Shape;
+    __parent: Shape;
+
+    constructor(symRef: SymbolRefShape, target: Shape, parent: Shape) {
+        this.__symRef = symRef;
+        this.__target = target;
+        this.__parent = parent;
+    }
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        // const ret = Reflect.set(target, propertyKey, value, receiver);
+        // return ret;
+        throw new Error("forbidden");
+    }
+    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
+        // const result = Reflect.deleteProperty(target, propertyKey);
+        // return result;
+        throw new Error("forbidden");
+    }
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const propStr = propertyKey.toString();
+        if (propStr === 'shapeId') return [this.__symRef.id, this.__target.id];
+        if (propStr === 'parent') return this.__parent;
+        if (propStr === 'frame') {
+            const frame = this.__target.frame;
+            return new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+        }
+        const val = Reflect.get(target, propertyKey, receiver);
+        return val;
+    }
+    has(target: object, propertyKey: PropertyKey) {
+        if (target instanceof Map) {
+            return target.has(propertyKey);
+        }
+        const val = Reflect.has(target, propertyKey);
+        return val;
+    }
+}
+
 export interface OverridesGetter {
     getOverrid(id: string): OverrideShape | undefined;
 }
 
 // 适配左侧导航栏
-function adaptShape(shape: Shape, parent: Shape): Shape {
-    const _parent = parent;
-    const handler = {
-        get: (target: object, propertyKey: PropertyKey, receiver?: any) => {
-            if (propertyKey === 'parent') {
-                return _parent;
-            }
-            const val = Reflect.get(target, propertyKey, receiver);
-            return val;
-        }
+function proxyShape(shape: Shape, parent: Shape, root: SymbolRefShape): Shape {
+
+    if (shape instanceof GroupShape) {
+        const hdl = new GroupShapeHdl(root, shape, parent);
+        const ret = new Proxy<GroupShape>(shape, hdl);
+        hdl.__childs = shape.childs.map((child) => proxyShape(child, ret, root));
+        return ret;
     }
-    return new Proxy<Shape>(shape, handler);
+
+    if (shape instanceof TextShape) {
+        const override = root.getOverrid(shape.id);
+        const ret = new Proxy<TextShape>(shape, new TextShapeHdl(root, shape, parent, override))
+        return ret;
+    }
+
+    const ret = new Proxy<Shape>(shape, new ShapeHdl(root, shape, parent))
+    return ret;
 }
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape, OverridesGetter {
@@ -198,11 +442,12 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     }
 
     get naviChilds(): Shape[] | undefined {
-        return this.__data?.childs.map((v) => adaptShape(v, this));
+        return this.__data?.childs.map((v) => proxyShape(v, this, this));
     }
 
-    get childs() {
-        return this.overrides;
+    get childs() {// 作为引用的symbol的parent，需要提供个childs
+        return [];
+        // return this.overrides;
     }
 
     setSymbolMgr(mgr: ResourceMgr<SymbolShape>) {
