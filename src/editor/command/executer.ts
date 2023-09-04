@@ -50,7 +50,7 @@ import {
     importTableShape,
     importPathShape2,
     importTableCell
-} from "../../io/baseimport";
+} from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import {
     GroupShape,

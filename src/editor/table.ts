@@ -8,7 +8,7 @@ import { adjColum, adjRow } from "./tableadjust";
 import { Border, Color, Fill } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils";
 import { Api } from "./command/recordapi";
-import { importBorder, importFill } from "../io/baseimport";
+import { importBorder, importFill } from "../data/baseimport";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;

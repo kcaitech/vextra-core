@@ -2,7 +2,7 @@ import { Cmd, CmdType, OpType, ShapeCmdModify, TableIndex } from "../../coop"
 import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape } from "../../data/classes"
 import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
-import { importColor, importText } from "../../io/baseimport";
+import { importColor, importText } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import { IdOpSet } from "coop/data/basictypes";
 

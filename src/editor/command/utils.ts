@@ -1,4 +1,4 @@
-import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell } from "../../io/baseexport";
+import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell } from "../../data/baseexport";
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
 import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, TextShape } from "../../data/shape";
