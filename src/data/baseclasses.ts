@@ -572,14 +572,14 @@ export class ContextSettings extends Basic {
 export class ContactForm extends Basic {
     typeId = 'contact-form'
     contactType: ContactType
-    shape: Shape
+    shapeId: string
     constructor(
         contactType: ContactType,
-        shape: Shape
+        shapeId: string
     ) {
         super()
         this.contactType = contactType
-        this.shape = shape
+        this.shapeId = shapeId
     }
 }
 /**

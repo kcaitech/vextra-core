@@ -361,7 +361,7 @@ export enum ContactType {
 /* border style */
 export type ContactForm = {
     contactType: ContactType
-    shape: Shape
+    shapeId: string
 }
 /* comment */
 export type Comment = {

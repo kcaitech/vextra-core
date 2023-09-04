@@ -5,13 +5,13 @@
     "contactType": {
       "$ref": "./contact-type.json"
     },
-    "shape": {
-      "$ref": "./shape.json"
+    "shapeId": {
+      "type": "string"
     }
   },
   "required": [
     "contactType",
-    "shape"
+    "shapeId"
   ],
   "additionalProperties": false
 }

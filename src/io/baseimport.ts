@@ -473,7 +473,7 @@ export function importContactType(source: types.ContactType, ctx?: IImportContex
 export function importContactForm(source: types.ContactForm, ctx?: IImportContext): impl.ContactForm {
     const ret: impl.ContactForm = new impl.ContactForm (
         importContactType(source.contactType, ctx),
-        importShape(source.shape, ctx)
+        source.shapeId
     )
     return ret
 }

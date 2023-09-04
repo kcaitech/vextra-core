@@ -474,7 +474,7 @@ export function exportContactType(source: types.ContactType, ctx?: IExportContex
 export function exportContactForm(source: types.ContactForm, ctx?: IExportContext): types.ContactForm {
     const ret = {
         contactType: exportContactType(source.contactType, ctx),
-        shape: exportShape(source.shape, ctx),
+        shapeId: source.shapeId,
     }
     return ret
 }
