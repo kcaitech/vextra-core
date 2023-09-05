@@ -57,8 +57,8 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     /**
      * for command
      */
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): any {
-
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
+        return this;
     }
 
     get naviChilds(): Shape[] | undefined {

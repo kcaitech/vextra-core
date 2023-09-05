@@ -424,6 +424,16 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         this.overrides = overrides
     }
 
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
+        if (targetId.length > 0) {
+            const shapeId = targetId[0] as string;
+            const shape = this.getOverrid(shapeId);
+            if (!shape) throw new Error("shape not find");
+            return shape.getTarget(targetId.slice(1));
+        }
+        return this;
+    }
+
     // symbolref需要watch symbol的修改？
     get naviChilds(): Shape[] | undefined {
         return this.__data?.childs.map((v) => proxyShape(v, this, this));

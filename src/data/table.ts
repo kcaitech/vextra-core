@@ -211,6 +211,16 @@ export class TableShape extends Shape implements classes.TableShape {
         this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur, 0);
     }
 
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
+        if (typeof targetId[0] !== 'string') {
+            const index = targetId[0];
+            const cell = this.getCellAt(index.rowIdx, index.colIdx, true);
+            if (!cell) throw new Error("table cell not find")
+            return cell.getTarget(targetId.slice(1))
+        }
+        return this;
+    }
+
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
     }
