@@ -261,7 +261,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(0, 0));
     const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
     style.borders.push(border);
     const shape = new ContactShape(uuid(), name, types.ShapeType.Contact, frame, style, curvePoint, true);
     shape.from = apex;
