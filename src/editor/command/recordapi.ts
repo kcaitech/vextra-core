@@ -10,7 +10,7 @@ import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
 import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, Shape, PathShape, PathShape2, CurvePoint, ContactShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
@@ -23,6 +23,7 @@ import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, 
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { TableOpTarget } from "../../coop/data/classes";
+import { ContactRole } from "../../data/baseclasses";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -606,11 +607,11 @@ export class Api {
         })
     }
     // contacts
-    addContactAt(page: Page, shape: Shape, contactShape: ContactShape, idx: number) {
+    addContactAt(page: Page, shape: Shape, contactRole: ContactRole, idx: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            basicapi.addContactShape(shape.style, contactShape.id);
-            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), CONTACTS_ID, contactShape.id, idx, contactShape.id))
+            basicapi.addContactShape(shape.style, contactRole);
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), CONTACTS_ID, contactRole.id, idx, exportContactRole(contactRole)))
         })
     }
     // text

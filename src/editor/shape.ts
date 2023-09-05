@@ -230,12 +230,6 @@ export class ShapeEditor {
         this.__repo.commit();
     }
 
-    // contacts
-    public addContact(contactShape: ContactShape, idx: number) {
-        const api = this.__repo.start("addContact", {});
-        api.addContactAt(this.__page, this.__shape, contactShape, idx);
-        this.__repo.commit();
-    }
 
     // 容器自适应大小
     public adapt() {

@@ -50,7 +50,8 @@ import {
     importTableShape,
     importPathShape2,
     importTableCell,
-    importContactShape
+    importContactShape,
+    importContactRole
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -367,8 +368,8 @@ export class CMDExecuter {
         }
         else if (arrayAttr === CONTACTS_ID) {
             if (op.type === OpType.ArrayInsert) {
-                const shapeId = cmd.data;
-                api.addContactShape(shape.style, shapeId);
+                const contact_role = importContactRole(JSON.parse(cmd.data));
+                api.addContactShape(shape.style, contact_role);
             }
         }
         else {
