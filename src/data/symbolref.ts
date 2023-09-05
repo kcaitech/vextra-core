@@ -196,6 +196,35 @@ class FreezHdl {
     }
 }
 
+
+class FillHdl extends FreezHdl {
+
+}
+
+class BorderHdl extends FreezHdl {
+
+}
+
+class StyleHdl extends FreezHdl {
+    constructor(target: Style) {
+        super(target)
+    }
+    private get _style(): Style {
+        return this.__target as Style;
+    }
+
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const propStr = propertyKey.toString();
+        if (propStr === 'fills') {
+            return this._style.fills.map((v) => new Proxy(v, new FillHdl(v)));
+        }
+        if (propStr === 'borders') {
+            return this._style.borders.map((v) => new Proxy(v, new BorderHdl(v)));
+        }
+        return super.get(target, propertyKey, receiver);
+    }
+}
+
 class ShapeHdl extends FreezHdl {
     __symRef: SymbolRefShape;
     __target: Shape;
@@ -222,16 +251,11 @@ class ShapeHdl extends FreezHdl {
             this.__tmpframe.height = frame.height;
             return this.__tmpframe;
         }
+        if (propStr === 'style') {
+            return new Proxy(this.__target.style, new StyleHdl(this.__target.style));
+        }
         return super.get(target, propertyKey, receiver);
     }
-}
-
-class FillHdl {
-
-}
-
-class BorderHdl {
-
 }
 
 class GroupShapeHdl extends ShapeHdl {
@@ -308,7 +332,7 @@ class TextShapeHdl extends ShapeHdl {
             return this.__text;
         }
 
-        if (propStr === 'buildTextOverride') {
+        if (propStr === 'textOverride') {
             if (this.__override && this.__override.text) return;
             let curText = (this.__target as TextShape).text;
             if (this.__override) {
