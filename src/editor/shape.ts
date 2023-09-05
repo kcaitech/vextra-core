@@ -308,4 +308,10 @@ export class ShapeEditor {
     public isDeleted() {
         return !this.__page.getShape(this.__shape.id);
     }
+
+    public modify_contact_form() {
+        
+    }
+
+    public modify_contact_to() {}
 }

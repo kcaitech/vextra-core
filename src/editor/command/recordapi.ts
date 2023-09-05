@@ -14,7 +14,7 @@ import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exp
 import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, Shape, PathShape, PathShape2, CurvePoint, ContactShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, Color, ContactForm, ContextSettings, Fill, MarkerType } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape, TableCell, TableCellType, TableShape } from "../../data/classes";
@@ -261,6 +261,22 @@ export class Api {
                 this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.endMarkerType, mt, save))
             })
         }
+    }
+    shapeModifyContactFrom(page: Page, shape: ContactShape, from: ContactForm | undefined) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const save = shape.from;
+            shape.from = from;
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.contactFrom, from, save))
+        })
+    }
+    shapeModifyContactTo(page: Page, shape: ContactShape, to: ContactForm | undefined) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const save = shape.to;
+            shape.to = to;
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.contactTo, to, save))
+        })
     }
     shapeModifyRotate(page: Page, shape: Shape, rotate: number) {
         checkShapeAtPage(page, shape);

@@ -57,8 +57,9 @@ export interface AsyncCreator {
     setFrame: (point: PageXY) => void;
     setFrameByWheel: (point: PageXY) => void;
     collect: (page: Page, shapes: Shape[], target: Artboard) => void;
-    close: () => undefined;
     init_table: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, row: number, col: number) => Shape | undefined;
+    contact_to: (p: PageXY, to?: ContactForm) => void;
+    close: () => undefined;
 }
 export interface AsyncBaseAction {
     executeRotate: (deg: number) => void;
@@ -218,6 +219,14 @@ export class Controller {
             status = Status.Fulfilled;
             return newShape
         }
+        const contact_to = (p: PageXY, to?: ContactForm) => {
+            if (!newShape || !savepage) return;
+            status = Status.Pending;
+            pathEdit(api, savepage, newShape, 1, p);
+            if (to) api.shapeModifyContactTo(savepage, newShape as ContactShape, to);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
         const setFrame = (point: PageXY) => {
             if (!newShape || !savepage) return;
             status = Status.Pending;
@@ -303,7 +312,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { init, init_media, init_text, init_arrow, init_contact, setFrame, setFrameByWheel, collect, close, init_table }
+        return { init, init_media, init_text, init_arrow, init_contact, setFrame, setFrameByWheel, collect, init_table, contact_to, close }
     }
     // 单个图形异步编辑
     public asyncRectEditor(shape: Shape, page: Page): AsyncBaseAction {

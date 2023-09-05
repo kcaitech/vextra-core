@@ -24,6 +24,8 @@ export const SHAPE_ATTR_ID = {
     fixedRadius: "fixedRadius",
     startMarkerType: "startMarkerType",
     endMarkerType: "endMarkerType",
+    contactFrom: "contactFrom",
+    contactTo: "contactTo",
     // text shape
     textBehaviour: "textBehaviour",
     textVerAlign: "textVerAlign",
