@@ -50,10 +50,6 @@ export class TableCell extends Shape implements classes.TableCell {
         return [table.id, indexCell];
     }
 
-    get text4edit(): Text | undefined {
-        return this.text;
-    }
-
     getPath(): Path {
         const x = 0;
         const y = 0;

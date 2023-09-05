@@ -42,6 +42,23 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
         this.refId = refId
     }
 
+    getTarget(targetId: (string | { rowIdx: number; colIdx: number; })[]): Shape {
+        if (targetId[0] === 'text') { // hack!
+            // inittext
+            if (!this.text) {
+                const text = new Text(new BasicArray());
+                text.setTextBehaviour(classes.TextBehaviour.Fixed); // 固定宽高
+                const para = new Para('\n', new BasicArray());
+                para.attr = new ParaAttr();
+                text.paras.push(para);
+                const span = new Span(para.length);
+                para.spans.push(span);
+                this.text = text;
+            }
+        }
+        return this;
+    }
+
     getPath(): Path {
         const x = 0;
         const y = 0;
@@ -112,32 +129,27 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
     // }
 
     getText(refShape: Shape): Text | undefined {
-        let text = this.text;
+        if (this.text) return this.text;
 
-        if (this.stringValue) {
-            if (this.__stringValue_text) {
-                text = this.__stringValue_text;
-            }
-            else {
+        if (this.stringValue && !this.__stringValue_text) {
 
-                if (text) throw new Error("Duplicate set text and stringValue")
-                if (!(refShape instanceof TextShape)) throw new Error("refshape is not textshape")
+            // if (text) throw new Error("Duplicate set text and stringValue")
+            if (!(refShape instanceof TextShape)) throw new Error("refshape is not textshape")
 
-                text = new Text(new BasicArray());
-                text.setTextBehaviour(classes.TextBehaviour.Fixed); // 固定宽高
-                const para = new Para('\n', new BasicArray());
-                para.attr = new ParaAttr();
-                text.paras.push(para);
-                const span = new Span(para.length);
-                para.spans.push(span);
-                mergeParaAttr(para, refShape.text.paras[0]);
-                mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
-                text.insertText(this.stringValue, 0);
+            const text = new Text(new BasicArray());
+            text.setTextBehaviour(classes.TextBehaviour.Fixed); // 固定宽高
+            const para = new Para('\n', new BasicArray());
+            para.attr = new ParaAttr();
+            text.paras.push(para);
+            const span = new Span(para.length);
+            para.spans.push(span);
+            mergeParaAttr(para, refShape.text.paras[0]);
+            mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
+            text.insertText(this.stringValue, 0);
 
-                this.__stringValue_text = text;
-            }
+            this.__stringValue_text = text;
         }
-        return text;
+        return this.__stringValue_text;
     }
 
     getLayout(refShape: Shape): TextLayout | undefined {
@@ -155,65 +167,6 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
 
     onRollback(): void {
         if (this.text) this.text.reLayout();
-    }
-}
-
-// handlers
-function proxyMapObj(target: Map<any, any>) {
-    return {
-        get(key: any) {
-            const get = Map.prototype.get.bind(target);
-            return get(key);
-        },
-        set(key: any, value: any) {
-            const set_inner = Map.prototype.set.bind(target);
-            set_inner(key, value);
-        },
-        delete(key: any) {
-            const get = Map.prototype.get.bind(target);
-            const ori = get(key)
-            const delete_inner = Map.prototype.delete.bind(target);
-            delete_inner(key);
-        }
-    };
-}
-class NormalHdl {
-    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-        const ret = Reflect.set(target, propertyKey, value, receiver);
-        return ret;
-    }
-    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
-        const result = Reflect.deleteProperty(target, propertyKey);
-        return result;
-    }
-    get(target: object, propertyKey: PropertyKey, receiver?: any) {
-        if (target instanceof Map) { // map对象上的属性和方法都会进入get
-            if (propertyKey === 'get') { // 高频操作，单独提出并置顶，提高响应速度
-                return Reflect.get(target, propertyKey, receiver).bind(target);
-            } else if (propertyKey === 'set' || propertyKey === 'delete') { // 需要进入事务的方法
-                return Reflect.get(proxyMapObj(target), propertyKey);
-            } else if (propertyKey === 'size') { // map对象上唯一的一个可访问属性
-                return target.size;
-            } else if (propertyKey === 'clear') { // todo clear操作为批量删除，也需要进入事务
-                return false;
-            } else { // 其他操作，get、values、has、keys、forEach、entries，不影响数据
-                const val = Reflect.get(target, propertyKey, receiver);
-                if (typeof val === 'function') {
-                    return val.bind(target);
-                }
-                return val;
-            }
-        } else {
-            const val = Reflect.get(target, propertyKey, receiver);
-            return val;
-        }
-    }
-    has(target: object, propertyKey: PropertyKey): boolean {
-        if (target instanceof Map) {
-            return target.has(propertyKey);
-        }
-        const val = Reflect.has(target, propertyKey);
-        return val;
     }
 }
 
@@ -322,12 +275,9 @@ class TextShapeHdl extends ShapeHdl {
         this.__text = new Proxy<Text>(target.text, new FreezHdl(target.text));
     }
 
-    buildTextOverride(curText: Text): Text {
+    buildTextOverride(curText: Text): Text { // 需要生成command
         const text = importText(curText); // clone
-        this.__symRef.addOverrid(this.__target.id, OverrideType.Text, text);
-        this.__override = this.__symRef.getOverrid(this.__target.id)!;
-        this.__override.__stringValue_text = undefined;
-        this.__override.stringValue = undefined;
+        this.__override = this.__symRef.addOverrid(this.__target.id, OverrideType.Text, text);
         return this.__override.text!;
     }
 
@@ -358,8 +308,8 @@ class TextShapeHdl extends ShapeHdl {
             return this.__text;
         }
 
-        if (propStr === 'text4edit') {
-            if (this.__override && this.__override.text) return this.__override.text;
+        if (propStr === 'buildTextOverride') {
+            if (this.__override && this.__override.text) return;
             let curText = (this.__target as TextShape).text;
             if (this.__override) {
                 const text = this.__override.getText(this.__target);
@@ -459,7 +409,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
 
     // overrideValues
     addOverrid(id: string, attr: OverrideType, value: any) {
-
         let override = this.getOverrid(id);
         if (!override) {
             override = new OverrideShape(uuid(), "",
@@ -475,6 +424,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
             case OverrideType.Text:
                 override.text = value;
                 override.override_text = true;
+                override.__stringValue_text = undefined;
+                override.stringValue = undefined;
                 break;
             case OverrideType.StringValue:
                 override.stringValue = value;
@@ -485,6 +436,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
                 override.override_image = true;
                 break;
         }
+        return override;
     }
     getOverrid(id: string): OverrideShape | undefined {
         for (let i = 0, len = this.overrides.length; i < len; ++i) {

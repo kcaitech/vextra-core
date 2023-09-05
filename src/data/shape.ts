@@ -564,11 +564,6 @@ export class TextShape extends Shape implements classes.TextShape {
         text.updateSize(frame.width, frame.height);
     }
 
-    // hack! symbolref, 需要个时机复制symbol的text
-    get text4edit(): Text {
-        return this.text;
-    }
-
     getPath(): Path {
         const x = 0;
         const y = 0;
