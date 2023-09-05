@@ -24,7 +24,7 @@ import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { TableOpTarget } from "../../coop/data/classes";
 
-type TextShapeLike = Shape & { text: Text, buildTextOverride?: Text }
+type TextShapeLike = Shape & { text: Text, textOverride?: Text }
 
 function checkShapeAtPage(page: Page, obj: Shape) {
     // if (obj instanceof VirtualShape) {
@@ -104,7 +104,7 @@ export class Api {
     }
 
     private text4edit(page: Page, shape: TextShapeLike): Text {
-        const text = shape.buildTextOverride;
+        const text = shape.textOverride;
         if (text) {
             const len = text.length - 1;
             const _text = exportText(text);
