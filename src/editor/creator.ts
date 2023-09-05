@@ -263,7 +263,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
     style.borders.push(border);
-    const shape = new ContactShape(uuid(), name, types.ShapeType.Contact, frame, style, curvePoint, true);
+    const shape = new ContactShape(uuid(), name, types.ShapeType.Contact, frame, style, curvePoint, false);
     shape.from = apex;
     shape.to = undefined;
     addCommonAttr(shape);
