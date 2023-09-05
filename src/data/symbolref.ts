@@ -10,6 +10,7 @@ import { TextLayout } from "./textlayout";
 import { uuid } from "../basic/uuid";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { GroupShape, Shape, SymbolShape, TextShape } from "./shape";
+import { importText } from "./baseimport";
 
 export class OverrideShape extends Shape implements classes.OverrideShape {
     typeId = 'override-shape'
@@ -234,12 +235,19 @@ class FreezHdl {
         }
         return val;
     }
+    has(target: object, propertyKey: PropertyKey): boolean {
+        if (target instanceof Map) {
+            return target.has(propertyKey);
+        }
+        return Reflect.has(target, propertyKey);
+    }
 }
 
 class ShapeHdl extends FreezHdl {
     __symRef: SymbolRefShape;
     __target: Shape;
     __parent: Shape;
+    __tmpframe?: ShapeFrame;
 
     constructor(symRef: SymbolRefShape, target: Shape, parent: Shape) {
         super(target);
@@ -254,53 +262,13 @@ class ShapeHdl extends FreezHdl {
         if (propStr === 'parent') return this.__parent;
         if (propStr === 'frame') {
             const frame = this.__target.frame;
-            return new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+            if (!this.__tmpframe) this.__tmpframe = new ShapeFrame(0, 0, 0, 0);
+            this.__tmpframe.x = frame.x;
+            this.__tmpframe.y = frame.y;
+            this.__tmpframe.width = frame.width;
+            this.__tmpframe.height = frame.height;
+            return this.__tmpframe;
         }
-        return super.get(target, propertyKey, receiver);
-    }
-}
-
-class TextHdl extends FreezHdl {
-    __symRef: SymbolRefShape;
-    __target: Text;
-    __parent: TextShape;
-    __override?: Text;
-
-    constructor(symRef: SymbolRefShape, target: Text, parent: TextShape, override: Text | undefined) {
-        super(target);
-        this.__symRef = symRef;
-        this.__target = target;
-        this.__parent = parent;
-        this.__override = override;
-    }
-
-    // buildOverride(): Text {
-
-    // }
-
-    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-        if (this.__override) {
-            return Reflect.set(this.__override, propertyKey, value, receiver);
-        }
-        // 创建override
-
-
-
-        // const ret = Reflect.set(target, propertyKey, value, receiver);
-        // return ret;
-        throw new Error("forbidden");
-    }
-    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
-        if (this.__override) {
-            return Reflect.deleteProperty(this.__override, propertyKey);
-        }
-        // const result = Reflect.deleteProperty(target, propertyKey);
-        // return result;
-        throw new Error("forbidden");
-    }
-    get(target: object, propertyKey: PropertyKey, receiver?: any) {
-        const propStr = propertyKey.toString();
-        if (propStr === 'parent') return this.__parent;
         return super.get(target, propertyKey, receiver);
     }
 }
@@ -351,8 +319,18 @@ class TextShapeHdl extends ShapeHdl {
         this.__target = target;
         this.__parent = parent;
         this.__override = override;
-        this.__text = new Proxy<Text>(target.text, new TextHdl(symRef, target.text, target, override?.text));
+        this.__text = new Proxy<Text>(target.text, new FreezHdl(target.text));
     }
+
+    buildTextOverride(curText: Text): Text {
+        const text = importText(curText); // clone
+        this.__symRef.addOverrid(this.__target.id, OverrideType.Text, text);
+        this.__override = this.__symRef.getOverrid(this.__target.id)!;
+        this.__override.__stringValue_text = undefined;
+        this.__override.stringValue = undefined;
+        return this.__override.text!;
+    }
+
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
         // const ret = Reflect.set(target, propertyKey, value, receiver);
         // return ret;
@@ -367,18 +345,29 @@ class TextShapeHdl extends ShapeHdl {
         const propStr = propertyKey.toString();
 
         if (propStr === 'text') {
-            if (this.__override) {
-                const text = this.__override.getText(this.__target);
-                if (this.__override.text) return this.__override.text;
-                if (text) {
-                    if (!this.__stringValueText) {
-                        this.__stringValueText = new Proxy<Text>(text, new TextHdl(this.__symRef, text, this.__target as TextShape, undefined));
-                    }
-                    return this.__stringValueText;
+            if (this.__override && this.__override.text) return this.__override.text;
+
+            const text = this.__override?.getText(this.__target);
+            if (text) {
+                if (!this.__stringValueText) {
+                    this.__stringValueText = new Proxy<Text>(text, new FreezHdl(text));
                 }
+                return this.__stringValueText;
             }
+
             return this.__text;
         }
+
+        if (propStr === 'text4edit') {
+            if (this.__override && this.__override.text) return this.__override.text;
+            let curText = (this.__target as TextShape).text;
+            if (this.__override) {
+                const text = this.__override.getText(this.__target);
+                curText = text ?? (this.__target as TextShape).text;
+            }
+            return this.buildTextOverride(curText);
+        }
+
         return super.get(target, propertyKey, receiver);
     }
 }
@@ -469,6 +458,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
                 new Style(new BasicArray(), new BasicArray()),
                 id);
             this.overrides.push(override);
+            override = this.overrides[this.overrides.length - 1];
         }
 
         switch (attr) {
@@ -483,6 +473,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
             case OverrideType.Image:
                 override.imageRef = value;
                 override.override_image = true;
+                break;
         }
     }
     getOverrid(id: string): OverrideShape | undefined {
