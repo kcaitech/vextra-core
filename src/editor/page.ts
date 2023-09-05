@@ -1,4 +1,4 @@
-import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape, SymbolShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
@@ -8,7 +8,7 @@ import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text } from "../data/classes";
+import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text, SymbolRefShape } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
@@ -243,6 +243,30 @@ export class PageEditor {
             this.__repo.rollback();
         }
         return false;
+    }
+
+    /**
+     * 创建组件
+     * @param shape 
+     */
+    makeSymbol(shape: Shape) {
+
+    }
+
+    /**
+     * 取消组件
+     * @param shape 
+     */
+    unSymbol(shape: SymbolShape) {
+
+    }
+
+    /**
+     * 将引用的组件解引用
+     * @param shape 
+     */
+    extractSymbol(shape: SymbolRefShape) {
+
     }
 
     private cloneStyle(style: Style): Style {
