@@ -5,14 +5,13 @@ marker[MarkerType.FilledArrow] = function (h: Function, style: Style, border: Bo
     const color = border.color;
     const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
-    const af = { w: range * 2, h: range * 2 };
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: "0 0 10 10",
         refX: "5",
         refY: "5",
-        markerWidth: af.w,
-        markerHeight: af.h,
+        markerWidth: range * 2,
+        markerHeight: range * 2,
         orient: "auto-start-reverse"
     }
     const marker_content_props: any = {
@@ -26,18 +25,17 @@ marker[MarkerType.OpenArrow] = function (h: Function, style: Style, border: Bord
     const color = border.color;
     const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
-    const af = { w: range * 2, h: range * 2 };
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: "0 0 10 10",
-        refX: "9",
+        refX: "7",
         refY: "5",
-        markerWidth: af.w,
-        markerHeight: af.h,
+        markerWidth: range * 2,
+        markerHeight: range * 2,
         orient: "auto-start-reverse"
     }
     const marker_content_props: any = {
-        d: 'M 0 0 L 10 5 L 0 10',
+        d: 'M 2 2 L 8 5 L 2 8',
         stroke: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")",
         'stroke-width': range,
         'stroke-linecap': 'round',
@@ -50,14 +48,13 @@ marker[MarkerType.FilledCircle] = function (h: Function, style: Style, border: B
     const color = border.color;
     const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
-    const af = { w: range * 2, h: range * 2 };
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: "0 0 10 10",
         refX: "5",
         refY: "5",
-        markerWidth: af.w,
-        markerHeight: af.h,
+        markerWidth: range * 2,
+        markerHeight: range * 2,
         orient: "auto-start-reverse"
     }
     const marker_content_props: any = {
@@ -71,14 +68,13 @@ marker[MarkerType.FilledSquare] = function (h: Function, style: Style, border: B
     const color = border.color;
     const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
-    const af = { w: range * 2, h: range * 2 };
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: "0 0 10 10",
         refX: "5",
         refY: "5",
-        markerWidth: af.w,
-        markerHeight: af.h,
+        markerWidth: range * 2,
+        markerHeight: range * 2,
         orient: "auto-start-reverse"
     }
     const marker_content_props: any = {
@@ -92,14 +88,13 @@ marker[MarkerType.Square] = function (h: Function, style: Style, border: Border,
     const color = border.color;
     const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
-    const af = { w: range, h: range };
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: "0 0 10 10",
         refX: "0",
         refY: "5",
-        markerWidth: af.w,
-        markerHeight: af.h,
+        markerWidth: range * 2,
+        markerHeight: range * 2,
         orient: "auto-start-reverse"
     }
     const marker_content_props: any = {
@@ -113,14 +108,13 @@ marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, 
     const color = border.color;
     const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
-    const af = { w: range, h: range };
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: "0 0 10 10",
         refX: "0",
         refY: "5",
-        markerWidth: af.w,
-        markerHeight: af.h,
+        markerWidth: range * 2,
+        markerHeight: range * 2,
         orient: "auto-start-reverse"
     }
     const marker_content_props: any = {
