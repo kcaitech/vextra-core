@@ -110,9 +110,9 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         return ret
     })()
     if (source.contacts !== undefined) ret.contacts = (() => {
-        const ret = new BasicArray<string>()
+        const ret = new BasicArray<impl.ContactRole>()
         for (let i = 0, len = source.contacts && source.contacts.length; i < len; i++) {
-            const r = source.contacts[i]
+            const r = importContactRole(source.contacts[i], ctx)
             if (r) ret.push(r)
         }
         return ret
@@ -469,7 +469,20 @@ export function importContextSettings(source: types.ContextSettings, ctx?: IImpo
 export function importContactType(source: types.ContactType, ctx?: IImportContext): impl.ContactType {
     return source
 }
-/* border style */
+/* contactstyle */
+export function importContactRole(source: types.ContactRole, ctx?: IImportContext): impl.ContactRole {
+    const ret: impl.ContactRole = new impl.ContactRole (
+        source.id,
+        importContactRoleType(source.roleType, ctx),
+        source.shapeId
+    )
+    return ret
+}
+/* contact role type */
+export function importContactRoleType(source: types.ContactRoleType, ctx?: IImportContext): impl.ContactRoleType {
+    return source
+}
+/* contact form */
 export function importContactForm(source: types.ContactForm, ctx?: IImportContext): impl.ContactForm {
     const ret: impl.ContactForm = new impl.ContactForm (
         importContactType(source.contactType, ctx),

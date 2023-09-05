@@ -52,7 +52,7 @@
         "contacts": {
             "type": "array",
             "items": {
-                "type": "string"
+                "$ref": "./contact-role.json"
             }
         },
         "startMarkerType": {

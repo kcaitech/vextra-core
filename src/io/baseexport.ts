@@ -111,7 +111,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
         contacts: source.contacts && (() => {
             const ret = []
             for (let i = 0, len = source.contacts.length; i < len; i++) {
-                const r = source.contacts[i]
+                const r = exportContactRole(source.contacts[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -470,7 +470,20 @@ export function exportContextSettings(source: types.ContextSettings, ctx?: IExpo
 export function exportContactType(source: types.ContactType, ctx?: IExportContext): types.ContactType {
     return source
 }
-/* border style */
+/* contactstyle */
+export function exportContactRole(source: types.ContactRole, ctx?: IExportContext): types.ContactRole {
+    const ret = {
+        id: source.id,
+        roleType: exportContactRoleType(source.roleType, ctx),
+        shapeId: source.shapeId,
+    }
+    return ret
+}
+/* contact role type */
+export function exportContactRoleType(source: types.ContactRoleType, ctx?: IExportContext): types.ContactRoleType {
+    return source
+}
+/* contact form */
 export function exportContactForm(source: types.ContactForm, ctx?: IExportContext): types.ContactForm {
     const ret = {
         contactType: exportContactType(source.contactType, ctx),

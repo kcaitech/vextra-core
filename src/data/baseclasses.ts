@@ -25,6 +25,7 @@ export {
     ExportFileFormat,
     CurveMode,
     ContactType,
+    ContactRoleType,
     BulletNumbersType,
     BulletNumbersBehavior,
     BorderPosition,
@@ -54,6 +55,7 @@ import {
     ExportFileFormat,
     CurveMode,
     ContactType,
+    ContactRoleType,
     BulletNumbersType,
     BulletNumbersBehavior,
     BorderPosition,
@@ -112,7 +114,7 @@ export class Style extends Basic {
     fills: BasicArray<Fill >
     innerShadows?: BasicArray<Shadow >
     shadows?: BasicArray<Shadow >
-    contacts?: BasicArray<string >
+    contacts?: BasicArray<ContactRole >
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     constructor(
@@ -567,7 +569,26 @@ export class ContextSettings extends Basic {
     }
 }
 /**
- * border style 
+ * contactstyle 
+ */
+export class ContactRole extends Basic {
+    typeId = 'contact-role'
+    id: string
+    roleType: ContactRoleType
+    shapeId: string
+    constructor(
+        id: string,
+        roleType: ContactRoleType,
+        shapeId: string
+    ) {
+        super()
+        this.id = id
+        this.roleType = roleType
+        this.shapeId = shapeId
+    }
+}
+/**
+ * contact form 
  */
 export class ContactForm extends Basic {
     typeId = 'contact-form'

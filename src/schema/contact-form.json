@@ -1,5 +1,5 @@
 {
-  "description": "border style",
+  "description": "contact form",
   "type": "object",
   "properties": {
     "contactType": {

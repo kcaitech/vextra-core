@@ -76,7 +76,7 @@ export type Style = {
     fills: Fill[]
     innerShadows?: Shadow[]
     shadows?: Shadow[]
-    contacts?: string[]
+    contacts?: ContactRole[]
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
 }
@@ -358,7 +358,18 @@ export enum ContactType {
     Bottom = 'bottom',
     Left = 'left',
 }
-/* border style */
+/* contactstyle */
+export type ContactRole = {
+    id: string
+    roleType: ContactRoleType
+    shapeId: string
+}
+/* contact role type */
+export enum ContactRoleType {
+    From = 'from',
+    To = 'to',
+}
+/* contact form */
 export type ContactForm = {
     contactType: ContactType
     shapeId: string

@@ -1,0 +1,24 @@
+{
+    "description": "contactstyle",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 36,
+            "default": "$uuid"
+        },
+        "roleType": {
+            "$ref": "./contact-role-type.json"
+        },
+        "shapeId": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "id",
+        "roleType",
+        "shapeId"
+    ],
+    "additionalProperties": false
+}
