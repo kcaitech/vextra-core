@@ -2,7 +2,7 @@ import { Page } from "data/page";
 import { Matrix } from "../basic/matrix";
 import { GroupShape, PathShape, Shape, TextShape } from "../data/shape";
 import { Text } from "../data/text"
-import { Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
+import { ContactForm, ContactRole, ContactRoleType, ContactType, Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils";
 import { TableShape } from "../data/table";
 
@@ -222,8 +222,8 @@ export function translate(api: Api, page: Page, shape: Shape, dx: number, dy: nu
         y = Math.round(y);
     }
     translateTo(api, page, shape, xy.x + dx, xy.y + dy);
+    modify_contacts(api, page, shape);
 }
-
 export function expandTo(api: Api, page: Page, shape: Shape, w: number, h: number) {
     const frame = shape.frame;
     if (w < minimum_WH) w = minimum_WH;
@@ -885,5 +885,50 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape) {
             }
             api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord3(p.point));
         }
+    }
+}
+function modify_contacts(api: Api, page: Page, shape: Shape) {
+    const contacts = shape.style.contacts;
+    if (!contacts || !contacts.length) return;
+    const from: ContactRole[] = [], to: ContactRole[] = [];
+    for (let i = 0, len = contacts.length; i < len; i++) {
+        const item = contacts[i];
+        if (item.roleType === ContactRoleType.From) from.push(item);
+        else if (item.roleType === ContactRoleType.To) to.push(item);
+    }
+    const box: any = {
+        top: undefined, right: undefined, bottom: undefined, left: undefined
+    }
+    const m2r = shape.matrix2Root();
+    for (let i = 0, len = from.length; i < len; i++) {
+        const item = from[i];
+        const consha = page.getShape(item.shapeId);
+        if (!consha) continue;
+        const cf: ContactForm = consha.from;
+        if (box[cf.contactType] === undefined) {
+            box[cf.contactType] = get_pagexy(shape, cf.contactType, m2r)
+        }
+        pathEdit(api, page, consha, 0, box[cf.contactType]);
+    }
+    for (let i = 0, len = to.length; i < len; i++) {
+        const item = to[i];
+        const consha = page.getShape(item.shapeId);
+        if (!consha) continue;
+        const cf: ContactForm = consha.to;
+        if (box[cf.contactType] === undefined) {
+            box[cf.contactType] = get_pagexy(shape, cf.contactType, m2r)
+        }
+        const cl = consha.points?.length - 1;
+        pathEdit(api, page, consha, cl || 1, box[cf.contactType]);
+    }
+}
+function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
+    const f = shape.frame;
+    switch (type) {
+        case ContactType.Top: return m2r.computeCoord2(f.width / 2, 0);
+        case ContactType.Right: return m2r.computeCoord2(f.width, f.height / 2);
+        case ContactType.Bottom: return m2r.computeCoord2(f.width / 2, f.height);
+        case ContactType.Left: return m2r.computeCoord2(0, f.height / 2);
+        default: return false
     }
 }

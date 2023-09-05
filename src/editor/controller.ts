@@ -297,7 +297,13 @@ export class Controller {
                     if ((newShape as ContactShape).from) {
                         const shape1 = savepage?.getShape((newShape as ContactShape).from.shapeId);
                         if (shape1) {
-                            api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.From, shape1.id), shape1.style.contacts?.length || 0);
+                            api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.From, newShape.id), shape1.style.contacts?.length || 0);
+                        }
+                    }
+                    if ((newShape as ContactShape).to) {
+                        const shape1 = savepage?.getShape((newShape as ContactShape).to.shapeId);
+                        if (shape1) {
+                            api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.To, newShape.id), shape1.style.contacts?.length || 0);
                         }
                     }
                 }
