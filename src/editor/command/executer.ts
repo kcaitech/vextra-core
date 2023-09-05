@@ -279,9 +279,8 @@ export class CMDExecuter {
         const pageId = cmd.blockId;
         const page = this.__document.pagesMgr.getSync(pageId)
         const op = cmd.ops[0];
-        const parentId = op.targetId[0] as string;
         if (page && op.type === OpType.ShapeInsert) { // 后续page加载后需要更新！
-            const parent = page.getShape(parentId, true);
+            const parent = page.getTarget(op.targetId);
             if (!parent || !(parent instanceof GroupShape)) {
                 throw new Error("shape insert, parent error")
             }
@@ -293,10 +292,9 @@ export class CMDExecuter {
     shapeDelete(cmd: ShapeCmdRemove, needUpdateFrame: { shape: Shape, page: Page }[]) {
         const pageId = cmd.blockId;
         const op = cmd.ops[0];
-        const parentId = op.targetId[0] as string;
         const page = this.__document.pagesMgr.getSync(pageId)
         if (page && op.type === OpType.ShapeRemove) {
-            const parent = page.getShape(parentId, true);
+            const parent = page.getTarget(op.targetId);
             if (!parent || !(parent instanceof GroupShape)) {
                 throw new Error("shape delete, parent error")
             }
@@ -319,10 +317,8 @@ export class CMDExecuter {
         const op = cmd.ops[0];
         if (op.type === OpType.ShapeMove) {
             const moveOp = op as ShapeOpMove;
-            const parentId = moveOp.targetId[0] as string;;
-            const parentId2 = moveOp.targetId2[0] as string;
-            const parent = page.getShape(parentId, true);
-            const parent2 = page.getShape(parentId2, true);
+            const parent = page.getTarget(moveOp.targetId);
+            const parent2 = page.getTarget(moveOp.targetId2);
             if (!parent || !parent2) {
                 throw new Error("shape move not find parent")
             }
@@ -335,19 +331,8 @@ export class CMDExecuter {
         if (!page) return;
         const op = cmd.ops[0]
         if (op.type === OpType.None) return;
-        const shapeId = op.targetId[0] as string;
-        const _shape = page.getShape(shapeId, true);
-        if (!_shape) {
-            throw new Error("shape not find")
-        }
-        let shape: Shape | undefined = _shape;
-        if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-            const index = op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
-            if (!shape) {
-                throw new Error("table cell not find")
-            }
-        }
+        const shape = page.getTarget(op.targetId);
+
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op.type === OpType.ArrayInsert) {
@@ -370,19 +355,8 @@ export class CMDExecuter {
         if (!page) return;
         const op = cmd.ops[0]
         if (op.type === OpType.None) return;
-        const shapeId = op.targetId[0] as string;
-        const _shape = page.getShape(shapeId, true);
-        if (!_shape) {
-            throw new Error("shape not find")
-        }
-        let shape: Shape | undefined = _shape;
-        if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-            const index = op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
-            if (!shape) {
-                throw new Error("table cell not find")
-            }
-        }
+        const shape = page.getTarget(op.targetId);
+
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op.type === OpType.ArrayRemove) {
@@ -405,19 +379,8 @@ export class CMDExecuter {
         if (_op.type !== OpType.IdSet) {
             return;
         }
-        const shapeId = _op.targetId[0] as string;
-        const _shape = page.getShape(shapeId, true);
-        if (!_shape) {
-            throw new Error("shape not find")
-        }
-        let shape: Shape | undefined = _shape;
-        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
-            const index = _op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
-            if (!shape) {
-                throw new Error("table cell not find")
-            }
-        }
+        const shape = page.getTarget(_op.targetId);
+
         const op = _op as IdOpSet;
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
@@ -520,11 +483,8 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0] as TableOpInsert
-        const shapeId = op.targetId[0] as string;
-        const shape = page.getShape(shapeId, true);
-        if (!shape) {
-            throw new Error("shape not find")
-        }
+        const shape = page.getTarget(op.targetId);
+
         if (op.type !== OpType.TableInsert) {
             return;
         }
@@ -548,11 +508,8 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0] as TableOpRemove
-        const shapeId = op.targetId[0] as string;
-        const shape = page.getShape(shapeId, true);
-        if (!shape) {
-            throw new Error("shape not find")
-        }
+        const shape = page.getTarget(op.targetId);
+
         if (op.type !== OpType.TableRemove) {
             return;
         }
@@ -570,11 +527,8 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0] as TableOpModify;
-        const shapeId = op.targetId[0] as string;
-        const shape = page.getShape(shapeId, true);
-        if (!shape) {
-            throw new Error("shape not find")
-        }
+        const shape = page.getTarget(op.targetId);
+
         if (op.type !== OpType.TableModify) {
             return;
         }
@@ -599,19 +553,8 @@ export class CMDExecuter {
         if (!page) return;
         const op0 = cmd.ops[0]
         const op1 = cmd.ops[1]
-        const shapeId = op0.targetId[0] as string;
-        const _shape = page.getShape(shapeId, true);
-        if (!_shape) {
-            throw new Error("shape not find")
-        }
-        let shape: Shape | undefined = _shape;
-        if (_shape instanceof TableShape && op0.targetId[1] instanceof TableIndex) {
-            const index = op0.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
-            if (!shape) {
-                throw new Error("table cell not find")
-            }
-        }
+        const shape = page.getTarget(op0.targetId);
+
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
@@ -637,22 +580,8 @@ export class CMDExecuter {
         if (!page) return;
         const _op = cmd.ops[0]
         if (_op.type !== OpType.ArrayInsert) return;
-        const shapeId = _op.targetId[0] as string;
-        const _shape = page.getShape(shapeId, true);
-        if (!_shape) {
-            throw new Error("shape not find")
-        }
-        let shape: Shape | undefined = _shape;
-        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
-            const index = _op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
-            if (!shape) {
-                throw new Error("table cell not find")
-            }
-            if (!(shape as TableCell).text) {
-                throw new Error("table cell has no text")
-            }
-        }
+        const shape = page.getTarget(_op.targetId);
+
         const op = _op as ArrayOpInsert;
         const text = cmd.parseText();
         const shapetext = (shape as TextShapeLike).text;
@@ -677,19 +606,8 @@ export class CMDExecuter {
         if (!page) return;
         const _op = cmd.ops[0]
         if (_op.type !== OpType.ArrayRemove) return;
-        const shapeId = _op.targetId[0] as string;
-        const _shape = page.getShape(shapeId, true);
-        if (!_shape) {
-            throw new Error("shape not find")
-        }
-        let shape: Shape | undefined = _shape;
-        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
-            const index = _op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
-            if (!shape) {
-                throw new Error("table cell not find")
-            }
-        }
+        const shape = page.getTarget(_op.targetId);
+
         const op = _op as ArrayOpRemove;
         const shapetext = (shape as TextShapeLike).text;
         if (!(shapetext instanceof Text)) {
@@ -704,19 +622,8 @@ export class CMDExecuter {
         if (_op.type !== OpType.ArrayAttr) {
             return;
         }
-        const shapeId = _op.targetId[0] as string;
-        const _shape = page.getShape(shapeId, true);
-        if (!_shape) {
-            throw new Error("shape not find")
-        }
-        let shape: Shape | undefined = _shape;
-        if (_shape instanceof TableShape && _op.targetId[1] instanceof TableIndex) {
-            const index = _op.targetId[1] as TableIndex;
-            shape = _shape.getCellAt(index.rowIdx, index.colIdx, true);
-            if (!shape) {
-                throw new Error("table cell not find")
-            }
-        }
+        const shape = page.getTarget(_op.targetId);
+
         const op = _op as ArrayOpAttr;
         const attrId = cmd.attrId
         const value = cmd.value;

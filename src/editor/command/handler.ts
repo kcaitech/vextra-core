@@ -33,19 +33,8 @@ export class CMDHandler {
         if ((op.type !== OpType.IdSet)) return;
         const page = document.pagesMgr.getSync(pageId)
         if (!page) return;
-        const shapeId = op.targetId[0] as string;
-        const _shape = page.getShape(shapeId, true);
-        if (!_shape) {
-            throw new Error("shape not find")
-        }
-        let shape: Shape | undefined = _shape;
-        // if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-        //     const index = op.targetId[1] as TableIndex;
-        //     shape = _shape.getCellAt(index.rowIdx, index.colIdx);
-        //     if (!shape) {
-        //         throw new Error("table cell not find")
-        //     }
-        // }
+
+        const shape: Shape = page.getTarget(op.targetId)
 
         const _op = op as IdOpSet;
         const value = cmd.value;
