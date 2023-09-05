@@ -5,28 +5,21 @@ const apexe: { [key: string]: (h: Function, style: Style, frame: ShapeFrame, bor
 const apexs: { [key: string]: (h: Function, style: Style, frame: ShapeFrame, border: Border, r: number) => any } = {};
 
 apexe[MarkerType.FilledArrow] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
-    const color = border.color;
-    const opacity = style.contextSettings?.opacity || 1;
     const range = border.thickness;
     const body_props1: any = {
         stroke: 'none',
         fill: 'none',
     }
-    const body_props2: any = {
-        stroke: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")",
-        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")",
-    }
     const a = { x: frame.width, y: frame.height };
     const af = { w: range * 3, h: range * 3 };
     body_props1.d = `M0 0 h${af.w} v${af.h} h${-af.w} z`;
-    body_props2.d = `M0 0 L${af.w} ${af.h / 2} L0 ${af.h} z`;
     const g_props: any = {};
     const s: any = {}
     s.transform = "translate(" + a.x + "px," + a.y + "px) "
     s.transform += "rotate(" + rad + "rad) "
     s.transform += "translate(" + (- af.w) + "px," + (- af.h / 2) + "px) ";
     g_props.style = s;
-    return h('g', g_props, [h("path", body_props1), h("path", body_props2)]);
+    return h('g', g_props, [h("path", body_props1)]);
 }
 apexe[MarkerType.OpenArrow] = function (h: Function, style: Style, frame: ShapeFrame, border: Border, rad: number) {
     const color = border.color;

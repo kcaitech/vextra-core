@@ -1,10 +1,9 @@
 
 
+import { objectId } from "../basic/objectid";
 import { Border, FillType, MarkerType, Shape, Style } from "../data/classes";
-import { render as ra } from "./apex2";
-function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
-    return Math.atan2(B.y - A.y, B.x - A.x)
-}
+import { render as rm } from "./marker";
+
 function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.thickness;
     const body_props: any = {
@@ -21,19 +20,18 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         const opacity = style.contextSettings?.opacity || 1;
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     }
+    const g_cs: any[] = [h('path', body_props)];
     if (endMarkerType !== MarkerType.Line || startMarkerType !== MarkerType.Line) {
-        const f = shape.frame, t = border.thickness;
-        let s = { x: 0, y: 0 }, e = { x: f.width, y: f.height };
-        const r = getHorizontalRadians(s, e);
-        const g_cs: any[] = ra(h, style, f, border, r, startMarkerType, endMarkerType);
-        if (startMarkerType && startMarkerType !== MarkerType.Line && startMarkerType !== MarkerType.OpenArrow && startMarkerType !== MarkerType.Round && startMarkerType !== MarkerType.Square) {
-            s.x = 2 * t * Math.cos(r), s.y = 2 * t * Math.sin(r);
+        if (endMarkerType && endMarkerType !== MarkerType.Line) {
+            const id = "s-" + objectId(shape);
+            g_cs.unshift(rm(h, style, border, endMarkerType, id));
+            body_props['marker-end'] = `url(#arrow-${id})`;
         }
-        if (endMarkerType && endMarkerType !== MarkerType.Line && endMarkerType !== MarkerType.OpenArrow && endMarkerType !== MarkerType.Round && endMarkerType !== MarkerType.Square) {
-            e.x -= 2 * t * Math.cos(r), e.y -= 2 * t * Math.sin(r);
+        if (startMarkerType && startMarkerType !== MarkerType.Line) {
+            const id = "e-" + objectId(shape);
+            g_cs.unshift(rm(h, style, border, startMarkerType, id));
+            body_props['marker-start'] = `url(#arrow-${id})`;
         }
-        body_props.d = `M ${s.x} ${s.y} L ${e.x} ${e.y}`;
-        g_cs.push(h('path', body_props));
         return g_cs;
     } else {
         return h('path', body_props);

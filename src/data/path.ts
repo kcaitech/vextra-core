@@ -723,7 +723,7 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
         const seg = ctx.segs[i];
         if (seg.points.length <= 1) continue;
 
-        ret.push({points: seg.points, isClosed: !!seg.isClosed})
+        ret.push({ points: seg.points, isClosed: !!seg.isClosed })
     }
 
     ret.forEach((seg) => {
