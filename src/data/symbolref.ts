@@ -128,6 +128,10 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
     //     if (this.text) this.text.updateSize(this.frame.width, this.frame.height)
     // }
 
+    peekText(): Text | undefined {
+        return this.text ?? this.__stringValue_text;
+    }
+
     getText(refShape: Shape): Text | undefined {
         if (this.text) return this.text;
 
