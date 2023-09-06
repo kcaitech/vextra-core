@@ -677,9 +677,54 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             default: return false
         }
     }
+    private get_nearest_border_point(shape: Shape, contactType: ContactType) {
+        const f = shape.frame, m2r = shape.matrix2Root();
+        const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
+        const t = m2r.computeCoord2(0, 0);
+        const box = { left: t.x, right: t.x, top: t.y, bottom: t.y };
+        for (let i = 1; i < 4; i++) {
+            const p = points[i];
+            const t = m2r.computeCoord2(p.x, p.y);
+            if (t.x < box.left) {
+                box.left = t.x;
+            } else if (t.x > box.right) {
+                box.right = t.x;
+            }
+            if (t.y < box.top) {
+                box.top = t.y
+            } else if (t.y > box.bottom) {
+                box.bottom = t.y
+            }
+        }
+        box.left -= 20, box.right += 20, box.top -= 20, box.bottom += 20;
+        let op = this.get_pagexy(shape, contactType, m2r);
+        if (op) {
+            const d1 = Math.abs(op.y - box.top);
+            const d2 = Math.abs(op.x - box.right);
+            const d3 = Math.abs(op.y - box.bottom);
+            const d4 = Math.abs(op.x - box.left);
+            let min_dis = d1;
+            const save = { x: op.x, y: op.y };
+            op = { x: save.x, y: box.top };
+            if (d2 < min_dis) {
+                min_dis = d2;
+                op = { x: box.right, y: save.y };
+            }
+            if (d3 < min_dis) {
+                min_dis = d3;
+                op = { x: save.x, y: box.bottom };
+            }
+            if (d4 < min_dis) {
+                op = { x: box.left, y: save.y };
+            }
+            return op;
+        }
+    }
+
     getPoints() {
-        const points = this.points.slice(0);
+        let points = this.points.slice(0);
         let page: any;
+        let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false;
         if (this.from) {
             if (!page) page = this.getPage();
             if (page) {
@@ -694,6 +739,12 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                         p = m1.computeCoord3(p);
                         const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(p.x, p.y));
                         points[0] = fp;
+                    }
+                    let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType);
+                    if (border_p) {
+                        border_p = m1.computeCoord3(border_p);
+                        points.splice(1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(border_p.x, border_p.y)));
+                        s1 = border_p;
                     }
                 }
             }
@@ -713,8 +764,18 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                         const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(p.x, p.y));
                         points[points.length - 1] = lp;
                     }
+                    let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
+                    if (border_p) {
+                        border_p = m1.computeCoord3(border_p);
+                        const t = points.pop();
+                        if (t) points = points.concat([new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(border_p.x, border_p.y)), t]);
+                        s2 = border_p;
+                    }
                 }
             }
+        }
+        if (s1 && s2) {
+            points.splice(2, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(s2.x, s1.y)));
         }
         return points;
     }
