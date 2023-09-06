@@ -677,53 +677,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             default: return false
         }
     }
-    getPath(fixedRadius?: number): Path {
-        const offsetX = 0;
-        const offsetY = 0;
-        const width = this.frame.width;
-        const height = this.frame.height;
-        fixedRadius = this.fixedRadius ?? fixedRadius;
-        const points = this.points.slice(0);
-        let page: any;
-        if (this.from) {
-            if (!page) page = this.getPage();
-            if (page) {
-                const fromShape = page.getShape((this.from as ContactForm).shapeId);
-                if (fromShape) {
-                    const f = this.frame;
-                    let m1 = this.matrix2Root();
-                    m1.preScale(f.width, f.height);
-                    m1 = new Matrix(m1.inverse);
-                    let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, fromShape.matrix2Root());
-                    if (p) {
-                        p = m1.computeCoord3(p);
-                        const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(p.x, p.y));
-                        points[0] = fp;
-                    }
-                }
-            }
-        }
-        if (this.to) {
-            if (!page) page = this.getPage();
-            if (page) {
-                const toShape = page.getShape((this.to as ContactForm).shapeId);
-                if (toShape) {
-                    const f = this.frame;
-                    let m1 = this.matrix2Root();
-                    m1.preScale(f.width, f.height);
-                    m1 = new Matrix(m1.inverse);
-                    let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, toShape.matrix2Root());
-                    if (p) {
-                        p = m1.computeCoord3(p);
-                        const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(p.x, p.y));
-                        points[points.length - 1] = lp;
-                    }
-                }
-            }
-        }
-        const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
-        return new Path(path);
-    }
     getPoints() {
         const points = this.points.slice(0);
         let page: any;
@@ -764,5 +717,15 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             }
         }
         return points;
+    }
+    getPath(fixedRadius?: number): Path {
+        const offsetX = 0;
+        const offsetY = 0;
+        const width = this.frame.width;
+        const height = this.frame.height;
+        fixedRadius = this.fixedRadius ?? fixedRadius;
+        const points = this.getPoints();
+        const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
+        return new Path(path);
     }
 }
