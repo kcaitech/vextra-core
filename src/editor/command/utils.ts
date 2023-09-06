@@ -210,7 +210,7 @@ export function exportShape(shape: Shape): Object {
         case ShapeType.SymbolRef: return (exportSymbolRefShape(shape as SymbolRefShape))
         case ShapeType.Text: return (exportTextShape(shape as TextShape))
         case ShapeType.Group: return (exportGroupShape(shape as GroupShape))
-        case ShapeType.FlattenShape: return exportFlattenShape(shape as FlattenShape);
+        // case ShapeType.FlattenShape: return exportFlattenShape(shape as FlattenShape);
         case ShapeType.Table: return exportTableShape(shape as TableShape)
         case ShapeType.TableCell: return exportTableCell(shape as TableCell);
         default: throw new Error("unknow shape type: " + shape.type)
