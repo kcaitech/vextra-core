@@ -30,7 +30,6 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
     }
     let childs = new Array();
     if (shape.style.borders.length) {
-        // const path = shape.getPath().toString();
         childs = childs.concat(renderB(h, shape.style, path, shape));
         return h('g', props, childs);
     } else {
