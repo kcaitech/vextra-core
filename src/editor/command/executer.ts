@@ -405,6 +405,11 @@ export class CMDExecuter {
                 api.deleteBorderAt(shape.style, (op as ArrayOpRemove).start)
             }
         }
+        else if (arrayAttr === CONTACTS_ID) {
+            if (op.type === OpType.ArrayRemove) {
+                api.removeContactRoleAt(shape.style, (op as ArrayOpRemove).start)
+            }
+        }
         else {
             console.error("not implemented ", arrayAttr)
         }

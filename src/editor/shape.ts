@@ -8,6 +8,7 @@ import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { ContactForm } from "data/typesdefine";
+import { Api } from "./command/recordapi";
 export class ShapeEditor {
     protected __shape: Shape;
     protected __repo: CoopRepository;
@@ -283,6 +284,11 @@ export class ShapeEditor {
             if (index >= 0) {
                 try {
                     const api = this.__repo.start("deleteShape", {});
+                    if (this.__shape.type === ShapeType.Contact) {
+                        this.removeContactSides(api, this.__page, this.__shape as unknown as ContactShape);
+                    } else {
+                        this.removeContact(api, this.__page, this.__shape);
+                    }
                     api.shapeDelete(this.__page, parent, index);
                     // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
                     if (!parent.childs.length && parent.type === ShapeType.Group) {
@@ -298,14 +304,67 @@ export class ShapeEditor {
             }
         }
     }
-
+    private removeContactSides(api: Api, page: Page, shape: ContactShape) {
+        if (shape.from) {
+            const fromShape = page.getShape(shape.from.shapeId);
+            const contacts = fromShape?.style.contacts;
+            if (fromShape && contacts) {
+                let idx: number = -1;
+                for (let i = 0, len = contacts.length; i < len; i++) {
+                    const c = contacts[i];
+                    if (c.shapeId === shape.id) {
+                        idx = i;
+                        break;
+                    }
+                }
+                if (idx > -1) {
+                    api.removeContactRoleAt(page, fromShape, idx);
+                }
+            }
+        }
+        if (shape.to) {
+            const toShape = page.getShape(shape.to.shapeId);
+            const contacts = toShape?.style.contacts;
+            if (toShape && contacts) {
+                let idx: number = -1;
+                for (let i = 0, len = contacts.length; i < len; i++) {
+                    const c = contacts[i];
+                    if (c.shapeId === shape.id) {
+                        idx = i;
+                        break;
+                    }
+                }
+                if (idx > -1) {
+                    api.removeContactRoleAt(page, toShape, idx);
+                }
+            }
+        }
+    }
+    private removeContact(api: Api, page: Page, shape: Shape) {
+        const contacts = shape.style.contacts;
+        if (contacts && contacts.length) {
+            for (let i = 0, len = contacts.length; i < len; i++) {
+                const shape = page.getShape(contacts[i].shapeId);
+                if (!shape) continue;
+                const p = shape.parent;
+                if (!p) continue;
+                let idx = -1;
+                for (let j = 0, len = p.childs.length; j < len; j++) {
+                    if (p.childs[j].id === shape.id) {
+                        idx = j; break;
+                    }
+                }
+                if (idx > -1) api.shapeDelete(page, p as GroupShape, idx);
+            }
+        }
+    }
     public isDeleted() {
         return !this.__page.getShape(this.__shape.id);
     }
 
     public modify_contact_form() {
-        
+
     }
 
-    public modify_contact_to() {}
+    public modify_contact_to() { }
 }

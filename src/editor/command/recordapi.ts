@@ -616,6 +616,14 @@ export class Api {
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), CONTACTS_ID, contactRole.id, idx, exportContactRole(contactRole)))
         })
     }
+    removeContactRoleAt(page: Page, shape: Shape, index: number) {
+        checkShapeAtPage(page, shape);
+        if (!shape.style.contacts || !shape.style.contacts[index]) return;
+        this.__trap(() => {
+            const contactRole = basicapi.removeContactRoleAt(shape.style, index);
+            if (contactRole) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), CONTACTS_ID, contactRole.id, index, exportContactRole(contactRole)));
+        })
+    }
     // text
     insertSimpleText(page: Page, shape: TextShapeLike, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);

@@ -11,3 +11,6 @@ export function addContactShape(style: Style, contact_role: ContactRole) {
   }
   return true;
 }
+export function removeContactRoleAt(style: Style, index: number) {
+  if (style.contacts) return style.contacts.splice(index, 1)[0];
+}

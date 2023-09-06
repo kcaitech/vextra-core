@@ -19,6 +19,7 @@ import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
+import { ContactShape } from "data/baseclasses";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -369,11 +370,49 @@ export class PageEditor {
         }
         return false;
     }
-
+    private removeContactSides(api: Api, page: Page, shape: ContactShape) {
+        if (shape.from) {
+            const fromShape = page.getShape(shape.from.shapeId);
+            const contacts = fromShape?.style.contacts;
+            if (fromShape && contacts) {
+                let idx: number = -1;
+                for (let i = 0, len = contacts.length; i < len; i++) {
+                    const c = contacts[i];
+                    if (c.shapeId === shape.id) {
+                        idx = i;
+                        break;
+                    }
+                }
+                if (idx > -1) {
+                    api.removeContactRoleAt(page, fromShape, idx);
+                }
+            }
+        }
+        if (shape.to) {
+            const toShape = page.getShape(shape.to.shapeId);
+            const contacts = toShape?.style.contacts;
+            if (toShape && contacts) {
+                let idx: number = -1;
+                for (let i = 0, len = contacts.length; i < len; i++) {
+                    const c = contacts[i];
+                    if (c.shapeId === shape.id) {
+                        idx = i;
+                        break;
+                    }
+                }
+                if (idx > -1) {
+                    api.removeContactRoleAt(page, toShape, idx);
+                }
+            }
+        }
+    }
     private delete_inner(page: Page, shape: Shape, api: Api): boolean {
         const p = shape.parent as GroupShape;
         if (!p) return false;
-        api.shapeDelete(page, p, p.indexOfChild(shape))
+        if (shape.type === ShapeType.Contact) { // 连接线删除之后需要删除两边的连接关系
+            this.removeContactSides(api, page, shape as unknown as ContactShape);
+        }
+        api.shapeDelete(page, p, p.indexOfChild(shape));
         if (p.childs.length <= 0 && p.type === ShapeType.Group) {
             this.delete_inner(page, p, api)
         }
