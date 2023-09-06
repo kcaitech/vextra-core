@@ -1,7 +1,7 @@
 import { Shape } from "../data/classes";
 import { render as renderB } from "./contact_borders";
 
-export function render(h: Function, shape: Shape, reflush?: number) {
+export function render(h: Function, shape: Shape, path: string, reflush?: number) {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
 
@@ -30,11 +30,11 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     }
     let childs = new Array();
     if (shape.style.borders.length) {
-        const path = shape.getPath().toString();
+        // const path = shape.getPath().toString();
         childs = childs.concat(renderB(h, shape.style, path, shape));
         return h('g', props, childs);
     } else {
-        props.stroke = '#000000', props['stroke-width'] = 1, props.d = shape.getPath().toString();
+        props.stroke = '#000000', props['stroke-width'] = 1, props.d = path;
         return h('path', props);
     }
 }
