@@ -37,7 +37,6 @@ import {
     importPathShape,
     importRectShape,
     importSymbolRefShape,
-    importSymbolShape,
     importTextShape,
     importFill,
     importBorder,
@@ -112,9 +111,6 @@ function importShape(data: string, document: Document) {
     }
     if (source.typeId == 'artboard') {
         return importArtboard(source as types.Artboard, ctx)
-    }
-    if (source.typeId == 'symbol-shape') {
-        return importSymbolShape(source as types.SymbolShape, ctx)
     }
     if (source.typeId == 'line-shape') {
         return importLineShape(source as types.LineShape, ctx)

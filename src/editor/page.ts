@@ -1,4 +1,4 @@
-import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape, SymbolShape } from "../data/shape";
+import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
@@ -247,9 +247,12 @@ export class PageEditor {
 
     /**
      * 创建组件
+     * symbolref引用的symbol可能被其他人取消，那么symbolref应该能引用普通的对象！
+     * 
      * @param shape 
      */
     makeSymbol(shape: Shape) {
+        // 
 
     }
 
@@ -257,7 +260,7 @@ export class PageEditor {
      * 取消组件
      * @param shape 
      */
-    unSymbol(shape: SymbolShape) {
+    unSymbol(shape: GroupShape) {
 
     }
 

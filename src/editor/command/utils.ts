@@ -1,7 +1,7 @@
-import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell } from "../../data/baseexport";
+import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell } from "../../data/baseexport";
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
-import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, TextShape } from "../../data/shape";
+import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { TableCell, TableShape } from "../../data/table";
 import { Page } from "../../data/page";
 import { SymbolRefShape } from "../../data/classes";
@@ -208,7 +208,6 @@ export function exportShape(shape: Shape): Object {
         case ShapeType.Path2: return (exportPathShape2(shape as PathShape2))
         case ShapeType.Rectangle: return (exportRectShape(shape as RectShape))
         case ShapeType.SymbolRef: return (exportSymbolRefShape(shape as SymbolRefShape))
-        case ShapeType.Symbol: return (exportSymbolShape(shape as SymbolShape))
         case ShapeType.Text: return (exportTextShape(shape as TextShape))
         case ShapeType.Group: return (exportGroupShape(shape as GroupShape))
         case ShapeType.FlattenShape: return exportFlattenShape(shape as FlattenShape);
