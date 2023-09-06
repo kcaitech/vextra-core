@@ -9,7 +9,6 @@ import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { ContactForm } from "./typesdefine";
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
