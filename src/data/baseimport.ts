@@ -901,7 +901,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.SymbolShape | impl.LineShape | impl.OvalShape | impl.TableShape)>()
+            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -937,9 +937,6 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
                     }
                     if (val.typeId == 'artboard') {
                         return importArtboard(val as types.Artboard, ctx)
-                    }
-                    if (val.typeId == 'symbol-shape') {
-                        return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'line-shape') {
                         return importLineShape(val as types.LineShape, ctx)
@@ -1249,85 +1246,10 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    return ret
-}
-/* symbol shape */
-export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
-    const ret: impl.SymbolShape = new impl.SymbolShape (
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.childs[i]
-                    if (val.typeId == 'group-shape') {
-                        return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'flatten-shape') {
-                        return importFlattenShape(val as types.FlattenShape, ctx)
-                    }
-                    if (val.typeId == 'image-shape') {
-                        return importImageShape(val as types.ImageShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape') {
-                        return importPathShape(val as types.PathShape, ctx)
-                    }
-                    if (val.typeId == 'rect-shape') {
-                        return importRectShape(val as types.RectShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
-                    }
-                    if (val.typeId == 'text-shape') {
-                        return importTextShape(val as types.TextShape, ctx)
-                    }
-                    if (val.typeId == 'artboard') {
-                        return importArtboard(val as types.Artboard, ctx)
-                    }
-                    if (val.typeId == 'line-shape') {
-                        return importLineShape(val as types.LineShape, ctx)
-                    }
-                    if (val.typeId == 'oval-shape') {
-                        return importOvalShape(val as types.OvalShape, ctx)
-                    }
-                    if (val.typeId == 'table-shape') {
-                        return importTableShape(val as types.TableShape, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
+    if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
     // inject code
-    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
     return ret
 }
 /* flatten shape */
@@ -1397,6 +1319,8 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
+    if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal

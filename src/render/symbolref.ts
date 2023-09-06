@@ -1,9 +1,10 @@
-import { OverridesGetter, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
+import { OverridesGetter, ShapeFrame, ShapeType, SymbolRefShape } from "../data/classes";
 import { renderGroupChilds } from "./group";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
+import { GroupShape } from "../data/shape";
 
-function renderSym(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame, overrides: OverridesGetter): any {
+function renderSym(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame, overrides: OverridesGetter): any {
     // if (!shape.isVisible) return [];
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;

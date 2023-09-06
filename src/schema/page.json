@@ -40,9 +40,6 @@
                         "$ref": "./artboard.json"
                     },
                     {
-                        "$ref": "./symbol-shape.json"
-                    },
-                    {
                         "$ref": "./line-shape.json"
                     },
                     {

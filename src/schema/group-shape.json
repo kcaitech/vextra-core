@@ -50,6 +50,12 @@
         },
         "fixedRadius": {
             "type": "number"
+        },
+        "isUsedToBeSymbol": {
+            "type": "boolean"
+        },
+        "isSymbolShape": {
+            "type": "boolean"
         }
     },
     "required": [

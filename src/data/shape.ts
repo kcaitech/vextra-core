@@ -211,8 +211,11 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 export class GroupShape extends Shape implements classes.GroupShape {
     typeId = 'group-shape';
     childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape)>
+
     isBoolOpShape?: boolean
     fixedRadius?: number
+    isUsedToBeSymbol?: boolean
+    isSymbolShape?: boolean
     constructor(
         id: string,
         name: string,
@@ -587,25 +590,3 @@ export class TextShape extends Shape implements classes.TextShape {
         return this.text.getLayout();
     }
 }
-
-export class SymbolShape extends GroupShape implements classes.SymbolShape {
-    typeId = 'symbol-shape'
-    constructor(
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style,
-        childs: BasicArray<(SymbolShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape)>
-    ) {
-        super(
-            id,
-            name,
-            type,
-            frame,
-            style,
-            childs
-        )
-    }
-}
-

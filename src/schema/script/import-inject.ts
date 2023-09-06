@@ -83,10 +83,10 @@ inject['Artboard']['after'] = `\
     // inject code
     if (ctx?.document) ctx.document.artboardMgr.add(ret.id, ret);
 `
-inject['SymbolShape'] = {};
-inject['SymbolShape']['after'] = `\
+inject['GroupShape'] = {};
+inject['GroupShape']['after'] = `\
     // inject code
-    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
 `
 inject['FlattenShape'] = {};
 inject['FlattenShape']['content'] = `\

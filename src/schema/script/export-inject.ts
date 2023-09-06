@@ -1,8 +1,8 @@
 export const inject: any = {};
-inject['SymbolShape'] = {};
-inject['SymbolShape']['after'] = `\
+inject['GroupShape'] = {};
+inject['GroupShape']['after'] = `\
     // inject code
-    if (ctx?.symbols) ctx.symbols.add(ret.id);
+    if (ctx?.symbols && ret.isSymbolShape) ctx.symbols.add(ret.id);
 `
 
 inject['ImageShape'] = {};

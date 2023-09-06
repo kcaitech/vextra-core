@@ -9,7 +9,7 @@ import { Path } from "./path";
 import { TextLayout } from "./textlayout";
 import { uuid } from "../basic/uuid";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
-import { GroupShape, Shape, SymbolShape, TextShape } from "./shape";
+import { GroupShape, Shape, TextShape } from "./shape";
 import { importText } from "./baseimport";
 
 export class OverrideShape extends Shape implements classes.OverrideShape {
@@ -372,8 +372,8 @@ function proxyShape(shape: Shape, parent: Shape, root: SymbolRefShape): Shape {
 }
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape, OverridesGetter {
-    __data: SymbolShape | undefined
-    __symMgr?: ResourceMgr<SymbolShape>
+    __data: GroupShape | undefined
+    __symMgr?: ResourceMgr<GroupShape>
 
     typeId = 'symbol-ref-shape'
     refId: string
@@ -418,10 +418,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     //     // return this.overrides;
     // }
 
-    setSymbolMgr(mgr: ResourceMgr<SymbolShape>) {
+    setSymbolMgr(mgr: ResourceMgr<GroupShape>) {
         this.__symMgr = mgr;
     }
-    peekSymbol(): SymbolShape | undefined {
+    peekSymbol(): GroupShape | undefined {
         return this.__data;
     }
     async loadSymbol() {
