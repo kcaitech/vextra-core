@@ -222,7 +222,7 @@ export function translate(api: Api, page: Page, shape: Shape, dx: number, dy: nu
         y = Math.round(y);
     }
     translateTo(api, page, shape, xy.x + dx, xy.y + dy);
-    modify_contacts(api, page, shape);
+    // modify_contacts(api, page, shape);
 }
 export function expandTo(api: Api, page: Page, shape: Shape, w: number, h: number) {
     const frame = shape.frame;
