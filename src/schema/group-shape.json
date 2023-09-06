@@ -10,12 +10,6 @@
                         "$ref": "#"
                     },
                     {
-                        "$ref": "./shape.json"
-                    },
-                    {
-                        "$ref": "./flatten-shape.json"
-                    },
-                    {
                         "$ref": "./image-shape.json"
                     },
                     {
@@ -41,6 +35,12 @@
                     },
                     {
                         "$ref": "./table-shape.json"
+                    },
+                    {
+                        "$ref": "./shape.json"
+                    },
+                    {
+                        "$ref": "./flatten-shape.json"
                     }
                 ]
             }

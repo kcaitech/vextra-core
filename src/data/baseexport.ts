@@ -1169,12 +1169,6 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (val.typeId == 'group-shape') {
                         return exportGroupShape(val as types.GroupShape, ctx)
                     }
-                    if (val.typeId == 'shape') {
-                        return exportShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'flatten-shape') {
-                        return exportFlattenShape(val as types.FlattenShape, ctx)
-                    }
                     if (val.typeId == 'image-shape') {
                         return exportImageShape(val as types.ImageShape, ctx)
                     }
@@ -1201,6 +1195,12 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     }
                     if (val.typeId == 'table-shape') {
                         return exportTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'shape') {
+                        return exportShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return exportFlattenShape(val as types.FlattenShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1239,12 +1239,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         if (val.typeId == 'group-shape') {
                             return exportGroupShape(val as types.GroupShape, ctx)
                         }
-                        if (val.typeId == 'shape') {
-                            return exportShape(val as types.Shape, ctx)
-                        }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
                         if (val.typeId == 'image-shape') {
                             return exportImageShape(val as types.ImageShape, ctx)
                         }
@@ -1271,6 +1265,12 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         }
                         if (val.typeId == 'table-shape') {
                             return exportTableShape(val as types.TableShape, ctx)
+                        }
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
+                        }
+                        if (val.typeId == 'flatten-shape') {
+                            return exportFlattenShape(val as types.FlattenShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -1322,12 +1322,6 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         if (val.typeId == 'group-shape') {
                             return exportGroupShape(val as types.GroupShape, ctx)
                         }
-                        if (val.typeId == 'shape') {
-                            return exportShape(val as types.Shape, ctx)
-                        }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
                         if (val.typeId == 'image-shape') {
                             return exportImageShape(val as types.ImageShape, ctx)
                         }
@@ -1354,6 +1348,12 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         }
                         if (val.typeId == 'table-shape') {
                             return exportTableShape(val as types.TableShape, ctx)
+                        }
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
+                        }
+                        if (val.typeId == 'flatten-shape') {
+                            return exportFlattenShape(val as types.FlattenShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -1405,12 +1405,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         if (val.typeId == 'group-shape') {
                             return exportGroupShape(val as types.GroupShape, ctx)
                         }
-                        if (val.typeId == 'shape') {
-                            return exportShape(val as types.Shape, ctx)
-                        }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
                         if (val.typeId == 'image-shape') {
                             return exportImageShape(val as types.ImageShape, ctx)
                         }
@@ -1437,6 +1431,12 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         }
                         if (val.typeId == 'table-shape') {
                             return exportTableShape(val as types.TableShape, ctx)
+                        }
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
+                        }
+                        if (val.typeId == 'flatten-shape') {
+                            return exportFlattenShape(val as types.FlattenShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)

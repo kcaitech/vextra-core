@@ -86,6 +86,7 @@ inject['Artboard']['after'] = `\
 inject['GroupShape'] = {};
 inject['GroupShape']['after'] = `\
     // inject code
+    ret.type = types.ShapeType.Group;
     if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
 `
 inject['FlattenShape'] = {};

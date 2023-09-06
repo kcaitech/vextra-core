@@ -550,7 +550,7 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape)[]
+    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape)[]
     isBoolOpShape?: boolean
     fixedRadius?: number
     isUsedToBeSymbol?: boolean

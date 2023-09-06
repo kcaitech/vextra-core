@@ -1183,18 +1183,12 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.Shape | impl.FlattenShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
                         return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'flatten-shape') {
-                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
                         return importImageShape(val as types.ImageShape, ctx)
@@ -1222,6 +1216,12 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                     }
                     if (val.typeId == 'table-shape') {
                         return importTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1252,6 +1252,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
     if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
     // inject code
+    ret.type = types.ShapeType.Group;
     if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
     return ret
 }
@@ -1282,18 +1283,12 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.Shape | impl.FlattenShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
                         return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'flatten-shape') {
-                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
                         return importImageShape(val as types.ImageShape, ctx)
@@ -1321,6 +1316,12 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                     }
                     if (val.typeId == 'table-shape') {
                         return importTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
