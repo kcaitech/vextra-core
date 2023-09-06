@@ -391,7 +391,13 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                     api.shapeModifyFixedRadius(shape as GroupShape, fixedRadius);
                 }
             },
-
+            {
+                opId: SHAPE_ATTR_ID.contactTo,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const to = value && JSON.parse(value);
+                    api.shapeModifyContactTo(shape as GroupShape, to);
+                }
+            },
         ]
     }
 ]

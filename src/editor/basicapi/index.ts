@@ -3,7 +3,7 @@ import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, PathShape, PathShape2, RectShape, Shape } from "../../data/shape";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
-import { BoolOp, BulletNumbersBehavior, BulletNumbersType, MarkerType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, MarkerType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 
 export * from "./fill";
 export * from "./border";
@@ -126,6 +126,9 @@ export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, need
 }
 export function shapeModifyConstrainerProportions(shape: Shape, prop: boolean) {
     shape.constrainerProportions = prop;
+}
+export function shapeModifyContactTo(shape: Shape, to: ContactForm | undefined) {
+    shape.to = to;
 }
 export function shapeModifyName(shape: Shape, name: string) {
     shape.name = name;
