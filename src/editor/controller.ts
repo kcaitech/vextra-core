@@ -90,6 +90,11 @@ export interface AsyncTransfer {
     transByWheel: (dx: number, dy: number) => void;
     close: () => undefined;
 }
+export interface AsyncContactEditor {
+    modify_contact_from: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
+    modify_contact_to: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
+    close: () => undefined;
+}
 
 export enum Status {
     Pending = 'pending',
@@ -545,6 +550,53 @@ export class Controller {
             return undefined;
         }
         return { addNode, execute, close }
+    }
+    public asyncContactEditor(shape: Shape, page: Page): AsyncContactEditor {
+        const api = this.__repo.start("action", {});
+        let status: Status = Status.Pending;
+        const modify_contact_from = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {
+            status = Status.Pending;
+            if (clear_target) {
+                if (!shape.from || (shape.from as ContactForm).shapeId !== clear_target.apex.shapeId) {
+                    api.shapeModifyContactFrom(page, shape as ContactShape, clear_target.apex);
+                }
+                pathEdit(api, page, shape, 0, clear_target.p);
+            } else {
+                if (shape.from) {
+                    api.shapeModifyContactFrom(page, shape as ContactShape, undefined);
+                }
+                pathEdit(api, page, shape, 0, m_target);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const modify_contact_to = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {
+            status = Status.Pending;
+            const idx = shape.points?.length;
+            if (!idx) return false;
+            if (clear_target) {
+                if (!shape.to || (shape.to as ContactForm).shapeId !== clear_target.apex.shapeId) {
+                    api.shapeModifyContactTo(page, shape as ContactShape, clear_target.apex);
+                }
+                pathEdit(api, page, shape, idx - 1, clear_target.p);
+            } else {
+                if (shape.to) {
+                    api.shapeModifyContactTo(page, shape as ContactShape, undefined);
+                }
+                pathEdit(api, page, shape, idx - 1, m_target);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return { modify_contact_from, modify_contact_to, close }
     }
 }
 function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {

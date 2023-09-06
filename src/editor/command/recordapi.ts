@@ -266,9 +266,11 @@ export class Api {
     shapeModifyContactFrom(page: Page, shape: ContactShape, from: ContactForm | undefined) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const save = shape.from;
+            const save = shape.from ? exportContactForm(shape.from) : shape.from;
             shape.from = from;
-            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.contactFrom, from, save))
+            let t: undefined | string = undefined;
+            if (from) t = JSON.stringify(exportContactForm(from));
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.contactFrom, t, save));
         })
     }
     shapeModifyContactTo(page: Page, shape: ContactShape, to: ContactForm | undefined) {

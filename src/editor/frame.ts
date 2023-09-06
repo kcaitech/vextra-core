@@ -931,3 +931,6 @@ function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
         default: return false
     }
 }
+export function pathEdit4contactApex() {
+    
+}
