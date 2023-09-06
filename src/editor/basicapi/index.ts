@@ -157,6 +157,15 @@ export function shapeModifyBoolOpShape(shape: GroupShape, isOpShape: boolean | u
     if (isOpShape) shape.isBoolOpShape = true;
     else shape.isBoolOpShape = undefined;
 }
+export function shapeModifySymbolShape(shape: GroupShape, isSymbolShape: boolean | undefined) {
+    if (isSymbolShape) {
+        shape.isUsedToBeSymbol = true;
+        shape.isSymbolShape = true;
+    }
+    else {
+        shape.isSymbolShape = undefined;
+    }
+}
 
 export function insertSimpleText(shapetext: Text, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
     shapetext.insertText(text, index, props)

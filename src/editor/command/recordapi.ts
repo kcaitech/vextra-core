@@ -419,6 +419,16 @@ export class Api {
             }
         })
     }
+    shapeModifySymbolShape(page: Page, shape: GroupShape, isSymbolShape: boolean | undefined) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const origin = shape.isSymbolShape;
+            if (!!isSymbolShape !== !!origin) {
+                basicapi.shapeModifySymbolShape(shape, isSymbolShape);
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.issymbolshape, isSymbolShape, origin));
+            }
+        })
+    }
     // 添加一次fill
     addFillAt(page: Page, shape: Shape, fill: Fill, index: number) {
         checkShapeAtPage(page, shape);

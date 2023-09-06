@@ -21,6 +21,7 @@ export const SHAPE_ATTR_ID = {
     backgroundColor: "backgroundColor",
     boolop: "boolop",
     isboolopshape: "isboolopshape",
+    issymbolshape: "issymbolshape",
     fixedRadius: "fixedRadius",
     startMarkerType: "startMarkerType",
     endMarkerType: "endMarkerType",

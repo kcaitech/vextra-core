@@ -374,6 +374,13 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 }
             },
             {
+                opId: SHAPE_ATTR_ID.issymbolshape,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const isSymShape = value && JSON.parse(value);
+                    api.shapeModifySymbolShape(shape as GroupShape, isSymShape);
+                }
+            },
+            {
                 opId: SHAPE_ATTR_ID.fixedRadius,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const fixedRadius = value && JSON.parse(value);
