@@ -309,6 +309,12 @@ export class GroupShape extends Shape implements classes.GroupShape {
 export class FlattenShape extends GroupShape implements classes.FlattenShape {
 }
 
+/**
+ * @deprecated
+ */
+export class SymbolShape extends GroupShape implements classes.FlattenShape {
+}
+
 export class PathShape extends Shape implements classes.PathShape {
     typeId = 'path-shape'
     points: BasicArray<CurvePoint>

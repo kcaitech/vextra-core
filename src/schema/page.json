@@ -47,6 +47,9 @@
                     },
                     {
                         "$ref": "./table-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-shape.json"
                     }
                 ]
             }

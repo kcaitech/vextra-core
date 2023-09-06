@@ -133,7 +133,6 @@ export type Shape = {
 export enum ShapeType {
     Path = 'path',
     Path2 = 'path2',
-    FlattenShape = 'flatten-shape',
     Group = 'group',
     Artboard = 'artboard',
     Image = 'image',
@@ -526,7 +525,7 @@ export type TextAttr = ParaAttr & {
 }
 /* page */
 export type Page = Shape & {
-    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | LineShape | OvalShape | TableShape)[]
+    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | LineShape | OvalShape | TableShape | SymbolShape)[]
 }
 /* override shape */
 export type OverrideShape = Shape & {
@@ -556,6 +555,9 @@ export type GroupShape = Shape & {
     fixedRadius?: number
     isUsedToBeSymbol?: boolean
     isSymbolShape?: boolean
+}
+/* symbol shape */
+export type SymbolShape = GroupShape & {
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {

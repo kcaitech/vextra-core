@@ -901,7 +901,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape)>()
+            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.SymbolShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -946,6 +946,9 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
                     }
                     if (val.typeId == 'table-shape') {
                         return importTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1252,11 +1255,22 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
     return ret
 }
+/* symbol shape */
+export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
+    // inject code
+    const ret = importGroupShape(source, ctx);
+    ret.isUsedToBeSymbol = true;
+    ret.isSymbolShape = true;
+    ret.type = types.ShapeType.Group;
+    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    return ret;
+}
 /* flatten shape */
 export function importFlattenShape(source: types.FlattenShape, ctx?: IImportContext): impl.FlattenShape {
     // inject code
     const ret = importGroupShape(source, ctx);
     ret.isBoolOpShape = true;
+    ret.type = types.ShapeType.Group;
     return ret;
 }
 /* artboard shape */

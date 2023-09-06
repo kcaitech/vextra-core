@@ -3,7 +3,6 @@
     "enum": [
         "path",
         "path2",
-        "flatten-shape",
         "group",
         "artboard",
         "image",

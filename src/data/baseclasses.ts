@@ -969,14 +969,14 @@ export class TextAttr extends ParaAttr {
  */
 export class Page extends Shape {
     typeId = 'page'
-    childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | LineShape | OvalShape | TableShape) >
+    childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | LineShape | OvalShape | TableShape | SymbolShape) >
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | LineShape | OvalShape | TableShape) >
+        childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | LineShape | OvalShape | TableShape | SymbolShape) >
     ) {
         super(
             id,
@@ -1125,6 +1125,29 @@ export class GroupShape extends Shape {
             style
         )
         this.childs = childs
+    }
+}
+/**
+ * symbol shape 
+ */
+export class SymbolShape extends GroupShape {
+    typeId = 'symbol-shape'
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style,
+            childs
+        )
     }
 }
 /**

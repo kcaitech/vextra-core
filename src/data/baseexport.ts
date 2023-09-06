@@ -969,6 +969,9 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                     if (val.typeId == 'table-shape') {
                         return exportTableShape(val as types.TableShape, ctx)
                     }
+                    if (val.typeId == 'symbol-shape') {
+                        return exportSymbolShape(val as types.SymbolShape, ctx)
+                    }
                     {
                         throw new Error('unknow val: ' + val)
                     }
@@ -1214,6 +1217,89 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
     }
     // inject code
     if (ctx?.symbols && ret.isSymbolShape) ctx.symbols.add(ret.id);
+    return ret
+}
+/* symbol shape */
+export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContext): types.SymbolShape {
+    const ret = {
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        childs: (() => {
+                const ret = []
+                for (let i = 0, len = source.childs.length; i < len; i++) {
+                    const r = (() => {
+                        const val = source.childs[i];
+                        if (typeof val != 'object') {
+                            return val
+                        }
+                        if (val.typeId == 'group-shape') {
+                            return exportGroupShape(val as types.GroupShape, ctx)
+                        }
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
+                        }
+                        if (val.typeId == 'flatten-shape') {
+                            return exportFlattenShape(val as types.FlattenShape, ctx)
+                        }
+                        if (val.typeId == 'image-shape') {
+                            return exportImageShape(val as types.ImageShape, ctx)
+                        }
+                        if (val.typeId == 'path-shape') {
+                            return exportPathShape(val as types.PathShape, ctx)
+                        }
+                        if (val.typeId == 'rect-shape') {
+                            return exportRectShape(val as types.RectShape, ctx)
+                        }
+                        if (val.typeId == 'symbol-ref-shape') {
+                            return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
+                        }
+                        if (val.typeId == 'text-shape') {
+                            return exportTextShape(val as types.TextShape, ctx)
+                        }
+                        if (val.typeId == 'artboard') {
+                            return exportArtboard(val as types.Artboard, ctx)
+                        }
+                        if (val.typeId == 'line-shape') {
+                            return exportLineShape(val as types.LineShape, ctx)
+                        }
+                        if (val.typeId == 'oval-shape') {
+                            return exportOvalShape(val as types.OvalShape, ctx)
+                        }
+                        if (val.typeId == 'table-shape') {
+                            return exportTableShape(val as types.TableShape, ctx)
+                        }
+                        {
+                            throw new Error('unknow val: ' + val)
+                        }
+                    })()
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        isBoolOpShape: source.isBoolOpShape,
+        fixedRadius: source.fixedRadius,
+        isUsedToBeSymbol: source.isUsedToBeSymbol,
+        isSymbolShape: source.isSymbolShape,
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+    }
     return ret
 }
 /* flatten shape */

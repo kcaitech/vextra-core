@@ -93,6 +93,7 @@ inject['FlattenShape']['content'] = `\
     // inject code
     const ret = importGroupShape(source, ctx);
     ret.isBoolOpShape = true;
+    ret.type = types.ShapeType.Group;
     return ret;
 `
 
@@ -100,4 +101,15 @@ inject['OverrideShape'] = {};
 inject['OverrideShape']['after'] = `\
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
+`
+
+inject['SymbolShape'] = {};
+inject['SymbolShape']['content'] = `\
+    // inject code
+    const ret = importGroupShape(source, ctx);
+    ret.isUsedToBeSymbol = true;
+    ret.isSymbolShape = true;
+    ret.type = types.ShapeType.Group;
+    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    return ret;
 `
