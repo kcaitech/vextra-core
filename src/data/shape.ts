@@ -777,6 +777,12 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         if (s1 && s2) {
             points.splice(2, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(s2.x, s1.y)));
         }
+        if (s1 && !s2) {
+            const p = points.pop();
+            if (p) {
+                points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(p.point.x, s1.y)), p);
+            }
+        }
         return points;
     }
     getPath(fixedRadius?: number): Path {
