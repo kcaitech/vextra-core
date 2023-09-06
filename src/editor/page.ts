@@ -406,11 +406,31 @@ export class PageEditor {
             }
         }
     }
+    private removeContact(api: Api, page: Page, shape: Shape) {
+        const contacts = shape.style.contacts;
+        if (contacts && contacts.length) {
+            for (let i = 0, len = contacts.length; i < len; i++) {
+                const shape = page.getShape(contacts[i].shapeId);
+                if (!shape) continue;
+                const p = shape.parent;
+                if (!p) continue;
+                let idx = -1;
+                for (let j = 0, len = p.childs.length; j < len; j++) {
+                    if (p.childs[j].id === shape.id) {
+                        idx = j; break;
+                    }
+                }
+                if (idx > -1) api.shapeDelete(page, p as GroupShape, idx);
+            }
+        }
+    }
     private delete_inner(page: Page, shape: Shape, api: Api): boolean {
         const p = shape.parent as GroupShape;
         if (!p) return false;
         if (shape.type === ShapeType.Contact) { // 连接线删除之后需要删除两边的连接关系
             this.removeContactSides(api, page, shape as unknown as ContactShape);
+        } else {
+            this.removeContact(api, page, shape);
         }
         api.shapeDelete(page, p, p.indexOfChild(shape));
         if (p.childs.length <= 0 && p.type === ShapeType.Group) {

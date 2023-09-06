@@ -1,6 +1,6 @@
 import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2, ContactShape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
-import { expand, expandTo, translate, translateTo } from "./frame";
+import { expand, expandTo, pathEdit, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
 import { BoolOp, CurvePoint, ShapeType } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
@@ -362,9 +362,13 @@ export class ShapeEditor {
         return !this.__page.getShape(this.__shape.id);
     }
 
-    public modify_contact_form() {
-
-    }
+    public modify_contact_form() { }
 
     public modify_contact_to() { }
+
+    public modify_path(page_xy: { x: number, y: number }) {
+        const api = this.__repo.start("modify_path", {});
+        pathEdit(api, this.__page, this.__shape, 0, page_xy);
+        this.__repo.commit();
+    }
 }
