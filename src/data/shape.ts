@@ -724,7 +724,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             return op;
         }
     }
-
     getPoints() {
         const points = [...this.points];
         let page: any;
@@ -810,14 +809,24 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         result_y.push(result_x[result_x.length - 1]);
         return result_y;
     }
-    getPath(fixedRadius?: number): Path {
+    
+    private __path: Path | undefined;
+    getPath(): Path {
         const offsetX = 0;
         const offsetY = 0;
         const width = this.frame.width;
         const height = this.frame.height;
-        fixedRadius = this.fixedRadius ?? fixedRadius;
         const points = this.getPoints();
-        const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
+        const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, this.fixedRadius);
+        return new Path(path);
+    }
+    getPath2(): Path {
+        const offsetX = 0;
+        const offsetY = 0;
+        const width = this.frame.width;
+        const height = this.frame.height;
+        const points = this.getPoints();
+        const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, this.fixedRadius);
         return new Path(path);
     }
 }
