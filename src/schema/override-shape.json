@@ -21,6 +21,9 @@
         "override_borders": {
             "type": "boolean"
         },
+        "override_visible": {
+            "type": "boolean"
+        },
         "stringValue": {
             "type": "string"
         },

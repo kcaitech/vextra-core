@@ -1,7 +1,7 @@
 
 
 import { DefaultColor, isColorEqual } from "./basic";
-import { TextShape, Path, Color } from '../data/classes';
+import { TextShape, Path, Color, OverrideShape } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { render as fillR } from "./fill";
@@ -191,7 +191,10 @@ export function renderTextLayout(h: Function, textlayout: TextLayout) {
 }
 
 export function render(h: Function, shape: TextShape, reflush?: number) {
-    if (!shape.isVisible) return null;
+
+    if (!shape.isVisible) {
+        return null;
+    }
 
     const childs = []
     const frame = shape.frame;

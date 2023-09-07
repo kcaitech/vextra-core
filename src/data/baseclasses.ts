@@ -999,6 +999,7 @@ export class OverrideShape extends Shape {
     override_image?: boolean
     override_fills?: boolean
     override_borders?: boolean
+    override_visible?: boolean
     stringValue?: string
     text?: Text
     imageRef?: string

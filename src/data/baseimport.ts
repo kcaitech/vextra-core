@@ -1009,6 +1009,7 @@ export function importOverrideShape(source: types.OverrideShape, ctx?: IImportCo
     if (source.override_image !== undefined) ret.override_image = source.override_image
     if (source.override_fills !== undefined) ret.override_fills = source.override_fills
     if (source.override_borders !== undefined) ret.override_borders = source.override_borders
+    if (source.override_visible !== undefined) ret.override_visible = source.override_visible
     if (source.stringValue !== undefined) ret.stringValue = source.stringValue
     if (source.text !== undefined) ret.text = importText(source.text, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef

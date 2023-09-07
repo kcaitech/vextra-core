@@ -5,6 +5,7 @@
         "text",
         "image",
         "fills",
-        "borders"
+        "borders",
+        "visible"
     ]
 }

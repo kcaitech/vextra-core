@@ -21,6 +21,7 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
     override_image?: boolean
     override_fills?: boolean
     override_borders?: boolean
+    override_visible?: boolean
 
     stringValue?: string // 兼容sketch，用户一旦编辑，转成text
     __stringValue_text?: Text;
@@ -251,11 +252,17 @@ class StyleHdl extends FreezHdl {
         const propStr = propertyKey.toString();
 
         if (propStr === 'overrideFills') {
+            if (!this.__override) {
+                this.__override = this.__symRef.getOverrid(this.__shape.id);
+            }
             if (this.__override && this.__override.override_fills) return;
             return this.overrideFills((this.__target as Style).fills);
         }
 
         if (propStr === 'overrideBorders') {
+            if (!this.__override) {
+                this.__override = this.__symRef.getOverrid(this.__shape.id);
+            }
             if (this.__override && this.__override.override_borders) return;
             return this.overrideBorders((this.__target as Style).borders);
         }
@@ -450,8 +457,11 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
         if (targetId.length > 0) {
             const shapeId = targetId[0] as string;
-            const shape = this.getOverrid(shapeId);
-            if (!shape) throw new Error("shape not find");
+            let shape = this.getOverrid(shapeId);
+            if (!shape) {
+                // throw new Error("shape not find");
+                shape = this.createOverrid(shapeId);
+            }
             return shape.getTarget(targetId.slice(1));
         }
         return this;
@@ -461,7 +471,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         if (!this.__overridesMap) {
             const map = new Map();
             this.overrides.forEach((o) => {
-                map.set(o.id, o);
+                map.set(o.refId, o);
             })
             this.__overridesMap = map;
         }
@@ -499,29 +509,36 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         return this.__data;
     }
 
+    private createOverrid(refId: string) {
+        let override = new OverrideShape(uuid(), "",
+            ShapeType.OverrideShape,
+            new ShapeFrame(0, 0, 0, 0),
+            new Style(new BasicArray(), new BasicArray()),
+            refId);
+        this.overrides.push(override);
+        override = this.overrides[this.overrides.length - 1];
+
+        if (this.__overridesMap) {
+            this.__overridesMap.set(refId, override);
+        }
+
+        return override;
+    }
+
     // overrideValues
     addOverrid(id: string, attr: OverrideType, value: any) {
         let override = this.getOverrid(id);
         if (!override) {
-            override = new OverrideShape(uuid(), "",
-                ShapeType.OverrideShape,
-                new ShapeFrame(0, 0, 0, 0),
-                new Style(new BasicArray(), new BasicArray()),
-                id);
-            this.overrides.push(override);
-            override = this.overrides[this.overrides.length - 1];
-
-            if (this.__overridesMap) {
-                this.__overridesMap.set(override.id, override);
-            }
+            override = this.createOverrid(id);
         }
 
         switch (attr) {
             case OverrideType.Text:
                 override.text = value;
-                override.override_text = true;
                 override.__stringValue_text = undefined;
                 override.stringValue = undefined;
+                override.override_text = true;
+                override.override_stringValue = undefined;
                 break;
             case OverrideType.StringValue:
                 override.stringValue = value;

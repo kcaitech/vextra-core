@@ -212,6 +212,7 @@ export enum OverrideType {
     Image = 'image',
     Fills = 'fills',
     Borders = 'borders',
+    Visible = 'visible',
 }
 /* marker type */
 export enum MarkerType {
@@ -537,6 +538,7 @@ export type OverrideShape = Shape & {
     override_image?: boolean
     override_fills?: boolean
     override_borders?: boolean
+    override_visible?: boolean
     stringValue?: string
     text?: Text
     imageRef?: string
