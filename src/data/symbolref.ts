@@ -9,8 +9,8 @@ import { Path } from "./path";
 import { TextLayout } from "./textlayout";
 import { uuid } from "../basic/uuid";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
-import { GroupShape, Shape, TextShape } from "./shape";
-import { IImportContext, importBorder, importFill, importText } from "./baseimport";
+import { GroupShape, OverridesGetter, Shape, TextShape } from "./shape";
+import { importBorder, importFill, importText } from "./baseimport";
 
 export class OverrideShape extends Shape implements classes.OverrideShape {
     typeId = 'override-shape'
@@ -322,6 +322,9 @@ class ShapeHdl extends FreezHdl {
         if (propStr === 'style') {
             return new Proxy(this.__target.style, new StyleHdl(this.__symRef, this.__target, this.__target.style));
         }
+        if (propStr === 'overridesGetter') {
+            return this.__symRef;
+        }
         return super.get(target, propertyKey, receiver);
     }
 }
@@ -412,12 +415,6 @@ class TextShapeHdl extends ShapeHdl {
 
         return super.get(target, propertyKey, receiver);
     }
-}
-
-export interface OverridesGetter {
-    getOverrid(id: string): OverrideShape | undefined;
-    watch(watcher: ((...args: any[]) => void)): (() => void);
-    unwatch(watcher: ((...args: any[]) => void)): boolean;
 }
 
 // 适配左侧导航栏

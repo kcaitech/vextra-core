@@ -4,11 +4,17 @@ import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType } from "./baseclasses"
-import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment } from "./baseclasses"
+import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, OverrideShape } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
+
+export interface OverridesGetter {
+    getOverrid(shapeId: string): OverrideShape | undefined;
+    watch(watcher: ((...args: any[]) => void)): (() => void);
+    unwatch(watcher: ((...args: any[]) => void)): boolean;
+}
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
@@ -46,6 +52,10 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.type = type
         this.frame = frame
         this.style = style
+    }
+
+    get overridesGetter(): OverridesGetter | undefined {
+        return undefined;
     }
 
     /**
