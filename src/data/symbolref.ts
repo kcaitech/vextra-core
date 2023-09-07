@@ -402,6 +402,8 @@ class TextShapeHdl extends ShapeHdl {
 
 export interface OverridesGetter {
     getOverrid(id: string): OverrideShape | undefined;
+    watch(watcher: ((...args: any[]) => void)): (() => void);
+    unwatch(watcher: ((...args: any[]) => void)): boolean;
 }
 
 // 适配左侧导航栏
