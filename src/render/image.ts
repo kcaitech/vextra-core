@@ -3,7 +3,7 @@ import { ImageShape } from "../data/classes";
 import { render as borderR } from "./border";
 import { render as clippathR } from "./clippath"
 
-export function render(h: Function, shape: ImageShape, url: string, reflush?: number) {
+export function render(h: Function, shape: ImageShape, imgPH: string, reflush?: number) {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
 
@@ -13,6 +13,8 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
     const id = "clippath-image-" + objectId(shape);
     const cp = clippathR(h, id, path);
     const childs = [cp];
+
+    const url = shape.peekImage(true) ?? imgPH;
 
     const img = h("image", {
         'xlink:href': url,
