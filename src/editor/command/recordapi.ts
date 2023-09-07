@@ -106,6 +106,7 @@ export class Api {
     private text4edit(page: Page, shape: TextShapeLike): Text {
         const text = shape.overrideText;
         if (text) {
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.override_text, true, undefined));
             const len = text.length - 1;
             const _text = exportText(text);
             // this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), "inittext", true, true));
@@ -120,6 +121,7 @@ export class Api {
     private fills4edit(page: Page, shape: Shape, style: Style): Fill[] {
         const fills: Fill[] | undefined = (style as any).overrideFills;
         if (fills) {
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.override_fills, true, undefined));
             for (let i = 0; i < fills.length; i++) {
                 const fill = fills[i];
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, i, exportFill(fill)));
@@ -131,6 +133,7 @@ export class Api {
     private borders4edit(page: Page, shape: Shape, style: Style): Border[] {
         const borders: Border[] | undefined = (style as any).overrideBorders;
         if (borders) {
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.override_borders, true, undefined));
             for (let i = 0; i < borders.length; i++) {
                 const border = borders[i];
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, i, exportBorder(border)));

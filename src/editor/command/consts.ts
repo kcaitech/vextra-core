@@ -53,6 +53,14 @@ export const SHAPE_ATTR_ID = {
     cellContentText: "cellContentText",
     cellContentImage: "cellContentImage",
     cellSpan: "cellSpan",
+
+    // override
+    // override_stringValue: "override_stringValue",
+    override_text: "override_text",
+    override_image: "override_image",
+    override_fills: "override_fills",
+    override_borders: "override_borders",
+    override_visible: "override_visible",
 }
 
 export const FILLS_ID = "fills"
