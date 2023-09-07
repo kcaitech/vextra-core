@@ -14,7 +14,7 @@ import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exp
 import { BORDER_ATTR_ID, BORDER_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import { GroupShape, Shape, PathShape, PathShape2 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType, Style } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape, TableCell, TableCellType, TableShape } from "../../data/classes";
@@ -24,7 +24,7 @@ import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { TableOpTarget } from "../../coop/data/classes";
 
-type TextShapeLike = Shape & { text: Text, textOverride?: Text }
+type TextShapeLike = Shape & { text: Text, overrideText?: Text }
 
 function checkShapeAtPage(page: Page, obj: Shape) {
     // if (obj instanceof VirtualShape) {
@@ -104,7 +104,7 @@ export class Api {
     }
 
     private text4edit(page: Page, shape: TextShapeLike): Text {
-        const text = shape.textOverride;
+        const text = shape.overrideText;
         if (text) {
             const len = text.length - 1;
             const _text = exportText(text);
@@ -115,6 +115,30 @@ export class Api {
             this.addCmd(TextCmdInsert.Make(page.id, genShapeId(shape), 0, len, { type: "complex", text: _text, length: len }));
         }
         return shape.text;
+    }
+
+    private fills4edit(page: Page, shape: Shape, style: Style): Fill[] {
+        const fills: Fill[] | undefined = (style as any).overrideFills;
+        if (fills) {
+            for (let i = 0; i < fills.length; i++) {
+                const fill = fills[i];
+                basicapi.addFillAt(style, fill, i);
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, i, exportFill(fill)));
+            }
+        }
+        return style.fills;
+    }
+
+    private borders4edit(page: Page, shape: Shape, style: Style): Border[] {
+        const borders: Border[] | undefined = (style as any).overrideBorders;
+        if (borders) {
+            for (let i = 0; i < borders.length; i++) {
+                const border = borders[i];
+                basicapi.addBorderAt(shape.style, border, i);
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, i, exportBorder(border)));
+            }
+        }
+        return style.borders;
     }
 
     pageInsert(document: Document, page: Page, index: number) {

@@ -86,7 +86,7 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.cellContentType,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const op = cmd.ops[0];
-                    const index = op.targetId[1] as TableIndex;
+                    const index = op.targetId[op.targetId.length - 1] as TableIndex;
                     api.tableSetCellContentType(shape as TableShape, index.rowIdx, index.colIdx, value as types.TableCellType);
                 }
             },
@@ -94,7 +94,7 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.cellContentText,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const op = cmd.ops[0];
-                    const index = op.targetId[1] as TableIndex;
+                    const index = op.targetId[op.targetId.length - 1] as TableIndex;
                     const text = value ? importText(JSON.parse(value)) : undefined;
                     api.tableSetCellContentText(shape as TableShape, index.rowIdx, index.colIdx, text);
                 }
@@ -103,7 +103,7 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.cellContentImage,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const op = cmd.ops[0];
-                    const index = op.targetId[1] as TableIndex;
+                    const index = op.targetId[op.targetId.length - 1] as TableIndex;
                     api.tableSetCellContentImage(shape as TableShape, index.rowIdx, index.colIdx, value);
                 }
             },
@@ -111,7 +111,7 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.cellSpan,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const op = cmd.ops[0];
-                    const index = op.targetId[1] as TableIndex;
+                    const index = op.targetId[op.targetId.length - 1] as TableIndex;
                     const val = value && JSON.parse(value);
                     const rowSpan = val?.rowSpan;
                     const colSpan = val?.colSpan;
@@ -399,14 +399,6 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.textBehaviour,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-                        const index = op.targetId[1] as TableIndex;
-                        shape = shape.getCellAt(index.rowIdx, index.colIdx, true) as Shape;
-                        if (!shape) {
-                            throw new Error("table cell not find")
-                        }
-                    }
                     const textBehaviour = value as types.TextBehaviour
                     api.shapeModifyTextBehaviour(page, shape as TextShapeLike, textBehaviour ?? types.TextBehaviour.Flexible);
                 }
@@ -414,14 +406,6 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.textVerAlign,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-                        const index = op.targetId[1] as TableIndex;
-                        shape = shape.getCellAt(index.rowIdx, index.colIdx, true) as Shape;
-                        if (!shape) {
-                            throw new Error("table cell not find")
-                        }
-                    }
                     const textVerAlign = value as types.TextVerAlign
                     const text = (shape as TextShapeLike).text;
                     api.shapeModifyTextVerAlign(text, textVerAlign ?? types.TextVerAlign.Top);
@@ -430,14 +414,6 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.textTransform,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-                        const index = op.targetId[1] as TableIndex;
-                        shape = shape.getCellAt(index.rowIdx, index.colIdx, true) as Shape;
-                        if (!shape) {
-                            throw new Error("table cell not find")
-                        }
-                    }
                     const text = (shape as TextShapeLike).text;
                     api.shapeModifyTextTransform(text, value as TextTransformType);
                 }
