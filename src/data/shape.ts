@@ -809,16 +809,17 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         result_y.push(result_x[result_x.length - 1]);
         return result_y;
     }
-    
-    private __path: Path | undefined;
+
+    private __pathCache: Path | undefined;
     getPath(): Path {
-        const offsetX = 0;
-        const offsetY = 0;
-        const width = this.frame.width;
-        const height = this.frame.height;
-        const points = this.getPoints();
-        const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, this.fixedRadius);
-        return new Path(path);
+        return this.getPath2();
+        // if (this.__pathCache) {
+        //     console.log(this.__pathCache.toString());
+        //     return this.__pathCache;
+        // } else {
+        //     this.getPath2();
+        //     return this.__pathCache!;
+        // }
     }
     getPath2(): Path {
         const offsetX = 0;
@@ -827,6 +828,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         const height = this.frame.height;
         const points = this.getPoints();
         const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, this.fixedRadius);
-        return new Path(path);
+        this.__pathCache = new Path(path);
+        return this.__pathCache;
     }
 }
