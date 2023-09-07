@@ -84,8 +84,22 @@ export class TableCell extends Shape implements classes.TableCell {
     }
 
     // image
-    peekImage() {
-        return this.__cacheData?.base64;
+    private __startLoad: boolean = false;
+    peekImage(startLoad: boolean = false) {
+        const ret = this.__cacheData?.base64;
+        if (ret) return ret;
+        if (!this.imageRef) return "";
+        if (startLoad && !this.__startLoad) {
+            this.__startLoad = true;
+            const mediaMgr = (this.parent as TableShape).__imageMgr;
+            mediaMgr && mediaMgr.get(this.imageRef).then((val) => {
+                if (!this.__cacheData) {
+                    this.__cacheData = val;
+                    if (val) this.notify();
+                }
+            })
+        }
+        return ret;
     }
     // image shape
     async loadImage(): Promise<string> {
@@ -93,6 +107,7 @@ export class TableCell extends Shape implements classes.TableCell {
         if (!this.imageRef) return "";
         const mediaMgr = (this.parent as TableShape).__imageMgr;
         this.__cacheData = mediaMgr && await mediaMgr.get(this.imageRef)
+        if (this.__cacheData) this.notify();
         return this.__cacheData && this.__cacheData.base64 || "";
     }
 

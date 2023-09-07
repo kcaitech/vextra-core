@@ -491,13 +491,27 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
     }
-    peekImage() {
-        return this.__cacheData?.base64;
+    private __startLoad: boolean = false;
+    peekImage(startLoad: boolean = false) {
+        const ret = this.__cacheData?.base64;
+        if (ret) return ret;
+        if (!this.imageRef) return "";
+        if (startLoad && !this.__startLoad) {
+            this.__startLoad = true;
+            this.__imageMgr && this.__imageMgr.get(this.imageRef).then((val) => {
+                if (!this.__cacheData) {
+                    this.__cacheData = val;
+                    if (val) this.notify();
+                }
+            })
+        }
+        return ret;
     }
     // image shape
     async loadImage(): Promise<string> {
         if (this.__cacheData) return this.__cacheData.base64;
         this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
+        if (this.__cacheData) this.notify();
         return this.__cacheData && this.__cacheData.base64 || "";
     }
 }

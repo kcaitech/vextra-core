@@ -19,7 +19,7 @@ function renderOverrideImage(h: Function, refShape: Shape, shape: OverrideShape,
 
     const frame = refShape.frame;
     const childs = [];
-    const url = shape.peekImage();
+    const url = shape.peekImage(true);
 
     const img = h("image", {
         'xlink:href': url,

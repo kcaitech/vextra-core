@@ -11,7 +11,7 @@ export function render(h: Function, shape: TableCell, frame: ShapeFrame): any {
 
     const childs = [];
     if (cellType === TableCellType.Image) {
-        const url = shape.peekImage();
+        const url = shape.peekImage(true);
 
         const img = h("image", {
             'xlink:href': url,

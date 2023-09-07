@@ -56,7 +56,7 @@ handler[FillType.Pattern] = function (h: Function, frame: ShapeFrame, fill: Fill
     const id = "clippath-fill-" + objectId(fill);
     const cp = clippathR(h, id, path);
 
-    const url = fill.peekImage();
+    const url = fill.peekImage(true);
     const props: any = {}
     // const frame = shape.frame;
     props.width = frame.width;
