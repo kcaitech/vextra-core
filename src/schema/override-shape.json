@@ -15,6 +15,12 @@
         "override_image": {
             "type": "boolean"
         },
+        "override_fills": {
+            "type": "boolean"
+        },
+        "override_borders": {
+            "type": "boolean"
+        },
         "stringValue": {
             "type": "string"
         },

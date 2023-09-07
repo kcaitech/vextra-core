@@ -713,7 +713,10 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     // inject code
-    if (ctx?.document) ret.setSymbolMgr(ctx.document.symbolsMgr);
+    if (ctx?.document) {
+        ret.setSymbolMgr(ctx.document.symbolsMgr);
+        ret.setImageMgr(ctx.document.mediasMgr);
+    }
     return ret
 }
 /* span attr */
@@ -1004,6 +1007,8 @@ export function importOverrideShape(source: types.OverrideShape, ctx?: IImportCo
     if (source.override_stringValue !== undefined) ret.override_stringValue = source.override_stringValue
     if (source.override_text !== undefined) ret.override_text = source.override_text
     if (source.override_image !== undefined) ret.override_image = source.override_image
+    if (source.override_fills !== undefined) ret.override_fills = source.override_fills
+    if (source.override_borders !== undefined) ret.override_borders = source.override_borders
     if (source.stringValue !== undefined) ret.stringValue = source.stringValue
     if (source.text !== undefined) ret.text = importText(source.text, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef

@@ -1,5 +1,5 @@
 import { ResourceMgr } from "./basic";
-import { Style } from "./style";
+import { Border, Fill, Style } from "./style";
 import { Para, ParaAttr, Span, Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
@@ -10,7 +10,7 @@ import { TextLayout } from "./textlayout";
 import { uuid } from "../basic/uuid";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { GroupShape, Shape, TextShape } from "./shape";
-import { importText } from "./baseimport";
+import { IImportContext, importBorder, importFill, importText } from "./baseimport";
 
 export class OverrideShape extends Shape implements classes.OverrideShape {
     typeId = 'override-shape'
@@ -19,6 +19,8 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
     override_stringValue?: boolean
     override_text?: boolean
     override_image?: boolean
+    override_fills?: boolean
+    override_borders?: boolean
 
     stringValue?: string // 兼容sketch，用户一旦编辑，转成text
     __stringValue_text?: Text;
@@ -210,19 +212,60 @@ class BorderHdl extends FreezHdl {
 }
 
 class StyleHdl extends FreezHdl {
-    constructor(target: Style) {
+    __symRef: SymbolRefShape;
+    __shape: Shape;
+    __override?: OverrideShape;
+    constructor(symRef: SymbolRefShape, shape: Shape, target: Style) {
         super(target)
+        this.__symRef = symRef;
+        this.__shape = shape;
+        this.__override = symRef.getOverrid(shape.id);
     }
     private get _style(): Style {
         return this.__target as Style;
     }
 
+    overrideFills(curFills: Fill[]): Fill[] { // 需要生成command
+        const imgMgr = this.__symRef.getImageMgr();
+        const fills = new BasicArray<Fill>();
+        curFills.forEach((v) => {
+            const fill = importFill(v);
+            if (imgMgr) fill.setImageMgr(imgMgr);
+            fills.push(fill);
+        })
+        this.__override = this.__symRef.addOverrid(this.__shape.id, OverrideType.Fills, fills);
+        return this.__override.style.fills;
+    }
+
+    overrideBorders(curBorders: Border[]): Border[] { // 需要生成command
+        const borders = new BasicArray<Border>();
+        curBorders.forEach((v) => {
+            const border = importBorder(v);
+            borders.push(border);
+        })
+        this.__override = this.__symRef.addOverrid(this.__shape.id, OverrideType.Borders, borders);
+        return this.__override.style.borders;
+    }
+
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
+
+        if (propStr === 'overrideFills') {
+            if (this.__override && this.__override.override_fills) return;
+            return this.overrideFills((this.__target as Style).fills);
+        }
+
+        if (propStr === 'overrideBorders') {
+            if (this.__override && this.__override.override_borders) return;
+            return this.overrideBorders((this.__target as Style).borders);
+        }
+
         if (propStr === 'fills') {
+            if (this.__override && this.__override.override_fills) return this.__override.style.fills;
             return this._style.fills.map((v) => new Proxy(v, new FillHdl(v)));
         }
         if (propStr === 'borders') {
+            if (this.__override && this.__override.override_borders) return this.__override.style.borders;
             return this._style.borders.map((v) => new Proxy(v, new BorderHdl(v)));
         }
         return super.get(target, propertyKey, receiver);
@@ -256,7 +299,7 @@ class ShapeHdl extends FreezHdl {
             return this.__tmpframe;
         }
         if (propStr === 'style') {
-            return new Proxy(this.__target.style, new StyleHdl(this.__target.style));
+            return new Proxy(this.__target.style, new StyleHdl(this.__symRef, this.__target, this.__target.style));
         }
         return super.get(target, propertyKey, receiver);
     }
@@ -303,7 +346,7 @@ class TextShapeHdl extends ShapeHdl {
         this.__text = new Proxy<Text>(target.text, new FreezHdl(target.text));
     }
 
-    buildTextOverride(curText: Text): Text { // 需要生成command
+    overrideText(curText: Text): Text { // 需要生成command
         const text = importText(curText); // clone
         this.__override = this.__symRef.addOverrid(this.__target.id, OverrideType.Text, text);
         return this.__override.text!;
@@ -336,14 +379,14 @@ class TextShapeHdl extends ShapeHdl {
             return this.__text;
         }
 
-        if (propStr === 'textOverride') {
+        if (propStr === 'overrideText') {
             if (this.__override && this.__override.text) return;
             let curText = (this.__target as TextShape).text;
             if (this.__override) {
                 const text = this.__override.getText(this.__target);
                 curText = text ?? (this.__target as TextShape).text;
             }
-            return this.buildTextOverride(curText);
+            return this.overrideText(curText);
         }
 
         return super.get(target, propertyKey, receiver);
@@ -382,6 +425,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     typeId = 'symbol-ref-shape'
     refId: string
     overrides: BasicArray<OverrideShape>
+
+    __overridesMap?: Map<string, OverrideShape>;
     constructor(
         id: string,
         name: string,
@@ -412,9 +457,28 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         return this;
     }
 
+    private get overrideMap() {
+        if (!this.__overridesMap) {
+            const map = new Map();
+            this.overrides.forEach((o) => {
+                map.set(o.id, o);
+            })
+            this.__overridesMap = map;
+        }
+        return this.__overridesMap;
+    }
+
     // symbolref需要watch symbol的修改？
     get naviChilds(): Shape[] | undefined {
         return this.__data?.childs.map((v) => proxyShape(v, this, this));
+    }
+
+    private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
+    setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
+        this.__imageMgr = imageMgr;
+    }
+    getImageMgr() {
+        return this.__imageMgr;
     }
 
     // get childs() {// 作为引用的symbol的parent，需要提供个childs
@@ -446,6 +510,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
                 id);
             this.overrides.push(override);
             override = this.overrides[this.overrides.length - 1];
+
+            if (this.__overridesMap) {
+                this.__overridesMap.set(override.id, override);
+            }
         }
 
         switch (attr) {
@@ -463,12 +531,21 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
                 override.imageRef = value;
                 override.override_image = true;
                 break;
+            case OverrideType.Borders:
+                override.style.borders = value;
+                override.override_borders = true;
+                break;
+            case OverrideType.Fills:
+                override.style.fills = value;
+                override.override_fills = true;
+                break;
         }
         return override;
     }
     getOverrid(id: string): OverrideShape | undefined {
-        for (let i = 0, len = this.overrides.length; i < len; ++i) {
-            if (this.overrides[i].refId === id) return this.overrides[i];
-        }
+        // for (let i = 0, len = this.overrides.length; i < len; ++i) {
+        //     if (this.overrides[i].refId === id) return this.overrides[i];
+        // }
+        return this.overrideMap.get(id);
     }
 }

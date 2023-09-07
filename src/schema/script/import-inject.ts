@@ -76,7 +76,10 @@ inject['TableShape']['after'] = `\
 inject['SymbolRefShape'] = {};
 inject['SymbolRefShape']['after'] = `\
     // inject code
-    if (ctx?.document) ret.setSymbolMgr(ctx.document.symbolsMgr);
+    if (ctx?.document) {
+        ret.setSymbolMgr(ctx.document.symbolsMgr);
+        ret.setImageMgr(ctx.document.mediasMgr);
+    }
 `
 inject['Artboard'] = {};
 inject['Artboard']['after'] = `\

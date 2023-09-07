@@ -3,6 +3,8 @@
     "enum": [
         "stringValue",
         "text",
-        "image"
+        "image",
+        "fills",
+        "borders"
     ]
 }

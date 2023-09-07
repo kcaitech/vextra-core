@@ -1011,6 +1011,8 @@ export function exportOverrideShape(source: types.OverrideShape, ctx?: IExportCo
         override_stringValue: source.override_stringValue,
         override_text: source.override_text,
         override_image: source.override_image,
+        override_fills: source.override_fills,
+        override_borders: source.override_borders,
         stringValue: source.stringValue,
         text: source.text && exportText(source.text, ctx),
         imageRef: source.imageRef,
