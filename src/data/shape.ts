@@ -11,6 +11,7 @@ import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { ContactForm, ContactType, CurveMode } from "./typesdefine";
 import { v4 } from "uuid";
+import { gen_matrix1 } from "./utils";
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
@@ -667,6 +668,9 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             isClosed
         )
     }
+    private isEdited() {
+        return this.points.length > 2;
+    }
     private get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
         const f = shape.frame;
         switch (type) {
@@ -677,7 +681,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             default: return false
         }
     }
-    private get_nearest_border_point(shape: Shape, contactType: ContactType) {
+    private get_nearest_border_point(shape: Shape, contactType: ContactType) { // 寻找距离外围最近的一个点
         const f = shape.frame, m2r = shape.matrix2Root();
         const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
         const t = m2r.computeCoord2(0, 0);
@@ -722,28 +726,28 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     }
 
     getPoints() {
-        let points = this.points.slice(0);
+        const points = [...this.points];
         let page: any;
-        let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false;
+        let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false; // 特殊点：s1出发图形的外围点，s2目的图形的外围点
+        let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：图形自身的坐标系，单位为比例系数
+        let fromShape: undefined | Shape, toShape: undefined | Shape; //sides 出发图形、目的图形
         if (this.from) {
             if (!page) page = this.getPage();
             if (page) {
-                const fromShape = page.getShape((this.from as ContactForm).shapeId);
+                fromShape = page.getShape((this.from as ContactForm).shapeId);
                 if (fromShape) {
-                    const f = this.frame;
-                    let m1 = this.matrix2Root();
-                    m1.preScale(f.width, f.height);
-                    m1 = new Matrix(m1.inverse);
-                    let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, fromShape.matrix2Root());
+                    if (!self_matrix) self_matrix = gen_matrix1(this);
+                    if (!from_matrix) from_matrix = fromShape.matrix2Root();
+                    let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
                     if (p) {
-                        p = m1.computeCoord3(p);
-                        const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(p.x, p.y));
+                        p = self_matrix.computeCoord3(p);
+                        const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
                         points[0] = fp;
                     }
                     let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType);
                     if (border_p) {
-                        border_p = m1.computeCoord3(border_p);
-                        points.splice(1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(border_p.x, border_p.y)));
+                        border_p = self_matrix.computeCoord3(border_p);
+                        points.splice(1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
                         s1 = border_p;
                     }
                 }
@@ -752,38 +756,59 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         if (this.to) {
             if (!page) page = this.getPage();
             if (page) {
-                const toShape = page.getShape((this.to as ContactForm).shapeId);
+                toShape = page.getShape((this.to as ContactForm).shapeId);
                 if (toShape) {
-                    const f = this.frame;
-                    let m1 = this.matrix2Root();
-                    m1.preScale(f.width, f.height);
-                    m1 = new Matrix(m1.inverse);
-                    let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, toShape.matrix2Root());
+                    if (!self_matrix) self_matrix = gen_matrix1(this);
+                    if (!to_matrix) to_matrix = toShape.matrix2Root();
+                    let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
                     if (p) {
-                        p = m1.computeCoord3(p);
-                        const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(p.x, p.y));
+                        p = self_matrix.computeCoord3(p);
+                        const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
                         points[points.length - 1] = lp;
                     }
                     let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
                     if (border_p) {
-                        border_p = m1.computeCoord3(border_p);
+                        border_p = self_matrix.computeCoord3(border_p);
                         const t = points.pop();
-                        if (t) points = points.concat([new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(border_p.x, border_p.y)), t]);
+                        if (t) points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)), t);
                         s2 = border_p;
                     }
                 }
             }
         }
+        // 寻找中间拐点
         if (s1 && s2) {
-            points.splice(2, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(s2.x, s1.y)));
+            points.splice(2, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(s2.x, s1.y)));
         }
         if (s1 && !s2) {
             const p = points.pop();
             if (p) {
-                points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(p.point.x, s1.y)), p);
+                points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.point.x, s1.y)), p);
             }
         }
-        return points;
+        // 处理x轴上连续相等的点
+        let result_x = [points[0]];
+        for (let i = 1, len = points.length - 1; i < len; i++) {
+            let p1 = points[i - 1].point;
+            let p2 = points[i].point;
+            let p3 = points[i + 1].point;
+            if (p1 && p2 && p3) {
+                if (Math.abs(p3.y - p1.y) > 0.0001) result_x.push(points[i]);
+            }
+        }
+        // 处理y轴上连续相等的点  如果不处理两轴上相等的点，会造成线段折叠的路径片段，属于无效片段，处理过程即为切除无效片段
+        result_x.push(points[points.length - 1]);
+        let result_y = [result_x[0]];
+        for (let i = 1, len = result_x.length - 1; i < len; i++) {
+            let p1 = result_x[i - 1].point;
+            let p2 = result_x[i].point;
+            let p3 = result_x[i + 1].point;
+            if (p1 && p2 && p3) {
+                if (Math.abs(p3.x - p1.x) > 0.0001) result_y.push(result_x[i]);
+            }
+        }
+        result_y.push(result_x[result_x.length - 1]);
+        return result_y;
     }
     getPath(fixedRadius?: number): Path {
         const offsetX = 0;
