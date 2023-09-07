@@ -10,12 +10,6 @@ import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 
-export interface OverridesGetter {
-    getOverrid(shapeId: string): OverrideShape | undefined;
-    watch(watcher: ((...args: any[]) => void)): (() => void);
-    unwatch(watcher: ((...args: any[]) => void)): boolean;
-}
-
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
     typeId = 'shape'
@@ -54,7 +48,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.style = style
     }
 
-    get overridesGetter(): OverridesGetter | undefined {
+    get overridesGetter(): any | undefined {
         return undefined;
     }
 

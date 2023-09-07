@@ -9,8 +9,14 @@ import { Path } from "./path";
 import { TextLayout } from "./textlayout";
 import { uuid } from "../basic/uuid";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
-import { GroupShape, OverridesGetter, Shape, TextShape } from "./shape";
+import { GroupShape, Shape, TextShape } from "./shape";
 import { importBorder, importFill, importText } from "./baseimport";
+
+export interface OverridesGetter {
+    getOverrid(shapeId: string): OverrideShape | undefined;
+    watch(watcher: ((...args: any[]) => void)): (() => void);
+    unwatch(watcher: ((...args: any[]) => void)): boolean;
+}
 
 export class OverrideShape extends Shape implements classes.OverrideShape {
     typeId = 'override-shape'
