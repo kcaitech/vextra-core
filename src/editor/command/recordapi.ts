@@ -122,7 +122,6 @@ export class Api {
         if (fills) {
             for (let i = 0; i < fills.length; i++) {
                 const fill = fills[i];
-                basicapi.addFillAt(style, fill, i);
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, i, exportFill(fill)));
             }
         }
@@ -134,7 +133,6 @@ export class Api {
         if (borders) {
             for (let i = 0; i < borders.length; i++) {
                 const border = borders[i];
-                basicapi.addBorderAt(shape.style, border, i);
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, i, exportBorder(border)));
             }
         }
@@ -457,7 +455,8 @@ export class Api {
     addFillAt(page: Page, shape: Shape, fill: Fill, index: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            basicapi.addFillAt(shape.style, fill, index);
+            const fills = this.fills4edit(page, shape, shape.style);
+            basicapi.addFillAt(fills, fill, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, index, exportFill(fill)))
         })
     }
@@ -465,9 +464,10 @@ export class Api {
     addFills(page: Page, shape: Shape, fills: Fill[]) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
+            const fillsOld = this.fills4edit(page, shape, shape.style);
             for (let i = 0; i < fills.length; i++) {
                 const fill = fills[i];
-                basicapi.addFillAt(shape.style, fill, i);
+                basicapi.addFillAt(fillsOld, fill, i);
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, i, exportFill(fill)));
             }
         })
@@ -476,7 +476,8 @@ export class Api {
     addBorderAt(page: Page, shape: Shape, border: Border, index: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            basicapi.addBorderAt(shape.style, border, index);
+            const borders = this.borders4edit(page, shape, shape.style);
+            basicapi.addBorderAt(borders, border, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, index, exportBorder(border)))
         })
     }
@@ -484,9 +485,10 @@ export class Api {
     addBorders(page: Page, shape: Shape, borders: Border[]) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
+            const bordersOld = this.borders4edit(page, shape, shape.style);
             for (let i = 0; i < borders.length; i++) {
                 const border = borders[i];
-                basicapi.addBorderAt(shape.style, border, i);
+                basicapi.addBorderAt(bordersOld, border, i);
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, i, exportBorder(border)));
             }
         })
@@ -496,7 +498,8 @@ export class Api {
         checkShapeAtPage(page, shape);
         if (!shape.style.fills[index]) return;
         this.__trap(() => {
-            const fill = basicapi.deleteFillAt(shape.style, index);
+            const fills = this.fills4edit(page, shape, shape.style);
+            const fill = basicapi.deleteFillAt(fills, index);
             if (fill) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, index, exportFill(fill)));
         })
     }
@@ -504,7 +507,8 @@ export class Api {
     deleteFills(page: Page, shape: Shape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const fills = basicapi.deleteFills(shape.style, index, strength);
+            const fillsOld = this.fills4edit(page, shape, shape.style);
+            const fills = basicapi.deleteFills(fillsOld, index, strength);
             if (fills && fills.length) {
                 for (let i = 0; i < fills.length; i++) {
                     const fill = fills[i];
@@ -518,7 +522,8 @@ export class Api {
         checkShapeAtPage(page, shape);
         if (!shape.style.borders[index]) return;
         this.__trap(() => {
-            const border = basicapi.deleteBorderAt(shape.style, index);
+            const borders = this.borders4edit(page, shape, shape.style);
+            const border = basicapi.deleteBorderAt(borders, index);
             if (border) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), BORDER_ID, border.id, index, exportBorder(border)));
         })
     }
@@ -526,7 +531,8 @@ export class Api {
     deleteBorders(page: Page, shape: Shape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const borders = basicapi.deleteBorders(shape.style, index, strength);
+            const bordersOld = this.borders4edit(page, shape, shape.style);
+            const borders = basicapi.deleteBorders(bordersOld, index, strength);
             if (borders && borders.length) {
                 for (let i = 0; i < borders.length; i++) {
                     const border = borders[i];
@@ -541,8 +547,10 @@ export class Api {
         const fill: Fill = shape.style.fills[idx];
         if (fill) {
             this.__trap(() => {
+                const fills = this.fills4edit(page, shape, shape.style);
+                const fill: Fill = fills[idx];
                 const save = fill.color;
-                fill.color = color
+                basicapi.setFillColor(fill, color);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.color, exportColor(color), exportColor(save)));
             })
         }
@@ -552,8 +560,10 @@ export class Api {
         const fill: Fill = shape.style.fills[idx];
         if (fill) {
             this.__trap(() => {
+                const fills = this.fills4edit(page, shape, shape.style);
+                const fill: Fill = fills[idx];
                 const save = fill.isEnabled;
-                fill.isEnabled = isEnable
+                basicapi.setFillEnable(fill, isEnable);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.enable, isEnable, save));
             })
         }
@@ -563,8 +573,10 @@ export class Api {
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
+                const borders = this.borders4edit(page, shape, shape.style);
+                const border = borders[idx];
                 const save = border.color;
-                border.color = color
+                basicapi.setBorderColor(border, color);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.color, exportColor(color), exportColor(save)));
             })
         }
@@ -574,8 +586,10 @@ export class Api {
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
+                const borders = this.borders4edit(page, shape, shape.style);
+                const border = borders[idx];
                 const save = border.isEnabled;
-                border.isEnabled = isEnable
+                basicapi.setBorderEnable(border, isEnable);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.enable, isEnable, save));
             })
         }
@@ -585,8 +599,10 @@ export class Api {
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
+                const borders = this.borders4edit(page, shape, shape.style);
+                const border = borders[idx];
                 const save = border.thickness;
-                border.thickness = thickness
+                basicapi.setBorderThickness(border, thickness);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.thickness, thickness, save));
             })
         }
@@ -596,8 +612,10 @@ export class Api {
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
+                const borders = this.borders4edit(page, shape, shape.style);
+                const border = borders[idx];
                 const save = border.position;
-                border.position = position
+                basicapi.setBorderPosition(border, position);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.position, exportBorderPosition(position), exportBorderPosition(save)));
             })
         }
@@ -607,8 +625,10 @@ export class Api {
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
+                const borders = this.borders4edit(page, shape, shape.style);
+                const border = borders[idx];
                 const save = border.borderStyle;
-                border.borderStyle = borderStyle
+                basicapi.setBorderStyle(border, borderStyle);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.borderStyle, exportBorderStyle(borderStyle), exportBorderStyle(save)));
             })
         }
@@ -616,9 +636,10 @@ export class Api {
     moveFill(page: Page, shape: Shape, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const fill = shape.style.fills.splice(idx, 1)[0];
+            const fills = this.fills4edit(page, shape, shape.style);
+            const fill = fills.splice(idx, 1)[0];
             if (fill) {
-                shape.style.fills.splice(idx2, 0, fill);
+                fills.splice(idx2, 0, fill);
                 this.addCmd(ShapeArrayAttrMove.Make(page.id, genShapeId(shape), FILLS_ID, idx, idx2))
             }
         })
@@ -626,13 +647,15 @@ export class Api {
     moveBorder(page: Page, shape: Shape, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const border = shape.style.borders.splice(idx, 1)[0];
+            const borders = this.borders4edit(page, shape, shape.style);
+            const border = borders.splice(idx, 1)[0];
             if (border) {
-                shape.style.borders.splice(idx2, 0, border);
+                borders.splice(idx2, 0, border);
                 this.addCmd(ShapeArrayAttrMove.Make(page.id, genShapeId(shape), BORDER_ID, idx, idx2))
             }
         })
     }
+    // text
     insertSimpleText(page: Page, shape: TextShapeLike, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
