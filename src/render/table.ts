@@ -14,7 +14,12 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
     const path = shape.getPath().toString();
 
     // table fill
-    nodes.push(...fillR(h, shape.style.fills, frame, path));
+    if (override && override.override_fills) {
+        nodes.push(...fillR(h, override.style.fills, frame, path));
+    }
+    else {
+        nodes.push(...fillR(h, shape.style.fills, frame, path));
+    }
 
     // cells fill & content
     for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
