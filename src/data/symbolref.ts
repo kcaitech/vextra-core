@@ -499,7 +499,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
 
     // symbolref需要watch symbol的修改？
     get naviChilds(): Shape[] | undefined {
-        return this.__data?.childs.map((v) => proxyShape(v, this, this));
+        return this.__data?.childs.map((v) => proxyShape(v, this, this.overridesGetter ?? this));
     }
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;

@@ -5,7 +5,7 @@ import { render as borderR } from "./border"
 import { GroupShape } from "../data/shape";
 
 function renderSym(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame, overrides: OverridesGetter): any {
-    // if (!shape.isVisible) return [];
+
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
 
@@ -16,6 +16,7 @@ function renderSym(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>,
         return childs;
     }
 
+    // 不是直接缩放！
     const props: any = {}
     const scaleX = targetFrame.width / frame.width;
     const scaleY = targetFrame.height / frame.height;
