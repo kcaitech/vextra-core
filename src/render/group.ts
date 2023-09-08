@@ -9,7 +9,7 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
     for (let i = 0; i < cc; i++) {
         const child = shape.childs[i];
         const com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
-        const node = h(com, { data: child, key: child.id, overrides });
+        const node = h(com, { data: child, overrides });
         childs.push(node);
     }
 

@@ -197,16 +197,18 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
     }
 }
 
+export class ForbiddenError extends Error {}
+
 class FreezHdl {
     __target: Object;
     constructor(target: Object) {
         this.__target = target;
     }
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-        throw new Error("forbidden");
+        throw new ForbiddenError("forbidden");
     }
     deleteProperty(target: object, propertyKey: PropertyKey): boolean {
-        throw new Error("forbidden");
+        throw new ForbiddenError("forbidden");
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any): any {
         const val = Reflect.get(target, propertyKey, receiver);
@@ -221,15 +223,6 @@ class FreezHdl {
         }
         return Reflect.has(target, propertyKey);
     }
-}
-
-
-class FillHdl extends FreezHdl {
-
-}
-
-class BorderHdl extends FreezHdl {
-
 }
 
 class StyleHdl extends FreezHdl {
@@ -287,14 +280,14 @@ class StyleHdl extends FreezHdl {
             return this.overrideBorders((this.__target as Style).borders);
         }
 
-        if (propStr === 'fills') {
-            if (this.__override && this.__override.override_fills) return this.__override.style.fills;
-            return this._style.fills.map((v) => new Proxy(v, new FillHdl(v)));
-        }
-        if (propStr === 'borders') {
-            if (this.__override && this.__override.override_borders) return this.__override.style.borders;
-            return this._style.borders.map((v) => new Proxy(v, new BorderHdl(v)));
-        }
+        // if (propStr === 'fills') {
+        //     if (this.__override && this.__override.override_fills) return this.__override.style.fills;
+        //     return this._style.fills.map((v) => new Proxy(v, new FreezHdl(v)));
+        // }
+        // if (propStr === 'borders') {
+        //     if (this.__override && this.__override.override_borders) return this.__override.style.borders;
+        //     return this._style.borders.map((v) => new Proxy(v, new FreezHdl(v)));
+        // }
         return super.get(target, propertyKey, receiver);
     }
 }
@@ -344,16 +337,7 @@ class GroupShapeHdl extends ShapeHdl {
         this.__target = target;
         this.__parent = parent;
     }
-    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-        // const ret = Reflect.set(target, propertyKey, value, receiver);
-        // return ret;
-        throw new Error("forbidden");
-    }
-    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
-        // const result = Reflect.deleteProperty(target, propertyKey);
-        // return result;
-        throw new Error("forbidden");
-    }
+
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
         if (propStr === 'childs') return (this.__target as GroupShape).childs.map((child) => proxyShape(child, this.__this!, this.__symRef));
@@ -382,16 +366,6 @@ class TextShapeHdl extends ShapeHdl {
         return this.__override.text!;
     }
 
-    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-        // const ret = Reflect.set(target, propertyKey, value, receiver);
-        // return ret;
-        throw new Error("forbidden");
-    }
-    deleteProperty(target: object, propertyKey: PropertyKey): boolean {
-        // const result = Reflect.deleteProperty(target, propertyKey);
-        // return result;
-        throw new Error("forbidden");
-    }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
 
