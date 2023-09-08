@@ -557,7 +557,7 @@ export class Controller {
         const modify_contact_from = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {
             status = Status.Pending;
             if (clear_target) {
-                if (!shape.from || (shape.from as ContactForm).shapeId !== clear_target.apex.shapeId) {
+                if (!shape.from) {
                     api.shapeModifyContactFrom(page, shape as ContactShape, clear_target.apex);
                 }
                 pathEdit(api, page, shape, 0, clear_target.p);
@@ -575,7 +575,7 @@ export class Controller {
             const idx = shape.points?.length;
             if (!idx) return false;
             if (clear_target) {
-                if (!shape.to || (shape.to as ContactForm).shapeId !== clear_target.apex.shapeId) {
+                if (!shape.to) {
                     api.shapeModifyContactTo(page, shape as ContactShape, clear_target.apex);
                 }
                 pathEdit(api, page, shape, idx - 1, clear_target.p);
