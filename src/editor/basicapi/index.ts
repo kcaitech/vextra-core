@@ -128,7 +128,7 @@ export function shapeModifyName(shape: Shape, name: string) {
     shape.name = name;
 }
 export function shapeModifyVisible(shape: Shape, isVisible: boolean) {
-    shape.isVisible = isVisible;
+    shape.setVisible(isVisible);
 }
 export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     shape.isLocked = isLocked;

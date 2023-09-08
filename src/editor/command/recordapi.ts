@@ -338,7 +338,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.isVisible;
-            shape.isVisible = isVisible;
+            shape.setVisible(isVisible);
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.visible, isVisible, save));
         })
     }
