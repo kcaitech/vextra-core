@@ -217,6 +217,7 @@ class FreezHdl {
     get(target: object, propertyKey: PropertyKey, receiver?: any): any {
         const val = Reflect.get(target, propertyKey, receiver);
         if (typeof val === 'object' && !propertyKey.toString().startsWith('__')) {
+            if (!target.hasOwnProperty(propertyKey)) return val;
             return new Proxy<Object>(val, new FreezHdl(val));
         }
         return val;
