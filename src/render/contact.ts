@@ -1,3 +1,4 @@
+import { Matrix } from "../basic/matrix";
 import { Shape } from "../data/classes";
 import { render as renderB } from "./contact_borders";
 
@@ -29,6 +30,15 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
         props.transform = `translate(${frame.x},${frame.y})`
     }
     let childs = new Array();
+    // const tps = shape.getTemp();
+    // if (tps && tps.length) {
+    //     const matrixx = new Matrix();
+    //     matrixx.preScale(frame.width, frame.height);
+    //     for (let i = 0; i < tps.length; i++) {
+    //         const p = matrixx.computeCoord3(tps[i].point);
+    //         childs.push(h('rect', { x: p.x - 3, y: p.y - 3, width: 6, height: 6, fill: 'red' }));
+    //     }
+    // }
     if (shape.style.borders.length) {
         childs = childs.concat(renderB(h, shape.style, path, shape));
         return h('g', props, childs);
