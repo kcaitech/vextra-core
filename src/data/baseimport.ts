@@ -1004,7 +1004,6 @@ export function importOverrideShape(source: types.OverrideShape, ctx?: IImportCo
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.override_stringValue !== undefined) ret.override_stringValue = source.override_stringValue
     if (source.override_text !== undefined) ret.override_text = source.override_text
     if (source.override_image !== undefined) ret.override_image = source.override_image
     if (source.override_fills !== undefined) ret.override_fills = source.override_fills

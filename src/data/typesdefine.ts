@@ -533,7 +533,6 @@ export type Page = Shape & {
 /* override shape */
 export type OverrideShape = Shape & {
     refId: string
-    override_stringValue?: boolean
     override_text?: boolean
     override_image?: boolean
     override_fills?: boolean

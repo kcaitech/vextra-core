@@ -6,9 +6,6 @@
             "type": "string",
             "default": "$uuid"
         },
-        "override_stringValue": {
-            "type": "boolean"
-        },
         "override_text": {
             "type": "boolean"
         },

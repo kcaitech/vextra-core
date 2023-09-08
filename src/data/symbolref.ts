@@ -22,7 +22,6 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
     typeId = 'override-shape'
     refId: string
 
-    override_stringValue?: boolean
     override_text?: boolean
     override_image?: boolean
     override_fills?: boolean
@@ -557,11 +556,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
                 override.__stringValue_text = undefined;
                 override.stringValue = undefined;
                 override.override_text = true;
-                override.override_stringValue = undefined;
                 break;
             case OverrideType.StringValue:
                 override.stringValue = value;
-                override.override_stringValue = true;
+                override.override_text = true;
                 break;
             case OverrideType.Image:
                 override.imageRef = value;

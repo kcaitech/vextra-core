@@ -994,7 +994,6 @@ export class Page extends Shape {
 export class OverrideShape extends Shape {
     typeId = 'override-shape'
     refId: string
-    override_stringValue?: boolean
     override_text?: boolean
     override_image?: boolean
     override_fills?: boolean

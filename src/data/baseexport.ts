@@ -1008,7 +1008,6 @@ export function exportOverrideShape(source: types.OverrideShape, ctx?: IExportCo
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         refId: source.refId,
-        override_stringValue: source.override_stringValue,
         override_text: source.override_text,
         override_image: source.override_image,
         override_fills: source.override_fills,
