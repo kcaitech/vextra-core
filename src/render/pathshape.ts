@@ -1,24 +1,34 @@
-import { PathShape } from "../data/classes";
+import { OverrideShape, PathShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
+import { isVisible } from "./basic";
 
-export function render(h: Function, shape: PathShape, reflush?: number) {
+export function render(h: Function, shape: PathShape, override: OverrideShape | undefined, reflush?: number) {
     // if (this.data.boolOp != BoolOp.None) {
     //     // todo 只画selection
     //     return;
     // }
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+
+    if (!isVisible(shape, override)) return;
 
     const frame = shape.frame;
     const path = shape.getPath().toString();
     const childs = [];
 
     // fill
-    childs.push(...fillR(h, shape.style.fills, frame, path));
-
+    if (override && override.override_fills) {
+        childs.push(...fillR(h, override.style.fills, frame, path));
+    }
+    else {
+        childs.push(...fillR(h, shape.style.fills, frame, path));
+    }
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    if (override && override.override_borders) {
+        childs.push(...borderR(h, override.style.borders, frame, path));
+    }
+    else {
+        childs.push(...borderR(h, shape.style.borders, frame, path));
+    }
 
     // ----------------------------------------------------------
     // shadows todo

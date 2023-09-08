@@ -1,10 +1,11 @@
-import { BoolOp, GroupShape, Path, Shape, Style, TextShape } from "../data/classes";
+import { BoolOp, GroupShape, OverrideShape, Path, Shape, Style, TextShape } from "../data/classes";
 // import { difference, intersection, subtract, union } from "./boolop";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
+import { isVisible } from "./basic";
 
 // find first usable style
 export function findUsableFillStyle(shape: Shape): Style {
@@ -97,9 +98,8 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
     return resultpath;
 }
 
-export function render(h: Function, shape: GroupShape, reflush?: number, consumed?: Array<Shape>): any {
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+export function render(h: Function, shape: GroupShape, override: OverrideShape | undefined, reflush?: number, consumed?: Array<Shape>): any {
+    if (!isVisible(shape, override)) return;
 
     const path = render2path(shape, consumed);
     const frame = shape.frame;

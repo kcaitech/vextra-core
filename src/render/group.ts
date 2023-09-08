@@ -1,6 +1,7 @@
-import { GroupShape, OverridesGetter, ShapeType } from "../data/classes";
+import { GroupShape, OverrideShape, OverridesGetter, ShapeType } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
+import { isVisible } from "./basic";
 
 export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, overrides: OverridesGetter | undefined): Array<any> {
     const childs: Array<any> = [];
@@ -9,26 +10,37 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
     for (let i = 0; i < cc; i++) {
         const child = shape.childs[i];
         const com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
-        const node = h(com, { data: child, overrides });
+        const node = h(com, { data: child, key: child.id, overrides });
         childs.push(node);
     }
 
     return childs;
 }
 
-export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, overrides: OverridesGetter | undefined, reflush?: number): any {
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, overrides: OverridesGetter | undefined, override: OverrideShape | undefined, reflush?: number): any {
+
+    if (!isVisible(shape, override)) return;
 
     const frame = shape.frame;
     const path = shape.getPath().toString();
     const childs: Array<any> = [];
+
     // fill
-    childs.push(...fillR(h, shape.style.fills, frame, path));
+    if (override && override.override_fills) {
+        childs.push(...fillR(h, override.style.fills, frame, path));
+    }
+    else {
+        childs.push(...fillR(h, shape.style.fills, frame, path));
+    }
     // childs
     childs.push(...renderGroupChilds(h, shape, comsMap, overrides));
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    if (override && override.override_borders) {
+        childs.push(...borderR(h, override.style.borders, frame, path));
+    }
+    else {
+        childs.push(...borderR(h, shape.style.borders, frame, path));
+    }
 
     const props: any = {}
     if (reflush) props.reflush = reflush;

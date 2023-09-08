@@ -1,11 +1,12 @@
-import { TableCell, TableShape } from "../data/classes";
+import { OverrideShape, OverridesGetter, TableCell, TableShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { render as rCell } from "./tablecell";
+import { isVisible } from "./basic";
 
-export function render(h: Function, shape: TableShape, reflush?: number): any {
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+export function render(h: Function, shape: TableShape, overrides: OverridesGetter | undefined, override: OverrideShape | undefined, reflush?: number): any {
+
+    if (!isVisible(shape, override)) return;
     const frame = shape.frame;
 
     const layout = shape.getLayout();

@@ -29,7 +29,6 @@ export function render(h: Function, shape: Shape, override: OverrideShape | unde
         childs.push(...borderR(h, shape.style.borders, frame, path));
     }
 
-
     const props: any = {}
     if (reflush) {
         props.reflush = reflush;

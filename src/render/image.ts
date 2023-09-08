@@ -1,11 +1,12 @@
 import { objectId } from "../basic/objectid";
-import { ImageShape } from "../data/classes";
+import { ImageShape, OverrideShape } from "../data/classes";
+import { isVisible } from "./basic";
 import { render as borderR } from "./border";
 import { render as clippathR } from "./clippath"
 
-export function render(h: Function, shape: ImageShape, imgPH: string, reflush?: number) {
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+export function render(h: Function, shape: ImageShape, imgPH: string, override: OverrideShape | undefined, reflush?: number) {
+
+    if (!isVisible(shape, override)) return;
 
     const frame = shape.frame;
 
@@ -14,7 +15,7 @@ export function render(h: Function, shape: ImageShape, imgPH: string, reflush?: 
     const cp = clippathR(h, id, path);
     const childs = [cp];
 
-    const url = shape.peekImage(true) ?? imgPH;
+    const url = (override && override.override_image ? override?.peekImage(true) : shape.peekImage(true)) ?? imgPH;
 
     const img = h("image", {
         'xlink:href': url,

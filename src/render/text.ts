@@ -1,6 +1,6 @@
 
 
-import { DefaultColor, isColorEqual } from "./basic";
+import { DefaultColor, isColorEqual, isVisible } from "./basic";
 import { TextShape, Path, Color, OverrideShape } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
@@ -190,23 +190,37 @@ export function renderTextLayout(h: Function, textlayout: TextLayout) {
     return childs;
 }
 
-export function render(h: Function, shape: TextShape, reflush?: number) {
+export function render(h: Function, shape: TextShape, override: OverrideShape | undefined, reflush?: number) {
 
-    if (!shape.isVisible) {
-        return null;
-    }
+    if (!isVisible(shape, override)) return;
 
     const childs = []
     const frame = shape.frame;
     const path = shape.getPath().toString();
+
     // fill
-    childs.push(...fillR(h, shape.style.fills, frame, path));
-
+    if (override && override.override_fills) {
+        childs.push(...fillR(h, override.style.fills, frame, path));
+    }
+    else {
+        childs.push(...fillR(h, shape.style.fills, frame, path));
+    }
     // text
-    childs.push(...renderTextLayout(h, shape.getLayout()));
+    if (override && override.override_text) {
+        const layout = override.getLayout(shape);
+        if (layout) childs.push(...renderTextLayout(h, layout))
+    }
+    else {
 
+        childs.push(...renderTextLayout(h, shape.getLayout()));
+    }
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    if (override && override.override_borders) {
+        childs.push(...borderR(h, override.style.borders, frame, path));
+    }
+    else {
+        childs.push(...borderR(h, shape.style.borders, frame, path));
+    }
 
     const props: any = {}
     if (reflush) props.reflush = reflush;

@@ -1,10 +1,10 @@
 import { ShapeFrame } from "../data/typesdefine";
-import { TableCell, TableCellType } from "../data/classes";
+import { OverrideShape, TableCell, TableCellType } from "../data/classes";
 import { renderTextLayout } from "./text";
 
 export function render(h: Function, shape: TableCell, frame: ShapeFrame): any {
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+    // const isVisible = shape.isVisible ?? true;
+    // if (!isVisible) return;
 
     const cellType = shape.cellType ?? TableCellType.None;
     if (cellType === TableCellType.None) return;
