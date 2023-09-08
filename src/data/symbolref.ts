@@ -285,14 +285,14 @@ class StyleHdl extends FreezHdl {
             return this.overrideBorders((this.__target as Style).borders);
         }
 
-        // if (propStr === 'fills') {
-        //     if (this.__override && this.__override.override_fills) return this.__override.style.fills;
-        //     return this._style.fills.map((v) => new Proxy(v, new FreezHdl(v)));
-        // }
-        // if (propStr === 'borders') {
-        //     if (this.__override && this.__override.override_borders) return this.__override.style.borders;
-        //     return this._style.borders.map((v) => new Proxy(v, new FreezHdl(v)));
-        // }
+        if (propStr === 'fills') {
+            if (this.__override && this.__override.override_fills) return this.__override.style.fills;
+            return this._style.fills.map((v) => new Proxy(v, new FreezHdl(v)));
+        }
+        if (propStr === 'borders') {
+            if (this.__override && this.__override.override_borders) return this.__override.style.borders;
+            return this._style.borders.map((v) => new Proxy(v, new FreezHdl(v)));
+        }
         return super.get(target, propertyKey, receiver);
     }
 }
