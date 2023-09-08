@@ -3,7 +3,7 @@ import { TableCell, TableCellType } from "../data/classes";
 import { renderTextLayout } from "./text";
 import { render as fillR } from "./fill";
 
-export function render(h: Function, shape: TableCell, frame: ShapeFrame, override: OverrideShape | undefined, reflush?: number): any {
+export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: string, override: OverrideShape | undefined, reflush?: number): any {
     // const isVisible = shape.isVisible ?? true;
     // if (!isVisible) return;
 
@@ -22,7 +22,7 @@ export function render(h: Function, shape: TableCell, frame: ShapeFrame, overrid
     if (cellType === TableCellType.None) return;
 
     if (cellType === TableCellType.Image) {
-        const url = shape.peekImage(true);
+        const url = (override && override.override_image ? override?.peekImage(true) : shape.peekImage(true)) ?? imgPH;
 
         const img = h("image", {
             'xlink:href': url,
@@ -35,8 +35,14 @@ export function render(h: Function, shape: TableCell, frame: ShapeFrame, overrid
         childs.push(img);
     }
     else if (cellType === TableCellType.Text) {
-        const layout = shape.getLayout();
-        if (layout) childs.push(...renderTextLayout(h, layout))
+        if (override && override.override_text) {
+            const layout = override.getLayout(shape);
+            if (layout) childs.push(...renderTextLayout(h, layout))
+        }
+        else {
+            const layout = shape.getLayout();
+            if (layout) childs.push(...renderTextLayout(h, layout))
+        }
     }
 
     const props = { transform: `translate(${frame.x},${frame.y})`, reflush }
