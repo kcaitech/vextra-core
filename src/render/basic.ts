@@ -36,7 +36,7 @@
 //     });
 // }
 
-import { Color } from "../data/classes";
+import { Color, OverrideShape, Shape } from "../data/classes";
 
 
 // export { h } from "vue";
@@ -52,3 +52,8 @@ export function isColorEqual(lhs: Color, rhs: Color): boolean {
 }
 
 export const DefaultColor = Color.DefaultColor;
+
+export function isVisible(shape: Shape, override: OverrideShape | undefined) {
+    if (override && override.override_visible) return !!override.isVisible;
+    return !!shape.isVisible;
+}

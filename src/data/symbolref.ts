@@ -195,6 +195,11 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
     onRollback(): void {
         if (this.text) this.text.reLayout();
     }
+
+    setVisible(isVisible: boolean | undefined) {
+        this.isVisible = isVisible;
+        this.override_visible = true;
+    }
 }
 
 export class ForbiddenError extends Error {}
@@ -305,6 +310,22 @@ class ShapeHdl extends FreezHdl {
         this.__parent = parent;
     }
 
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        const propStr = propertyKey.toString();
+        if (propStr === "isVisible") {
+            let override = this.__symRef.getOverrid(this.__target.id);
+            if (!override) {
+                this.__symRef.addOverrid(this.__target.id, OverrideType.Visible, value);
+            }
+            else {
+                override.override_visible = true;
+                override.isVisible = value;
+            }
+            return true;
+        }
+        throw new ForbiddenError("forbidden");
+    }
+
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
         if (propStr === 'shapeId') return [this.__symRef.id, this.__target.id];
@@ -323,6 +344,11 @@ class ShapeHdl extends FreezHdl {
         }
         if (propStr === 'overridesGetter') {
             return this.__symRef;
+        }
+        if (propStr === "isVisible") {
+            const override = this.__symRef.getOverrid(this.__target.id);
+            if (override && override.override_visible) return override.isVisible;
+            return this.__target.isVisible;
         }
         return super.get(target, propertyKey, receiver);
     }

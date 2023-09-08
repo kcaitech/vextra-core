@@ -210,6 +210,10 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.frame.width = w;
         this.frame.height = h;
     }
+
+    setVisible(isVisible: boolean | undefined) {
+        this.isVisible = isVisible;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {

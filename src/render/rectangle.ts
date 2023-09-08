@@ -1,14 +1,15 @@
 import { OverrideShape, Shape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
+import { isVisible } from "./basic";
 
 export function render(h: Function, shape: Shape, override: OverrideShape | undefined, reflush?: number) {
     // if (this.data.booleanOperation != BooleanOperation.None) {
     //     // todo 只画selection
     //     return;
     // }
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+
+    if (!isVisible(shape, override)) return;
 
     const frame = shape.frame;
     const childs = [];
