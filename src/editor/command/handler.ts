@@ -1,5 +1,5 @@
 import { Cmd, CmdType, OpType, ShapeCmdModify, TableIndex } from "../../coop"
-import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape, OverridesGetter, OverrideShape } from "../../data/classes"
+import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape, TableCell, OverrideShape } from "../../data/classes"
 import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
 import { importColor, importText } from "../../data/baseimport";
@@ -85,37 +85,29 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.cellContentType,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    const index = op.targetId[op.targetId.length - 1] as TableIndex;
-                    api.tableSetCellContentType(shape as TableShape, index.rowIdx, index.colIdx, value as types.TableCellType);
+                    api.tableSetCellContentType(shape as TableCell, value as types.TableCellType);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.cellContentText,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    const index = op.targetId[op.targetId.length - 1] as TableIndex;
                     const text = value ? importText(JSON.parse(value)) : undefined;
-                    api.tableSetCellContentText(shape as TableShape, index.rowIdx, index.colIdx, text);
+                    api.tableSetCellContentText(shape as TableCell, text);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.cellContentImage,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    const index = op.targetId[op.targetId.length - 1] as TableIndex;
-                    api.tableSetCellContentImage(shape as TableShape, index.rowIdx, index.colIdx, value);
+                    api.tableSetCellContentImage(shape as TableCell, value);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.cellSpan,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    const index = op.targetId[op.targetId.length - 1] as TableIndex;
                     const val = value && JSON.parse(value);
                     const rowSpan = val?.rowSpan;
                     const colSpan = val?.colSpan;
-                    api.tableModifyCellSpan(shape as TableShape, index.rowIdx, index.colIdx, rowSpan ?? 1, colSpan ?? 1);
+                    api.tableModifyCellSpan(shape as TableCell, rowSpan ?? 1, colSpan ?? 1);
                 }
             },
             {

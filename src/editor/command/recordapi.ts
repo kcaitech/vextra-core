@@ -999,9 +999,9 @@ export class Api {
     tableSetCellContentType(page: Page, table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
         checkShapeAtPage(page, table);
         this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx);
-            const origin = cell?.cellType;
-            basicapi.tableSetCellContentType(table, rowIdx, colIdx, contentType);
+            const cell = table.getCellAt(rowIdx, colIdx, true)!;
+            const origin = cell.cellType;
+            basicapi.tableSetCellContentType(cell, contentType);
             this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentType, contentType, origin))
         })
     }
@@ -1009,10 +1009,10 @@ export class Api {
     tableSetCellContentText(page: Page, table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
         checkShapeAtPage(page, table);
         this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx);
-            const origin = cell?.text && exportText(cell.text);
+            const cell = table.getCellAt(rowIdx, colIdx, true)!;
+            const origin = cell.text && exportText(cell.text);
             if (origin !== text) { // undefined
-                basicapi.tableSetCellContentText(table, rowIdx, colIdx, text);
+                basicapi.tableSetCellContentText(cell, text);
                 this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentText, text && exportText(text), origin))
             }
         })
@@ -1021,10 +1021,10 @@ export class Api {
     tableSetCellContentImage(page: Page, table: TableShape, rowIdx: number, colIdx: number, ref: string | undefined) {
         checkShapeAtPage(page, table);
         this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx);
-            const origin = cell?.imageRef;
+            const cell = table.getCellAt(rowIdx, colIdx, true)!;
+            const origin = cell.imageRef;
             if (origin !== ref) {
-                basicapi.tableSetCellContentImage(table, rowIdx, colIdx, ref);
+                basicapi.tableSetCellContentImage(cell, ref);
                 this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentImage, ref, origin))
             }
         })
@@ -1089,10 +1089,10 @@ export class Api {
     tableModifyCellSpan(page: Page, table: TableShape, rowIdx: number, colIdx: number, rowSpan: number, colSpan: number) {
         checkShapeAtPage(page, table);
         this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx);
+            const cell = table.getCellAt(rowIdx, colIdx, true)!;
             const origin = { rowSpan: cell?.rowSpan, colSpan: cell?.colSpan };
             if ((origin.rowSpan ?? 1) !== rowSpan || (origin.colSpan ?? 1) !== colSpan) {
-                basicapi.tableModifyCellSpan(table, rowIdx, colIdx, rowSpan, colSpan);
+                basicapi.tableModifyCellSpan(cell, rowSpan, colSpan);
                 this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellSpan, { rowSpan, colSpan }, origin))
             }
         })
