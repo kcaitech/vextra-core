@@ -6,9 +6,9 @@ import { ContactType, CurveMode } from "./typesdefine";
 /**
  * @description root -> 图形自身上且单位为比例系数的矩阵
  */
-export function gen_matrix1(shape: Shape) {
+export function gen_matrix1(shape: Shape, prem?: Matrix) {
     const f = shape.frame;
-    let m = shape.matrix2Root();
+    let m = prem || shape.matrix2Root();
     m.preScale(f.width, f.height);
     m = new Matrix(m.inverse);
     return m;
@@ -71,7 +71,7 @@ function get_nearest_border_point(shape: Shape, contactType: ContactType, m2r: M
         return op;
     }
 }
-function XYsBoundingPoints(points: { x: number, y: number }[]) {
+function XYsBoundingPoints(points: PageXY[]) {
     const xs: number[] = [];
     const ys: number[] = [];
     for (let i = 0; i < points.length; i++) {
@@ -92,7 +92,7 @@ function XYsBoundingPoints(points: { x: number, y: number }[]) {
 function isEqu(a: number, b: number) {
     return Math.abs(a - b) < 0.0001;
 }
-function getIntersection(line1: [{ x: number, y: number }, { x: number, y: number }], line2: [{ x: number, y: number }, { x: number, y: number }]) {
+function get_intersection(line1: [PageXY, PageXY], line2: [PageXY, PageXY]) {
     if (isEqu(line1[0].x, line1[1].x) && isEqu(line2[0].x, line2[1].x)) {
         return false;
     }
@@ -106,8 +106,8 @@ function getIntersection(line1: [{ x: number, y: number }, { x: number, y: numbe
         return { x: line1[0].x, y: line2[0].y };
     }
 };
-function removeDuplicatePoint(points: { x: number, y: number }[]) {
-    const res: { x: number, y: number }[] = [];
+function removeDuplicatePoint(points: PageXY[]) {
+    const res: PageXY[] = [];
     const cache: any = {};
     for (let i = 0, len = points.length; i < len; i++) {
         const { x, y } = points[i];
@@ -132,7 +132,7 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
     const ff2 = { x: s2xy1.x, y: s2xy1.y, width: s2w, height: s2h };
     const start_point = get_pagexy(shape1, type1, m1), end_point = get_pagexy(shape2, type2, m2);
     if (!start_point || !end_point) return false;
-    let preparation_point: { x: number, y: number }[] = [];
+    let preparation_point: PageXY[] = [];
     const fake_start_point1 = get_nearest_border_point(shape1, type1, m1);
     const fake_start_point2 = get_nearest_border_point(shape2, type2, m2);
     if (!fake_start_point1 || !fake_start_point2) return false;
@@ -145,36 +145,26 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
     const t3 = { x: s2xy1.x - OFFSET, y: s2xy1.y - OFFSET }, t4 = { x: s2xy2.x + OFFSET, y: s2xy2.y + OFFSET };
     preparation_point.push(...XYsBoundingPoints([fake_start_point1, fake_start_point2, t3, t4])); // 伪起点和伪终点形成的矩形 和 终点元素包围框 组成一个大矩形 的四个顶点
 
-    const t5 = getIntersection([start_point, fake_start_point1], [end_point, fake_start_point2]);
+    const t5 = get_intersection([start_point, fake_start_point1], [end_point, fake_start_point2]);
     if (t5) preparation_point.push(t5);
     if (!t5) {
         const t6 = { x: fake_start_point2.x + OFFSET, y: fake_start_point2.y }
-        const t7 = getIntersection([start_point, fake_start_point1], [fake_start_point2, t6]);
-        if (t7) {
-            preparation_point.push(t7);
-        }
+        const t7 = get_intersection([start_point, fake_start_point1], [fake_start_point2, t6]);
+        if (t7) preparation_point.push(t7);
 
         const t8 = { x: fake_start_point2.x, y: fake_start_point2.y + OFFSET };
-        const t9 = getIntersection([start_point, fake_start_point1], [fake_start_point2, t8]);
-        if (t9) {
-            preparation_point.push(t9);
-        }
+        const t9 = get_intersection([start_point, fake_start_point1], [fake_start_point2, t8]);
+        if (t9) preparation_point.push(t9);
 
         const t10 = { x: fake_start_point1.x + OFFSET, y: fake_start_point1.y };
-        const t11 = getIntersection([end_point, fake_start_point2], [fake_start_point1, t10]);
-        if (t11) {
-            preparation_point.push(t11);
-        }
+        const t11 = get_intersection([end_point, fake_start_point2], [fake_start_point1, t10]);
+        if (t11) preparation_point.push(t11);
 
         const t12 = { x: fake_start_point1.x, y: fake_start_point1.y + OFFSET };
-        const t13 = getIntersection([end_point, fake_start_point2], [fake_start_point2, t12]);
-        if (t13) {
-            preparation_point.push(t13);
-        }
+        const t13 = get_intersection([end_point, fake_start_point2], [fake_start_point2, t12]);
+        if (t13) preparation_point.push(t13);
     }
     preparation_point = removeDuplicatePoint(preparation_point);
-    console.log('preparation_point', preparation_point);
-    
     return { start_point, end_point, fake_start_point1, fake_start_point2, preparation_point, ff1, ff2 };
 }
 function checkIsSamePoint(a: PageXY | null, b: PageXY | undefined) {
@@ -192,7 +182,7 @@ interface ShapeFrameLike {
     width: number
     height: number
 }
-// A*算法类
+// A*
 class AStar {
     static OFFSET = 20;
     startPoint: PageXY;
@@ -300,8 +290,6 @@ class AStar {
         });
     }
     getNextPoints(point: PageXY, points: PageXY[]) {
-        console.log('point', point);
-
         const { x, y } = point;
         const xSamePoints: PageXY[] = [];
         const ySamePoints: PageXY[] = [];
@@ -328,7 +316,7 @@ class AStar {
         let maxX = Math.max(a.x, b.x);
         let minY = Math.min(a.y, b.y);
         let maxY = Math.max(a.y, b.y);
-        const xxx = 18;
+        const xxx = 0;
         // 水平线
         if (isEqu(a.y, b.y)) {
             for (let i = 0; i < rects.length; i++) {
@@ -361,9 +349,7 @@ class AStar {
         for (let i = 0; i < list.length; i++) {
             let cur = list[i];
             // 检查当前点和目标点的连线是否穿过起终点元素
-            if (this.checkLineThroughElements({ x, y }, cur, f1, f2)) {
-                continue
-            };
+            if (this.checkLineThroughElements({ x, y }, cur, f1, f2)) continue;
             // 左侧或上方最近的点
             if (cur[dir] < value) {
                 if (nextLeftTopPoint) {
@@ -400,8 +386,8 @@ class AStar {
     }
     computedHCost(point: AP) {
         return (
-            Math.abs(this.endPoint!.x - point.point!.x) +
-            Math.abs(this.endPoint!.y - point.point!.y)
+            Math.abs(this.endPoint!.x - point.point.x) +
+            Math.abs(this.endPoint!.y - point.point.y)
         )
     }
 }
