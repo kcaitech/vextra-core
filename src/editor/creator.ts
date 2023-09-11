@@ -267,7 +267,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     const shape = new ContactShape(uuid(), name, types.ShapeType.Contact, frame, style, curvePoint, false);
     shape.from = apex;
     shape.to = undefined;
-    shape.fixedRadius = 0;
+    shape.fixedRadius = 6;
     addCommonAttr(shape);
     return shape;
 }
