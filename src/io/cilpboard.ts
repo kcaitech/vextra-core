@@ -1,65 +1,53 @@
 import { GroupShape, Shape, ShapeType, TextShape } from "../data/shape";
-import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText } from "./baseexport";
-import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText } from "./baseimport";
+import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText, exportTableShape } from "./baseexport";
+import { importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText, importArtboard, importTableShape } from "./baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { newTextShape, newTextShapeByText } from "../editor/creator";
 
 function set_childs_id(shapes: Shape[]) {
-    for (let i = 0; i < shapes.length; i++) {
+    for (let i = 0, len = shapes.length; i < len; i++) {
         const shape = shapes[i];
+        if (!shape) continue;
         shape.id = v4();
-        if (shape.childs && shape.childs.length) {
-            set_childs_id(shape.childs);
-        }
+        if (shape.childs && shape.childs.length) set_childs_id(shape.childs);
     }
 }
 
-export interface ExportContent {
-    index: number
-    content: types.Shape
-}
 // 导出图形到剪切板
 export function export_shape(shapes: Shape[]) {
-    const result: ExportContent[] = []
+    const result: Shape[] = []
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const type = shape.type;
-        const r: any = { index: 0 };
+        const shape = shapes[i], type = shape.type;
+        let content: any;
         if (type === ShapeType.Rectangle) {
-            r.content = exportRectShape(shape as unknown as types.RectShape);
+            content = exportRectShape(shape as unknown as types.RectShape);
         } else if (type === ShapeType.Oval) {
-            r.content = exportOvalShape(shape as unknown as types.OvalShape);
+            content = exportOvalShape(shape as unknown as types.OvalShape);
         } else if (type === ShapeType.Line) {
-            r.content = exportLineShape(shape as unknown as types.LineShape);
+            content = exportLineShape(shape as unknown as types.LineShape);
         } else if (type === ShapeType.Image) {
-            r.content = exportImageShape(shape as unknown as types.ImageShape);
+            content = exportImageShape(shape as unknown as types.ImageShape);
         } else if (type === ShapeType.Text) {
-            r.content = exportTextShape(shape as unknown as types.TextShape);
+            content = exportTextShape(shape as unknown as types.TextShape);
         } else if (type === ShapeType.Path) {
-            r.content = exportPathShape(shape as unknown as types.PathShape);
+            content = exportPathShape(shape as unknown as types.PathShape);
         } else if (type === ShapeType.Artboard) {
-            r.content = exportArtboard(shape as unknown as types.Artboard);
+            content = exportArtboard(shape as unknown as types.Artboard);
         } else if (type === ShapeType.Group) {
-            r.content = exportGroupShape(shape as unknown as types.GroupShape);
+            content = exportGroupShape(shape as unknown as types.GroupShape);
+        } else if (type === ShapeType.Table) {
+            content = exportTableShape(shape as unknown as types.TableShape);
         }
-        const parent = shape.parent;
-        if (parent) {
-            const childs = (parent as GroupShape).childs;
-            r.index = Math.max(0, childs.findIndex(i => i.id === shape.id));
-            if (r.content) {
-                result.push(r);
-            }
-        }
+        if (content) result.push(content);
     }
     return result;
 }
 
 // 从剪切板导入图形
-export function import_shape(document: Document, source: { index: number, content: types.Shape }[]) {
+export function import_shape(document: Document, source: types.Shape[]) {
     const ctx: IImportContext = new class implements IImportContext { document: Document = document };
-
     // const ctx = new class implements IImportContext {
     //     afterImport(obj: any): void {
     //         if (obj instanceof ImageShape || obj instanceof Fill || obj instanceof TableCell) {
@@ -79,39 +67,37 @@ export function import_shape(document: Document, source: { index: number, conten
     // }
     const result: Shape[] = [];
     try {
-        for (let i = 0; i < source.length; i++) {
-            const _s = source[i];
-            _s.content.id = v4();
+        for (let i = 0, len = source.length; i < len; i++) {
+            const _s = source[i], type = _s.type;
+            _s.id = v4();
             let r: Shape | undefined = undefined;
-            const type = _s.content.type;
             if (type === ShapeType.Rectangle) {
-                r = importRectShape(_s.content as types.RectShape);
+                r = importRectShape(_s as types.RectShape);
             } else if (type === ShapeType.Oval) {
-                r = importOvalShape(_s.content as types.OvalShape);
+                r = importOvalShape(_s as types.OvalShape);
             } else if (type === ShapeType.Line) {
-                r = importLineShape(_s.content as types.LineShape);
+                r = importLineShape(_s as types.LineShape);
             } else if (type === ShapeType.Image) {
-                r = importImageShape(_s.content as types.ImageShape, ctx);
+                r = importImageShape(_s as types.ImageShape, ctx);
             } else if (type === ShapeType.Text) {
-                r = importTextShape(_s.content as types.TextShape, ctx);
+                r = importTextShape(_s as types.TextShape, ctx);
             } else if (type === ShapeType.Path) {
-                r = importPathShape(_s.content as types.PathShape);
+                r = importPathShape(_s as types.PathShape);
             } else if (type === ShapeType.Artboard) {
-                const childs = (_s.content as GroupShape).childs;
-                if (childs && childs.length) {
-                    set_childs_id(childs);
-                }
-                r = importArtboard(_s.content as types.Artboard, ctx);
+                const childs = (_s as GroupShape).childs;
+                childs && childs.length && set_childs_id(childs);
+                importArtboard(_s as types.Artboard, ctx); // 此时已经进入文档
+                r = importArtboard(_s as types.Artboard);
             } else if (type === ShapeType.Group) {
-                const childs = (_s.content as GroupShape).childs;
-                if (childs && childs.length) {
-                    set_childs_id(childs);
-                }
-                r = importGroupShape(_s.content as types.GroupShape, ctx);
+                const childs = (_s as GroupShape).childs;
+                childs && childs.length && set_childs_id(childs);
+                r = importGroupShape(_s as types.GroupShape, ctx);
+            } else if (type === ShapeType.Table) {
+                const childs = (_s as GroupShape).childs;
+                childs && childs.length && set_childs_id(childs);
+                r = importTableShape(_s as types.TableShape, ctx);
             }
-            if (r) {
-                result.push(r);
-            }
+            r && result.push(r);
         }
     } catch (error) {
         console.log(error);

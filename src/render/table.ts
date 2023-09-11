@@ -75,8 +75,7 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
         props.style = style;
     }
     else {
-        props.transform = `translate(${frame.x},${frame.y})`
+        props.transform = `translate(${frame.x},${frame.y})`;
     }
-    // props.transform = `translate(${frame.x},${frame.y})`;
     return h('g', props, nodes);
 }
