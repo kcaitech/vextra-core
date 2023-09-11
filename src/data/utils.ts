@@ -85,10 +85,10 @@ function XYsBoundingPoints(points: PageXY[]) {
     const left = Math.min(...xs);
     const right = Math.max(...xs);
     return [
-        { x: left, y: top }, // lt
-        { x: right, y: top }, // rt
-        { x: right, y: bottom }, // rb
-        { x: left, y: bottom }, // lb
+        { x: left, y: top }, // 矩形顶点
+        { x: right, y: top },
+        { x: right, y: bottom },
+        { x: left, y: bottom }
     ];
 }
 /**
@@ -239,7 +239,43 @@ class AStar {
         }
         return []
     }
-
+    run_easy() {
+        this.openList = [
+            {
+                id: v4(),
+                point: this.startPoint, // 起点加入openList
+                cost: 0, // 代价
+                parent: null, // 父节点
+            }
+        ];
+        this.closeList = [];
+        while (this.openList.length) {
+            const point = this.most_advantageous_point();
+            if (check_is_same_point(point.point, this.endPoint)) {
+                return this.best_path(point);
+            } else {
+                this.remove_from_openlist(point); // 先将point从openList中删除，并推入closeList
+                this.closeList.push(point);
+                const nextPoints: PageXY[] = this.next_points2(point.point, this.pointList) as PageXY[]; // 寻找下一个点
+                for (let i = 0; i < nextPoints.length; i++) {
+                    const cur = nextPoints[i];
+                    // 如果该点在closeList中，那么跳过该点
+                    if (this.is_exist_list(cur, this.closeList)) continue;
+                    if (!this.is_exist_list(cur, this.openList)) {
+                        const pointObj: AP = {
+                            id: v4(),
+                            point: cur,
+                            parent: point, // 设置point为下一个点的父节点
+                            cost: 0,
+                        };
+                        this.cost_assessment(pointObj); // 计算好代价之后推入openList
+                        this.openList.push(pointObj);
+                    }
+                }
+            }
+        }
+        return []
+    }
     // 获取openList中优先级最高的点，也就是代价最小的点
     most_advantageous_point() {
         let min = Infinity, point = this.openList[0];
@@ -289,6 +325,23 @@ class AStar {
         const xNextPoints = this.next_point_d(x, y, ySamePoints, "x", this.shapeFrame1, this.shapeFrame2);
         // 找出y方向最近的点
         const yNextPoints = this.next_point_d(x, y, xSamePoints, "y", this.shapeFrame1, this.shapeFrame2);
+        return [...xNextPoints, ...yNextPoints];
+    }
+    next_points2(point: PageXY, points: PageXY[]) {
+        const { x, y } = point;
+        const xSamePoints: PageXY[] = [];
+        const ySamePoints: PageXY[] = [];
+        // 找出x或y坐标相同的点
+        for (let i = 0, len = points.length; i < len; i++) {
+            const item = points[i];
+            if (check_is_same_point(point, item)) continue;
+            if (isEqu(item.x, x)) xSamePoints.push(item);
+            if (isEqu(item.y, y)) ySamePoints.push(item);
+        }
+        // 找出x方向最近的点
+        const xNextPoints = this.next_point_d2(x, y, ySamePoints, "x", this.shapeFrame1, this.shapeFrame2);
+        // 找出y方向最近的点
+        const yNextPoints = this.next_point_d2(x, y, xSamePoints, "y", this.shapeFrame1, this.shapeFrame2);
         return [...xNextPoints, ...yNextPoints];
     }
     is_through(a: PageXY, b: PageXY, f1: ShapeFrameLike, f2: ShapeFrameLike) {
@@ -349,7 +402,32 @@ class AStar {
             }
         }
         return [nextLeftTopPoint, nextRIghtBottomPoint].filter((point) => !!point);
-    };
+    }
+    next_point_d2(x: number, y: number, list: PageXY[], dir: 'x' | 'y', f1: ShapeFrameLike, f2: ShapeFrameLike) {
+        const value = dir === "x" ? x : y;
+        let nextLeftTopPoint = null;
+        let nextRIghtBottomPoint = null;
+        for (let i = 0; i < list.length; i++) {
+            let cur = list[i];
+            // 左侧或上方最近的点
+            if (cur[dir] < value) {
+                if (nextLeftTopPoint) {
+                    if (cur[dir] > nextLeftTopPoint[dir]) nextLeftTopPoint = cur;
+                } else {
+                    nextLeftTopPoint = cur;
+                }
+            }
+            // 右侧或下方最近的点
+            if (cur[dir] > value) {
+                if (nextRIghtBottomPoint) {
+                    if (cur[dir] < nextRIghtBottomPoint[dir]) nextRIghtBottomPoint = cur;
+                } else {
+                    nextRIghtBottomPoint = cur;
+                }
+            }
+        }
+        return [nextLeftTopPoint, nextRIghtBottomPoint].filter((point) => !!point);
+    }
     // 计算一个点的代价
     cost_assessment(point: AP) {
         point.cost = this.g_cost(point) + this.h_cost(point);
@@ -373,9 +451,14 @@ class AStar {
 export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Matrix, m2: Matrix, m3: Matrix) {
     const params = gen_baisc_params(shape1, type1, shape2, type2, m1, m2);
     if (!params) return false;
-    const { start_point, end_point, b_start_point, b_end_point, preparation_point, ff1, ff2 } = params;
+    let { start_point, end_point, b_start_point, b_end_point, preparation_point, ff1, ff2 } = params;
     const aStar = new AStar(ff1, ff2, b_start_point, b_end_point, preparation_point);
     let path = aStar.run();
+    if (!path.length) { // 第二次寻找
+        preparation_point = [start_point, ...preparation_point, end_point];
+        const aStar2 = new AStar(ff1, ff2, start_point, end_point, preparation_point);
+        path = aStar2.run_easy()
+    }
     if (!path.length) return false;
     path = [start_point, ...path, end_point];
     const points: CurvePoint[] = [];
