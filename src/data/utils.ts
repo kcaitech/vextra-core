@@ -91,6 +91,24 @@ function XYsBoundingPoints(points: PageXY[]) {
         { x: left, y: bottom }
     ];
 }
+function XYsBoundingPoints2(points: PageXY[]) {
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        xs.push(p.x), ys.push(p.y);
+    }
+    const top = Math.min(...ys);
+    const bottom = Math.max(...ys);
+    const left = Math.min(...xs);
+    const right = Math.max(...xs);
+    const width = right - left;
+    const height = bottom - top;
+    return [
+        { x: left + width / 2, y: top },
+        { x: left + width / 2, y: bottom },
+    ];
+}
 /**
  * @description 一定误差范围内的相等判定
  */
@@ -141,6 +159,8 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
 
     preparation_point.push(b_start_point, b_end_point); // 获取伪起点和伪终点,并将它们添加到数组里
 
+    // preparation_point.push(...XYsBoundingPoints2([b_start_point, b_end_point]));
+
     const t1 = { x: s1xy1.x - OFFSET, y: s1xy1.y - OFFSET }, t2 = { x: s1xy2.x + OFFSET, y: s1xy2.y + OFFSET };
     preparation_point.push(...XYsBoundingPoints([b_start_point, b_end_point, t1, t2])); // 伪起点和伪终点形成的矩形 和 起点元素包围框 组成一个大矩形 的四个顶点
 
@@ -162,6 +182,7 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
         const t13 = get_intersection([end_point, b_end_point], [b_end_point, { x: b_start_point.x, y: b_start_point.y + OFFSET }]);
         if (t13) preparation_point.push(t13);
     }
+
     preparation_point = remove_duplicate_point(preparation_point);
     return { start_point, end_point, b_start_point, b_end_point, preparation_point, ff1, ff2 };
 }
@@ -467,4 +488,29 @@ export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2
         points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y)));
     }
     return points;
+}
+export function slice_invalid_point(points: CurvePoint[]) {
+    // 处理x轴上连续相等的点
+    let result_x = [points[0]];
+    for (let i = 1, len = points.length - 1; i < len; i++) {
+        let p1 = points[i - 1].point;
+        let p2 = points[i].point;
+        let p3 = points[i + 1].point;
+        if (p1 && p2 && p3) {
+            if (Math.abs(p3.y - p1.y) > 0.0001) result_x.push(points[i]);
+        }
+    }
+    // 处理y轴上连续相等的点  如果不处理两轴上相等的点，会造成线段折叠的路径片段，属于无效片段，处理过程即为切除无效片段
+    result_x.push(points[points.length - 1]);
+    let result_y = [result_x[0]];
+    for (let i = 1, len = result_x.length - 1; i < len; i++) {
+        let p1 = result_x[i - 1].point;
+        let p2 = result_x[i].point;
+        let p3 = result_x[i + 1].point;
+        if (p1 && p2 && p3) {
+            if (Math.abs(p3.x - p1.x) > 0.0001) result_y.push(result_x[i]);
+        }
+    }
+    result_y.push(result_x[result_x.length - 1]);
+    return result_y;
 }

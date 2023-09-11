@@ -11,7 +11,7 @@ import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { ContactForm, ContactType, CurveMode } from "./typesdefine";
 import { v4 } from "uuid";
-import { gen_baisc_params, gen_matrix1, gen_path } from "./utils";
+import { gen_baisc_params, gen_matrix1, gen_path, slice_invalid_point } from "./utils";
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
@@ -668,9 +668,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             isClosed
         )
     }
-    private isEdited() {
-        return this.points.length > 2;
-    }
     private get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
         const f = shape.frame;
         switch (type) {
@@ -724,13 +721,16 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             return op;
         }
     }
-    getPoints() {
+    isEdited() {
+        return this.points.length > 2;
+    }
+    getPoints(): CurvePoint[] {
         const points = [...this.points];
         let page: any;
         let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false; // 特殊点：s1出发图形的外围点，s2目的图形的外围点
         let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：图形自身的坐标系，单位为比例系数
         let fromShape: undefined | Shape, toShape: undefined | Shape; //sides 出发图形、目的图形
-        let type1, type2;
+        let type1: ContactType, type2: ContactType;
         if (this.from) {
             if (!page) page = this.getPage();
             if (page) {
@@ -778,44 +778,22 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                 }
             }
         }
-        // 寻找中间拐点
-        if (fromShape && toShape && type1 && type2) {
+        if (fromShape && toShape) {
             if (!self_matrix) self_matrix = gen_matrix1(this);
             if (!from_matrix) from_matrix = fromShape.matrix2Root();
             if (!to_matrix) to_matrix = toShape.matrix2Root();
-            const result = gen_path(fromShape, type1, toShape, type2, from_matrix, to_matrix, self_matrix);
-            console.log('A*', result);
-            if (result && result.length) return result;
+            const result = gen_path(fromShape, type1!, toShape, type2!, from_matrix, to_matrix, self_matrix);
+            if (result && result.length) return slice_invalid_point(result);
         }
-        if (s1 && !s2) {
+        if (!fromShape && !toShape) { }
+        if (fromShape && !toShape) {
             const p = points.pop();
-            if (p) {
+            if (p && s1) {
                 points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.point.x, s1.y)), p);
             }
         }
-        // 处理x轴上连续相等的点
-        let result_x = [points[0]];
-        for (let i = 1, len = points.length - 1; i < len; i++) {
-            let p1 = points[i - 1].point;
-            let p2 = points[i].point;
-            let p3 = points[i + 1].point;
-            if (p1 && p2 && p3) {
-                if (Math.abs(p3.y - p1.y) > 0.0001) result_x.push(points[i]);
-            }
-        }
-        // 处理y轴上连续相等的点  如果不处理两轴上相等的点，会造成线段折叠的路径片段，属于无效片段，处理过程即为切除无效片段
-        result_x.push(points[points.length - 1]);
-        let result_y = [result_x[0]];
-        for (let i = 1, len = result_x.length - 1; i < len; i++) {
-            let p1 = result_x[i - 1].point;
-            let p2 = result_x[i].point;
-            let p3 = result_x[i + 1].point;
-            if (p1 && p2 && p3) {
-                if (Math.abs(p3.x - p1.x) > 0.0001) result_y.push(result_x[i]);
-            }
-        }
-        result_y.push(result_x[result_x.length - 1]);
-        return result_y;
+        if (!fromShape && toShape) { }
+        return slice_invalid_point(points);
     }
     getTemp() {
         const points = [...this.points];
