@@ -71,16 +71,24 @@ import {
  */
 export class Variable extends Basic {
     typeId = 'variable'
+    id: string
     type: VariableType
+    name: string
     color?: Color
     text?: string
     fill?: Fill
     border?: Border
+    num?: number
+    shapeId?: string
     constructor(
-        type: VariableType
+        id: string,
+        type: VariableType,
+        name: string
     ) {
         super()
+        this.id = id
         this.type = type
+        this.name = name
     }
 }
 /**
@@ -437,6 +445,7 @@ export class Fill extends Basic {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
+    variableRef?: string
     constructor(
         id: string,
         isEnabled: boolean,
@@ -708,6 +717,7 @@ export class Border extends Basic {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
+    variableRef?: string
     constructor(
         id: string,
         isEnabled: boolean,

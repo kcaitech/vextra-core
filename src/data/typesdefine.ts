@@ -10,11 +10,15 @@ export enum WindingRule {
 }
 /* color */
 export type Variable = {
+    id: string
     type: VariableType
+    name: string
     color?: Color
     text?: string
     fill?: Fill
     border?: Border
+    num?: number
+    shapeId?: string
 }
 /* variable types */
 export enum VariableType {
@@ -22,6 +26,8 @@ export enum VariableType {
     Text = 'text',
     Fill = 'fill',
     Border = 'border',
+    ShapeId = 'shapeId',
+    Num = 'num',
 }
 /* user infomation */
 export type UserInfo = {
@@ -292,6 +298,7 @@ export type Fill = {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
+    variableRef?: string
 }
 /* fill types */
 export enum FillType {
@@ -435,6 +442,7 @@ export type Border = {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
+    variableRef?: string
 }
 /* border style */
 export type BorderStyle = {

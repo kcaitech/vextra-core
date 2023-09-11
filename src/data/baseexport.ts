@@ -17,11 +17,15 @@ export function exportWindingRule(source: types.WindingRule, ctx?: IExportContex
 /* color */
 export function exportVariable(source: types.Variable, ctx?: IExportContext): types.Variable {
     const ret = {
+        id: source.id,
         type: exportVariableType(source.type, ctx),
+        name: source.name,
         color: source.color && exportColor(source.color, ctx),
         text: source.text,
         fill: source.fill && exportFill(source.fill, ctx),
         border: source.border && exportBorder(source.border, ctx),
+        num: source.num,
+        shapeId: source.shapeId,
     }
     return ret
 }
@@ -372,6 +376,7 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
         contextSettings: source.contextSettings && exportContextSettings(source.contextSettings, ctx),
         gradient: source.gradient && exportGradient(source.gradient, ctx),
         imageRef: source.imageRef,
+        variableRef: source.variableRef,
     }
     // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
@@ -563,6 +568,7 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
         thickness: source.thickness,
         gradient: source.gradient && exportGradient(source.gradient, ctx),
         borderStyle: exportBorderStyle(source.borderStyle, ctx),
+        variableRef: source.variableRef,
     }
     return ret
 }

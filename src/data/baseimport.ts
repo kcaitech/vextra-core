@@ -18,12 +18,16 @@ export function importWindingRule(source: types.WindingRule, ctx?: IImportContex
 /* color */
 export function importVariable(source: types.Variable, ctx?: IImportContext): impl.Variable {
     const ret: impl.Variable = new impl.Variable (
-        importVariableType(source.type, ctx)
+        source.id,
+        importVariableType(source.type, ctx),
+        source.name
     )
     if (source.color !== undefined) ret.color = importColor(source.color, ctx)
     if (source.text !== undefined) ret.text = source.text
     if (source.fill !== undefined) ret.fill = importFill(source.fill, ctx)
     if (source.border !== undefined) ret.border = importBorder(source.border, ctx)
+    if (source.num !== undefined) ret.num = source.num
+    if (source.shapeId !== undefined) ret.shapeId = source.shapeId
     return ret
 }
 /* variable types */
@@ -372,6 +376,7 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
     if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
+    if (source.variableRef !== undefined) ret.variableRef = source.variableRef
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
@@ -563,6 +568,7 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
     )
     if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
+    if (source.variableRef !== undefined) ret.variableRef = source.variableRef
     return ret
 }
 /* border style */

@@ -2,8 +2,14 @@
     "description": "color",
     "type": "object",
     "properties": {
+        "id": {
+            "type": "string"
+        },
         "type": {
             "$ref": "./variable-type.json"
+        },
+        "name": {
+            "type": "string"
         },
         "color": {
             "$ref": "./color.json"
@@ -16,10 +22,18 @@
         },
         "border": {
             "$ref": "./border.json"
+        },
+        "num": {
+            "type": "number"
+        },
+        "shapeId": {
+            "type": "string"
         }
     },
     "required": [
-        "type"
+        "id",
+        "type",
+        "name"
     ],
     "additionalProperties": false
 }

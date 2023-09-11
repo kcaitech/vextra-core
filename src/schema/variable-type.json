@@ -4,6 +4,8 @@
         "color",
         "text",
         "fill",
-        "border"
+        "border",
+        "shapeId",
+        "num"
     ]
 }

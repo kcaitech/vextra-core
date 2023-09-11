@@ -1,6 +1,9 @@
-import { uuid } from "../basic/uuid";
 import * as classes from "./baseclasses"
-import { Blur, BorderOptions, ColorControls, ContextSettings, Shadow, WindingRule, FillType, Gradient, BorderPosition, BorderStyle, MarkerType } from "./baseclasses";
+import {
+    Blur, BorderOptions, ColorControls, ContextSettings,
+    Shadow, WindingRule, FillType, Gradient, BorderPosition,
+    BorderStyle, MarkerType
+} from "./baseclasses";
 import { Basic, BasicArray, ResourceMgr } from "./basic";
 
 export {
@@ -65,6 +68,7 @@ export class Border extends Basic implements classes.Border {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
+    variableRef?: string
     constructor(
         id: string,
         isEnabled: boolean,
@@ -94,6 +98,7 @@ export class Fill extends Basic implements classes.Fill {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
+    variableRef?: string
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };
@@ -152,17 +157,17 @@ export class Style extends Basic implements classes.Style {
     windingRule?: WindingRule
     blur?: Blur
     borderOptions?: BorderOptions
-    borders: BasicArray<Border >
+    borders: BasicArray<Border>
     colorControls?: ColorControls
     contextSettings?: ContextSettings
-    fills: BasicArray<Fill >
-    innerShadows?: BasicArray<Shadow >
-    shadows?: BasicArray<Shadow >
+    fills: BasicArray<Fill>
+    innerShadows?: BasicArray<Shadow>
+    shadows?: BasicArray<Shadow>
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     constructor(
-        borders: BasicArray<Border >,
-        fills: BasicArray<Fill >
+        borders: BasicArray<Border>,
+        fills: BasicArray<Fill>
     ) {
         super()
         this.borders = borders
