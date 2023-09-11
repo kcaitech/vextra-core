@@ -8,6 +8,21 @@ export enum WindingRule {
     NonZero = 'non-zero',
     EvenOdd = 'even-odd',
 }
+/* color */
+export type Variable = {
+    type: VariableType
+    color?: Color
+    text?: string
+    fill?: Fill
+    border?: Border
+}
+/* variable types */
+export enum VariableType {
+    Color = 'color',
+    Text = 'text',
+    Fill = 'fill',
+    Border = 'border',
+}
 /* user infomation */
 export type UserInfo = {
     userId: string
@@ -24,6 +39,7 @@ export enum UnderlineType {
 export type Text = {
     paras: Para[]
     attr?: TextAttr
+    variableRef?: string
 }
 /* text vertical alignment */
 export enum TextVerAlign {
@@ -62,6 +78,12 @@ export enum TableCellType {
     None = 'none',
     Text = 'text',
     Image = 'image',
+}
+/* symbol props */
+export type SymbolProps = {
+    overrides?: OverrideArray[]
+    curOverrid?: string
+    variables?: Variable[]
 }
 /* style */
 export type Style = {
@@ -213,6 +235,12 @@ export enum OverrideType {
     Fills = 'fills',
     Borders = 'borders',
     Visible = 'visible',
+}
+/* override set */
+export type OverrideArray = {
+    id: string
+    name: string
+    overrides: OverrideShape[]
 }
 /* marker type */
 export enum MarkerType {
@@ -369,6 +397,7 @@ export type Color = {
     red: number
     green: number
     blue: number
+    variableRef?: string
 }
 /* color controls */
 export type ColorControls = {
@@ -560,6 +589,7 @@ export type GroupShape = Shape & {
     fixedRadius?: number
     isUsedToBeSymbol?: boolean
     isSymbolShape?: boolean
+    symbolProps?: SymbolProps
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {

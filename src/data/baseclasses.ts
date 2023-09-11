@@ -5,6 +5,7 @@
 
 export {
     WindingRule,
+    VariableType,
     UnderlineType,
     TextVerAlign,
     TextTransformType,
@@ -34,6 +35,7 @@ export {
 } from "./typesdefine"
 import {
     WindingRule,
+    VariableType,
     UnderlineType,
     TextVerAlign,
     TextTransformType,
@@ -65,6 +67,23 @@ import {
     Basic, BasicArray
     } from "./basic"
 /**
+ * color 
+ */
+export class Variable extends Basic {
+    typeId = 'variable'
+    type: VariableType
+    color?: Color
+    text?: string
+    fill?: Fill
+    border?: Border
+    constructor(
+        type: VariableType
+    ) {
+        super()
+        this.type = type
+    }
+}
+/**
  * user infomation 
  */
 export class UserInfo extends Basic {
@@ -90,11 +109,25 @@ export class Text extends Basic {
     typeId = 'text'
     paras: BasicArray<Para >
     attr?: TextAttr
+    variableRef?: string
     constructor(
         paras: BasicArray<Para >
     ) {
         super()
         this.paras = paras
+    }
+}
+/**
+ * symbol props 
+ */
+export class SymbolProps extends Basic {
+    typeId = 'symbol-props'
+    overrides?: BasicArray<OverrideArray >
+    curOverrid?: string
+    variables?: BasicArray<Variable >
+    constructor(
+    ) {
+        super()
     }
 }
 /**
@@ -330,6 +363,25 @@ export class Padding extends Basic {
     constructor(
     ) {
         super()
+    }
+}
+/**
+ * override set 
+ */
+export class OverrideArray extends Basic {
+    typeId = 'override-array'
+    id: string
+    name: string
+    overrides: BasicArray<OverrideShape >
+    constructor(
+        id: string,
+        name: string,
+        overrides: BasicArray<OverrideShape >
+    ) {
+        super()
+        this.id = id
+        this.name = name
+        this.overrides = overrides
     }
 }
 /**
@@ -588,6 +640,7 @@ export class Color extends Basic {
     red: number
     green: number
     blue: number
+    variableRef?: string
     constructor(
         alpha: number,
         red: number,
@@ -1111,6 +1164,7 @@ export class GroupShape extends Shape {
     fixedRadius?: number
     isUsedToBeSymbol?: boolean
     isSymbolShape?: boolean
+    symbolProps?: SymbolProps
     constructor(
         id: string,
         name: string,

@@ -3,7 +3,10 @@ import { Border, Fill, Style } from "./style";
 import { Para, ParaAttr, Span, Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
-export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType } from "./baseclasses"
+export {
+    CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
+    ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
+} from "./baseclasses"
 import { ShapeType, ShapeFrame, OverrideType } from "./baseclasses"
 import { Path } from "./path";
 import { TextLayout } from "./textlayout";
@@ -201,7 +204,20 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
     }
 }
 
-export class ForbiddenError extends Error {}
+export class OverrideArray extends classes.OverrideArray {
+    constructor(
+        id: string,
+        name: string,
+        overrides: BasicArray<OverrideShape>
+    ) {
+        super(id, name, overrides)
+    }
+}
+
+export class SymbolProps extends classes.SymbolProps {
+}
+
+export class ForbiddenError extends Error { }
 
 class FreezHdl {
     __target: Object;

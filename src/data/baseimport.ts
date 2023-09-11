@@ -15,6 +15,21 @@ export interface IImportContext {
 export function importWindingRule(source: types.WindingRule, ctx?: IImportContext): impl.WindingRule {
     return source
 }
+/* color */
+export function importVariable(source: types.Variable, ctx?: IImportContext): impl.Variable {
+    const ret: impl.Variable = new impl.Variable (
+        importVariableType(source.type, ctx)
+    )
+    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
+    if (source.text !== undefined) ret.text = source.text
+    if (source.fill !== undefined) ret.fill = importFill(source.fill, ctx)
+    if (source.border !== undefined) ret.border = importBorder(source.border, ctx)
+    return ret
+}
+/* variable types */
+export function importVariableType(source: types.VariableType, ctx?: IImportContext): impl.VariableType {
+    return source
+}
 /* user infomation */
 export function importUserInfo(source: types.UserInfo, ctx?: IImportContext): impl.UserInfo {
     const ret: impl.UserInfo = new impl.UserInfo (
@@ -41,6 +56,7 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
         })()
     )
     if (source.attr !== undefined) ret.attr = importTextAttr(source.attr, ctx)
+    if (source.variableRef !== undefined) ret.variableRef = source.variableRef
     return ret
 }
 /* text vertical alignment */
@@ -66,6 +82,29 @@ export function importTextBehaviour(source: types.TextBehaviour, ctx?: IImportCo
 /* table cell types */
 export function importTableCellType(source: types.TableCellType, ctx?: IImportContext): impl.TableCellType {
     return source
+}
+/* symbol props */
+export function importSymbolProps(source: types.SymbolProps, ctx?: IImportContext): impl.SymbolProps {
+    const ret: impl.SymbolProps = new impl.SymbolProps (
+    )
+    if (source.overrides !== undefined) ret.overrides = (() => {
+        const ret = new BasicArray<impl.OverrideArray>()
+        for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
+            const r = importOverrideArray(source.overrides[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
+    if (source.curOverrid !== undefined) ret.curOverrid = source.curOverrid
+    if (source.variables !== undefined) ret.variables = (() => {
+        const ret = new BasicArray<impl.Variable>()
+        for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
+            const r = importVariable(source.variables[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
+    return ret
 }
 /* style */
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
@@ -263,6 +302,22 @@ export function importPadding(source: types.Padding, ctx?: IImportContext): impl
 /* override types */
 export function importOverrideType(source: types.OverrideType, ctx?: IImportContext): impl.OverrideType {
     return source
+}
+/* override set */
+export function importOverrideArray(source: types.OverrideArray, ctx?: IImportContext): impl.OverrideArray {
+    const ret: impl.OverrideArray = new impl.OverrideArray (
+        source.id,
+        source.name,
+        (() => {
+            const ret = new BasicArray<impl.OverrideShape>()
+            for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
+                const r = importOverrideShape(source.overrides[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
+    return ret
 }
 /* marker type */
 export function importMarkerType(source: types.MarkerType, ctx?: IImportContext): impl.MarkerType {
@@ -464,6 +519,7 @@ export function importColor(source: types.Color, ctx?: IImportContext): impl.Col
         source.green,
         source.blue
     )
+    if (source.variableRef !== undefined) ret.variableRef = source.variableRef
     return ret
 }
 /* color controls */
@@ -1256,6 +1312,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
     if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
+    if (source.symbolProps !== undefined) ret.symbolProps = importSymbolProps(source.symbolProps, ctx)
     // inject code
     ret.type = types.ShapeType.Group;
     if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
@@ -1341,6 +1398,7 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
     if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
+    if (source.symbolProps !== undefined) ret.symbolProps = importSymbolProps(source.symbolProps, ctx)
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
