@@ -214,6 +214,8 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     setVisible(isVisible: boolean | undefined) {
         this.isVisible = isVisible;
     }
+
+    onRemoved() {}
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {

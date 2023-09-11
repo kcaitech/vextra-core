@@ -63,6 +63,7 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Artboard) {
             this.artboards.delete(shape.id);
         }
+        shape.onRemoved();
         if (recursive && (shape instanceof GroupShape)) {
             const childs = shape.childs;
             childs.forEach((c) => this.onRemoveShape(c))
