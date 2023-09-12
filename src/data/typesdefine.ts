@@ -581,6 +581,7 @@ export type ContactShape = Shape & {
     points: CurvePoint[]
     from?: ContactForm
     to?: ContactForm
+    isEdited: boolean
     isClosed: boolean
     fixedRadius?: number
 }

@@ -11,8 +11,11 @@ import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { ContactForm, ContactType, CurveMode } from "./typesdefine";
 import { v4 } from "uuid";
-import { gen_baisc_params, gen_matrix1, gen_path, slice_invalid_point } from "./utils";
-
+import { d, gen_baisc_params, gen_matrix1, gen_path, slice_invalid_point } from "./utils";
+interface PageXY {
+    x: number
+    y: number
+}
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
     typeId = 'shape'
@@ -649,6 +652,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 }
 export class ContactShape extends PathShape implements classes.ContactShape {
     typeId = 'contact-shape'
+    isEdited: boolean;
     constructor(
         id: string,
         name: string,
@@ -656,7 +660,8 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         frame: ShapeFrame,
         style: Style,
         points: BasicArray<CurvePoint>,
-        isClosed: boolean
+        isClosed: boolean,
+        isEdited: boolean
     ) {
         super(
             id,
@@ -667,6 +672,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             points,
             isClosed
         )
+        this.isEdited = isEdited;
     }
     private get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
         const f = shape.frame;
@@ -721,9 +727,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             return op;
         }
     }
-    isEdited() {
-        return this.points.length > 2;
-    }
     getPoints(): CurvePoint[] {
         const points = [...this.points];
         let page: any;
@@ -731,6 +734,8 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：图形自身的坐标系，单位为比例系数
         let fromShape: undefined | Shape, toShape: undefined | Shape; //sides 出发图形、目的图形
         let type1: ContactType, type2: ContactType;
+        let start_point: PageXY, end_point: PageXY;
+
         if (this.from) {
             if (!page) page = this.getPage();
             if (page) {
@@ -742,6 +747,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
                     if (p) {
                         p = self_matrix.computeCoord3(p);
+                        start_point = p;
                         const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
                         points[0] = fp;
                     }
@@ -765,6 +771,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
                     if (p) {
                         p = self_matrix.computeCoord3(p);
+                        end_point = p;
                         const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
                         points[points.length - 1] = lp;
                     }
@@ -778,6 +785,50 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                 }
             }
         }
+        if (this.isEdited) {
+            let result: CurvePoint[] = [...points];
+            // if (fromShape) {
+            //     const os = result[0].point;
+            //     const dx = os.x - start_point!.x;
+            //     const dy = os.y - start_point!.y;
+            //     const s = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(start_point!.x, start_point!.y));
+            //     if (Math.abs(dx) < 0.00001 || Math.abs(dy) < 0.00001) {
+            //         result.unshift(s)
+            //     } else {
+            //         const o2 = result[1].point;
+            //         const _d = d(o2, os);
+            //         if (_d === 'ver') {
+            //             const s2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(os.x, start_point!.y));
+            //             result = [s, s2, ...result];
+            //         } else if (_d === 'hor') {
+            //             const s2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(start_point!.x, os.y));
+            //             result = [s, s2, ...result];
+            //         }
+            //     }
+            // }
+            // if (toShape) {
+            //     const len = result.length;
+            //     const oe = result[len - 1].point;
+            //     const dx = oe.x - end_point!.x;
+            //     const dy = oe.y - end_point!.y;
+            //     const e = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(end_point!.x, end_point!.y));
+            //     if (Math.abs(dx) < 0.00001 || Math.abs(dy) < 0.00001) {
+            //         result.unshift(e);
+            //     } else {
+            //         const o2 = result[len - 2].point;
+            //         const _d = d(o2, oe);
+            //         if (_d === 'ver') {
+            //             const e2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(oe.x, end_point!.y));
+            //             result = [e, e2, ...result];
+            //         } else if (_d === 'hor') {
+            //             const e2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(end_point!.x, oe.y));
+            //             result = [e, e2, ...result];
+            //         }
+            //     }
+            // }
+            return slice_invalid_point(result);
+        }
+        // 四种连接
         if (fromShape && toShape) {
             if (!self_matrix) self_matrix = gen_matrix1(this);
             if (!from_matrix) from_matrix = fromShape.matrix2Root();
@@ -869,16 +920,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     }
     private __pathCache: Path | undefined;
     getPath(): Path {
-        return this.getPath2();
-        // if (this.__pathCache) {
-        //     console.log(this.__pathCache.toString());
-        //     return this.__pathCache;
-        // } else {
-        //     this.getPath2();
-        //     return this.__pathCache!;
-        // }
-    }
-    getPath2(): Path {
         const offsetX = 0;
         const offsetY = 0;
         const width = this.frame.width;
@@ -887,5 +928,8 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, this.fixedRadius);
         this.__pathCache = new Path(path);
         return this.__pathCache;
+    }
+    getPath2(): Path {
+        return this.getPath()
     }
 }

@@ -17,6 +17,10 @@ interface PageXY {
     x: number
     y: number
 }
+interface XY {
+    x: number
+    y: number
+}
 /**
  * @description 根据连接类型获取页面坐标系上的连接点
  */
@@ -30,50 +34,16 @@ function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
         default: return false
     }
 }
-function get_nearest_border_point(shape: Shape, contactType: ContactType, m2r: Matrix) { // 寻找距离外围最近的一个点
-    const f = shape.frame;
-    const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
-    const t = m2r.computeCoord2(0, 0);
-    const box = { left: t.x, right: t.x, top: t.y, bottom: t.y };
-    const offset = AStar.OFFSET;
-    for (let i = 1; i < 4; i++) {
-        const p = points[i], t = m2r.computeCoord3(p);
-        if (t.x < box.left) {
-            box.left = t.x;
-        } else if (t.x > box.right) {
-            box.right = t.x;
-        }
-        if (t.y < box.top) {
-            box.top = t.y
-        } else if (t.y > box.bottom) {
-            box.bottom = t.y
-        }
-    }
-    box.left -= offset, box.right += offset, box.top -= offset, box.bottom += offset;
-    let op = get_pagexy(shape, contactType, m2r);
-    if (op) {
-        const d1 = Math.abs(op.y - box.top);
-        const d2 = Math.abs(op.x - box.right);
-        const d3 = Math.abs(op.y - box.bottom);
-        const d4 = Math.abs(op.x - box.left);
-        let min_dis = d1;
-        const save = { x: op.x, y: op.y };
-        op = { x: save.x, y: box.top };
-        if (d2 < min_dis) {
-            min_dis = d2;
-            op = { x: box.right, y: save.y };
-        }
-        if (d3 < min_dis) {
-            min_dis = d3;
-            op = { x: save.x, y: box.bottom };
-        }
-        if (d4 < min_dis) {
-            op = { x: box.left, y: save.y };
-        }
-        return op;
-    }
+export function get_box_pagexy(shape: Shape) {
+    const p = shape.parent;
+    if (!p) return false;
+    const p2r = p.matrix2Root();
+    const box = shape.boundingBox();
+    const xy1 = p2r.computeCoord2(box.x, box.y);
+    const xy2 = p2r.computeCoord(box.x + box.width, box.y + box.height);
+    return { xy1, xy2 }
 }
-function get_nearest_border_point2(shape: Shape, contactType: ContactType, m2r: Matrix, xy1: PageXY, xy2: PageXY) { // 寻找距离外围最近的一个点
+export function get_nearest_border_point2(shape: Shape, contactType: ContactType, m2r: Matrix, xy1: PageXY, xy2: PageXY) { // 寻找距离外围最近的一个点
     const box = { left: xy1.x, right: xy2.x, top: xy1.y, bottom: xy2.y };
     const offset = AStar.OFFSET;
     box.left -= offset, box.right += offset, box.top -= offset, box.bottom += offset;
@@ -116,24 +86,6 @@ function XYsBoundingPoints(points: PageXY[]) {
         { x: right, y: top },
         { x: right, y: bottom },
         { x: left, y: bottom }
-    ];
-}
-function XYsBoundingPoints2(points: PageXY[]) {
-    const xs: number[] = [];
-    const ys: number[] = [];
-    for (let i = 0; i < points.length; i++) {
-        const p = points[i];
-        xs.push(p.x), ys.push(p.y);
-    }
-    const top = Math.min(...ys);
-    const bottom = Math.max(...ys);
-    const left = Math.min(...xs);
-    const right = Math.max(...xs);
-    const width = right - left;
-    const height = bottom - top;
-    return [
-        { x: left + width / 2, y: top },
-        { x: left + width / 2, y: bottom },
     ];
 }
 /**
@@ -479,7 +431,8 @@ class AStar {
     }
     // 计算一个点的代价
     cost_assessment(point: AP) {
-        point.cost = this.g_cost(point) + this.h_cost(point);
+        // point.cost = this.g_cost(point) + this.h_cost(point);
+        point.cost = this.g_cost(point);
     }
     g_cost(point: AP) {
         let cost = 0;
@@ -492,8 +445,8 @@ class AStar {
     }
     h_cost(point: AP) {
         return (
-            Math.abs(this.endPoint!.x - point.point.x) +
-            Math.abs(this.endPoint!.y - point.point.y)
+            Math.abs(this.endPoint.x - point.point.x) +
+            Math.abs(this.endPoint.y - point.point.y)
         )
     }
 }
@@ -541,4 +494,9 @@ export function slice_invalid_point(points: CurvePoint[]) {
     }
     result_y.push(result_x[result_x.length - 1]);
     return result_y;
+}
+export function d(a: PageXY, b: XY): 'ver' | 'hor' | false {
+    if (Math.abs(a.x - b.x) < 0.00001) return 'hor';
+    if (Math.abs(a.y - b.y) < 0.00001) return 'ver';
+    return false;
 }

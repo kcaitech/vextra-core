@@ -14,6 +14,9 @@
     "to": {
       "$ref": "./contact-form.json"
     },
+    "isEdited": {
+      "type": "boolean"
+    },
     "isClosed": {
       "type": "boolean"
     },
@@ -23,7 +26,8 @@
   },
   "required": [
     "points",
-    "isClosed"
+    "isClosed",
+    "isEdited"
   ],
   "allOf": [
     {

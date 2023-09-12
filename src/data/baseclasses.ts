@@ -1204,6 +1204,7 @@ export class ContactShape extends Shape {
     points: BasicArray<CurvePoint >
     from?: ContactForm
     to?: ContactForm
+    isEdited: boolean
     isClosed: boolean
     fixedRadius?: number
     constructor(
@@ -1213,7 +1214,8 @@ export class ContactShape extends Shape {
         frame: ShapeFrame,
         style: Style,
         points: BasicArray<CurvePoint >,
-        isClosed: boolean
+        isClosed: boolean,
+        isEdited: boolean
     ) {
         super(
             id,
@@ -1224,6 +1226,7 @@ export class ContactShape extends Shape {
         )
         this.points = points
         this.isClosed = isClosed
+        this.isEdited = isEdited
     }
 }
 /**

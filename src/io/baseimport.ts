@@ -1364,7 +1364,8 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
             }
             return ret
         })(),
-        source.isClosed
+        source.isClosed,
+        source.isEdited
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport

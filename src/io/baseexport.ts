@@ -1426,6 +1426,7 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
         })(),
         from: source.from && exportContactForm(source.from, ctx),
         to: source.to && exportContactForm(source.to, ctx),
+        isEdited: source.isEdited,
         isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
     }
