@@ -793,7 +793,7 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
 }
 // 路径编辑
 /**
- * @description 路径编辑，当路径中某一点(编辑点)的编辑变化引起frame更新后，路径上的所有点都需要在新的frame重新定位，若没有引起frame更新，则只更新编辑点
+ * @description 以点为操作目标编辑路径，当路径中某一点(编辑点)的编辑变化引起frame更新后，路径上的所有点都需要在新的frame重新定位，若没有引起frame更新，则只更新编辑点
  * @param index 点的数组索引
  * @param end 点的目标🎯位置（root）
  */
@@ -827,7 +827,7 @@ export function pathEdit(api: Api, page: Page, s: Shape, index: number, end: Pag
         }
     }
 }
-export function pathEditSide(api: Api, page: Page, s: Shape, index1: number, index2: number, dx: number, dy: number) {
+export function pathEditSide(api: Api, page: Page, s: Shape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
     const m = new Matrix(s.matrix2Root()), w = s.frame.width, h = s.frame.height;
     m.preScale(w, h);
     const m_in = new Matrix(m.inverse);  // 图形单位坐标系，0-1
@@ -835,12 +835,8 @@ export function pathEditSide(api: Api, page: Page, s: Shape, index1: number, ind
     let p2 = s.points[index2];
     if (!p1 || !p2) return false;
     p1 = m.computeCoord3(p1.point), p2 = m.computeCoord3(p2.point);
-    if (dx) {
-        p1.x = p1.x + dx, p2.x = p2.x + dx;
-    }
-    if (dy) {
-        p1.y = p1.y + dy, p2.y = p2.y + dy;
-    }
+    if (dx) p1.x = p1.x + dx, p2.x = p2.x + dx;
+    if (dy) p1.y = p1.y + dy, p2.y = p2.y + dy;
     p1 = m_in.computeCoord3(p1);
     p2 = m_in.computeCoord3(p2);
     api.shapeModifyCurvPoint(page, s as PathShape, index1, p1);
@@ -899,41 +895,6 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape) {
         }
     }
 }
-function modify_contacts(api: Api, page: Page, shape: Shape) {
-    const contacts = shape.style.contacts;
-    if (!contacts || !contacts.length) return;
-    const from: ContactRole[] = [], to: ContactRole[] = [];
-    for (let i = 0, len = contacts.length; i < len; i++) {
-        const item = contacts[i];
-        if (item.roleType === ContactRoleType.From) from.push(item);
-        else if (item.roleType === ContactRoleType.To) to.push(item);
-    }
-    const box: any = {
-        top: undefined, right: undefined, bottom: undefined, left: undefined
-    }
-    const m2r = shape.matrix2Root();
-    for (let i = 0, len = from.length; i < len; i++) {
-        const item = from[i];
-        const consha = page.getShape(item.shapeId);
-        if (!consha) continue;
-        const cf: ContactForm = consha.from;
-        if (box[cf.contactType] === undefined) {
-            box[cf.contactType] = get_pagexy(shape, cf.contactType, m2r)
-        }
-        pathEdit(api, page, consha, 0, box[cf.contactType]);
-    }
-    for (let i = 0, len = to.length; i < len; i++) {
-        const item = to[i];
-        const consha = page.getShape(item.shapeId);
-        if (!consha) continue;
-        const cf: ContactForm = consha.to;
-        if (box[cf.contactType] === undefined) {
-            box[cf.contactType] = get_pagexy(shape, cf.contactType, m2r)
-        }
-        const cl = consha.points?.length - 1;
-        pathEdit(api, page, consha, cl || 1, box[cf.contactType]);
-    }
-}
 function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
     const f = shape.frame;
     switch (type) {
@@ -943,7 +904,4 @@ function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
         case ContactType.Left: return m2r.computeCoord2(0, f.height / 2);
         default: return false
     }
-}
-export function pathEdit4contactApex() {
-
 }
