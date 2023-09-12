@@ -9,6 +9,7 @@ import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { ContactForm } from "data/typesdefine";
 import { Api } from "./command/recordapi";
+import { update_frame_by_points } from "./path";
 export class ShapeEditor {
     protected __shape: Shape;
     protected __repo: CoopRepository;
@@ -369,6 +370,11 @@ export class ShapeEditor {
     public modify_path(page_xy: { x: number, y: number }) {
         const api = this.__repo.start("modify_path", {});
         pathEdit(api, this.__page, this.__shape, 0, page_xy);
+        this.__repo.commit();
+    }
+    public modify_frame_by_points() {
+        const api = this.__repo.start("modify_frame_by_points", {});
+        update_frame_by_points(api, this.__page, this.__shape);
         this.__repo.commit();
     }
 }

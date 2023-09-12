@@ -610,6 +610,28 @@ export class Api {
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), POINTS_ID, point.id, idx, exportCurvePoint(point)))
         })
     }
+    deletePoints(page: Page, shape: PathShape, index: number, strength: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const points = basicapi.deletePoints(shape, index, strength);
+            if (points && points.length) {
+                for (let i = 0; i < points.length; i++) {
+                    const point = points[i];
+                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), POINTS_ID, point.id, index, exportCurvePoint(point)));
+                }
+            }
+        })
+    }
+    addPoints(page: Page, shape: PathShape, points: CurvePoint[]) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            for (let i = 0; i < points.length; i++) {
+                const point = points[i];
+                basicapi.addPointAt(shape, point, i);
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), POINTS_ID, point.id, i, exportCurvePoint(point)));
+            }
+        })
+    }
     // contacts
     addContactAt(page: Page, shape: Shape, contactRole: ContactRole, idx: number) {
         checkShapeAtPage(page, shape);

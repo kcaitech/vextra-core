@@ -588,6 +588,17 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
+        const modify_sides = (index: number) => {
+            if (shape.type !== ShapeType.Contact) return;
+            const _points = shape.getPoints();
+            const len = _points.length;
+            if (index === 0 || index === len - 1) return;
+            status = Status.Pending;
+            
+
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
