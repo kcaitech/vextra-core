@@ -73,6 +73,33 @@ function get_nearest_border_point(shape: Shape, contactType: ContactType, m2r: M
         return op;
     }
 }
+function get_nearest_border_point2(shape: Shape, contactType: ContactType, m2r: Matrix, xy1: PageXY, xy2: PageXY) { // 寻找距离外围最近的一个点
+    const box = { left: xy1.x, right: xy2.x, top: xy1.y, bottom: xy2.y };
+    const offset = AStar.OFFSET;
+    box.left -= offset, box.right += offset, box.top -= offset, box.bottom += offset;
+    let op = get_pagexy(shape, contactType, m2r);
+    if (op) {
+        const d1 = Math.abs(op.y - box.top);
+        const d2 = Math.abs(op.x - box.right);
+        const d3 = Math.abs(op.y - box.bottom);
+        const d4 = Math.abs(op.x - box.left);
+        let min_dis = d1;
+        const save = { x: op.x, y: op.y };
+        op = { x: save.x, y: box.top };
+        if (d2 < min_dis) {
+            min_dis = d2;
+            op = { x: box.right, y: save.y };
+        }
+        if (d3 < min_dis) {
+            min_dis = d3;
+            op = { x: save.x, y: box.bottom };
+        }
+        if (d4 < min_dis) {
+            op = { x: box.left, y: save.y };
+        }
+        return op;
+    }
+}
 function XYsBoundingPoints(points: PageXY[]) {
     const xs: number[] = [];
     const ys: number[] = [];
@@ -143,9 +170,12 @@ function remove_duplicate_point(points: PageXY[]) {
  */
 export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Matrix, m2: Matrix) {
     const OFFSET = 20;
-    const f1 = shape1.frame, f2 = shape2.frame;
-    const s1xy1 = m1.computeCoord2(0, 0), s2xy1 = m2.computeCoord2(0, 0);
-    const s1xy2 = m1.computeCoord(f1.width, f1.height), s2xy2 = m2.computeCoord2(f2.width, f2.height);
+    const p1 = shape1.parent, p2 = shape2.parent;
+    if (!p1 || !p2) return false;
+    const p2r1 = p1.matrix2Root(), p2r2 = p2.matrix2Parent();
+    const box1 = shape1.boundingBox(), box2 = shape2.boundingBox();
+    const s1xy1 = p2r1.computeCoord2(box1.x, box1.y), s2xy1 = p2r2.computeCoord2(box2.x, box2.y);
+    const s1xy2 = p2r1.computeCoord(box1.x + box1.width, box1.y + box1.height), s2xy2 = p2r2.computeCoord2(box2.x + box2.width, box2.y + box2.height);
     const s1w = s1xy2.x - s1xy1.x, s1h = s1xy2.y - s1xy1.y;
     const s2w = s2xy2.x - s2xy1.x, s2h = s2xy2.y - s2xy1.y;
     const ff1 = { x: s1xy1.x, y: s1xy1.y, width: s1w, height: s1h };
@@ -153,13 +183,11 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
     const start_point = get_pagexy(shape1, type1, m1), end_point = get_pagexy(shape2, type2, m2);
     if (!start_point || !end_point) return false;
     let preparation_point: PageXY[] = [];
-    const b_start_point = get_nearest_border_point(shape1, type1, m1);
-    const b_end_point = get_nearest_border_point(shape2, type2, m2);
+    const b_start_point = get_nearest_border_point2(shape1, type1, m1, s1xy1, s1xy2);
+    const b_end_point = get_nearest_border_point2(shape2, type2, m2, s2xy1, s2xy2);
     if (!b_start_point || !b_end_point) return false;
 
     preparation_point.push(b_start_point, b_end_point); // 获取伪起点和伪终点,并将它们添加到数组里
-
-    // preparation_point.push(...XYsBoundingPoints2([b_start_point, b_end_point]));
 
     const t1 = { x: s1xy1.x - OFFSET, y: s1xy1.y - OFFSET }, t2 = { x: s1xy2.x + OFFSET, y: s1xy2.y + OFFSET };
     preparation_point.push(...XYsBoundingPoints([b_start_point, b_end_point, t1, t2])); // 伪起点和伪终点形成的矩形 和 起点元素包围框 组成一个大矩形 的四个顶点
