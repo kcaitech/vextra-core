@@ -786,46 +786,37 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             }
         }
         if (this.isEdited) {
-            let result: CurvePoint[] = [...points];
-            // if (fromShape) {
-            //     const os = result[0].point;
-            //     const dx = os.x - start_point!.x;
-            //     const dy = os.y - start_point!.y;
-            //     const s = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(start_point!.x, start_point!.y));
-            //     if (Math.abs(dx) < 0.00001 || Math.abs(dy) < 0.00001) {
-            //         result.unshift(s)
-            //     } else {
-            //         const o2 = result[1].point;
-            //         const _d = d(o2, os);
-            //         if (_d === 'ver') {
-            //             const s2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(os.x, start_point!.y));
-            //             result = [s, s2, ...result];
-            //         } else if (_d === 'hor') {
-            //             const s2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(start_point!.x, os.y));
-            //             result = [s, s2, ...result];
-            //         }
-            //     }
-            // }
-            // if (toShape) {
-            //     const len = result.length;
-            //     const oe = result[len - 1].point;
-            //     const dx = oe.x - end_point!.x;
-            //     const dy = oe.y - end_point!.y;
-            //     const e = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(end_point!.x, end_point!.y));
-            //     if (Math.abs(dx) < 0.00001 || Math.abs(dy) < 0.00001) {
-            //         result.unshift(e);
-            //     } else {
-            //         const o2 = result[len - 2].point;
-            //         const _d = d(o2, oe);
-            //         if (_d === 'ver') {
-            //             const e2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(oe.x, end_point!.y));
-            //             result = [e, e2, ...result];
-            //         } else if (_d === 'hor') {
-            //             const e2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(end_point!.x, oe.y));
-            //             result = [e, e2, ...result];
-            //         }
-            //     }
-            // }
+            const result: CurvePoint[] = [...points];
+            if (fromShape) {
+                const os = result[0].point;
+                const fixed1 = result[2]?.point;
+                if (os && fixed1) {
+                    const s1 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(start_point!.x, start_point!.y));
+                    result.splice(0, 1, s1);
+                    const s2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(start_point!.x, fixed1.y));
+                    result.splice(1, 1, s2);
+                }
+            }
+            if (toShape) {
+                const len = result.length;
+                const flex_point1 = end_point!;
+                const flex_point2 = result[len - 2]?.point;
+                console.log('flex_point1', flex_point1);
+                console.log('flex_point2', flex_point2);
+
+                if (flex_point1 && flex_point2) {
+                    const _d = d(flex_point1, flex_point2);
+                    console.log('===_d===', _d);
+
+                    if (_d === 'hor') {
+                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point2.x, flex_point1.y));
+                        result.splice(len - 2, 1, p);
+                    } else if (_d === 'ver') {
+                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point1.x, flex_point2.y));
+                        result.splice(len - 2, 1, p);
+                    }
+                }
+            }
             return slice_invalid_point(result);
         }
         // 四种连接

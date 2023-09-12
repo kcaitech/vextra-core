@@ -471,17 +471,16 @@ export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2
     return points;
 }
 export function slice_invalid_point(points: CurvePoint[]) {
-    // 处理x轴上连续相等的点
+    //  如果不处理两轴上相等的点，会造成线段折叠的路径片段，属于无效片段，处理过程即为切除无效片段
     let result_x = [points[0]];
     for (let i = 1, len = points.length - 1; i < len; i++) {
         let p1 = points[i - 1].point;
         let p2 = points[i].point;
         let p3 = points[i + 1].point;
         if (p1 && p2 && p3) {
-            if (Math.abs(p3.y - p1.y) > 0.0001) result_x.push(points[i]);
+            if (Math.abs(p3.y - p1.y) > 0.00001) result_x.push(points[i]);
         }
     }
-    // 处理y轴上连续相等的点  如果不处理两轴上相等的点，会造成线段折叠的路径片段，属于无效片段，处理过程即为切除无效片段
     result_x.push(points[points.length - 1]);
     let result_y = [result_x[0]];
     for (let i = 1, len = result_x.length - 1; i < len; i++) {
@@ -489,7 +488,7 @@ export function slice_invalid_point(points: CurvePoint[]) {
         let p2 = result_x[i].point;
         let p3 = result_x[i + 1].point;
         if (p1 && p2 && p3) {
-            if (Math.abs(p3.x - p1.x) > 0.0001) result_y.push(result_x[i]);
+            if (Math.abs(p3.x - p1.x) > 0.00001) result_y.push(result_x[i]);
         }
     }
     result_y.push(result_x[result_x.length - 1]);
