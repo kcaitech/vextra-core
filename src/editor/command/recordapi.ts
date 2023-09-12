@@ -283,6 +283,14 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.contactTo, t, save))
         })
     }
+    contactModifyEditState(page: Page, shape: Shape, state: boolean) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const save = shape.isEdited;
+            shape.isEdited = state;
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.isEdited, state, save))
+        })
+    }
     shapeModifyRotate(page: Page, shape: Shape, rotate: number) {
         checkShapeAtPage(page, shape);
         if (rotate !== shape.rotation) {

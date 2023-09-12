@@ -1,4 +1,4 @@
-import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL, pathEdit, update_frame_by_points } from "./frame";
+import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL, pathEdit, update_frame_by_points, pathEditSide } from "./frame";
 import { Shape, GroupShape, PathShape, CurvePoint, Point2D, ContactShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ContactRoleType, CurveMode, ShapeType } from "../data/typesdefine";
@@ -93,6 +93,7 @@ export interface AsyncTransfer {
 export interface AsyncContactEditor {
     modify_contact_from: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
     modify_contact_to: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
+    modify_sides: (index: number, dx: number, dy: number) => void;
     close: () => undefined;
 }
 
@@ -588,14 +589,10 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
-        const modify_sides = (index: number) => {
+        const modify_sides = (index: number, dx: number, dy: number) => {
             if (shape.type !== ShapeType.Contact) return;
-            const _points = shape.getPoints();
-            const len = _points.length;
-            if (index === 0 || index === len - 1) return;
             status = Status.Pending;
-            
-
+            pathEditSide(api, page, shape, index, index + 1, dx, dy);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
@@ -607,7 +604,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { modify_contact_from, modify_contact_to, close }
+        return { modify_contact_from, modify_contact_to, modify_sides, close }
     }
 }
 function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {

@@ -800,7 +800,7 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
 export function pathEdit(api: Api, page: Page, s: Shape, index: number, end: PageXY) {
     let m = new Matrix(s.matrix2Root()), w = s.frame.width, h = s.frame.height;
     m.preScale(w, h), m = new Matrix(m.inverse);  // 图形单位坐标系，0-1
-    const p = s?.points[index];
+    const p = s.points[index];
     if (!p) return false;
     const t = m.computeCoord3(end);
     api.shapeModifyCurvPoint(page, s as PathShape, index, t);
@@ -823,15 +823,28 @@ export function pathEdit(api: Api, page: Page, s: Shape, index: number, end: Pag
         for (let i = 0, len = points.length; i < len; i++) {
             const p = points[i];
             if (!p) continue;
-            if (p.hasCurveFrom) {
-                api.shapeModifyCurvFromPoint(page, s as PathShape, i, mp.computeCoord3(p.curveFrom));
-            }
-            if (p.hasCurveTo) {
-                api.shapeModifyCurvToPoint(page, s as PathShape, i, mp.computeCoord3(p.curveTo));
-            }
             api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord3(p.point));
         }
     }
+}
+export function pathEditSide(api: Api, page: Page, s: Shape, index1: number, index2: number, dx: number, dy: number) {
+    const m = new Matrix(s.matrix2Root()), w = s.frame.width, h = s.frame.height;
+    m.preScale(w, h);
+    const m_in = new Matrix(m.inverse);  // 图形单位坐标系，0-1
+    let p1 = s.points[index1];
+    let p2 = s.points[index2];
+    if (!p1 || !p2) return false;
+    p1 = m.computeCoord3(p1.point), p2 = m.computeCoord3(p2.point);
+    if (dx) {
+        p1.x = p1.x + dx, p2.x = p2.x + dx;
+    }
+    if (dy) {
+        p1.y = p1.y + dy, p2.y = p2.y + dy;
+    }
+    p1 = m_in.computeCoord3(p1);
+    p2 = m_in.computeCoord3(p2);
+    api.shapeModifyCurvPoint(page, s as PathShape, index1, p1);
+    api.shapeModifyCurvPoint(page, s as PathShape, index2, p2);
 }
 function get_box_by_points(s: Shape) {
     const point_raw = s.points;
@@ -932,5 +945,5 @@ function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
     }
 }
 export function pathEdit4contactApex() {
-    
+
 }

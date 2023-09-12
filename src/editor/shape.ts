@@ -2,14 +2,19 @@ import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2, Contac
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, pathEdit, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
-import { BoolOp, CurvePoint, ShapeType } from "../data/baseclasses";
+import { BoolOp, CurvePoint, Point2D, ShapeType } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { ContactForm } from "data/typesdefine";
+import { ContactForm, CurveMode } from "../data/typesdefine";
 import { Api } from "./command/recordapi";
 import { update_frame_by_points } from "./path";
+import { exportCurvePoint } from "../io/baseexport";
+import { importCurvePoint } from "../io/baseimport";
+import { v4 } from "uuid";
+import { get_box_pagexy, get_nearest_border_point2 } from "../data/utils";
+import { Matrix } from "../basic/matrix";
 export class ShapeEditor {
     protected __shape: Shape;
     protected __repo: CoopRepository;
@@ -363,13 +368,74 @@ export class ShapeEditor {
         return !this.__page.getShape(this.__shape.id);
     }
 
-    public modify_contact_form() { }
+    // contact
+    public modify_edit_state(state: boolean) {
+        if (this.__shape.type !== ShapeType.Contact) return false;
+        const api = this.__repo.start("modify_edit_state", {});
+        api.contactModifyEditState(this.__page, this.__shape, state);
+        this.__repo.commit();
+    }
+    private get_points_for_init(index: number, points: CurvePoint[]) {
+        const len = points.length;
+        let result = [...points];
+        console.log('index: %d', index);
 
-    public modify_contact_to() { }
+        if (index === 0) {
+            const from = this.__shape.from;
+            if (!from) return result;
+            const fromShape = this.__page.getShape((from as ContactForm).shapeId);
+            if (!fromShape) return result;
+            const xy_result = get_box_pagexy(this.__shape);
+            if (!xy_result) return result;
+            const { xy1, xy2 } = xy_result;
+            const m1 = this.__shape.matrix2Root();
+            let p = get_nearest_border_point2(this.__shape, from.contactType, m1, xy1, xy2);
+            if (!p) return result
+            const f = fromShape.frame;
+            m1.preScale(f.width, f.height);
+            const m2 = new Matrix(m1.inverse);
+            p = m2.computeCoord3(p);
+            const cp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+            console.log('handle start');
 
-    public modify_path(page_xy: { x: number, y: number }) {
-        const api = this.__repo.start("modify_path", {});
-        pathEdit(api, this.__page, this.__shape, 0, page_xy);
+            result.unshift(cp);
+        }
+        if (index === len - 1) {
+            const to = this.__shape.to;
+            if (!to) return result;
+            const toShape = this.__page.getShape((to as ContactForm).shapeId);
+            if (!toShape) return result;
+            const xy_result = get_box_pagexy(this.__shape);
+            if (!xy_result) return result;
+            const { xy1, xy2 } = xy_result;
+            const m1 = this.__shape.matrix2Root();
+            let p = get_nearest_border_point2(this.__shape, to.contactType, m1, xy1, xy2);
+            if (!p) return result
+            const f = toShape.frame;
+            m1.preScale(f.width, f.height);
+            const m2 = new Matrix(m1.inverse);
+            p = m2.computeCoord3(p);
+            const cp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+            console.log('handle end');
+            result.push(cp);
+        }
+        return result;
+    }
+    /**
+     * @description 编辑边之前，初始化点
+     */
+    public pre_modify_side(index: number) {
+        if (this.__shape.type !== ShapeType.Contact) return false;
+        const points = this.get_points_for_init(index, this.__shape.getPoints());
+        const api = this.__repo.start("init_points", {});
+        const len = this.__shape.points.length;
+        api.deletePoints(this.__page, this.__shape as PathShape, 0, len);
+        for (let i = 0, len = points.length; i < len; i++) {
+            const p = importCurvePoint(exportCurvePoint(points[i]));
+            p.id = v4();
+            points[i] = p;
+        }
+        api.addPoints(this.__page, this.__shape as PathShape, points);
         this.__repo.commit();
     }
     public modify_frame_by_points() {

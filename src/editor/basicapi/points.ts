@@ -1,4 +1,3 @@
-import { BasicArray } from "data/basic";
 import { CurveMode, CurvePoint, Point2D } from "../../data/baseclasses";
 import { PathShape } from "../../data/shape";
 import { v4 } from "uuid";
@@ -7,7 +6,6 @@ export function addPointAt(shape: PathShape, point: CurvePoint, index: number) {
   shape.points.splice(index, 0, point);
 }
 export function repalcePoints(shape: PathShape, points: CurvePoint[]) {
-  // shape.points = new BasicArray<CurvePoint>(...points);
   shape.points.splice(0, shape.points.length);
   for (let i = 0; i < points.length; i++) {
     const _p = points[i];
@@ -17,4 +15,7 @@ export function repalcePoints(shape: PathShape, points: CurvePoint[]) {
 }
 export function deletePoints(shape: PathShape, index: number, strength: number) {
   return shape.points.splice(index, strength);
+}
+export function deletePointAt(shape: PathShape, index: number) {
+  return shape.points.splice(index, 1);
 }

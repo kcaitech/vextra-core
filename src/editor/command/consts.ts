@@ -26,6 +26,7 @@ export const SHAPE_ATTR_ID = {
     endMarkerType: "endMarkerType",
     contactFrom: "contactFrom",
     contactTo: "contactTo",
+    isEdited: "isEdited",
     // text shape
     textBehaviour: "textBehaviour",
     textVerAlign: "textVerAlign",

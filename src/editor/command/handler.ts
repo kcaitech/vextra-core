@@ -398,6 +398,13 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                     api.shapeModifyContactTo(shape as GroupShape, to);
                 }
             },
+            {
+                opId: SHAPE_ATTR_ID.isEdited,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const state = value && JSON.parse(value)
+                    api.shapeModifyEditedState(shape as GroupShape, state ?? false);
+                }
+            },
         ]
     }
 ]

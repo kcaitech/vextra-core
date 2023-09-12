@@ -51,7 +51,8 @@ import {
     importPathShape2,
     importTableCell,
     importContactShape,
-    importContactRole
+    importContactRole,
+    importCurvePoint
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -372,6 +373,12 @@ export class CMDExecuter {
                 api.addContactShape(shape.style, contact_role);
             }
         }
+        else if (arrayAttr === POINTS_ID) {
+            if (op.type === OpType.ArrayInsert) {
+                const point = importCurvePoint(JSON.parse(cmd.data));
+                api.addPointAt(shape as PathShape, point, (op as ArrayOpInsert).start);
+            }
+        }
         else {
             console.error("not implemented ", arrayAttr)
         }
@@ -408,6 +415,11 @@ export class CMDExecuter {
         else if (arrayAttr === CONTACTS_ID) {
             if (op.type === OpType.ArrayRemove) {
                 api.removeContactRoleAt(shape.style, (op as ArrayOpRemove).start)
+            }
+        }
+        else if (arrayAttr === POINTS_ID) {
+            if (op.type === OpType.ArrayRemove) {
+                api.deletePointAt(shape as PathShape, (op as ArrayOpRemove).start)
             }
         }
         else {
