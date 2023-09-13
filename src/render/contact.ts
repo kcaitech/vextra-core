@@ -30,8 +30,9 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
         props.transform = `translate(${frame.x},${frame.y})`
     }
     let childs = new Array();
-    // const tps = shape.getTemp();
-    const tps = shape.getTemp2();
+    // const tps = shape.getTemp(); // 路径计算时可能会经过的点
+
+    const tps = shape.getTemp2(); // 包括伪点在内的所有点
     if (tps && tps.length) {
         const matrixx = new Matrix();
         matrixx.preScale(frame.width, frame.height);
@@ -40,7 +41,7 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
             childs.push(h('rect', { x: p.x - 5, y: p.y - 5, width: 10, height: 10, fill: 'green', rx: 5, ry: 5, 'fill-opacity': 0.6 }));
         }
     }
-    const tps2 = shape.getTemp3();
+    const tps2 = shape.yellow_points(); // 黄色： points上真实存在的点 + 起始点
     if (tps2 && tps2.length) {
         const matrixx = new Matrix();
         matrixx.preScale(frame.width, frame.height);
@@ -49,7 +50,7 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
             childs.push(h('rect', { x: p.x - 6, y: p.y - 6, width: 12, height: 12, fill: 'yellow', rx: 6, ry: 6, 'fill-opacity': 0.6 }));
         }
     }
-    const tps3 = shape.getPoints();
+    const tps3 = shape.getPoints(); // 最终在屏幕上展示的点
     if (tps3 && tps3.length) {
         const matrixx = new Matrix();
         matrixx.preScale(frame.width, frame.height);
