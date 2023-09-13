@@ -583,6 +583,8 @@ export type ContactShape = Shape & {
     to?: ContactForm
     isEdited: boolean
     isClosed: boolean
+    mark: boolean
+    text: Text
     fixedRadius?: number
 }
 /* artboard shape */

@@ -653,6 +653,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 export class ContactShape extends PathShape implements classes.ContactShape {
     typeId = 'contact-shape'
     isEdited: boolean;
+    text: Text;
+    mark: boolean;
     constructor(
         id: string,
         name: string,
@@ -661,7 +663,9 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         style: Style,
         points: BasicArray<CurvePoint>,
         isClosed: boolean,
-        isEdited: boolean
+        isEdited: boolean,
+        text: Text,
+        mark: boolean
     ) {
         super(
             id,
@@ -673,6 +677,8 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             isClosed
         )
         this.isEdited = isEdited; // 路径是否已被编辑
+        this.text = text;
+        this.mark = mark;
     }
     /**
      * @description 根据连接类型，在图形身上找一个点。该点的坐标系为页面坐标系
@@ -1030,5 +1036,10 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     }
     getPath2(): Path {
         return this.getPath()
+    }
+    getLayout(): TextLayout | undefined {
+        if (!this.text || !this.mark) return;
+        this.text.updateSize(40, 100);
+        return this.text.getLayout();
     }
 }

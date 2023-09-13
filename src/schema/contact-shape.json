@@ -20,6 +20,12 @@
     "isClosed": {
       "type": "boolean"
     },
+    "mark": {
+      "type": "boolean"
+    },
+    "text": {
+      "$ref": "./text.json"
+    },
     "fixedRadius": {
       "type": "number"
     }
@@ -27,7 +33,9 @@
   "required": [
     "points",
     "isClosed",
-    "isEdited"
+    "isEdited",
+    "text",
+    "mark"
   ],
   "allOf": [
     {
