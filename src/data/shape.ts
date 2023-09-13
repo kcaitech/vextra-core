@@ -793,42 +793,43 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                 }
             }
         }
+        // 连接线被用户编辑过
         if (this.isEdited) {
             const result: CurvePoint[] = [...points];
-            if (s1) result.splice(1, 1);
-            if (s2) result.splice(result.length - 2, 1); // 先削一刀
-            if (fromShape) {
+            if (s1) result.splice(1, 1); // 编辑过后，不需要外围点再做为活点
+            if (s2) result.splice(result.length - 2, 1);
+            if (fromShape) { // 在第一个点后面再寻找一个新的活点
                 const flex_point1 = start_point!;
                 const flex_point2 = result[1]?.point;
                 if (flex_point1 && flex_point2) {
                     const _d = d(flex_point1, s1 as PageXY);
+                    let p: undefined | CurvePoint;
                     if (_d === 'hor') {
-                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point2.x, flex_point1.y));
-                        result.splice(1, 1, p);
+                        p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point2.x, flex_point1.y));
                     } else if (_d === 'ver') {
-                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point1.x, flex_point2.y));
-                        result.splice(1, 1, p);
+                        p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point1.x, flex_point2.y));
                     }
+                    if (p) result.splice(1, 1, p);
                 }
             }
-            if (toShape) {
+            if (toShape) { // 在最后一个点前面再寻找一个活点
                 const len = result.length;
                 const flex_point1 = end_point!;
                 const flex_point2 = result[len - 2]?.point;
                 if (flex_point1 && flex_point2) {
                     const _d = d(flex_point1, s2 as PageXY);
                     if (_d === 'hor') {
-                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point2.x, flex_point1.y)); // x fixed
+                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point2.x, flex_point1.y));
                         result.splice(len - 2, 1, p);
                     } else if (_d === 'ver') {
-                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point1.x, flex_point2.y)); // y fixed
+                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point1.x, flex_point2.y));
                         result.splice(len - 2, 1, p);
                     }
                 }
             }
-            return slice_invalid_point(result);
+            return slice_invalid_point(result); // 最后削减无效点
         }
-        // 四种连接
+        // 未被编辑，由寻路算法计算连接线路径
         if (fromShape && toShape) {
             if (!self_matrix) self_matrix = gen_matrix1(this);
             if (!from_matrix) from_matrix = fromShape.matrix2Root();
@@ -846,6 +847,9 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         if (!fromShape && toShape) { }
         return slice_invalid_point(points);
     }
+    /**
+     * @description 计算路径时候可能会经过的点
+     */
     getTemp() {
         if (this.isEdited) return [];
         const points = [...this.points];
@@ -919,13 +923,14 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         }
 
     }
+    /**
+     * @description 绿点 —— points经过头尾加工、处理外围点之后的点
+     */
     getTemp2() {
         const points = [...this.points];
         let page: any;
-        let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false; // 特殊点：s1出发图形的外围点，s2目的图形的外围点
-        let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：图形自身的坐标系，单位为比例系数
-        let fromShape: undefined | Shape, toShape: undefined | Shape; //sides 出发图形、目的图形
-        let type1: ContactType, type2: ContactType;
+        let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix;
+        let fromShape: undefined | Shape, toShape: undefined | Shape; // 出发图形、目的图形
         let start_point: PageXY, end_point: PageXY;
 
         if (this.from) {
@@ -933,7 +938,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             if (page) {
                 fromShape = page.getShape((this.from as ContactForm).shapeId);
                 if (fromShape) {
-                    type1 = (this.from as ContactForm).contactType;
                     if (!self_matrix) self_matrix = gen_matrix1(this);
                     if (!from_matrix) from_matrix = fromShape.matrix2Root();
                     let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
@@ -947,7 +951,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     if (border_p) {
                         border_p = self_matrix.computeCoord3(border_p);
                         points.splice(1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
-                        s1 = border_p;
                     }
                 }
             }
@@ -957,7 +960,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             if (page) {
                 toShape = page.getShape((this.to as ContactForm).shapeId);
                 if (toShape) {
-                    type2 = (this.to as ContactForm).contactType;
                     if (!self_matrix) self_matrix = gen_matrix1(this);
                     if (!to_matrix) to_matrix = toShape.matrix2Root();
                     let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
@@ -970,9 +972,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
                     if (border_p) {
                         border_p = self_matrix.computeCoord3(border_p);
-                        const t = points.pop();
-                        if (t) points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)), t);
-                        s2 = border_p;
+                        points.splice(points.length - 1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
                     }
                 }
             }

@@ -92,7 +92,7 @@ function XYsBoundingPoints(points: PageXY[]) {
  * @description 一定误差范围内的相等判定
  */
 function isEqu(a: number, b: number) {
-    return Math.abs(a - b) < 0.0001;
+    return Math.abs(a - b) < 0.00001;
 }
 /**
  * @description 获取两条线的焦点
@@ -470,9 +470,12 @@ export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2
     }
     return points;
 }
+/**
+ * @description 削减无效点，如果连续多个(大于等于3个)点在一条水平线或者垂直线上，那除了第一个和最后一个剩下的点被认为是无效点，
+ * 如果不处理无效点，会造成线段折叠的路径片段，属于无效片段，处理过程即为切除无效片段
+ */
 export function slice_invalid_point(points: CurvePoint[]) {
-    //  如果不处理两轴上相等的点，会造成线段折叠的路径片段，属于无效片段，处理过程即为切除无效片段
-    let result_x = [points[0]];
+    let result_x = [points[0]]; // 线处理水平方向上的无效点
     for (let i = 1, len = points.length - 1; i < len; i++) {
         let p1 = points[i - 1].point;
         let p2 = points[i].point;
@@ -481,7 +484,7 @@ export function slice_invalid_point(points: CurvePoint[]) {
             if (Math.abs(p3.y - p1.y) > 0.00001) result_x.push(points[i]);
         }
     }
-    result_x.push(points[points.length - 1]);
+    result_x.push(points[points.length - 1]); // 再处理垂直方向上的无效点
     let result_y = [result_x[0]];
     for (let i = 1, len = result_x.length - 1; i < len; i++) {
         let p1 = result_x[i - 1].point;
@@ -494,6 +497,9 @@ export function slice_invalid_point(points: CurvePoint[]) {
     result_y.push(result_x[result_x.length - 1]);
     return result_y;
 }
+/**
+ * @description 给两点确定两点是否同一水平或同一垂线上
+ */
 export function d(a: PageXY, b: XY): 'ver' | 'hor' | false {
     if (Math.abs(a.x - b.x) < 0.00001) return 'ver';
     if (Math.abs(a.y - b.y) < 0.00001) return 'hor';
