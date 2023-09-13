@@ -406,6 +406,7 @@ export class Controller {
             status = Status.Pending;
             for (let i = 0; i < shapes.length; i++) {
                 const s = shapes[i];
+                if (s.type === ShapeType.Contact) continue;
                 const sp = s.parent;
                 if (!sp) continue;
                 // 计算左上角的目标位置
@@ -423,9 +424,7 @@ export class Controller {
                 const sf_common = np.computeCoord3(target_xy);
                 // 计算自转后的xy
                 const r = s.rotation || 0;
-                if (!r && s.type === ShapeType.Contact) { // 连接线处理
-                    update_contact_points(api, s, page);
-                }
+
                 let cr = deg;
                 if (s.isFlippedHorizontal) cr = -cr;
                 if (s.isFlippedVertical) cr = -cr;
