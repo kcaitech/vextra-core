@@ -495,7 +495,7 @@ export function slice_invalid_point(points: CurvePoint[]) {
     return result_y;
 }
 export function d(a: PageXY, b: XY): 'ver' | 'hor' | false {
-    if (Math.abs(a.x - b.x) < 0.00001) return 'hor';
-    if (Math.abs(a.y - b.y) < 0.00001) return 'ver';
+    if (Math.abs(a.x - b.x) < 0.00001) return 'ver';
+    if (Math.abs(a.y - b.y) < 0.00001) return 'hor';
     return false;
 }

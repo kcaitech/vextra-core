@@ -787,32 +787,33 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         }
         if (this.isEdited) {
             const result: CurvePoint[] = [...points];
+            if (s1) result.splice(1, 1);
+            if (s2) result.splice(result.length - 2, 1); // 先削一刀
             if (fromShape) {
-                const os = result[0].point;
-                const fixed1 = result[2]?.point;
-                if (os && fixed1) {
-                    const s1 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(start_point!.x, start_point!.y));
-                    result.splice(0, 1, s1);
-                    const s2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(start_point!.x, fixed1.y));
-                    result.splice(1, 1, s2);
+                const flex_point1 = start_point!;
+                const flex_point2 = result[1]?.point;
+                if (flex_point1 && flex_point2) {
+                    const _d = d(flex_point1, s1 as PageXY);
+                    if (_d === 'hor') {
+                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point2.x, flex_point1.y));
+                        result.splice(1, 1, p);
+                    } else if (_d === 'ver') {
+                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point1.x, flex_point2.y));
+                        result.splice(1, 1, p);
+                    }
                 }
             }
             if (toShape) {
                 const len = result.length;
                 const flex_point1 = end_point!;
                 const flex_point2 = result[len - 2]?.point;
-                console.log('flex_point1', flex_point1);
-                console.log('flex_point2', flex_point2);
-
                 if (flex_point1 && flex_point2) {
-                    const _d = d(flex_point1, flex_point2);
-                    console.log('===_d===', _d);
-
+                    const _d = d(flex_point1, s2 as PageXY);
                     if (_d === 'hor') {
-                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point2.x, flex_point1.y));
+                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point2.x, flex_point1.y)); // x fixed
                         result.splice(len - 2, 1, p);
                     } else if (_d === 'ver') {
-                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point1.x, flex_point2.y));
+                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point1.x, flex_point2.y)); // y fixed
                         result.splice(len - 2, 1, p);
                     }
                 }
@@ -838,6 +839,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         return slice_invalid_point(points);
     }
     getTemp() {
+        if (this.isEdited) return [];
         const points = [...this.points];
         let page: any;
         let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false; // 特殊点：s1出发图形的外围点，s2目的图形的外围点
@@ -908,6 +910,128 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             return points;
         }
 
+    }
+    getTemp2() {
+        const points = [...this.points];
+        let page: any;
+        let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false; // 特殊点：s1出发图形的外围点，s2目的图形的外围点
+        let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：图形自身的坐标系，单位为比例系数
+        let fromShape: undefined | Shape, toShape: undefined | Shape; //sides 出发图形、目的图形
+        let type1: ContactType, type2: ContactType;
+        let start_point: PageXY, end_point: PageXY;
+
+        if (this.from) {
+            if (!page) page = this.getPage();
+            if (page) {
+                fromShape = page.getShape((this.from as ContactForm).shapeId);
+                if (fromShape) {
+                    type1 = (this.from as ContactForm).contactType;
+                    if (!self_matrix) self_matrix = gen_matrix1(this);
+                    if (!from_matrix) from_matrix = fromShape.matrix2Root();
+                    let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
+                    if (p) {
+                        p = self_matrix.computeCoord3(p);
+                        start_point = p;
+                        const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        points[0] = fp;
+                    }
+                    let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType);
+                    if (border_p) {
+                        border_p = self_matrix.computeCoord3(border_p);
+                        points.splice(1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
+                        s1 = border_p;
+                    }
+                }
+            }
+        }
+        if (this.to) {
+            if (!page) page = this.getPage();
+            if (page) {
+                toShape = page.getShape((this.to as ContactForm).shapeId);
+                if (toShape) {
+                    type2 = (this.to as ContactForm).contactType;
+                    if (!self_matrix) self_matrix = gen_matrix1(this);
+                    if (!to_matrix) to_matrix = toShape.matrix2Root();
+                    let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
+                    if (p) {
+                        p = self_matrix.computeCoord3(p);
+                        end_point = p;
+                        const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        points[points.length - 1] = lp;
+                    }
+                    let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
+                    if (border_p) {
+                        border_p = self_matrix.computeCoord3(border_p);
+                        const t = points.pop();
+                        if (t) points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)), t);
+                        s2 = border_p;
+                    }
+                }
+            }
+        }
+        return points;
+    }
+    getTemp3() {
+        const points = [...this.points];
+        let page: any;
+        let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false; // 特殊点：s1出发图形的外围点，s2目的图形的外围点
+        let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：图形自身的坐标系，单位为比例系数
+        let fromShape: undefined | Shape, toShape: undefined | Shape; //sides 出发图形、目的图形
+        let type1: ContactType, type2: ContactType;
+        let start_point: PageXY, end_point: PageXY;
+
+        if (this.from) {
+            if (!page) page = this.getPage();
+            if (page) {
+                fromShape = page.getShape((this.from as ContactForm).shapeId);
+                if (fromShape) {
+                    type1 = (this.from as ContactForm).contactType;
+                    if (!self_matrix) self_matrix = gen_matrix1(this);
+                    if (!from_matrix) from_matrix = fromShape.matrix2Root();
+                    let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
+                    if (p) {
+                        p = self_matrix.computeCoord3(p);
+                        start_point = p;
+                        const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        points[0] = fp;
+                    }
+                    let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType);
+                    if (border_p) {
+                        border_p = self_matrix.computeCoord3(border_p);
+                        points.splice(1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
+                        s1 = border_p;
+                    }
+                }
+            }
+        }
+        if (this.to) {
+            if (!page) page = this.getPage();
+            if (page) {
+                toShape = page.getShape((this.to as ContactForm).shapeId);
+                if (toShape) {
+                    type2 = (this.to as ContactForm).contactType;
+                    if (!self_matrix) self_matrix = gen_matrix1(this);
+                    if (!to_matrix) to_matrix = toShape.matrix2Root();
+                    let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
+                    if (p) {
+                        p = self_matrix.computeCoord3(p);
+                        end_point = p;
+                        const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        points[points.length - 1] = lp;
+                    }
+                    let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
+                    if (border_p) {
+                        border_p = self_matrix.computeCoord3(border_p);
+                        const t = points.pop();
+                        if (t) points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)), t);
+                        s2 = border_p;
+                    }
+                }
+            }
+        }
+        if (s1) points.splice(1, 1);
+        if (s2) points.splice(points.length - 2, 1)
+        return points;
     }
     private __pathCache: Path | undefined;
     getPath(): Path {
