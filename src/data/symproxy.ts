@@ -213,6 +213,7 @@ class ShapeHdl extends FreezHdl {
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
+        if (propStr === 'id') return this.__symRef[0].mapId(this.__target.id);
         if (propStr === 'shapeId') return [this.__symRef[0].id, this.__target.id];
         if (propStr === 'parent') return this.__parent;
         if (propStr === 'frame') { // 外面编辑需要修改，但又不可以修改target的

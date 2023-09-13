@@ -35,7 +35,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     overrides: BasicArray<OverrideShape>
 
     __overridesMap?: Map<string, OverrideShape>;
-    __childs?: Shape[];
+    __proxyIdMap: Map<string, string> = new Map();
+    // __childs?: Shape[];
 
     constructor(
         id: string,
@@ -56,6 +57,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         this.refId = refId
         this.overrides = overrides
         this.watcher = this.watcher.bind(this);
+    }
+
+    mapId(id: string) {
+        let _id = this.__proxyIdMap.get(id);
+        if (_id) return _id;
+        _id = uuid();
+        this.__proxyIdMap.set(id, _id);
+        return _id;
     }
 
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
@@ -86,27 +95,26 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     get naviChilds(): Shape[] | undefined {
         // 需要cache
         if (!this.__data) return;
-        if (this.__childs) return this.__childs;
+        // if (this.__childs) return this.__childs;
 
         const symRef: SymbolRefShape[] = [];
         const preSymRef = this.overridesGetter;
         if (preSymRef) symRef.push(...preSymRef);
         symRef.push(this);
-        this.__childs = this.__data.childs.map((v) => proxyShape(v, this, symRef));
-
-        this.__data.watch(this.watcher);
-
-        return this.__childs;
+        // this.__childs = this.__data.childs.map((v) => proxyShape(v, this, symRef));
+        // this.__data.watch(this.watcher);
+        // return this.__childs;
+        return this.__data.childs.map((v) => proxyShape(v, this, symRef));
     }
 
     private watcher(...args: any[]): void {
         super.watcher(args);
-        if (this.__childs) {
-            // todo compare
-            this.__childs.forEach((c: any) => c.remove)
-            this.__childs = undefined;
-            this.__data?.unwatch(this.watcher);
-        }
+        // if (this.__childs) {
+        //     // todo compare
+        //     this.__childs.forEach((c: any) => c.remove)
+        //     this.__childs = undefined;
+        //     this.__data?.unwatch(this.watcher);
+        // }
     }
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
@@ -189,10 +197,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         //     if (this.overrides[i].refId === id) return this.overrides[i];
         // }
         return this.overrideMap.get(id);
-    }
-
-    getOverridValue(shapeId: string, type: classes.OverrideType): OverrideShape | undefined {
-        throw new Error("Method not implemented.");
     }
 
     onRemoved(): void {

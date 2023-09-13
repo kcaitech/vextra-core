@@ -200,7 +200,6 @@ export interface OverridesGetter {
     // 当前symbolref的overrid，当前可修改的
     getOverrid(shapeId: string): OverrideShape | undefined;
     // 当前实际起作用的override
-    getOverridValue(shapeId: string, type: OverrideType): OverrideShape | undefined;
     watch(watcher: ((...args: any[]) => void)): (() => void);
     unwatch(watcher: ((...args: any[]) => void)): boolean;
 }
