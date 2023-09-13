@@ -1,11 +1,12 @@
-import { OverrideShape, OverridesGetter, ShapeType, TableCell, TableShape } from "../data/classes";
+import { OverrideShape, ShapeType, SymbolRefShape, TableCell, TableShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { isVisible } from "./basic";
+import { OverrideType, findOverride } from "../data/symproxy";
 
-export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, overrides: OverridesGetter | undefined, override: OverrideShape | undefined, reflush?: number): any {
+export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number): any {
 
-    if (!isVisible(shape, override)) return;
+    if (!isVisible(shape, overrides)) return;
     const frame = shape.frame;
 
     const layout = shape.getLayout();
@@ -14,8 +15,15 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
     const path = shape.getPath().toString();
 
     // table fill
-    if (override && override.override_fills) {
-        nodes.push(...fillR(h, override.style.fills, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Fills);
+        if (o) {
+            nodes.push(...fillR(h, o.override.style.fills, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            nodes.push(...fillR(h, shape.style.fills, frame, path));
+        }
     }
     else {
         nodes.push(...fillR(h, shape.style.fills, frame, path));

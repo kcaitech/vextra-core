@@ -48,6 +48,9 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.style = style
     }
 
+    /**
+     * @returns undefined | SymbolRefShape[]
+     */
     get overridesGetter(): any | undefined {
         return undefined;
     }

@@ -1,4 +1,4 @@
-import { ShapeFrame, Style, Fill, FillType, Gradient } from "../data/classes";
+import { ShapeFrame, Fill, FillType, Gradient } from "../data/classes";
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"

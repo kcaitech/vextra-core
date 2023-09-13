@@ -1,9 +1,10 @@
-import { OverrideShape, ShapeFrame } from "../data/classes";
+import { OverrideShape, ShapeFrame, SymbolRefShape } from "../data/classes";
 import { TableCell, TableCellType } from "../data/classes";
 import { renderTextLayout } from "./text";
 import { render as fillR } from "./fill";
+import { OverrideType, findOverride } from "../data/symproxy";
 
-export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: string, override: OverrideShape | undefined, reflush?: number): any {
+export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: string, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number): any {
     // const isVisible = shape.isVisible ?? true;
     // if (!isVisible) return;
 
@@ -11,8 +12,15 @@ export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: 
     const childs = [];
 
     // fill
-    if (override && override.override_fills) {
-        childs.push(...fillR(h, override.style.fills, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Fills);
+        if (o) {
+            childs.push(...fillR(h, o.override.style.fills, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...fillR(h, shape.style.fills, frame, path));
+        }
     }
     else {
         childs.push(...fillR(h, shape.style.fills, frame, path));
@@ -22,10 +30,23 @@ export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: 
     if (cellType === TableCellType.None) return;
 
     if (cellType === TableCellType.Image) {
-        const url = (override && override.override_image ? override?.peekImage(true) : shape.peekImage(true)) ?? imgPH;
+        let url;
+        if (overrides) {
+            const o = findOverride(overrides, shape.id, OverrideType.Image);
+            if (o) {
+                url = o.override.peekImage(true);
+                if (consumeOverride) consumeOverride.push(o.override);
+            }
+            else {
+                url = shape.peekImage(true);
+            }
+        }
+        else {
+            url = shape.peekImage(true);
+        }
 
         const img = h("image", {
-            'xlink:href': url,
+            'xlink:href': url ?? imgPH,
             width: frame.width,
             height: frame.height,
             x: 0,
@@ -35,13 +56,21 @@ export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: 
         childs.push(img);
     }
     else if (cellType === TableCellType.Text) {
-        if (override && override.override_text) {
-            const layout = override.getLayout(shape);
-            if (layout) childs.push(...renderTextLayout(h, layout))
+        if (overrides) {
+            const o = findOverride(overrides, shape.id, OverrideType.Text);
+            if (o) {
+                const layout = o.override.getLayout(shape);
+                if (layout) childs.push(...renderTextLayout(h, layout))
+                if (consumeOverride) consumeOverride.push(o.override);
+            }
+            else {
+                const layout = shape.getLayout();
+                if (layout) childs.push(...renderTextLayout(h, layout));
+            }
         }
         else {
             const layout = shape.getLayout();
-            if (layout) childs.push(...renderTextLayout(h, layout))
+            if (layout) childs.push(...renderTextLayout(h, layout));
         }
     }
 

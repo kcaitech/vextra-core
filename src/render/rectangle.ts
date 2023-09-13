@@ -1,29 +1,45 @@
-import { OverrideShape, Shape } from "../data/classes";
+import { OverrideShape, Shape, SymbolRefShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { isVisible } from "./basic";
+import { OverrideType, findOverride } from "../data/symproxy";
 
-export function render(h: Function, shape: Shape, override: OverrideShape | undefined, reflush?: number) {
+export function render(h: Function, shape: Shape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number) {
     // if (this.data.booleanOperation != BooleanOperation.None) {
     //     // todo 只画selection
     //     return;
     // }
 
-    if (!isVisible(shape, override)) return;
+    if (!isVisible(shape, overrides)) return;
 
     const frame = shape.frame;
     const childs = [];
     const path = shape.getPath().toString();
+    
     // fill
-    if (override && override.override_fills) {
-        childs.push(...fillR(h, override.style.fills, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Fills);
+        if (o) {
+            childs.push(...fillR(h, o.override.style.fills, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...fillR(h, shape.style.fills, frame, path));
+        }
     }
     else {
         childs.push(...fillR(h, shape.style.fills, frame, path));
     }
     // border
-    if (override && override.override_borders) {
-        childs.push(...borderR(h, override.style.borders, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Borders);
+        if (o) {
+            childs.push(...borderR(h, o.override.style.borders, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...borderR(h, shape.style.borders, frame, path));
+        }
     }
     else {
         childs.push(...borderR(h, shape.style.borders, frame, path));

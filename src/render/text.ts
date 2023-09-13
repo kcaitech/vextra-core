@@ -1,11 +1,12 @@
 
 
 import { DefaultColor, isColorEqual, isVisible } from "./basic";
-import { TextShape, Path, Color, OverrideShape } from '../data/classes';
+import { TextShape, Path, Color, OverrideShape, SymbolRefShape } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
+import { OverrideType, findOverride } from "../data/symproxy";
 
 
 function toRGBA(color: Color): string {
@@ -190,33 +191,53 @@ export function renderTextLayout(h: Function, textlayout: TextLayout) {
     return childs;
 }
 
-export function render(h: Function, shape: TextShape, override: OverrideShape | undefined, reflush?: number) {
+export function render(h: Function, shape: TextShape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number) {
 
-    if (!isVisible(shape, override)) return;
+    if (!isVisible(shape, overrides)) return;
 
     const childs = []
     const frame = shape.frame;
     const path = shape.getPath().toString();
 
     // fill
-    if (override && override.override_fills) {
-        childs.push(...fillR(h, override.style.fills, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Fills);
+        if (o) {
+            childs.push(...fillR(h, o.override.style.fills, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...fillR(h, shape.style.fills, frame, path));
+        }
     }
     else {
         childs.push(...fillR(h, shape.style.fills, frame, path));
     }
     // text
-    if (override && override.override_text) {
-        const layout = override.getLayout(shape);
-        if (layout) childs.push(...renderTextLayout(h, layout))
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Text);
+        if (o) {
+            const layout = o.override.getLayout(shape);
+            if (layout) childs.push(...renderTextLayout(h, layout))
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...renderTextLayout(h, shape.getLayout()));
+        }
     }
     else {
-
         childs.push(...renderTextLayout(h, shape.getLayout()));
     }
     // border
-    if (override && override.override_borders) {
-        childs.push(...borderR(h, override.style.borders, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Borders);
+        if (o) {
+            childs.push(...borderR(h, o.override.style.borders, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...borderR(h, shape.style.borders, frame, path));
+        }
     }
     else {
         childs.push(...borderR(h, shape.style.borders, frame, path));

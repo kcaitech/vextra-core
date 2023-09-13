@@ -1,10 +1,10 @@
-import { OverridesGetter, ShapeFrame, ShapeType, SymbolRefShape } from "../data/classes";
+import { OverrideShape, ShapeFrame, ShapeType, SymbolRefShape } from "../data/classes";
 import { renderGroupChilds } from "./group";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
 import { GroupShape } from "../data/shape";
 
-function renderSym(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame, overrides: OverridesGetter): any {
+function renderSym(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame, overrides: SymbolRefShape[] | undefined): any {
 
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
@@ -29,7 +29,7 @@ function renderSym(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>,
     return [h('g', props, childs)];
 }
 
-export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeType, any>, reflush?: number) {
+export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeType, any>, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number) {
     const sym = shape.peekSymbol();
     if (!sym) {
         return;
@@ -43,7 +43,10 @@ export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeTyp
     childs.push(...borderR(h, shape.style.borders, frame, path));
 
     // symbol
-    childs.push(...renderSym(h, sym, comsMap, shape.frame, shape)); // 有缩放
+    const subOverrides = [];
+    if (overrides) subOverrides.push(...overrides);
+    subOverrides.push(shape);
+    childs.push(...renderSym(h, sym, comsMap, shape.frame, subOverrides)); // 有缩放
 
     const props: any = {}
     if (reflush) props.reflush = reflush;

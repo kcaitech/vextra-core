@@ -1,4 +1,4 @@
-import { BoolOp, GroupShape, OverrideShape, Path, Shape, Style, TextShape } from "../data/classes";
+import { BoolOp, GroupShape, OverrideShape, Path, Shape, Style, SymbolRefShape, TextShape } from "../data/classes";
 // import { difference, intersection, subtract, union } from "./boolop";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
@@ -98,8 +98,8 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
     return resultpath;
 }
 
-export function render(h: Function, shape: GroupShape, override: OverrideShape | undefined, reflush?: number, consumed?: Array<Shape>): any {
-    if (!isVisible(shape, override)) return;
+export function render(h: Function, shape: GroupShape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number, consumed?: Array<Shape>): any {
+    if (!isVisible(shape, overrides)) return;
 
     const path = render2path(shape, consumed);
     const frame = shape.frame;

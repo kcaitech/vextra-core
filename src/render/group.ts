@@ -1,9 +1,10 @@
-import { GroupShape, OverrideShape, OverridesGetter, ShapeType } from "../data/classes";
+import { GroupShape, OverrideShape, ShapeType, SymbolRefShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { isVisible } from "./basic";
+import { OverrideType, findOverride } from "../data/symproxy";
 
-export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, overrides: OverridesGetter | undefined): Array<any> {
+export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, overrides: SymbolRefShape[] | undefined): Array<any> {
     const childs: Array<any> = [];
     const cc = shape.childs.length;
 
@@ -17,17 +18,24 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
     return childs;
 }
 
-export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, overrides: OverridesGetter | undefined, override: OverrideShape | undefined, reflush?: number): any {
+export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number): any {
 
-    if (!isVisible(shape, override)) return;
+    if (!isVisible(shape, overrides)) return;
 
     const frame = shape.frame;
     const path = shape.getPath().toString();
     const childs: Array<any> = [];
 
     // fill
-    if (override && override.override_fills) {
-        childs.push(...fillR(h, override.style.fills, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Fills);
+        if (o) {
+            childs.push(...fillR(h, o.override.style.fills, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...fillR(h, shape.style.fills, frame, path));
+        }
     }
     else {
         childs.push(...fillR(h, shape.style.fills, frame, path));
@@ -35,8 +43,15 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     // childs
     childs.push(...renderGroupChilds(h, shape, comsMap, overrides));
     // border
-    if (override && override.override_borders) {
-        childs.push(...borderR(h, override.style.borders, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Borders);
+        if (o) {
+            childs.push(...borderR(h, o.override.style.borders, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...borderR(h, shape.style.borders, frame, path));
+        }
     }
     else {
         childs.push(...borderR(h, shape.style.borders, frame, path));

@@ -35,6 +35,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     overrides: BasicArray<OverrideShape>
 
     __overridesMap?: Map<string, OverrideShape>;
+    __childs?: Shape[];
+
     constructor(
         id: string,
         name: string,
@@ -53,6 +55,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         )
         this.refId = refId
         this.overrides = overrides
+        this.watcher = this.watcher.bind(this);
     }
 
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
@@ -81,7 +84,29 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
 
     // symbolref需要watch symbol的修改？
     get naviChilds(): Shape[] | undefined {
-        return this.__data?.childs.map((v) => proxyShape(v, this, this.overridesGetter ?? this));
+        // 需要cache
+        if (!this.__data) return;
+        if (this.__childs) return this.__childs;
+
+        const symRef: SymbolRefShape[] = [];
+        const preSymRef = this.overridesGetter;
+        if (preSymRef) symRef.push(...preSymRef);
+        symRef.push(this);
+        this.__childs = this.__data.childs.map((v) => proxyShape(v, this, symRef));
+
+        this.__data.watch(this.watcher);
+
+        return this.__childs;
+    }
+
+    private watcher(...args: any[]): void {
+        super.watcher(args);
+        if (this.__childs) {
+            // todo compare
+            this.__childs.forEach((c: any) => c.remove)
+            this.__childs = undefined;
+            this.__data?.unwatch(this.watcher);
+        }
     }
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
@@ -172,5 +197,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
 
     onRemoved(): void {
         // 构建symbol proxy shadow, 在这里需要unwatch
+
+        if (this.__childs) {
+            // todo compare
+
+            this.__childs.forEach((c: any) => c.remove)
+            this.__childs = undefined;
+
+            this.__data?.unwatch(this.watcher);
+        }
     }
 }
