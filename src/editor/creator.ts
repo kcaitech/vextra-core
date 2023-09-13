@@ -263,7 +263,17 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
     style.borders.push(border);
-    const shape = new ContactShape(uuid(), name, types.ShapeType.Contact, frame, style, curvePoint, false, false);
+    const text = new Text(new BasicArray());
+    const para = new Para('\n', new BasicArray());
+    para.attr = new ParaAttr();
+    para.attr.minimumLineHeight = 24;
+    text.paras.push(para);
+    const span = new Span(para.length);
+    span.fontName = "PingFangSC-Regular";
+    span.fontSize = 14;
+    span.color = new Color(0.85, 0, 0, 0);
+    para.spans.push(span);
+    const shape = new ContactShape(uuid(), name, types.ShapeType.Contact, frame, style, curvePoint, false, false, text, false);
     shape.from = apex;
     shape.to = undefined;
     shape.fixedRadius = 6;
