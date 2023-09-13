@@ -794,11 +794,11 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             }
         }
         // 连接线被用户编辑过
-        if (this.isEdited) {
+        if (this.isEdited || this.rotation) {
             const result: CurvePoint[] = [...points];
             if (s1) result.splice(1, 1); // 编辑过后，不需要外围点再做为活点
             if (s2) result.splice(result.length - 2, 1);
-            if (fromShape) { // 在第一个点后面再寻找一个新的活点
+            { // 在第一个点后面再寻找一个新的活点
                 const flex_point1 = start_point!;
                 const flex_point2 = result[1]?.point;
                 if (flex_point1 && flex_point2) {
@@ -812,7 +812,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     if (p) result.splice(1, 1, p);
                 }
             }
-            if (toShape) { // 在最后一个点前面再寻找一个活点
+            {
                 const len = result.length;
                 const flex_point1 = end_point!;
                 const flex_point2 = result[len - 2]?.point;
@@ -831,10 +831,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         }
         // 未被编辑，由寻路算法计算连接线路径
         if (fromShape && toShape) {
-            if (!self_matrix) self_matrix = gen_matrix1(this);
-            if (!from_matrix) from_matrix = fromShape.matrix2Root();
-            if (!to_matrix) to_matrix = toShape.matrix2Root();
-            const result = gen_path(fromShape, type1!, toShape, type2!, from_matrix, to_matrix, self_matrix);
+            const result = gen_path(fromShape, type1!, toShape, type2!, from_matrix!, to_matrix!, self_matrix!);
             if (result && result.length) return slice_invalid_point(result);
         }
         if (!fromShape && !toShape) { }
@@ -926,20 +923,19 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     /**
      * @description 绿点 —— points经过头尾加工、处理外围点之后的点
      */
-    getTemp2() {
+    green_points() {
         const points = [...this.points];
         let page: any;
         let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix;
         let fromShape: undefined | Shape, toShape: undefined | Shape; // 出发图形、目的图形
         let start_point: PageXY, end_point: PageXY;
-
         if (this.from) {
             if (!page) page = this.getPage();
             if (page) {
                 fromShape = page.getShape((this.from as ContactForm).shapeId);
                 if (fromShape) {
-                    if (!self_matrix) self_matrix = gen_matrix1(this);
-                    if (!from_matrix) from_matrix = fromShape.matrix2Root();
+                    self_matrix = gen_matrix1(this);
+                    from_matrix = fromShape.matrix2Root();
                     let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
                     if (p) {
                         p = self_matrix.computeCoord3(p);
@@ -961,7 +957,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                 toShape = page.getShape((this.to as ContactForm).shapeId);
                 if (toShape) {
                     if (!self_matrix) self_matrix = gen_matrix1(this);
-                    if (!to_matrix) to_matrix = toShape.matrix2Root();
+                    to_matrix = toShape.matrix2Root();
                     let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
                     if (p) {
                         p = self_matrix.computeCoord3(p);
@@ -979,7 +975,10 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         }
         return points;
     }
-    yellow_points() { // 黄点：数据层(points)上真实存在的，并经过头尾加工的点，这里不存在外围点、也不会削减无效点
+    /**
+     * @description 黄点：数据层(points)上真实存在的，并经过头尾加工的点，这里不存在外围点、也不会削减无效点
+     */
+    yellow_points() {
         const points = [...this.points];
         let page: any;
         let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 可复用矩阵

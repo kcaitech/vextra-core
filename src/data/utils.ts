@@ -1,7 +1,11 @@
 import { v4 } from "uuid";
 import { Matrix } from "../basic/matrix";
-import { CurvePoint, Point2D, Shape } from "./shape";
+import { CurvePoint, PathShape, Point2D, Shape } from "./shape";
 import { ContactType, CurveMode } from "./typesdefine";
+import { Api } from "editor/command/recordapi";
+import { Page } from "./page";
+import { importCurvePoint } from "../io/baseimport";
+import { exportCurvePoint } from "../io/baseexport";
 
 /**
  * @description root -> 图形自身上且单位为比例系数的矩阵
@@ -504,4 +508,15 @@ export function d(a: PageXY, b: XY): 'ver' | 'hor' | false {
     if (Math.abs(a.x - b.x) < 0.00001) return 'ver';
     if (Math.abs(a.y - b.y) < 0.00001) return 'hor';
     return false;
+}
+export function update_contact_points(api: Api, shape: Shape, page: Page) {
+    const _p = shape.getPoints();
+    const len = shape.points.length;
+    api.deletePoints(page, shape as PathShape, 0, len);
+    for (let i = 0, len2 = _p.length; i < len2; i++) {
+        const p = importCurvePoint(exportCurvePoint(_p[i]));
+        p.id = v4();
+        _p[i] = p;
+    }
+    api.addPoints(page, shape as PathShape, _p);
 }
