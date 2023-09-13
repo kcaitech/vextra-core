@@ -7,10 +7,10 @@ export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
-import { ShapeType, ShapeFrame, OverrideType } from "./baseclasses"
+import { ShapeType, ShapeFrame } from "./baseclasses"
 import { Path } from "./path";
 import { TextLayout } from "./textlayout";
-import { mergeParaAttr, mergeSpanAttr } from "./textutils";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 import { Shape, TextShape } from "./shape";
 
 export class OverrideShape extends Shape implements classes.OverrideShape {
@@ -158,7 +158,10 @@ export class OverrideShape extends Shape implements classes.OverrideShape {
             if (!(refShape instanceof TextShape)) throw new Error("refshape is not textshape")
 
             const text = new Text(new BasicArray());
-            text.setTextBehaviour(classes.TextBehaviour.Fixed); // 固定宽高
+            // text.setTextBehaviour(classes.TextBehaviour.Fixed); // 固定宽高
+            if (refShape.text.attr) {
+                mergeTextAttr(text, refShape.text.attr);
+            }
             const para = new Para('\n', new BasicArray());
             para.attr = new ParaAttr();
             text.paras.push(para);

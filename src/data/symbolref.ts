@@ -25,7 +25,6 @@ export class OverrideArray extends classes.OverrideArray {
 export class SymbolProps extends classes.SymbolProps {
 }
 
-
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape, OverridesGetter {
     __data: GroupShape | undefined
     __symMgr?: ResourceMgr<GroupShape>
@@ -36,7 +35,11 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
 
     __overridesMap?: Map<string, OverrideShape>;
     __proxyIdMap: Map<string, string> = new Map();
-    // __childs?: Shape[];
+    // __childs?: Shape[]; // TODO 不可以在这缓存
+    // sym0->symRef0->sym1
+    // symRef1->sym0
+    // symRef2->sym0
+    // 此时共用一个symRef0对象，缓存的childs是错误的
 
     constructor(
         id: string,
@@ -202,13 +205,11 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     onRemoved(): void {
         // 构建symbol proxy shadow, 在这里需要unwatch
 
-        if (this.__childs) {
-            // todo compare
-
-            this.__childs.forEach((c: any) => c.remove)
-            this.__childs = undefined;
-
-            this.__data?.unwatch(this.watcher);
-        }
+        // if (this.__childs) {
+        //     // todo compare
+        //     this.__childs.forEach((c: any) => c.remove)
+        //     this.__childs = undefined;
+        //     this.__data?.unwatch(this.watcher);
+        // }
     }
 }
