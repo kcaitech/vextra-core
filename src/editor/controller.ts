@@ -15,6 +15,7 @@ import { Color } from "../data/style";
 import { afterModifyGroupShapeWH } from "./frame";
 import { uuid } from "../basic/uuid";
 import { ContactForm, ContactRole } from "../data/baseclasses";
+import { update_contact_points } from "../data/utils";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -91,6 +92,7 @@ export interface AsyncTransfer {
     close: () => undefined;
 }
 export interface AsyncContactEditor {
+    pre: () => void;
     modify_contact_from: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
     modify_contact_to: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
     modify_sides: (index: number, dx: number, dy: number) => void;
@@ -421,6 +423,9 @@ export class Controller {
                 const sf_common = np.computeCoord3(target_xy);
                 // 计算自转后的xy
                 const r = s.rotation || 0;
+                if (!r && s.type === ShapeType.Contact) { // 连接线处理
+                    update_contact_points(api, s, page);
+                }
                 let cr = deg;
                 if (s.isFlippedHorizontal) cr = -cr;
                 if (s.isFlippedVertical) cr = -cr;
@@ -555,6 +560,9 @@ export class Controller {
     public asyncContactEditor(shape: Shape, page: Page): AsyncContactEditor {
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
+        const pre = () => {
+            update_contact_points(api, shape, page);
+        }
         const modify_contact_from = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {
             status = Status.Pending;
             if (clear_target) {
@@ -604,7 +612,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { modify_contact_from, modify_contact_to, modify_sides, close }
+        return { pre, modify_contact_from, modify_contact_to, modify_sides, close }
     }
 }
 function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {

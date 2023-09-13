@@ -455,4 +455,20 @@ export class ShapeEditor {
         update_frame_by_points(api, this.__page, this.__shape);
         this.__repo.commit();
     }
+    public reset_contact_path() {
+        if (this.__shape.type !== ShapeType.Contact) return false;
+        const api = this.__repo.start("reset_contact_path", {});
+        api.contactModifyEditState(this.__page, this.__shape, false);
+        const points = this.get_points_for_init(1, this.__shape.getPoints());
+        const len = this.__shape.points.length;
+        api.deletePoints(this.__page, this.__shape as PathShape, 0, len);
+        for (let i = 0, len = points.length; i < len; i++) {
+            const p = importCurvePoint(exportCurvePoint(points[i]));
+            p.id = v4();
+            points[i] = p;
+        }
+        api.addPoints(this.__page, this.__shape as PathShape, points);
+        update_frame_by_points(api, this.__page, this.__shape);
+        this.__repo.commit();
+    }
 }
