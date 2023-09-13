@@ -13,7 +13,7 @@ import { update_frame_by_points } from "./path";
 import { exportCurvePoint } from "../io/baseexport";
 import { importCurvePoint } from "../io/baseimport";
 import { v4 } from "uuid";
-import { get_box_pagexy, get_nearest_border_point2 } from "../data/utils";
+import { d, get_box_pagexy, get_nearest_border_point } from "../data/utils";
 import { Matrix } from "../basic/matrix";
 export class ShapeEditor {
     protected __shape: Shape;
@@ -385,20 +385,22 @@ export class ShapeEditor {
             if (!from) return result;
             const fromShape = this.__page.getShape((from as ContactForm).shapeId);
             if (!fromShape) return result;
-            const xy_result = get_box_pagexy(this.__shape);
+            const xy_result = get_box_pagexy(fromShape);
             if (!xy_result) return result;
             const { xy1, xy2 } = xy_result;
-            const m1 = this.__shape.matrix2Root();
-            let p = get_nearest_border_point2(this.__shape, from.contactType, m1, xy1, xy2);
+            let p = get_nearest_border_point(fromShape, from.contactType, fromShape.matrix2Root(), xy1, xy2);
             if (!p) return result
-            const f = fromShape.frame;
+
+            const m1 = this.__shape.matrix2Root();
+            const f = this.__shape.frame;
             m1.preScale(f.width, f.height);
             const m2 = new Matrix(m1.inverse);
+
             p = m2.computeCoord3(p);
             const cp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
-            console.log('handle start');
-
-            result.unshift(cp);
+            const cp2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+            
+            result.splice(1, 0, cp, cp2);
         }
         if (index === len - 1) {
             const to = this.__shape.to;
@@ -409,15 +411,15 @@ export class ShapeEditor {
             if (!xy_result) return result;
             const { xy1, xy2 } = xy_result;
             const m1 = this.__shape.matrix2Root();
-            let p = get_nearest_border_point2(this.__shape, to.contactType, m1, xy1, xy2);
+            let p = get_nearest_border_point(this.__shape, to.contactType, m1, xy1, xy2);
             if (!p) return result
             const f = toShape.frame;
             m1.preScale(f.width, f.height);
             const m2 = new Matrix(m1.inverse);
             p = m2.computeCoord3(p);
             const cp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
-            console.log('handle end');
-            result.push(cp);
+            const cp2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+            result.splice(len - 1, 0, cp, cp2)
         }
         return result;
     }
@@ -436,6 +438,8 @@ export class ShapeEditor {
             points[i] = p;
         }
         api.addPoints(this.__page, this.__shape as PathShape, points);
+        console.log('should be 6', this.__shape.points.length);
+
         this.__repo.commit();
     }
     public modify_frame_by_points() {

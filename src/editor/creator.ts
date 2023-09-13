@@ -257,7 +257,6 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
 }
 export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm): ContactShape {
     const style = newStyle();
-    style.startMarkerType = types.MarkerType.FilledCircle;
     style.endMarkerType = types.MarkerType.OpenArrow;
     const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0));
     const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(1, 1));
