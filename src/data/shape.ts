@@ -672,7 +672,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             points,
             isClosed
         )
-        this.isEdited = isEdited;
+        this.isEdited = isEdited; // 路径是否已被编辑
     }
     /**
      * @description 根据连接类型，在图形身上找一个点。该点的坐标系为页面坐标系
@@ -794,7 +794,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             }
         }
         // 连接线被用户编辑过
-        if (this.isEdited || this.rotation) {
+        if (this.isEdited) {
             const result: CurvePoint[] = [...points];
             if (s1) result.splice(1, 1); // 编辑过后，不需要外围点再做为活点
             if (s2) result.splice(result.length - 2, 1);
