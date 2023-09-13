@@ -369,18 +369,25 @@ export class ShapeEditor {
     }
 
     // contact
+    /**
+     * @description 修改连接线的编辑状态，如果一条连接线的状态为被用户手动编辑过，
+     * 则在生成路径的时候应该以用户手动确认的点为主体，让两端去连接这些用户手动确认的点。
+     */
     public modify_edit_state(state: boolean) {
         if (this.__shape.type !== ShapeType.Contact) return false;
         const api = this.__repo.start("modify_edit_state", {});
         api.contactModifyEditState(this.__page, this.__shape, state);
         this.__repo.commit();
     }
+    /**
+     * @description 寻找可能需要产生的新点
+     */
     private get_points_for_init(index: number, points: CurvePoint[]) {
-        const len = points.length;
+        let len = points.length;
         let result = [...points];
         console.log('index: %d', index);
-
-        if (index === 0) {
+        console.log('len: %d', len);
+        if (index === 0) { // 如果编辑的线为第一根线；
             const from = this.__shape.from;
             if (!from) return result;
             const fromShape = this.__page.getShape((from as ContactForm).shapeId);
@@ -399,23 +406,25 @@ export class ShapeEditor {
             p = m2.computeCoord3(p);
             const cp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
             const cp2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
-            
             result.splice(1, 0, cp, cp2);
         }
-        if (index === len - 1) {
+        if (index === len - 2) { // 编辑的线为最后一根线；
+            len = result.length; // 更新一下长度，因为部分场景下，编辑的线会同时为第一根线和最后一根线，若是第一根线的话，原数据已经更改，需要在下次更改数据前并判定为最后一根线后去更新result长度。
             const to = this.__shape.to;
             if (!to) return result;
             const toShape = this.__page.getShape((to as ContactForm).shapeId);
             if (!toShape) return result;
-            const xy_result = get_box_pagexy(this.__shape);
+            const xy_result = get_box_pagexy(toShape);
             if (!xy_result) return result;
             const { xy1, xy2 } = xy_result;
-            const m1 = this.__shape.matrix2Root();
-            let p = get_nearest_border_point(this.__shape, to.contactType, m1, xy1, xy2);
+            let p = get_nearest_border_point(toShape, to.contactType, toShape.matrix2Root(), xy1, xy2);
             if (!p) return result
-            const f = toShape.frame;
+
+            const m1 = this.__shape.matrix2Root();
+            const f = this.__shape.frame;
             m1.preScale(f.width, f.height);
             const m2 = new Matrix(m1.inverse);
+
             p = m2.computeCoord3(p);
             const cp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
             const cp2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
@@ -424,7 +433,8 @@ export class ShapeEditor {
         return result;
     }
     /**
-     * @description 编辑边之前，初始化点
+     * @description 编辑路径之前，初始化点 —— 在编辑路径之前，渲染的点也许并不存在于连接线的数据上(points)，另外，编辑的预期效果可能需要产生新的点才可能实现。
+     * 这个方法的目的就是把可能需要产生的新点、已经渲染的点全部更新到连接线的数据上以支持后续操作；
      */
     public pre_modify_side(index: number) {
         if (this.__shape.type !== ShapeType.Contact) return false;
@@ -438,8 +448,6 @@ export class ShapeEditor {
             points[i] = p;
         }
         api.addPoints(this.__page, this.__shape as PathShape, points);
-        console.log('should be 6', this.__shape.points.length);
-
         this.__repo.commit();
     }
     public modify_frame_by_points() {
