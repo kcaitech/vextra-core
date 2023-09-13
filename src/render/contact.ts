@@ -49,6 +49,15 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
             childs.push(h('rect', { x: p.x - 6, y: p.y - 6, width: 12, height: 12, fill: 'yellow', rx: 6, ry: 6, 'fill-opacity': 0.6 }));
         }
     }
+    const tps3 = shape.getPoints();
+    if (tps3 && tps3.length) {
+        const matrixx = new Matrix();
+        matrixx.preScale(frame.width, frame.height);
+        for (let i = 0; i < tps3.length; i++) {
+            const p = matrixx.computeCoord3(tps3[i].point);
+            childs.push(h('rect', { x: p.x - 3, y: p.y - 3, width: 6, height: 6, fill: 'red', rx: 3, ry: 3, 'fill-opacity': 0.6 }));
+        }
+    }
     if (shape.style.borders.length) {
         childs.push(...renderB(h, shape.style, path, shape));
         return h('g', props, childs);

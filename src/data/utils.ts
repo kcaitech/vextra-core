@@ -40,10 +40,10 @@ export function get_box_pagexy(shape: Shape) {
     const p2r = p.matrix2Root();
     const box = shape.boundingBox();
     const xy1 = p2r.computeCoord2(box.x, box.y);
-    const xy2 = p2r.computeCoord(box.x + box.width, box.y + box.height);
+    const xy2 = p2r.computeCoord2(box.x + box.width, box.y + box.height);
     return { xy1, xy2 }
 }
-export function get_nearest_border_point2(shape: Shape, contactType: ContactType, m2r: Matrix, xy1: PageXY, xy2: PageXY) { // 寻找距离外围最近的一个点
+export function get_nearest_border_point(shape: Shape, contactType: ContactType, m2r: Matrix, xy1: PageXY, xy2: PageXY) { // 寻找距离外围最近的一个点
     const box = { left: xy1.x, right: xy2.x, top: xy1.y, bottom: xy2.y };
     const offset = AStar.OFFSET;
     box.left -= offset, box.right += offset, box.top -= offset, box.bottom += offset;
@@ -135,8 +135,8 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
     const start_point = get_pagexy(shape1, type1, m1), end_point = get_pagexy(shape2, type2, m2);
     if (!start_point || !end_point) return false;
     let preparation_point: PageXY[] = [];
-    const b_start_point = get_nearest_border_point2(shape1, type1, m1, s1xy1, s1xy2);
-    const b_end_point = get_nearest_border_point2(shape2, type2, m2, s2xy1, s2xy2);
+    const b_start_point = get_nearest_border_point(shape1, type1, m1, s1xy1, s1xy2);
+    const b_end_point = get_nearest_border_point(shape2, type2, m2, s2xy1, s2xy2);
     if (!b_start_point || !b_end_point) return false;
 
     preparation_point.push(b_start_point, b_end_point); // 获取伪起点和伪终点,并将它们添加到数组里
