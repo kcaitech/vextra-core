@@ -130,6 +130,9 @@ export function shapeModifyConstrainerProportions(shape: Shape, prop: boolean) {
 export function shapeModifyContactTo(shape: Shape, to: ContactForm | undefined) {
     shape.to = to;
 }
+export function shapeModifyContactFrom(shape: Shape, from: ContactForm | undefined) {
+    shape.from = from;
+}
 export function shapeModifyEditedState(shape: Shape, state: boolean) {
     shape.isEdited = state;
 }

@@ -17,6 +17,8 @@ import { uuid } from "../basic/uuid";
 import { ContactForm, ContactRole } from "../data/baseclasses";
 import { update_contact_points } from "../data/utils";
 import { ContactShape } from "../data/contact";
+import { importCurvePoint } from "../io/baseimport";
+import { exportCurvePoint } from "../io/baseexport";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
@@ -573,6 +575,18 @@ export class Controller {
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
         const pre = () => {
+            if (shape.isEdited) {
+                api.contactModifyEditState(page, shape, false);
+                const points = shape.getPoints();
+                const len = shape.points.length;
+                api.deletePoints(page, shape as PathShape, 0, len);
+                for (let i = 0, len = points.length; i < len; i++) {
+                    const p = importCurvePoint(exportCurvePoint(points[i]));
+                    p.id = v4();
+                    points[i] = p;
+                }
+                api.addPoints(page, shape as PathShape, points);
+            }
             update_contact_points(api, shape, page);
         }
         const modify_contact_from = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {

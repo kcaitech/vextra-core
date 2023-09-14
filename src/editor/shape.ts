@@ -473,10 +473,4 @@ export class ShapeEditor {
         update_frame_by_points(api, this.__page, this.__shape);
         this.__repo.commit();
     }
-    public addMark() {
-        if (this.__shape.type !== ShapeType.Contact) return false;
-        const api = this.__repo.start("reset_contact_path", {});
-        
-        this.__repo.commit();
-    }
 }
