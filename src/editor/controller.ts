@@ -1,5 +1,5 @@
 import { translateTo, translate, expandTo, adjustLT2, adjustRT2, adjustRB2, adjustLB2, erScaleByT, erScaleByR, erScaleByB, erScaleByL, scaleByT, scaleByR, scaleByB, scaleByL, pathEdit, update_frame_by_points, pathEditSide } from "./frame";
-import { Shape, GroupShape, PathShape, CurvePoint, Point2D, ContactShape } from "../data/shape";
+import { Shape, GroupShape, PathShape, CurvePoint, Point2D } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ContactRoleType, CurveMode, ShapeType } from "../data/typesdefine";
 import { ShapeFrame } from "../data/shape";
@@ -16,6 +16,7 @@ import { afterModifyGroupShapeWH } from "./frame";
 import { uuid } from "../basic/uuid";
 import { ContactForm, ContactRole } from "../data/baseclasses";
 import { update_contact_points } from "../data/utils";
+import { ContactShape } from "../data/contact";
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number

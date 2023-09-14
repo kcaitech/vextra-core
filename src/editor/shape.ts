@@ -1,4 +1,4 @@
-import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2, ContactShape } from "../data/shape";
+import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2 } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, pathEdit, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
@@ -13,8 +13,10 @@ import { update_frame_by_points } from "./path";
 import { exportCurvePoint } from "../io/baseexport";
 import { importCurvePoint } from "../io/baseimport";
 import { v4 } from "uuid";
-import { d, get_box_pagexy, get_nearest_border_point } from "../data/utils";
+import {  get_box_pagexy, get_nearest_border_point } from "../data/utils";
 import { Matrix } from "../basic/matrix";
+import { ContactShape } from "../data/contact";
+
 export class ShapeEditor {
     protected __shape: Shape;
     protected __repo: CoopRepository;

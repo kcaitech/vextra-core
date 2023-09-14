@@ -2,7 +2,8 @@ import { v4 as uuid } from "uuid";
 import { Page } from "../data/page";
 import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
-import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment, ContactShape } from "../data/shape";
+import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment } from "../data/shape";
+import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
 import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape, importTableCell } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
