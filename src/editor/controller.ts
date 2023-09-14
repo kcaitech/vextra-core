@@ -60,6 +60,7 @@ export interface AsyncCreator {
     collect: (page: Page, shapes: Shape[], target: Artboard) => void;
     init_table: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, row: number, col: number) => Shape | undefined;
     contact_to: (p: PageXY, to?: ContactForm) => void;
+    migrate: (targetParent: GroupShape) => void;
     close: () => undefined;
 }
 export interface AsyncBaseAction {
@@ -231,7 +232,17 @@ export class Controller {
             if (!newShape || !savepage) return;
             status = Status.Pending;
             pathEdit(api, savepage, newShape, 1, p);
-            if (to) api.shapeModifyContactTo(savepage, newShape as ContactShape, to);
+            api.shapeModifyContactTo(savepage, newShape as ContactShape, to);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const migrate = (targetParent: GroupShape) => {
+            if (!newShape || !savepage) return;
+            status = Status.Pending;
+            const origin: GroupShape = newShape.parent as GroupShape;
+            const { x, y } = newShape.frame2Root();
+            api.shapeMove(savepage, origin, origin.indexOfChild(newShape), targetParent, targetParent.childs.length);
+            translateTo(api, savepage, newShape, x, y);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
@@ -321,7 +332,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { init, init_media, init_text, init_arrow, init_contact, setFrame, setFrameByWheel, collect, init_table, contact_to, close }
+        return { init, init_media, init_text, init_arrow, init_contact, setFrame, setFrameByWheel, collect, init_table, contact_to, migrate, close }
     }
     // 单个图形异步编辑
     public asyncRectEditor(shape: Shape, page: Page): AsyncBaseAction {
