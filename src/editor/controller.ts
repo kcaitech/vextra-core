@@ -97,6 +97,7 @@ export interface AsyncContactEditor {
     modify_contact_from: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
     modify_contact_to: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
     modify_sides: (index: number, dx: number, dy: number) => void;
+    migrate: (targetParent: GroupShape) => void;
     close: () => undefined;
 }
 
@@ -607,6 +608,15 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
+        const migrate = (targetParent: GroupShape) => {
+            status = Status.Pending;
+            const origin: GroupShape = shape.parent as GroupShape;
+            const { x, y } = shape.frame2Root();
+            api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length);
+            translateTo(api, page, shape, x, y);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
         const modify_sides = (index: number, dx: number, dy: number) => {
             if (shape.type !== ShapeType.Contact) return;
             status = Status.Pending;
@@ -622,7 +632,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { pre, modify_contact_from, modify_contact_to, modify_sides, close }
+        return { pre, modify_contact_from, modify_contact_to, modify_sides, migrate, close }
     }
 }
 function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
