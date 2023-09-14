@@ -264,7 +264,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
     style.borders.push(border);
     const text = new Text(new BasicArray());
-    const para = new Para('\n', new BasicArray());
+    const para = new Para('添加文本\n', new BasicArray());
     para.attr = new ParaAttr();
     para.attr.minimumLineHeight = 24;
     text.paras.push(para);
