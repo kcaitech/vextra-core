@@ -32,20 +32,21 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
         props.opacity = contextSettings.opacity;
     }
 
-    if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
-        const cx = frame.x + frame.width / 2;
-        const cy = frame.y + frame.height / 2;
-        const style: any = {}
-        style.transform = "translate(" + cx + "px," + cy + "px) "
-        if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
-        if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
-        if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
-        style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
-        props.style = style;
-    }
-    else {
-        props.transform = `translate(${frame.x},${frame.y})`
-    }
+    // if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
+    //     const cx = frame.x + frame.width / 2;
+    //     const cy = frame.y + frame.height / 2;
+    //     const style: any = {}
+    //     style.transform = "translate(" + cx + "px," + cy + "px) "
+    //     if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
+    //     if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
+    //     if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
+    //     style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
+    //     props.style = style;
+    // }
+    // else {
+    //     props.transform = `translate(${frame.x},${frame.y})`
+    // }
+    props.transform = `translate(${frame.x},${frame.y})`
     let childs = new Array();
     // const tps = shape.getTemp(); // 路径计算时可能会经过的点
 
@@ -77,27 +78,27 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
     //     }
     // }
 
-    let mark_id: any;
-    if (!shape.mark) {
-        const tps3 = shape.getPoints(); // 最终在屏幕上展示的点
-        let points: { x: number, y: number }[] = []
-        if (tps3 && tps3.length) {
-            const matrixx = new Matrix();
-            matrixx.preScale(frame.width, frame.height);
-            for (let i = 0; i < tps3.length; i++) {
-                points.push(matrixx.computeCoord3(tps3[i].point));
-            }
-        }
-        const box = XYsBounding(points);
-        mark_id = 'mask-' + objectId(shape);
-        childs.push(renderM(h, shape, mark_id, box, { x: 0, y: 0 }));
-        childs.push(renderTextLayout(h, shape.getTextLayout()));
-    }
+    // let mark_id: any;
+    // if (!shape.mark) {
+    //     const tps3 = shape.getPoints(); // 最终在屏幕上展示的点
+    //     let points: { x: number, y: number }[] = []
+    //     if (tps3 && tps3.length) {
+    //         const matrixx = new Matrix();
+    //         matrixx.preScale(frame.width, frame.height);
+    //         for (let i = 0; i < tps3.length; i++) {
+    //             points.push(matrixx.computeCoord3(tps3[i].point));
+    //         }
+    //     }
+    //     const box = XYsBounding(points);
+    //     mark_id = 'mask-' + objectId(shape);
+    //     childs.push(renderM(h, shape, mark_id, box, { x: 0, y: 0 }));
+    //     childs.push(renderTextLayout(h, shape.getTextLayout()));
+    // }
     if (shape.style.borders.length) {
-        childs.push(...renderB(h, shape.style, path, shape, mark_id));
+        childs.push(...renderB(h, shape.style, path, shape));
         return h('g', props, childs);
     } else {
-        props.stroke = '#000000', props['stroke-width'] = 1, props.d = path;
+        props.stroke = '#808080', props['stroke-width'] = 2, props.d = path;
         return h('path', props);
     }
 }

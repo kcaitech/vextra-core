@@ -12,6 +12,7 @@ import { parsePath } from "./pathparser";
 import { ContactForm, ContactType, CurveMode } from "./typesdefine";
 import { v4 } from "uuid";
 import { d, gen_baisc_params, gen_matrix1, gen_path, slice_invalid_point } from "./utils";
+import { Page } from "./page";
 interface PageXY {
     x: number
     y: number
@@ -1041,5 +1042,12 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         // if (!this.text || !this.mark) return;
         this.text.updateSize(40, 100);
         return this.text.getLayout();
+    }
+    private __page: Shape | undefined;
+    page() {
+        if (!this.__page) {
+            this.__page = this.getPage();
+        }
+        return this.__page;
     }
 }
