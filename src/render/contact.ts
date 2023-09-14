@@ -1,7 +1,24 @@
+import { objectId } from "../basic/objectid";
 import { Matrix } from "../basic/matrix";
 import { Shape } from "../data/classes";
 import { render as renderB } from "./contact_borders";
+import { render as renderM } from "./contact_mark";
+import { renderTextLayout } from "./text";
+import { Text } from "../data/text";
 
+function XYsBounding(points: { x: number, y: number }[]) {
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        xs.push(p.x), ys.push(p.y);
+    }
+    const top = Math.min(...ys);
+    const bottom = Math.max(...ys);
+    const left = Math.min(...xs);
+    const right = Math.max(...xs);
+    return { x: left, y: top, width: right - left, height: bottom - top }
+}
 export function render(h: Function, shape: Shape, path: string, reflush?: number) {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
@@ -41,26 +58,43 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
     //         childs.push(h('rect', { x: p.x - 5, y: p.y - 5, width: 10, height: 10, fill: 'green', rx: 5, ry: 5, 'fill-opacity': 0.6 }));
     //     }
     // }
-    const tps2 = shape.yellow_points(); // 黄色： points上真实存在的点 + 起始点
-    if (tps2 && tps2.length) {
-        const matrixx = new Matrix();
-        matrixx.preScale(frame.width, frame.height);
-        for (let i = 0; i < tps2.length; i++) {
-            const p = matrixx.computeCoord3(tps2[i].point);
-            childs.push(h('rect', { x: p.x - 6, y: p.y - 6, width: 12, height: 12, fill: 'yellow', rx: 6, ry: 6, 'fill-opacity': 0.6 }));
+    // const tps2 = shape.yellow_points(); // 黄色： points上真实存在的点 + 起始点
+    // if (tps2 && tps2.length) {
+    //     const matrixx = new Matrix();
+    //     matrixx.preScale(frame.width, frame.height);
+    //     for (let i = 0; i < tps2.length; i++) {
+    //         const p = matrixx.computeCoord3(tps2[i].point);
+    //         childs.push(h('rect', { x: p.x - 6, y: p.y - 6, width: 12, height: 12, fill: 'yellow', rx: 6, ry: 6, 'fill-opacity': 0.6 }));
+    //     }
+    // }
+    // const tps3 = shape.getPoints(); // 最终在屏幕上展示的点
+    // if (tps3 && tps3.length) {
+    //     const matrixx = new Matrix();
+    //     matrixx.preScale(frame.width, frame.height);
+    //     for (let i = 0; i < tps3.length; i++) {
+    //         const p = matrixx.computeCoord3(tps3[i].point);
+    //         childs.push(h('rect', { x: p.x - 3, y: p.y - 3, width: 6, height: 6, fill: 'red', rx: 3, ry: 3, 'fill-opacity': 0.6 }));
+    //     }
+    // }
+
+    let mark_id: any;
+    if (!shape.mark) {
+        const tps3 = shape.getPoints(); // 最终在屏幕上展示的点
+        let points: { x: number, y: number }[] = []
+        if (tps3 && tps3.length) {
+            const matrixx = new Matrix();
+            matrixx.preScale(frame.width, frame.height);
+            for (let i = 0; i < tps3.length; i++) {
+                points.push(matrixx.computeCoord3(tps3[i].point));
+            }
         }
-    }
-    const tps3 = shape.getPoints(); // 最终在屏幕上展示的点
-    if (tps3 && tps3.length) {
-        const matrixx = new Matrix();
-        matrixx.preScale(frame.width, frame.height);
-        for (let i = 0; i < tps3.length; i++) {
-            const p = matrixx.computeCoord3(tps3[i].point);
-            childs.push(h('rect', { x: p.x - 3, y: p.y - 3, width: 6, height: 6, fill: 'red', rx: 3, ry: 3, 'fill-opacity': 0.6 }));
-        }
+        const box = XYsBounding(points);
+        mark_id = 'mask-' + objectId(shape);
+        childs.push(renderM(h, shape, mark_id, box, { x: 0, y: 0 }));
+        childs.push(renderTextLayout(h, shape.getTextLayout()));
     }
     if (shape.style.borders.length) {
-        childs.push(...renderB(h, shape.style, path, shape));
+        childs.push(...renderB(h, shape.style, path, shape, mark_id));
         return h('g', props, childs);
     } else {
         props.stroke = '#000000', props['stroke-width'] = 1, props.d = path;

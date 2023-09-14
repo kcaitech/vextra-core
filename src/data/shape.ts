@@ -1037,8 +1037,8 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     getPath2(): Path {
         return this.getPath()
     }
-    getLayout(): TextLayout | undefined {
-        if (!this.text || !this.mark) return;
+    getTextLayout(): TextLayout | undefined {
+        // if (!this.text || !this.mark) return;
         this.text.updateSize(40, 100);
         return this.text.getLayout();
     }
