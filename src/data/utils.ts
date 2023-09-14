@@ -93,7 +93,7 @@ function XYsBoundingPoints(points: PageXY[]) {
     ];
 }
 /**
- * @description 一定误差范围内的相等判定
+ * @description 一定误差范围内的相等判定，'Math.abs(a - b) < 0.00001' 竟然比 'a === b' 更快！
  */
 function isEqu(a: number, b: number) {
     return Math.abs(a - b) < 0.00001;
@@ -122,13 +122,13 @@ function remove_duplicate_point(points: PageXY[]) {
 }
 
 /**
- * @description 生成寻路计算的必要参数，其中点位是关键
+ * @description 生成寻路计算的必要参数，其中确定点位(绘制寻路地图)是关键😫
  */
 export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Matrix, m2: Matrix) {
     const OFFSET = 20;
     const p1 = shape1.parent, p2 = shape2.parent;
     if (!p1 || !p2) return false;
-    const p2r1 = p1.matrix2Root(), p2r2 = p2.matrix2Parent();
+    const p2r1 = p1.matrix2Root(), p2r2 = p2.matrix2Root();
     const box1 = shape1.boundingBox(), box2 = shape2.boundingBox();
     const s1xy1 = p2r1.computeCoord2(box1.x, box1.y), s2xy1 = p2r2.computeCoord2(box2.x, box2.y);
     const s1xy2 = p2r1.computeCoord(box1.x + box1.width, box1.y + box1.height), s2xy2 = p2r2.computeCoord2(box2.x + box2.width, box2.y + box2.height);
@@ -169,6 +169,36 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
 
     preparation_point = remove_duplicate_point(preparation_point);
     return { start_point, end_point, b_start_point, b_end_point, preparation_point, ff1, ff2 };
+}
+export function gen_raw(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Matrix, m2: Matrix) {
+    const OFFSET = 20;
+    const p1 = shape1.parent, p2 = shape2.parent;
+    if (!p1 || !p2) return false;
+    const p2r1 = p1.matrix2Root(), p2r2 = p2.matrix2Root();
+    const box1 = shape1.boundingBox(), box2 = shape2.boundingBox();
+    const s1xy1 = p2r1.computeCoord2(box1.x, box1.y), s2xy1 = p2r2.computeCoord2(box2.x, box2.y);
+    const s1xy2 = p2r1.computeCoord2(box1.x + box1.width, box1.y + box1.height), s2xy2 = p2r2.computeCoord2(box2.x + box2.width, box2.y + box2.height);
+    const s1w = s1xy2.x - s1xy1.x, s1h = s1xy2.y - s1xy1.y;
+    const s2w = s2xy2.x - s2xy1.x, s2h = s2xy2.y - s2xy1.y;
+    const ff1 = { x: s1xy1.x, y: s1xy1.y, width: s1w, height: s1h };
+    const ff2 = { x: s2xy1.x, y: s2xy1.y, width: s2w, height: s2h };
+    const start_point = get_pagexy(shape1, type1, m1), end_point = get_pagexy(shape2, type2, m2);
+    if (!start_point || !end_point) return false;
+    const preparation_point_green: PageXY[] = [];
+    const b_start_point = get_nearest_border_point(shape1, type1, m1, s1xy1, s1xy2);
+    const b_end_point = get_nearest_border_point(shape2, type2, m2, s2xy1, s2xy2);
+    if (!b_start_point || !b_end_point) return false;
+    preparation_point_green.push(b_start_point, b_end_point); // 获取伪起点和伪终点,并将它们添加到数组里
+
+    const preparation_point_yellow: PageXY[] = [];
+    const t1 = { x: s1xy1.x - OFFSET, y: s1xy1.y - OFFSET }, t2 = { x: s1xy2.x + OFFSET, y: s1xy2.y + OFFSET };
+    preparation_point_yellow.push(...XYsBoundingPoints([b_start_point, b_end_point, t1, t2])); // 伪起点和伪终点形成的矩形 和 起点元素包围框 组成一个大矩形 的四个顶点
+
+    const preparation_point_red: PageXY[] = [];
+    const t3 = { x: s2xy1.x - OFFSET, y: s2xy1.y - OFFSET }, t4 = { x: s2xy2.x + OFFSET, y: s2xy2.y + OFFSET };
+    preparation_point_red.push(...XYsBoundingPoints([b_start_point, b_end_point, t3, t4])); // 伪起点和伪终点形成的矩形 和 终点元素包围框 组成一个大矩形 的四个顶点
+
+    return { preparation_point_red, preparation_point_yellow, preparation_point_green };
 }
 /**
  * @description 一定范围误差内，判定ab为同一个点

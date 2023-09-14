@@ -1,24 +1,7 @@
-import { objectId } from "../basic/objectid";
 import { Matrix } from "../basic/matrix";
 import { Shape } from "../data/classes";
 import { render as renderB } from "./contact_borders";
-import { render as renderM } from "./contact_mark";
-import { renderTextLayout } from "./text";
-import { Text } from "../data/text";
 
-function XYsBounding(points: { x: number, y: number }[]) {
-    const xs: number[] = [];
-    const ys: number[] = [];
-    for (let i = 0; i < points.length; i++) {
-        const p = points[i];
-        xs.push(p.x), ys.push(p.y);
-    }
-    const top = Math.min(...ys);
-    const bottom = Math.max(...ys);
-    const left = Math.min(...xs);
-    const right = Math.max(...xs);
-    return { x: left, y: top, width: right - left, height: bottom - top }
-}
 export function render(h: Function, shape: Shape, path: string, reflush?: number) {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
@@ -31,21 +14,6 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
     if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
         props.opacity = contextSettings.opacity;
     }
-
-    // if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
-    //     const cx = frame.x + frame.width / 2;
-    //     const cy = frame.y + frame.height / 2;
-    //     const style: any = {}
-    //     style.transform = "translate(" + cx + "px," + cy + "px) "
-    //     if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
-    //     if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
-    //     if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
-    //     style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
-    //     props.style = style;
-    // }
-    // else {
-    //     props.transform = `translate(${frame.x},${frame.y})`
-    // }
     props.transform = `translate(${frame.x},${frame.y})`
     let childs = new Array();
     // const tps = shape.getTemp(); // 路径计算时可能会经过的点
@@ -59,6 +27,36 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
     //         childs.push(h('rect', { x: p.x - 5, y: p.y - 5, width: 10, height: 10, fill: 'green', rx: 5, ry: 5, 'fill-opacity': 0.6 }));
     //     }
     // }
+    
+    // const res = shape.getTemp2();
+    // if (res) {
+    //     const { points1, points2, points3 } = res;
+    //     if (points1 && points1.length) {
+    //         const matrixx = new Matrix();
+    //         matrixx.preScale(frame.width, frame.height);
+    //         for (let i = 0; i < points1.length; i++) {
+    //             const p = matrixx.computeCoord3(points1[i].point);
+    //             childs.push(h('rect', { x: p.x - 3, y: p.y - 3, width: 6, height: 6, fill: 'green', rx: 3, ry: 3, 'fill-opacity': 0.6 }));
+    //         }
+    //     }
+    //     if (points2 && points2.length) {
+    //         const matrixx = new Matrix();
+    //         matrixx.preScale(frame.width, frame.height);
+    //         for (let i = 0; i < points2.length; i++) {
+    //             const p = matrixx.computeCoord3(points2[i].point);
+    //             childs.push(h('rect', { x: p.x - 4, y: p.y - 4, width: 8, height: 8, fill: 'red', rx: 4, ry: 4, 'fill-opacity': 0.6 }));
+    //         }
+    //     }
+    //     if (points3 && points3.length) {
+    //         const matrixx = new Matrix();
+    //         matrixx.preScale(frame.width, frame.height);
+    //         for (let i = 0; i < points3.length; i++) {
+    //             const p = matrixx.computeCoord3(points3[i].point);
+    //             childs.push(h('rect', { x: p.x - 5, y: p.y - 5, width: 10, height: 10, fill: 'yellow', rx: 5, ry: 5, 'fill-opacity': 0.6 }));
+    //         }
+    //     }
+    // }
+
     // const tps2 = shape.yellow_points(); // 黄色： points上真实存在的点 + 起始点
     // if (tps2 && tps2.length) {
     //     const matrixx = new Matrix();
