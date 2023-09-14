@@ -6,6 +6,7 @@ import { renderText2Path } from "./text";
 import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
 import { isVisible } from "./basic";
+import { Matrix } from "../basic/matrix";
 
 // find first usable style
 export function findUsableFillStyle(shape: Shape): Style {
@@ -37,19 +38,19 @@ function opPath(bop: BoolOp, path0: IPalPath, path1: IPalPath) {
     }
 }
 
-export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
+export function render2path(shape: Shape, matrix: Matrix | undefined, consumed?: Array<Shape>): Path {
     const shapeIsGroup = shape instanceof GroupShape;
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
     if (!shapeIsGroup || shape.childs.length === 0) {
-        const path = shape instanceof TextShape ? renderText2Path(shape, 0, 0) : shape.getPath(fixedRadius);
+        const path = shape instanceof TextShape ? renderText2Path(shape, 0, 0, matrix) : shape.getPath(fixedRadius);
         return path;
     }
 
     const cc = shape.childs.length;
     const child0 = shape.childs[0];
     const frame0 = child0.frame;
-    const path0 = render2path(child0, consumed);
+    const path0 = render2path(child0, matrix, consumed);
     consumed?.push(child0);
     if (child0.isNoTransform()) {
         path0.translate(frame0.x, frame0.y);
@@ -61,7 +62,7 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
     for (let i = 1; i < cc; i++) {
         const child1 = shape.childs[i];
         const frame1 = child1.frame;
-        const path1 = render2path(child1, consumed);
+        const path1 = render2path(child1, undefined, consumed);
         if (child1.isNoTransform()) {
             path1.translate(frame1.x, frame1.y);
         } else {
@@ -98,13 +99,15 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
     return resultpath;
 }
 
-export function render(h: Function, shape: GroupShape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number, consumed?: Array<Shape>): any {
+export function render(h: Function, shape: GroupShape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, matrix: Matrix | undefined, reflush?: number, consumed?: Array<Shape>): any {
     if (!isVisible(shape, overrides)) return;
 
-    const path = render2path(shape, consumed);
+    const path = render2path(shape, matrix, consumed);
     const frame = shape.frame;
 
-    const pathstr = path.toString();
+    const path0 = shape.getPath();
+    if (matrix) path0.transform(matrix);
+    const pathstr = path0.toString();
     const childs = [];
 
     // fill

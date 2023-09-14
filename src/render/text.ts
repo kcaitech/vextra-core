@@ -7,6 +7,7 @@ import { gPal } from "../basic/pal";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { OverrideType, findOverride } from "../data/symproxy";
+import { Matrix } from "../basic/matrix";
 
 
 function toRGBA(color: Color): string {
@@ -23,7 +24,7 @@ function isBlankChar(charCode: number) {
     return false;
 }
 
-export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number): Path {
+export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number, matrix: Matrix | undefined): Path {
     const getTextPath = gPal.text.getTextPath;
     const { yOffset, paras } = shape.getLayout();
     const pc = paras.length;
@@ -47,6 +48,7 @@ export function renderText2Path(shape: TextShape, offsetX: number, offsetY: numb
                     const pathstr = getTextPath(font, fontSize, g.char.charCodeAt(0))
                     const path = new Path(pathstr)
                     path.translate(g.x + offsetX + line.x, y + offsetY);
+                    if (matrix) path.transform(matrix);
                     return path;
                 }))
             }
@@ -191,13 +193,15 @@ export function renderTextLayout(h: Function, textlayout: TextLayout) {
     return childs;
 }
 
-export function render(h: Function, shape: TextShape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number) {
+export function render(h: Function, shape: TextShape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, matrix: Matrix | undefined, reflush?: number) {
 
     if (!isVisible(shape, overrides)) return;
 
     const childs = []
     const frame = shape.frame;
-    const path = shape.getPath().toString();
+    const path0 = shape.getPath();
+    if (matrix) path0.transform(matrix);
+    const path = path0.toString();
 
     // fill
     if (overrides) {
@@ -272,7 +276,7 @@ export function render(h: Function, shape: TextShape, overrides: SymbolRefShape[
 //
 // for test text path
 export function render_(h: Function, shape: TextShape, reflush?: number) {
-    const path = renderText2Path(shape, 0, 0);
+    const path = renderText2Path(shape, 0, 0, undefined);
 
     const childs = [h('path', { d: path })]
 

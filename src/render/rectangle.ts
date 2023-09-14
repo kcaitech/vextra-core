@@ -3,8 +3,9 @@ import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { isVisible } from "./basic";
 import { OverrideType, findOverride } from "../data/symproxy";
+import { Matrix } from "../basic/matrix";
 
-export function render(h: Function, shape: Shape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number) {
+export function render(h: Function, shape: Shape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, matrix: Matrix | undefined, reflush?: number) {
     // if (this.data.booleanOperation != BooleanOperation.None) {
     //     // todo 只画selection
     //     return;
@@ -14,8 +15,10 @@ export function render(h: Function, shape: Shape, overrides: SymbolRefShape[] | 
 
     const frame = shape.frame;
     const childs = [];
-    const path = shape.getPath().toString();
-    
+    const path0 = shape.getPath();
+    if (matrix) path0.transform(matrix);
+    const path = path0.toString();
+
     // fill
     if (overrides) {
         const o = findOverride(overrides, shape.id, OverrideType.Fills);
