@@ -435,8 +435,7 @@ class AStar {
     }
     // 计算一个点的代价
     cost_assessment(point: AP) {
-        // point.cost = this.g_cost(point) + this.h_cost(point);
-        point.cost = this.g_cost(point);
+        point.cost = this.g_cost(point) + this.h_cost(point);
     }
     g_cost(point: AP) {
         let cost = 0;
