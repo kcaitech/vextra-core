@@ -387,8 +387,6 @@ export class ShapeEditor {
     private get_points_for_init(index: number, points: CurvePoint[]) {
         let len = points.length;
         let result = [...points];
-        console.log('index: %d', index);
-        console.log('len: %d', len);
         if (index === 0) { // 如果编辑的线为第一根线；
             const from = this.__shape.from;
             if (!from) return result;
