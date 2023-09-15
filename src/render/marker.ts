@@ -28,7 +28,7 @@ marker[MarkerType.OpenArrow] = function (h: Function, style: Style, border: Bord
     const marker_props: any = {
         id: "arrow-" + id,
         viewBox: "0 0 10 10",
-        refX: "7",
+        refX: "7.5",
         refY: "5",
         markerWidth: range * 2,
         markerHeight: range * 2,
