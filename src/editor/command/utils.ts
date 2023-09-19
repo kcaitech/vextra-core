@@ -1,10 +1,11 @@
-import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportSymbolShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape } from "../../io/baseexport";
+import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape } from "../../data/baseexport";
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
-import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TextShape } from "../../data/shape";
+import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
 import { TableCell, TableShape } from "../../data/table";
 import { ContactShape } from "../../data/contact";
 import { Page } from "../../data/page";
+import { SymbolRefShape } from "../../data/classes";
 
 export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
@@ -28,7 +29,7 @@ const float_accuracy = 1e-7;
 
 function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
     const p: Shape | undefined = shape.parent;
-    if (!p || (p instanceof Artboard)) return false;
+    if (!p || (p instanceof Artboard || p instanceof SymbolRefShape)) return false;
 
     const cf = shape.boundingBox();
     let xychanged = false;
@@ -208,10 +209,9 @@ export function exportShape(shape: Shape): Object {
         case ShapeType.Path2: return (exportPathShape2(shape as PathShape2))
         case ShapeType.Rectangle: return (exportRectShape(shape as RectShape))
         case ShapeType.SymbolRef: return (exportSymbolRefShape(shape as SymbolRefShape))
-        case ShapeType.Symbol: return (exportSymbolShape(shape as SymbolShape))
         case ShapeType.Text: return (exportTextShape(shape as TextShape))
         case ShapeType.Group: return (exportGroupShape(shape as GroupShape))
-        case ShapeType.FlattenShape: return exportFlattenShape(shape as FlattenShape);
+        // case ShapeType.FlattenShape: return exportFlattenShape(shape as FlattenShape);
         case ShapeType.Table: return exportTableShape(shape as TableShape)
         case ShapeType.TableCell: return exportTableCell(shape as TableCell);
         case ShapeType.Contact: return exportContactShape(shape as ContactShape);

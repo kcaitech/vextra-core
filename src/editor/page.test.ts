@@ -15,7 +15,7 @@ import { v4 as uuid } from "uuid";
 import { ConstrainerProportionsAction, PageEditor, RotateAdjust } from './page';
 import { PageListItem, ShapeFrame } from '../data/baseclasses';
 import { GroupShape, Shape } from '../data/shape';
-import { exportArtboard, exportPage, exportRectShape } from '../io/baseexport';
+import { exportArtboard, exportPage, exportRectShape } from '../data/baseexport';
 import { CMDExecuter } from './command/executer';
 import { Cmd, CmdGroup } from '../coop/data/classes';
 import { CoopRepository } from './command/cooprepo';

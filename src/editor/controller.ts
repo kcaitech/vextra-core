@@ -17,8 +17,8 @@ import { uuid } from "../basic/uuid";
 import { ContactForm, ContactRole } from "../data/baseclasses";
 import { update_contact_points } from "../data/utils";
 import { ContactShape } from "../data/contact";
-import { importCurvePoint } from "../io/baseimport";
-import { exportCurvePoint } from "../io/baseexport";
+import { importCurvePoint } from "../data/baseimport";
+import { exportCurvePoint } from "../data/baseexport";
 import { log } from "console";
 interface PageXY { // 页面坐标系的xy
     x: number

@@ -1,8 +1,8 @@
 import { Cmd, CmdType, OpType, ShapeCmdModify, TableIndex } from "../../coop"
-import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape } from "../../data/classes"
+import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape, TableCell, OverrideShape } from "../../data/classes"
 import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
-import { importColor, importText } from "../../io/baseimport";
+import { importColor, importText } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import { IdOpSet } from "coop/data/basictypes";
 
@@ -33,19 +33,8 @@ export class CMDHandler {
         if ((op.type !== OpType.IdSet)) return;
         const page = document.pagesMgr.getSync(pageId)
         if (!page) return;
-        const shapeId = op.targetId[0] as string;
-        const _shape = page.getShape(shapeId, true);
-        if (!_shape) {
-            throw new Error("shape not find")
-        }
-        let shape: Shape | undefined = _shape;
-        // if (_shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-        //     const index = op.targetId[1] as TableIndex;
-        //     shape = _shape.getCellAt(index.rowIdx, index.colIdx);
-        //     if (!shape) {
-        //         throw new Error("table cell not find")
-        //     }
-        // }
+
+        const shape: Shape = page.getTarget(op.targetId)
 
         const _op = op as IdOpSet;
         const value = cmd.value;
@@ -96,37 +85,29 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.cellContentType,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    const index = op.targetId[1] as TableIndex;
-                    api.tableSetCellContentType(shape as TableShape, index.rowIdx, index.colIdx, value as types.TableCellType);
+                    api.tableSetCellContentType(shape as TableCell, value as types.TableCellType);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.cellContentText,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    const index = op.targetId[1] as TableIndex;
                     const text = value ? importText(JSON.parse(value)) : undefined;
-                    api.tableSetCellContentText(shape as TableShape, index.rowIdx, index.colIdx, text);
+                    api.tableSetCellContentText(shape as TableCell, text);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.cellContentImage,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    const index = op.targetId[1] as TableIndex;
-                    api.tableSetCellContentImage(shape as TableShape, index.rowIdx, index.colIdx, value);
+                    api.tableSetCellContentImage(shape as TableCell, value);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.cellSpan,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    const index = op.targetId[1] as TableIndex;
                     const val = value && JSON.parse(value);
                     const rowSpan = val?.rowSpan;
                     const colSpan = val?.colSpan;
-                    api.tableModifyCellSpan(shape as TableShape, index.rowIdx, index.colIdx, rowSpan ?? 1, colSpan ?? 1);
+                    api.tableModifyCellSpan(shape as TableCell, rowSpan ?? 1, colSpan ?? 1);
                 }
             },
             {
@@ -385,6 +366,13 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 }
             },
             {
+                opId: SHAPE_ATTR_ID.issymbolshape,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const isSymShape = value && JSON.parse(value);
+                    api.shapeModifySymbolShape(shape as GroupShape, isSymShape);
+                }
+            },
+            {
                 opId: SHAPE_ATTR_ID.fixedRadius,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const fixedRadius = value && JSON.parse(value);
@@ -412,6 +400,41 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                     api.shapeModifyEditedState(shape as GroupShape, state ?? false);
                 }
             },
+            {
+                opId: SHAPE_ATTR_ID.override_borders,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const val = value && JSON.parse(value);
+                    (shape as OverrideShape).override_borders = val;
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.override_fills,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const val = value && JSON.parse(value);
+                    (shape as OverrideShape).override_fills = val;
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.override_text,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const val = value && JSON.parse(value);
+                    (shape as OverrideShape).override_text = val;
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.override_image,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const val = value && JSON.parse(value);
+                    (shape as OverrideShape).override_image = val;
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.override_visible,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const val = value && JSON.parse(value);
+                    (shape as OverrideShape).override_visible = val;
+                }
+            },
         ]
     }
 ]
@@ -423,14 +446,6 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.textBehaviour,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-                        const index = op.targetId[1] as TableIndex;
-                        shape = shape.getCellAt(index.rowIdx, index.colIdx, true) as Shape;
-                        if (!shape) {
-                            throw new Error("table cell not find")
-                        }
-                    }
                     const textBehaviour = value as types.TextBehaviour
                     api.shapeModifyTextBehaviour(page, shape as TextShapeLike, textBehaviour ?? types.TextBehaviour.Flexible);
                 }
@@ -438,14 +453,6 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.textVerAlign,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-                        const index = op.targetId[1] as TableIndex;
-                        shape = shape.getCellAt(index.rowIdx, index.colIdx, true) as Shape;
-                        if (!shape) {
-                            throw new Error("table cell not find")
-                        }
-                    }
                     const textVerAlign = value as types.TextVerAlign
                     const text = (shape as TextShapeLike).text;
                     api.shapeModifyTextVerAlign(text, textVerAlign ?? types.TextVerAlign.Top);
@@ -454,14 +461,6 @@ export const text_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.textTransform,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const op = cmd.ops[0];
-                    if (shape instanceof TableShape && op.targetId[1] instanceof TableIndex) {
-                        const index = op.targetId[1] as TableIndex;
-                        shape = shape.getCellAt(index.rowIdx, index.colIdx, true) as Shape;
-                        if (!shape) {
-                            throw new Error("table cell not find")
-                        }
-                    }
                     const text = (shape as TextShapeLike).text;
                     api.shapeModifyTextTransform(text, value as TextTransformType);
                 }

@@ -10,40 +10,44 @@ import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../data/baseexport";
 import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
-import { GroupShape, Shape, PathShape, PathShape2, CurvePoint } from "../../data/shape";
-import { ContactShape } from "../../data/contact";
+import { GroupShape, Shape, PathShape, PathShape2 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, Color, ContactForm, ContextSettings, Fill, MarkerType } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType, Style } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, FillType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { TableOpTarget } from "../../coop/data/classes";
-import { ContactRole } from "../../data/baseclasses";
+import { ContactRole, CurvePoint } from "../../data/baseclasses";
+import {ContactShape} from "../../data/contact"
 
-type TextShapeLike = Shape & { text: Text }
+type TextShapeLike = Shape & { text: Text, overrideText?: Text }
 
 function checkShapeAtPage(page: Page, obj: Shape) {
-    if (obj instanceof TableCell) {
-        obj = obj.parent as Shape;
-    }
-    if (!page.getShape(obj.id)) throw new Error("shape not inside page")
+    // if (obj instanceof VirtualShape) {
+    //     const id = obj.getRootId();
+    //     if (!page.getShape(id)) throw new Error("shape not inside page")
+    //     return;
+    // }
+    // if (obj instanceof TableCell) {
+    //     obj = obj.parent as Shape;
+    // }
+    const shapeid = obj.shapeId;
+    if (!page.getShape(shapeid[0] as string)) throw new Error("shape not inside page")
 }
 
 function genShapeId(shape: Shape): Array<string | TableIndex> {
-    if (shape instanceof TableCell) {
-        const table = shape.parent as TableShape;
-        const index = table.indexOfCell(shape);
-        if (!index) throw new Error("Cant find cell");
-        return [table.id, new TableIndex(index.rowIdx, index.colIdx)]
-    }
-    return [shape.id]
+    return shape.shapeId.map((v) => {
+        if (typeof v === 'string') return v;
+        return new TableIndex(v.rowIdx, v.colIdx);
+    });
 }
+
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -99,6 +103,45 @@ export class Api {
         if (!cmdmerge(this.cmds, cmd)) {
             this.cmds.push(cmd);
         }
+    }
+
+    private text4edit(page: Page, shape: TextShapeLike): Text {
+        const text = shape.overrideText;
+        if (text) {
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.override_text, true, undefined));
+            const len = text.length - 1;
+            const _text = exportText(text);
+            // this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), "inittext", true, true));
+            const p = _text.paras[_text.paras.length - 1];
+            const str = p.text;
+            p.text = str.slice(0, str.length - 1); // 去掉最后的回车
+            this.addCmd(TextCmdInsert.Make(page.id, genShapeId(shape), 0, len, { type: "complex", text: _text, length: len }));
+        }
+        return shape.text;
+    }
+
+    private fills4edit(page: Page, shape: Shape, style: Style): Fill[] {
+        const fills: Fill[] | undefined = (style as any).overrideFills;
+        if (fills) {
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.override_fills, true, undefined));
+            for (let i = 0; i < fills.length; i++) {
+                const fill = fills[i];
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, i, exportFill(fill)));
+            }
+        }
+        return style.fills;
+    }
+
+    private borders4edit(page: Page, shape: Shape, style: Style): Border[] {
+        const borders: Border[] | undefined = (style as any).overrideBorders;
+        if (borders) {
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.override_borders, true, undefined));
+            for (let i = 0; i < borders.length; i++) {
+                const border = borders[i];
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, i, exportBorder(border)));
+            }
+        }
+        return style.borders;
     }
 
     pageInsert(document: Document, page: Page, index: number) {
@@ -325,7 +368,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.isVisible;
-            shape.isVisible = isVisible;
+            shape.setVisible(isVisible);
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.visible, isVisible, save));
         })
     }
@@ -431,11 +474,22 @@ export class Api {
             }
         })
     }
+    shapeModifySymbolShape(page: Page, shape: GroupShape, isSymbolShape: boolean | undefined) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const origin = shape.isSymbolShape;
+            if (!!isSymbolShape !== !!origin) {
+                basicapi.shapeModifySymbolShape(shape, isSymbolShape);
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.issymbolshape, isSymbolShape, origin));
+            }
+        })
+    }
     // 添加一次fill
     addFillAt(page: Page, shape: Shape, fill: Fill, index: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            basicapi.addFillAt(shape.style, fill, index);
+            const fills = this.fills4edit(page, shape, shape.style);
+            basicapi.addFillAt(fills, fill, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, index, exportFill(fill)))
         })
     }
@@ -443,9 +497,10 @@ export class Api {
     addFills(page: Page, shape: Shape, fills: Fill[]) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
+            const fillsOld = this.fills4edit(page, shape, shape.style);
             for (let i = 0; i < fills.length; i++) {
                 const fill = fills[i];
-                basicapi.addFillAt(shape.style, fill, i);
+                basicapi.addFillAt(fillsOld, fill, i);
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, i, exportFill(fill)));
             }
         })
@@ -454,7 +509,8 @@ export class Api {
     addBorderAt(page: Page, shape: Shape, border: Border, index: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            basicapi.addBorderAt(shape.style, border, index);
+            const borders = this.borders4edit(page, shape, shape.style);
+            basicapi.addBorderAt(borders, border, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, index, exportBorder(border)))
         })
     }
@@ -462,9 +518,10 @@ export class Api {
     addBorders(page: Page, shape: Shape, borders: Border[]) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
+            const bordersOld = this.borders4edit(page, shape, shape.style);
             for (let i = 0; i < borders.length; i++) {
                 const border = borders[i];
-                basicapi.addBorderAt(shape.style, border, i);
+                basicapi.addBorderAt(bordersOld, border, i);
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, i, exportBorder(border)));
             }
         })
@@ -474,7 +531,8 @@ export class Api {
         checkShapeAtPage(page, shape);
         if (!shape.style.fills[index]) return;
         this.__trap(() => {
-            const fill = basicapi.deleteFillAt(shape.style, index);
+            const fills = this.fills4edit(page, shape, shape.style);
+            const fill = basicapi.deleteFillAt(fills, index);
             if (fill) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, index, exportFill(fill)));
         })
     }
@@ -482,7 +540,8 @@ export class Api {
     deleteFills(page: Page, shape: Shape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const fills = basicapi.deleteFills(shape.style, index, strength);
+            const fillsOld = this.fills4edit(page, shape, shape.style);
+            const fills = basicapi.deleteFills(fillsOld, index, strength);
             if (fills && fills.length) {
                 for (let i = 0; i < fills.length; i++) {
                     const fill = fills[i];
@@ -496,7 +555,8 @@ export class Api {
         checkShapeAtPage(page, shape);
         if (!shape.style.borders[index]) return;
         this.__trap(() => {
-            const border = basicapi.deleteBorderAt(shape.style, index);
+            const borders = this.borders4edit(page, shape, shape.style);
+            const border = basicapi.deleteBorderAt(borders, index);
             if (border) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), BORDER_ID, border.id, index, exportBorder(border)));
         })
     }
@@ -504,7 +564,8 @@ export class Api {
     deleteBorders(page: Page, shape: Shape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const borders = basicapi.deleteBorders(shape.style, index, strength);
+            const bordersOld = this.borders4edit(page, shape, shape.style);
+            const borders = basicapi.deleteBorders(bordersOld, index, strength);
             if (borders && borders.length) {
                 for (let i = 0; i < borders.length; i++) {
                     const border = borders[i];
@@ -519,8 +580,10 @@ export class Api {
         const fill: Fill = shape.style.fills[idx];
         if (fill) {
             this.__trap(() => {
+                const fills = this.fills4edit(page, shape, shape.style);
+                const fill: Fill = fills[idx];
                 const save = fill.color;
-                fill.color = color
+                basicapi.setFillColor(fill, color);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.color, exportColor(color), exportColor(save)));
             })
         }
@@ -530,8 +593,10 @@ export class Api {
         const fill: Fill = shape.style.fills[idx];
         if (fill) {
             this.__trap(() => {
+                const fills = this.fills4edit(page, shape, shape.style);
+                const fill: Fill = fills[idx];
                 const save = fill.isEnabled;
-                fill.isEnabled = isEnable
+                basicapi.setFillEnable(fill, isEnable);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.enable, isEnable, save));
             })
         }
@@ -541,8 +606,10 @@ export class Api {
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
+                const borders = this.borders4edit(page, shape, shape.style);
+                const border = borders[idx];
                 const save = border.color;
-                border.color = color
+                basicapi.setBorderColor(border, color);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.color, exportColor(color), exportColor(save)));
             })
         }
@@ -552,8 +619,10 @@ export class Api {
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
+                const borders = this.borders4edit(page, shape, shape.style);
+                const border = borders[idx];
                 const save = border.isEnabled;
-                border.isEnabled = isEnable
+                basicapi.setBorderEnable(border, isEnable);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.enable, isEnable, save));
             })
         }
@@ -563,8 +632,10 @@ export class Api {
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
+                const borders = this.borders4edit(page, shape, shape.style);
+                const border = borders[idx];
                 const save = border.thickness;
-                border.thickness = thickness
+                basicapi.setBorderThickness(border, thickness);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.thickness, thickness, save));
             })
         }
@@ -574,8 +645,10 @@ export class Api {
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
+                const borders = this.borders4edit(page, shape, shape.style);
+                const border = borders[idx];
                 const save = border.position;
-                border.position = position
+                basicapi.setBorderPosition(border, position);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.position, exportBorderPosition(position), exportBorderPosition(save)));
             })
         }
@@ -585,8 +658,10 @@ export class Api {
         const border = shape.style.borders[idx];
         if (border) {
             this.__trap(() => {
+                const borders = this.borders4edit(page, shape, shape.style);
+                const border = borders[idx];
                 const save = border.borderStyle;
-                border.borderStyle = borderStyle
+                basicapi.setBorderStyle(border, borderStyle);
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.borderStyle, exportBorderStyle(borderStyle), exportBorderStyle(save)));
             })
         }
@@ -594,9 +669,10 @@ export class Api {
     moveFill(page: Page, shape: Shape, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const fill = shape.style.fills.splice(idx, 1)[0];
+            const fills = this.fills4edit(page, shape, shape.style);
+            const fill = fills.splice(idx, 1)[0];
             if (fill) {
-                shape.style.fills.splice(idx2, 0, fill);
+                fills.splice(idx2, 0, fill);
                 this.addCmd(ShapeArrayAttrMove.Make(page.id, genShapeId(shape), FILLS_ID, idx, idx2))
             }
         })
@@ -604,9 +680,10 @@ export class Api {
     moveBorder(page: Page, shape: Shape, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const border = shape.style.borders.splice(idx, 1)[0];
+            const borders = this.borders4edit(page, shape, shape.style);
+            const border = borders.splice(idx, 1)[0];
             if (border) {
-                shape.style.borders.splice(idx2, 0, border);
+                borders.splice(idx2, 0, border);
                 this.addCmd(ShapeArrayAttrMove.Make(page.id, genShapeId(shape), BORDER_ID, idx, idx2))
             }
         })
@@ -661,14 +738,14 @@ export class Api {
     insertSimpleText(page: Page, shape: TextShapeLike, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            basicapi.insertSimpleText(shape.text, text, idx, { attr })
+            basicapi.insertSimpleText(this.text4edit(page, shape), text, idx, { attr })
             this.addCmd(TextCmdInsert.Make(page.id, genShapeId(shape), idx, text.length, { type: "simple", text, attr, length: text.length }))
         })
     }
     insertComplexText(page: Page, shape: TextShapeLike, idx: number, text: Text) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            basicapi.insertComplexText(shape.text, text, idx)
+            basicapi.insertComplexText(this.text4edit(page, shape), text, idx)
             this.addCmd(TextCmdInsert.Make(page.id, genShapeId(shape), idx, text.length, { type: "complex", text: exportText(text), length: text.length }))
         })
     }
@@ -676,7 +753,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         let del: Text | undefined;
         this.__trap(() => {
-            del = basicapi.deleteText(shape.text, idx, len)
+            del = basicapi.deleteText(this.text4edit(page, shape), idx, len)
             if (del && del.length > 0) this.addCmd(TextCmdRemove.Make(page.id, genShapeId(shape), idx, del.length, { type: "complex", text: exportText(del), length: del.length }))
         })
         return del;
@@ -684,7 +761,7 @@ export class Api {
     textModifyColor(page: Page, shape: TextShapeLike, idx: number, len: number, color: Color | undefined) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.textModifyColor(shape.text, idx, len, color);
+            const ret = basicapi.textModifyColor(this.text4edit(page, shape), idx, len, color);
             ret.forEach((m) => {
                 const colorEqual = m.color === color || m.color && color && color.equals(m.color);
                 if (!colorEqual) {
@@ -704,7 +781,7 @@ export class Api {
     textModifyFontName(page: Page, shape: TextShapeLike, idx: number, len: number, fontname: string) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.textModifyFontName(shape.text, idx, len, fontname);
+            const ret = basicapi.textModifyFontName(this.text4edit(page, shape), idx, len, fontname);
             ret.forEach((m) => {
                 if (fontname !== m.fontName) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), idx, m.length, TEXT_ATTR_ID.fontName, fontname, m.fontName));
                 idx += m.length;
@@ -714,7 +791,7 @@ export class Api {
     textModifyFontSize(page: Page, shape: TextShapeLike, idx: number, len: number, fontsize: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.textModifyFontSize(shape.text, idx, len, fontsize);
+            const ret = basicapi.textModifyFontSize(this.text4edit(page, shape), idx, len, fontsize);
             ret.forEach((m) => {
                 if (fontsize !== m.fontSize) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), idx, m.length, TEXT_ATTR_ID.fontSize, fontsize, m.fontSize));
                 idx += m.length;
@@ -734,7 +811,7 @@ export class Api {
     shapeModifyTextVerAlign(page: Page, shape: TextShapeLike, verAlign: TextVerAlign) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.shapeModifyTextVerAlign(shape.text, verAlign);
+            const ret = basicapi.shapeModifyTextVerAlign(this.text4edit(page, shape), verAlign);
             if (ret !== verAlign) {
                 this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.textVerAlign, verAlign, ret));
             }
@@ -744,7 +821,7 @@ export class Api {
     textModifyHighlightColor(page: Page, shape: TextShapeLike, idx: number, len: number, color: Color | undefined) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.textModifyHighlightColor(shape.text, idx, len, color);
+            const ret = basicapi.textModifyHighlightColor(this.text4edit(page, shape), idx, len, color);
             ret.forEach((m) => {
                 const colorEqual = m.highlight === color || m.highlight && color && color.equals(m.highlight);
                 if (!colorEqual) {
@@ -764,7 +841,7 @@ export class Api {
     textModifyUnderline(page: Page, shape: TextShapeLike, underline: UnderlineType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.textModifyUnderline(shape.text, underline, index, len);
+            const ret = basicapi.textModifyUnderline(this.text4edit(page, shape), underline, index, len);
             ret.forEach((m) => {
                 if (underline !== m.underline) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.underline, underline, m.underline));
                 index += m.length;
@@ -774,7 +851,7 @@ export class Api {
     textModifyStrikethrough(page: Page, shape: TextShapeLike, strikethrough: StrikethroughType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.textModifyStrikethrough(shape.text, strikethrough, index, len);
+            const ret = basicapi.textModifyStrikethrough(this.text4edit(page, shape), strikethrough, index, len);
             ret.forEach((m) => {
                 if (strikethrough !== m.strikethrough) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.strikethrough, strikethrough, m.strikethrough));
                 index += m.length;
@@ -784,7 +861,7 @@ export class Api {
     textModifyBold(page: Page, shape: TextShapeLike, bold: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.textModifyBold(shape.text, bold, index, len);
+            const ret = basicapi.textModifyBold(this.text4edit(page, shape), bold, index, len);
             ret.forEach((m) => {
                 if (bold !== m.bold) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.bold, bold, m.bold));
                 index += m.length;
@@ -794,7 +871,7 @@ export class Api {
     textModifyItalic(page: Page, shape: TextShapeLike, italic: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const ret = basicapi.textModifyItalic(shape.text, italic, index, len);
+            const ret = basicapi.textModifyItalic(this.text4edit(page, shape), italic, index, len);
             ret.forEach((m) => {
                 if (italic !== m.italic) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.italic, italic, m.italic));
                 index += m.length;
@@ -804,7 +881,7 @@ export class Api {
 
     private _textModifyRemoveBulletNumbers(page: Page, shape: TextShapeLike, index: number, len: number) {
         const removeIndexs: number[] = [];
-        _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+        _travelTextPara(this.text4edit(page, shape).paras, index, len, (paraArray, paraIndex, para, _index, length) => {
             index -= _index;
             if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
                 removeIndexs.push(index - _index);
@@ -813,21 +890,21 @@ export class Api {
         })
 
         for (let i = 0, len = removeIndexs.length; i < len; i++) {
-            const del = basicapi.deleteText(shape.text, removeIndexs[i] - i, 1);
+            const del = basicapi.deleteText(this.text4edit(page, shape), removeIndexs[i] - i, 1);
             if (del && del.length > 0) this.addCmd(TextCmdRemove.Make(page.id, genShapeId(shape), removeIndexs[i] - i, del.length, { type: "complex", text: exportText(del), length: del.length }))
         }
-        if (removeIndexs.length > 0) shape.text.reLayout();
+        if (removeIndexs.length > 0) this.text4edit(page, shape).reLayout();
     }
 
     private _textModifySetBulletNumbers(page: Page, shape: TextShapeLike, type: BulletNumbersType, index: number, len: number) {
 
-        const modifyeds = shape.text.setBulletNumbersType(type, index, len);
+        const modifyeds = this.text4edit(page, shape).setBulletNumbersType(type, index, len);
         modifyeds.forEach((m) => {
             this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), m.index, 1, TEXT_ATTR_ID.bulletNumbersType, type, m.origin));
         })
 
         const insertIndexs: number[] = [];
-        _travelTextPara(shape.text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
+        _travelTextPara(this.text4edit(page, shape).paras, index, len, (paraArray, paraIndex, para, _index, length) => {
             index -= _index;
             if (para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
                 //
@@ -843,16 +920,16 @@ export class Api {
             const attr = new SpanAttrSetter();
             attr.placeholder = true;
             attr.bulletNumbers = new BulletNumbers(type);
-            basicapi.insertSimpleText(shape.text, '*', insertIndexs[i] + i, { attr });
+            basicapi.insertSimpleText(this.text4edit(page, shape), '*', insertIndexs[i] + i, { attr });
             this.addCmd(TextCmdInsert.Make(page.id, genShapeId(shape), insertIndexs[i] + i, 1, { type: "simple", text: '*', attr, length: 1 }))
         }
-        if (insertIndexs.length > 0) shape.text.reLayout();
+        if (insertIndexs.length > 0) this.text4edit(page, shape).reLayout();
     }
 
     textModifyBulletNumbers(page: Page, shape: TextShapeLike, type: BulletNumbersType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const alignRange = shape.text.alignParaRange(index, len);
+            const alignRange = this.text4edit(page, shape).alignParaRange(index, len);
             index = alignRange.index;
             len = alignRange.len;
 
@@ -868,7 +945,7 @@ export class Api {
     textModifyBulletNumbersStart(page: Page, shape: TextShapeLike, start: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const modifyeds = shape.text.setBulletNumbersStart(start, index, len);
+            const modifyeds = this.text4edit(page, shape).setBulletNumbersStart(start, index, len);
             modifyeds.forEach((m) => {
                 this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), m.index, 1, TEXT_ATTR_ID.bulletNumbersStart, start, m.origin));
             })
@@ -878,7 +955,7 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const behavior = inherit ? BulletNumbersBehavior.Inherit : BulletNumbersBehavior.Renew;
-            const modifyeds = shape.text.setBulletNumbersBehavior(behavior, index, len);
+            const modifyeds = this.text4edit(page, shape).setBulletNumbersBehavior(behavior, index, len);
             modifyeds.forEach((m) => {
                 this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), m.index, 1, TEXT_ATTR_ID.bulletNumbersBehavior, behavior, m.origin));
             })
@@ -889,11 +966,11 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             // fix index
-            const alignRange = shape.text.alignParaRange(index, len);
+            const alignRange = this.text4edit(page, shape).alignParaRange(index, len);
             index = alignRange.index;
             len = alignRange.len;
 
-            const ret = basicapi.textModifyHorAlign(shape.text, horAlign, index, len);
+            const ret = basicapi.textModifyHorAlign(this.text4edit(page, shape), horAlign, index, len);
             ret.forEach((m) => {
                 if (horAlign !== m.alignment) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.textHorAlign, horAlign, m.alignment));
                 index += m.length;
@@ -905,11 +982,11 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             // fix index
-            // const alignRange = shape.text.alignParaRange(index, len);
+            // const alignRange = this.text4edit(page, shape).alignParaRange(index, len);
             // index = alignRange.index;
             // len = alignRange.len;
 
-            const ret = shape.text.setParaIndent(indent, index, len);
+            const ret = this.text4edit(page, shape).setParaIndent(indent, index, len);
             ret.forEach((m) => {
                 if (indent !== m.origin) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.len, TEXT_ATTR_ID.indent, indent, m.origin));
                 index += m.len;
@@ -919,11 +996,11 @@ export class Api {
     textModifyMinLineHeight(page: Page, shape: TextShapeLike, minLineheight: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const alignRange = shape.text.alignParaRange(index, len);
+            const alignRange = this.text4edit(page, shape).alignParaRange(index, len);
             index = alignRange.index;
             len = alignRange.len;
 
-            const ret = basicapi.textModifyMinLineHeight(shape.text, minLineheight, index, len);
+            const ret = basicapi.textModifyMinLineHeight(this.text4edit(page, shape), minLineheight, index, len);
             ret.forEach((m) => {
                 if (minLineheight !== m.minimumLineHeight) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.textMinLineheight, minLineheight, m.minimumLineHeight));
                 index += m.length;
@@ -933,11 +1010,11 @@ export class Api {
     textModifyMaxLineHeight(page: Page, shape: TextShapeLike, maxLineheight: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const alignRange = shape.text.alignParaRange(index, len);
+            const alignRange = this.text4edit(page, shape).alignParaRange(index, len);
             index = alignRange.index;
             len = alignRange.len;
 
-            const ret = basicapi.textModifyMaxLineHeight(shape.text, maxLineheight, index, len);
+            const ret = basicapi.textModifyMaxLineHeight(this.text4edit(page, shape), maxLineheight, index, len);
             ret.forEach((m) => {
                 if (maxLineheight !== m.maximumLineHeight) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.textMaxLineheight, maxLineheight, m.maximumLineHeight));
                 index += m.length;
@@ -947,7 +1024,7 @@ export class Api {
     textModifyKerning(page: Page, shape: TextShapeLike, kerning: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            // const alignRange = shape.text.alignParaRange(index, len);
+            // const alignRange = this.text4edit(page, shape).alignParaRange(index, len);
             // index = alignRange.index;
             // len = alignRange.len;
 
@@ -957,7 +1034,7 @@ export class Api {
             //     index += m.length;
             // })
 
-            const ret = basicapi.textModifySpanKerning(shape.text, kerning, index, len);
+            const ret = basicapi.textModifySpanKerning(this.text4edit(page, shape), kerning, index, len);
             ret.forEach((m) => {
                 if (m.kerning !== kerning) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.spanKerning, kerning, m.kerning));
                 index += m.length;
@@ -967,11 +1044,11 @@ export class Api {
     textModifyParaSpacing(page: Page, shape: TextShapeLike, paraSpacing: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const alignRange = shape.text.alignParaRange(index, len);
+            const alignRange = this.text4edit(page, shape).alignParaRange(index, len);
             index = alignRange.index;
             len = alignRange.len;
 
-            const ret = basicapi.textModifyParaSpacing(shape.text, paraSpacing, index, len);
+            const ret = basicapi.textModifyParaSpacing(this.text4edit(page, shape), paraSpacing, index, len);
             ret.forEach((m) => {
                 if (paraSpacing !== m.paraSpacing) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.paraSpacing, paraSpacing, m.paraSpacing));
                 index += m.length;
@@ -982,11 +1059,11 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             if (transform === TextTransformType.UppercaseFirst) {
-                const alignRange = shape.text.alignParaRange(index, len);
+                const alignRange = this.text4edit(page, shape).alignParaRange(index, len);
                 index = alignRange.index;
                 len = alignRange.len;
             }
-            const ret1 = basicapi.textModifySpanTransfrom(shape.text, transform, index, len);
+            const ret1 = basicapi.textModifySpanTransfrom(this.text4edit(page, shape), transform, index, len);
             ret1.forEach((m) => {
                 if (m.transform !== transform) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.spanTransform, transform, m.transform));
                 index += m.length;
@@ -998,9 +1075,9 @@ export class Api {
     tableSetCellContentType(page: Page, table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
         checkShapeAtPage(page, table);
         this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx);
-            const origin = cell?.cellType;
-            basicapi.tableSetCellContentType(table, rowIdx, colIdx, contentType);
+            const cell = table.getCellAt(rowIdx, colIdx, true)!;
+            const origin = cell.cellType;
+            basicapi.tableSetCellContentType(cell, contentType);
             this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentType, contentType, origin))
         })
     }
@@ -1008,10 +1085,10 @@ export class Api {
     tableSetCellContentText(page: Page, table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
         checkShapeAtPage(page, table);
         this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx);
-            const origin = cell?.text && exportText(cell.text);
+            const cell = table.getCellAt(rowIdx, colIdx, true)!;
+            const origin = cell.text && exportText(cell.text);
             if (origin !== text) { // undefined
-                basicapi.tableSetCellContentText(table, rowIdx, colIdx, text);
+                basicapi.tableSetCellContentText(cell, text);
                 this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentText, text && exportText(text), origin))
             }
         })
@@ -1020,10 +1097,10 @@ export class Api {
     tableSetCellContentImage(page: Page, table: TableShape, rowIdx: number, colIdx: number, ref: string | undefined) {
         checkShapeAtPage(page, table);
         this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx);
-            const origin = cell?.imageRef;
+            const cell = table.getCellAt(rowIdx, colIdx, true)!;
+            const origin = cell.imageRef;
             if (origin !== ref) {
-                basicapi.tableSetCellContentImage(table, rowIdx, colIdx, ref);
+                basicapi.tableSetCellContentImage(cell, ref);
                 this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentImage, ref, origin))
             }
         })
@@ -1088,10 +1165,10 @@ export class Api {
     tableModifyCellSpan(page: Page, table: TableShape, rowIdx: number, colIdx: number, rowSpan: number, colSpan: number) {
         checkShapeAtPage(page, table);
         this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx);
+            const cell = table.getCellAt(rowIdx, colIdx, true)!;
             const origin = { rowSpan: cell?.rowSpan, colSpan: cell?.colSpan };
             if ((origin.rowSpan ?? 1) !== rowSpan || (origin.colSpan ?? 1) !== colSpan) {
-                basicapi.tableModifyCellSpan(table, rowIdx, colIdx, rowSpan, colSpan);
+                basicapi.tableModifyCellSpan(cell, rowSpan, colSpan);
                 this.addCmd(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellSpan, { rowSpan, colSpan }, origin))
             }
         })

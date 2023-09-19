@@ -4,22 +4,23 @@ import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape } from "./creator";
 import { Document } from "../data/document";
-import { translateTo, translate, expand, adjustLT2 } from "./frame";
+import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text } from "../data/classes";
+import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text, SymbolRefShape } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
-import { IImportContext, importBorder, importStyle } from "../io/baseimport";
+import { IImportContext, importBorder, importGroupShape, importStyle } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
-import { ContactShape } from "data/baseclasses";
+import { exportGroupShape, exportText } from "../data/baseexport";
+import * as types from "../data/typesdefine";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -246,6 +247,109 @@ export class PageEditor {
         return false;
     }
 
+    /**
+     * 创建组件
+     * symbolref引用的symbol可能被其他人取消，那么symbolref应该能引用普通的对象！
+     * 
+     * @param shape 
+     */
+    makeSymbol(shape: Shape, name?: string) {
+        const api = this.__repo.start("makeSymbol", {});
+        try {
+            if (!(shape instanceof GroupShape)) {
+                const savep = shape.parent as GroupShape;
+                const saveidx = savep.indexOfChild(shape);
+                const gshape = newGroupShape(name ?? shape.name);
+                shape = group(this.__page, [shape], gshape, savep, saveidx, api);
+            }
+            api.shapeModifySymbolShape(this.__page, shape as GroupShape, true);
+            this.__repo.commit();
+            return shape;
+        }
+        catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * 取消组件
+     * @param shape 
+     */
+    unSymbol(shape: GroupShape) {
+        const api = this.__repo.start("unSymbol", {});
+        try {
+            api.shapeModifySymbolShape(this.__page, shape, false);
+            this.__repo.commit();
+            return shape;
+        }
+        catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * 将引用的组件解引用
+     * @param shape 
+     */
+    extractSymbol(shape: SymbolRefShape) {
+        // 创建一个新对象
+        const symbol = shape.peekSymbol();
+        if (!symbol) return;
+        // 导出symbol
+        const symbolData = exportGroupShape(symbol);
+        // 将override更新到导出的数据
+        const shapeMap = new Map<string, types.Shape>();
+        const add2map = (shape: types.Shape) => {
+            shapeMap.set(shape.id, shape);
+            if ((shape as types.GroupShape).childs) {
+                (shape as types.GroupShape).childs.forEach((c) => add2map(c));
+            }
+        }
+        add2map(symbolData);
+        shape.overrides.forEach((override) => {
+            // 更新override数据
+            const text = override.peekText();
+            if (text) {
+                const refData = shapeMap.get(override.refId);
+                if (refData) {
+                    (refData as types.TextShape).text = exportText(text);
+                }
+            }
+        })
+        // replaceid
+        const replaceId = (shape: types.Shape) => {
+            shape.id = uuid();
+            if ((shape as types.GroupShape).childs) {
+                (shape as types.GroupShape).childs.forEach((c) => replaceId(c));
+            }
+        }
+        replaceId(symbolData);
+
+        const parent = shape.parent;
+        if (!parent) throw new Error("shape has no parent")
+
+        const index = (parent as GroupShape).indexOfChild(shape);
+        if (index < 0) throw new Error("shape not inside parent")
+
+        const _this = this;
+        const ctx: IImportContext = new class implements IImportContext { document: Document = _this.__document };
+        const newShape = importGroupShape(symbolData, ctx);
+
+        const api = this.__repo.start("extractSymbol", {});
+        try {
+            const ret = api.shapeInsert(this.__page, parent as GroupShape, newShape, index);
+            api.shapeDelete(this.__page, parent as GroupShape, index + 1);
+            this.__repo.commit();
+            return ret;
+        }
+        catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+    }
+
     private cloneStyle(style: Style): Style {
         const _this = this;
         const ctx: IImportContext = new class implements IImportContext { document: Document = _this.__document };
@@ -297,7 +401,7 @@ export class PageEditor {
             let pathstr = "";
             shapes.forEach((shape) => {
                 const shapem = shape.matrix2Root();
-                const shapepath = render2path(shape);
+                const shapepath = render2path(shape, undefined);
                 shapem.multiAtLeft(m);
                 shapepath.transform(shapem);
 
@@ -337,7 +441,7 @@ export class PageEditor {
         const parent = shape.parent as GroupShape;
         if (!parent) return false;
 
-        const path = render2path(shape);
+        const path = render2path(shape, undefined);
 
         // copy fill and borders
         const copyStyle = findUsableFillStyle(shape);
@@ -370,7 +474,7 @@ export class PageEditor {
         }
         return false;
     }
-    private removeContactSides(api: Api, page: Page, shape: ContactShape) {
+    private removeContactSides(api: Api, page: Page, shape: types.ContactShape) {
         if (shape.from) {
             const fromShape = page.getShape(shape.from.shapeId);
             const contacts = fromShape?.style.contacts;
@@ -428,7 +532,7 @@ export class PageEditor {
         const p = shape.parent as GroupShape;
         if (!p) return false;
         if (shape.type === ShapeType.Contact) { // 连接线删除之后需要删除两边的连接关系
-            this.removeContactSides(api, page, shape as unknown as ContactShape);
+            this.removeContactSides(api, page, shape as unknown as types.ContactShape);
         } else {
             this.removeContact(api, page, shape);
         }
