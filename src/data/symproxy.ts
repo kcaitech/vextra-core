@@ -189,6 +189,7 @@ class ShapeHdl extends Watchable(FreezHdl) {
         super.notify(...args);
     }
     override_watcher(...args: any[]) {
+        // todo
         super.notify(...args);
     }
 
@@ -199,6 +200,11 @@ class ShapeHdl extends Watchable(FreezHdl) {
         this.__parent = parent;
         this.origin_watcher = this.origin_watcher.bind(this);
         this.override_watcher = this.override_watcher.bind(this);
+
+        // watch unwatch
+        this.watch = this.watch.bind(this);
+        this.unwatch = this.unwatch.bind(this);
+
         target.watch(this.origin_watcher);
         symRef.forEach((s) => s.watch(this.override_watcher));
 
@@ -214,7 +220,7 @@ class ShapeHdl extends Watchable(FreezHdl) {
 
     onRemoved() {
         this.__target.unwatch(this.origin_watcher);
-        this.__symRef.forEach((s) => s.unwatch(this.override_watcher))
+        this.__symRef.forEach((s) => s.unwatch(this.override_watcher));
     }
 
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
@@ -283,6 +289,12 @@ class ShapeHdl extends Watchable(FreezHdl) {
             this.onRemoved();
             return;
         }
+        if (propStr === "watch") {
+            return this.watch;
+        }
+        if (propStr === "unwatch") {
+            return this.unwatch;
+        }
         return super.get(target, propertyKey, receiver);
     }
 }
@@ -290,13 +302,6 @@ class ShapeHdl extends Watchable(FreezHdl) {
 class GroupShapeHdl extends ShapeHdl {
     __thisProxy?: GroupShape; // 由外面赋值。proxy对象依赖于handler，需要实例化proxy后才能赋值
     __childs?: Shape[];
-
-    constructor(symRef: SymbolRefShape[], target: GroupShape, parent: Shape) {
-        super(symRef, target, parent);
-        this.__symRef = symRef;
-        this.__target = target;
-        this.__parent = parent;
-    }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
@@ -328,7 +333,36 @@ class GroupShapeHdl extends ShapeHdl {
 }
 
 class SymbolRefHdl extends ShapeHdl {
-    // todo
+    __thisProxy?: SymbolRefShape; // 由外面赋值。proxy对象依赖于handler，需要实例化proxy后才能赋值
+    __childs?: Shape[];
+
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const propStr = propertyKey.toString();
+        if (propStr === 'virtualChilds') {
+            if (this.__childs) return this.__childs;
+            this.__childs = (this.__target as SymbolRefShape)._virtualChilds;
+            return this.__childs;
+        }
+        return super.get(target, propertyKey, receiver);
+    }
+
+    origin_watcher(...args: any[]): void {
+        super.origin_watcher(args);
+        if (this.__childs) {
+            // todo compare
+
+            this.__childs.forEach((c: any) => c.remove)
+            this.__childs = undefined;
+        }
+    }
+
+    onRemoved(): void {
+        super.onRemoved();
+        if (this.__childs) {
+            this.__childs.forEach((c: any) => c.remove)
+            this.__childs = undefined;
+        }
+    }
 }
 
 class TextShapeHdl extends ShapeHdl {
@@ -377,6 +411,8 @@ class TextShapeHdl extends ShapeHdl {
         return this.__text;
     }
 
+    // todo frame不对
+
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
 
@@ -416,13 +452,19 @@ export function proxyShape(shape: Shape, parent: Shape, symRefs: SymbolRefShape[
     if (shape instanceof GroupShape) {
         const hdl = new GroupShapeHdl(symRefs, shape, parent);
         const ret = new Proxy<GroupShape>(shape, hdl);
-        // hdl.__childs = shape.childs.map((child) => proxyShape(child, ret, root));
         hdl.__thisProxy = ret;
         return ret;
     }
 
     if (shape instanceof TextShape) {
         const ret = new Proxy<TextShape>(shape, new TextShapeHdl(symRefs, shape, parent))
+        return ret;
+    }
+
+    if (shape instanceof SymbolRefShape) {
+        const hdl = new SymbolRefHdl(symRefs, shape, parent);
+        const ret = new Proxy<SymbolRefShape>(shape, hdl);
+        hdl.__thisProxy = ret;
         return ret;
     }
 

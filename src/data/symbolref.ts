@@ -37,7 +37,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
 
     __overridesMap?: Map<string, OverrideShape>;
     __proxyIdMap: Map<string, string> = new Map();
-    // __childs?: Shape[]; // TODO 不可以在这缓存
+    __childs?: Shape[];
+    // TODO 不可以在这缓存
     // sym0->symRef0->sym1
     // symRef1->sym0
     // symRef2->sym0
@@ -95,7 +96,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         return this.__overridesMap;
     }
 
-    get virtualChilds(): Shape[] | undefined {
+    get _virtualChilds(): Shape[] | undefined {
         if (!this.__data) return;
         // if (this.__childs) return this.__childs;
 
@@ -115,6 +116,12 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         }
 
         return childs;
+    }
+
+    get virtualChilds(): Shape[] | undefined {
+        if (this.__childs) return this.__childs;
+        this.__childs = this._virtualChilds;
+        return this.__childs;
     }
 
     // symbolref需要watch symbol的修改？
@@ -207,12 +214,12 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     onRemoved(): void {
         // 构建symbol proxy shadow, 在这里需要unwatch
 
-        // if (this.__childs) {
-        //     // todo compare
-        //     this.__childs.forEach((c: any) => c.remove)
-        //     this.__childs = undefined;
-        //     this.__data?.unwatch(this.watcher);
-        // }
+        if (this.__childs) {
+            // todo compare
+            this.__childs.forEach((c: any) => c.remove)
+            this.__childs = undefined;
+            this.__data?.unwatch(this.watcher);
+        }
     }
     getPath(): Path {
         const x = 0;
