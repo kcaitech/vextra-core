@@ -21,6 +21,7 @@ import { BasicArray } from "../../../data/basic";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
 import { Fill, FillType } from "../../../data/classes";
+import { ResizingConstraints } from "../../../data/consts";
 
 function uniqueId(ctx: LoadContext, id: string): string {
     // if (ctx.shapeIds.has(id)) id = uuid();
@@ -89,7 +90,10 @@ function importShapePropertys(shape: Shape, data: IJSON) {
     shape.isFlippedHorizontal = data['isFlippedHorizontal'];
     shape.isFlippedVertical = data['isFlippedVertical'];
     shape.rotation = -data['rotation'];
-    shape.resizingConstraint = data['resizingConstraint'];
+    const resizingConstraint = data['resizingConstraint'];
+    if (resizingConstraint) {
+        shape.resizingConstraint = (~resizingConstraint) & ResizingConstraints.Mask;
+    }
     shape.isVisible = data['isVisible'];
     shape.isLocked = data['isLocked'];
     shape.constrainerProportions = data.frame['constrainerProportions'];
