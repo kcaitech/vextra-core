@@ -11,6 +11,7 @@ import { uuid } from "../basic/uuid";
 import { GroupShape, Shape } from "./shape";
 import { OverrideShape, OverridesGetter } from "./overrideshape";
 import { proxyShape } from "./symproxy";
+import { Path } from "./path";
 
 export class OverrideArray extends classes.OverrideArray {
     constructor(
@@ -211,5 +212,19 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         //     this.__childs = undefined;
         //     this.__data?.unwatch(this.watcher);
         // }
+    }
+    getPath(): Path {
+        const x = 0;
+        const y = 0;
+        const w = this.frame.width;
+        const h = this.frame.height;
+        const path = [
+            ["M", x, y],
+            ["l", w, 0],
+            ["l", 0, h],
+            ["l", -w, 0],
+            ["z"]
+        ]
+        return new Path(path);
     }
 }
