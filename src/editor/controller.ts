@@ -690,7 +690,7 @@ function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: numb
     const width = boundingBox.width * sx;
     const height = boundingBox.height * sy;
     api.shapeModifyWH(page, s, width, height);
-    afterModifyGroupShapeWH(api, page, s, sx, sy);
+    afterModifyGroupShapeWH(api, page, s, sx, sy, boundingBox);
 }
 function adjust_pathshape_rotate_frame(api: Api, page: Page, s: PathShape) {
     const matrix = s.matrix2Parent();
@@ -744,6 +744,8 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
         sy = -sy;
     }
+    const saveW = s.frame.width;
+    const saveH = s.frame.height;
     if (s.isFlippedHorizontal || s.isFlippedVertical) {
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
         const self = s.matrix2Parent().computeCoord2(0, 0);
@@ -755,5 +757,5 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         api.shapeModifyY(page, s, xy.y);
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
     }
-    if (s instanceof GroupShape && s.type === ShapeType.Group) afterModifyGroupShapeWH(api, page, s, sx, sy);
+    if (s instanceof GroupShape && s.type === ShapeType.Group) afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH));
 }

@@ -1,10 +1,11 @@
-import { Page } from "data/page";
+import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
-import { GroupShape, PathShape, Shape, TextShape } from "../data/shape";
-import { Text } from "../data/text"
-import { ContactForm, ContactRole, ContactRoleType, ContactType, Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
+import { GroupShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
+import { Text } from "../data/text";
+import { ContactType, Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils";
 import { TableShape } from "../data/table";
+import { ResizingConstraints } from "../data/consts";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -28,7 +29,7 @@ export interface Api {
 
 const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
-export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number) {
+export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame) {
     if (shape.type === ShapeType.Artboard) return; // 容器不需要调整子对象
     const childs = shape.childs;
     for (let i = 0, len = childs.length; i < len; i++) {
@@ -39,7 +40,7 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
             const cY = cFrame.y * scaleY;
             const cW = cFrame.width * scaleX;
             const cH = cFrame.height * scaleY;
-            setFrame(page, c, cX, cY, cW, cH, api);
+            setResizingConstrainFrame(page, c, cX, cY, cW, cH, api, originFrame, shape.frame);
         }
         else if (c instanceof GroupShape && c.type === ShapeType.Group) {
             // 需要摆正
@@ -68,12 +69,13 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
             if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
             if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
 
-            api.shapeModifyX(page, c, boundingBox.x * scaleX);
-            api.shapeModifyY(page, c, boundingBox.y * scaleY);
+            // api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            // api.shapeModifyY(page, c, boundingBox.y * scaleY);
             const width = boundingBox.width * scaleX;
             const height = boundingBox.height * scaleY;
-            api.shapeModifyWH(page, c, width, height);
-            afterModifyGroupShapeWH(api, page, c, scaleX, scaleY);
+            // api.shapeModifyWH(page, c, width, height);
+            // afterModifyGroupShapeWH(api, page, c, scaleX, scaleY, boundingBox);
+            setResizingConstrainFrame(page, c, boundingBox.x * scaleX, boundingBox.y * scaleY, width, height, api, originFrame, shape.frame, boundingBox)
         }
         else if (c instanceof PathShape) {
             // 摆正并处理points
@@ -109,11 +111,12 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
             }
 
             // scale
-            api.shapeModifyX(page, c, boundingBox.x * scaleX);
-            api.shapeModifyY(page, c, boundingBox.y * scaleY);
+            // api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            // api.shapeModifyY(page, c, boundingBox.y * scaleY);
             const width = boundingBox.width * scaleX;
             const height = boundingBox.height * scaleY;
-            api.shapeModifyWH(page, c, width, height);
+            // api.shapeModifyWH(page, c, width, height);
+            setResizingConstrainFrame(page, c, boundingBox.x * scaleX, boundingBox.y * scaleY, width, height, api, originFrame, shape.frame, boundingBox)
         }
         else { // textshape imageshape symbolrefshape
             // 需要调整位置跟大小
@@ -151,10 +154,72 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
 
             const dx = target[0].x - xy.x;
             const dy = target[0].y - xy.y;
-            setFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api);
+            setResizingConstrainFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api, originFrame, shape.frame);
         }
     }
 }
+function setResizingConstrainFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api, originParentFrame: ShapeFrame, curParentFrame: ShapeFrame, cFrame?: ShapeFrame): boolean {
+    cFrame = cFrame ?? shape.frame;
+    const resizingConstraint = shape.resizingConstraint;
+    if (!resizingConstraint || ResizingConstraints.isUnset(resizingConstraint)) {
+        return setFrame(page, shape, x, y, w, h, api);
+    }
+    else {
+        // 水平
+        const hasWidth = ResizingConstraints.hasWidth(resizingConstraint);
+        const hasLeft = ResizingConstraints.hasLeft(resizingConstraint);
+        const hasRight = ResizingConstraints.hasRight(resizingConstraint);
+        // 计算width, x
+        // 宽度与同时设置左右是互斥关系，万一数据出错，以哪个优先？先以左右吧
+        let cw = hasWidth ? cFrame.width : w;
+        let cx = x;
+        if (hasLeft && hasRight) {
+            cx = cFrame.x;
+            const dis = originParentFrame.width - (cFrame.x + cFrame.width);
+            cw = curParentFrame.width - dis - cx;
+        }
+        else if (hasLeft) {
+            cx = cFrame.x;
+        }
+        else if (hasRight) {
+            cx = x;
+            const dis = originParentFrame.width - (cFrame.x + cFrame.width);
+            cw = curParentFrame.width - dis - cx;
+        }
+        else if (hasWidth) {
+            // 居中
+            cx += (w - cFrame.width) / 2;
+        }
+
+        // 垂直
+        const hasHeight = ResizingConstraints.hasHeight(resizingConstraint);
+        const hasTop = ResizingConstraints.hasTop(resizingConstraint);
+        const hasBottom = ResizingConstraints.hasBottom(resizingConstraint);
+        // 计算height, y
+        let ch = hasHeight ? cFrame.height : h;
+        let cy = y;
+        if (hasTop && hasBottom) {
+            cy = cFrame.y;
+            const dis = originParentFrame.height - (cFrame.y + cFrame.height);
+            ch = curParentFrame.height - dis - cy;
+        }
+        else if (hasTop) {
+            cy = cFrame.y;
+        }
+        else if (hasBottom) {
+            cy = y;
+            const dis = originParentFrame.height - (cFrame.y + cFrame.height);
+            ch = curParentFrame.height - dis - cy;
+        }
+        else if (hasHeight) {
+            // 居中
+            cy += (h - cFrame.height) / 2;
+        }
+
+        return setFrame(page, shape, cx, cy, cw, ch, api);
+    }
+}
+
 function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
     let changed = false;
@@ -189,7 +254,7 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
             const scaleX = frame.width / saveW;
             const scaleY = frame.height / saveH;
 
-            afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY);
+            afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(frame.x, frame.y, saveW, saveH));
         }
         else {
             api.shapeModifyWH(page, shape, w, h)
@@ -703,6 +768,8 @@ export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
     const p = s.parent;
     if (!p) return;
     const f = s.frame;
+    const saveW = f.width;
+    const saveH = f.height;
     if (scale < 0) {
         api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
         if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
@@ -720,13 +787,15 @@ export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
-    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH));
 }
 // 拖拽右边
 export function erScaleByR(api: Api, page: Page, s: Shape, scale: number) {
     const p = s.parent;
     if (!p) return;
     const f = s.frame;
+    const saveW = f.width;
+    const saveH = f.height;
     if (scale < 0) {
         api.shapeModifyHFlip(page, s, !s.isFlippedVertical);
         if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
@@ -743,13 +812,15 @@ export function erScaleByR(api: Api, page: Page, s: Shape, scale: number) {
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
-    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH));
 }
 // 拖拽底部
 export function erScaleByB(api: Api, page: Page, s: Shape, scale: number) {
     const p = s.parent;
     if (!p) return;
     const f = s.frame;
+    const saveW = f.width;
+    const saveH = f.height;
     if (scale < 0) {
         api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
         if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
@@ -766,13 +837,15 @@ export function erScaleByB(api: Api, page: Page, s: Shape, scale: number) {
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
-    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH));
 }
 // 拖拽左边
 export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
     const p = s.parent;
     if (!p) return;
     const f = s.frame;
+    const saveW = f.width;
+    const saveH = f.height;
     if (scale < 0) {
         api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
         if (s.rotation) api.shapeModifyRotate(page, s, 360 - s.rotation);
@@ -789,7 +862,7 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
-    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale);
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH));
 }
 // 路径编辑
 /**
