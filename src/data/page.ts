@@ -1,4 +1,4 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, SymbolRefShape, TextShape } from "./shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, Watchable } from "./basic";
@@ -21,7 +21,7 @@ export class Page extends GroupShape implements classes.Page {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
+        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
     ) {
         super(
             id,
@@ -34,6 +34,17 @@ export class Page extends GroupShape implements classes.Page {
         // this.onAddShape(this); // 不能add 自己
         childs.forEach((c) => this.onAddShape(c))
     }
+
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
+        if (targetId.length > 0) {
+            const shapeId = targetId[0] as string;
+            const shape = this.getShape(shapeId);
+            if (!shape) throw new Error("shape not find");
+            return shape.getTarget(targetId.slice(1));
+        }
+        return this;
+    }
+
     onAddShape(shape: Shape, recursive: boolean = true) {
         // check 不可以重shape id
         if (this.shapes.has(shape.id)) throw new Error("The same shape id already exists");
@@ -52,6 +63,7 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Artboard) {
             this.artboards.delete(shape.id);
         }
+        shape.onRemoved();
         if (recursive && (shape instanceof GroupShape)) {
             const childs = shape.childs;
             childs.forEach((c) => this.onRemoveShape(c))

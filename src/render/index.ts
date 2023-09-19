@@ -18,3 +18,4 @@ export { render as renderTable } from "./table";
 export { render as renderContact } from "./contact";
 
 // export { render as renderTableCell } from "./tablecell";
+export { render as renderTableCell } from "./tablecell";

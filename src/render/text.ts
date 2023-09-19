@@ -1,11 +1,13 @@
 
 
-import { DefaultColor, isColorEqual } from "./basic";
-import { TextShape, Path, Color } from '../data/classes';
+import { DefaultColor, isColorEqual, isVisible } from "./basic";
+import { TextShape, Path, Color, OverrideShape, SymbolRefShape } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
+import { OverrideType, findOverride } from "../data/symproxy";
+import { Matrix } from "../basic/matrix";
 
 
 function toRGBA(color: Color): string {
@@ -22,7 +24,7 @@ function isBlankChar(charCode: number) {
     return false;
 }
 
-export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number): Path {
+export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number, matrix: Matrix | undefined): Path {
     const getTextPath = gPal.text.getTextPath;
     const { yOffset, paras } = shape.getLayout();
     const pc = paras.length;
@@ -46,6 +48,7 @@ export function renderText2Path(shape: TextShape, offsetX: number, offsetY: numb
                     const pathstr = getTextPath(font, fontSize, g.char.charCodeAt(0))
                     const path = new Path(pathstr)
                     path.translate(g.x + offsetX + line.x, y + offsetY);
+                    if (matrix) path.transform(matrix);
                     return path;
                 }))
             }
@@ -190,20 +193,59 @@ export function renderTextLayout(h: Function, textlayout: TextLayout) {
     return childs;
 }
 
-export function render(h: Function, shape: TextShape, reflush?: number) {
-    if (!shape.isVisible) return null;
+export function render(h: Function, shape: TextShape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, matrix: Matrix | undefined, reflush?: number) {
+
+    if (!isVisible(shape, overrides)) return;
 
     const childs = []
     const frame = shape.frame;
-    const path = shape.getPath().toString();
+    const path0 = shape.getPath();
+    if (matrix) path0.transform(matrix);
+    const path = path0.toString();
+
     // fill
-    childs.push(...fillR(h, shape.style.fills, frame, path));
-
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Fills);
+        if (o) {
+            childs.push(...fillR(h, o.override.style.fills, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...fillR(h, shape.style.fills, frame, path));
+        }
+    }
+    else {
+        childs.push(...fillR(h, shape.style.fills, frame, path));
+    }
     // text
-    childs.push(...renderTextLayout(h, shape.getLayout()));
-
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Text);
+        if (o) {
+            const layout = o.override.getLayout(shape);
+            if (layout) childs.push(...renderTextLayout(h, layout))
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...renderTextLayout(h, shape.getLayout()));
+        }
+    }
+    else {
+        childs.push(...renderTextLayout(h, shape.getLayout()));
+    }
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Borders);
+        if (o) {
+            childs.push(...borderR(h, o.override.style.borders, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...borderR(h, shape.style.borders, frame, path));
+        }
+    }
+    else {
+        childs.push(...borderR(h, shape.style.borders, frame, path));
+    }
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
@@ -234,7 +276,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
 //
 // for test text path
 export function render_(h: Function, shape: TextShape, reflush?: number) {
-    const path = renderText2Path(shape, 0, 0);
+    const path = renderText2Path(shape, 0, 0, undefined);
 
     const childs = [h('path', { d: path })]
 

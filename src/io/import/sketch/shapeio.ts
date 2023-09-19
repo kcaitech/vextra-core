@@ -7,23 +7,20 @@ import {
     RectShape,
     Shape,
     ShapeFrame,
-    SymbolShape,
-    SymbolRefShape,
     TextShape,
     ExportFormat
 } from "../../../data/shape";
-import { BlendMode, Color, ContextSettings } from "../../../data/style";
+import { Color } from "../../../data/style";
 import { importXY, importStyle, importColor } from "./styleio";
 import { Page } from "../../../data/page";
 import { importText } from "./textio";
 import { Artboard } from "../../../data/artboard";
 import { Text } from "../../../data/text";
-import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D } from "../../../data/classes"
+import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D, SymbolRefShape } from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
 import { Fill, FillType } from "../../../data/classes";
-import { importFill } from "../../../io/baseimport";
 
 function uniqueId(ctx: LoadContext, id: string): string {
     // if (ctx.shapeIds.has(id)) id = uuid();
@@ -306,7 +303,7 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun): Te
     return shape;
 }
 
-export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): SymbolShape {
+export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): GroupShape {
     // const type = importShapeType(data);
     // const id: string = data['do_objectID'];
     const exportOptions = importExportOptions(data);
@@ -323,7 +320,9 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): Symbo
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs));
+    const shape = new GroupShape(id, name, ShapeType.Group, frame, style, new BasicArray<Shape>(...childs));
+    shape.isUsedToBeSymbol = true;
+    shape.isSymbolShape = true;
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
@@ -347,7 +346,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun): Sy
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    const shape = new SymbolRefShape(id, name, ShapeType.SymbolRef, frame, style, data['symbolID']);
+    const shape = new SymbolRefShape(id, name, ShapeType.SymbolRef, frame, style, data['symbolID'], new BasicArray());
 
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);

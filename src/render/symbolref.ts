@@ -1,47 +1,63 @@
-import { ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
+import { OverrideShape, ShapeFrame, ShapeType, SymbolRefShape } from "../data/classes";
 import { renderGroupChilds } from "./group";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
+import { GroupShape } from "../data/shape";
+import { Matrix } from "../basic/matrix";
 
-function renderSym(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame): any {
-    // if (!shape.isVisible) return [];
+function renderSym(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame, overrides: SymbolRefShape[] | undefined, matrix0: Matrix | undefined): any {
+
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
 
-    const childs: Array<any> = renderGroupChilds(h, shape, comsMap);
     const frame = shape.frame;
 
     if (targetFrame.width === frame.width && targetFrame.height === frame.height) {
+        const childs: Array<any> = renderGroupChilds(h, shape, comsMap, overrides, matrix0);
         return childs;
     }
 
-    const props: any = {}
+    const matrix = new Matrix();
     const scaleX = targetFrame.width / frame.width;
     const scaleY = targetFrame.height / frame.height;
-    const style: any = {}
-    style.transform = "translate(" + (targetFrame.width / 2) + "px," + (targetFrame.height / 2) + "px) "
-    style.transform += `scale(${scaleX}, ${scaleY})`
-    style.transform += "translate(" + (-frame.width / 2) + "px," + (-frame.height / 2) + "px)"
-    props.style = style;
+    matrix.trans(-frame.width / 2, -frame.height / 2);
+    matrix.scale(scaleX, scaleY);
+    matrix.trans(targetFrame.width / 2, targetFrame.height / 2);
+    if (matrix0) matrix.multiAtLeft(matrix0);
+
+    const childs: Array<any> = renderGroupChilds(h, shape, comsMap, overrides, matrix);
+
+    // 不是直接缩放！
+    const props: any = {}
+    // const style: any = {}
+    // style.transform = "translate(" + (targetFrame.width / 2) + "px," + (targetFrame.height / 2) + "px) "
+    // style.transform += `scale(${scaleX}, ${scaleY})`
+    // style.transform += "translate(" + (-frame.width / 2) + "px," + (-frame.height / 2) + "px)"
+    // props.style = style;
 
     return [h('g', props, childs)];
 }
 
-export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeType, any>, reflush?: number) {
+export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeType, any>, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, matrix: Matrix | undefined, reflush?: number) {
     const sym = shape.peekSymbol();
     if (!sym) {
         return;
     }
     const frame = shape.frame;
     const childs = [];
-    const path = shape.getPath().toString();
+    const path0 = shape.getPath();
+    if (matrix) path0.transform(matrix);
+    const path = path0.toString();
     // fill
     childs.push(...fillR(h, shape.style.fills, frame, path));
     // border
     childs.push(...borderR(h, shape.style.borders, frame, path));
 
     // symbol
-    childs.push(...renderSym(h, sym, comsMap, shape.frame)); // 有缩放
+    const subOverrides = [];
+    if (overrides) subOverrides.push(...overrides);
+    subOverrides.push(shape);
+    childs.push(...renderSym(h, sym, comsMap, shape.frame, subOverrides, matrix)); // 有缩放
 
     const props: any = {}
     if (reflush) props.reflush = reflush;

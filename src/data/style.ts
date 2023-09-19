@@ -1,6 +1,9 @@
-import { uuid } from "../basic/uuid";
 import * as classes from "./baseclasses"
-import { Blur, BorderOptions, ColorControls, ContextSettings, Shadow, WindingRule, FillType, Gradient, BorderPosition, BorderStyle, MarkerType, ContactRole } from "./baseclasses";
+import {
+    Blur, BorderOptions, ColorControls, ContextSettings,
+    Shadow, WindingRule, FillType, Gradient, BorderPosition,
+    BorderStyle, MarkerType, ContactRole
+} from "./baseclasses";
 import { Basic, BasicArray, ResourceMgr } from "./basic";
 
 export {
@@ -69,6 +72,7 @@ export class Border extends Basic implements classes.Border {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
+    variableRef?: string
     constructor(
         id: string,
         isEnabled: boolean,
@@ -98,6 +102,7 @@ export class Fill extends Basic implements classes.Fill {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
+    variableRef?: string
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };
@@ -120,14 +125,29 @@ export class Fill extends Basic implements classes.Fill {
     getImageMgr(): ResourceMgr<{ buff: Uint8Array, base64: string }> | undefined {
         return this.__imageMgr;
     }
-    peekImage() {
-        return this.__cacheData?.base64;
+
+    private __startLoad: boolean = false;
+    peekImage(startLoad: boolean = false) {
+        const ret = this.__cacheData?.base64;
+        if (ret) return ret;
+        if (!this.imageRef) return "";
+        if (startLoad && !this.__startLoad) {
+            this.__startLoad = true;
+            this.__imageMgr && this.__imageMgr.get(this.imageRef).then((val) => {
+                if (!this.__cacheData) {
+                    this.__cacheData = val;
+                    if (val) this.notify();
+                }
+            })
+        }
+        return ret;
     }
     // image fill
     async loadImage(): Promise<string> {
         if (!this.imageRef) return "";
         if (this.__cacheData) return this.__cacheData.base64;
         this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
+        if (this.__cacheData) this.notify();
         return this.__cacheData && this.__cacheData.base64 || "";
     }
 }

@@ -1,24 +1,49 @@
-import { PathShape } from "../data/classes";
+import { OverrideShape, PathShape, SymbolRefShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
+import { isVisible } from "./basic";
+import { OverrideType, findOverride } from "../data/symproxy";
 
-export function render(h: Function, shape: PathShape, reflush?: number) {
+export function render(h: Function, shape: PathShape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number) {
     // if (this.data.boolOp != BoolOp.None) {
     //     // todo 只画selection
     //     return;
     // }
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+
+    if (!isVisible(shape, overrides)) return;
 
     const frame = shape.frame;
     const path = shape.getPath().toString();
     const childs = [];
 
     // fill
-    childs.push(...fillR(h, shape.style.fills, frame, path));
-
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Fills);
+        if (o) {
+            childs.push(...fillR(h, o.override.style.fills, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...fillR(h, shape.style.fills, frame, path));
+        }
+    }
+    else {
+        childs.push(...fillR(h, shape.style.fills, frame, path));
+    }
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Borders);
+        if (o) {
+            childs.push(...borderR(h, o.override.style.borders, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            childs.push(...borderR(h, shape.style.borders, frame, path));
+        }
+    }
+    else {
+        childs.push(...borderR(h, shape.style.borders, frame, path));
+    }
 
     // ----------------------------------------------------------
     // shadows todo

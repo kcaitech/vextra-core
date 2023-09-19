@@ -1,0 +1,26 @@
+{
+    "description": "symbol ref shape",
+    "type": "object",
+    "properties": {
+        "refId": {
+            "type": "string",
+            "default": "$uuid"
+        },
+        "overrides": {
+            "type": "array",
+            "items": {
+                "$ref": "./override-shape.json"
+            }
+        }
+    },
+    "required": [
+        "refId",
+        "overrides"
+    ],
+    "allOf": [
+        {
+            "$ref": "./shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

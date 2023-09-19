@@ -14,8 +14,6 @@ import { uuid } from "../basic/uuid";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
-const defaut = 'data:image/svg+xml;base64,PHN2ZyBjbGFzcz0ic3ZnIiB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4NCiAgICA8cGF0aA0KICAgICAgICBkPSJNMTIuNSAxMGMxLjM4IDAgMi41LTEuMTIgMi41LTIuNUMxNSA2LjEyIDEzLjg4IDUgMTIuNSA1IDExLjEyIDUgMTAgNi4xMiAxMCA3LjVjMCAxLjM4IDEuMTIgMi41IDIuNSAyLjV6TTE0IDcuNWMwIC44MjgtLjY3MiAxLjUtMS41IDEuNS0uODI4IDAtMS41LS42NzItMS41LTEuNSAwLS44MjguNjcyLTEuNSAxLjUtMS41LjgyOCAwIDEuNS42NzIgMS41IDEuNXpNMTcgMUgxdjE2aDE2VjF6bS0xIDF2MTRoLTEuMjkzTDYgNy4yOTNsLTQgNFYyaDE0ek0yIDE2di0zLjI5M2w0LTRMMTMuMjkzIDE2SDJ6Ig0KICAgICAgICBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGwtb3BhY2l0eT0iMSIgZmlsbD0iZ3JleSIgc3Ryb2tlPSJub25lIj4NCiAgICA8L3BhdGg+DQo8L3N2Zz4=';
-
 export class TableCell extends Shape implements classes.TableCell {
 
     typeId = 'table-cell'
@@ -42,6 +40,14 @@ export class TableCell extends Shape implements classes.TableCell {
             style
         )
     }
+
+    get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
+        const table = this.parent as TableShape;
+        const indexCell = table.indexOfCell2(this);
+        if (!indexCell) throw new Error("cell has no index?")
+        return [table.id, indexCell];
+    }
+
     getPath(): Path {
         const x = 0;
         const y = 0;
@@ -76,8 +82,22 @@ export class TableCell extends Shape implements classes.TableCell {
     }
 
     // image
-    peekImage() {
-        return this.__cacheData?.base64;
+    private __startLoad: boolean = false;
+    peekImage(startLoad: boolean = false) {
+        const ret = this.__cacheData?.base64;
+        if (ret) return ret;
+        if (!this.imageRef) return "";
+        if (startLoad && !this.__startLoad) {
+            this.__startLoad = true;
+            const mediaMgr = (this.parent as TableShape).__imageMgr;
+            mediaMgr && mediaMgr.get(this.imageRef).then((val) => {
+                if (!this.__cacheData) {
+                    this.__cacheData = val;
+                    if (val) this.notify();
+                }
+            })
+        }
+        return ret;
     }
     // image shape
     async loadImage(): Promise<string> {
@@ -85,6 +105,7 @@ export class TableCell extends Shape implements classes.TableCell {
         if (!this.imageRef) return "";
         const mediaMgr = (this.parent as TableShape).__imageMgr;
         this.__cacheData = mediaMgr && await mediaMgr.get(this.imageRef)
+        if (this.__cacheData) this.notify();
         return this.__cacheData && this.__cacheData.base64 || "";
     }
 
@@ -164,7 +185,7 @@ export class TableShape extends Shape implements classes.TableShape {
     static MaxColCount = 50;
 
     typeId = 'table-shape'
-    childs: BasicArray<(TableCell | undefined)>
+    datas: BasicArray<(TableCell | undefined)>
     rowHeights: BasicArray<number>
     colWidths: BasicArray<number>
     textAttr?: TextAttr // 文本默认属性
@@ -181,7 +202,7 @@ export class TableShape extends Shape implements classes.TableShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(TableCell | undefined)>,
+        datas: BasicArray<(TableCell | undefined)>,
         rowHeights: BasicArray<number>,
         colWidths: BasicArray<number>
     ) {
@@ -194,17 +215,34 @@ export class TableShape extends Shape implements classes.TableShape {
         )
         this.rowHeights = rowHeights
         this.colWidths = colWidths
-        this.childs = childs;
+        this.datas = datas;
         this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur, 0);
         this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur, 0);
+    }
+
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
+        if (targetId.length > 0 && typeof targetId[0] !== 'string') {
+            const index = targetId[0];
+            const cell = this.getCellAt(index.rowIdx, index.colIdx, true);
+            if (!cell) throw new Error("table cell not find")
+            return cell.getTarget(targetId.slice(1))
+        }
+        return this;
     }
 
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
     }
 
-    get childsVisible(): boolean {
-        return false;
+    get naviChilds(): Shape[] | undefined {
+        return undefined;
+    }
+
+    /**
+     * @deprecated
+     */
+    get childs() {
+        return this.datas;
     }
 
     get widthTotalWeights() {
@@ -345,7 +383,7 @@ export class TableShape extends Shape implements classes.TableShape {
 
     private getCellIndexs() {
         if (this.__cellIndexs.size === 0) {
-            this.childs.forEach((c, i) => {
+            this.datas.forEach((c, i) => {
                 if (c) this.__cellIndexs.set(c.id, i);
             })
         }
@@ -394,7 +432,7 @@ export class TableShape extends Shape implements classes.TableShape {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
         const index = rowIdx * this.colWidths.length + colIdx;
-        const cell = this.childs[index];
+        const cell = this.datas[index];
         if (!cell && initCell) {
             return this.initCell(index);
         }
@@ -402,9 +440,9 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     private initCell(index: number) {
-        this.childs[index] = newCell();
+        this.datas[index] = newCell();
         // add to index
-        const cell = this.childs[index];
+        const cell = this.datas[index];
         // this.getCellIndexs().set(cell!.id, index);
         if (this.__cellIndexs.size > 0) {
             this.__cellIndexs.set(cell!.id, index)

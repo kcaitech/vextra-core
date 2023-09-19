@@ -1,0 +1,39 @@
+{
+    "description": "color",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "type": {
+            "$ref": "./variable-type.json"
+        },
+        "name": {
+            "type": "string"
+        },
+        "color": {
+            "$ref": "./color.json"
+        },
+        "text": {
+            "type": "string"
+        },
+        "fill": {
+            "$ref": "./fill.json"
+        },
+        "border": {
+            "$ref": "./border.json"
+        },
+        "num": {
+            "type": "number"
+        },
+        "shapeId": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "id",
+        "type",
+        "name"
+    ],
+    "additionalProperties": false
+}

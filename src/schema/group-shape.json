@@ -10,12 +10,6 @@
                         "$ref": "#"
                     },
                     {
-                        "$ref": "./shape.json"
-                    },
-                    {
-                        "$ref": "./flatten-shape.json"
-                    },
-                    {
                         "$ref": "./image-shape.json"
                     },
                     {
@@ -41,6 +35,12 @@
                     },
                     {
                         "$ref": "./table-shape.json"
+                    },
+                    {
+                        "$ref": "./shape.json"
+                    },
+                    {
+                        "$ref": "./flatten-shape.json"
                     }
                 ]
             }
@@ -50,6 +50,15 @@
         },
         "fixedRadius": {
             "type": "number"
+        },
+        "isUsedToBeSymbol": {
+            "type": "boolean"
+        },
+        "isSymbolShape": {
+            "type": "boolean"
+        },
+        "symbolProps": {
+            "$ref": "./symbol-props.json"
         }
     },
     "required": [

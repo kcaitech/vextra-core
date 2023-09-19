@@ -2,7 +2,7 @@
 
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
-import { Shape, Border, Gradient, BorderPosition, FillType, GradientType, Style, ShapeFrame } from "../data/classes";
+import { Border, Gradient, BorderPosition, FillType, GradientType, ShapeFrame } from "../data/classes";
 
 const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
 const angularHandler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};

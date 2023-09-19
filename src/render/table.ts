@@ -1,11 +1,12 @@
-import { TableCell, TableShape } from "../data/classes";
+import { OverrideShape, ShapeType, SymbolRefShape, TableCell, TableShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
-import { render as rCell } from "./tablecell";
+import { isVisible } from "./basic";
+import { OverrideType, findOverride } from "../data/symproxy";
 
-export function render(h: Function, shape: TableShape, reflush?: number): any {
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number): any {
+
+    if (!isVisible(shape, overrides)) return;
     const frame = shape.frame;
 
     const layout = shape.getLayout();
@@ -14,23 +15,29 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
     const path = shape.getPath().toString();
 
     // table fill
-    nodes.push(...fillR(h, shape.style.fills, frame, path));
+    if (overrides) {
+        const o = findOverride(overrides, shape.id, OverrideType.Fills);
+        if (o) {
+            nodes.push(...fillR(h, o.override.style.fills, frame, path));
+            if (consumeOverride) consumeOverride.push(o.override);
+        }
+        else {
+            nodes.push(...fillR(h, shape.style.fills, frame, path));
+        }
+    }
+    else {
+        nodes.push(...fillR(h, shape.style.fills, frame, path));
+    }
 
     // cells fill & content
     for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
-
         for (let j = 0, len = layout.grid.colCount; j < len; ++j) {
             const cellLayout = layout.grid.get(i, j);
             const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
             if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
-                const path = TableCell.getPathOfFrame(cellLayout.frame);
-                const pathstr = path.toString();
-                const child = cell;
-                const fill = fillR(h, child.style.fills, cellLayout.frame, pathstr);
-                nodes.push(h("g", { transform: `translate(${cellLayout.frame.x},${cellLayout.frame.y})` }, fill));
-
-                // content
-                nodes.push(rCell(h, child, cellLayout.frame));
+                const com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle);
+                const node = h(com, { data: cell, key: cell.id, overrides, frame: cellLayout.frame });
+                nodes.push(node);
             }
         }
     }

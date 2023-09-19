@@ -1,0 +1,24 @@
+{
+    "description": "override set",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "overrides": {
+            "type": "array",
+            "items": {
+                "$ref": "./override-shape.json"
+            }
+        }
+    },
+    "required": [
+        "id",
+        "name",
+        "overrides"
+    ],
+    "additionalProperties": false
+}

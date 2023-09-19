@@ -1,0 +1,32 @@
+{
+    "description": "color",
+    "type": "object",
+    "properties": {
+        "alpha": {
+            "type": "integer",
+            "default": 0
+        },
+        "red": {
+            "type": "integer",
+            "default": 0
+        },
+        "green": {
+            "type": "integer",
+            "default": 0
+        },
+        "blue": {
+            "type": "integer",
+            "default": 0
+        },
+        "variableRef": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "alpha",
+        "red",
+        "green",
+        "blue"
+    ],
+    "additionalProperties": false
+}

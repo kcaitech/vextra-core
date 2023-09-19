@@ -1,0 +1,11 @@
+{
+    "description": "variable types",
+    "enum": [
+        "color",
+        "text",
+        "fill",
+        "border",
+        "shapeId",
+        "num"
+    ]
+}

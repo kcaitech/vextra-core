@@ -5,6 +5,7 @@
 
 export {
     WindingRule,
+    VariableType,
     UnderlineType,
     TextVerAlign,
     TextTransformType,
@@ -15,6 +16,7 @@ export {
     StrikethroughType,
     ShapeType,
     ResizeType,
+    OverrideType,
     MarkerType,
     LineJoinStyle,
     LineCapStyle,
@@ -35,6 +37,7 @@ export {
 } from "./typesdefine"
 import {
     WindingRule,
+    VariableType,
     UnderlineType,
     TextVerAlign,
     TextTransformType,
@@ -45,6 +48,7 @@ import {
     StrikethroughType,
     ShapeType,
     ResizeType,
+    OverrideType,
     MarkerType,
     LineJoinStyle,
     LineCapStyle,
@@ -66,6 +70,31 @@ import {
 import {
     Basic, BasicArray
     } from "./basic"
+/**
+ * color 
+ */
+export class Variable extends Basic {
+    typeId = 'variable'
+    id: string
+    type: VariableType
+    name: string
+    color?: Color
+    text?: string
+    fill?: Fill
+    border?: Border
+    num?: number
+    shapeId?: string
+    constructor(
+        id: string,
+        type: VariableType,
+        name: string
+    ) {
+        super()
+        this.id = id
+        this.type = type
+        this.name = name
+    }
+}
 /**
  * user infomation 
  */
@@ -92,11 +121,25 @@ export class Text extends Basic {
     typeId = 'text'
     paras: BasicArray<Para >
     attr?: TextAttr
+    variableRef?: string
     constructor(
         paras: BasicArray<Para >
     ) {
         super()
         this.paras = paras
+    }
+}
+/**
+ * symbol props 
+ */
+export class SymbolProps extends Basic {
+    typeId = 'symbol-props'
+    overrides?: BasicArray<OverrideArray >
+    curOverrid?: string
+    variables?: BasicArray<Variable >
+    constructor(
+    ) {
+        super()
     }
 }
 /**
@@ -336,22 +379,22 @@ export class Padding extends Basic {
     }
 }
 /**
- * override list item 
+ * override set 
  */
-export class OverrideItem extends Basic {
-    typeId = 'override-item'
+export class OverrideArray extends Basic {
+    typeId = 'override-array'
     id: string
-    attr: string
-    value: (Style | string)
+    name: string
+    overrides: BasicArray<OverrideShape >
     constructor(
         id: string,
-        attr: string,
-        value: (Style | string)
+        name: string,
+        overrides: BasicArray<OverrideShape >
     ) {
         super()
         this.id = id
-        this.attr = attr
-        this.value = value
+        this.name = name
+        this.overrides = overrides
     }
 }
 /**
@@ -407,6 +450,7 @@ export class Fill extends Basic {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
+    variableRef?: string
     constructor(
         id: string,
         isEnabled: boolean,
@@ -645,6 +689,7 @@ export class Color extends Basic {
     red: number
     green: number
     blue: number
+    variableRef?: string
     constructor(
         alpha: number,
         red: number,
@@ -712,6 +757,7 @@ export class Border extends Basic {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
+    variableRef?: string
     constructor(
         id: string,
         isEnabled: boolean,
@@ -819,7 +865,7 @@ export class TextShape extends Shape {
  */
 export class TableShape extends Shape {
     typeId = 'table-shape'
-    childs: BasicArray<(undefined | TableCell) >
+    datas: BasicArray<(undefined | TableCell) >
     rowHeights: BasicArray<number >
     colWidths: BasicArray<number >
     textAttr?: TextAttr
@@ -829,7 +875,7 @@ export class TableShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(undefined | TableCell) >,
+        datas: BasicArray<(undefined | TableCell) >,
         rowHeights: BasicArray<number >,
         colWidths: BasicArray<number >
     ) {
@@ -840,7 +886,7 @@ export class TableShape extends Shape {
             frame,
             style
         )
-        this.childs = childs
+        this.datas = datas
         this.rowHeights = rowHeights
         this.colWidths = colWidths
     }
@@ -877,14 +923,15 @@ export class TableCell extends Shape {
 export class SymbolRefShape extends Shape {
     typeId = 'symbol-ref-shape'
     refId: string
-    overrides?: BasicArray<OverrideItem >
+    overrides: BasicArray<OverrideShape >
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        refId: string
+        refId: string,
+        overrides: BasicArray<OverrideShape >
     ) {
         super(
             id,
@@ -894,6 +941,7 @@ export class SymbolRefShape extends Shape {
             style
         )
         this.refId = refId
+        this.overrides = overrides
     }
 }
 /**
@@ -1024,14 +1072,14 @@ export class TextAttr extends ParaAttr {
  */
 export class Page extends Shape {
     typeId = 'page'
-    childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape | TableShape) >
+    childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | LineShape | OvalShape | TableShape | SymbolShape) >
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape | TableShape) >
+        childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | LineShape | OvalShape | TableShape | SymbolShape) >
     ) {
         super(
             id,
@@ -1041,6 +1089,38 @@ export class Page extends Shape {
             style
         )
         this.childs = childs
+    }
+}
+/**
+ * override shape 
+ */
+export class OverrideShape extends Shape {
+    typeId = 'override-shape'
+    refId: string
+    override_text?: boolean
+    override_image?: boolean
+    override_fills?: boolean
+    override_borders?: boolean
+    override_visible?: boolean
+    stringValue?: string
+    text?: Text
+    imageRef?: string
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        refId: string
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style
+        )
+        this.refId = refId
     }
 }
 /**
@@ -1129,16 +1209,19 @@ export class ImageShape extends PathShape {
  */
 export class GroupShape extends Shape {
     typeId = 'group-shape'
-    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
+    childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >
     isBoolOpShape?: boolean
     fixedRadius?: number
+    isUsedToBeSymbol?: boolean
+    isSymbolShape?: boolean
+    symbolProps?: SymbolProps
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >
     ) {
         super(
             id,
@@ -1161,7 +1244,7 @@ export class SymbolShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >
     ) {
         super(
             id,
@@ -1184,7 +1267,7 @@ export class FlattenShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >
     ) {
         super(
             id,
@@ -1246,7 +1329,7 @@ export class Artboard extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >
     ) {
         super(
             id,

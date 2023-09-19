@@ -64,6 +64,11 @@ inject['Fill']['after'] = `\
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 `
 inject['TableShape'] = {};
+inject['TableShape']['before'] = `\
+    // inject code
+    // 兼容旧数据
+    if ((source as any).childs) source.datas = (source as any).childs;
+`
 inject['TableShape']['after'] = `\
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
@@ -71,23 +76,44 @@ inject['TableShape']['after'] = `\
 inject['SymbolRefShape'] = {};
 inject['SymbolRefShape']['after'] = `\
     // inject code
-    if (ctx?.document) ret.setSymbolMgr(ctx.document.symbolsMgr);
+    if (ctx?.document) {
+        ret.setSymbolMgr(ctx.document.symbolsMgr);
+        ret.setImageMgr(ctx.document.mediasMgr);
+    }
 `
 inject['Artboard'] = {};
 inject['Artboard']['after'] = `\
     // inject code
     if (ctx?.document) ctx.document.artboardMgr.add(ret.id, ret);
 `
-inject['SymbolShape'] = {};
-inject['SymbolShape']['after'] = `\
+inject['GroupShape'] = {};
+inject['GroupShape']['after'] = `\
     // inject code
-    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    ret.type = types.ShapeType.Group;
+    if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
 `
 inject['FlattenShape'] = {};
 inject['FlattenShape']['content'] = `\
     // inject code
     const ret = importGroupShape(source, ctx);
     ret.isBoolOpShape = true;
+    ret.type = types.ShapeType.Group;
     return ret;
 `
 
+inject['OverrideShape'] = {};
+inject['OverrideShape']['after'] = `\
+    // inject code
+    if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
+`
+
+inject['SymbolShape'] = {};
+inject['SymbolShape']['content'] = `\
+    // inject code
+    const ret = importGroupShape(source, ctx);
+    ret.isUsedToBeSymbol = true;
+    ret.isSymbolShape = true;
+    ret.type = types.ShapeType.Group;
+    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    return ret;
+`

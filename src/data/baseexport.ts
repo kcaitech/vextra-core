@@ -3,7 +3,7 @@
  * 可修改schema后在schema目录运行node script生成
  */
 
-import * as types from "../data/typesdefine"
+import * as types from "./typesdefine"
 
 
 export interface IExportContext {
@@ -12,6 +12,25 @@ export interface IExportContext {
 }
 /* winding rule */
 export function exportWindingRule(source: types.WindingRule, ctx?: IExportContext): types.WindingRule {
+    return source
+}
+/* color */
+export function exportVariable(source: types.Variable, ctx?: IExportContext): types.Variable {
+    const ret = {
+        id: source.id,
+        type: exportVariableType(source.type, ctx),
+        name: source.name,
+        color: source.color && exportColor(source.color, ctx),
+        text: source.text,
+        fill: source.fill && exportFill(source.fill, ctx),
+        border: source.border && exportBorder(source.border, ctx),
+        num: source.num,
+        shapeId: source.shapeId,
+    }
+    return ret
+}
+/* variable types */
+export function exportVariableType(source: types.VariableType, ctx?: IExportContext): types.VariableType {
     return source
 }
 /* user infomation */
@@ -39,6 +58,7 @@ export function exportText(source: types.Text, ctx?: IExportContext): types.Text
             return ret
         })(),
         attr: source.attr && exportTextAttr(source.attr, ctx),
+        variableRef: source.variableRef,
     }
     return ret
 }
@@ -65,6 +85,29 @@ export function exportTextBehaviour(source: types.TextBehaviour, ctx?: IExportCo
 /* table cell types */
 export function exportTableCellType(source: types.TableCellType, ctx?: IExportContext): types.TableCellType {
     return source
+}
+/* symbol props */
+export function exportSymbolProps(source: types.SymbolProps, ctx?: IExportContext): types.SymbolProps {
+    const ret = {
+        overrides: source.overrides && (() => {
+            const ret = []
+            for (let i = 0, len = source.overrides.length; i < len; i++) {
+                const r = exportOverrideArray(source.overrides[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        curOverrid: source.curOverrid,
+        variables: source.variables && (() => {
+            const ret = []
+            for (let i = 0, len = source.variables.length; i < len; i++) {
+                const r = exportVariable(source.variables[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+    }
+    return ret
 }
 /* style */
 export function exportStyle(source: types.Style, ctx?: IExportContext): types.Style {
@@ -269,22 +312,22 @@ export function exportPadding(source: types.Padding, ctx?: IExportContext): type
     }
     return ret
 }
-/* override list item */
-export function exportOverrideItem(source: types.OverrideItem, ctx?: IExportContext): types.OverrideItem {
+/* override types */
+export function exportOverrideType(source: types.OverrideType, ctx?: IExportContext): types.OverrideType {
+    return source
+}
+/* override set */
+export function exportOverrideArray(source: types.OverrideArray, ctx?: IExportContext): types.OverrideArray {
     const ret = {
         id: source.id,
-        attr: source.attr,
-        value: (() => {
-            const val = source.value;
-            if (typeof val != 'object') {
-                return val
+        name: source.name,
+        overrides: (() => {
+            const ret = []
+            for (let i = 0, len = source.overrides.length; i < len; i++) {
+                const r = exportOverrideShape(source.overrides[i], ctx)
+                if (r) ret.push(r)
             }
-            if (val.typeId == 'style') {
-                return exportStyle(val as types.Style, ctx)
-            }
-            {
-                throw new Error('unknow val: ' + val)
-            }
+            return ret
         })(),
     }
     return ret
@@ -341,6 +384,7 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
         contextSettings: source.contextSettings && exportContextSettings(source.contextSettings, ctx),
         gradient: source.gradient && exportGradient(source.gradient, ctx),
         imageRef: source.imageRef,
+        variableRef: source.variableRef,
     }
     // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
@@ -513,6 +557,7 @@ export function exportColor(source: types.Color, ctx?: IExportContext): types.Co
         red: source.red,
         green: source.green,
         blue: source.blue,
+        variableRef: source.variableRef,
     }
     return ret
 }
@@ -556,6 +601,7 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
         thickness: source.thickness,
         gradient: source.gradient && exportGradient(source.gradient, ctx),
         borderStyle: exportBorderStyle(source.borderStyle, ctx),
+        variableRef: source.variableRef,
     }
     return ret
 }
@@ -656,11 +702,11 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        childs: (() => {
+        datas: (() => {
             const ret = []
-            for (let i = 0, len = source.childs.length; i < len; i++) {
+            for (let i = 0, len = source.datas.length; i < len; i++) {
                 const r = (() => {
-                    const val = source.childs[i];
+                    const val = source.datas[i];
                     if (typeof val != 'object') {
                         return val
                     }
@@ -754,10 +800,10 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         refId: source.refId,
-        overrides: source.overrides && (() => {
+        overrides: (() => {
             const ret = []
             for (let i = 0, len = source.overrides.length; i < len; i++) {
-                const r = exportOverrideItem(source.overrides[i], ctx)
+                const r = exportOverrideShape(source.overrides[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -1009,9 +1055,6 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                     if (val.typeId == 'artboard') {
                         return exportArtboard(val as types.Artboard, ctx)
                     }
-                    if (val.typeId == 'symbol-shape') {
-                        return exportSymbolShape(val as types.SymbolShape, ctx)
-                    }
                     if (val.typeId == 'line-shape') {
                         return exportLineShape(val as types.LineShape, ctx)
                     }
@@ -1020,6 +1063,9 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                     }
                     if (val.typeId == 'table-shape') {
                         return exportTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        return exportSymbolShape(val as types.SymbolShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1030,6 +1076,44 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
             return ret
         })(),
     }
+    return ret
+}
+/* override shape */
+export function exportOverrideShape(source: types.OverrideShape, ctx?: IExportContext): types.OverrideShape {
+    const ret = {
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        refId: source.refId,
+        override_text: source.override_text,
+        override_image: source.override_image,
+        override_fills: source.override_fills,
+        override_borders: source.override_borders,
+        override_visible: source.override_visible,
+        stringValue: source.stringValue,
+        text: source.text && exportText(source.text, ctx),
+        imageRef: source.imageRef,
+    }
+    // inject code
+    if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
     return ret
 }
 /* oval shape */
@@ -1182,12 +1266,6 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (val.typeId == 'group-shape') {
                         return exportGroupShape(val as types.GroupShape, ctx)
                     }
-                    if (val.typeId == 'shape') {
-                        return exportShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'flatten-shape') {
-                        return exportFlattenShape(val as types.FlattenShape, ctx)
-                    }
                     if (val.typeId == 'image-shape') {
                         return exportImageShape(val as types.ImageShape, ctx)
                     }
@@ -1215,6 +1293,12 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (val.typeId == 'table-shape') {
                         return exportTableShape(val as types.TableShape, ctx)
                     }
+                    if (val.typeId == 'shape') {
+                        return exportShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return exportFlattenShape(val as types.FlattenShape, ctx)
+                    }
                     {
                         throw new Error('unknow val: ' + val)
                     }
@@ -1225,7 +1309,12 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
         })(),
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
+        isUsedToBeSymbol: source.isUsedToBeSymbol,
+        isSymbolShape: source.isSymbolShape,
+        symbolProps: source.symbolProps && exportSymbolProps(source.symbolProps, ctx),
     }
+    // inject code
+    if (ctx?.symbols && ret.isSymbolShape) ctx.symbols.add(ret.id);
     return ret
 }
 /* symbol shape */
@@ -1248,12 +1337,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         if (val.typeId == 'group-shape') {
                             return exportGroupShape(val as types.GroupShape, ctx)
                         }
-                        if (val.typeId == 'shape') {
-                            return exportShape(val as types.Shape, ctx)
-                        }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
                         if (val.typeId == 'image-shape') {
                             return exportImageShape(val as types.ImageShape, ctx)
                         }
@@ -1281,6 +1364,12 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         if (val.typeId == 'table-shape') {
                             return exportTableShape(val as types.TableShape, ctx)
                         }
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
+                        }
+                        if (val.typeId == 'flatten-shape') {
+                            return exportFlattenShape(val as types.FlattenShape, ctx)
+                        }
                         {
                             throw new Error('unknow val: ' + val)
                         }
@@ -1291,6 +1380,9 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
             })(),
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
+        isUsedToBeSymbol: source.isUsedToBeSymbol,
+        isSymbolShape: source.isSymbolShape,
+        symbolProps: source.symbolProps && exportSymbolProps(source.symbolProps, ctx),
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -1307,8 +1399,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
     }
-    // inject code
-    if (ctx?.symbols) ctx.symbols.add(ret.id);
     return ret
 }
 /* flatten shape */
@@ -1331,12 +1421,6 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         if (val.typeId == 'group-shape') {
                             return exportGroupShape(val as types.GroupShape, ctx)
                         }
-                        if (val.typeId == 'shape') {
-                            return exportShape(val as types.Shape, ctx)
-                        }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
                         if (val.typeId == 'image-shape') {
                             return exportImageShape(val as types.ImageShape, ctx)
                         }
@@ -1364,6 +1448,12 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         if (val.typeId == 'table-shape') {
                             return exportTableShape(val as types.TableShape, ctx)
                         }
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
+                        }
+                        if (val.typeId == 'flatten-shape') {
+                            return exportFlattenShape(val as types.FlattenShape, ctx)
+                        }
                         {
                             throw new Error('unknow val: ' + val)
                         }
@@ -1374,6 +1464,9 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
             })(),
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
+        isUsedToBeSymbol: source.isUsedToBeSymbol,
+        isSymbolShape: source.isSymbolShape,
+        symbolProps: source.symbolProps && exportSymbolProps(source.symbolProps, ctx),
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -1454,12 +1547,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         if (val.typeId == 'group-shape') {
                             return exportGroupShape(val as types.GroupShape, ctx)
                         }
-                        if (val.typeId == 'shape') {
-                            return exportShape(val as types.Shape, ctx)
-                        }
-                        if (val.typeId == 'flatten-shape') {
-                            return exportFlattenShape(val as types.FlattenShape, ctx)
-                        }
                         if (val.typeId == 'image-shape') {
                             return exportImageShape(val as types.ImageShape, ctx)
                         }
@@ -1487,6 +1574,12 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         if (val.typeId == 'table-shape') {
                             return exportTableShape(val as types.TableShape, ctx)
                         }
+                        if (val.typeId == 'shape') {
+                            return exportShape(val as types.Shape, ctx)
+                        }
+                        if (val.typeId == 'flatten-shape') {
+                            return exportFlattenShape(val as types.FlattenShape, ctx)
+                        }
                         {
                             throw new Error('unknow val: ' + val)
                         }
@@ -1497,6 +1590,9 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
             })(),
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
+        isUsedToBeSymbol: source.isUsedToBeSymbol,
+        isSymbolShape: source.isSymbolShape,
+        symbolProps: source.symbolProps && exportSymbolProps(source.symbolProps, ctx),
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,

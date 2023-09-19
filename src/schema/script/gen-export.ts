@@ -210,7 +210,7 @@ handler['allOf'] = function (schema: any, className: string, attrname: string, l
         if (outputed.has(k)) return;
         outputed.add(k);
         ret += indent(level) + k + ': '
-        if (v.schema['$ref']) ret += attrname + '.' + k + ' && '
+        if (v.schema['$ref'] || v.schema.type == 'array') ret += attrname + '.' + k + ' && '
         ret += handler['type'](v.schema, v.className, attrname + '.' + k, level + 1, v.filename, allschemas) + ',\n'
     })
     return ret

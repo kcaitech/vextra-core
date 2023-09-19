@@ -8,6 +8,27 @@ export enum WindingRule {
     NonZero = 'non-zero',
     EvenOdd = 'even-odd',
 }
+/* color */
+export type Variable = {
+    id: string
+    type: VariableType
+    name: string
+    color?: Color
+    text?: string
+    fill?: Fill
+    border?: Border
+    num?: number
+    shapeId?: string
+}
+/* variable types */
+export enum VariableType {
+    Color = 'color',
+    Text = 'text',
+    Fill = 'fill',
+    Border = 'border',
+    ShapeId = 'shapeId',
+    Num = 'num',
+}
 /* user infomation */
 export type UserInfo = {
     userId: string
@@ -24,6 +45,7 @@ export enum UnderlineType {
 export type Text = {
     paras: Para[]
     attr?: TextAttr
+    variableRef?: string
 }
 /* text vertical alignment */
 export enum TextVerAlign {
@@ -62,6 +84,12 @@ export enum TableCellType {
     None = 'none',
     Text = 'text',
     Image = 'image',
+}
+/* symbol props */
+export type SymbolProps = {
+    overrides?: OverrideArray[]
+    curOverrid?: string
+    variables?: Variable[]
 }
 /* style */
 export type Style = {
@@ -134,13 +162,11 @@ export type Shape = {
 export enum ShapeType {
     Path = 'path',
     Path2 = 'path2',
-    FlattenShape = 'flatten-shape',
     Group = 'group',
     Artboard = 'artboard',
     Image = 'image',
     Page = 'page',
     Text = 'text',
-    Symbol = 'symbol',
     SymbolRef = 'symbol-ref',
     ArtboardRef = 'artboard-ref',
     Rectangle = 'rectangle',
@@ -152,6 +178,7 @@ export enum ShapeType {
     Table = 'table',
     TableCell = 'table-cell',
     Contact = 'contact',
+    OverrideShape = 'override-shape',
 }
 /* shape frame
  * x,y为parent坐标系里的点
@@ -208,11 +235,20 @@ export type Padding = {
     right?: number
     bottom?: number
 }
-/* override list item */
-export type OverrideItem = {
+/* override types */
+export enum OverrideType {
+    StringValue = 'stringValue',
+    Text = 'text',
+    Image = 'image',
+    Fills = 'fills',
+    Borders = 'borders',
+    Visible = 'visible',
+}
+/* override set */
+export type OverrideArray = {
     id: string
-    attr: string
-    value: (Style | string)
+    name: string
+    overrides: OverrideShape[]
 }
 /* marker type */
 export enum MarkerType {
@@ -264,6 +300,7 @@ export type Fill = {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
+    variableRef?: string
 }
 /* fill types */
 export enum FillType {
@@ -392,6 +429,7 @@ export type Color = {
     red: number
     green: number
     blue: number
+    variableRef?: string
 }
 /* color controls */
 export type ColorControls = {
@@ -429,6 +467,7 @@ export type Border = {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
+    variableRef?: string
 }
 /* border style */
 export type BorderStyle = {
@@ -498,7 +537,7 @@ export type TextShape = Shape & {
 }
 /* table shape */
 export type TableShape = Shape & {
-    childs: (undefined | TableCell)[]
+    datas: (undefined | TableCell)[]
     rowHeights: number[]
     colWidths: number[]
     textAttr?: TextAttr
@@ -514,7 +553,7 @@ export type TableCell = Shape & {
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
     refId: string
-    overrides?: OverrideItem[]
+    overrides: OverrideShape[]
 }
 /* span attr */
 export type Span = SpanAttr & {
@@ -551,7 +590,19 @@ export type TextAttr = ParaAttr & {
 }
 /* page */
 export type Page = Shape & {
-    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape | TableShape)[]
+    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | LineShape | OvalShape | TableShape | SymbolShape)[]
+}
+/* override shape */
+export type OverrideShape = Shape & {
+    refId: string
+    override_text?: boolean
+    override_image?: boolean
+    override_fills?: boolean
+    override_borders?: boolean
+    override_visible?: boolean
+    stringValue?: string
+    text?: Text
+    imageRef?: string
 }
 /* oval shape */
 export type OvalShape = PathShape & {
@@ -566,9 +617,12 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape)[]
+    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape)[]
     isBoolOpShape?: boolean
     fixedRadius?: number
+    isUsedToBeSymbol?: boolean
+    isSymbolShape?: boolean
+    symbolProps?: SymbolProps
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {

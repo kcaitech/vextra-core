@@ -4,8 +4,8 @@ import { CurvePoint, PathShape, Point2D, Shape } from "./shape";
 import { ContactType, CurveMode } from "./typesdefine";
 import { Api } from "editor/command/recordapi";
 import { Page } from "./page";
-import { importCurvePoint } from "../io/baseimport";
-import { exportCurvePoint } from "../io/baseexport";
+import { importCurvePoint } from "../data/baseimport";
+import { exportCurvePoint } from "../data/baseexport";
 
 /**
  * @description root -> 图形自身上且单位为比例系数的矩阵

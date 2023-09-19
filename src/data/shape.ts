@@ -3,16 +3,12 @@ import { Style, Border } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
-export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, OverrideItem, Ellipse, PathSegment } from "./baseclasses"
-import { ShapeType, CurvePoint, OverrideItem, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Point2D } from "./baseclasses"
+export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType } from "./baseclasses"
+import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, OverrideShape } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { ContactForm, ContactType, CurveMode } from "./typesdefine";
-import { v4 } from "uuid";
-import { d, gen_baisc_params, gen_matrix1, gen_path, gen_raw, slice_invalid_point } from "./utils";
-import { Page } from "./page";
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
@@ -52,8 +48,28 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.style = style
     }
 
-    get childsVisible(): boolean {
-        return false;
+    /**
+     * @returns undefined | SymbolRefShape[]
+     */
+    get overridesGetter(): any | undefined {
+        return undefined;
+    }
+
+    /**
+     * for command
+     */
+    get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
+        return [this.id];
+    }
+    /**
+     * for command
+     */
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
+        return this;
+    }
+
+    get naviChilds(): Shape[] | undefined {
+        return undefined;
     }
 
     getPath(fixedRadius?: number): Path {
@@ -197,20 +213,29 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.frame.width = w;
         this.frame.height = h;
     }
+
+    setVisible(isVisible: boolean | undefined) {
+        this.isVisible = isVisible;
+    }
+
+    onRemoved() {}
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
     typeId = 'group-shape';
-    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
+    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape)>
+
     isBoolOpShape?: boolean
     fixedRadius?: number
+    isUsedToBeSymbol?: boolean
+    isSymbolShape?: boolean
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
+        childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape)>
     ) {
         super(
             id,
@@ -223,8 +248,8 @@ export class GroupShape extends Shape implements classes.GroupShape {
         (childs as any).typeId = "childs";
     }
 
-    get childsVisible(): boolean {
-        return true;
+    get naviChilds(): Shape[] | undefined {
+        return this.childs;
     }
 
     removeChild(shape: Shape): boolean {
@@ -295,6 +320,12 @@ export class GroupShape extends Shape implements classes.GroupShape {
  * @deprecated
  */
 export class FlattenShape extends GroupShape implements classes.FlattenShape {
+}
+
+/**
+ * @deprecated
+ */
+export class SymbolShape extends GroupShape implements classes.FlattenShape {
 }
 
 export class PathShape extends Shape implements classes.PathShape {
@@ -473,13 +504,27 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
     }
-    peekImage() {
-        return this.__cacheData?.base64;
+    private __startLoad: boolean = false;
+    peekImage(startLoad: boolean = false) {
+        const ret = this.__cacheData?.base64;
+        if (ret) return ret;
+        if (!this.imageRef) return "";
+        if (startLoad && !this.__startLoad) {
+            this.__startLoad = true;
+            this.__imageMgr && this.__imageMgr.get(this.imageRef).then((val) => {
+                if (!this.__cacheData) {
+                    this.__cacheData = val;
+                    if (val) this.notify();
+                }
+            })
+        }
+        return ret;
     }
     // image shape
     async loadImage(): Promise<string> {
         if (this.__cacheData) return this.__cacheData.base64;
         this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
+        if (this.__cacheData) this.notify();
         return this.__cacheData && this.__cacheData.base64 || "";
     }
 }
@@ -576,75 +621,5 @@ export class TextShape extends Shape implements classes.TextShape {
 
     getLayout(): TextLayout {
         return this.text.getLayout();
-    }
-}
-
-export class SymbolShape extends GroupShape implements classes.SymbolShape {
-    typeId = 'symbol-shape'
-    constructor(
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style,
-        childs: BasicArray<(SymbolShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape)>
-    ) {
-        super(
-            id,
-            name,
-            type,
-            frame,
-            style,
-            childs
-        )
-    }
-}
-
-export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
-    typeId = 'symbol-ref-shape'
-    refId: string
-    overrides?: BasicArray<OverrideItem>
-    __data: SymbolShape | undefined
-    __symMgr?: ResourceMgr<SymbolShape>
-    constructor(
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style,
-        refId: string
-    ) {
-        super(
-            id,
-            name,
-            type,
-            frame,
-            style
-        )
-        this.refId = refId
-    }
-    setSymbolMgr(mgr: ResourceMgr<SymbolShape>) {
-        this.__symMgr = mgr;
-    }
-    peekSymbol(): SymbolShape | undefined {
-        return this.__data;
-    }
-    async loadSymbol() {
-        if (this.__data) return this.__data;
-        this.__data = this.__symMgr && await this.__symMgr.get(this.refId);
-        this.notify();
-        return this.__data;
-    }
-    // overrideValues
-    addOverrid(id: string, attr: string, value: any) {
-        if (!this.overrides) this.overrides = new BasicArray();
-        const item = new OverrideItem(id, attr, value);
-        this.overrides.push(item);
-    }
-    getOverrid(id: string, attr: string): OverrideItem | undefined {
-        if (!this.overrides) return;
-        this.overrides.forEach((item) => {
-            if (item.id === id && item.attr === attr) return item;
-        })
     }
 }

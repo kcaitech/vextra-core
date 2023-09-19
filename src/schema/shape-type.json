@@ -3,13 +3,11 @@
     "enum": [
         "path",
         "path2",
-        "flatten-shape",
         "group",
         "artboard",
         "image",
         "page",
         "text",
-        "symbol",
         "symbol-ref",
         "artboard-ref",
         "rectangle",
@@ -20,7 +18,8 @@
         "line",
         "table",
         "table-cell",
-        "contact"
+        "contact",
+        "override-shape"
     ],
     "default": "path"
 }
