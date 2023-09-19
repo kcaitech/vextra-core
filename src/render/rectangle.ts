@@ -1,52 +1,20 @@
-import { OverrideShape, Shape, SymbolRefShape } from "../data/classes";
+import { Shape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { isVisible } from "./basic";
-import { OverrideType, findOverride } from "../data/symproxy";
-import { Matrix } from "../basic/matrix";
 
-export function render(h: Function, shape: Shape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, matrix: Matrix | undefined, reflush?: number) {
-    // if (this.data.booleanOperation != BooleanOperation.None) {
-    //     // todo 只画selection
-    //     return;
-    // }
-
-    if (!isVisible(shape, overrides)) return;
+export function render(h: Function, shape: Shape, reflush?: number) {
+    if (!isVisible(shape)) return;
 
     const frame = shape.frame;
     const childs = [];
     const path0 = shape.getPath();
-    if (matrix) path0.transform(matrix);
     const path = path0.toString();
 
     // fill
-    if (overrides) {
-        const o = findOverride(overrides, shape.id, OverrideType.Fills);
-        if (o) {
-            childs.push(...fillR(h, o.override.style.fills, frame, path));
-            if (consumeOverride) consumeOverride.push(o.override);
-        }
-        else {
-            childs.push(...fillR(h, shape.style.fills, frame, path));
-        }
-    }
-    else {
-        childs.push(...fillR(h, shape.style.fills, frame, path));
-    }
+    childs.push(...fillR(h, shape.style.fills, frame, path));
     // border
-    if (overrides) {
-        const o = findOverride(overrides, shape.id, OverrideType.Borders);
-        if (o) {
-            childs.push(...borderR(h, o.override.style.borders, frame, path));
-            if (consumeOverride) consumeOverride.push(o.override);
-        }
-        else {
-            childs.push(...borderR(h, shape.style.borders, frame, path));
-        }
-    }
-    else {
-        childs.push(...borderR(h, shape.style.borders, frame, path));
-    }
+    childs.push(...borderR(h, shape.style.borders, frame, path));
 
     const props: any = {}
     if (reflush) {

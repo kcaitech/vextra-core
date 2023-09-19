@@ -12,6 +12,7 @@ import { GroupShape, Shape } from "./shape";
 import { OverrideShape, OverridesGetter } from "./overrideshape";
 import { proxyShape } from "./symproxy";
 import { Path } from "./path";
+import { layoutChilds } from "./symbolreflayout";
 
 export class OverrideArray extends classes.OverrideArray {
     constructor(
@@ -60,7 +61,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         )
         this.refId = refId
         this.overrides = overrides
-        this.watcher = this.watcher.bind(this);
     }
 
     mapId(id: string) {
@@ -95,9 +95,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         return this.__overridesMap;
     }
 
-    // symbolref需要watch symbol的修改？
-    get naviChilds(): Shape[] | undefined {
-        // 需要cache
+    get virtualChilds(): Shape[] | undefined {
         if (!this.__data) return;
         // if (this.__childs) return this.__childs;
 
@@ -108,17 +106,20 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         // this.__childs = this.__data.childs.map((v) => proxyShape(v, this, symRef));
         // this.__data.watch(this.watcher);
         // return this.__childs;
-        return this.__data.childs.map((v) => proxyShape(v, this, symRef));
+        const childs = this.__data.childs.map((v) => proxyShape(v, this, symRef));
+
+        const thisframe = this.frame;
+        const symframe = this.__data.frame;
+        if (thisframe.width !== symframe.width || thisframe.height !== symframe.height) {
+            layoutChilds(childs, thisframe, symframe);
+        }
+
+        return childs;
     }
 
-    private watcher(...args: any[]): void {
-        super.watcher(args);
-        // if (this.__childs) {
-        //     // todo compare
-        //     this.__childs.forEach((c: any) => c.remove)
-        //     this.__childs = undefined;
-        //     this.__data?.unwatch(this.watcher);
-        // }
+    // symbolref需要watch symbol的修改？
+    get naviChilds(): Shape[] | undefined {
+        return this.virtualChilds;
     }
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;

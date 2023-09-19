@@ -1,12 +1,11 @@
-import { OverrideShape, ShapeType, SymbolRefShape, TableCell, TableShape } from "../data/classes";
+import { ShapeType, TableCell, TableShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { isVisible } from "./basic";
-import { OverrideType, findOverride } from "../data/symproxy";
 
-export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number): any {
+export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
 
-    if (!isVisible(shape, overrides)) return;
+    if (!isVisible(shape)) return;
     const frame = shape.frame;
 
     const layout = shape.getLayout();
@@ -15,19 +14,7 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
     const path = shape.getPath().toString();
 
     // table fill
-    if (overrides) {
-        const o = findOverride(overrides, shape.id, OverrideType.Fills);
-        if (o) {
-            nodes.push(...fillR(h, o.override.style.fills, frame, path));
-            if (consumeOverride) consumeOverride.push(o.override);
-        }
-        else {
-            nodes.push(...fillR(h, shape.style.fills, frame, path));
-        }
-    }
-    else {
-        nodes.push(...fillR(h, shape.style.fills, frame, path));
-    }
+    nodes.push(...fillR(h, shape.style.fills, frame, path));
 
     // cells fill & content
     for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
@@ -36,7 +23,7 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
             const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
             if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                 const com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle);
-                const node = h(com, { data: cell, key: cell.id, overrides, frame: cellLayout.frame });
+                const node = h(com, { data: cell, key: cell.id, frame: cellLayout.frame });
                 nodes.push(node);
             }
         }

@@ -1,13 +1,12 @@
-import { OverrideType, findOverride } from "../data/symproxy";
 import { objectId } from "../basic/objectid";
-import { ImageShape, OverrideShape, SymbolRefShape } from "../data/classes";
+import { ImageShape } from "../data/classes";
 import { isVisible } from "./basic";
 import { render as borderR } from "./border";
 import { render as clippathR } from "./clippath"
 
-export function render(h: Function, shape: ImageShape, imgPH: string, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number) {
+export function render(h: Function, shape: ImageShape, imgPH: string, reflush?: number) {
 
-    if (!isVisible(shape, overrides)) return;
+    if (!isVisible(shape)) return;
 
     const frame = shape.frame;
 
@@ -16,20 +15,7 @@ export function render(h: Function, shape: ImageShape, imgPH: string, overrides:
     const cp = clippathR(h, id, path);
     const childs = [cp];
 
-    let url;
-    if (overrides) {
-        const o = findOverride(overrides, shape.id, OverrideType.Image);
-        if (o) {
-            url = o.override.peekImage(true);
-            if (consumeOverride) consumeOverride.push(o.override);
-        }
-        else {
-            url = shape.peekImage(true);
-        }
-    }
-    else {
-        url = shape.peekImage(true);
-    }
+    const url = shape.peekImage(true);
 
     const img = h("image", {
         'xlink:href': url ?? imgPH,

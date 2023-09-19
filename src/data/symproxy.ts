@@ -1,13 +1,13 @@
 import { Border, Fill, Style } from "./style";
 import { Text } from "./text";
-import { BasicArray } from "./basic";
+import { BasicArray, Watchable } from "./basic";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
-import { ShapeFrame, OverrideType } from "./baseclasses"
+import { ShapeFrame, OverrideType, CurvePoint } from "./baseclasses"
 import { GroupShape, Shape, TextShape } from "./shape";
-import { importBorder, importFill, importText } from "./baseimport";
+import { importBorder, importCurvePoint, importFill, importText } from "./baseimport";
 import { OverrideShape } from "./overrideshape";
 import { SymbolRefShape } from "./symbolref";
 
@@ -48,7 +48,6 @@ class FreezHdl {
     }
 }
 
-
 export function findOverride(symRef: SymbolRefShape[], id: string, type: OverrideType) {
     for (let i = 0, len = symRef.length; i < len; ++i) {
         const getter = symRef[i];
@@ -78,7 +77,7 @@ export function findOverride(symRef: SymbolRefShape[], id: string, type: Overrid
 class StyleHdl extends FreezHdl {
     __symRef: SymbolRefShape[];
     __shape: Shape;
-    __override?: OverrideShape;
+    __override?: OverrideShape; // 当前shape的override对象
 
     __fills?: Fill[];
     __borders?: Border[];
@@ -170,30 +169,52 @@ class StyleHdl extends FreezHdl {
     }
 }
 
-
-class ShapeHdl extends FreezHdl {
+class ShapeHdl extends Watchable(FreezHdl) {
     __symRef: SymbolRefShape[];
     __target: Shape;
     __parent: Shape;
-    __frame?: ShapeFrame;
     __style?: Style;
+
+    // 布局相关属性
+    __frame: ShapeFrame;
+    __rotation: number;
+    __isFlippedHorizontal: boolean;
+    __isFlippedVertical: boolean;
+    __points: CurvePoint[] | undefined;
+
+    origin_watcher(...args: any[]) {
+
+        // todo 布局属性更改后要重新布局
+
+        super.notify(...args);
+    }
+    override_watcher(...args: any[]) {
+        super.notify(...args);
+    }
 
     constructor(symRef: SymbolRefShape[], target: Shape, parent: Shape) {
         super(target);
         this.__symRef = symRef;
         this.__target = target;
         this.__parent = parent;
-        this.watcher = this.watcher.bind(this);
-        target.watch(this.watcher);
-    }
+        this.origin_watcher = this.origin_watcher.bind(this);
+        this.override_watcher = this.override_watcher.bind(this);
+        target.watch(this.origin_watcher);
+        symRef.forEach((s) => s.watch(this.override_watcher));
 
-    watcher(...args: any[]) {
-        // 清除缓存数据
-        this.__style = undefined;
+        const frame = target.frame;
+        this.__frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+
+        this.__rotation = target.rotation ?? 0;
+        this.__isFlippedHorizontal = target.isFlippedHorizontal ?? false;
+        this.__isFlippedVertical = target.isFlippedVertical ?? false;
+
+        this.__points = (target as any).points ? (target as any).points.map((p: CurvePoint) => importCurvePoint(p)) : undefined;
     }
 
     onRemoved() {
-        this.__target.unwatch(this.watcher);
+        this.__target.unwatch(this.origin_watcher);
+        this.__symRef.forEach((s) => s.unwatch(this.override_watcher))
     }
 
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
@@ -208,6 +229,18 @@ class ShapeHdl extends FreezHdl {
             }
             return true;
         }
+        if (propStr === 'rotation') {
+            this.__rotation = value;
+            return true;
+        }
+        if (propStr === 'isFlippedHorizontal') {
+            this.__isFlippedHorizontal = value;
+            return true;
+        }
+        if (propStr === 'isFlippedVertical') {
+            this.__isFlippedVertical = value;
+            return true;
+        }
         return super.set(target, propertyKey, value, receiver);
     }
 
@@ -217,12 +250,6 @@ class ShapeHdl extends FreezHdl {
         if (propStr === 'shapeId') return [this.__symRef[0].id, this.__target.id];
         if (propStr === 'parent') return this.__parent;
         if (propStr === 'frame') { // 外面编辑需要修改，但又不可以修改target的
-            const frame = this.__target.frame;
-            if (!this.__frame) this.__frame = new ShapeFrame(0, 0, 0, 0);
-            this.__frame.x = frame.x;
-            this.__frame.y = frame.y;
-            this.__frame.width = frame.width;
-            this.__frame.height = frame.height;
             return this.__frame;
         }
         if (propStr === 'style') {
@@ -238,6 +265,18 @@ class ShapeHdl extends FreezHdl {
             const override = o?.override;
             if (override && override.override_visible) return override.isVisible;
             return this.__target.isVisible;
+        }
+        if (propStr === 'rotation') {
+            return this.__rotation;
+        }
+        if (propStr === 'isFlippedHorizontal') {
+            return this.__isFlippedHorizontal;
+        }
+        if (propStr === 'isFlippedVertical') {
+            return this.__isFlippedVertical;
+        }
+        if (propStr === 'points') {
+            return this.__points;
         }
         if (propStr === "remove") {
             // 清除watch
@@ -269,8 +308,8 @@ class GroupShapeHdl extends ShapeHdl {
         return super.get(target, propertyKey, receiver);
     }
 
-    watcher(...args: any[]): void {
-        super.watcher(args);
+    origin_watcher(...args: any[]): void {
+        super.origin_watcher(args);
         if (this.__childs) {
             // todo compare
 
@@ -286,6 +325,10 @@ class GroupShapeHdl extends ShapeHdl {
             this.__childs = undefined;
         }
     }
+}
+
+class SymbolRefHdl extends ShapeHdl {
+    // todo
 }
 
 class TextShapeHdl extends ShapeHdl {
@@ -308,33 +351,39 @@ class TextShapeHdl extends ShapeHdl {
         return this.__override.text!;
     }
 
+    getText() {
+        if (this.__override &&
+            this.__override.override_text &&
+            this.__override.text) return this.__override.text;
+
+        const o = findOverride(this.__symRef, this.__target.id, OverrideType.Text);
+        if (!o) return this.__text;
+
+        if (!this.__override && o.i === 0) {
+            // first 
+            this.__override = o.override;
+            if (this.__override.override_text &&
+                this.__override.text) return this.__override.text;
+        }
+
+        // get override text
+        const text = o.override.getText(this.__target);
+        if (text) {
+            if (!this.__freezText) {
+                this.__freezText = new Proxy<Text>(text, new FreezHdl(text));
+            }
+            return this.__freezText;
+        }
+        return this.__text;
+    }
+
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
 
         if (propStr === 'text') {
-            if (this.__override &&
-                this.__override.override_text &&
-                this.__override.text) return this.__override.text;
-
-            const o = findOverride(this.__symRef, this.__target.id, OverrideType.Text);
-            if (!o) return this.__text;
-
-            if (!this.__override && o.i === 0) {
-                // first 
-                this.__override = o.override;
-                if (this.__override.override_text &&
-                    this.__override.text) return this.__override.text;
-            }
-
-            // get override text
-            const text = o.override.getText(this.__target);
-            if (text) {
-                if (!this.__freezText) {
-                    this.__freezText = new Proxy<Text>(text, new FreezHdl(text));
-                }
-                return this.__freezText;
-            }
-            return this.__text;
+            const text = this.getText();
+            text.updateSize(this.__frame.width, this.__frame.height);
+            return text;
         }
 
         if (propStr === 'overrideText') {

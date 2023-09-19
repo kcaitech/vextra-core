@@ -1,10 +1,10 @@
-import { OverrideShape, Shape, SymbolRefShape } from "../data/classes";
+import { Shape } from "../data/classes";
 import { isVisible } from "./basic";
 import { render as renderB } from "./line_borders";
 
-export function render(h: Function, shape: Shape, overrides: SymbolRefShape[] | undefined, consumeOverride: OverrideShape[] | undefined, reflush?: number) {
+export function render(h: Function, shape: Shape, reflush?: number) {
 
-    if (!isVisible(shape, overrides)) return;
+    if (!isVisible(shape)) return;
 
     const frame = shape.frame;
     const props: any = {}
