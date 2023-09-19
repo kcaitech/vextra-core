@@ -3,7 +3,7 @@ import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, Watchable } from "./basic";
 import { Artboard } from "./artboard";
-import { TableCell } from "./classes";
+import { SymbolRefShape, TableCell } from "./classes";
 class PageCollectNotify extends Watchable(Object) {
     constructor() {
         super();
@@ -15,6 +15,7 @@ export class Page extends GroupShape implements classes.Page {
     shapes: Map<string, Shape> = new Map();
     __allshapes: Map<string, WeakRef<Shape>> = new Map(); // 包含被删除的
     __collect: PageCollectNotify = new PageCollectNotify();
+    __symbolshapes: Map<string, SymbolRefShape> = new Map();
     constructor(
         id: string,
         name: string,
@@ -52,6 +53,9 @@ export class Page extends GroupShape implements classes.Page {
         this.__allshapes.set(shape.id, new WeakRef(shape));
         if (shape.type === ShapeType.Artboard) {
             this.artboards.set(shape.id, shape as Artboard);
+        }
+        if (shape.type === ShapeType.Group && shape.isSymbolShape) {
+            this.__symbolshapes.set(shape.id, shape as SymbolRefShape);
         }
         if (recursive && (shape instanceof GroupShape)) {
             const childs = shape.childs;
