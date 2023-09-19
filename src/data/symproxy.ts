@@ -338,11 +338,11 @@ class SymbolRefHdl extends ShapeHdl {
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
-        if (propStr === 'virtualChilds') {
-            if (this.__childs) return this.__childs;
-            this.__childs = (this.__target as SymbolRefShape)._virtualChilds;
-            return this.__childs;
-        }
+        // if (propStr === 'virtualChilds') {
+        //     if (this.__childs) return this.__childs;
+        //     this.__childs = (this.__target as SymbolRefShape)._virtualChilds;
+        //     return this.__childs;
+        // }
         return super.get(target, propertyKey, receiver);
     }
 

@@ -119,9 +119,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     }
 
     get virtualChilds(): Shape[] | undefined {
-        if (this.__childs) return this.__childs;
-        this.__childs = this._virtualChilds;
-        return this.__childs;
+        return this._virtualChilds;
+        // if (this.__childs) return this.__childs;
+        // this.__childs = this._virtualChilds;
+        // return this.__childs;
     }
 
     // symbolref需要watch symbol的修改？
