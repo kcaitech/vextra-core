@@ -48,10 +48,23 @@ class FreezHdl {
     }
 }
 
+function genRefId(symRef: SymbolRefShape[], shapeId: string, i: number = 1) {
+    let refId = "";
+    for (let len = symRef.length; i < len; ++i) {
+        if (refId.length > 0) refId += "/";
+        refId += symRef[i].id;
+    }
+    if (refId.length > 0) refId += "/";
+    refId += shapeId;
+    return refId;
+}
+
 export function findOverride(symRef: SymbolRefShape[], id: string, type: OverrideType) {
+
     for (let i = 0, len = symRef.length; i < len; ++i) {
         const getter = symRef[i];
-        const override = getter.getOverrid(id);
+        const refId = genRefId(symRef, id, i + 1);
+        const override = getter.getOverrid(refId);
         if (!override) continue;
         switch (type) {
             case OverrideType.Borders:
@@ -104,7 +117,7 @@ class StyleHdl extends FreezHdl {
             if (imgMgr) fill.setImageMgr(imgMgr);
             fills.push(fill);
         })
-        this.__override = this.__symRef[0].addOverrid(this.__shape.id, OverrideType.Fills, fills);
+        this.__override = this.__symRef[0].addOverrid(genRefId(this.__symRef, this.__shape.id), OverrideType.Fills, fills)!;
         this.__parentHdl.updateOverrides(this.__override, OverrideType.Fills);
         this.__fills = undefined;
         return this.__override.style.fills;
@@ -116,7 +129,7 @@ class StyleHdl extends FreezHdl {
             const border = importBorder(v);
             borders.push(border);
         })
-        this.__override = this.__symRef[0].addOverrid(this.__shape.id, OverrideType.Borders, borders);
+        this.__override = this.__symRef[0].addOverrid(genRefId(this.__symRef, this.__shape.id), OverrideType.Borders, borders)!;
         this.__parentHdl.updateOverrides(this.__override, OverrideType.Borders);
         this.__borders = undefined;
         return this.__override.style.borders;
@@ -260,7 +273,7 @@ class ShapeHdl extends Watchable(FreezHdl) {
         if (propStr === "isVisible") {
             let override = this.__symRef[0].getOverrid(this.__target.id);
             if (!override) {
-                override = this.__symRef[0].addOverrid(this.__target.id, OverrideType.Visible, value);
+                override = this.__symRef[0].addOverrid(genRefId(this.__symRef, this.__target.id), OverrideType.Visible, value)!;
             } else {
                 override.override_visible = true;
                 override.isVisible = value;
@@ -417,7 +430,7 @@ class TextShapeHdl extends ShapeHdl {
 
     overrideText(curText: Text): Text { // 需要生成command
         const text = importText(curText); // clone
-        this.__override = this.__symRef[0].addOverrid(this.__target.id, OverrideType.Text, text);
+        this.__override = this.__symRef[0].addOverrid(genRefId(this.__symRef, this.__target.id), OverrideType.Text, text)!;
         return this.__override.text!;
     }
 

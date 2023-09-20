@@ -175,37 +175,64 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     }
 
     // overrideValues
-    addOverrid(id: string, attr: OverrideType, value: any) {
-        let override = this.getOverrid(id);
-        if (!override) {
-            override = this.createOverrid(id);
-        }
-
+    addOverrid(refId: string, attr: OverrideType, value: any) {
         switch (attr) {
             case OverrideType.Text:
-                override.text = value;
-                override.__stringValue_text = undefined;
-                override.stringValue = undefined;
-                override.override_text = true;
-                break;
+                {
+                    let override = this.getOverrid(refId);
+                    if (!override) {
+                        override = this.createOverrid(refId);
+                    }
+                    override.text = value;
+                    override.__stringValue_text = undefined;
+                    override.stringValue = undefined;
+                    override.override_text = true;
+                    return override;
+                }
             case OverrideType.StringValue:
-                override.stringValue = value;
-                override.override_text = true;
-                break;
+                {
+                    let override = this.getOverrid(refId);
+                    if (!override) {
+                        override = this.createOverrid(refId);
+                    }
+                    override.stringValue = value;
+                    override.override_text = true;
+                    return override;
+                }
             case OverrideType.Image:
-                override.imageRef = value;
-                override.override_image = true;
-                break;
+                {
+                    let override = this.getOverrid(refId);
+                    if (!override) {
+                        override = this.createOverrid(refId);
+                    }
+                    override.imageRef = value;
+                    override.override_image = true;
+                    return override;
+                }
             case OverrideType.Borders:
-                override.style.borders = value;
-                override.override_borders = true;
-                break;
+                {
+                    let override = this.getOverrid(refId);
+                    if (!override) {
+                        override = this.createOverrid(refId);
+                    }
+                    override.style.borders = value;
+                    override.override_borders = true;
+                    return override;
+                }
             case OverrideType.Fills:
-                override.style.fills = value;
-                override.override_fills = true;
-                break;
+                {
+                    let override = this.getOverrid(refId);
+                    if (!override) {
+                        override = this.createOverrid(refId);
+                    }
+                    override.style.fills = value;
+                    override.override_fills = true;
+                    return override;
+                }
+            default:
+                console.error("unknow override: " + attr, value)
         }
-        return override;
+
     }
     getOverrid(id: string): OverrideShape | undefined {
         // for (let i = 0, len = this.overrides.length; i < len; ++i) {
