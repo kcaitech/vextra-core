@@ -9,6 +9,7 @@ import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
+import { RECT_POINTS } from "./consts";
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
@@ -581,6 +582,7 @@ export class LineShape extends PathShape implements classes.LineShape {
 export class TextShape extends Shape implements classes.TextShape {
     typeId = 'text-shape'
     text: Text
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,
@@ -600,12 +602,18 @@ export class TextShape extends Shape implements classes.TextShape {
         text.updateSize(frame.width, frame.height);
     }
 
-    getPath(): Path {
-        const x = 0;
-        const y = 0;
+    getPath(fixedRadius?: number): Path {
         const w = this.frame.width;
         const h = this.frame.height;
 
+        fixedRadius = this.fixedRadius ?? fixedRadius;
+        if (fixedRadius) {
+            const path = parsePath(RECT_POINTS, true, 0, 0, w, h, fixedRadius);
+            return new Path(path);
+        }
+
+        const x = 0;
+        const y = 0;
         const path = [["M", x, y],
         ["l", w, 0],
         ["l", 0, h],

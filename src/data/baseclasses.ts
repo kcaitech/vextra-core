@@ -842,6 +842,7 @@ export class Blur extends Basic {
 export class TextShape extends Shape {
     typeId = 'text-shape'
     text: Text
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,

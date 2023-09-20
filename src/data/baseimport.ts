@@ -674,6 +674,7 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
 /* table shape */

@@ -1,3 +1,5 @@
+import { CurveMode, CurvePoint, Point2D } from "./baseclasses";
+
 function hasSetBit(val: number, mask: number): boolean {
     return !!(val & mask);
 }
@@ -57,3 +59,23 @@ export const ResizingConstraints = {
         return setBit(val, this.Top, b);
     },
 }
+
+export const RECT_POINTS = (() => {
+    const id1 = "f9bbacab-970e-4bb6-9df2-32b02ea26ccc"
+    const id2 = "114f9903-1a14-4534-a7bf-ae10c77c39ff"
+    const id3 = "a22094f2-6e4d-4d64-ab35-13fe5452f3a5"
+    const id4 = "9407a2d0-e77b-4a44-a064-90f611342e39"
+    const p1 = new CurvePoint(
+        id1, 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0)
+    );
+    const p2 = new CurvePoint(
+        id2, 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(1, 0)
+    );
+    const p3 = new CurvePoint(
+        id3, 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(1, 1)
+    );
+    const p4 = new CurvePoint(
+        id4, 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 1)
+    );
+    return [p1, p2, p3, p4];
+})()

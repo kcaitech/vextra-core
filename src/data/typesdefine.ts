@@ -534,6 +534,7 @@ export enum BlendMode {
 /* text shape */
 export type TextShape = Shape & {
     text: Text
+    fixedRadius?: number
 }
 /* table shape */
 export type TableShape = Shape & {

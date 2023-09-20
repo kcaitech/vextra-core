@@ -675,6 +675,7 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         text: exportText(source.text, ctx),
+        fixedRadius: source.fixedRadius,
     }
     return ret
 }
