@@ -12,7 +12,7 @@ import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../data/baseexport";
 import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
-import { GroupShape, Shape, PathShape, PathShape2 } from "../../data/shape";
+import { GroupShape, Shape, PathShape, PathShape2, TextShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType, Style } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
@@ -414,7 +414,7 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.radius, { lt, rt, rb, lb }, save))
         })
     }
-    shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2, fixedRadius: number | undefined) {
+    shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2 | TextShape, fixedRadius: number | undefined) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.fixedRadius;

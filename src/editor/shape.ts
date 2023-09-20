@@ -1,4 +1,4 @@
-import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2 } from "../data/shape";
+import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2, TextShape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, pathEdit, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
@@ -102,7 +102,7 @@ export class ShapeEditor {
         if (this.__shape instanceof GroupShape) {
             if (!this.__shape.isBoolOpShape) return;
         }
-        else if (!(this.__shape instanceof PathShape || this.__shape instanceof PathShape2)) {
+        else if (!(this.__shape instanceof PathShape || this.__shape instanceof PathShape2 || this.__shape instanceof TextShape)) {
             return;
         }
         const api = this.__repo.start("setFixedRadius", {});
