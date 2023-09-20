@@ -615,12 +615,12 @@ export class PageEditor {
     insertShapes1(parent: GroupShape, shapes: Shape[], adjusted = false): Shape[] | false {
         const api = this.__repo.start("insertShapes1", {});
         try {
-            const p_xy = parent.matrix2Root().computeCoord2(0, 0), result: Shape[] = [];
+            const result: Shape[] = [];
             let index = parent.childs.length;
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const shape = shapes[i];
+                const shape = shapes[i], f = shape.frame;
                 shape.id = uuid();
-                if (!adjusted) shape.frame.x -= p_xy.x, shape.frame.y -= p_xy.y;
+                if (!adjusted) translateTo(api, this.__page, shape, f.x, f.y);
                 api.shapeInsert(this.__page, parent, shape, index);
                 result.push(parent.childs[index]);
                 index++;
