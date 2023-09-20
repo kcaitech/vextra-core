@@ -96,18 +96,19 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         return this.__overridesMap;
     }
 
-    get _virtualChilds(): Shape[] | undefined {
+    getVirtualChilds(symRef: SymbolRefShape[] | undefined, parent: SymbolRefShape): Shape[] | undefined {
         if (!this.__data) return;
         // if (this.__childs) return this.__childs;
 
-        const symRef: SymbolRefShape[] = [];
-        const preSymRef = this.overridesGetter;
-        if (preSymRef) symRef.push(...preSymRef);
-        symRef.push(this);
+        // const symRef: SymbolRefShape[] = [];
+        // const preSymRef = this.overridesGetter;
+        // if (preSymRef) symRef.push(...preSymRef);
+        const _symRef = symRef ?? [];
+        _symRef.push(this);
         // this.__childs = this.__data.childs.map((v) => proxyShape(v, this, symRef));
         // this.__data.watch(this.watcher);
         // return this.__childs;
-        const childs = this.__data.childs.map((v) => proxyShape(v, this, symRef));
+        const childs = this.__data.childs.map((v) => proxyShape(v, parent, _symRef));
 
         const thisframe = this.frame;
         const symframe = this.__data.frame;
@@ -118,14 +119,15 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         return childs;
     }
 
+    // for render
     get virtualChilds(): Shape[] | undefined {
-        return this._virtualChilds;
-        // if (this.__childs) return this.__childs;
-        // this.__childs = this._virtualChilds;
-        // return this.__childs;
+        // return this._virtualChilds;
+        if (this.__childs) return this.__childs;
+        this.__childs = this.getVirtualChilds(this.overridesGetter, this);
+        return this.__childs;
     }
 
-    // symbolref需要watch symbol的修改？
+    // for navigation column
     get naviChilds(): Shape[] | undefined {
         return this.virtualChilds;
     }
