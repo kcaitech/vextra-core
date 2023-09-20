@@ -5,7 +5,7 @@ export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
-import { ShapeFrame, OverrideType, CurvePoint } from "./baseclasses"
+import { ShapeFrame, OverrideType, CurvePoint, TextBehaviour } from "./baseclasses"
 import { GroupShape, Shape, TextShape } from "./shape";
 import { importBorder, importCurvePoint, importFill, importText } from "./baseimport";
 import { OverrideShape } from "./overrideshape";
@@ -76,16 +76,20 @@ export function findOverride(symRef: SymbolRefShape[], id: string, type: Overrid
 
 class StyleHdl extends FreezHdl {
     __symRef: SymbolRefShape[];
+    __parent: Shape; // proxyed shape
+    __parentHdl: ShapeHdl;
     __shape: Shape;
     __override?: OverrideShape; // 当前shape的override对象
 
     __fills?: Fill[];
     __borders?: Border[];
 
-    constructor(symRef: SymbolRefShape[], shape: Shape, target: Style) {
+    constructor(symRef: SymbolRefShape[], shape: Shape, target: Style, parent: Shape, parentHdl: ShapeHdl) {
         super(target)
         this.__symRef = symRef;
         this.__shape = shape;
+        this.__parent = parent;
+        this.__parentHdl = parentHdl;
         // this.__override = symRef.getOverrid(shape.id);
     }
     private get _style(): Style {
@@ -101,6 +105,7 @@ class StyleHdl extends FreezHdl {
             fills.push(fill);
         })
         this.__override = this.__symRef[0].addOverrid(this.__shape.id, OverrideType.Fills, fills);
+        this.__parentHdl.updateOverrides(this.__override, OverrideType.Fills);
         this.__fills = undefined;
         return this.__override.style.fills;
     }
@@ -112,18 +117,22 @@ class StyleHdl extends FreezHdl {
             borders.push(border);
         })
         this.__override = this.__symRef[0].addOverrid(this.__shape.id, OverrideType.Borders, borders);
+        this.__parentHdl.updateOverrides(this.__override, OverrideType.Borders);
         this.__borders = undefined;
         return this.__override.style.borders;
     }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
-
+        if (propStr === 'parent' || propStr === '__parent') return this.__parent;
         if (propStr === 'overrideFills') {
             if (!this.__override) {
                 this.__override = this.__symRef[0].getOverrid(this.__shape.id);
             }
-            if (this.__override && this.__override.override_fills) return;
+            if (this.__override && this.__override.override_fills) {
+                this.__parentHdl.updateOverrides(this.__override, OverrideType.Fills);
+                return;
+            }
             const o = findOverride(this.__symRef, this.__shape.id, OverrideType.Fills);
             let fills = (this.__target as Style).fills;
             if (o) fills = o.override.style.fills;
@@ -134,7 +143,10 @@ class StyleHdl extends FreezHdl {
             if (!this.__override) {
                 this.__override = this.__symRef[0].getOverrid(this.__shape.id);
             }
-            if (this.__override && this.__override.override_borders) return;
+            if (this.__override && this.__override.override_borders) {
+                this.__parentHdl.updateOverrides(this.__override, OverrideType.Borders);
+                return;
+            }
             const o = findOverride(this.__symRef, this.__shape.id, OverrideType.Borders);
             let borders = (this.__target as Style).borders;
             if (o) borders = o.override.style.borders;
@@ -149,6 +161,7 @@ class StyleHdl extends FreezHdl {
             if (o) {
                 fills = o.override.style.fills;
                 if (o.i === 0 && !this.__override) this.__override = o.override;
+                this.__parentHdl.updateOverrides(o.override, OverrideType.Fills);
             }
             this.__fills = fills.map<Fill>((v) => new Proxy<Fill>(v, new FreezHdl(v)));
             return this.__fills;
@@ -161,6 +174,7 @@ class StyleHdl extends FreezHdl {
             if (o) {
                 borders = o.override.style.borders;
                 if (o.i === 0 && !this.__override) this.__override = o.override;
+                this.__parentHdl.updateOverrides(o.override, OverrideType.Borders);
             }
             this.__borders = borders.map((v) => new Proxy<Border>(v, new FreezHdl(v)));
             return this.__borders;
@@ -170,6 +184,7 @@ class StyleHdl extends FreezHdl {
 }
 
 class ShapeHdl extends Watchable(FreezHdl) {
+    __thisProxy?: Shape; // 由外面赋值。proxy对象依赖于handler，需要实例化proxy后才能赋值
     __symRef: SymbolRefShape[];
     __target: Shape;
     __parent: Shape;
@@ -182,14 +197,29 @@ class ShapeHdl extends Watchable(FreezHdl) {
     __isFlippedVertical: boolean;
     __points: CurvePoint[] | undefined;
 
+    // overrides
+    __overrides: { [key: string]: OverrideShape } = {}
+    updateOverrides(override: OverrideShape, type: OverrideType) {
+        const old = this.__overrides[type];
+        if (old) {
+            if (old.id === override.id) return;
+            old.unwatch(this.override_watcher);
+        }
+        this.__overrides[type] = override;
+        override.watch(this.override_watcher);
+    }
+
     origin_watcher(...args: any[]) {
 
         // todo 布局属性更改后要重新布局
-
+        // 
         super.notify(...args);
     }
     override_watcher(...args: any[]) {
         // todo
+        super.notify(...args);
+    }
+    symref_watcher(...args: any[]) {
         super.notify(...args);
     }
 
@@ -200,13 +230,14 @@ class ShapeHdl extends Watchable(FreezHdl) {
         this.__parent = parent;
         this.origin_watcher = this.origin_watcher.bind(this);
         this.override_watcher = this.override_watcher.bind(this);
+        this.symref_watcher = this.symref_watcher.bind(this);
 
         // watch unwatch
         this.watch = this.watch.bind(this);
         this.unwatch = this.unwatch.bind(this);
 
         target.watch(this.origin_watcher);
-        symRef.forEach((s) => s.watch(this.override_watcher));
+        symRef.forEach((s) => s.watch(this.symref_watcher));
 
         const frame = target.frame;
         this.__frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
@@ -220,7 +251,8 @@ class ShapeHdl extends Watchable(FreezHdl) {
 
     onRemoved() {
         this.__target.unwatch(this.origin_watcher);
-        this.__symRef.forEach((s) => s.unwatch(this.override_watcher));
+        this.__symRef.forEach((s) => s.unwatch(this.symref_watcher));
+        this.__overrides.keys.forEach((key: string) => this.__overrides[key].unwatch(this.override_watcher));
     }
 
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
@@ -228,11 +260,12 @@ class ShapeHdl extends Watchable(FreezHdl) {
         if (propStr === "isVisible") {
             let override = this.__symRef[0].getOverrid(this.__target.id);
             if (!override) {
-                this.__symRef[0].addOverrid(this.__target.id, OverrideType.Visible, value);
+                override = this.__symRef[0].addOverrid(this.__target.id, OverrideType.Visible, value);
             } else {
                 override.override_visible = true;
                 override.isVisible = value;
             }
+            this.updateOverrides(override, OverrideType.Visible);
             return true;
         }
         if (propStr === 'rotation') {
@@ -254,13 +287,13 @@ class ShapeHdl extends Watchable(FreezHdl) {
         const propStr = propertyKey.toString();
         if (propStr === 'id') return this.__symRef[0].mapId(this.__target.id);
         if (propStr === 'shapeId') return [this.__symRef[0].id, this.__target.id];
-        if (propStr === 'parent') return this.__parent;
+        if (propStr === 'parent' || propStr === '__parent') return this.__parent;
         if (propStr === 'frame') { // 外面编辑需要修改，但又不可以修改target的
             return this.__frame;
         }
         if (propStr === 'style') {
             if (this.__style) return this.__style;
-            this.__style = new Proxy<Style>(this.__target.style, new StyleHdl(this.__symRef, this.__target, this.__target.style));
+            this.__style = new Proxy<Style>(this.__target.style, new StyleHdl(this.__symRef, this.__target, this.__target.style, this.__thisProxy!, this));
             return this.__style;
         }
         if (propStr === 'overridesGetter') {
@@ -269,7 +302,10 @@ class ShapeHdl extends Watchable(FreezHdl) {
         if (propStr === "isVisible") {
             const o = findOverride(this.__symRef, this.__target.id, OverrideType.Visible);
             const override = o?.override;
-            if (override && override.override_visible) return override.isVisible;
+            if (override && override.override_visible) {
+                this.updateOverrides(override, OverrideType.Visible);
+                return override.isVisible;
+            }
             return this.__target.isVisible;
         }
         if (propStr === 'rotation') {
@@ -300,7 +336,7 @@ class ShapeHdl extends Watchable(FreezHdl) {
 }
 
 class GroupShapeHdl extends ShapeHdl {
-    __thisProxy?: GroupShape; // 由外面赋值。proxy对象依赖于handler，需要实例化proxy后才能赋值
+    // __thisProxy?: GroupShape; // 由外面赋值。proxy对象依赖于handler，需要实例化proxy后才能赋值
     __childs?: Shape[];
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
@@ -333,14 +369,14 @@ class GroupShapeHdl extends ShapeHdl {
 }
 
 class SymbolRefHdl extends ShapeHdl {
-    __thisProxy?: SymbolRefShape; // 由外面赋值。proxy对象依赖于handler，需要实例化proxy后才能赋值
+    // __thisProxy?: SymbolRefShape; // 由外面赋值。proxy对象依赖于handler，需要实例化proxy后才能赋值
     __childs?: Shape[];
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
         if (propStr === 'virtualChilds') {
             if (this.__childs) return this.__childs;
-            this.__childs = (this.__target as SymbolRefShape).getVirtualChilds(this.__symRef, this.__thisProxy!);
+            this.__childs = (this.__target as SymbolRefShape).getVirtualChilds(this.__symRef, this.__thisProxy as SymbolRefShape);
             return this.__childs;
         }
         return super.get(target, propertyKey, receiver);
@@ -393,6 +429,8 @@ class TextShapeHdl extends ShapeHdl {
         const o = findOverride(this.__symRef, this.__target.id, OverrideType.Text);
         if (!o) return this.__text;
 
+        this.updateOverrides(o.override, OverrideType.Text);
+
         if (!this.__override && o.i === 0) {
             // first 
             this.__override = o.override;
@@ -419,6 +457,19 @@ class TextShapeHdl extends ShapeHdl {
         if (propStr === 'text') {
             const text = this.getText();
             text.updateSize(this.__frame.width, this.__frame.height);
+            // todo 更新frame大小
+            const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+            if (textBehaviour === TextBehaviour.Flexible) {
+                // update width & height
+                const layout = text.getLayout();
+                this.__frame.width = layout.contentWidth;
+                this.__frame.height = layout.contentHeight;
+            }
+            else if (textBehaviour === TextBehaviour.Fixed) {
+                // update height
+                const layout = text.getLayout();
+                this.__frame.height = layout.contentHeight;
+            }
             return text;
         }
 
@@ -457,7 +508,9 @@ export function proxyShape(shape: Shape, parent: Shape, symRefs: SymbolRefShape[
     }
 
     if (shape instanceof TextShape) {
-        const ret = new Proxy<TextShape>(shape, new TextShapeHdl(symRefs, shape, parent))
+        const hdl = new TextShapeHdl(symRefs, shape, parent);
+        const ret = new Proxy<TextShape>(shape, hdl)
+        hdl.__thisProxy = ret;
         return ret;
     }
 
@@ -468,6 +521,8 @@ export function proxyShape(shape: Shape, parent: Shape, symRefs: SymbolRefShape[
         return ret;
     }
 
-    const ret = new Proxy<Shape>(shape, new ShapeHdl(symRefs, shape, parent))
+    const hdl = new ShapeHdl(symRefs, shape, parent);
+    const ret = new Proxy<Shape>(shape, hdl)
+    hdl.__thisProxy = ret;
     return ret;
 }
