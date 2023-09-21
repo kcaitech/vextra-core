@@ -9,6 +9,7 @@
         "page",
         "text",
         "symbol-ref",
+        "symbol",
         "artboard-ref",
         "rectangle",
         "triangle",

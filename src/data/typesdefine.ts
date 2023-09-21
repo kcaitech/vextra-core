@@ -157,6 +157,7 @@ export enum ShapeType {
     Page = 'page',
     Text = 'text',
     SymbolRef = 'symbol-ref',
+    Symbol = 'symbol',
     ArtboardRef = 'artboard-ref',
     Rectangle = 'rectangle',
     Triangle = 'triangle',
@@ -602,17 +603,15 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape)[]
+    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape)[]
     isBoolOpShape?: boolean
-    isUsedToBeSymbol?: boolean
-    isSymbolShape?: boolean
-    isUnionSymbolShape?: boolean
-    unionSymbolRef?: string
-    variables?: Variable[]
     fixedRadius?: number
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
+    isUnionSymbolShape?: boolean
+    unionSymbolRef?: string
+    variables?: Variable[]
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {

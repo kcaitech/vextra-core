@@ -108,12 +108,8 @@ inject['OverrideShape']['after'] = `\
 `
 
 inject['SymbolShape'] = {};
-inject['SymbolShape']['content'] = `\
+inject['SymbolShape']['after'] = `\
     // inject code
-    const ret = importGroupShape(source, ctx);
-    ret.isUsedToBeSymbol = true;
-    ret.isSymbolShape = true;
-    ret.type = types.ShapeType.Group;
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
     return ret;
 `

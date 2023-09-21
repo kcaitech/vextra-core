@@ -1247,6 +1247,9 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (val.typeId == 'symbol-ref-shape') {
                         return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
+                    if (val.typeId == 'symbol-shape') {
+                        return exportSymbolShape(val as types.SymbolShape, ctx)
+                    }
                     if (val.typeId == 'text-shape') {
                         return exportTextShape(val as types.TextShape, ctx)
                     }
@@ -1277,22 +1280,8 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
             return ret
         })(),
         isBoolOpShape: source.isBoolOpShape,
-        isUsedToBeSymbol: source.isUsedToBeSymbol,
-        isSymbolShape: source.isSymbolShape,
-        isUnionSymbolShape: source.isUnionSymbolShape,
-        unionSymbolRef: source.unionSymbolRef,
-        variables: source.variables && (() => {
-            const ret = []
-            for (let i = 0, len = source.variables.length; i < len; i++) {
-                const r = exportVariable(source.variables[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
         fixedRadius: source.fixedRadius,
     }
-    // inject code
-    if (ctx?.symbols && ret.isSymbolShape) ctx.symbols.add(ret.id);
     return ret
 }
 /* symbol shape */
@@ -1327,6 +1316,9 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
+                        if (val.typeId == 'symbol-shape') {
+                            return exportSymbolShape(val as types.SymbolShape, ctx)
+                        }
                         if (val.typeId == 'text-shape') {
                             return exportTextShape(val as types.TextShape, ctx)
                         }
@@ -1357,18 +1349,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 return ret
             })(),
         isBoolOpShape: source.isBoolOpShape,
-        isUsedToBeSymbol: source.isUsedToBeSymbol,
-        isSymbolShape: source.isSymbolShape,
-        isUnionSymbolShape: source.isUnionSymbolShape,
-        unionSymbolRef: source.unionSymbolRef,
-        variables: source.variables && (() => {
-                const ret = []
-                for (let i = 0, len = source.variables.length; i < len; i++) {
-                    const r = exportVariable(source.variables[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1385,7 +1365,19 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        isUnionSymbolShape: source.isUnionSymbolShape,
+        unionSymbolRef: source.unionSymbolRef,
+        variables: source.variables && (() => {
+            const ret = []
+            for (let i = 0, len = source.variables.length; i < len; i++) {
+                const r = exportVariable(source.variables[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
     }
+    // inject code
+    if (ctx?.symbols) ctx.symbols.add(ret.id);
     return ret
 }
 /* flatten shape */
@@ -1420,6 +1412,9 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
+                        if (val.typeId == 'symbol-shape') {
+                            return exportSymbolShape(val as types.SymbolShape, ctx)
+                        }
                         if (val.typeId == 'text-shape') {
                             return exportTextShape(val as types.TextShape, ctx)
                         }
@@ -1450,18 +1445,6 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                 return ret
             })(),
         isBoolOpShape: source.isBoolOpShape,
-        isUsedToBeSymbol: source.isUsedToBeSymbol,
-        isSymbolShape: source.isSymbolShape,
-        isUnionSymbolShape: source.isUnionSymbolShape,
-        unionSymbolRef: source.unionSymbolRef,
-        variables: source.variables && (() => {
-                const ret = []
-                for (let i = 0, len = source.variables.length; i < len; i++) {
-                    const r = exportVariable(source.variables[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
@@ -1555,6 +1538,9 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
+                        if (val.typeId == 'symbol-shape') {
+                            return exportSymbolShape(val as types.SymbolShape, ctx)
+                        }
                         if (val.typeId == 'text-shape') {
                             return exportTextShape(val as types.TextShape, ctx)
                         }
@@ -1585,18 +1571,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                 return ret
             })(),
         isBoolOpShape: source.isBoolOpShape,
-        isUsedToBeSymbol: source.isUsedToBeSymbol,
-        isSymbolShape: source.isSymbolShape,
-        isUnionSymbolShape: source.isUnionSymbolShape,
-        unionSymbolRef: source.unionSymbolRef,
-        variables: source.variables && (() => {
-                const ret = []
-                for (let i = 0, len = source.variables.length; i < len; i++) {
-                    const r = exportVariable(source.variables[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
-            })(),
         fixedRadius: source.fixedRadius,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,

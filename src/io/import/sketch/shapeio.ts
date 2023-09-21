@@ -8,7 +8,8 @@ import {
     Shape,
     ShapeFrame,
     TextShape,
-    ExportFormat
+    ExportFormat,
+    SymbolShape
 } from "../../../data/shape";
 import { Color } from "../../../data/style";
 import { importXY, importStyle, importColor } from "./styleio";
@@ -324,9 +325,8 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): Group
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new GroupShape(id, name, ShapeType.Group, frame, style, new BasicArray<Shape>(...childs));
-    shape.isUsedToBeSymbol = true;
-    shape.isSymbolShape = true;
+    const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs));
+
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);

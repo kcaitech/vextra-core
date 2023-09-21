@@ -228,11 +228,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
 
     isBoolOpShape?: boolean
     fixedRadius?: number
-    isUsedToBeSymbol?: boolean
-    isSymbolShape?: boolean
-    isUnionSymbolShape?: boolean
-    unionSymbolRef?: string
-    variables?: BasicArray<Variable >
+
     constructor(
         id: string,
         name: string,
@@ -331,10 +327,29 @@ export class GroupShape extends Shape implements classes.GroupShape {
 export class FlattenShape extends GroupShape implements classes.FlattenShape {
 }
 
-/**
- * @deprecated
- */
-export class SymbolShape extends GroupShape implements classes.FlattenShape {
+export class SymbolShape extends GroupShape implements classes.SymbolShape {
+    typeId = 'symbol-shape'
+    isUnionSymbolShape?: boolean
+    unionSymbolRef?: string
+    variables?: BasicArray<Variable >
+
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        childs: BasicArray<Shape >
+    ) {
+        super(
+            id,
+            name,
+            ShapeType.Symbol,
+            frame,
+            style,
+            childs
+        )
+    }
 }
 
 export class PathShape extends Shape implements classes.PathShape {

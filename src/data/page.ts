@@ -1,4 +1,4 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape } from "./shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape, SymbolShape } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, Watchable } from "./basic";
@@ -15,7 +15,7 @@ export class Page extends GroupShape implements classes.Page {
     shapes: Map<string, Shape> = new Map();
     __allshapes: Map<string, WeakRef<Shape>> = new Map(); // 包含被删除的
     __collect: PageCollectNotify = new PageCollectNotify();
-    __symbolshapes: Map<string, SymbolRefShape> = new Map();
+    __symbolshapes: Map<string, SymbolShape> = new Map();
     constructor(
         id: string,
         name: string,
@@ -54,8 +54,8 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Artboard) {
             this.artboards.set(shape.id, shape as Artboard);
         }
-        if (shape.type === ShapeType.Group && shape.isSymbolShape) {
-            this.__symbolshapes.set(shape.id, shape as SymbolRefShape);
+        if (shape.type === ShapeType.Symbol) {
+            this.__symbolshapes.set(shape.id, shape as SymbolShape);
         }
         if (recursive && (shape instanceof GroupShape)) {
             const childs = shape.childs;
@@ -67,7 +67,7 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Artboard) {
             this.artboards.delete(shape.id);
         }
-        if (shape.type === ShapeType.Group && shape.isSymbolShape) {
+        if (shape.type === ShapeType.Symbol) {
             this.__symbolshapes.delete(shape.id);
         }
         shape.onRemoved();

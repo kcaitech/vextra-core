@@ -1,0 +1,25 @@
+{
+    "description": "symbol shape",
+    "type": "object",
+    "properties": {
+        "isUnionSymbolShape": {
+            "type": "boolean"
+        },
+        "unionSymbolRef": {
+            "type": "string"
+        },
+        "variables": {
+            "type": "array",
+            "items": {
+                "$ref": "./variable.json"
+            }
+        }
+    },
+    "required": [],
+    "allOf": [
+        {
+            "$ref": "./group-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

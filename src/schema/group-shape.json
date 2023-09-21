@@ -22,6 +22,9 @@
                         "$ref": "./symbol-ref-shape.json"
                     },
                     {
+                        "$ref": "./symbol-shape.json"
+                    },
+                    {
                         "$ref": "./text-shape.json"
                     },
                     {
@@ -47,24 +50,6 @@
         },
         "isBoolOpShape": {
             "type": "boolean"
-        },
-        "isUsedToBeSymbol": {
-            "type": "boolean"
-        },
-        "isSymbolShape": {
-            "type": "boolean"
-        },
-        "isUnionSymbolShape": {
-            "type": "boolean"
-        },
-        "unionSymbolRef": {
-            "type": "string"
-        },
-        "variables": {
-            "type": "array",
-            "items": {
-                "$ref": "./variable.json"
-            }
         },
         "fixedRadius": {
             "type": "number"

@@ -1251,7 +1251,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.Shape | impl.FlattenShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.Shape | impl.FlattenShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1269,6 +1269,9 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
                         return importTextShape(val as types.TextShape, ctx)
@@ -1316,8 +1319,90 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
-    if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
-    if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    // inject code
+    ret.type = types.ShapeType.Group;
+    if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
+    return ret
+}
+/* symbol shape */
+export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
+    const ret: impl.SymbolShape = new impl.SymbolShape (
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.Shape | impl.FlattenShape)>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
+                const r = (() => {
+                    const val = source.childs[i]
+                    if (val.typeId == 'group-shape') {
+                        return importGroupShape(val as types.GroupShape, ctx)
+                    }
+                    if (val.typeId == 'image-shape') {
+                        return importImageShape(val as types.ImageShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape') {
+                        return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'rect-shape') {
+                        return importRectShape(val as types.RectShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'text-shape') {
+                        return importTextShape(val as types.TextShape, ctx)
+                    }
+                    if (val.typeId == 'artboard') {
+                        return importArtboard(val as types.Artboard, ctx)
+                    }
+                    if (val.typeId == 'line-shape') {
+                        return importLineShape(val as types.LineShape, ctx)
+                    }
+                    if (val.typeId == 'oval-shape') {
+                        return importOvalShape(val as types.OvalShape, ctx)
+                    }
+                    if (val.typeId == 'table-shape') {
+                        return importTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
+                    }
+                    {
+                        throw new Error('unknow val: ' + val)
+                    }
+                })()
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
+    if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
     if (source.unionSymbolRef !== undefined) ret.unionSymbolRef = source.unionSymbolRef
     if (source.variables !== undefined) ret.variables = (() => {
@@ -1328,21 +1413,10 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         }
         return ret
     })()
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     // inject code
-    ret.type = types.ShapeType.Group;
-    if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
-    return ret
-}
-/* symbol shape */
-export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
-    // inject code
-    const ret = importGroupShape(source, ctx);
-    ret.isUsedToBeSymbol = true;
-    ret.isSymbolShape = true;
-    ret.type = types.ShapeType.Group;
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
     return ret;
+    return ret
 }
 /* flatten shape */
 export function importFlattenShape(source: types.FlattenShape, ctx?: IImportContext): impl.FlattenShape {
@@ -1402,7 +1476,7 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.Shape | impl.FlattenShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.Shape | impl.FlattenShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1420,6 +1494,9 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                     }
                     if (val.typeId == 'symbol-ref-shape') {
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
                         return importTextShape(val as types.TextShape, ctx)
@@ -1452,18 +1529,6 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         })()
     )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
-    if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
-    if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
-    if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
-    if (source.unionSymbolRef !== undefined) ret.unionSymbolRef = source.unionSymbolRef
-    if (source.variables !== undefined) ret.variables = (() => {
-        const ret = new BasicArray<impl.Variable>()
-        for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
-            const r = importVariable(source.variables[i], ctx)
-            if (r) ret.push(r)
-        }
-        return ret
-    })()
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
