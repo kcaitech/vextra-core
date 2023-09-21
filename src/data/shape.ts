@@ -3,8 +3,8 @@ import { Style, Border } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
-export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType } from "./baseclasses"
-import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment } from "./baseclasses"
+export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType } from "./baseclasses"
+import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Variable } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
@@ -230,6 +230,8 @@ export class GroupShape extends Shape implements classes.GroupShape {
     fixedRadius?: number
     isUsedToBeSymbol?: boolean
     isSymbolShape?: boolean
+    isUnionSymbolShape?: boolean
+    variables?: BasicArray<Variable >
     constructor(
         id: string,
         name: string,

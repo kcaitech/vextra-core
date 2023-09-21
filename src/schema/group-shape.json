@@ -57,8 +57,14 @@
         "isSymbolShape": {
             "type": "boolean"
         },
-        "symbolProps": {
-            "$ref": "./symbol-props.json"
+        "isUnionSymbolShape": {
+            "type": "boolean"
+        },
+        "variables": {
+            "type": "array",
+            "items": {
+                "$ref": "./variable.json"
+            }
         }
     },
     "required": [

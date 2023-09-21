@@ -87,29 +87,6 @@ export function importTextBehaviour(source: types.TextBehaviour, ctx?: IImportCo
 export function importTableCellType(source: types.TableCellType, ctx?: IImportContext): impl.TableCellType {
     return source
 }
-/* symbol props */
-export function importSymbolProps(source: types.SymbolProps, ctx?: IImportContext): impl.SymbolProps {
-    const ret: impl.SymbolProps = new impl.SymbolProps (
-    )
-    if (source.overrides !== undefined) ret.overrides = (() => {
-        const ret = new BasicArray<impl.OverrideArray>()
-        for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
-            const r = importOverrideArray(source.overrides[i], ctx)
-            if (r) ret.push(r)
-        }
-        return ret
-    })()
-    if (source.curOverrid !== undefined) ret.curOverrid = source.curOverrid
-    if (source.variables !== undefined) ret.variables = (() => {
-        const ret = new BasicArray<impl.Variable>()
-        for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
-            const r = importVariable(source.variables[i], ctx)
-            if (r) ret.push(r)
-        }
-        return ret
-    })()
-    return ret
-}
 /* style */
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
     const ret: impl.Style = new impl.Style (
@@ -314,22 +291,6 @@ export function importPadding(source: types.Padding, ctx?: IImportContext): impl
 /* override types */
 export function importOverrideType(source: types.OverrideType, ctx?: IImportContext): impl.OverrideType {
     return source
-}
-/* override set */
-export function importOverrideArray(source: types.OverrideArray, ctx?: IImportContext): impl.OverrideArray {
-    const ret: impl.OverrideArray = new impl.OverrideArray (
-        source.id,
-        source.name,
-        (() => {
-            const ret = new BasicArray<impl.OverrideShape>()
-            for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
-                const r = importOverrideShape(source.overrides[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    return ret
 }
 /* marker type */
 export function importMarkerType(source: types.MarkerType, ctx?: IImportContext): impl.MarkerType {
@@ -1352,7 +1313,15 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
     if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
-    if (source.symbolProps !== undefined) ret.symbolProps = importSymbolProps(source.symbolProps, ctx)
+    if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
+    if (source.variables !== undefined) ret.variables = (() => {
+        const ret = new BasicArray<impl.Variable>()
+        for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
+            const r = importVariable(source.variables[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     // inject code
     ret.type = types.ShapeType.Group;
     if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
@@ -1479,7 +1448,15 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
     if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
-    if (source.symbolProps !== undefined) ret.symbolProps = importSymbolProps(source.symbolProps, ctx)
+    if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
+    if (source.variables !== undefined) ret.variables = (() => {
+        const ret = new BasicArray<impl.Variable>()
+        for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
+            const r = importVariable(source.variables[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal

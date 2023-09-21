@@ -4,7 +4,7 @@ import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
-    ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
+    ShapeFrame, Ellipse, PathSegment, OverrideType
 } from "./baseclasses"
 import { ShapeType, ShapeFrame, OverrideType } from "./baseclasses"
 import { uuid } from "../basic/uuid";
@@ -13,19 +13,6 @@ import { OverrideShape, OverridesGetter } from "./overrideshape";
 import { proxyShape } from "./symproxy";
 import { Path } from "./path";
 import { layoutChilds } from "./symbolreflayout";
-
-export class OverrideArray extends classes.OverrideArray {
-    constructor(
-        id: string,
-        name: string,
-        overrides: BasicArray<OverrideShape>
-    ) {
-        super(id, name, overrides)
-    }
-}
-
-export class SymbolProps extends classes.SymbolProps {
-}
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape, OverridesGetter {
     __data: GroupShape | undefined

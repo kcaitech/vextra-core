@@ -130,19 +130,6 @@ export class Text extends Basic {
     }
 }
 /**
- * symbol props 
- */
-export class SymbolProps extends Basic {
-    typeId = 'symbol-props'
-    overrides?: BasicArray<OverrideArray >
-    curOverrid?: string
-    variables?: BasicArray<Variable >
-    constructor(
-    ) {
-        super()
-    }
-}
-/**
  * style 
  */
 export class Style extends Basic {
@@ -376,25 +363,6 @@ export class Padding extends Basic {
     constructor(
     ) {
         super()
-    }
-}
-/**
- * override set 
- */
-export class OverrideArray extends Basic {
-    typeId = 'override-array'
-    id: string
-    name: string
-    overrides: BasicArray<OverrideShape >
-    constructor(
-        id: string,
-        name: string,
-        overrides: BasicArray<OverrideShape >
-    ) {
-        super()
-        this.id = id
-        this.name = name
-        this.overrides = overrides
     }
 }
 /**
@@ -1215,7 +1183,8 @@ export class GroupShape extends Shape {
     fixedRadius?: number
     isUsedToBeSymbol?: boolean
     isSymbolShape?: boolean
-    symbolProps?: SymbolProps
+    isUnionSymbolShape?: boolean
+    variables?: BasicArray<Variable >
     constructor(
         id: string,
         name: string,

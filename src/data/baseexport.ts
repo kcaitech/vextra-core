@@ -86,29 +86,6 @@ export function exportTextBehaviour(source: types.TextBehaviour, ctx?: IExportCo
 export function exportTableCellType(source: types.TableCellType, ctx?: IExportContext): types.TableCellType {
     return source
 }
-/* symbol props */
-export function exportSymbolProps(source: types.SymbolProps, ctx?: IExportContext): types.SymbolProps {
-    const ret = {
-        overrides: source.overrides && (() => {
-            const ret = []
-            for (let i = 0, len = source.overrides.length; i < len; i++) {
-                const r = exportOverrideArray(source.overrides[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        curOverrid: source.curOverrid,
-        variables: source.variables && (() => {
-            const ret = []
-            for (let i = 0, len = source.variables.length; i < len; i++) {
-                const r = exportVariable(source.variables[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-    }
-    return ret
-}
 /* style */
 export function exportStyle(source: types.Style, ctx?: IExportContext): types.Style {
     const ret = {
@@ -315,22 +292,6 @@ export function exportPadding(source: types.Padding, ctx?: IExportContext): type
 /* override types */
 export function exportOverrideType(source: types.OverrideType, ctx?: IExportContext): types.OverrideType {
     return source
-}
-/* override set */
-export function exportOverrideArray(source: types.OverrideArray, ctx?: IExportContext): types.OverrideArray {
-    const ret = {
-        id: source.id,
-        name: source.name,
-        overrides: (() => {
-            const ret = []
-            for (let i = 0, len = source.overrides.length; i < len; i++) {
-                const r = exportOverrideShape(source.overrides[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-    }
-    return ret
 }
 /* marker type */
 export function exportMarkerType(source: types.MarkerType, ctx?: IExportContext): types.MarkerType {
@@ -1312,7 +1273,15 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
         fixedRadius: source.fixedRadius,
         isUsedToBeSymbol: source.isUsedToBeSymbol,
         isSymbolShape: source.isSymbolShape,
-        symbolProps: source.symbolProps && exportSymbolProps(source.symbolProps, ctx),
+        isUnionSymbolShape: source.isUnionSymbolShape,
+        variables: source.variables && (() => {
+            const ret = []
+            for (let i = 0, len = source.variables.length; i < len; i++) {
+                const r = exportVariable(source.variables[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
     }
     // inject code
     if (ctx?.symbols && ret.isSymbolShape) ctx.symbols.add(ret.id);
@@ -1383,7 +1352,15 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         fixedRadius: source.fixedRadius,
         isUsedToBeSymbol: source.isUsedToBeSymbol,
         isSymbolShape: source.isSymbolShape,
-        symbolProps: source.symbolProps && exportSymbolProps(source.symbolProps, ctx),
+        isUnionSymbolShape: source.isUnionSymbolShape,
+        variables: source.variables && (() => {
+                const ret = []
+                for (let i = 0, len = source.variables.length; i < len; i++) {
+                    const r = exportVariable(source.variables[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -1467,7 +1444,15 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
         fixedRadius: source.fixedRadius,
         isUsedToBeSymbol: source.isUsedToBeSymbol,
         isSymbolShape: source.isSymbolShape,
-        symbolProps: source.symbolProps && exportSymbolProps(source.symbolProps, ctx),
+        isUnionSymbolShape: source.isUnionSymbolShape,
+        variables: source.variables && (() => {
+                const ret = []
+                for (let i = 0, len = source.variables.length; i < len; i++) {
+                    const r = exportVariable(source.variables[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
@@ -1593,7 +1578,15 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
         fixedRadius: source.fixedRadius,
         isUsedToBeSymbol: source.isUsedToBeSymbol,
         isSymbolShape: source.isSymbolShape,
-        symbolProps: source.symbolProps && exportSymbolProps(source.symbolProps, ctx),
+        isUnionSymbolShape: source.isUnionSymbolShape,
+        variables: source.variables && (() => {
+                const ret = []
+                for (let i = 0, len = source.variables.length; i < len; i++) {
+                    const r = exportVariable(source.variables[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,

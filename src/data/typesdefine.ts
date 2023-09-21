@@ -85,12 +85,6 @@ export enum TableCellType {
     Text = 'text',
     Image = 'image',
 }
-/* symbol props */
-export type SymbolProps = {
-    overrides?: OverrideArray[]
-    curOverrid?: string
-    variables?: Variable[]
-}
 /* style */
 export type Style = {
     typeId: string
@@ -243,12 +237,6 @@ export enum OverrideType {
     Fills = 'fills',
     Borders = 'borders',
     Visible = 'visible',
-}
-/* override set */
-export type OverrideArray = {
-    id: string
-    name: string
-    overrides: OverrideShape[]
 }
 /* marker type */
 export enum MarkerType {
@@ -623,7 +611,8 @@ export type GroupShape = Shape & {
     fixedRadius?: number
     isUsedToBeSymbol?: boolean
     isSymbolShape?: boolean
-    symbolProps?: SymbolProps
+    isUnionSymbolShape?: boolean
+    variables?: Variable[]
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
