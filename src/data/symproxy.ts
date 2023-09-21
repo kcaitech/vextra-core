@@ -140,7 +140,8 @@ class StyleHdl extends FreezHdl {
         if (propStr === 'parent' || propStr === '__parent') return this.__parent;
         if (propStr === 'overrideFills') {
             if (!this.__override) {
-                this.__override = this.__symRef[0].getOverrid(this.__shape.id);
+                const refId = genRefId(this.__symRef, this.__shape.id)
+                this.__override = this.__symRef[0].getOverrid(refId);
             }
             if (this.__override && this.__override.override_fills) {
                 this.__parentHdl.updateOverrides(this.__override, OverrideType.Fills);
@@ -154,7 +155,8 @@ class StyleHdl extends FreezHdl {
 
         if (propStr === 'overrideBorders') {
             if (!this.__override) {
-                this.__override = this.__symRef[0].getOverrid(this.__shape.id);
+                const refId = genRefId(this.__symRef, this.__shape.id)
+                this.__override = this.__symRef[0].getOverrid(refId);
             }
             if (this.__override && this.__override.override_borders) {
                 this.__parentHdl.updateOverrides(this.__override, OverrideType.Borders);
@@ -270,9 +272,10 @@ class ShapeHdl extends Watchable(FreezHdl) {
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
         const propStr = propertyKey.toString();
         if (propStr === "isVisible") {
-            let override = this.__symRef[0].getOverrid(this.__target.id);
+            const refId = genRefId(this.__symRef, this.__target.id);
+            let override = this.__symRef[0].getOverrid(refId);
             if (!override) {
-                override = this.__symRef[0].addOverrid(genRefId(this.__symRef, this.__target.id), OverrideType.Visible, value)!;
+                override = this.__symRef[0].addOverrid(refId, OverrideType.Visible, value)!;
             } else {
                 override.override_visible = true;
                 override.isVisible = value;

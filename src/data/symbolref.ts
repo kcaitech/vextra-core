@@ -227,6 +227,16 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
                     override.override_fills = true;
                     return override;
                 }
+            case OverrideType.Visible:
+                {
+                    let override = this.getOverrid(refId);
+                    if (!override) {
+                        override = this.createOverrid(refId);
+                    }
+                    override.isVisible = value;
+                    override.override_visible = true;
+                    return override;
+                }
             default:
                 console.error("unknow override: " + attr, value)
         }
