@@ -231,6 +231,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
     isUsedToBeSymbol?: boolean
     isSymbolShape?: boolean
     isUnionSymbolShape?: boolean
+    unionSymbolRef?: string
     variables?: BasicArray<Variable >
     constructor(
         id: string,
@@ -289,6 +290,11 @@ export class GroupShape extends Shape implements classes.GroupShape {
     indexOfChild(shape: Shape): number {
         return this.childs.findIndex((val) => {
             return val.id == shape.id
+        })
+    }
+    findChildById(id: string): Shape | undefined {
+        return this.childs.find((val) => {
+            if (val.id == id) return val;
         })
     }
 

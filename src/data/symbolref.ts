@@ -12,7 +12,7 @@ import { GroupShape, Shape } from "./shape";
 import { OverrideShape, OverridesGetter } from "./overrideshape";
 import { proxyShape } from "./symproxy";
 import { Path } from "./path";
-import { layoutChilds } from "./symbolreflayout";
+import { layoutChilds } from "./symlayout";
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape, OverridesGetter {
     __data: GroupShape | undefined
@@ -25,11 +25,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     __overridesMap?: Map<string, OverrideShape>;
     __proxyIdMap: Map<string, string> = new Map();
     __childs?: Shape[];
-    // TODO 不可以在这缓存
-    // sym0->symRef0->sym1
-    // symRef1->sym0
-    // symRef2->sym0
-    // 此时共用一个symRef0对象，缓存的childs是错误的
 
     constructor(
         id: string,
@@ -85,18 +80,27 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
 
     getVirtualChilds(symRef: SymbolRefShape[] | undefined, parent: SymbolRefShape): Shape[] | undefined {
         if (!this.__data) return;
+        const sym = this.__data;
 
         const _symRef = symRef ? symRef.slice(0) : [];
         _symRef.push(this);
 
-        const childs = this.__data.childs.map((v) => proxyShape(v, parent, _symRef));
-
+        let _sym = sym;
+        // union symbol
+        if (sym.isUnionSymbolShape) {
+            let _sym = sym.childs[0];
+            // symbolref.
+            if (sym.unionSymbolRef) {
+                const c = sym.findChildById(sym.unionSymbolRef);
+                if (c) _sym = c;
+            }
+        }
+        const childs = (_sym.childs || []).map((v: Shape) => proxyShape(v, parent, _symRef));
         const thisframe = this.frame;
-        const symframe = this.__data.frame;
+        const symframe = _sym.frame;
         if (thisframe.width !== symframe.width || thisframe.height !== symframe.height) {
             layoutChilds(childs, thisframe, symframe);
         }
-
         return childs;
     }
 

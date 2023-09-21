@@ -48,9 +48,6 @@
         "isBoolOpShape": {
             "type": "boolean"
         },
-        "fixedRadius": {
-            "type": "number"
-        },
         "isUsedToBeSymbol": {
             "type": "boolean"
         },
@@ -60,11 +57,17 @@
         "isUnionSymbolShape": {
             "type": "boolean"
         },
+        "unionSymbolRef": {
+            "type": "string"
+        },
         "variables": {
             "type": "array",
             "items": {
                 "$ref": "./variable.json"
             }
+        },
+        "fixedRadius": {
+            "type": "number"
         }
     },
     "required": [

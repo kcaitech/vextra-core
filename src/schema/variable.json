@@ -11,23 +11,18 @@
         "name": {
             "type": "string"
         },
-        "color": {
-            "$ref": "./color.json"
-        },
-        "text": {
-            "type": "string"
-        },
-        "fill": {
-            "$ref": "./fill.json"
-        },
-        "border": {
-            "$ref": "./border.json"
-        },
-        "num": {
-            "type": "number"
-        },
-        "shapeId": {
-            "type": "string"
+        "value": {
+            "oneOf": [
+                {
+                    "$ref": "./color.json"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "string"
+                }
+            ]
         }
     },
     "required": [

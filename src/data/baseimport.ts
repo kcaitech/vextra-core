@@ -22,12 +22,18 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
         importVariableType(source.type, ctx),
         source.name
     )
-    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
-    if (source.text !== undefined) ret.text = source.text
-    if (source.fill !== undefined) ret.fill = importFill(source.fill, ctx)
-    if (source.border !== undefined) ret.border = importBorder(source.border, ctx)
-    if (source.num !== undefined) ret.num = source.num
-    if (source.shapeId !== undefined) ret.shapeId = source.shapeId
+    if (source.value !== undefined) ret.value = (() => {
+        const val = source.value
+        if (typeof val !== 'object') {
+            return val
+        }
+        if (val.typeId == 'color') {
+            return importColor(val as types.Color, ctx)
+        }
+        {
+            throw new Error('unknow val: ' + val)
+        }
+    })()
     return ret
 }
 /* variable types */
@@ -1310,10 +1316,10 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
     if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
     if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
+    if (source.unionSymbolRef !== undefined) ret.unionSymbolRef = source.unionSymbolRef
     if (source.variables !== undefined) ret.variables = (() => {
         const ret = new BasicArray<impl.Variable>()
         for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
@@ -1322,6 +1328,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         }
         return ret
     })()
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     // inject code
     ret.type = types.ShapeType.Group;
     if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
@@ -1445,10 +1452,10 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         })()
     )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.isUsedToBeSymbol !== undefined) ret.isUsedToBeSymbol = source.isUsedToBeSymbol
     if (source.isSymbolShape !== undefined) ret.isSymbolShape = source.isSymbolShape
     if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
+    if (source.unionSymbolRef !== undefined) ret.unionSymbolRef = source.unionSymbolRef
     if (source.variables !== undefined) ret.variables = (() => {
         const ret = new BasicArray<impl.Variable>()
         for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
@@ -1457,6 +1464,7 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         }
         return ret
     })()
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal

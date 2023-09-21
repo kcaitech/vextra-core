@@ -13,12 +13,7 @@ export type Variable = {
     id: string
     type: VariableType
     name: string
-    color?: Color
-    text?: string
-    fill?: Fill
-    border?: Border
-    num?: number
-    shapeId?: string
+    value?: (Color | number | string)
 }
 /* variable types */
 export enum VariableType {
@@ -413,6 +408,7 @@ export type Comment = {
 }
 /* color */
 export type Color = {
+    typeId: string
     alpha: number
     red: number
     green: number
@@ -608,11 +604,12 @@ export type ImageShape = PathShape & {
 export type GroupShape = Shape & {
     childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape)[]
     isBoolOpShape?: boolean
-    fixedRadius?: number
     isUsedToBeSymbol?: boolean
     isSymbolShape?: boolean
     isUnionSymbolShape?: boolean
+    unionSymbolRef?: string
     variables?: Variable[]
+    fixedRadius?: number
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {

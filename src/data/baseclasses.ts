@@ -78,12 +78,7 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    color?: Color
-    text?: string
-    fill?: Fill
-    border?: Border
-    num?: number
-    shapeId?: string
+    value?: (Color | number | string)
     constructor(
         id: string,
         type: VariableType,
@@ -1180,11 +1175,12 @@ export class GroupShape extends Shape {
     typeId = 'group-shape'
     childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >
     isBoolOpShape?: boolean
-    fixedRadius?: number
     isUsedToBeSymbol?: boolean
     isSymbolShape?: boolean
     isUnionSymbolShape?: boolean
+    unionSymbolRef?: string
     variables?: BasicArray<Variable >
+    fixedRadius?: number
     constructor(
         id: string,
         name: string,
