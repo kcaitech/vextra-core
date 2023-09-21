@@ -225,8 +225,9 @@ class ShapeHdl extends Watchable(FreezHdl) {
     origin_watcher(...args: any[]) {
 
         // todo 布局属性更改后要重新布局
-        // 
-        super.notify(...args);
+        // todo 需要优化！
+        this.__symRef[0].reLayout(); // 
+        // super.notify(...args);
     }
     override_watcher(...args: any[]) {
         // todo
@@ -254,18 +255,16 @@ class ShapeHdl extends Watchable(FreezHdl) {
 
         const frame = target.frame;
         this.__frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
-
         this.__rotation = target.rotation ?? 0;
         this.__isFlippedHorizontal = target.isFlippedHorizontal ?? false;
         this.__isFlippedVertical = target.isFlippedVertical ?? false;
-
         this.__points = (target as any).points ? (target as any).points.map((p: CurvePoint) => importCurvePoint(p)) : undefined;
     }
 
     onRemoved() {
         this.__target.unwatch(this.origin_watcher);
         this.__symRef.forEach((s) => s.unwatch(this.symref_watcher));
-        this.__overrides.keys.forEach((key: string) => this.__overrides[key].unwatch(this.override_watcher));
+        Object.keys(this.__overrides).forEach((key: string) => this.__overrides[key].unwatch(this.override_watcher));
     }
 
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {

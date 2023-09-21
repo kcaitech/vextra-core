@@ -148,9 +148,22 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     setSymbolMgr(mgr: ResourceMgr<GroupShape>) {
         this.__symMgr = mgr;
     }
-    peekSymbol(): GroupShape | undefined {
-        return this.__data;
+    private __startLoad: boolean = false;
+    peekSymbol(startLoad: boolean = false): GroupShape | undefined {
+        const ret = this.__data;
+        if (ret) return ret;
+        if (startLoad && !this.__startLoad) {
+            this.__startLoad = true;
+            this.__symMgr && this.__symMgr.get(this.refId).then((val) => {
+                if (!this.__data) {
+                    this.__data = val;
+                    if (val) this.notify();
+                }
+            })
+        }
+        return ret;
     }
+
     async loadSymbol() {
         if (this.__data) return this.__data;
         this.__data = this.__symMgr && await this.__symMgr.get(this.refId);
@@ -244,13 +257,34 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     onRemoved(): void {
         // 构建symbol proxy shadow, 在这里需要unwatch
 
+        this._reLayout();
+        this.__data?.unwatch(this.watcher);
+    }
+
+    _reLayout() {
         if (this.__childs) {
             // todo compare
             this.__childs.forEach((c: any) => c.remove)
             this.__childs = undefined;
-            this.__data?.unwatch(this.watcher);
         }
     }
+
+    private __hasNotify: any;
+    reLayout() {
+        this._reLayout();
+        if (!this.__hasNotify) { // 这里有界面监听实时更新视图，导致反复实例proxy数据
+            this.__hasNotify = setTimeout(() => {
+                this.notify()
+                this.__hasNotify = undefined;
+            }, 0);
+        }
+    }
+
+    setFrameSize(w: number, h: number): void {
+        super.setFrameSize(w, h);
+        this._reLayout(); // todo 太粗暴了！
+    }
+
     getPath(): Path {
         const x = 0;
         const y = 0;

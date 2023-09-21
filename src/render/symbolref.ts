@@ -17,7 +17,7 @@ export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeTyp
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return
 
-    const sym = shape.peekSymbol();
+    const sym = shape.peekSymbol(true);
     if (!sym) {
         return;
     }
