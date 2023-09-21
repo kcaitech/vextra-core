@@ -85,16 +85,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
 
     getVirtualChilds(symRef: SymbolRefShape[] | undefined, parent: SymbolRefShape): Shape[] | undefined {
         if (!this.__data) return;
-        // if (this.__childs) return this.__childs;
 
-        // const symRef: SymbolRefShape[] = [];
-        // const preSymRef = this.overridesGetter;
-        // if (preSymRef) symRef.push(...preSymRef);
-        const _symRef = symRef ?? [];
+        const _symRef = symRef ? symRef.slice(0) : [];
         _symRef.push(this);
-        // this.__childs = this.__data.childs.map((v) => proxyShape(v, this, symRef));
-        // this.__data.watch(this.watcher);
-        // return this.__childs;
+
         const childs = this.__data.childs.map((v) => proxyShape(v, parent, _symRef));
 
         const thisframe = this.frame;
