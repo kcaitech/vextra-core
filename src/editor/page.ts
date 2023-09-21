@@ -262,7 +262,7 @@ export class PageEditor {
                 const gshape = newGroupShape(name ?? shape.name);
                 shape = group(this.__page, [shape], gshape, savep, saveidx, api);
             }
-            api.shapeModifySymbolShape(this.__page, shape as GroupShape, true);
+            // api.shapeModifySymbolShape(this.__page, shape as GroupShape, true);
             this.__repo.commit();
             return shape;
         }
@@ -272,23 +272,25 @@ export class PageEditor {
         }
     }
 
-    /**
-     * 取消组件
-     * todo 考虑union symbol
-     * @param shape 
-     */
-    unSymbol(shape: GroupShape) {
-        const api = this.__repo.start("unSymbol", {});
-        try {
-            api.shapeModifySymbolShape(this.__page, shape, false);
-            this.__repo.commit();
-            return shape;
-        }
-        catch (e) {
-            console.log(e)
-            this.__repo.rollback();
-        }
-    }
+    // /**
+    //  * 取消组件
+    //  * todo 考虑union symbol
+    //  * @param shape 
+    //  */
+    // unSymbol(shape: GroupShape) {
+    //     const api = this.__repo.start("unSymbol", {});
+    //     try {
+    //         api.shapeModifySymbolShape(this.__page, shape, false);
+    //         this.__repo.commit();
+    //         return shape;
+    //     }
+    //     catch (e) {
+    //         console.log(e)
+    //         this.__repo.rollback();
+    //     }
+    // }
+
+    // todo 插入组件
 
     /**
      * 将引用的组件解引用
