@@ -274,6 +274,7 @@ export class PageEditor {
 
     /**
      * 取消组件
+     * todo 考虑union symbol
      * @param shape 
      */
     unSymbol(shape: GroupShape) {
@@ -291,6 +292,7 @@ export class PageEditor {
 
     /**
      * 将引用的组件解引用
+     * todo 考虑union symbol
      * @param shape 
      */
     extractSymbol(shape: SymbolRefShape) {
