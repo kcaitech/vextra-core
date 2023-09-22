@@ -79,6 +79,12 @@ export function newStyle(): Style {
     style.fills.push(fill);
     return style;
 }
+export function newflatStyle(): Style {
+    const borders = new BasicArray<Border>();
+    const fills = new BasicArray<Fill>();
+    const style = new Style(borders, fills);
+    return style;
+}
 
 export function newArtboard(name: string, frame: ShapeFrame): Artboard {
     template_artboard.id = uuid();
@@ -284,7 +290,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
 }
 
 export function newSymbolShape(name: string, frame: ShapeFrame): SymbolShape {
-    const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newStyle(), new BasicArray(), new BasicArray());
+    const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicArray());
     addCommonAttr(compo);
     return compo;
 }
