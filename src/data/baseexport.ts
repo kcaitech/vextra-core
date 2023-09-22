@@ -25,11 +25,42 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
             if (typeof val != 'object') {
                 return val
             }
+            if (val instanceof Array) {
+                const _val = val;
+                return (() => {
+                    const ret = []
+                    for (let i = 0, len = _val.length; i < len; i++) {
+                        const r = (() => {
+                            const val = _val[i];
+                            if (typeof val != 'object') {
+                                return val
+                            }
+                            if (val.typeId == 'border') {
+                                return exportBorder(val as types.Border, ctx)
+                            }
+                            if (val.typeId == 'fill') {
+                                return exportFill(val as types.Fill, ctx)
+                            }
+                            {
+                                throw new Error('unknow val: ' + val)
+                            }
+                        })()
+                        if (r) ret.push(r)
+                    }
+                    return ret
+                })()
+            }
             if (val.typeId == 'color') {
                 return exportColor(val as types.Color, ctx)
             }
+            if (val.typeId == 'text') {
+                return exportText(val as types.Text, ctx)
+            }
             if (val.typeId == 'gradient') {
                 return exportGradient(val as types.Gradient, ctx)
+            }
+            if (val.typeId == 'style') {
+                return exportStyle(val as types.Style, ctx)
             }
             {
                 throw new Error('unknow val: ' + val)
@@ -58,6 +89,7 @@ export function exportUnderlineType(source: types.UnderlineType, ctx?: IExportCo
 /* text */
 export function exportText(source: types.Text, ctx?: IExportContext): types.Text {
     const ret = {
+        typeId: source.typeId,
         paras: (() => {
             const ret = []
             for (let i = 0, len = source.paras.length; i < len; i++) {
@@ -348,6 +380,7 @@ export function exportGradientType(source: types.GradientType, ctx?: IExportCont
 /* fill */
 export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill {
     const ret = {
+        typeId: source.typeId,
         id: source.id,
         isEnabled: source.isEnabled,
         fillType: exportFillType(source.fillType, ctx),
@@ -564,6 +597,7 @@ export function exportBulletNumbersBehavior(source: types.BulletNumbersBehavior,
 /* border */
 export function exportBorder(source: types.Border, ctx?: IExportContext): types.Border {
     const ret = {
+        typeId: source.typeId,
         id: source.id,
         isEnabled: source.isEnabled,
         fillType: exportFillType(source.fillType, ctx),
@@ -1092,6 +1126,8 @@ export function exportOverrideShape(source: types.OverrideShape, ctx?: IExportCo
         stringValue: source.stringValue,
         text: source.text && exportText(source.text, ctx),
         imageRef: source.imageRef,
+        textVar: source.textVar,
+        visibleVar: source.visibleVar,
     }
     // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);

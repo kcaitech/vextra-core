@@ -27,11 +27,39 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
         if (typeof val !== 'object') {
             return val
         }
+        if (val instanceof Array) {
+            const _val = val;
+            return (() => {
+                const ret = new BasicArray<(impl.Border | impl.Fill)>()
+                for (let i = 0, len = _val && _val.length; i < len; i++) {
+                    const r = (() => {
+                        const val = _val[i]
+                        if (val.typeId == 'border') {
+                            return importBorder(val as types.Border, ctx)
+                        }
+                        if (val.typeId == 'fill') {
+                            return importFill(val as types.Fill, ctx)
+                        }
+                        {
+                            throw new Error('unknow val: ' + val)
+                        }
+                    })()
+                    if (r) ret.push(r)
+                }
+                return ret
+            })()
+        }
         if (val.typeId == 'color') {
             return importColor(val as types.Color, ctx)
         }
+        if (val.typeId == 'text') {
+            return importText(val as types.Text, ctx)
+        }
         if (val.typeId == 'gradient') {
             return importGradient(val as types.Gradient, ctx)
+        }
+        if (val.typeId == 'style') {
+            return importStyle(val as types.Style, ctx)
         }
         {
             throw new Error('unknow val: ' + val)
@@ -1086,6 +1114,8 @@ export function importOverrideShape(source: types.OverrideShape, ctx?: IImportCo
     if (source.stringValue !== undefined) ret.stringValue = source.stringValue
     if (source.text !== undefined) ret.text = importText(source.text, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
+    if (source.textVar !== undefined) ret.textVar = source.textVar
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret

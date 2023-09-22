@@ -14,16 +14,38 @@
         "value": {
             "oneOf": [
                 {
+                    "type": "number"
+                },
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
                     "$ref": "./color.json"
+                },
+                {
+                    "$ref": "./text.json"
                 },
                 {
                     "$ref": "./gradient.json"
                 },
                 {
-                    "type": "number"
+                    "$ref": "./style.json"
                 },
                 {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "oneOf": [
+                            {
+                                "$ref": "./border.json"
+                            },
+                            {
+                                "$ref": "./fill.json"
+                            }
+                        ]
+                    }
                 }
             ]
         }

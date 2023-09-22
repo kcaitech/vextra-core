@@ -2,6 +2,10 @@
     "description": "border",
     "type": "object",
     "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
         "id": {
             "type": "string",
             "minLength": 32,
@@ -39,6 +43,7 @@
         }
     },
     "required": [
+        "typeId",
         "id",
         "isEnabled",
         "fillType",

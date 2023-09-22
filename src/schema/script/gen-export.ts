@@ -140,6 +140,23 @@ ${indent(level)}    if (typeof val != 'object') {
 ${indent(level)}        return val
 ${indent(level)}    }`
 
+// array
+// array
+for (let i = 0; i < schema.length; i++) {
+    let s = schema[i]
+
+    if (s.type === 'array') {
+
+        ret += `
+${indent(level)}    if (val instanceof Array) {
+${indent(level)}        const _val = val;
+${indent(level)}        return ${handler['array'](s, className, '_val', level + 2, filename, allschemas)}
+${indent(level)}    }`
+
+        break;
+    }
+}
+
     for (let i = 0; i < schema.length; i++) {
         let s = schema[i]
         let typename
