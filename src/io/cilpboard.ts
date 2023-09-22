@@ -1,10 +1,10 @@
-import { GroupShape, Shape, ShapeType, TextShape } from "../data/shape";
-import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText, exportTableShape, exportSymbolShape } from "../data/baseexport";
-import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText, importTableShape, importSymbolShape } from "../data/baseimport";
+import { GroupShape, Shape, ShapeType, SymbolShape, TextShape } from "../data/shape";
+import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText, exportTableShape, exportSymbolShape, exportShapeFrame } from "../data/baseexport";
+import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText, importTableShape, importSymbolShape, importShapeFrame } from "../data/baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
-import { newTextShape, newTextShapeByText } from "../editor/creator";
+import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/creator";
 
 function set_childs_id(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
@@ -155,4 +155,14 @@ export function trasnform_text(document: Document, text: types.Text, gen?: boole
         return newTextShape(name)
     }
     return _text;
+}
+export async function symbol2ref(document: Document, symbol: SymbolShape) {
+    const is_existed = await document.symbolsMgr.get(symbol.id);
+    if (is_existed) {
+        const frame = importShapeFrame(exportShapeFrame(symbol.frame));
+        const name = symbol.name;
+        return newSymbolRefShape(name, frame, symbol.id);
+    } else {
+        return symbol;
+    }
 }
