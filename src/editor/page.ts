@@ -253,18 +253,26 @@ export class PageEditor {
      * 
      * @param shape 
      */
-    makeSymbol(shape: Shape, name?: string) {
+    makeSymbol(shapes: Shape[], name?: string) {
+        if (shapes.length === 0) return;
         const api = this.__repo.start("makeSymbol", {});
         try {
-            if (!(shape instanceof GroupShape)) {
-                const savep = shape.parent as GroupShape;
-                const saveidx = savep.indexOfChild(shape);
-                const gshape = newGroupShape(name ?? shape.name);
-                shape = group(this.__page, [shape], gshape, savep, saveidx, api);
+            if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
+                // todo
             }
-            // api.shapeModifySymbolShape(this.__page, shape as GroupShape, true);
+            else {
+
+            }
+
+            // if (!(shape instanceof GroupShape)) {
+            //     const savep = shape.parent as GroupShape;
+            //     const saveidx = savep.indexOfChild(shape);
+            //     const gshape = newGroupShape(name ?? shape.name);
+            //     shape = group(this.__page, [shape], gshape, savep, saveidx, api);
+            // }
+
             this.__repo.commit();
-            return shape;
+            // return shape;
         }
         catch (e) {
             console.log(e)
@@ -290,7 +298,9 @@ export class PageEditor {
     //     }
     // }
 
-    // todo 插入组件
+    insertSymbolRef(refId: string) {
+        // todo
+    }
 
     /**
      * 将引用的组件解引用
@@ -302,7 +312,7 @@ export class PageEditor {
         const symbol = shape.peekSymbol();
         if (!symbol) return;
         // 导出symbol
-        const symbolData = exportGroupShape(symbol);
+        const symbolData = exportGroupShape(symbol); // todo 如果symbol只有一个child时
         // 将override更新到导出的数据
         const shapeMap = new Map<string, types.Shape>();
         const add2map = (shape: types.Shape) => {
