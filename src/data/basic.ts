@@ -134,6 +134,15 @@ export class ResourceMgr<T> extends Watchable(Object) {
         // this.__loader = loader;
         this.__guard = guard;
     }
+    get size() {
+        return this.__resource.size;
+    }
+    get keys() {
+        return Array.from(this.__resource.keys());
+    }
+    get resource() {
+        return Array.from(this.__resource.values());
+    }
     async get(id: string): Promise<T | undefined> {
         let r = this.__resource.get(id)
         if (r) return r;
