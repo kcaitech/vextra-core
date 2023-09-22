@@ -614,15 +614,14 @@ export class PageEditor {
      * @description 同一容器下批量插入shape
      * @param shapes 未进入文档的shape 
      */
-    insertShapes1(parent: GroupShape, shapes: Shape[], adjusted = false): Shape[] | false {
+    insertShapes1(parent: GroupShape, shapes: Shape[]): Shape[] | false {
         const api = this.__repo.start("insertShapes1", {});
         try {
             const result: Shape[] = [];
             let index = parent.childs.length;
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const shape = shapes[i], f = shape.frame;
+                const shape = shapes[i];
                 shape.id = uuid();
-                if (!adjusted) translateTo(api, this.__page, shape, f.x, f.y);
                 api.shapeInsert(this.__page, parent, shape, index);
                 result.push(parent.childs[index]);
                 index++;
