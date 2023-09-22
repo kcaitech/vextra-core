@@ -6,6 +6,11 @@
         "text",
         "visible",
         "instance",
-        "status"
+        "status",
+        "stringValue",
+        "imageRef",
+        "fills",
+        "borders",
+        "style"
     ]
 }

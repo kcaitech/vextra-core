@@ -27,6 +27,28 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
         if (typeof val !== 'object') {
             return val
         }
+        if (val instanceof Array) {
+            const _val = val;
+            return (() => {
+                const ret = new BasicArray<(impl.Border | impl.Fill)>()
+                for (let i = 0, len = _val && _val.length; i < len; i++) {
+                    const r = (() => {
+                        const val = _val[i]
+                        if (val.typeId == 'border') {
+                            return importBorder(val as types.Border, ctx)
+                        }
+                        if (val.typeId == 'fill') {
+                            return importFill(val as types.Fill, ctx)
+                        }
+                        {
+                            throw new Error('unknow val: ' + val)
+                        }
+                    })()
+                    if (r) ret.push(r)
+                }
+                return ret
+            })()
+        }
         if (val.typeId == 'color') {
             return importColor(val as types.Color, ctx)
         }
@@ -35,6 +57,9 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
         }
         if (val.typeId == 'gradient') {
             return importGradient(val as types.Gradient, ctx)
+        }
+        if (val.typeId == 'style') {
+            return importStyle(val as types.Style, ctx)
         }
         {
             throw new Error('unknow val: ' + val)

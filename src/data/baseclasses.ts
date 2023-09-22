@@ -78,7 +78,7 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value?: (Color | Text | Gradient | number | string)
+    value?: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill) >)
     constructor(
         id: string,
         type: VariableType,

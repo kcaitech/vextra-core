@@ -13,7 +13,7 @@ export type Variable = {
     id: string
     type: VariableType
     name: string
-    value?: (Color | Text | Gradient | number | string)
+    value?: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill)[])
 }
 /* variable types */
 export enum VariableType {
@@ -23,6 +23,11 @@ export enum VariableType {
     Visible = 'visible',
     Instance = 'instance',
     Status = 'status',
+    StringValue = 'stringValue',
+    ImageRef = 'imageRef',
+    Fills = 'fills',
+    Borders = 'borders',
+    Style = 'style',
 }
 /* user infomation */
 export type UserInfo = {
@@ -279,6 +284,7 @@ export enum GradientType {
 }
 /* fill */
 export type Fill = {
+    typeId: string
     id: string
     isEnabled: boolean
     fillType: FillType
@@ -445,6 +451,7 @@ export enum BulletNumbersBehavior {
 }
 /* border */
 export type Border = {
+    typeId: string
     id: string
     isEnabled: boolean
     fillType: FillType
