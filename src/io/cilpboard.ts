@@ -1,6 +1,6 @@
 import { GroupShape, Shape, ShapeType, TextShape } from "../data/shape";
-import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText, exportTableShape } from "../data/baseexport";
-import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText, importTableShape } from "../data/baseimport";
+import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText, exportTableShape, exportSymbolShape } from "../data/baseexport";
+import { importArtboard, importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText, importTableShape, importSymbolShape } from "../data/baseimport";
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
@@ -39,6 +39,8 @@ export function export_shape(shapes: Shape[]) {
             content = exportGroupShape(shape as unknown as types.GroupShape);
         } else if (type === ShapeType.Table) {
             content = exportTableShape(shape as unknown as types.TableShape);
+        } else if (type === ShapeType.Symbol) {
+            content = exportSymbolShape(shape as unknown as types.SymbolShape);
         }
         if (content) {
             content.style.contacts && (content.style.contacts = undefined);
@@ -99,6 +101,10 @@ export function import_shape(document: Document, source: types.Shape[]) {
                 const childs = (_s as GroupShape).childs;
                 childs && childs.length && set_childs_id(childs);
                 r = importTableShape(_s as types.TableShape, ctx);
+            } else if (type === ShapeType.Symbol) {
+                const childs = (_s as GroupShape).childs;
+                childs && childs.length && set_childs_id(childs);
+                r = importSymbolShape(_s as types.SymbolShape);
             }
             r && result.push(r);
         }
