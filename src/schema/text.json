@@ -2,6 +2,10 @@
     "description": "text",
     "type": "object",
     "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
         "paras": {
             "type": "array",
             "items": {
@@ -16,6 +20,7 @@
         }
     },
     "required": [
+        "typeId",
         "paras"
     ],
     "additionalProperties": false

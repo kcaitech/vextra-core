@@ -30,6 +30,9 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
         if (val.typeId == 'color') {
             return importColor(val as types.Color, ctx)
         }
+        if (val.typeId == 'text') {
+            return importText(val as types.Text, ctx)
+        }
         if (val.typeId == 'gradient') {
             return importGradient(val as types.Gradient, ctx)
         }
@@ -1086,6 +1089,8 @@ export function importOverrideShape(source: types.OverrideShape, ctx?: IImportCo
     if (source.stringValue !== undefined) ret.stringValue = source.stringValue
     if (source.text !== undefined) ret.text = importText(source.text, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
+    if (source.textVar !== undefined) ret.textVar = source.textVar
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret

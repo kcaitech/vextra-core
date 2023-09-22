@@ -28,6 +28,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
             if (val.typeId == 'color') {
                 return exportColor(val as types.Color, ctx)
             }
+            if (val.typeId == 'text') {
+                return exportText(val as types.Text, ctx)
+            }
             if (val.typeId == 'gradient') {
                 return exportGradient(val as types.Gradient, ctx)
             }
@@ -58,6 +61,7 @@ export function exportUnderlineType(source: types.UnderlineType, ctx?: IExportCo
 /* text */
 export function exportText(source: types.Text, ctx?: IExportContext): types.Text {
     const ret = {
+        typeId: source.typeId,
         paras: (() => {
             const ret = []
             for (let i = 0, len = source.paras.length; i < len; i++) {
@@ -1092,6 +1096,8 @@ export function exportOverrideShape(source: types.OverrideShape, ctx?: IExportCo
         stringValue: source.stringValue,
         text: source.text && exportText(source.text, ctx),
         imageRef: source.imageRef,
+        textVar: source.textVar,
+        visibleVar: source.visibleVar,
     }
     // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);

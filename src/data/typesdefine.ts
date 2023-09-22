@@ -13,7 +13,7 @@ export type Variable = {
     id: string
     type: VariableType
     name: string
-    value?: (Color | Gradient | number | string)
+    value?: (Color | Text | Gradient | number | string)
 }
 /* variable types */
 export enum VariableType {
@@ -38,6 +38,7 @@ export enum UnderlineType {
 }
 /* text */
 export type Text = {
+    typeId: string
     paras: Para[]
     attr?: TextAttr
     variableRef?: string
@@ -591,6 +592,8 @@ export type OverrideShape = Shape & {
     stringValue?: string
     text?: Text
     imageRef?: string
+    textVar?: string
+    visibleVar?: string
 }
 /* oval shape */
 export type OvalShape = PathShape & {
