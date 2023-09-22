@@ -220,6 +220,10 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     }
 
     onRemoved() { }
+
+    findVar(varId: string): Variable | undefined {
+        return this.parent?.findVar(varId);
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -331,7 +335,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean // 子对象都为SymbolShape
     unionSymbolRef?: string // Variable:xxxxxx
-    variables: BasicArray<Variable > // 怎么做关联
+    variables: BasicArray<Variable> // 怎么做关联
+    private __varMap: Map<string, Variable>;
 
     constructor(
         id: string,
@@ -339,8 +344,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<Shape >,
-        variables: BasicArray<Variable >
+        childs: BasicArray<Shape>,
+        variables: BasicArray<Variable>
     ) {
         super(
             id,
@@ -351,12 +356,30 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             childs
         )
         this.variables = variables;
+        this.__varMap = new Map(variables.map((v) => [v.id, v]))
     }
-    addVariable() {
 
+    addVar(v: Variable) {
+        this.variables.push(v);
+        this.__varMap.set(v.id, v);
     }
-    getVariable() {
+    removeVar(varId: string) {
+        const v = this.__varMap.get(varId);
+        if (v) {
+            const i = this.variables.findIndex((v) => v.id === varId)
+            this.variables.splice(i, 1);
+            this.__varMap.delete(varId);
+        }
+        return v;
+    }
+    getVar(varId: string) {
+        return this.__varMap.get(varId);
+    }
 
+    findVar(varId: string): Variable | undefined {
+        const v = this.parent?.findVar(varId); // 父级的优先
+        if (v) return v;
+        return this.getVar(varId);
     }
 }
 

@@ -37,9 +37,6 @@
         },
         "borderStyle": {
             "$ref": "./border-style.json"
-        },
-        "variableRef": {
-            "type": "string"
         }
     },
     "required": [

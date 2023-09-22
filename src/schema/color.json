@@ -21,9 +21,6 @@
         "blue": {
             "type": "integer",
             "default": 0
-        },
-        "variableRef": {
-            "type": "string"
         }
     },
     "required": [

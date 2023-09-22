@@ -207,7 +207,6 @@ export class Text extends Basic implements classes.Text {
     typeId = 'text'
     paras: BasicArray<Para>
     attr?: TextAttr
-    variableRef?: string
 
     private __layout?: TextLayout;
     private __layoutWidth: number = 0;

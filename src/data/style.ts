@@ -72,7 +72,6 @@ export class Border extends Basic implements classes.Border {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
-    variableRef?: string
     constructor(
         id: string,
         isEnabled: boolean,
@@ -102,7 +101,6 @@ export class Fill extends Basic implements classes.Fill {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
-    variableRef?: string
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __cacheData?: { buff: Uint8Array, base64: string };
@@ -162,9 +160,11 @@ export class Style extends Basic implements classes.Style {
     blur?: Blur
     borderOptions?: BorderOptions
     borders: BasicArray<Border>
+    bordersVar?: string
     colorControls?: ColorControls
     contextSettings?: ContextSettings
     fills: BasicArray<Fill>
+    fillsVar?: string
     innerShadows?: BasicArray<Shadow>
     shadows?: BasicArray<Shadow>
     contacts?: BasicArray<ContactRole>

@@ -116,7 +116,6 @@ export class Text extends Basic {
     typeId = 'text'
     paras: BasicArray<Para >
     attr?: TextAttr
-    variableRef?: string
     constructor(
         paras: BasicArray<Para >
     ) {
@@ -134,9 +133,11 @@ export class Style extends Basic {
     blur?: Blur
     borderOptions?: BorderOptions
     borders: BasicArray<Border >
+    bordersVar?: string
     colorControls?: ColorControls
     contextSettings?: ContextSettings
     fills: BasicArray<Fill >
+    fillsVar?: string
     innerShadows?: BasicArray<Shadow >
     shadows?: BasicArray<Shadow >
     contacts?: BasicArray<ContactRole >
@@ -196,12 +197,14 @@ export class Shape extends Basic {
     type: ShapeType
     frame: ShapeFrame
     style: Style
+    styleVar?: string
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isFlippedHorizontal?: boolean
     isFlippedVertical?: boolean
     isLocked?: boolean
     isVisible?: boolean
+    visibleVar?: string
     exportOptions?: ExportOptions
     name: string
     nameIsFixed?: boolean
@@ -413,7 +416,6 @@ export class Fill extends Basic {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
-    variableRef?: string
     constructor(
         id: string,
         isEnabled: boolean,
@@ -652,7 +654,6 @@ export class Color extends Basic {
     red: number
     green: number
     blue: number
-    variableRef?: string
     constructor(
         alpha: number,
         red: number,
@@ -720,7 +721,6 @@ export class Border extends Basic {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
-    variableRef?: string
     constructor(
         id: string,
         isEnabled: boolean,
@@ -806,6 +806,7 @@ export class TextShape extends Shape {
     typeId = 'text-shape'
     text: Text
     fixedRadius?: number
+    textVar?: string
     constructor(
         id: string,
         name: string,
@@ -1072,8 +1073,6 @@ export class OverrideShape extends Shape {
     stringValue?: string
     text?: Text
     imageRef?: string
-    textVar?: string
-    visibleVar?: string
     constructor(
         id: string,
         name: string,

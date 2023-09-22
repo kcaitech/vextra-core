@@ -25,6 +25,9 @@
                 "$ref": "./border.json"
             }
         },
+        "bordersVar": {
+            "type": "string"
+        },
         "colorControls": {
             "$ref": "./color-controls.json"
         },
@@ -36,6 +39,9 @@
             "items": {
                 "$ref": "./fill.json"
             }
+        },
+        "fillsVar": {
+            "type": "string"
         },
         "innerShadows": {
             "type": "array",

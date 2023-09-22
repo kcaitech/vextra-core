@@ -30,12 +30,6 @@
         "imageRef": {
             "type": "string",
             "default": "$uuid"
-        },
-        "textVar": {
-            "type": "string"
-        },
-        "visibleVar": {
-            "type": "string"
         }
     },
     "required": [

@@ -30,9 +30,6 @@
         },
         "imageRef": {
             "type": "string"
-        },
-        "variableRef": {
-            "type": "string"
         }
     },
     "required": [

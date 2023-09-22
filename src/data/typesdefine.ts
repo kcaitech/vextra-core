@@ -46,7 +46,6 @@ export type Text = {
     typeId: string
     paras: Para[]
     attr?: TextAttr
-    variableRef?: string
 }
 /* text vertical alignment */
 export enum TextVerAlign {
@@ -94,9 +93,11 @@ export type Style = {
     blur?: Blur
     borderOptions?: BorderOptions
     borders: Border[]
+    bordersVar?: string
     colorControls?: ColorControls
     contextSettings?: ContextSettings
     fills: Fill[]
+    fillsVar?: string
     innerShadows?: Shadow[]
     shadows?: Shadow[]
     contacts?: ContactRole[]
@@ -136,12 +137,14 @@ export type Shape = {
     type: ShapeType
     frame: ShapeFrame
     style: Style
+    styleVar?: string
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isFlippedHorizontal?: boolean
     isFlippedVertical?: boolean
     isLocked?: boolean
     isVisible?: boolean
+    visibleVar?: string
     exportOptions?: ExportOptions
     name: string
     nameIsFixed?: boolean
@@ -292,7 +295,6 @@ export type Fill = {
     contextSettings?: ContextSettings
     gradient?: Gradient
     imageRef?: string
-    variableRef?: string
 }
 /* fill types */
 export enum FillType {
@@ -422,7 +424,6 @@ export type Color = {
     red: number
     green: number
     blue: number
-    variableRef?: string
 }
 /* color controls */
 export type ColorControls = {
@@ -461,7 +462,6 @@ export type Border = {
     thickness: number
     gradient?: Gradient
     borderStyle: BorderStyle
-    variableRef?: string
 }
 /* border style */
 export type BorderStyle = {
@@ -529,6 +529,7 @@ export enum BlendMode {
 export type TextShape = Shape & {
     text: Text
     fixedRadius?: number
+    textVar?: string
 }
 /* table shape */
 export type TableShape = Shape & {
@@ -599,8 +600,6 @@ export type OverrideShape = Shape & {
     stringValue?: string
     text?: Text
     imageRef?: string
-    textVar?: string
-    visibleVar?: string
 }
 /* oval shape */
 export type OvalShape = PathShape & {

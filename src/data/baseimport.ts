@@ -97,7 +97,6 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
         })()
     )
     if (source.attr !== undefined) ret.attr = importTextAttr(source.attr, ctx)
-    if (source.variableRef !== undefined) ret.variableRef = source.variableRef
     return ret
 }
 /* text vertical alignment */
@@ -148,8 +147,10 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
     if (source.windingRule !== undefined) ret.windingRule = importWindingRule(source.windingRule, ctx)
     if (source.blur !== undefined) ret.blur = importBlur(source.blur, ctx)
     if (source.borderOptions !== undefined) ret.borderOptions = importBorderOptions(source.borderOptions, ctx)
+    if (source.bordersVar !== undefined) ret.bordersVar = source.bordersVar
     if (source.colorControls !== undefined) ret.colorControls = importColorControls(source.colorControls, ctx)
     if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
+    if (source.fillsVar !== undefined) ret.fillsVar = source.fillsVar
     if (source.innerShadows !== undefined) ret.innerShadows = (() => {
         const ret = new BasicArray<impl.Shadow>()
         for (let i = 0, len = source.innerShadows && source.innerShadows.length; i < len; i++) {
@@ -217,12 +218,14 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx)
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -382,7 +385,6 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
     if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
-    if (source.variableRef !== undefined) ret.variableRef = source.variableRef
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
@@ -555,7 +557,6 @@ export function importColor(source: types.Color, ctx?: IImportContext): impl.Col
         source.green,
         source.blue
     )
-    if (source.variableRef !== undefined) ret.variableRef = source.variableRef
     return ret
 }
 /* color controls */
@@ -599,7 +600,6 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
     )
     if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
     if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
-    if (source.variableRef !== undefined) ret.variableRef = source.variableRef
     return ret
 }
 /* border style */
@@ -657,12 +657,14 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
         importStyle(source.style, ctx),
         importText(source.text, ctx)
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -673,6 +675,7 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.textVar !== undefined) ret.textVar = source.textVar
     return ret
 }
 /* table shape */
@@ -722,12 +725,14 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
             return ret
         })()
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -751,12 +756,14 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx)
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -799,12 +806,14 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
             return ret
         })()
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -857,12 +866,14 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
             return ret
         })()
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -893,12 +904,14 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
         })(),
         source.isClosed
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -930,12 +943,14 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         source.isClosed
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1064,12 +1079,14 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
             return ret
         })()
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1091,12 +1108,14 @@ export function importOverrideShape(source: types.OverrideShape, ctx?: IImportCo
         importStyle(source.style, ctx),
         source.refId
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1114,8 +1133,6 @@ export function importOverrideShape(source: types.OverrideShape, ctx?: IImportCo
     if (source.stringValue !== undefined) ret.stringValue = source.stringValue
     if (source.text !== undefined) ret.text = importText(source.text, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
-    if (source.textVar !== undefined) ret.textVar = source.textVar
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
@@ -1140,12 +1157,14 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         importEllipse(source.ellipse, ctx)
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1176,12 +1195,14 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         source.isClosed
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1264,12 +1285,14 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         source.imageRef
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1344,12 +1367,14 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
             return ret
         })()
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1437,12 +1462,14 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1488,12 +1515,14 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
         importText(source.text, ctx),
         source.mark
     )
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1571,12 +1600,14 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint

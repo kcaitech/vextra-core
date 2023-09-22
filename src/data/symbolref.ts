@@ -23,6 +23,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     overrides: BasicArray<OverrideShape>
     variables: BasicArray<Variable >
 
+    private __varMap: Map<string, Variable>;
     __overridesMap?: Map<string, OverrideShape>;
     __proxyIdMap: Map<string, string> = new Map();
     __childs?: Shape[];
@@ -47,6 +48,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         this.refId = refId
         this.overrides = overrides
         this.variables = variables;
+        this.__varMap = new Map(variables.map((v) => [v.id, v]))
     }
 
     mapId(id: string) {
@@ -296,5 +298,28 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
             ["z"]
         ]
         return new Path(path);
+    }
+
+    addVar(v: Variable) {
+        this.variables.push(v);
+        this.__varMap.set(v.id, v);
+    }
+    removeVar(varId: string) {
+        const v = this.__varMap.get(varId);
+        if (v) {
+            const i = this.variables.findIndex((v) => v.id === varId)
+            this.variables.splice(i, 1);
+            this.__varMap.delete(varId);
+        }
+        return v;
+    }
+    getVar(varId: string) {
+        return this.__varMap.get(varId);
+    }
+
+    findVar(varId: string): Variable | undefined {
+        const v = this.parent?.findVar(varId); // 父级的优先
+        if (v) return v;
+        return this.getVar(varId);
     }
 }
