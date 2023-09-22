@@ -1,0 +1,46 @@
+{
+  "description": "contact shape",
+  "type": "object",
+  "properties": {
+    "points": {
+      "type": "array",
+      "items": {
+        "$ref": "./curve-point.json"
+      }
+    },
+    "from": {
+      "$ref": "./contact-form.json"
+    },
+    "to": {
+      "$ref": "./contact-form.json"
+    },
+    "isEdited": {
+      "type": "boolean"
+    },
+    "isClosed": {
+      "type": "boolean"
+    },
+    "mark": {
+      "type": "boolean"
+    },
+    "text": {
+      "$ref": "./text.json"
+    },
+    "fixedRadius": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "points",
+    "isClosed",
+    "isEdited",
+    "text",
+    "mark"
+  ],
+  "allOf": [
+    {
+      "$ref": "./shape.json"
+    }
+  ],
+  "additionalProperties": false
+}

@@ -108,6 +108,14 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
             }
             return ret
         })(),
+        contacts: source.contacts && (() => {
+            const ret = []
+            for (let i = 0, len = source.contacts.length; i < len; i++) {
+                const r = exportContactRole(source.contacts[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         startMarkerType: source.startMarkerType && exportMarkerType(source.startMarkerType, ctx),
         endMarkerType: source.endMarkerType && exportMarkerType(source.endMarkerType, ctx),
     }
@@ -455,6 +463,31 @@ export function exportContextSettings(source: types.ContextSettings, ctx?: IExpo
     const ret = {
         blenMode: exportBlendMode(source.blenMode, ctx),
         opacity: source.opacity,
+    }
+    return ret
+}
+/* contact type */
+export function exportContactType(source: types.ContactType, ctx?: IExportContext): types.ContactType {
+    return source
+}
+/* contactstyle */
+export function exportContactRole(source: types.ContactRole, ctx?: IExportContext): types.ContactRole {
+    const ret = {
+        id: source.id,
+        roleType: exportContactRoleType(source.roleType, ctx),
+        shapeId: source.shapeId,
+    }
+    return ret
+}
+/* contact role type */
+export function exportContactRoleType(source: types.ContactRoleType, ctx?: IExportContext): types.ContactRoleType {
+    return source
+}
+/* contact form */
+export function exportContactForm(source: types.ContactForm, ctx?: IExportContext): types.ContactForm {
+    const ret = {
+        contactType: exportContactType(source.contactType, ctx),
+        shapeId: source.shapeId,
     }
     return ret
 }
@@ -1356,6 +1389,48 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+    }
+    return ret
+}
+/* contact shape */
+export function exportContactShape(source: types.ContactShape, ctx?: IExportContext): types.ContactShape {
+    const ret = {
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        points: (() => {
+            const ret = []
+            for (let i = 0, len = source.points.length; i < len; i++) {
+                const r = exportCurvePoint(source.points[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        from: source.from && exportContactForm(source.from, ctx),
+        to: source.to && exportContactForm(source.to, ctx),
+        isEdited: source.isEdited,
+        isClosed: source.isClosed,
+        mark: source.mark,
+        text: exportText(source.text, ctx),
+        fixedRadius: source.fixedRadius,
     }
     return ret
 }

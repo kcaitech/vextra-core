@@ -40,7 +40,10 @@ export function export_shape(shapes: Shape[]) {
         } else if (type === ShapeType.Table) {
             content = exportTableShape(shape as unknown as types.TableShape);
         }
-        if (content) result.push(content);
+        if (content) {
+            content.style.contacts && (content.style.contacts = undefined);
+            result.push(content);
+        }
     }
     return result;
 }

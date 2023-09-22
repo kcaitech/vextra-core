@@ -1,0 +1,17 @@
+{
+  "description": "contact form",
+  "type": "object",
+  "properties": {
+    "contactType": {
+      "$ref": "./contact-type.json"
+    },
+    "shapeId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "contactType",
+    "shapeId"
+  ],
+  "additionalProperties": false
+}

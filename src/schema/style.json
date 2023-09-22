@@ -49,6 +49,12 @@
                 "$ref": "./shadow.json"
             }
         },
+        "contacts": {
+            "type": "array",
+            "items": {
+                "$ref": "./contact-role.json"
+            }
+        },
         "startMarkerType": {
             "$ref": "./marker-type.json"
         },

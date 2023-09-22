@@ -24,6 +24,8 @@ export {
     ExportFormatNameingScheme,
     ExportFileFormat,
     CurveMode,
+    ContactType,
+    ContactRoleType,
     BulletNumbersType,
     BulletNumbersBehavior,
     BorderPosition,
@@ -52,6 +54,8 @@ import {
     ExportFormatNameingScheme,
     ExportFileFormat,
     CurveMode,
+    ContactType,
+    ContactRoleType,
     BulletNumbersType,
     BulletNumbersBehavior,
     BorderPosition,
@@ -110,6 +114,7 @@ export class Style extends Basic {
     fills: BasicArray<Fill >
     innerShadows?: BasicArray<Shadow >
     shadows?: BasicArray<Shadow >
+    contacts?: BasicArray<ContactRole >
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     constructor(
@@ -561,6 +566,41 @@ export class ContextSettings extends Basic {
         super()
         this.blenMode = blenMode
         this.opacity = opacity
+    }
+}
+/**
+ * contactstyle 
+ */
+export class ContactRole extends Basic {
+    typeId = 'contact-role'
+    id: string
+    roleType: ContactRoleType
+    shapeId: string
+    constructor(
+        id: string,
+        roleType: ContactRoleType,
+        shapeId: string
+    ) {
+        super()
+        this.id = id
+        this.roleType = roleType
+        this.shapeId = shapeId
+    }
+}
+/**
+ * contact form 
+ */
+export class ContactForm extends Basic {
+    typeId = 'contact-form'
+    contactType: ContactType
+    shapeId: string
+    constructor(
+        contactType: ContactType,
+        shapeId: string
+    ) {
+        super()
+        this.contactType = contactType
+        this.shapeId = shapeId
     }
 }
 /**
@@ -1154,6 +1194,45 @@ export class FlattenShape extends GroupShape {
             style,
             childs
         )
+    }
+}
+/**
+ * contact shape 
+ */
+export class ContactShape extends Shape {
+    typeId = 'contact-shape'
+    points: BasicArray<CurvePoint >
+    from?: ContactForm
+    to?: ContactForm
+    isEdited: boolean
+    isClosed: boolean
+    mark: boolean
+    text: Text
+    fixedRadius?: number
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        points: BasicArray<CurvePoint >,
+        isClosed: boolean,
+        isEdited: boolean,
+        text: Text,
+        mark: boolean
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style
+        )
+        this.points = points
+        this.isClosed = isClosed
+        this.isEdited = isEdited
+        this.text = text
+        this.mark = mark
     }
 }
 /**

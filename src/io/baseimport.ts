@@ -109,6 +109,14 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         }
         return ret
     })()
+    if (source.contacts !== undefined) ret.contacts = (() => {
+        const ret = new BasicArray<impl.ContactRole>()
+        for (let i = 0, len = source.contacts && source.contacts.length; i < len; i++) {
+            const r = importContactRole(source.contacts[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (source.startMarkerType !== undefined) ret.startMarkerType = importMarkerType(source.startMarkerType, ctx)
     if (source.endMarkerType !== undefined) ret.endMarkerType = importMarkerType(source.endMarkerType, ctx)
     return ret
@@ -454,6 +462,31 @@ export function importContextSettings(source: types.ContextSettings, ctx?: IImpo
     const ret: impl.ContextSettings = new impl.ContextSettings (
         importBlendMode(source.blenMode, ctx),
         source.opacity
+    )
+    return ret
+}
+/* contact type */
+export function importContactType(source: types.ContactType, ctx?: IImportContext): impl.ContactType {
+    return source
+}
+/* contactstyle */
+export function importContactRole(source: types.ContactRole, ctx?: IImportContext): impl.ContactRole {
+    const ret: impl.ContactRole = new impl.ContactRole (
+        source.id,
+        importContactRoleType(source.roleType, ctx),
+        source.shapeId
+    )
+    return ret
+}
+/* contact role type */
+export function importContactRoleType(source: types.ContactRoleType, ctx?: IImportContext): impl.ContactRoleType {
+    return source
+}
+/* contact form */
+export function importContactForm(source: types.ContactForm, ctx?: IImportContext): impl.ContactForm {
+    const ret: impl.ContactForm = new impl.ContactForm (
+        importContactType(source.contactType, ctx),
+        source.shapeId
     )
     return ret
 }
@@ -1314,6 +1347,47 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
     const ret = importGroupShape(source, ctx);
     ret.isBoolOpShape = true;
     return ret;
+}
+/* contact shape */
+export function importContactShape(source: types.ContactShape, ctx?: IImportContext): impl.ContactShape {
+    const ret: impl.ContactShape = new impl.ContactShape (
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<impl.CurvePoint>()
+            for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const r = importCurvePoint(source.points[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.isClosed,
+        source.isEdited,
+        importText(source.text, ctx),
+        source.mark
+    )
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.from !== undefined) ret.from = importContactForm(source.from, ctx)
+    if (source.to !== undefined) ret.to = importContactForm(source.to, ctx)
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    return ret
 }
 /* artboard shape */
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {

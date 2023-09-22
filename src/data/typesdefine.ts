@@ -76,6 +76,7 @@ export type Style = {
     fills: Fill[]
     innerShadows?: Shadow[]
     shadows?: Shadow[]
+    contacts?: ContactRole[]
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
 }
@@ -150,6 +151,7 @@ export enum ShapeType {
     Line = 'line',
     Table = 'table',
     TableCell = 'table-cell',
+    Contact = 'contact',
 }
 /* shape frame
  * x,y为parent坐标系里的点
@@ -348,6 +350,29 @@ export enum CurveMode {
 export type ContextSettings = {
     blenMode: BlendMode
     opacity: number
+}
+/* contact type */
+export enum ContactType {
+    Top = 'top',
+    Right = 'right',
+    Bottom = 'bottom',
+    Left = 'left',
+}
+/* contactstyle */
+export type ContactRole = {
+    id: string
+    roleType: ContactRoleType
+    shapeId: string
+}
+/* contact role type */
+export enum ContactRoleType {
+    From = 'from',
+    To = 'to',
+}
+/* contact form */
+export type ContactForm = {
+    contactType: ContactType
+    shapeId: string
 }
 /* comment */
 export type Comment = {
@@ -550,6 +575,17 @@ export type SymbolShape = GroupShape & {
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {
+}
+/* contact shape */
+export type ContactShape = Shape & {
+    points: CurvePoint[]
+    from?: ContactForm
+    to?: ContactForm
+    isEdited: boolean
+    isClosed: boolean
+    mark: boolean
+    text: Text
+    fixedRadius?: number
 }
 /* artboard shape */
 export type Artboard = GroupShape & {

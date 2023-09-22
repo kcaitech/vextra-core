@@ -4,11 +4,15 @@ import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, OverrideItem, Ellipse, PathSegment } from "./baseclasses"
-import { ShapeType, CurvePoint, OverrideItem, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment } from "./baseclasses"
+import { ShapeType, CurvePoint, OverrideItem, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Point2D } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
+import { ContactForm, ContactType, CurveMode } from "./typesdefine";
+import { v4 } from "uuid";
+import { d, gen_baisc_params, gen_matrix1, gen_path, gen_raw, slice_invalid_point } from "./utils";
+import { Page } from "./page";
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 

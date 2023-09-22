@@ -1,6 +1,6 @@
 import { uuid } from "../basic/uuid";
 import * as classes from "./baseclasses"
-import { Blur, BorderOptions, ColorControls, ContextSettings, Shadow, WindingRule, FillType, Gradient, BorderPosition, BorderStyle, MarkerType } from "./baseclasses";
+import { Blur, BorderOptions, ColorControls, ContextSettings, Shadow, WindingRule, FillType, Gradient, BorderPosition, BorderStyle, MarkerType, ContactRole } from "./baseclasses";
 import { Basic, BasicArray, ResourceMgr } from "./basic";
 
 export {
@@ -24,7 +24,11 @@ export {
     ContextSettings,
     Shadow,
     GraphicsContextSettings,
-    BorderStyle
+    BorderStyle,
+    ContactForm,
+    ContactType,
+    ContactRole,
+    ContactRoleType
 } from "./baseclasses"
 
 export class Color extends classes.Color {
@@ -137,17 +141,18 @@ export class Style extends Basic implements classes.Style {
     windingRule?: WindingRule
     blur?: Blur
     borderOptions?: BorderOptions
-    borders: BasicArray<Border >
+    borders: BasicArray<Border>
     colorControls?: ColorControls
     contextSettings?: ContextSettings
-    fills: BasicArray<Fill >
-    innerShadows?: BasicArray<Shadow >
-    shadows?: BasicArray<Shadow >
+    fills: BasicArray<Fill>
+    innerShadows?: BasicArray<Shadow>
+    shadows?: BasicArray<Shadow>
+    contacts?: BasicArray<ContactRole>
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     constructor(
-        borders: BasicArray<Border >,
-        fills: BasicArray<Fill >
+        borders: BasicArray<Border>,
+        fills: BasicArray<Fill>
     ) {
         super()
         this.borders = borders
