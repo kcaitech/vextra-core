@@ -78,7 +78,7 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value?: (Color | number | string)
+    value?: (Color | Gradient | number | string)
     constructor(
         id: string,
         type: VariableType,
@@ -888,6 +888,7 @@ export class SymbolRefShape extends Shape {
     typeId = 'symbol-ref-shape'
     refId: string
     overrides: BasicArray<OverrideShape >
+    variables: BasicArray<Variable >
     constructor(
         id: string,
         name: string,
@@ -895,7 +896,8 @@ export class SymbolRefShape extends Shape {
         frame: ShapeFrame,
         style: Style,
         refId: string,
-        overrides: BasicArray<OverrideShape >
+        overrides: BasicArray<OverrideShape >,
+        variables: BasicArray<Variable >
     ) {
         super(
             id,
@@ -906,6 +908,7 @@ export class SymbolRefShape extends Shape {
         )
         this.refId = refId
         this.overrides = overrides
+        this.variables = variables
     }
 }
 /**
@@ -1201,14 +1204,15 @@ export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean
     unionSymbolRef?: string
-    variables?: BasicArray<Variable >
+    variables: BasicArray<Variable >
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >,
+        variables: BasicArray<Variable >
     ) {
         super(
             id,
@@ -1218,6 +1222,7 @@ export class SymbolShape extends GroupShape {
             style,
             childs
         )
+        this.variables = variables
     }
 }
 /**

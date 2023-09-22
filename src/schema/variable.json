@@ -17,6 +17,9 @@
                     "$ref": "./color.json"
                 },
                 {
+                    "$ref": "./gradient.json"
+                },
+                {
                     "type": "number"
                 },
                 {

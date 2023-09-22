@@ -30,6 +30,9 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
         if (val.typeId == 'color') {
             return importColor(val as types.Color, ctx)
         }
+        if (val.typeId == 'gradient') {
+            return importGradient(val as types.Gradient, ctx)
+        }
         {
             throw new Error('unknow val: ' + val)
         }
@@ -758,6 +761,14 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
                 if (r) ret.push(r)
             }
             return ret
+        })(),
+        (() => {
+            const ret = new BasicArray<impl.Variable>()
+            for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
+                const r = importVariable(source.variables[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
         })()
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
@@ -1384,6 +1395,14 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                 if (r) ret.push(r)
             }
             return ret
+        })(),
+        (() => {
+            const ret = new BasicArray<impl.Variable>()
+            for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
+                const r = importVariable(source.variables[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
         })()
     )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
@@ -1405,14 +1424,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
     if (source.unionSymbolRef !== undefined) ret.unionSymbolRef = source.unionSymbolRef
-    if (source.variables !== undefined) ret.variables = (() => {
-        const ret = new BasicArray<impl.Variable>()
-        for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
-            const r = importVariable(source.variables[i], ctx)
-            if (r) ret.push(r)
-        }
-        return ret
-    })()
     // inject code
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
     return ret;

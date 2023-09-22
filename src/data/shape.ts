@@ -329,9 +329,9 @@ export class FlattenShape extends GroupShape implements classes.FlattenShape {
 
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
     typeId = 'symbol-shape'
-    isUnionSymbolShape?: boolean
-    unionSymbolRef?: string
-    variables?: BasicArray<Variable >
+    isUnionSymbolShape?: boolean // 子对象都为SymbolShape
+    unionSymbolRef?: string // Variable:xxxxxx
+    variables: BasicArray<Variable > // 怎么做关联
 
     constructor(
         id: string,
@@ -339,7 +339,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<Shape >
+        childs: BasicArray<Shape >,
+        variables: BasicArray<Variable >
     ) {
         super(
             id,
@@ -349,6 +350,13 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             style,
             childs
         )
+        this.variables = variables;
+    }
+    addVariable() {
+
+    }
+    getVariable() {
+
     }
 }
 

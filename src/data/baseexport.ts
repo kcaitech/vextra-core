@@ -28,6 +28,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
             if (val.typeId == 'color') {
                 return exportColor(val as types.Color, ctx)
             }
+            if (val.typeId == 'gradient') {
+                return exportGradient(val as types.Gradient, ctx)
+            }
             {
                 throw new Error('unknow val: ' + val)
             }
@@ -322,6 +325,7 @@ export function exportGraphicsContextSettings(source: types.GraphicsContextSetti
 /* gradient */
 export function exportGradient(source: types.Gradient, ctx?: IExportContext): types.Gradient {
     const ret = {
+        typeId: source.typeId,
         elipseLength: source.elipseLength,
         from: exportPoint2D(source.from, ctx),
         to: exportPoint2D(source.to, ctx),
@@ -773,6 +777,14 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
             const ret = []
             for (let i = 0, len = source.overrides.length; i < len; i++) {
                 const r = exportOverrideShape(source.overrides[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        variables: (() => {
+            const ret = []
+            for (let i = 0, len = source.variables.length; i < len; i++) {
+                const r = exportVariable(source.variables[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -1367,7 +1379,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         isUnionSymbolShape: source.isUnionSymbolShape,
         unionSymbolRef: source.unionSymbolRef,
-        variables: source.variables && (() => {
+        variables: (() => {
             const ret = []
             for (let i = 0, len = source.variables.length; i < len; i++) {
                 const r = exportVariable(source.variables[i], ctx)

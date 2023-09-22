@@ -13,16 +13,16 @@ export type Variable = {
     id: string
     type: VariableType
     name: string
-    value?: (Color | number | string)
+    value?: (Color | Gradient | number | string)
 }
 /* variable types */
 export enum VariableType {
     Color = 'color',
+    Gradient = 'gradient',
     Text = 'text',
-    Fill = 'fill',
-    Border = 'border',
-    ShapeId = 'shapeId',
-    Num = 'num',
+    Visible = 'visible',
+    Instance = 'instance',
+    Status = 'status',
 }
 /* user infomation */
 export type UserInfo = {
@@ -263,6 +263,7 @@ export type GraphicsContextSettings = {
 }
 /* gradient */
 export type Gradient = {
+    typeId: string
     elipseLength: number
     from: Point2D
     to: Point2D
@@ -540,6 +541,7 @@ export type TableCell = Shape & {
 export type SymbolRefShape = Shape & {
     refId: string
     overrides: OverrideShape[]
+    variables: Variable[]
 }
 /* span attr */
 export type Span = SpanAttr & {
@@ -611,7 +613,7 @@ export type GroupShape = Shape & {
 export type SymbolShape = GroupShape & {
     isUnionSymbolShape?: boolean
     unionSymbolRef?: string
-    variables?: Variable[]
+    variables: Variable[]
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {

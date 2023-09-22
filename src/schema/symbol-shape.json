@@ -15,7 +15,9 @@
             }
         }
     },
-    "required": [],
+    "required": [
+        "variables"
+    ],
     "allOf": [
         {
             "$ref": "./group-shape.json"

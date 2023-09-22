@@ -6,7 +6,7 @@ export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType
 } from "./baseclasses"
-import { ShapeType, ShapeFrame, OverrideType } from "./baseclasses"
+import { ShapeType, ShapeFrame, OverrideType, Variable } from "./baseclasses"
 import { uuid } from "../basic/uuid";
 import { GroupShape, Shape } from "./shape";
 import { OverrideShape, OverridesGetter } from "./overrideshape";
@@ -19,8 +19,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     __symMgr?: ResourceMgr<GroupShape>
 
     typeId = 'symbol-ref-shape'
-    refId: string
+    refId: string // 得支持变量"Variable:xxxxxx"
     overrides: BasicArray<OverrideShape>
+    variables: BasicArray<Variable >
 
     __overridesMap?: Map<string, OverrideShape>;
     __proxyIdMap: Map<string, string> = new Map();
@@ -33,7 +34,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         frame: ShapeFrame,
         style: Style,
         refId: string,
-        overrides: BasicArray<OverrideShape>
+        overrides: BasicArray<OverrideShape>,
+        variables: BasicArray<Variable >
     ) {
         super(
             id,
@@ -44,6 +46,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         )
         this.refId = refId
         this.overrides = overrides
+        this.variables = variables;
     }
 
     mapId(id: string) {

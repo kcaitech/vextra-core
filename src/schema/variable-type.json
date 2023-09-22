@@ -2,10 +2,10 @@
     "description": "variable types",
     "enum": [
         "color",
+        "gradient",
         "text",
-        "fill",
-        "border",
-        "shapeId",
-        "num"
+        "visible",
+        "instance",
+        "status"
     ]
 }

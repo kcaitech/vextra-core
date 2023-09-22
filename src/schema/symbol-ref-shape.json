@@ -11,11 +11,18 @@
             "items": {
                 "$ref": "./override-shape.json"
             }
+        },
+        "variables": {
+            "type": "array",
+            "items": {
+                "$ref": "./variable.json"
+            }
         }
     },
     "required": [
         "refId",
-        "overrides"
+        "overrides",
+        "variables"
     ],
     "allOf": [
         {
