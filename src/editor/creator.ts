@@ -2,7 +2,7 @@ import { v4 as uuid } from "uuid";
 import { Page } from "../data/page";
 import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
-import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment } from "../data/shape";
+import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment, SymbolShape } from "../data/shape";
 import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
 import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape } from "../data/baseimport";
@@ -20,7 +20,8 @@ import {
     Span,
     ParaAttr,
     TextAttr,
-    BorderStyle
+    BorderStyle,
+    SymbolRefShape
 } from "../data/classes";
 import { BasicArray } from "../data/basic";
 import { Repository } from "../data/transact";
@@ -280,4 +281,12 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     shape.fixedRadius = 12;
     addCommonAttr(shape);
     return shape;
+}
+
+export function newSymbolShape(name: string, frame: ShapeFrame): SymbolShape {
+    return new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newStyle(), new BasicArray(), new BasicArray());
+}
+
+export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string): SymbolRefShape {
+    return new SymbolRefShape(uuid(), name, types.ShapeType.SymbolRef, frame, newStyle(), refId, new BasicArray(), new BasicArray());
 }
