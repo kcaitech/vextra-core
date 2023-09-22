@@ -2,7 +2,7 @@ import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/sh
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape } from "./creator";
+import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape, newSymbolShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
@@ -21,6 +21,7 @@ import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
 import { exportGroupShape, exportText } from "../data/baseexport";
 import * as types from "../data/typesdefine";
+import { SymbolShape } from "data/baseclasses";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -253,36 +254,33 @@ export class PageEditor {
      * 
      * @param shape 
      */
-    makeSymbol(shape: Shape, name?: string) {
+    makeSymbol(shapes: Shape[], name?: string) {
+        if (shapes.length === 0) return;
         const api = this.__repo.start("makeSymbol", {});
         try {
-            if (!(shape instanceof GroupShape)) {
-                const savep = shape.parent as GroupShape;
-                const saveidx = savep.indexOfChild(shape);
-                const gshape = newGroupShape(name ?? shape.name);
-                shape = group(this.__page, [shape], gshape, savep, saveidx, api);
+            let sym: Shape;
+            const shape0 = shapes[0];
+            if (shapes.length === 1 && shape0 instanceof GroupShape && !shape0.fixedRadius
+                && shape0.style.fills.length === 0 && shape0.style.borders.length === 0) {
+                const frame = shape0.frame;
+                const symbolShape = newSymbolShape(name ?? shape0.name, new ShapeFrame(frame.x, frame.y, frame.width, frame.height));
+                const index = (shape0.parent as GroupShape).indexOfChild(shape0);
+                api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
+                const childs = shape0.childs;
+                for (let i = 0, len = childs.length; i < len; ++i) {
+                    api.shapeMove(this.__page, shape0, i, symbolShape, i);
+                }
+                api.shapeDelete(this.__page, shape0.parent as GroupShape, index);
+                sym = (shape0.parent as GroupShape).childs[index];
             }
-            api.shapeModifySymbolShape(this.__page, shape as GroupShape, true);
+            else {
+                const frame = shape0.frame;
+                const symbolShape = newSymbolShape(name ?? shape0.name, new ShapeFrame(frame.x, frame.y, frame.width, frame.height));
+                const index = (shape0.parent as GroupShape).indexOfChild(shape0);
+                sym = group(this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
+            }
             this.__repo.commit();
-            return shape;
-        }
-        catch (e) {
-            console.log(e)
-            this.__repo.rollback();
-        }
-    }
-
-    /**
-     * 取消组件
-     * todo 考虑union symbol
-     * @param shape 
-     */
-    unSymbol(shape: GroupShape) {
-        const api = this.__repo.start("unSymbol", {});
-        try {
-            api.shapeModifySymbolShape(this.__page, shape, false);
-            this.__repo.commit();
-            return shape;
+            return sym as any as  SymbolShape;
         }
         catch (e) {
             console.log(e)
@@ -300,7 +298,7 @@ export class PageEditor {
         const symbol = shape.peekSymbol();
         if (!symbol) return;
         // 导出symbol
-        const symbolData = exportGroupShape(symbol);
+        const symbolData = exportGroupShape(symbol); // todo 如果symbol只有一个child时
         // 将override更新到导出的数据
         const shapeMap = new Map<string, types.Shape>();
         const add2map = (shape: types.Shape) => {
