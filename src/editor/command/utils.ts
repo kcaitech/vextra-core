@@ -1,7 +1,7 @@
-import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape } from "../../data/baseexport";
+import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape, exportSymbolShape } from "../../data/baseexport";
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
-import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, TextShape } from "../../data/shape";
+import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, TextShape } from "../../data/shape";
 import { TableCell, TableShape } from "../../data/table";
 import { ContactShape } from "../../data/contact";
 import { Page } from "../../data/page";
@@ -215,6 +215,7 @@ export function exportShape(shape: Shape): Object {
         case ShapeType.Table: return exportTableShape(shape as TableShape)
         case ShapeType.TableCell: return exportTableCell(shape as TableCell);
         case ShapeType.Contact: return exportContactShape(shape as ContactShape);
+        case ShapeType.Symbol: return exportSymbolShape(shape as SymbolShape);
         default: throw new Error("unknow shape type: " + shape.type)
     }
 }

@@ -284,7 +284,9 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
 }
 
 export function newSymbolShape(name: string, frame: ShapeFrame): SymbolShape {
-    return new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newStyle(), new BasicArray(), new BasicArray());
+    const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newStyle(), new BasicArray(), new BasicArray());
+    addCommonAttr(compo);
+    return compo;
 }
 
 export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string): SymbolRefShape {

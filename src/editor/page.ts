@@ -2,7 +2,7 @@ import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/sh
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape, newSymbolShape } from "./creator";
+import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape, newSymbolShape, newSymbolRefShape } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
@@ -280,7 +280,7 @@ export class PageEditor {
                 sym = group(this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
             }
             this.__repo.commit();
-            return sym as any as  SymbolShape;
+            return sym as any as SymbolShape;
         }
         catch (e) {
             console.log(e)
@@ -348,6 +348,10 @@ export class PageEditor {
             console.log(e)
             this.__repo.rollback();
         }
+    }
+
+    refSymbol(name: string, frame: ShapeFrame, refId: string) {
+        return newSymbolRefShape(name, frame, refId);
     }
 
     private cloneStyle(style: Style): Style {
