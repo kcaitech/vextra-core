@@ -1,11 +1,11 @@
 {
     "description": "override types",
     "enum": [
-        "stringValue",
         "text",
         "image",
         "fills",
         "borders",
-        "visible"
+        "visible",
+        "variable"
     ]
 }

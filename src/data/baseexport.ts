@@ -333,6 +333,15 @@ export function exportPadding(source: types.Padding, ctx?: IExportContext): type
     }
     return ret
 }
+/* override */
+export function exportOverride(source: types.Override, ctx?: IExportContext): types.Override {
+    const ret = {
+        refId: source.refId,
+        type: exportOverrideType(source.type, ctx),
+        varId: source.varId,
+    }
+    return ret
+}
 /* override types */
 export function exportOverrideType(source: types.OverrideType, ctx?: IExportContext): types.OverrideType {
     return source
@@ -819,7 +828,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         overrides: (() => {
             const ret = []
             for (let i = 0, len = source.overrides.length; i < len; i++) {
-                const r = exportOverrideShape(source.overrides[i], ctx)
+                const r = exportOverride(source.overrides[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -1136,18 +1145,10 @@ export function exportOverrideShape(source: types.OverrideShape, ctx?: IExportCo
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
-        refId: source.refId,
-        override_text: source.override_text,
-        override_image: source.override_image,
-        override_fills: source.override_fills,
-        override_borders: source.override_borders,
-        override_visible: source.override_visible,
         stringValue: source.stringValue,
         text: source.text && exportText(source.text, ctx),
         imageRef: source.imageRef,
     }
-    // inject code
-    if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
     return ret
 }
 /* oval shape */

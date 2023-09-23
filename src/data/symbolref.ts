@@ -4,27 +4,27 @@ import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
-    ShapeFrame, Ellipse, PathSegment, OverrideType
+    ShapeFrame, Ellipse, PathSegment, OverrideType, Override
 } from "./baseclasses"
-import { ShapeType, ShapeFrame, OverrideType, Variable } from "./baseclasses"
+import { ShapeType, ShapeFrame, OverrideType, Variable, Override } from "./baseclasses"
 import { uuid } from "../basic/uuid";
 import { GroupShape, Shape } from "./shape";
-import { OverrideShape, OverridesGetter } from "./overrideshape";
 import { proxyShape } from "./symproxy";
 import { Path } from "./path";
 import { layoutChilds } from "./symlayout";
+import { OverrideShape } from "./overrideshape";
 
-export class SymbolRefShape extends Shape implements classes.SymbolRefShape, OverridesGetter {
+export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     __data: GroupShape | undefined
     __symMgr?: ResourceMgr<GroupShape>
 
     typeId = 'symbol-ref-shape'
     refId: string // 得支持变量"Variable:xxxxxx"
-    overrides: BasicArray<OverrideShape>
-    variables: BasicArray<Variable >
+    overrides: BasicArray<Override>
+    variables: BasicArray<Variable>
 
-    private __varMap: Map<string, Variable>;
-    __overridesMap?: Map<string, OverrideShape>;
+    private __varMap?: Map<string, Variable>;
+    __overridesMap?: Map<string, Override>;
     __proxyIdMap: Map<string, string> = new Map();
     __childs?: Shape[];
 
@@ -35,8 +35,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         frame: ShapeFrame,
         style: Style,
         refId: string,
-        overrides: BasicArray<OverrideShape>,
-        variables: BasicArray<Variable >
+        overrides: BasicArray<Override>,
+        variables: BasicArray<Variable>
     ) {
         super(
             id,
@@ -48,7 +48,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         this.refId = refId
         this.overrides = overrides
         this.variables = variables;
-        this.__varMap = new Map(variables.map((v) => [v.id, v]))
     }
 
     mapId(id: string) {
@@ -59,17 +58,28 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         return _id;
     }
 
+    private __virtualShape?: OverrideShape;
+    private __proxyedVirtualShape?: Shape;
+    // 虚构一个OverrideShape, proxy?
+    // 修改text fills borders重定向到修改variable
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
-        if (targetId.length > 0) {
-            const shapeId = targetId[0] as string;
-            let shape = this.getOverrid(shapeId);
-            if (!shape) {
-                // throw new Error("shape not find");
-                shape = this.createOverrid(shapeId);
-            }
-            return shape.getTarget(targetId.slice(1));
+        if (targetId.length === 0) return this;
+
+        const refId = targetId[0] as string; // "xxxx/xxxx/xxxx" or "variable" or "override" or "fills" or "borders"
+        // [0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}
+        if (refId.length < 16) return this;
+
+        if (this.__virtualShape) {
+            this.__virtualShape.id = refId;
+            return this.__proxyedVirtualShape!;
         }
-        return this;
+        this.__virtualShape = new OverrideShape(refId,
+            "",
+            ShapeType.OverrideShape,
+            new ShapeFrame(0, 0, 0, 0),
+            new Style(new BasicArray(), new BasicArray()));
+        this.__proxyedVirtualShape = proxyShape(this.__virtualShape, this, [this]);
+        return this.__proxyedVirtualShape;
     }
 
     private get overrideMap() {
@@ -113,7 +123,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
     get virtualChilds(): Shape[] | undefined {
         // return this._virtualChilds;
         if (this.__childs) return this.__childs;
-        this.__childs = this.getVirtualChilds(this.overridesGetter, this);
+        this.__childs = this.getVirtualChilds(this.symRefs, this);
         return this.__childs;
     }
 
@@ -161,97 +171,82 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
         return this.__data;
     }
 
-    private createOverrid(refId: string) {
-        let override = new OverrideShape(uuid(), "",
-            ShapeType.OverrideShape,
-            new ShapeFrame(0, 0, 0, 0),
-            new Style(new BasicArray(), new BasicArray()),
-            refId);
-        this.overrides.push(override);
-        override = this.overrides[this.overrides.length - 1];
+    private _createVar(type: OverrideType) {
+        switch (type) {
+            case OverrideType.Borders:
+                return new Variable(uuid(), classes.VariableType.Borders, "");
+            case OverrideType.Fills:
+                return new Variable(uuid(), classes.VariableType.Fills, "");
+            case OverrideType.Image:
+                return new Variable(uuid(), classes.VariableType.ImageRef, "");
+            // case OverrideType.StringValue:
+            //     return new Variable(uuid(), classes.VariableType.StringValue, "");
+            case OverrideType.Text:
+                return new Variable(uuid(), classes.VariableType.Text, "");
+            case OverrideType.Visible:
+                return new Variable(uuid(), classes.VariableType.Visible, "");
+            default:
+                throw new Error("unknow override type: " + type)
+        }
+    }
+
+    private createVar(type: OverrideType) {
+        const v = this._createVar(type);
+        this.addVar(v);
+        return v;
+    }
+
+    private createOverrid(refId: string, type: OverrideType) {
+
+        refId = refId + '/' + type; // id+type->var
+
+        const v = this.createVar(type);
+        let over = new Override(refId, type, v.id);
+
+        this.overrides.push(over);
+        over = this.overrides[this.overrides.length - 1];
 
         if (this.__overridesMap) {
-            this.__overridesMap.set(refId, override);
+            this.__overridesMap.set(refId, over);
         }
 
-        return override;
+        return { over, v };
     }
 
     // overrideValues
     addOverrid(refId: string, attr: OverrideType, value: any) {
         switch (attr) {
             case OverrideType.Text:
-                {
-                    let override = this.getOverrid(refId);
-                    if (!override) {
-                        override = this.createOverrid(refId);
-                    }
-                    override.text = value;
-                    override.__stringValue_text = undefined;
-                    override.stringValue = undefined;
-                    override.override_text = true;
-                    return override;
-                }
-            case OverrideType.StringValue:
-                {
-                    let override = this.getOverrid(refId);
-                    if (!override) {
-                        override = this.createOverrid(refId);
-                    }
-                    override.stringValue = value;
-                    override.override_text = true;
-                    return override;
-                }
+            // case OverrideType.StringValue:
             case OverrideType.Image:
-                {
-                    let override = this.getOverrid(refId);
-                    if (!override) {
-                        override = this.createOverrid(refId);
-                    }
-                    override.imageRef = value;
-                    override.override_image = true;
-                    return override;
-                }
             case OverrideType.Borders:
-                {
-                    let override = this.getOverrid(refId);
-                    if (!override) {
-                        override = this.createOverrid(refId);
-                    }
-                    override.style.borders = value;
-                    override.override_borders = true;
-                    return override;
-                }
             case OverrideType.Fills:
-                {
-                    let override = this.getOverrid(refId);
-                    if (!override) {
-                        override = this.createOverrid(refId);
-                    }
-                    override.style.fills = value;
-                    override.override_fills = true;
-                    return override;
-                }
             case OverrideType.Visible:
                 {
-                    let override = this.getOverrid(refId);
+                    let override = this.getOverrid(refId, attr);
                     if (!override) {
-                        override = this.createOverrid(refId);
+                        override = this.createOverrid(refId, attr);
                     }
-                    override.isVisible = value;
-                    override.override_visible = true;
+                    override.v.value = value;
                     return override;
                 }
             default:
                 console.error("unknow override: " + attr, value)
         }
-
     }
-    getOverrid(id: string): OverrideShape | undefined {
-        // for (let i = 0, len = this.overrides.length; i < len; ++i) {
-        //     if (this.overrides[i].refId === id) return this.overrides[i];
-        // }
-        return this.overrideMap.get(id);
+
+    private get varMap() { // 不可以构造时就初始化，这时的var没有proxy
+        if (!this.__varMap) this.__varMap = new Map(this.variables.map((v) => [v.id, v]));
+        return this.__varMap;
+    }
+
+    getOverrid(refId: string, type: OverrideType): { over: Override, v: Variable } | undefined {
+        refId = refId + '/' + type; // id+type->var
+        const over = this.overrideMap.get(refId);
+        if (over) {
+            const v = this.varMap.get(over.varId);
+            if (v) return { over, v }
+        }
     }
 
     onRemoved(): void {
@@ -302,24 +297,54 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape, Ove
 
     addVar(v: Variable) {
         this.variables.push(v);
-        this.__varMap.set(v.id, v);
+        if (this.__varMap) this.__varMap.set(v.id, this.variables[this.variables.length - 1]);
     }
     removeVar(varId: string) {
-        const v = this.__varMap.get(varId);
+        const v = this.varMap.get(varId);
         if (v) {
             const i = this.variables.findIndex((v) => v.id === varId)
             this.variables.splice(i, 1);
-            this.__varMap.delete(varId);
+            this.varMap.delete(varId);
         }
         return v;
     }
     getVar(varId: string) {
-        return this.__varMap.get(varId);
+        return this.varMap.get(varId);
     }
 
     findVar(varId: string): Variable | undefined {
         const v = this.parent?.findVar(varId); // 父级的优先
         if (v) return v;
         return this.getVar(varId);
+    }
+
+    addOverrideAt(over: Override, index: number) {
+        this.overrides.splice(index, 0, over);
+        if (this.__overridesMap) {
+            this.__overridesMap.set(over.refId, over);
+        }
+    }
+    deleteOverrideAt(idx: number) {
+        const ret = this.overrides.splice(idx, 1)[0];
+        if (ret && this.__overridesMap) {
+            this.__overridesMap.delete(ret.refId);
+        }
+        return ret;
+    }
+    
+    addVariableAt(_var: Variable, index: number) {
+        this.variables.splice(index, 0, _var);
+        if (this.__varMap) {
+            this.__varMap.set(_var.id, this.variables[index]);
+        }
+    }
+    deleteVariableAt(idx: number) {
+        const ret = this.variables.splice(idx, 1)[0];
+        if (ret && this.__varMap) {
+            this.__varMap.delete(ret.id);
+        }
+    }
+    modifyVariableAt(idx: number, value: any) {
+        this.variables[idx].value = value;
     }
 }

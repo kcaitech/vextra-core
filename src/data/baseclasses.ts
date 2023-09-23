@@ -364,6 +364,25 @@ export class Padding extends Basic {
     }
 }
 /**
+ * override 
+ */
+export class Override extends Basic {
+    typeId = 'override'
+    refId: string
+    type: OverrideType
+    varId: string
+    constructor(
+        refId: string,
+        type: OverrideType,
+        varId: string
+    ) {
+        super()
+        this.refId = refId
+        this.type = type
+        this.varId = varId
+    }
+}
+/**
  * graphics contex settings 
  */
 export class GraphicsContextSettings extends Basic {
@@ -888,7 +907,7 @@ export class TableCell extends Shape {
 export class SymbolRefShape extends Shape {
     typeId = 'symbol-ref-shape'
     refId: string
-    overrides: BasicArray<OverrideShape >
+    overrides: BasicArray<Override >
     variables: BasicArray<Variable >
     constructor(
         id: string,
@@ -897,7 +916,7 @@ export class SymbolRefShape extends Shape {
         frame: ShapeFrame,
         style: Style,
         refId: string,
-        overrides: BasicArray<OverrideShape >,
+        overrides: BasicArray<Override >,
         variables: BasicArray<Variable >
     ) {
         super(
@@ -1064,12 +1083,6 @@ export class Page extends Shape {
  */
 export class OverrideShape extends Shape {
     typeId = 'override-shape'
-    refId: string
-    override_text?: boolean
-    override_image?: boolean
-    override_fills?: boolean
-    override_borders?: boolean
-    override_visible?: boolean
     stringValue?: string
     text?: Text
     imageRef?: string
@@ -1078,8 +1091,7 @@ export class OverrideShape extends Shape {
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
-        style: Style,
-        refId: string
+        style: Style
     ) {
         super(
             id,
@@ -1088,7 +1100,6 @@ export class OverrideShape extends Shape {
             frame,
             style
         )
-        this.refId = refId
     }
 }
 /**

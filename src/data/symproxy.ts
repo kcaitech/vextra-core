@@ -1,15 +1,16 @@
 import { Border, Fill, Style } from "./style";
-import { Text } from "./text";
+import { Para, ParaAttr, Span, Text } from "./text";
 import { BasicArray, Watchable } from "./basic";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
-import { ShapeFrame, OverrideType, CurvePoint, TextBehaviour } from "./baseclasses"
+import { ShapeFrame, OverrideType, CurvePoint, TextBehaviour, Override, Point2D } from "./baseclasses"
 import { GroupShape, Shape, TextShape } from "./shape";
 import { importBorder, importCurvePoint, importFill, importText } from "./baseimport";
-import { OverrideShape } from "./overrideshape";
 import { SymbolRefShape } from "./symbolref";
+import { Variable } from "./typesdefine";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 
 export class ForbiddenError extends Error { }
 
@@ -59,31 +60,13 @@ function genRefId(symRef: SymbolRefShape[], shapeId: string, i: number = 1) {
     return refId;
 }
 
-export function findOverride(symRef: SymbolRefShape[], id: string, type: OverrideType) {
-
+export function findOverride(symRef: SymbolRefShape[], id: string, type: OverrideType): { v: Variable, i: number } | undefined {
     for (let i = 0, len = symRef.length; i < len; ++i) {
         const getter = symRef[i];
         const refId = genRefId(symRef, id, i + 1);
-        const override = getter.getOverrid(refId);
+        const override = getter.getOverrid(refId, type);
         if (!override) continue;
-        switch (type) {
-            case OverrideType.Borders:
-                if (override.override_borders) return { override, i };
-                break;
-            case OverrideType.Fills:
-                if (override.override_fills) return { override, i };
-                break;
-            case OverrideType.Image:
-                if (override.override_image) return { override, i };
-                break;
-            case OverrideType.StringValue:
-            case OverrideType.Text:
-                if (override.override_text) return { override, i };
-                break;
-            case OverrideType.Visible:
-                if (override.override_visible) return { override, i };
-                break;
-        }
+        return { v: override.v, i };
     }
 }
 
@@ -92,7 +75,6 @@ class StyleHdl extends FreezHdl {
     __parent: Shape; // proxyed shape
     __parentHdl: ShapeHdl;
     __shape: Shape;
-    __override?: OverrideShape; // 当前shape的override对象
 
     __fills?: Fill[];
     __borders?: Border[];
@@ -103,93 +85,40 @@ class StyleHdl extends FreezHdl {
         this.__shape = shape;
         this.__parent = parent;
         this.__parentHdl = parentHdl;
-        // this.__override = symRef.getOverrid(shape.id);
     }
-    private get _style(): Style {
+
+    private get style(): Style {
         return this.__target as Style;
-    }
-
-    overrideFills(curFills: Fill[]): Fill[] { // 需要生成command
-        const imgMgr = this.__symRef[0].getImageMgr();
-        const fills = new BasicArray<Fill>();
-        curFills.forEach((v) => {
-            const fill = importFill(v);
-            if (imgMgr) fill.setImageMgr(imgMgr);
-            fills.push(fill);
-        })
-        this.__override = this.__symRef[0].addOverrid(genRefId(this.__symRef, this.__shape.id), OverrideType.Fills, fills)!;
-        this.__parentHdl.updateOverrides(this.__override, OverrideType.Fills);
-        this.__fills = undefined;
-        return this.__override.style.fills;
-    }
-
-    overrideBorders(curBorders: Border[]): Border[] { // 需要生成command
-        const borders = new BasicArray<Border>();
-        curBorders.forEach((v) => {
-            const border = importBorder(v);
-            borders.push(border);
-        })
-        this.__override = this.__symRef[0].addOverrid(genRefId(this.__symRef, this.__shape.id), OverrideType.Borders, borders)!;
-        this.__parentHdl.updateOverrides(this.__override, OverrideType.Borders);
-        this.__borders = undefined;
-        return this.__override.style.borders;
     }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
         if (propStr === 'parent' || propStr === '__parent') return this.__parent;
-        if (propStr === 'overrideFills') {
-            if (!this.__override) {
-                const refId = genRefId(this.__symRef, this.__shape.id)
-                this.__override = this.__symRef[0].getOverrid(refId);
-            }
-            if (this.__override && this.__override.override_fills) {
-                this.__parentHdl.updateOverrides(this.__override, OverrideType.Fills);
-                return;
-            }
-            const o = findOverride(this.__symRef, this.__shape.id, OverrideType.Fills);
-            let fills = (this.__target as Style).fills;
-            if (o) fills = o.override.style.fills;
-            return this.overrideFills(fills);
-        }
-
-        if (propStr === 'overrideBorders') {
-            if (!this.__override) {
-                const refId = genRefId(this.__symRef, this.__shape.id)
-                this.__override = this.__symRef[0].getOverrid(refId);
-            }
-            if (this.__override && this.__override.override_borders) {
-                this.__parentHdl.updateOverrides(this.__override, OverrideType.Borders);
-                return;
-            }
-            const o = findOverride(this.__symRef, this.__shape.id, OverrideType.Borders);
-            let borders = (this.__target as Style).borders;
-            if (o) borders = o.override.style.borders;
-            return this.overrideBorders(borders);
-        }
 
         if (propStr === 'fills') {
-            if (this.__override && this.__override.override_fills) return this.__override.style.fills;
             if (this.__fills) return this.__fills;
             const o = findOverride(this.__symRef, this.__shape.id, OverrideType.Fills);
-            let fills = (this.__target as Style).fills;
+            let fills: Fill[] = this.style.fills;
             if (o) {
-                fills = o.override.style.fills;
-                if (o.i === 0 && !this.__override) this.__override = o.override;
-                this.__parentHdl.updateOverrides(o.override, OverrideType.Fills);
+                if (o.i === 0) {
+                    this.__fills = o.v.value as Fill[];
+                    return this.__fills;
+                }
+                fills = o.v.value as Fill[];
             }
             this.__fills = fills.map<Fill>((v) => new Proxy<Fill>(v, new FreezHdl(v)));
             return this.__fills;
         }
         if (propStr === 'borders') {
-            if (this.__override && this.__override.override_borders) return this.__override.style.borders;
             if (this.__borders) return this.__borders;
             const o = findOverride(this.__symRef, this.__shape.id, OverrideType.Borders);
-            let borders = (this.__target as Style).borders;
+            let borders: Border[] = this.style.borders;
             if (o) {
-                borders = o.override.style.borders;
-                if (o.i === 0 && !this.__override) this.__override = o.override;
-                this.__parentHdl.updateOverrides(o.override, OverrideType.Borders);
+                if (o.i === 0) {
+                    this.__borders = o.v.value as Border[];
+                    return this.__borders;
+                }
+                borders = o.v.value as Border[];
             }
             this.__borders = borders.map((v) => new Proxy<Border>(v, new FreezHdl(v)));
             return this.__borders;
@@ -198,12 +127,23 @@ class StyleHdl extends FreezHdl {
     }
 }
 
+function isDiffPoint(p0: Point2D, p1: Point2D) {
+    return p0.x !== p1.x || p0.y !== p1.y;
+}
+
 class ShapeHdl extends Watchable(FreezHdl) {
     __thisProxy?: Shape; // 由外面赋值。proxy对象依赖于handler，需要实例化proxy后才能赋值
     __symRef: SymbolRefShape[];
     __target: Shape;
     __parent: Shape;
     __style?: Style;
+    __styleHdl?: StyleHdl;
+
+    __save_frame: ShapeFrame;
+    __save_rotation: number;
+    __save_isFlippedHorizontal: boolean;
+    __save_isFlippedVertical: boolean;
+    __save_points: CurvePoint[] | undefined;
 
     // 布局相关属性
     __frame: ShapeFrame;
@@ -212,31 +152,32 @@ class ShapeHdl extends Watchable(FreezHdl) {
     __isFlippedVertical: boolean;
     __points: CurvePoint[] | undefined;
 
-    // overrides
-    __overrides: { [key: string]: OverrideShape } = {}
-    updateOverrides(override: OverrideShape, type: OverrideType) {
-        const old = this.__overrides[type];
-        if (old) {
-            if (old.id === override.id) return;
-            old.unwatch(this.override_watcher);
-        }
-        this.__overrides[type] = override;
-        override.watch(this.override_watcher);
-    }
+    // cache
+    private __visible: { value: boolean } | undefined
+    private __id: string;
+    protected __refId: string;
 
     origin_watcher(...args: any[]) {
 
+        // 清除cache
+        if (this.__styleHdl) {
+            this.__styleHdl.__borders = undefined;
+            this.__styleHdl.__fills = undefined;
+        }
+
         // todo 布局属性更改后要重新布局
         // todo 需要优化！
-        this.__symRef[0].reLayout(); // 
-        // super.notify(...args);
+        if (this.checkRelayout()) this.__symRef[0].reLayout(); // 重排&重绘
+        else super.notify(...args);
     }
-    override_watcher(...args: any[]) {
-        // todo
-        super.notify(...args);
-    }
+
     symref_watcher(...args: any[]) {
-        super.notify(...args);
+        if (this.__styleHdl) {
+            this.__styleHdl.__borders = undefined;
+            this.__styleHdl.__fills = undefined;
+        }
+        // todo 优化？
+        super.notify(...args); // 重绘
     }
 
     constructor(symRef: SymbolRefShape[], target: Shape, parent: Shape) {
@@ -245,8 +186,8 @@ class ShapeHdl extends Watchable(FreezHdl) {
         this.__target = target;
         this.__parent = parent;
         this.origin_watcher = this.origin_watcher.bind(this);
-        this.override_watcher = this.override_watcher.bind(this);
         this.symref_watcher = this.symref_watcher.bind(this);
+        this.override = this.override.bind(this);
 
         // watch unwatch
         this.watch = this.watch.bind(this);
@@ -261,6 +202,82 @@ class ShapeHdl extends Watchable(FreezHdl) {
         this.__isFlippedHorizontal = target.isFlippedHorizontal ?? false;
         this.__isFlippedVertical = target.isFlippedVertical ?? false;
         this.__points = (target as any).points ? (target as any).points.map((p: CurvePoint) => importCurvePoint(p)) : undefined;
+
+        this.__save_frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+        this.__save_rotation = target.rotation ?? 0;
+        this.__save_isFlippedHorizontal = target.isFlippedHorizontal ?? false;
+        this.__save_isFlippedVertical = target.isFlippedVertical ?? false;
+        this.__save_points = (target as any).points ? (target as any).points.map((p: CurvePoint) => importCurvePoint(p)) : undefined;
+    
+        this.__refId = genRefId(symRef, target.id);
+        this.__id = this.__symRef[0].mapId(this.__refId);
+    }
+
+    checkRelayout() {
+        const target = this.__target;
+        const frame = target.frame;
+        let needRelayout: boolean = false;
+        for (; ;) {
+            if (this.__save_frame.x !== frame.x ||
+                this.__save_frame.y !== frame.y ||
+                this.__save_frame.width !== frame.width ||
+                this.__save_frame.height !== frame.height) {
+                needRelayout = true;
+                break;
+            }
+            if (this.__save_rotation !== target.rotation) {
+                needRelayout = true;
+                break;
+            }
+            if (this.__save_isFlippedHorizontal !== target.isFlippedHorizontal) {
+                needRelayout = true;
+                break;
+            }
+            if (this.__save_isFlippedVertical !== target.isFlippedVertical) {
+                needRelayout = true;
+                break;
+            }
+            if (this.__save_points === undefined) {
+                if ((target as any).points !== undefined) {
+                    needRelayout = true;
+                    break;
+                }
+            }
+            else if ((target as any).points === undefined) {
+                needRelayout = true;
+                break;
+            }
+            else if (this.__save_points.length !== (target as any).points.length) {
+                needRelayout = true;
+                break;
+            }
+            else {
+                const points = (target as any).points;
+                const save_points = this.__save_points;
+                for (let i = 0, len = save_points.length; i < len; ++i) {
+                    const p0 = points[i] as CurvePoint;
+                    const p1 = save_points[i];
+                    if (isDiffPoint(p0.point, p1.point) ||
+                        isDiffPoint(p0.curveFrom, p1.curveFrom) ||
+                        isDiffPoint(p0.curveTo, p1.curveTo) ||
+                        p0.hasCurveFrom !== p1.hasCurveFrom ||
+                        p0.hasCurveTo !== p1.hasCurveTo ||
+                        p0.cornerRadius !== p1.cornerRadius ||
+                        p0.curveMode !== p1.curveMode) {
+                        needRelayout = true;
+                        break;
+                    }
+                }
+                if (needRelayout) break;
+            }
+            break;
+        }
+        this.__save_frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+        this.__save_rotation = target.rotation ?? 0;
+        this.__save_isFlippedHorizontal = target.isFlippedHorizontal ?? false;
+        this.__save_isFlippedVertical = target.isFlippedVertical ?? false;
+        this.__save_points = (target as any).points ? (target as any).points.map((p: CurvePoint) => importCurvePoint(p)) : undefined;
+        return needRelayout;
     }
 
     onRemoved() {
@@ -269,19 +286,66 @@ class ShapeHdl extends Watchable(FreezHdl) {
         Object.keys(this.__overrides).forEach((key: string) => this.__overrides[key].unwatch(this.override_watcher));
     }
 
+    override(type: OverrideType): { container: Shape, over: Override, v: Variable } | undefined {
+        switch (type) {
+            case OverrideType.Borders:
+                {
+                    const o = findOverride(this.__symRef, this.__target.id, OverrideType.Borders);
+                    if (o && o.i === 0) return;
+                    let curborders: Border[] = this.__target.style.borders;
+                    if (o) curborders = o.v.value as Border[];
+                    const borders = new BasicArray<Border>();
+                    curborders.forEach((v) => {
+                        const border = importBorder(v);
+                        borders.push(border);
+                    })
+                    const override = this.__symRef[0].addOverrid(this.__refId, OverrideType.Borders, borders)!;
+                    // 清除cache
+                    if (this.__styleHdl) this.__styleHdl.__borders = undefined;
+                    return { container: this.__symRef[0], over: override.over, v: override.v };
+                }
+            case OverrideType.Fills:
+                {
+                    const o = findOverride(this.__symRef, this.__target.id, OverrideType.Fills);
+                    if (o && o.i === 0) return;
+                    let curfills: Fill[] = this.__target.style.fills;
+                    if (o) curfills = o.v.value as Fill[];
+                    const imgMgr = this.__symRef[0].getImageMgr();
+                    const fills = new BasicArray<Fill>();
+                    curfills.forEach((v) => {
+                        const fill = importFill(v);
+                        if (imgMgr) fill.setImageMgr(imgMgr);
+                        fills.push(fill);
+                    })
+                    const override = this.__symRef[0].addOverrid(this.__refId, OverrideType.Fills, fills)!;
+
+                    // 清除cache
+                    if (this.__styleHdl) this.__styleHdl.__fills = undefined;
+                    return { container: this.__symRef[0], over: override.over, v: override.v };
+                }
+            case OverrideType.Visible:
+                {
+                    const o = findOverride(this.__symRef, this.__target.id, OverrideType.Visible);
+                    if (o && o.i === 0) return;
+                    let visible = this.__target.isVisible;
+                    if (o) visible = o.v.value as boolean;
+                    this.__visible = undefined;
+                    const override = this.__symRef[0].addOverrid(this.__refId, OverrideType.Visible, visible)!;
+                    return { container: this.__symRef[0], over: override.over, v: override.v };
+                }
+        }
+    }
+
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
         const propStr = propertyKey.toString();
-        if (propStr === "isVisible") {
-            const refId = genRefId(this.__symRef, this.__target.id);
-            let override = this.__symRef[0].getOverrid(refId);
-            if (!override) {
-                override = this.__symRef[0].addOverrid(refId, OverrideType.Visible, value)!;
-            } else {
-                override.override_visible = true;
-                override.isVisible = value;
+        if (propStr === 'isVisible') {
+            const o = findOverride(this.__symRef, this.__target.id, OverrideType.Visible);
+            if (o && o.i === 0) {
+                o.v.value = value;
+                this.__visible = { value } // todo notify?
+                return true;
             }
-            this.updateOverrides(override, OverrideType.Visible);
-            return true;
+            throw new ForbiddenError("forbid set: " + propertyKey.toString());
         }
         if (propStr === 'rotation') {
             this.__rotation = value;
@@ -300,28 +364,30 @@ class ShapeHdl extends Watchable(FreezHdl) {
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
-        if (propStr === 'id') return this.__symRef[0].mapId(genRefId(this.__symRef, this.__target.id));
-        if (propStr === 'shapeId') return [this.__symRef[0].id, this.__target.id];
+        if (propStr === 'isVirtualShape') return true;
+        if (propStr === 'originId') return this.__target.id;
+        if (propStr === 'id') return this.__id;
+        if (propStr === 'shapeId') return [this.__symRef[0].id, this.__refId];
         if (propStr === 'parent' || propStr === '__parent') return this.__parent;
         if (propStr === 'frame') { // 外面编辑需要修改，但又不可以修改target的
             return this.__frame;
         }
         if (propStr === 'style') {
             if (this.__style) return this.__style;
-            this.__style = new Proxy<Style>(this.__target.style, new StyleHdl(this.__symRef, this.__target, this.__target.style, this.__thisProxy!, this));
+            this.__styleHdl = new StyleHdl(this.__symRef, this.__target, this.__target.style, this.__thisProxy!, this);
+            this.__style = new Proxy<Style>(this.__target.style, this.__styleHdl);
             return this.__style;
         }
-        if (propStr === 'overridesGetter') {
+        if (propStr === 'symRefs') {
             return this.__symRef;
         }
         if (propStr === "isVisible") {
+            if (this.__visible) return this.__visible.value;
             const o = findOverride(this.__symRef, this.__target.id, OverrideType.Visible);
-            const override = o?.override;
-            if (override && override.override_visible) {
-                this.updateOverrides(override, OverrideType.Visible);
-                return override.isVisible;
-            }
-            return this.__target.isVisible;
+            let visible = this.__target.isVisible;
+            if (o) visible = o.v.value as boolean;
+            this.__visible = { value: !!visible }
+            return this.__visible.value;
         }
         if (propStr === 'rotation') {
             return this.__rotation;
@@ -346,6 +412,9 @@ class ShapeHdl extends Watchable(FreezHdl) {
         if (propStr === "unwatch") {
             return this.unwatch;
         }
+        if (propStr === 'override') {
+            return this.override;
+        }
         return super.get(target, propertyKey, receiver);
     }
 }
@@ -367,10 +436,24 @@ class GroupShapeHdl extends ShapeHdl {
     origin_watcher(...args: any[]): void {
         super.origin_watcher(args);
         if (this.__childs) {
-            // todo compare
-
-            this.__childs.forEach((c: any) => c.remove)
-            this.__childs = undefined;
+            const childs = (this.__target as GroupShape).childs;
+            const _childs = this.__childs;
+            if (_childs.length > childs.length) {
+                // 回收多余的
+                for (let i = childs.length, len = _childs.length; i < len; ++i) {
+                    (_childs[i] as any).remove;
+                }
+            }
+            _childs.length = childs.length;
+            for (let i = 0, len = childs.length; i < len; ++i) {
+                const c = _childs[i]; // 可能undefined
+                const origin = childs[i];
+                if (c && (c as any).originId === origin.id) {
+                    continue;
+                }
+                if (c) (c as any).remove;
+                _childs[i] = proxyShape(origin, this.__thisProxy!, this.__symRef);
+            }
         }
     }
 
@@ -384,9 +467,6 @@ class GroupShapeHdl extends ShapeHdl {
 }
 
 class SymbolRefHdl extends ShapeHdl {
-    // __thisProxy?: SymbolRefShape; // 由外面赋值。proxy对象依赖于handler，需要实例化proxy后才能赋值
-    __childs?: Shape[];
-
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
         if (propStr === 'virtualChilds') {
@@ -397,14 +477,30 @@ class SymbolRefHdl extends ShapeHdl {
         return super.get(target, propertyKey, receiver);
     }
 
-    origin_watcher(...args: any[]): void {
-        super.origin_watcher(args);
-        if (this.__childs) {
-            // todo compare
-
-            this.__childs.forEach((c: any) => c.remove)
-            this.__childs = undefined;
+    checkRelayout(): boolean {
+        if (super.checkRelayout()) return true;
+        if (!this.__childs) return false;
+        const childs = (this.__target as SymbolRefShape).__data?.childs ?? [];
+        const _childs = this.__childs;
+        let needRelayout: boolean = false;
+        for (; ;) {
+            if (this.__childs.length !== childs.length) {
+                // 回收多余的
+                needRelayout = true;
+                break;
+            }
+            for (let i = 0, len = childs.length; i < len; ++i) {
+                const c = _childs[i]; // 可能undefined
+                const origin = childs[i];
+                if (c && (c as any).originId === origin.id) {
+                    continue;
+                }
+                needRelayout = true;
+                break;
+            }
+            break;
         }
+        return needRelayout;
     }
 
     onRemoved(): void {
@@ -416,95 +512,114 @@ class SymbolRefHdl extends ShapeHdl {
     }
 }
 
+function createTextByString(stringValue: string, refShape: TextShape) {
+    const text = new Text(new BasicArray());
+    if (refShape.text.attr) {
+        mergeTextAttr(text, refShape.text.attr);
+    }
+    const para = new Para('\n', new BasicArray());
+    para.attr = new ParaAttr();
+    text.paras.push(para);
+    const span = new Span(para.length);
+    para.spans.push(span);
+    mergeParaAttr(para, refShape.text.paras[0]);
+    mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
+    text.insertText(stringValue, 0);
+    return text;
+}
+
+const DefaultFontSize = Text.DefaultFontSize;
+export function fixTextShapeFrameByLayout(text: Text, frame: ShapeFrame) {
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    switch (textBehaviour) {
+        case TextBehaviour.FixWidthAndHeight: break;
+        case TextBehaviour.Fixed:
+            {
+                const layout = text.getLayout();
+                const fontsize = text.attr?.fontSize ?? DefaultFontSize;
+                frame.height = Math.max(fontsize, layout.contentHeight);
+                break;
+            }
+        case TextBehaviour.Flexible:
+            {
+                const layout = text.getLayout();
+                const fontsize = text.attr?.fontSize ?? DefaultFontSize;
+                frame.width = Math.max(fontsize, layout.contentWidth);
+                frame.height = Math.max(fontsize, layout.contentHeight);
+                break;
+            }
+    }
+}
+
 class TextShapeHdl extends ShapeHdl {
 
-    __override: OverrideShape | undefined;
-    __text: Text;
-    __freezText?: Text;
+    __text?: Text;
 
     constructor(symRef: SymbolRefShape[], target: TextShape, parent: Shape) {
         super(symRef, target, parent);
         this.__symRef = symRef;
         this.__target = target;
         this.__parent = parent;
-        this.__text = new Proxy<Text>(target.text, new FreezHdl(target.text));
+        this.updateSize = this.updateSize.bind(this);
     }
 
-    overrideText(curText: Text): Text { // 需要生成command
-        const text = importText(curText); // clone
-        this.__override = this.__symRef[0].addOverrid(genRefId(this.__symRef, this.__target.id), OverrideType.Text, text)!;
-        return this.__override.text!;
-    }
-
-    getText() {
-        if (this.__override &&
-            this.__override.override_text &&
-            this.__override.text) return this.__override.text;
-
-        const o = findOverride(this.__symRef, this.__target.id, OverrideType.Text);
-        if (!o) return this.__text;
-
-        this.updateOverrides(o.override, OverrideType.Text);
-
-        if (!this.__override && o.i === 0) {
-            // first 
-            this.__override = o.override;
-            if (this.__override.override_text &&
-                this.__override.text) return this.__override.text;
+    override(type: OverrideType): { container: Shape, over: Override; v: Variable; } | undefined {
+        if (type === OverrideType.Text) {
+            // todo stringvalue
+            const o = findOverride(this.__symRef, this.__target.id, OverrideType.Text);
+            if (o && o.i === 0) return;
+            let curText = (this.__target as TextShape).text;
+            const _ov = o?.v.value;
+            if (_ov) curText = (typeof _ov) === 'string' ? createTextByString(_ov as string, this.__target as TextShape) : _ov as Text;
+            this.__text = undefined;
+            const text = importText(curText); // clone
+            const override = this.__symRef[0].addOverrid(this.__refId, OverrideType.Text, text)!;
+            return { container: this.__symRef[0], over: override.over, v: override.v };
         }
-
-        // get override text
-        const text = o.override.getText(this.__target);
-        if (text) {
-            if (!this.__freezText) {
-                this.__freezText = new Proxy<Text>(text, new FreezHdl(text));
-            }
-            return this.__freezText;
-        }
-        return this.__text;
+        return super.override(type);
     }
 
-    // todo frame不对
+    updateSize(w: number, h: number) {
+        this.__frame.width = w;
+        this.__frame.height = h;
+        if (this.__text) this.__text.updateSize(w, h);
+    }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
 
         if (propStr === 'text') {
-            const text = this.getText();
-            text.updateSize(this.__frame.width, this.__frame.height);
-            // todo 更新frame大小
-            const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-            if (textBehaviour === TextBehaviour.Flexible) {
-                // update width & height
-                const layout = text.getLayout();
-                this.__frame.width = layout.contentWidth;
-                this.__frame.height = layout.contentHeight;
-            }
-            else if (textBehaviour === TextBehaviour.Fixed) {
-                // update height
-                const layout = text.getLayout();
-                this.__frame.height = layout.contentHeight;
-            }
-            return text;
-        }
-
-        if (propStr === 'overrideText') {
-            if (this.__override && this.__override.override_text && this.__override.text) return;
-            let curText = (this.__target as TextShape).text;
-
+            if (this.__text) return this.__text;
             const o = findOverride(this.__symRef, this.__target.id, OverrideType.Text);
-            if (o) {
-                if (!this.__override && o.i === 0) {
-                    // first 
-                    this.__override = o.override;
-                    if (this.__override.override_text &&
-                        this.__override.text) return;
+            if (o && o.i === 0) {
+                const _ov = o.v.value;
+                if (_ov instanceof Text) {
+                    _ov.updateSize(this.__frame.width, this.__frame.height);
+                    this.__text = _ov;
+                    return _ov;
                 }
-                const text = o.override.getText(this.__target);
-                if (text) curText = text;
+                const _text = createTextByString(_ov as string, this.__target as TextShape);
+                _text.updateSize(this.__frame.width, this.__frame.height);
+                this.__text = new Proxy<Text>(_text, new FreezHdl(_text));
+                return this.__text;
             }
-
-            return this.overrideText(curText);
+            let curText = (this.__target as TextShape).text;
+            const _ov = o?.v.value;
+            if (_ov) curText = (typeof _ov) === 'string' ? createTextByString(_ov as string, this.__target as TextShape) : _ov as Text;
+            curText.updateSize(this.__frame.width, this.__frame.height);
+            this.__text = new Proxy<Text>(curText, new FreezHdl(curText));
+            return this.__text;
+        }
+        if (propStr === "frame") {
+            // update frame size
+            if (this.__text) {
+                fixTextShapeFrameByLayout(this.__text, this.__frame);
+            }
+            return this.__frame;
+        }
+        if (propStr === "updateSize") {
+            // update frame size
+            return this.updateSize;
         }
 
         return super.get(target, propertyKey, receiver);
@@ -515,28 +630,33 @@ class TextShapeHdl extends ShapeHdl {
 // 需要cache
 export function proxyShape(shape: Shape, parent: Shape, symRefs: SymbolRefShape[]): Shape {
 
+    const refId = genRefId(symRefs, shape.id); // 缓存proxy handler
     if (shape instanceof GroupShape) {
-        const hdl = new GroupShapeHdl(symRefs, shape, parent);
+        let hdl = shape[refId];
+        if (!hdl) hdl = new GroupShapeHdl(symRefs, shape, parent);
         const ret = new Proxy<GroupShape>(shape, hdl);
         hdl.__thisProxy = ret;
         return ret;
     }
 
     if (shape instanceof TextShape) {
-        const hdl = new TextShapeHdl(symRefs, shape, parent);
+        let hdl = shape[refId];
+        if (!hdl) hdl = new TextShapeHdl(symRefs, shape, parent);
         const ret = new Proxy<TextShape>(shape, hdl)
         hdl.__thisProxy = ret;
         return ret;
     }
 
     if (shape instanceof SymbolRefShape) {
-        const hdl = new SymbolRefHdl(symRefs, shape, parent);
+        let hdl = shape[refId];
+        if (!hdl) hdl = new SymbolRefHdl(symRefs, shape, parent);
         const ret = new Proxy<SymbolRefShape>(shape, hdl);
         hdl.__thisProxy = ret;
         return ret;
     }
 
-    const hdl = new ShapeHdl(symRefs, shape, parent);
+    let hdl = shape[refId];
+    if (!hdl) hdl = new ShapeHdl(symRefs, shape, parent);
     const ret = new Proxy<Shape>(shape, hdl)
     hdl.__thisProxy = ret;
     return ret;
