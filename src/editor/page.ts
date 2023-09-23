@@ -19,7 +19,7 @@ import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
-import { exportGroupShape, exportText } from "../data/baseexport";
+import { exportGroupShape } from "../data/baseexport";
 import * as types from "../data/typesdefine";
 import { SymbolShape } from "data/baseclasses";
 
@@ -297,27 +297,10 @@ export class PageEditor {
         // 创建一个新对象
         const symbol = shape.peekSymbol();
         if (!symbol) return;
-        // 导出symbol
-        const symbolData = exportGroupShape(symbol); // todo 如果symbol只有一个child时
-        // 将override更新到导出的数据
-        const shapeMap = new Map<string, types.Shape>();
-        const add2map = (shape: types.Shape) => {
-            shapeMap.set(shape.id, shape);
-            if ((shape as types.GroupShape).childs) {
-                (shape as types.GroupShape).childs.forEach((c) => add2map(c));
-            }
-        }
-        add2map(symbolData);
-        shape.overrides.forEach((override) => {
-            // 更新override数据
-            const text = override.peekText();
-            if (text) {
-                const refData = shapeMap.get(override.refId);
-                if (refData) {
-                    (refData as types.TextShape).text = exportText(text);
-                }
-            }
-        })
+        // 构造一个临时group用于导出symbol
+        const tmpGroup = newGroupShape(shape.name, shape.style);
+        tmpGroup.childs = shape.virtualChilds! as BasicArray<Shape>;
+        const symbolData = exportGroupShape(tmpGroup); // todo 如果symbol只有一个child时
         // replaceid
         const replaceId = (shape: types.Shape) => {
             shape.id = uuid();

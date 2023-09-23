@@ -1,8 +1,8 @@
 import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
-import { GroupShape, PathShape, PathShape2, RectShape, Shape } from "../../data/shape";
-import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
+import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
+import { Override, ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 import { BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, MarkerType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 
 export * from "./fill";
@@ -472,4 +472,21 @@ export function shapeModifyCurvToPoint(page: Page, shape: PathShape, index: numb
     const p = shape.points[index];
     p.curveTo.x = point.x;
     p.curveTo.y = point.y;
+}
+
+export function addOverrideAt(shape: SymbolRefShape, over: Override, index: number) {
+    shape.addOverrideAt(over, index);
+}
+export function deleteOverrideAt(shape: SymbolRefShape, idx: number) {
+    return shape.deleteOverrideAt(idx);
+}
+
+export function addVariableAt(shape: SymbolRefShape | SymbolShape, _var: Variable, index: number) {
+    shape.addVariableAt(_var, index);
+}
+export function deleteVariableAt(shape: SymbolRefShape | SymbolShape, idx: number) {
+    return shape.deleteVariableAt(idx);
+}
+export function modifyVariableAt(shape: SymbolRefShape | SymbolShape, idx: number, value: any) {
+    shape.modifyVariableAt(idx, value);
 }
