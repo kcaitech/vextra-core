@@ -16,6 +16,7 @@ export { render as renderSymbolRef } from "./symbolref";
 export { render as renderTextShape } from "./text";
 export { render as renderTable } from "./table";
 export { render as renderContact } from "./contact";
+export { render as renderSymbolPreview } from "./symbol_preview";
 
 // export { render as renderTableCell } from "./tablecell";
 export { render as renderTableCell } from "./tablecell";

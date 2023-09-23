@@ -161,7 +161,8 @@ export async function symbol2ref(document: Document, symbol: SymbolShape) {
     if (is_existed) {
         const frame = importShapeFrame(exportShapeFrame(symbol.frame));
         const name = symbol.name;
-        return newSymbolRefShape(name, frame, symbol.id);
+        // return newSymbolRefShape(name, frame, symbol.id);
+        return symbol;
     } else {
         return symbol;
     }
