@@ -109,8 +109,8 @@ export class Api {
         const over: { container: Shape, over: Override, v: Variable } | undefined = shape.override(type);
         if (over) {
             const container = over.container as SymbolShape | SymbolRefShape;
-            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(container), VARIABLE_ID, over.v.id, container.variables.length, exportVariable(over.v)))
-            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(container), OVERRIDE_ID, over.over.refId, container.override.length, exportOverride(over.over)))
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(container), VARIABLE_ID, over.v.id, container.variables.length - 1, exportVariable(over.v)))
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(container), OVERRIDE_ID, over.over.refId, container.override.length - 1, exportOverride(over.over)))
         }
     }
 
