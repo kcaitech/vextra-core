@@ -81,8 +81,8 @@ function importOverrides(shape: SymbolRefShape, data: IJSON[]) {
         const value = override['value'];
         const _idx = name.indexOf('_');
         const id = name.substring(0, _idx);
-        const attr = name.substring(_idx + 1);
-
+        let attr = name.substring(_idx + 1);
+        if (attr === 'stringValue') attr = 'text'
         shape.addOverrid(id, attr, value);
     }
 }

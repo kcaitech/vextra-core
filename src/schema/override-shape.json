@@ -2,25 +2,6 @@
     "description": "override shape",
     "type": "object",
     "properties": {
-        "refId": {
-            "type": "string",
-            "default": "$uuid"
-        },
-        "override_text": {
-            "type": "boolean"
-        },
-        "override_image": {
-            "type": "boolean"
-        },
-        "override_fills": {
-            "type": "boolean"
-        },
-        "override_borders": {
-            "type": "boolean"
-        },
-        "override_visible": {
-            "type": "boolean"
-        },
         "stringValue": {
             "type": "string"
         },
@@ -32,9 +13,7 @@
             "default": "$uuid"
         }
     },
-    "required": [
-        "refId"
-    ],
+    "required": [],
     "allOf": [
         {
             "$ref": "./shape.json"

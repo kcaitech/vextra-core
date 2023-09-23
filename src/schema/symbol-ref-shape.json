@@ -9,7 +9,7 @@
         "overrides": {
             "type": "array",
             "items": {
-                "$ref": "./override-shape.json"
+                "$ref": "./override.json"
             }
         },
         "variables": {

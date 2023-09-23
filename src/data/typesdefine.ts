@@ -23,7 +23,6 @@ export enum VariableType {
     Visible = 'visible',
     Instance = 'instance',
     Status = 'status',
-    StringValue = 'stringValue',
     ImageRef = 'imageRef',
     Fills = 'fills',
     Borders = 'borders',
@@ -234,14 +233,20 @@ export type Padding = {
     right?: number
     bottom?: number
 }
+/* override */
+export type Override = {
+    refId: string
+    type: OverrideType
+    varId: string
+}
 /* override types */
 export enum OverrideType {
-    StringValue = 'stringValue',
     Text = 'text',
     Image = 'image',
     Fills = 'fills',
     Borders = 'borders',
     Visible = 'visible',
+    Variable = 'variable',
 }
 /* marker type */
 export enum MarkerType {
@@ -549,7 +554,7 @@ export type TableCell = Shape & {
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
     refId: string
-    overrides: OverrideShape[]
+    overrides: Override[]
     variables: Variable[]
 }
 /* span attr */
@@ -591,12 +596,6 @@ export type Page = Shape & {
 }
 /* override shape */
 export type OverrideShape = Shape & {
-    refId: string
-    override_text?: boolean
-    override_image?: boolean
-    override_fills?: boolean
-    override_borders?: boolean
-    override_visible?: boolean
     stringValue?: string
     text?: Text
     imageRef?: string

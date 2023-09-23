@@ -4,7 +4,7 @@ import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType } from "./baseclasses"
-import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Variable } from "./baseclasses"
+import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Variable, Override } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
@@ -50,13 +50,6 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     }
 
     /**
-     * @returns undefined | SymbolRefShape[]
-     */
-    get overridesGetter(): any | undefined {
-        return undefined;
-    }
-
-    /**
      * for command
      */
     get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
@@ -71,6 +64,14 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
     get naviChilds(): Shape[] | undefined {
         return undefined;
+    }
+
+    get isVirtualShape() {
+        return false;
+    }
+
+    override(type: classes.OverrideType): { container: Shape, over: Override, v: Variable } | undefined {
+        return;
     }
 
     getPath(fixedRadius?: number): Path {
@@ -380,6 +381,22 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         const v = this.parent?.findVar(varId); // 父级的优先
         if (v) return v;
         return this.getVar(varId);
+    }
+
+    addVariableAt(_var: Variable, index: number) {
+        this.variables.splice(index, 0, _var);
+        if (this.__varMap) {
+            this.__varMap.set(_var.id, _var);
+        }
+    }
+    deleteVariableAt(idx: number) {
+        const ret = this.variables.splice(idx, 1)[0];
+        if (ret && this.__varMap) {
+            this.__varMap.delete(ret.id);
+        }
+    }
+    modifyVariableAt(idx: number, value: any) {
+        this.variables[idx].value = value;
     }
 }
 
