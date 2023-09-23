@@ -350,8 +350,8 @@ export class PageEditor {
         }
     }
 
-    refSymbol(name: string, frame: ShapeFrame, refId: string) {
-        return newSymbolRefShape(name, frame, refId);
+    refSymbol(document: Document, name: string, frame: ShapeFrame, refId: string) {
+        return newSymbolRefShape(name, frame, refId, document.symbolsMgr);
     }
 
     private cloneStyle(style: Style): Style {

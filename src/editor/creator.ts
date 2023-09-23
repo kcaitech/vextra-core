@@ -295,6 +295,9 @@ export function newSymbolShape(name: string, frame: ShapeFrame): SymbolShape {
     return compo;
 }
 
-export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string): SymbolRefShape {
-    return new SymbolRefShape(uuid(), name, types.ShapeType.SymbolRef, frame, newStyle(), refId, new BasicArray(), new BasicArray());
+export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: ResourceMgr<GroupShape>): SymbolRefShape {
+    const ref = new SymbolRefShape(uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId, new BasicArray(), new BasicArray());
+    addCommonAttr(ref);
+    ref.setSymbolMgr(symbol_mgr);
+    return ref;
 }
