@@ -10,21 +10,21 @@ import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../data/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
-import { GroupShape, Shape, PathShape, PathShape2, TextShape } from "../../data/shape";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportOverride, exportPage, exportPoint2D, exportTableCell, exportText, exportVariable } from "../../data/baseexport";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, OVERRIDE_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, VARIABLE_ID } from "./consts";
+import { GroupShape, Shape, PathShape, PathShape2, TextShape, SymbolShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType, Style } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
-import { RectShape, TableCell, TableCellType, TableShape } from "../../data/classes";
+import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, FillType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { TableOpTarget } from "../../coop/data/classes";
-import { ContactRole, CurvePoint } from "../../data/baseclasses";
-import {ContactShape} from "../../data/contact"
+import { ContactRole, CurvePoint, Override, Variable } from "../../data/baseclasses";
+import { ContactShape } from "../../data/contact"
 
 type TextShapeLike = Shape & { text: Text, overrideText?: Text }
 
@@ -105,42 +105,27 @@ export class Api {
         }
     }
 
-    private text4edit(page: Page, shape: TextShapeLike): Text {
-        const text = shape.overrideText;
-        if (text) {
-            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.override_text, true, undefined));
-            const len = text.length - 1;
-            const _text = exportText(text);
-            // this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), "inittext", true, true));
-            const p = _text.paras[_text.paras.length - 1];
-            const str = p.text;
-            p.text = str.slice(0, str.length - 1); // 去掉最后的回车
-            this.addCmd(TextCmdInsert.Make(page.id, genShapeId(shape), 0, len, { type: "complex", text: _text, length: len }));
+    private _override(page: Page, shape: Shape, type: OverrideType) {
+        const over: { container: Shape, over: Override, v: Variable } | undefined = shape.override(type);
+        if (over) {
+            const container = over.container as SymbolShape | SymbolRefShape;
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(container), VARIABLE_ID, over.v.id, container.variables.length - 1, exportVariable(over.v)))
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(container), OVERRIDE_ID, over.over.refId, container.override.length - 1, exportOverride(over.over)))
         }
+    }
+
+    private text4edit(page: Page, shape: TextShapeLike): Text {
+        this._override(page, shape, OverrideType.Text);
         return shape.text;
     }
 
     private fills4edit(page: Page, shape: Shape, style: Style): Fill[] {
-        const fills: Fill[] | undefined = (style as any).overrideFills;
-        if (fills) {
-            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.override_fills, true, undefined));
-            for (let i = 0; i < fills.length; i++) {
-                const fill = fills[i];
-                this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, i, exportFill(fill)));
-            }
-        }
+        this._override(page, shape, OverrideType.Fills);
         return style.fills;
     }
 
     private borders4edit(page: Page, shape: Shape, style: Style): Border[] {
-        const borders: Border[] | undefined = (style as any).overrideBorders;
-        if (borders) {
-            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.override_borders, true, undefined));
-            for (let i = 0; i < borders.length; i++) {
-                const border = borders[i];
-                this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, i, exportBorder(border)));
-            }
-        }
+        this._override(page, shape, OverrideType.Borders);
         return style.borders;
     }
 
@@ -367,6 +352,7 @@ export class Api {
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
+            this._override(page, shape, OverrideType.Visible);
             const save = shape.isVisible;
             shape.setVisible(isVisible);
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.visible, isVisible, save));

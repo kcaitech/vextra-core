@@ -21,8 +21,7 @@ import {
     TableOpInsert,
     TableCmdModify,
     TableOpRemove,
-    TableOpModify,
-    TableIndex
+    TableOpModify
 } from "../../coop/data/classes";
 import { Document } from "../../data/document";
 import {
@@ -52,6 +51,8 @@ import {
     importContactShape,
     importContactRole,
     importCurvePoint,
+    importOverride,
+    importVariable,
 } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -68,11 +69,12 @@ import {
     BulletNumbersBehavior,
     Text,
     TableShape,
-    TableCell
+    SymbolShape,
+    SymbolRefShape
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, OVERRIDE_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, VARIABLE_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
 import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
@@ -332,33 +334,33 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0]
-        if (op.type === OpType.None) return;
+        if (op.type !== OpType.ArrayInsert) return;
         const shape = page.getTarget(op.targetId);
 
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
-            if (op.type === OpType.ArrayInsert) {
-                const fill = importFill(JSON.parse(cmd.data))
-                api.addFillAt(shape.style.fills, fill, (op as ArrayOpInsert).start);
-            }
+            const fill = importFill(JSON.parse(cmd.data))
+            api.addFillAt(shape.style.fills, fill, (op as ArrayOpInsert).start);
         }
         else if (arrayAttr === BORDER_ID) {
-            if (op.type === OpType.ArrayInsert) {
-                const border = importBorder(JSON.parse(cmd.data))
-                api.addBorderAt(shape.style.borders, border, (op as ArrayOpInsert).start);
-            }
+            const border = importBorder(JSON.parse(cmd.data))
+            api.addBorderAt(shape.style.borders, border, (op as ArrayOpInsert).start);
         }
         else if (arrayAttr === CONTACTS_ID) {
-            if (op.type === OpType.ArrayInsert) {
-                const contact_role = importContactRole(JSON.parse(cmd.data));
-                api.addContactShape(shape.style, contact_role);
-            }
+            const contact_role = importContactRole(JSON.parse(cmd.data));
+            api.addContactShape(shape.style, contact_role);
         }
         else if (arrayAttr === POINTS_ID) {
-            if (op.type === OpType.ArrayInsert) {
-                const point = importCurvePoint(JSON.parse(cmd.data));
-                api.addPointAt(shape as PathShape, point, (op as ArrayOpInsert).start);
-            }
+            const point = importCurvePoint(JSON.parse(cmd.data));
+            api.addPointAt(shape as PathShape, point, (op as ArrayOpInsert).start);
+        }
+        else if (arrayAttr === OVERRIDE_ID) {
+            const over = importOverride(JSON.parse(cmd.data));
+            api.addOverrideAt((shape as SymbolRefShape), over, (op as ArrayOpInsert).start);
+        }
+        else if (arrayAttr === VARIABLE_ID) {
+            const _var = importVariable(JSON.parse(cmd.data));
+            api.addVariableAt((shape as SymbolRefShape | SymbolShape), _var, (op as ArrayOpInsert).start);
         }
         else {
             console.error("not implemented ", arrayAttr)
@@ -368,29 +370,27 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0]
-        if (op.type === OpType.None) return;
+        if (op.type !== OpType.ArrayRemove) return;
         const shape = page.getTarget(op.targetId);
 
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
-            if (op.type === OpType.ArrayRemove) {
-                api.deleteFillAt(shape.style.fills, (op as ArrayOpRemove).start)
-            }
+            api.deleteFillAt(shape.style.fills, (op as ArrayOpRemove).start)
         }
         else if (arrayAttr === BORDER_ID) {
-            if (op.type === OpType.ArrayRemove) {
-                api.deleteBorderAt(shape.style.borders, (op as ArrayOpRemove).start)
-            }
+            api.deleteBorderAt(shape.style.borders, (op as ArrayOpRemove).start)
         }
         else if (arrayAttr === CONTACTS_ID) {
-            if (op.type === OpType.ArrayRemove) {
-                api.removeContactRoleAt(shape.style, (op as ArrayOpRemove).start)
-            }
+            api.removeContactRoleAt(shape.style, (op as ArrayOpRemove).start)
         }
         else if (arrayAttr === POINTS_ID) {
-            if (op.type === OpType.ArrayRemove) {
-                api.deletePointAt(shape as PathShape, (op as ArrayOpRemove).start)
-            }
+            api.deletePointAt(shape as PathShape, (op as ArrayOpRemove).start)
+        }
+        else if (arrayAttr === OVERRIDE_ID) {
+            api.deleteOverrideAt((shape as SymbolRefShape), (op as ArrayOpRemove).start);
+        }
+        else if (arrayAttr === VARIABLE_ID) {
+            api.deleteVariableAt((shape as SymbolShape | SymbolRefShape), (op as ArrayOpRemove).start);
         }
         else {
             console.error("not implemented ", arrayAttr)
@@ -501,6 +501,12 @@ export class CMDExecuter {
             else {
                 console.error("not implemented ", op)
             }
+        }
+        else if (arrayAttr === OVERRIDE_ID) {
+            // todo
+        }
+        else if (arrayAttr === VARIABLE_ID) {
+            // todo
         }
         else {
             console.error("not implemented ", arrayAttr)

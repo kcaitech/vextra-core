@@ -59,11 +59,11 @@ export const SHAPE_ATTR_ID = {
 
     // override
     // override_stringValue: "override_stringValue",
-    override_text: "override_text",
-    override_image: "override_image",
-    override_fills: "override_fills",
-    override_borders: "override_borders",
-    override_visible: "override_visible",
+    // override_text: "override_text",
+    // override_image: "override_image",
+    // override_fills: "override_fills",
+    // override_borders: "override_borders",
+    // override_visible: "override_visible",
 }
 
 export const FILLS_ID = "fills"
@@ -121,3 +121,7 @@ export const TABLE_ATTR_ID = {
 }
 
 export const CONTACTS_ID = "contact"
+
+export const OVERRIDE_ID = "override"
+
+export const VARIABLE_ID = "variable"
