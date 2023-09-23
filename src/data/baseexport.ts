@@ -1119,38 +1119,6 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
     }
     return ret
 }
-/* override shape */
-export function exportOverrideShape(source: types.OverrideShape, ctx?: IExportContext): types.OverrideShape {
-    const ret = {
-        typeId: source.typeId,
-        id: source.id,
-        name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
-        isFixedToViewport: source.isFixedToViewport,
-        isFlippedHorizontal: source.isFlippedHorizontal,
-        isFlippedVertical: source.isFlippedVertical,
-        isLocked: source.isLocked,
-        isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
-        nameIsFixed: source.nameIsFixed,
-        resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
-        rotation: source.rotation,
-        constrainerProportions: source.constrainerProportions,
-        clippingMaskMode: source.clippingMaskMode,
-        hasClippingMask: source.hasClippingMask,
-        shouldBreakMaskChain: source.shouldBreakMaskChain,
-        stringValue: source.stringValue,
-        text: source.text && exportText(source.text, ctx),
-        imageRef: source.imageRef,
-    }
-    return ret
-}
 /* oval shape */
 export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): types.OvalShape {
     const ret = {

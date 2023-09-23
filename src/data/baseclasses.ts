@@ -1079,30 +1079,6 @@ export class Page extends Shape {
     }
 }
 /**
- * override shape 
- */
-export class OverrideShape extends Shape {
-    typeId = 'override-shape'
-    stringValue?: string
-    text?: Text
-    imageRef?: string
-    constructor(
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style
-    ) {
-        super(
-            id,
-            name,
-            type,
-            frame,
-            style
-        )
-    }
-}
-/**
  * oval shape 
  */
 export class OvalShape extends PathShape {

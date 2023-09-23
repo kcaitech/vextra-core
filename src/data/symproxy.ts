@@ -208,7 +208,7 @@ class ShapeHdl extends Watchable(FreezHdl) {
         this.__save_isFlippedHorizontal = target.isFlippedHorizontal ?? false;
         this.__save_isFlippedVertical = target.isFlippedVertical ?? false;
         this.__save_points = (target as any).points ? (target as any).points.map((p: CurvePoint) => importCurvePoint(p)) : undefined;
-    
+
         this.__refId = genRefId(symRef, target.id);
         this.__id = this.__symRef[0].mapId(this.__refId);
     }
@@ -626,38 +626,38 @@ class TextShapeHdl extends ShapeHdl {
     }
 }
 
+function createHandler(shape: Shape, parent: Shape, symRefs: SymbolRefShape[]) {
+    if (shape instanceof GroupShape) {
+        return new GroupShapeHdl(symRefs, shape, parent);
+    }
+    if (shape instanceof TextShape) {
+        return new TextShapeHdl(symRefs, shape, parent);
+    }
+    if (shape instanceof SymbolRefShape) {
+        return new SymbolRefHdl(symRefs, shape, parent);
+    }
+    return new ShapeHdl(symRefs, shape, parent);
+}
+
+function genCacheId(symRef: SymbolRefShape[]) {
+    let refId = "";
+    for (let i = 0, len = symRef.length; i < len; ++i) {
+        if (refId.length > 0) refId += "/";
+        refId += symRef[i].id;
+    }
+    return "__hdl@" + refId;
+}
+
 // 适配左侧导航栏
 // 需要cache
 export function proxyShape(shape: Shape, parent: Shape, symRefs: SymbolRefShape[]): Shape {
-
-    const refId = genRefId(symRefs, shape.id); // 缓存proxy handler
-    if (shape instanceof GroupShape) {
-        let hdl = shape[refId];
-        if (!hdl) hdl = new GroupShapeHdl(symRefs, shape, parent);
-        const ret = new Proxy<GroupShape>(shape, hdl);
-        hdl.__thisProxy = ret;
-        return ret;
+    const cacheId = genCacheId(symRefs); // 缓存proxy handler
+    let hdl = shape[cacheId];
+    if (!hdl) {
+        hdl = createHandler(shape, parent, symRefs);
+        shape[cacheId] = hdl;
     }
-
-    if (shape instanceof TextShape) {
-        let hdl = shape[refId];
-        if (!hdl) hdl = new TextShapeHdl(symRefs, shape, parent);
-        const ret = new Proxy<TextShape>(shape, hdl)
-        hdl.__thisProxy = ret;
-        return ret;
-    }
-
-    if (shape instanceof SymbolRefShape) {
-        let hdl = shape[refId];
-        if (!hdl) hdl = new SymbolRefHdl(symRefs, shape, parent);
-        const ret = new Proxy<SymbolRefShape>(shape, hdl);
-        hdl.__thisProxy = ret;
-        return ret;
-    }
-
-    let hdl = shape[refId];
-    if (!hdl) hdl = new ShapeHdl(symRefs, shape, parent);
-    const ret = new Proxy<Shape>(shape, hdl)
+    const ret = new Proxy<Shape>(shape, hdl);
     hdl.__thisProxy = ret;
     return ret;
 }

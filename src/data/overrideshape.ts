@@ -1,6 +1,5 @@
 import { Style } from "./style";
 import { Text } from "./text";
-import * as classes from "./baseclasses"
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
@@ -11,7 +10,7 @@ import { Shape } from "./shape";
 /**
  * virtual shape for override
  */
-export class OverrideShape extends Shape implements classes.OverrideShape {
+export class OverrideShape extends Shape {
     typeId = 'override-shape'
 
     stringValue?: string // 兼容sketch，用户一旦编辑，转成text

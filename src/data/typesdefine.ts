@@ -594,12 +594,6 @@ export type TextAttr = ParaAttr & {
 export type Page = Shape & {
     childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | LineShape | OvalShape | TableShape | SymbolShape)[]
 }
-/* override shape */
-export type OverrideShape = Shape & {
-    stringValue?: string
-    text?: Text
-    imageRef?: string
-}
 /* oval shape */
 export type OvalShape = PathShape & {
     ellipse: Ellipse
