@@ -285,7 +285,6 @@ class ShapeHdl extends Watchable(FreezHdl) {
     onRemoved() {
         this.__target.unwatch(this.origin_watcher);
         this.__symRef.forEach((s) => s.unwatch(this.symref_watcher));
-        Object.keys(this.__overrides).forEach((key: string) => this.__overrides[key].unwatch(this.override_watcher));
     }
 
     override(type: OverrideType): { container: Shape, over: Override, v: Variable } | undefined {
