@@ -125,3 +125,7 @@ export const CONTACTS_ID = "contact"
 export const OVERRIDE_ID = "override"
 
 export const VARIABLE_ID = "variable"
+
+export const VARIABLE_ATTR_ID = {
+    value: "value"
+}

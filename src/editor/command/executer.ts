@@ -70,11 +70,12 @@ import {
     Text,
     TableShape,
     SymbolShape,
-    SymbolRefShape
+    SymbolRefShape,
+    Variable
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, OVERRIDE_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, VARIABLE_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, OVERRIDE_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, VARIABLE_ATTR_ID, VARIABLE_ID } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
 import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
@@ -506,7 +507,23 @@ export class CMDExecuter {
             // todo
         }
         else if (arrayAttr === VARIABLE_ID) {
-            // todo
+            if (!(shape instanceof SymbolRefShape || shape instanceof SymbolShape)) return;
+            const valId = cmd.arrayAttrId;
+            // find variable
+            const valIdx = shape.variables.findIndex((p) => p.id === valId)
+            if (valIdx < 0) return;
+
+            const opId = op.opId;
+            const value = cmd.value;
+
+            if (opId === VARIABLE_ATTR_ID.value) {
+                if (value) {
+                    const _val = new Variable("", types.VariableType.Text, ""); // 用于导入
+                    _val.value = JSON.parse(value);
+                    const _val1 = importVariable(_val);
+                    api.modifyVariableAt(shape, valIdx, _val1.value);
+                }
+            }
         }
         else {
             console.error("not implemented ", arrayAttr)
