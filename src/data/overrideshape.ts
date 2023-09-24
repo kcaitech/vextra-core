@@ -1,9 +1,5 @@
 import { Style } from "./style";
 import { Text } from "./text";
-export {
-    CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
-    ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
-} from "./baseclasses"
 import { ShapeType, ShapeFrame } from "./baseclasses";
 import { Shape } from "./shape";
 

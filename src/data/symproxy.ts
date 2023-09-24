@@ -567,13 +567,19 @@ class TextShapeHdl extends ShapeHdl {
         if (type === OverrideType.Text) {
             // todo stringvalue
             const o = findOverride(this.__symRef, this.__target.id, OverrideType.Text);
-            if (o && o.i === 0) return;
+            if (o && o.i === 0) {
+                // 如是stringValue需要处理
+                if (o.v.value instanceof Text) return;
+                o.v.value = createTextByString(o.v.value as string, this.__target as TextShape);
+                this.__text = undefined;
+                return;
+            }
             let curText = (this.__target as TextShape).text;
             const _ov = o?.v.value;
             if (_ov) curText = (typeof _ov) === 'string' ? createTextByString(_ov as string, this.__target as TextShape) : _ov as Text;
-            this.__text = undefined;
             const text = importText(curText); // clone
             const override = this.__symRef[0].addOverrid(this.__refId, OverrideType.Text, text)!;
+            this.__text = undefined;
             return { container: this.__symRef[0], over: override.over, v: override.v };
         }
         return super.override(type);
@@ -651,12 +657,14 @@ function genCacheId(symRef: SymbolRefShape[]) {
 // 适配左侧导航栏
 // 需要cache
 export function proxyShape(shape: Shape, parent: Shape, symRefs: SymbolRefShape[]): Shape {
-    const cacheId = genCacheId(symRefs); // 缓存proxy handler
-    let hdl = shape[cacheId];
-    if (!hdl) {
-        hdl = createHandler(shape, parent, symRefs);
-        shape[cacheId] = hdl;
-    }
+    // const cacheId = genCacheId(symRefs); // 缓存proxy handler
+    // let hdl = shape[cacheId];
+    // if (!hdl) {
+    //     hdl = createHandler(shape, parent, symRefs);
+    //     shape[cacheId] = hdl;
+    // }
+    // 缓存还有些问题，如ref对象删除时的回收、relayout无效
+    const hdl = createHandler(shape, parent, symRefs);
     const ret = new Proxy<Shape>(shape, hdl);
     hdl.__thisProxy = ret;
     return ret;
