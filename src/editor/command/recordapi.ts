@@ -26,7 +26,7 @@ import { TableOpTarget } from "../../coop/data/classes";
 import { ContactRole, CurvePoint, Override, Variable } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 
-type TextShapeLike = Shape & { text: Text, overrideText?: Text }
+type TextShapeLike = Shape & { text: Text }
 
 function checkShapeAtPage(page: Page, obj: Shape) {
     // if (obj instanceof VirtualShape) {
