@@ -12,6 +12,7 @@ import { SymbolRefShape } from "./symbolref";
 import { VariableType } from "./typesdefine";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 import { uuid } from "../basic/uuid";
+import { OverrideShape } from "./overrideshape";
 
 export class ForbiddenError extends Error { }
 
@@ -513,7 +514,7 @@ class SymbolRefHdl extends ShapeHdl {
     }
 }
 
-function createTextByString(stringValue: string, refShape: TextShape) {
+function createTextByString(stringValue: string, refShape: TextShapeLike) {
     const text = new Text(new BasicArray());
     if (refShape.text.attr) {
         mergeTextAttr(text, refShape.text.attr);
@@ -552,11 +553,13 @@ export function fixTextShapeFrameByLayout(text: Text, frame: ShapeFrame) {
     }
 }
 
+type TextShapeLike = Shape & { text: Text }
+
 class TextShapeHdl extends ShapeHdl {
 
     __text?: Text;
 
-    constructor(symRef: SymbolRefShape[], target: TextShape, parent: Shape) {
+    constructor(symRef: SymbolRefShape[], target: TextShapeLike, parent: Shape) {
         super(symRef, target, parent);
         this.__symRef = symRef;
         this.__target = target;
@@ -573,16 +576,16 @@ class TextShapeHdl extends ShapeHdl {
                 if (o.v.value instanceof Text) return;
                 // 需要个modify cmd
                 // override value
-                const text = createTextByString(o.v.value as string, this.__target as TextShape);
+                const text = createTextByString(o.v.value as string, this.__target as TextShapeLike);
                 const _val = new Variable(uuid(), VariableType.Text, "");
                 _val.value = text;
                 const override = this.__symRef[0].addOverrid(o.v.id, OverrideType.Variable, _val)!;
                 this.__text = undefined;
                 return { container: this.__symRef[0], over: override.over, v: override.v };
             }
-            let curText = (this.__target as TextShape).text;
+            let curText = (this.__target as TextShapeLike).text;
             const _ov = o?.v.value;
-            if (_ov) curText = (typeof _ov) === 'string' ? createTextByString(_ov as string, this.__target as TextShape) : _ov as Text;
+            if (_ov) curText = (typeof _ov) === 'string' ? createTextByString(_ov as string, this.__target as TextShapeLike) : _ov as Text;
             const text = importText(curText); // clone
             const override = this.__symRef[0].addOverrid(this.__refId, OverrideType.Text, text)!;
             this.__text = undefined;
@@ -610,14 +613,14 @@ class TextShapeHdl extends ShapeHdl {
                     this.__text = _ov;
                     return _ov;
                 }
-                const _text = createTextByString(_ov as string, this.__target as TextShape);
+                const _text = createTextByString(_ov as string, this.__target as TextShapeLike);
                 _text.updateSize(this.__frame.width, this.__frame.height);
                 this.__text = new Proxy<Text>(_text, new FreezHdl(_text));
                 return this.__text;
             }
-            let curText = (this.__target as TextShape).text;
+            let curText = (this.__target as TextShapeLike).text;
             const _ov = o?.v.value;
-            if (_ov) curText = (typeof _ov) === 'string' ? createTextByString(_ov as string, this.__target as TextShape) : _ov as Text;
+            if (_ov) curText = (typeof _ov) === 'string' ? createTextByString(_ov as string, this.__target as TextShapeLike) : _ov as Text;
             curText.updateSize(this.__frame.width, this.__frame.height);
             this.__text = new Proxy<Text>(curText, new FreezHdl(curText));
             return this.__text;
@@ -642,8 +645,8 @@ function createHandler(shape: Shape, parent: Shape, symRefs: SymbolRefShape[]) {
     if (shape instanceof GroupShape) {
         return new GroupShapeHdl(symRefs, shape, parent);
     }
-    if (shape instanceof TextShape) {
-        return new TextShapeHdl(symRefs, shape, parent);
+    if (shape instanceof TextShape || shape instanceof OverrideShape) {
+        return new TextShapeHdl(symRefs, shape as TextShapeLike, parent);
     }
     if (shape instanceof SymbolRefShape) {
         return new SymbolRefHdl(symRefs, shape, parent);
