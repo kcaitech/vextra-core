@@ -14,6 +14,12 @@ import { Path } from "./path";
 import { layoutChilds } from "./symlayout";
 import { OverrideShape } from "./overrideshape";
 
+
+function genRefId(refId: string, type: OverrideType) {
+    if (type === OverrideType.Variable) return refId;
+    return refId + '/' + type;
+}
+
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     __data: GroupShape | undefined
     __symMgr?: ResourceMgr<GroupShape>
@@ -171,7 +177,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.__data;
     }
 
-    private _createVar(type: OverrideType) {
+    private _createVar4Override(type: OverrideType, value: any) {
         switch (type) {
             case OverrideType.Borders:
                 return new Variable(uuid(), classes.VariableType.Borders, "");
@@ -185,22 +191,24 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                 return new Variable(uuid(), classes.VariableType.Text, "");
             case OverrideType.Visible:
                 return new Variable(uuid(), classes.VariableType.Visible, "");
+            case OverrideType.Variable:
+                const _val = value as Variable;
+                return _val;
             default:
                 throw new Error("unknow override type: " + type)
         }
     }
 
-    private createVar(type: OverrideType) {
-        const v = this._createVar(type);
-        this.addVar(v);
-        return v;
+    private createVar4Override(type: OverrideType, value: any) {
+        const v = this._createVar4Override(type, value);
+        return this.addVar(v);
     }
 
-    private createOverrid(refId: string, type: OverrideType) {
+    private createOverrid(refId: string, type: OverrideType, value: any) {
 
-        refId = refId + '/' + type; // id+type->var
+        refId = genRefId(refId, type); // id+type->var
 
-        const v = this.createVar(type);
+        const v: Variable = this.createVar4Override(type, value);
         let over = new Override(refId, type, v.id);
 
         this.overrides.push(over);
@@ -225,9 +233,22 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                 {
                     let override = this.getOverrid(refId, attr);
                     if (!override) {
-                        override = this.createOverrid(refId, attr);
+                        override = this.createOverrid(refId, attr, value);
                     }
                     override.v.value = value;
+                    return override;
+                }
+            case OverrideType.Variable:
+                {
+                    let override = this.getOverrid(refId, attr);
+                    if (!override) {
+                        override = this.createOverrid(refId, attr, value);
+                    }
+                    else {
+                        const _val = value as Variable;
+                        override.over.varId = _val.id; // 映射到新变量
+                        override.v = this.addVar(_val);
+                    }
                     return override;
                 }
             default:
@@ -241,7 +262,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     }
 
     getOverrid(refId: string, type: OverrideType): { over: Override, v: Variable } | undefined {
-        refId = refId + '/' + type; // id+type->var
+        refId = genRefId(refId, type); // id+type->var
         const over = this.overrideMap.get(refId);
         if (over) {
             const v = this.varMap.get(over.varId);
@@ -298,8 +319,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     addVar(v: Variable) {
         this.variables.push(v);
         if (this.__varMap) this.__varMap.set(v.id, this.variables[this.variables.length - 1]);
+        return this.variables[this.variables.length - 1];
     }
-    removeVar(varId: string) {
+    deleteVar(varId: string) {
         const v = this.varMap.get(varId);
         if (v) {
             const i = this.variables.findIndex((v) => v.id === varId)
@@ -331,7 +353,16 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         }
         return ret;
     }
-    
+    deleteOverride(overrideId: string) {
+        const v = this.overrideMap.get(overrideId);
+        if (v) {
+            const i = this.overrides.findIndex((v) => v.refId === overrideId)
+            this.overrides.splice(i, 1);
+            this.overrideMap.delete(overrideId);
+        }
+        return v;
+    }
+
     addVariableAt(_var: Variable, index: number) {
         this.variables.splice(index, 0, _var);
         if (this.__varMap) {

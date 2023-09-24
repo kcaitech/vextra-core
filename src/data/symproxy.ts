@@ -5,12 +5,13 @@ export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
-import { ShapeFrame, OverrideType, CurvePoint, TextBehaviour, Override, Point2D } from "./baseclasses"
+import { ShapeFrame, OverrideType, CurvePoint, TextBehaviour, Override, Point2D, Variable } from "./baseclasses"
 import { GroupShape, Shape, TextShape } from "./shape";
 import { importBorder, importCurvePoint, importFill, importText } from "./baseimport";
 import { SymbolRefShape } from "./symbolref";
-import { Variable } from "./typesdefine";
+import { VariableType } from "./typesdefine";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
+import { uuid } from "../basic/uuid";
 
 export class ForbiddenError extends Error { }
 
@@ -60,13 +61,13 @@ function genRefId(symRef: SymbolRefShape[], shapeId: string, i: number = 1) {
     return refId;
 }
 
-export function findOverride(symRef: SymbolRefShape[], id: string, type: OverrideType): { v: Variable, i: number } | undefined {
+export function findOverride(symRef: SymbolRefShape[], id: string, type: OverrideType): { over: Override, v: Variable, i: number } | undefined {
     for (let i = 0, len = symRef.length; i < len; ++i) {
         const getter = symRef[i];
         const refId = genRefId(symRef, id, i + 1);
         const override = getter.getOverrid(refId, type);
         if (!override) continue;
-        return { v: override.v, i };
+        return { over: override.over, v: override.v, i };
     }
 }
 
@@ -101,10 +102,10 @@ class StyleHdl extends FreezHdl {
             let fills: Fill[] = this.style.fills;
             if (o) {
                 if (o.i === 0) {
-                    this.__fills = o.v.value as Fill[];
+                    this.__fills = o.v.value as BasicArray<Fill>;
                     return this.__fills;
                 }
-                fills = o.v.value as Fill[];
+                fills = o.v.value as BasicArray<Fill>;
             }
             this.__fills = fills.map<Fill>((v) => new Proxy<Fill>(v, new FreezHdl(v)));
             return this.__fills;
@@ -115,10 +116,10 @@ class StyleHdl extends FreezHdl {
             let borders: Border[] = this.style.borders;
             if (o) {
                 if (o.i === 0) {
-                    this.__borders = o.v.value as Border[];
+                    this.__borders = o.v.value as BasicArray<Border>;
                     return this.__borders;
                 }
-                borders = o.v.value as Border[];
+                borders = o.v.value as BasicArray<Border>;
             }
             this.__borders = borders.map((v) => new Proxy<Border>(v, new FreezHdl(v)));
             return this.__borders;
@@ -293,7 +294,7 @@ class ShapeHdl extends Watchable(FreezHdl) {
                     const o = findOverride(this.__symRef, this.__target.id, OverrideType.Borders);
                     if (o && o.i === 0) return;
                     let curborders: Border[] = this.__target.style.borders;
-                    if (o) curborders = o.v.value as Border[];
+                    if (o) curborders = o.v.value as BasicArray<Border>;
                     const borders = new BasicArray<Border>();
                     curborders.forEach((v) => {
                         const border = importBorder(v);
@@ -309,7 +310,7 @@ class ShapeHdl extends Watchable(FreezHdl) {
                     const o = findOverride(this.__symRef, this.__target.id, OverrideType.Fills);
                     if (o && o.i === 0) return;
                     let curfills: Fill[] = this.__target.style.fills;
-                    if (o) curfills = o.v.value as Fill[];
+                    if (o) curfills = o.v.value as BasicArray<Fill>;
                     const imgMgr = this.__symRef[0].getImageMgr();
                     const fills = new BasicArray<Fill>();
                     curfills.forEach((v) => {
@@ -563,16 +564,21 @@ class TextShapeHdl extends ShapeHdl {
         this.updateSize = this.updateSize.bind(this);
     }
 
-    override(type: OverrideType): { container: Shape, over: Override; v: Variable; } | undefined {
+    override(type: OverrideType): { container: Shape, over: Override, v: Variable } | undefined {
         if (type === OverrideType.Text) {
             // todo stringvalue
             const o = findOverride(this.__symRef, this.__target.id, OverrideType.Text);
             if (o && o.i === 0) {
                 // 如是stringValue需要处理
                 if (o.v.value instanceof Text) return;
-                o.v.value = createTextByString(o.v.value as string, this.__target as TextShape);
+                // 需要个modify cmd
+                // override value
+                const text = createTextByString(o.v.value as string, this.__target as TextShape);
+                const _val = new Variable(uuid(), VariableType.Text, "");
+                _val.value = text;
+                const override = this.__symRef[0].addOverrid(o.v.id, OverrideType.Variable, _val)!;
                 this.__text = undefined;
-                return;
+                return { container: this.__symRef[0], over: override.over, v: override.v };
             }
             let curText = (this.__target as TextShape).text;
             const _ov = o?.v.value;
