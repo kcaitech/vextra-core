@@ -5,7 +5,7 @@ import { Document, PageListItem } from "../data/document";
 import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment, SymbolShape } from "../data/shape";
 import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
-import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape } from "../data/baseimport";
+import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape, importShapeFrame } from "../data/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
@@ -30,6 +30,7 @@ import { ResourceMgr } from "../data/basic";
 import { TableShape } from "../data/table";
 import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
 import { ContactForm } from "../data/baseclasses";
+import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {
@@ -61,10 +62,15 @@ export function newGroupShape(name: string, style?: Style): GroupShape {
     template_group_shape.name = name // i18n
     const group = importGroupShape(template_group_shape as types.GroupShape);
     if (style) group.style = style;
-    addCommonAttr(group)
+    addCommonAttr(group);
     return group;
 }
-
+/**
+ * @description 给未进入文档的图形设置frame
+ */
+export function initFrame(shape: Shape, frame: ShapeFrame) {
+    shape.frame = importShapeFrame(exportShapeFrame(frame));
+}
 export function newSolidColorFill(): Fill {
     const fillColor = new Color(1, 216, 216, 216);
     const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);

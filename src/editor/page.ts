@@ -2,7 +2,7 @@ import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/sh
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape, newSymbolShape, newSymbolRefShape } from "./creator";
+import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape, newSymbolShape, newSymbolRefShape, initFrame } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
@@ -21,7 +21,7 @@ import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
 import { exportGroupShape } from "../data/baseexport";
 import * as types from "../data/typesdefine";
-import { SymbolShape } from "data/baseclasses";
+import { SymbolShape } from "../data/baseclasses";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -304,6 +304,7 @@ export class PageEditor {
         if (!symbol) return;
         // 构造一个临时group用于导出symbol
         const tmpGroup = newGroupShape(shape.name, shape.style);
+        initFrame(tmpGroup, shape.frame);
         tmpGroup.childs = shape.virtualChilds! as BasicArray<Shape>;
         const symbolData = exportGroupShape(tmpGroup); // todo 如果symbol只有一个child时
         // replaceid
@@ -323,6 +324,7 @@ export class PageEditor {
 
         const _this = this;
         const ctx: IImportContext = new class implements IImportContext { document: Document = _this.__document };
+
         const newShape = importGroupShape(symbolData, ctx);
 
         const api = this.__repo.start("extractSymbol", {});
