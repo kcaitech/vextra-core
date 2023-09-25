@@ -1,0 +1,22 @@
+{
+    "description": "symbol shape states",
+    "type": "object",
+    "properties": {
+        "childs": {
+            "type": "array",
+            "items": {
+                "$ref": "./symbol-shape-states.json"
+            }
+        },
+        "isBoolOpShape": {
+            "type": "boolean"
+        },
+        "fixedRadius": {
+            "type": "number"
+        }
+    },
+    "required": [
+        "childs"
+    ],
+    "additionalProperties": false
+}
