@@ -44,22 +44,7 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
         props.opacity = contextSettings.opacity;
     }
-
-    // if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
-    //     const cx = frame.x + frame.width / 2;
-    //     const cy = frame.y + frame.height / 2;
-    //     const style: any = {}
-    //     style.transform = "translate(" + cx + "px," + cy + "px) "
-    //     if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
-    //     if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
-    //     if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
-    //     style.transform += "translate(" + (-cx) + "px," + (-cy) + "px)"
-    //     props.style = style;
-    // }
-    // else {
-    //     props.transform = `translate(0,0)`
-    // }
-    // props.transform = `translate(0,0)`
+    
     if (frame.width > frame.height) {
         props.transform = `translate(0, ${(frame.width - frame.height) / 2})`;
     } else {
