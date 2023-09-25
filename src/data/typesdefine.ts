@@ -615,6 +615,7 @@ export type GroupShape = Shape & {
 export type SymbolShape = GroupShape & {
     isUnionSymbolShape?: boolean
     unionSymbolRef?: string
+    overrides: Override[]
     variables: Variable[]
 }
 /* flatten shape */

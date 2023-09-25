@@ -1422,6 +1422,14 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
             return ret
         })(),
         (() => {
+            const ret = new BasicArray<impl.Override>()
+            for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
+                const r = importOverride(source.overrides[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        (() => {
             const ret = new BasicArray<impl.Variable>()
             for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
                 const r = importVariable(source.variables[i], ctx)

@@ -1,15 +1,18 @@
 import { Basic, ResourceMgr, Watchable } from "./basic";
-import { Style, Border } from "./style";
+import { Style, Border, Fill, Color } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
-export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType } from "./baseclasses"
-import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Variable, Override } from "./baseclasses"
+export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType } from "./baseclasses";
+import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Override, OverrideType, VariableType, Gradient } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
 import { RECT_POINTS } from "./consts";
+import { uuid } from "../basic/uuid";
+import { Variable } from "./variable";
+export { Variable } from "./variable";
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
@@ -18,12 +21,14 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     type: ShapeType
     frame: ShapeFrame
     style: Style
+    styleVar?: string
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isFlippedHorizontal?: boolean
     isFlippedVertical?: boolean
     isLocked?: boolean
     isVisible?: boolean
+    visibleVar?: string
     exportOptions?: ExportOptions
     name: string
     nameIsFixed?: boolean
@@ -34,6 +39,44 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
+
+    // private __var_rules: Map<string, string[]> = new Map(); // <"shapeid;fills" -> varid[]>
+    // private __var_watch_rule: Map<string, string[]> = new Map(); // <varid -> ruleid (含shapeid)[]>
+    private __var_onwatch: Map<string, Variable[]> = new Map(); // 设置了watcher的变量
+    private __has_var_notify: any;
+    private _var_watcher(...args: any[]) {
+        if (!this.__has_var_notify) {
+            this.__has_var_notify = setTimeout(() => {
+                if (this.__has_var_notify) this.notify()
+                this.__has_var_notify = undefined;
+            }, 0);
+        }
+    }
+
+    protected _watch_vars(slot: string, vars: Variable[]) {
+        const old = this.__var_onwatch.get(slot);
+        if (!old) {
+            vars.forEach((v) => v.watch(this._var_watcher));
+            this.__var_onwatch.set(slot, vars);
+            return;
+        }
+        if (old.length > vars.length) {
+            for (let i = vars.length, len = old.length; i < len; ++i) {
+                const v = old[i];
+                v.unwatch(this._var_watcher);
+            }
+        }
+        old.length = vars.length;
+        for (let i = 0, len = old.length; i < len; ++i) {
+            const o = old[i];
+            const v = vars[i];
+            if (o && o.id === v.id) continue;
+            if (o) o.unwatch(this._var_watcher);
+            v.watch(this._var_watcher);
+            old[i] = v;
+        }
+    }
+
     constructor(
         id: string,
         name: string,
@@ -47,6 +90,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.type = type
         this.frame = frame
         this.style = style
+        this._var_watcher = this._var_watcher.bind(this);
     }
 
     /**
@@ -220,10 +264,29 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.isVisible = isVisible;
     }
 
-    onRemoved() { }
+    onRemoved() {
+        this.__var_onwatch.forEach((v) => {
+            v.forEach((v) => v.unwatch(this._var_watcher));
+        })
+        this.__var_onwatch.clear();
+        this.__has_var_notify = undefined;
+    }
 
-    findVar(varId: string): Variable | undefined {
-        return this.parent?.findVar(varId);
+    findVar(varId: string, ret: Variable[]) {
+        this.parent?.findVar(varId, ret);
+    }
+
+    getVisible(): boolean {
+        if (!this.visibleVar) return !!this.isVisible;
+        const _vars: Variable[] = [];
+        this.findVar(this.visibleVar, _vars);
+        // watch vars
+        this._watch_vars("visible", _vars);
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === VariableType.Visible) {
+            return !!_var.value;
+        }
+        return !!this.isVisible;
     }
 }
 
@@ -332,12 +395,17 @@ export class GroupShape extends Shape implements classes.GroupShape {
 export class FlattenShape extends GroupShape implements classes.FlattenShape {
 }
 
+function genRefId(refId: string, type: OverrideType) {
+    if (type === OverrideType.Variable) return refId;
+    return refId + '/' + type;
+}
+
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean // 子对象都为SymbolShape
     unionSymbolRef?: string // Variable:xxxxxx
+    overrides: BasicArray<Override>
     variables: BasicArray<Variable> // 怎么做关联
-    private __varMap: Map<string, Variable>;
 
     constructor(
         id: string,
@@ -346,6 +414,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<Shape>,
+        overrides: BasicArray<Override>,
         variables: BasicArray<Variable>
     ) {
         super(
@@ -356,37 +425,177 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             style,
             childs
         )
+        this.overrides = overrides;
         this.variables = variables;
-        this.__varMap = new Map(variables.map((v) => [v.id, v]))
+    }
+
+    private __varMap?: Map<string, Variable>;
+    private __overridesMap?: Map<string, Override>;
+    private get overrideMap() {
+        if (!this.__overridesMap) {
+            const map = new Map();
+            this.overrides.forEach((o) => {
+                map.set(o.refId, o);
+            })
+            this.__overridesMap = map;
+        }
+        return this.__overridesMap;
+    }
+
+    private get varMap() { // 不可以构造时就初始化，这时的var没有proxy
+        if (!this.__varMap) this.__varMap = new Map(this.variables.map((v) => [v.id, v]));
+        return this.__varMap;
+    }
+
+    private _createVar4Override(type: OverrideType, value: any) {
+        switch (type) {
+            case OverrideType.Borders:
+                return new Variable(uuid(), classes.VariableType.Borders, "");
+            case OverrideType.Fills:
+                return new Variable(uuid(), classes.VariableType.Fills, "");
+            case OverrideType.Image:
+                return new Variable(uuid(), classes.VariableType.ImageRef, "");
+            // case OverrideType.StringValue:
+            //     return new Variable(uuid(), classes.VariableType.StringValue, "");
+            case OverrideType.Text:
+                return new Variable(uuid(), classes.VariableType.Text, "");
+            case OverrideType.Visible:
+                return new Variable(uuid(), classes.VariableType.Visible, "");
+            case OverrideType.Variable:
+                const _val = value as Variable;
+                return _val;
+            default:
+                throw new Error("unknow override type: " + type)
+        }
+    }
+
+    private createVar4Override(type: OverrideType, value: any) {
+        const v = this._createVar4Override(type, value);
+        return this.addVar(v);
+    }
+
+    private createOverrid(refId: string, type: OverrideType, value: any) {
+
+        refId = genRefId(refId, type); // id+type->var
+
+        const v: Variable = this.createVar4Override(type, value);
+        let over = new Override(refId, type, v.id);
+
+        this.overrides.push(over);
+        over = this.overrides[this.overrides.length - 1];
+
+        if (this.__overridesMap) {
+            this.__overridesMap.set(refId, over);
+        }
+
+        return { over, v };
+    }
+
+    // overrideValues
+    addOverrid(refId: string, attr: OverrideType, value: any) {
+        switch (attr) {
+            case OverrideType.Text:
+            // case OverrideType.StringValue:
+            case OverrideType.Image:
+            case OverrideType.Borders:
+            case OverrideType.Fills:
+            case OverrideType.Visible:
+                {
+                    let override = this.getOverrid(refId, attr);
+                    if (!override) {
+                        override = this.createOverrid(refId, attr, value);
+                    }
+                    override.v.value = value;
+                    return override;
+                }
+            case OverrideType.Variable:
+                {
+                    let override = this.getOverrid(refId, attr);
+                    if (!override) {
+                        override = this.createOverrid(refId, attr, value);
+                    }
+                    else {
+                        const _val = value as Variable;
+                        override.over.varId = _val.id; // 映射到新变量
+                        override.v = this.addVar(_val);
+                    }
+                    return override;
+                }
+            default:
+                console.error("unknow override: " + attr, value)
+        }
+    }
+
+    getOverrid(refId: string, type: OverrideType): { over: Override, v: Variable } | undefined {
+        refId = genRefId(refId, type); // id+type->var
+        const over = this.overrideMap.get(refId);
+        if (over) {
+            const v = this.varMap.get(over.varId);
+            if (v) return { over, v }
+        }
     }
 
     addVar(v: Variable) {
         this.variables.push(v);
-        this.__varMap.set(v.id, v);
+        if (this.__varMap) this.__varMap.set(v.id, this.variables[this.variables.length - 1]);
+        return this.variables[this.variables.length - 1];
     }
-    removeVar(varId: string) {
-        const v = this.__varMap.get(varId);
+    deleteVar(varId: string) {
+        const v = this.varMap.get(varId);
         if (v) {
             const i = this.variables.findIndex((v) => v.id === varId)
             this.variables.splice(i, 1);
-            this.__varMap.delete(varId);
+            this.varMap.delete(varId);
         }
         return v;
     }
     getVar(varId: string) {
-        return this.__varMap.get(varId);
+        return this.varMap.get(varId);
     }
 
-    findVar(varId: string): Variable | undefined {
-        const v = this.parent?.findVar(varId); // 父级的优先
-        if (v) return v;
-        return this.getVar(varId);
+    findVar(varId: string, ret: Variable[]) {
+        const override = this.getOverrid(varId, OverrideType.Variable);
+        if (override) {
+            ret.push(override.v);
+            super.findVar(override.v.id, ret);
+            return;
+        }
+        const _var = this.getVar(varId);
+        if (_var) {
+            ret.push(_var);
+            super.findVar(varId, ret);
+            return;
+        }
+        super.findVar(varId, ret);
+    }
+
+    addOverrideAt(over: Override, index: number) {
+        this.overrides.splice(index, 0, over);
+        if (this.__overridesMap) {
+            this.__overridesMap.set(over.refId, over);
+        }
+    }
+    deleteOverrideAt(idx: number) {
+        const ret = this.overrides.splice(idx, 1)[0];
+        if (ret && this.__overridesMap) {
+            this.__overridesMap.delete(ret.refId);
+        }
+        return ret;
+    }
+    deleteOverride(overrideId: string) {
+        const v = this.overrideMap.get(overrideId);
+        if (v) {
+            const i = this.overrides.findIndex((v) => v.refId === overrideId)
+            this.overrides.splice(i, 1);
+            this.overrideMap.delete(overrideId);
+        }
+        return v;
     }
 
     addVariableAt(_var: Variable, index: number) {
         this.variables.splice(index, 0, _var);
         if (this.__varMap) {
-            this.__varMap.set(_var.id, _var);
+            this.__varMap.set(_var.id, this.variables[index]);
         }
     }
     deleteVariableAt(idx: number) {
@@ -653,6 +862,7 @@ export class LineShape extends PathShape implements classes.LineShape {
 export class TextShape extends Shape implements classes.TextShape {
     typeId = 'text-shape'
     text: Text
+    textVar?: string
     fixedRadius?: number
     constructor(
         id: string,
@@ -700,5 +910,18 @@ export class TextShape extends Shape implements classes.TextShape {
 
     getLayout(): TextLayout {
         return this.text.getLayout();
+    }
+
+    getText(): Text {
+        if (!this.textVar) return this.text;
+        const _vars: Variable[] = [];
+        this.findVar(this.textVar, _vars);
+        // watch vars
+        this._watch_vars("text", _vars);
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === VariableType.Text) {
+            return _var.value as Text; // 这要是string?
+        }
+        return this.text;
     }
 }

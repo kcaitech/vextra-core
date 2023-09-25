@@ -619,7 +619,12 @@ class TextShapeHdl extends ShapeHdl {
             }
             let curText = (this.__target as TextShapeLike).text;
             const _ov = o?.v.value;
-            if (_ov) curText = (typeof _ov) === 'string' ? createTextByString(_ov as string, this.__target as TextShapeLike) : _ov as Text;
+
+            // 全部shape拷贝一份
+            // 需要拷贝一份，否则__layout数据会串
+            if (_ov) curText = (typeof _ov) === 'string' ? createTextByString(_ov as string, this.__target as TextShapeLike) : importText(_ov as Text);
+            else curText = importText(curText);
+
             curText.updateSize(this.__frame.width, this.__frame.height);
             this.__text = new Proxy<Text>(curText, new FreezHdl(curText));
             return this.__text;

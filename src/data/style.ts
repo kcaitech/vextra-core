@@ -2,9 +2,10 @@ import * as classes from "./baseclasses"
 import {
     Blur, BorderOptions, ColorControls, ContextSettings,
     Shadow, WindingRule, FillType, Gradient, BorderPosition,
-    BorderStyle, MarkerType, ContactRole
+    BorderStyle, MarkerType, ContactRole, VariableType
 } from "./baseclasses";
-import { Basic, BasicArray, ResourceMgr } from "./basic";
+import { Basic, BasicArray, ResourceMgr, Watchable } from "./basic";
+import { Variable } from "./variable";
 
 export {
     GradientType,
@@ -179,5 +180,36 @@ export class Style extends Basic implements classes.Style {
         this.fills = fills
         borders.setTypeId("borders");
         fills.setTypeId("fills");
+    }
+
+    private _watch_vars(slot: string, vars: Variable[]) {
+        (this.__parent as any)?._watch_vars(slot, vars);
+    }
+    private findVar(varId: string, ret: Variable[]): boolean {
+        return !!(this.__parent as any)?.findVar(varId, ret);
+    }
+    getFills(): BasicArray<Fill> {
+        if (!this.fillsVar) return this.fills;
+        const _vars: Variable[] = [];
+        this.findVar(this.fillsVar, _vars);
+        // watch vars
+        this._watch_vars("style.fills", _vars);
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === VariableType.Fills) {
+            return _var.value;
+        }
+        return this.fills;
+    }
+    getBorders(): BasicArray<Border> {
+        if (!this.bordersVar) return this.borders;
+        const _vars: Variable[] = [];
+        this.findVar(this.bordersVar, _vars);
+        // watch vars
+        this._watch_vars("style.borders", _vars);
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === VariableType.Borders) {
+            return _var.value;
+        }
+        return this.borders;
     }
 }

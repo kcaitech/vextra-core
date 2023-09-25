@@ -1411,6 +1411,14 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         isUnionSymbolShape: source.isUnionSymbolShape,
         unionSymbolRef: source.unionSymbolRef,
+        overrides: (() => {
+            const ret = []
+            for (let i = 0, len = source.overrides.length; i < len; i++) {
+                const r = exportOverride(source.overrides[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         variables: (() => {
             const ret = []
             for (let i = 0, len = source.variables.length; i < len; i++) {

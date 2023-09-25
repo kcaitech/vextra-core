@@ -6,13 +6,14 @@ export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Override
 } from "./baseclasses"
-import { ShapeType, ShapeFrame, OverrideType, Variable, Override } from "./baseclasses"
+import { ShapeType, ShapeFrame, OverrideType, Override } from "./baseclasses"
 import { uuid } from "../basic/uuid";
 import { GroupShape, Shape } from "./shape";
 import { proxyShape } from "./symproxy";
 import { Path } from "./path";
 import { layoutChilds } from "./symlayout";
 import { OverrideShape } from "./overrideshape";
+import { Variable } from "./variable";
 
 
 function genRefId(refId: string, type: OverrideType) {
@@ -29,8 +30,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     overrides: BasicArray<Override>
     variables: BasicArray<Variable>
 
-    private __varMap?: Map<string, Variable>;
-    __overridesMap?: Map<string, Override>;
     __proxyIdMap: Map<string, string> = new Map();
     __childs?: Shape[];
 
@@ -88,17 +87,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.__proxyedVirtualShape;
     }
 
-    private get overrideMap() {
-        if (!this.__overridesMap) {
-            const map = new Map();
-            this.overrides.forEach((o) => {
-                map.set(o.refId, o);
-            })
-            this.__overridesMap = map;
-        }
-        return this.__overridesMap;
-    }
-
     getVirtualChilds(symRef: SymbolRefShape[] | undefined, parent: SymbolRefShape): Shape[] | undefined {
         if (!this.__data) return;
         const sym = this.__data;
@@ -116,6 +104,12 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                 if (c) _sym = c;
             }
         }
+        // todo 这里必须要拷贝一份对象数据，否则对象数据里的临时数据会起冲突？
+        // 暂时不会，目前所有会修改的都提前拷贝了？？
+        // 会串的有： symbolref.__data, 这个支持不同实例后，是不一样的
+        // text.__layout
+        // objectId
+        // 
         const childs = (_sym.childs || []).map((v: Shape) => proxyShape(v, parent, _symRef));
         const thisframe = this.frame;
         const symframe = _sym.frame;
@@ -175,6 +169,70 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         this.__data = this.__symMgr && await this.__symMgr.get(this.refId);
         if (this.__data) this.notify();
         return this.__data;
+    }
+
+    onRemoved(): void {
+        // 构建symbol proxy shadow, 在这里需要unwatch
+
+        this._reLayout();
+        this.__data?.unwatch(this.watcher);
+    }
+
+    _reLayout() {
+        if (this.__childs) {
+            // todo compare
+            this.__childs.forEach((c: any) => c.remove)
+            this.__childs = undefined;
+        }
+    }
+
+    private __hasNotify: any;
+    reLayout() {
+        this._reLayout();
+        if (!this.__hasNotify) { // 这里有界面监听实时更新视图，导致反复实例proxy数据
+            this.__hasNotify = setTimeout(() => {
+                this.notify()
+                this.__hasNotify = undefined;
+            }, 0);
+        }
+    }
+
+    setFrameSize(w: number, h: number): void {
+        super.setFrameSize(w, h);
+        this._reLayout(); // todo 太粗暴了！
+    }
+
+    getPath(): Path {
+        const x = 0;
+        const y = 0;
+        const w = this.frame.width;
+        const h = this.frame.height;
+        const path = [
+            ["M", x, y],
+            ["l", w, 0],
+            ["l", 0, h],
+            ["l", -w, 0],
+            ["z"]
+        ]
+        return new Path(path);
+    }
+
+    private __varMap?: Map<string, Variable>;
+    private __overridesMap?: Map<string, Override>;
+    private get overrideMap() {
+        if (!this.__overridesMap) {
+            const map = new Map();
+            this.overrides.forEach((o) => {
+                map.set(o.refId, o);
+            })
+            this.__overridesMap = map;
+        }
+        return this.__overridesMap;
+    }
+
+    private get varMap() { // 不可以构造时就初始化，这时的var没有proxy
+        if (!this.__varMap) this.__varMap = new Map(this.variables.map((v) => [v.id, v]));
+        return this.__varMap;
     }
 
     private _createVar4Override(type: OverrideType, value: any) {
@@ -256,11 +314,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         }
     }
 
-    private get varMap() { // 不可以构造时就初始化，这时的var没有proxy
-        if (!this.__varMap) this.__varMap = new Map(this.variables.map((v) => [v.id, v]));
-        return this.__varMap;
-    }
-
     getOverrid(refId: string, type: OverrideType): { over: Override, v: Variable } | undefined {
         refId = genRefId(refId, type); // id+type->var
         const over = this.overrideMap.get(refId);
@@ -268,52 +321,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             const v = this.varMap.get(over.varId);
             if (v) return { over, v }
         }
-    }
-
-    onRemoved(): void {
-        // 构建symbol proxy shadow, 在这里需要unwatch
-
-        this._reLayout();
-        this.__data?.unwatch(this.watcher);
-    }
-
-    _reLayout() {
-        if (this.__childs) {
-            // todo compare
-            this.__childs.forEach((c: any) => c.remove)
-            this.__childs = undefined;
-        }
-    }
-
-    private __hasNotify: any;
-    reLayout() {
-        this._reLayout();
-        if (!this.__hasNotify) { // 这里有界面监听实时更新视图，导致反复实例proxy数据
-            this.__hasNotify = setTimeout(() => {
-                this.notify()
-                this.__hasNotify = undefined;
-            }, 0);
-        }
-    }
-
-    setFrameSize(w: number, h: number): void {
-        super.setFrameSize(w, h);
-        this._reLayout(); // todo 太粗暴了！
-    }
-
-    getPath(): Path {
-        const x = 0;
-        const y = 0;
-        const w = this.frame.width;
-        const h = this.frame.height;
-        const path = [
-            ["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]
-        ]
-        return new Path(path);
     }
 
     addVar(v: Variable) {
@@ -334,10 +341,20 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.varMap.get(varId);
     }
 
-    findVar(varId: string): Variable | undefined {
-        const v = this.parent?.findVar(varId); // 父级的优先
-        if (v) return v;
-        return this.getVar(varId);
+    findVar(varId: string, ret: Variable[]) {
+        const override = this.getOverrid(varId, OverrideType.Variable);
+        if (override) {
+            ret.push(override.v);
+            super.findVar(override.v.id, ret);
+            return;
+        }
+        const _var = this.getVar(varId);
+        if (_var) {
+            ret.push(_var);
+            super.findVar(varId, ret);
+            return;
+        }
+        super.findVar(varId, ret);
     }
 
     addOverrideAt(over: Override, index: number) {

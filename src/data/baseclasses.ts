@@ -1192,6 +1192,7 @@ export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean
     unionSymbolRef?: string
+    overrides: BasicArray<Override >
     variables: BasicArray<Variable >
     constructor(
         id: string,
@@ -1200,6 +1201,7 @@ export class SymbolShape extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >,
+        overrides: BasicArray<Override >,
         variables: BasicArray<Variable >
     ) {
         super(
@@ -1210,6 +1212,7 @@ export class SymbolShape extends GroupShape {
             style,
             childs
         )
+        this.overrides = overrides
         this.variables = variables
     }
 }

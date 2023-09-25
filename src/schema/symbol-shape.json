@@ -8,6 +8,12 @@
         "unionSymbolRef": {
             "type": "string"
         },
+        "overrides": {
+            "type": "array",
+            "items": {
+                "$ref": "./override.json"
+            }
+        },
         "variables": {
             "type": "array",
             "items": {
@@ -16,6 +22,7 @@
         }
     },
     "required": [
+        "overrides",
         "variables"
     ],
     "allOf": [
