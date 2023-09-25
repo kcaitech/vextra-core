@@ -254,7 +254,7 @@ export class PageEditor {
      * 
      * @param shape 
      */
-    makeSymbol(shapes: Shape[], name?: string) {
+    makeSymbol(document: Document, shapes: Shape[], name?: string) {
         if (shapes.length === 0) return;
         const api = this.__repo.start("makeSymbol", {});
         try {
@@ -279,8 +279,13 @@ export class PageEditor {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 sym = group(this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
             }
-            this.__repo.commit();
-            return sym as any as SymbolShape;
+            if (sym) {
+                document.symbolsMgr.add(sym.id, sym as GroupShape);
+                this.__repo.commit();
+                return sym as any as SymbolShape;
+            } else {
+                throw new Error('failed')
+            }
         }
         catch (e) {
             console.log(e)
