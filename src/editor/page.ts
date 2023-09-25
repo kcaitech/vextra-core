@@ -2,7 +2,7 @@ import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/sh
 import { ShapeEditor } from "./shape";
 import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape, newSymbolShape, newSymbolRefShape, initFrame } from "./creator";
+import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape, newSymbolShape, newSymbolRefShape, initFrame, newSymbolShapeUnion } from "./creator";
 import { Document } from "../data/document";
 import { translateTo, translate, expand } from "./frame";
 import { uuid } from "../basic/uuid";
@@ -14,14 +14,14 @@ import { transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
-import { IImportContext, importBorder, importGroupShape, importStyle } from "../data/baseimport";
+import { IImportContext, importBorder, importGroupShape, importShapeFrame, importStyle, importSymbolShape } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
-import { exportGroupShape } from "../data/baseexport";
+import { exportGroupShape, exportShapeFrame, exportSymbolShape } from "../data/baseexport";
 import * as types from "../data/typesdefine";
-import { SymbolShape } from "../data/baseclasses";
+import { SymbolShape } from "../data/shape";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -278,9 +278,9 @@ export class PageEditor {
                 const symbolShape = newSymbolShape(name ?? shape0.name, new ShapeFrame(frame.x, frame.y, frame.width, frame.height));
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 sym = group(this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
+                document.symbolsMgr.add(sym.id, sym as GroupShape);
             }
             if (sym) {
-                document.symbolsMgr.add(sym.id, sym as GroupShape);
                 this.__repo.commit();
                 return sym as any as SymbolShape;
             } else {
@@ -289,6 +289,40 @@ export class PageEditor {
         }
         catch (e) {
             console.log(e)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 创建组件状态集合
+     */
+    makeSymbolUnion(symbol: SymbolShape, state_name: string) {
+        const p = symbol.parent;
+        if (!p) return;
+        const box = (symbol as unknown as Shape).boundingBox();
+        const union_frame = new ShapeFrame(box.x - 20, box.y - 20, box.width + 40, box.height + 40);
+        let union = newSymbolShapeUnion(symbol, union_frame);
+        const api = this.__repo.start("makeSymbolUnion", {});
+        try {
+            const index = symbol.parent.indexOfChild(symbol);
+            api.shapeDelete(this.__page, p as GroupShape, index);
+            const insert_result = api.shapeInsert(this.__page, p as GroupShape, union, index);
+            if (!insert_result) throw new Error('failed');
+            const default_state_source = exportSymbolShape(symbol);
+            default_state_source.id = uuid();
+            default_state_source.name = state_name;
+            default_state_source.frame.x = 20;
+            default_state_source.frame.y = 20;
+            const default_state = importSymbolShape(default_state_source);
+            union = api.shapeInsert(this.__page, union, default_state, 0) as unknown as SymbolShape;
+            if (union) {
+                this.__repo.commit();
+                return union as any as SymbolShape;
+            } else {
+                throw new Error('failed');
+            }
+        } catch (error) {
+            console.log(error)
             this.__repo.rollback();
         }
     }
