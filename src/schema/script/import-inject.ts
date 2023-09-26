@@ -86,12 +86,7 @@ inject['Artboard']['after'] = `\
     // inject code
     if (ctx?.document) ctx.document.artboardMgr.add(ret.id, ret);
 `
-inject['GroupShape'] = {};
-inject['GroupShape']['after'] = `\
-    // inject code
-    ret.type = types.ShapeType.Group;
-    if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
-`
+
 inject['FlattenShape'] = {};
 inject['FlattenShape']['content'] = `\
     // inject code
@@ -105,5 +100,4 @@ inject['SymbolShape'] = {};
 inject['SymbolShape']['after'] = `\
     // inject code
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
-    return ret;
 `

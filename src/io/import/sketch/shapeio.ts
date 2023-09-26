@@ -325,7 +325,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): Group
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicArray(), new BasicArray());
+    const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicArray());
 
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);

@@ -53,7 +53,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         }
     }
 
-    protected _watch_vars(slot: string, vars: Variable[]) {
+    _watch_vars(slot: string, vars: Variable[]) {
         const old = this.__var_onwatch.get(slot);
         if (!old) {
             vars.forEach((v) => v.watch(this._var_watcher));
@@ -404,7 +404,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean // 子对象都为SymbolShape
     unionSymbolRef?: string // Variable:xxxxxx
-    overrides: BasicArray<Override>
     variables: BasicArray<Variable> // 怎么做关联
 
     constructor(
@@ -414,7 +413,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<Shape>,
-        overrides: BasicArray<Override>,
         variables: BasicArray<Variable>
     ) {
         super(
@@ -425,22 +423,10 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             style,
             childs
         )
-        this.overrides = overrides;
         this.variables = variables;
     }
 
     private __varMap?: Map<string, Variable>;
-    private __overridesMap?: Map<string, Override>;
-    private get overrideMap() {
-        if (!this.__overridesMap) {
-            const map = new Map();
-            this.overrides.forEach((o) => {
-                map.set(o.refId, o);
-            })
-            this.__overridesMap = map;
-        }
-        return this.__overridesMap;
-    }
 
     private get varMap() { // 不可以构造时就初始化，这时的var没有proxy
         if (!this.__varMap) this.__varMap = new Map(this.variables.map((v) => [v.id, v]));
@@ -567,29 +553,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             return;
         }
         super.findVar(varId, ret);
-    }
-
-    addOverrideAt(over: Override, index: number) {
-        this.overrides.splice(index, 0, over);
-        if (this.__overridesMap) {
-            this.__overridesMap.set(over.refId, over);
-        }
-    }
-    deleteOverrideAt(idx: number) {
-        const ret = this.overrides.splice(idx, 1)[0];
-        if (ret && this.__overridesMap) {
-            this.__overridesMap.delete(ret.refId);
-        }
-        return ret;
-    }
-    deleteOverride(overrideId: string) {
-        const v = this.overrideMap.get(overrideId);
-        if (v) {
-            const i = this.overrides.findIndex((v) => v.refId === overrideId)
-            this.overrides.splice(i, 1);
-            this.overrideMap.delete(overrideId);
-        }
-        return v;
     }
 
     addVariableAt(_var: Variable, index: number) {

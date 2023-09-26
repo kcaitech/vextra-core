@@ -1356,9 +1356,6 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    // inject code
-    ret.type = types.ShapeType.Group;
-    if (ctx?.document && ret.isUsedToBeSymbol) ctx.document.symbolsMgr.add(ret.id, ret);
     return ret
 }
 /* symbol shape */
@@ -1422,14 +1419,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
             return ret
         })(),
         (() => {
-            const ret = new BasicArray<impl.Override>()
-            for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
-                const r = importOverride(source.overrides[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        (() => {
             const ret = new BasicArray<impl.Variable>()
             for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
                 const r = importVariable(source.variables[i], ctx)
@@ -1461,7 +1450,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     if (source.unionSymbolRef !== undefined) ret.unionSymbolRef = source.unionSymbolRef
     // inject code
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
-    return ret;
     return ret
 }
 /* flatten shape */
