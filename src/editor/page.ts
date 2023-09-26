@@ -10,7 +10,7 @@ import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text, SymbolRefShape } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
-import { transform_data } from "../io/cilpboard";
+import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
@@ -22,6 +22,7 @@ import { TableEditor } from "./table";
 import { exportGroupShape, exportShapeFrame, exportSymbolShape } from "../data/baseexport";
 import * as types from "../data/typesdefine";
 import { SymbolShape } from "../data/shape";
+import { find_state_space } from "./utils";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -340,17 +341,24 @@ export class PageEditor {
      * @description 基于内部原有状态建立新状态
      * @union union
      */
-    makeStateAt(union: SymbolShape, index: number) {
+    makeStateAt(union: SymbolShape, name: string, index?: number) {
         if (!union.isUnionSymbolShape || !union.childs.length) return;
-        if (index > union.childs.length || index < 0) return;
-        const origin = union.childs[index - 1];
+        let idx = index || union.childs.length;
+        if (index && (index > union.childs.length || index < 0)) idx = union.childs.length;
+        const origin = union.childs[idx - 1];
         if (!origin) return;
         try {
             const source = exportSymbolShape(origin as unknown as SymbolShape);
             source.id = uuid();
+            source.name = name;
+            set_childs_id(source.childs as Shape[]);
+            const pre_y = find_state_space(union);
+            if (pre_y < 0) throw new Error('failed');
+            source.frame.y = pre_y + 20;
             const copy = importSymbolShape(source);
             const api = this.__repo.start("makeStateAt", {});
-            const new_state = api.shapeInsert(this.__page, union, copy, index);
+            const new_state = api.shapeInsert(this.__page, union, copy, union.childs.length);
+            api.shapeModifyHeight(this.__page, union, union.frame.height + source.frame.height + 20);
             if (new_state) {
                 this.__repo.commit();
                 return new_state as any as SymbolShape;

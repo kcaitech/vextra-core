@@ -1,5 +1,5 @@
 import { float_accuracy } from "../basic/consts";
-import { TableShape, Page, Shape, Style, TextBehaviour, Text, TextShape, TableCell } from "../data/classes";
+import { TableShape, Page, Shape, Style, TextBehaviour, Text, TextShape, TableCell, SymbolShape } from "../data/classes";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
@@ -57,4 +57,19 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
         api.tableModifyRowHeight(page, table, rowIdx, weight);
         api.shapeModifyWH(page, table, table.frame.width, table.frame.height + layout.contentHeight - height);
     }
+}
+export function find_state_space(union: SymbolShape) {
+    if (!union.isUnionSymbolShape) return -1;
+    const childs = union.childs;
+    if (!childs.length) return -1;
+    let y = -1;
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const child = childs[i];
+        const m2p = child.matrix2Parent(), f = child.frame;
+        const point = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m2p.computeCoord3(p));
+        for (let j = 0; j < 4; j++) {
+            if (point[j].y > y) y = point[j].y;
+        }
+    }
+    return y;
 }
