@@ -389,6 +389,14 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.visible, isVisible, save));
         })
     }
+    shapeModifyIsUnion(page: Page, shape: Shape, isUnionSymbolShape: boolean) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const save = shape.isUnionSymbolShape;
+            shape.isUnionSymbolShape = isUnionSymbolShape;
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.isUnionSymbolShape, isUnionSymbolShape, save))
+        })
+    }
     shapeModifyLock(page: Page, shape: Shape, isLocked: boolean) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {

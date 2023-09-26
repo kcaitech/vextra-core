@@ -299,28 +299,38 @@ export class PageEditor {
     makeSymbolUnion(symbol: SymbolShape, state_name: string) {
         const p = symbol.parent;
         if (!p) return;
-        const box = (symbol as unknown as Shape).boundingBox();
-        const union_frame = new ShapeFrame(box.x - 20, box.y - 20, box.width + 40, box.height + 40);
-        let union = newSymbolShapeUnion(symbol, union_frame);
+        const state_frame = new ShapeFrame(20, 20, symbol.frame.width, symbol.frame.height);
         const api = this.__repo.start("makeSymbolUnion", {});
         try {
-            const index = symbol.parent.indexOfChild(symbol);
-            api.shapeDelete(this.__page, p as GroupShape, index);
-            const insert_result = api.shapeInsert(this.__page, p as GroupShape, union, index);
-            if (!insert_result) throw new Error('failed');
-            const default_state_source = exportSymbolShape(symbol);
-            default_state_source.id = uuid();
-            default_state_source.name = state_name;
-            default_state_source.frame.x = 20;
-            default_state_source.frame.y = 20;
-            const default_state = importSymbolShape(default_state_source);
-            union = api.shapeInsert(this.__page, union, default_state, 0) as unknown as SymbolShape;
-            if (union) {
-                this.__repo.commit();
-                return union as any as SymbolShape;
-            } else {
-                throw new Error('failed');
+            let n_sym = newSymbolShape(state_name, state_frame);
+            const insert_result = api.shapeInsert(this.__page, symbol, n_sym, 0);
+            if (!insert_result) throw new Error('failed: !insert_result');
+            const childs = symbol.childs;
+            for (let i = 1, len = childs.length; i < len; ++i) {
+                api.shapeMove(this.__page, symbol, 1, n_sym, i - 1);
             }
+            const box = symbol.boundingBox();
+            if (symbol.rotation) {
+                api.shapeModifyRotate(this.__page, n_sym, symbol.rotation);
+                api.shapeModifyRotate(this.__page, symbol, 0);
+            }
+            if (symbol.isFlippedHorizontal) {
+                api.shapeModifyHFlip(this.__page, n_sym, true);
+                api.shapeModifyHFlip(this.__page, symbol, false);
+            }
+            if (symbol.isFlippedVertical) {
+                api.shapeModifyVFlip(this.__page, n_sym, true);
+                api.shapeModifyVFlip(this.__page, symbol, false);
+            }
+            api.shapeModifyX(this.__page, symbol, box.x - 20);
+            api.shapeModifyY(this.__page, symbol, box.y - 20);
+            api.shapeModifyWH(this.__page, symbol, box.width + 40, box.height + 40);
+            api.shapeModifyIsUnion(this.__page, symbol, true);
+            const border_style = new BorderStyle(10, 10);
+            const boder = new Border(uuid(), true, types.FillType.SolidColor, new Color(1, 86, 7, 246), BorderPosition.Inner, 2, border_style);
+            api.addBorderAt(this.__page, symbol, boder, 0);
+            this.__repo.commit();
+            return symbol as any as SymbolShape;
         } catch (error) {
             console.log(error)
             this.__repo.rollback();

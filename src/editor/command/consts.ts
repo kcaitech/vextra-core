@@ -22,6 +22,7 @@ export const SHAPE_ATTR_ID = {
     boolop: "boolop",
     isboolopshape: "isboolopshape",
     // issymbolshape: "issymbolshape",
+    isUnionSymbolShape: "isUnionSymbolShape",
     fixedRadius: "fixedRadius",
     startMarkerType: "startMarkerType",
     endMarkerType: "endMarkerType",
