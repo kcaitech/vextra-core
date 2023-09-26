@@ -4,8 +4,10 @@ import { CurvePoint, PathShape, Point2D, Shape } from "./shape";
 import { ContactType, CurveMode } from "./typesdefine";
 import { Api } from "editor/command/recordapi";
 import { Page } from "./page";
-import { importCurvePoint } from "../data/baseimport";
-import { exportCurvePoint } from "../data/baseexport";
+import { importCurvePoint } from "./baseimport";
+import { exportCurvePoint } from "./baseexport";
+import { importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
+import * as types from "./typesdefine"
 
 /**
  * @description root -> 图形自身上且单位为比例系数的矩阵
@@ -549,3 +551,51 @@ export function update_contact_points(api: Api, shape: Shape, page: Page) {
     }
     api.addPoints(page, shape as PathShape, _p);
 }
+
+export function copyShape(source: types.Shape) {
+    if (source.typeId == 'flatten-shape') {
+        return importFlattenShape(source as types.FlattenShape)
+    }
+    if (source.typeId == 'group-shape') {
+        return importGroupShape(source as types.GroupShape)
+    }
+    if (source.typeId == 'image-shape') {
+        return importImageShape(source as types.ImageShape)
+    }
+    if (source.typeId == 'path-shape') {
+        return importPathShape(source as types.PathShape)
+    }
+    if (source.typeId == 'path-shape2') {
+        return importPathShape2(source as types.PathShape2)
+    }
+    if (source.typeId == 'rect-shape') {
+        return importRectShape(source as types.RectShape)
+    }
+    if (source.typeId == 'symbol-ref-shape') {
+        return importSymbolRefShape(source as types.SymbolRefShape)
+    }
+    if (source.typeId == 'text-shape') {
+        return importTextShape(source as types.TextShape)
+    }
+    if (source.typeId == 'artboard') {
+        return importArtboard(source as types.Artboard)
+    }
+    if (source.typeId == 'line-shape') {
+        return importLineShape(source as types.LineShape)
+    }
+    if (source.typeId == 'oval-shape') {
+        return importOvalShape(source as types.OvalShape)
+    }
+    if (source.typeId == 'table-shape') {
+        return importTableShape(source as types.TableShape)
+    }
+    if (source.typeId == 'table-cell') {
+        return importTableCell(source as types.TableCell)
+    }
+    if (source.typeId == 'contact-shape') {
+        return importContactShape(source as types.ContactShape)
+    }
+    throw new Error("unknow shape type: " + source.typeId)
+}
+
+

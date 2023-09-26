@@ -8,12 +8,15 @@ export {
 } from "./baseclasses"
 import { ShapeType, ShapeFrame, OverrideType, Override } from "./baseclasses"
 import { uuid } from "../basic/uuid";
-import { GroupShape, Shape } from "./shape";
+import { GroupShape, Shape, SymbolShape } from "./shape";
 import { proxyShape } from "./symproxy";
 import { Path } from "./path";
 import { layoutChilds } from "./symlayout";
 import { OverrideShape } from "./overrideshape";
 import { Variable } from "./variable";
+import { IImportContext, importSymbolShape } from "./baseimport";
+import { proxyShape2 } from "./symproxy2";
+import { Document } from "./document";
 
 
 function genRefId(refId: string, type: OverrideType) {
@@ -83,6 +86,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             ShapeType.OverrideShape,
             new ShapeFrame(0, 0, 0, 0),
             new Style(new BasicArray(), new BasicArray()));
+        // proxy是为了自动将编辑命令定向到override的数据
+        // 在api层区分是shape修改还是variable、override修改，简单化数据层
         this.__proxyedVirtualShape = proxyShape(this.__virtualShape, this, [this]);
         return this.__proxyedVirtualShape;
     }
@@ -109,8 +114,17 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         // 会串的有： symbolref.__data, 这个支持不同实例后，是不一样的
         // text.__layout
         // objectId
-        // 
-        const childs = (_sym.childs || []).map((v: Shape) => proxyShape(v, parent, _symRef));
+        // 缺少document, 
+
+        const copy = importSymbolShape(_sym as SymbolShape);
+        // const childs = (_sym.childs || []).map((v: Shape) => proxyShape(v, parent, _symRef));
+
+        const childs = copy.childs;
+        const origin_childs = (_sym as GroupShape).childs;
+        for (let i = 0, len = childs.length; i < len; ++i) {
+            childs[i] = proxyShape2(childs[i], this, origin_childs[i], _symRef)
+        }
+
         const thisframe = this.frame;
         const symframe = _sym.frame;
         if (thisframe.width !== symframe.width || thisframe.height !== symframe.height) {
@@ -147,6 +161,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     setSymbolMgr(mgr: ResourceMgr<GroupShape>) {
         this.__symMgr = mgr;
+    }
+    getSymbolMgr() {
+        return this.__symMgr;
     }
     private __startLoad: boolean = false;
     peekSymbol(startLoad: boolean = false): GroupShape | undefined {
