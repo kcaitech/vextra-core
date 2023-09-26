@@ -22,7 +22,7 @@ import { TableEditor } from "./table";
 import { exportGroupShape, exportShapeFrame, exportSymbolShape } from "../data/baseexport";
 import * as types from "../data/typesdefine";
 import { SymbolShape } from "../data/shape";
-import { find_state_space } from "./utils";
+import { find_state_space, modify_frame_after_inset_state } from "./utils";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -358,7 +358,7 @@ export class PageEditor {
             const copy = importSymbolShape(source);
             const api = this.__repo.start("makeStateAt", {});
             const new_state = api.shapeInsert(this.__page, union, copy, union.childs.length);
-            api.shapeModifyHeight(this.__page, union, union.frame.height + source.frame.height + 20);
+            modify_frame_after_inset_state(this.__page, api, union);
             if (new_state) {
                 this.__repo.commit();
                 return new_state as any as SymbolShape;

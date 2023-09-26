@@ -1,5 +1,6 @@
 import { float_accuracy } from "../basic/consts";
 import { TableShape, Page, Shape, Style, TextBehaviour, Text, TextShape, TableCell, SymbolShape } from "../data/classes";
+import { Api } from "./command/recordapi";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
@@ -72,4 +73,11 @@ export function find_state_space(union: SymbolShape) {
         }
     }
     return y;
+}
+export function modify_frame_after_inset_state(page: Page, api: Api, union: SymbolShape) {
+    const y = find_state_space(union);
+    const delta = union.frame.height - y;
+    if (delta <= 0) {
+        api.shapeModifyHeight(page, union, union.frame.height - delta + 20)
+    }
 }

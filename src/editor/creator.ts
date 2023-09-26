@@ -305,7 +305,7 @@ export function newSymbolShapeUnion(default_sym: SymbolShape, frame: ShapeFrame)
     const style = newflatStyle();
     const fill = new Fill(uuid(), false, types.FillType.SolidColor, new Color(1, 128, 128, 128));
     style.fills.push(fill);
-    const union = new SymbolShape(default_sym.id, default_sym.name, types.ShapeType.Symbol, frame, style, new BasicArray(), new BasicArray(), new BasicArray());
+    const union = new SymbolShape(default_sym.id, default_sym.name, types.ShapeType.Symbol, frame, style, new BasicArray(), new BasicArray());
     addCommonAttr(union);
     default_sym.isUnionSymbolShape = true;
     return union;
