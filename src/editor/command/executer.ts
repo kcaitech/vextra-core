@@ -26,17 +26,7 @@ import {
 import { Document } from "../../data/document";
 import {
     IImportContext,
-    importFlattenShape,
-    importArtboard,
-    importGroupShape,
-    importImageShape,
-    importLineShape,
-    importOvalShape,
     importPage,
-    importPathShape,
-    importRectShape,
-    importSymbolRefShape,
-    importTextShape,
     importFill,
     importBorder,
     importColor,
@@ -45,10 +35,7 @@ import {
     importText,
     importSpanAttr,
     importPoint2D,
-    importTableShape,
-    importPathShape2,
     importTableCell,
-    importContactShape,
     importContactRole,
     importCurvePoint,
     importOverride,
@@ -79,62 +66,12 @@ import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, OVERRI
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
 import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
-import { updateShapesFrame } from "./utils";
+import { importShape, updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { CMDHandler } from "./handler";
 
 type TextShapeLike = Shape & { text: Text }
 
-function importShape(data: string, document: Document) {
-    const source: { [key: string]: any } = JSON.parse(data);
-    const ctx: IImportContext = new class implements IImportContext { document: Document = document };
-    // if (source.typeId == 'shape') {
-    //     return importShape(source as types.Shape, ctx)
-    // }
-    if (source.typeId == 'flatten-shape') {
-        return importFlattenShape(source as types.FlattenShape, ctx)
-    }
-    if (source.typeId == 'group-shape') {
-        return importGroupShape(source as types.GroupShape, ctx)
-    }
-    if (source.typeId == 'image-shape') {
-        return importImageShape(source as types.ImageShape, ctx)
-    }
-    if (source.typeId == 'path-shape') {
-        return importPathShape(source as types.PathShape, ctx)
-    }
-    if (source.typeId == 'path-shape2') {
-        return importPathShape2(source as types.PathShape2, ctx)
-    }
-    if (source.typeId == 'rect-shape') {
-        return importRectShape(source as types.RectShape, ctx)
-    }
-    if (source.typeId == 'symbol-ref-shape') {
-        return importSymbolRefShape(source as types.SymbolRefShape, ctx)
-    }
-    if (source.typeId == 'text-shape') {
-        return importTextShape(source as types.TextShape, ctx)
-    }
-    if (source.typeId == 'artboard') {
-        return importArtboard(source as types.Artboard, ctx)
-    }
-    if (source.typeId == 'line-shape') {
-        return importLineShape(source as types.LineShape, ctx)
-    }
-    if (source.typeId == 'oval-shape') {
-        return importOvalShape(source as types.OvalShape, ctx)
-    }
-    if (source.typeId == 'table-shape') {
-        return importTableShape(source as types.TableShape, ctx)
-    }
-    if (source.typeId == 'table-cell') {
-        return importTableCell(source as types.TableCell, ctx)
-    }
-    if (source.typeId == 'contact-shape') {
-        return importContactShape(source as types.ContactShape, ctx)
-    }
-    throw new Error("unknow shape type: " + source.typeId)
-}
 
 export class CMDExecuter {
     private __document: Document;

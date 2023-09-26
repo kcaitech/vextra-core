@@ -296,7 +296,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
 }
 
 export function newSymbolShape(name: string, frame: ShapeFrame): SymbolShape {
-    const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicArray(), new BasicArray());
+    const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicArray());
     addCommonAttr(compo);
     compo.isUnionSymbolShape = false;
     return compo;
