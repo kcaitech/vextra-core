@@ -327,7 +327,7 @@ export class PageEditor {
             api.shapeModifyWH(this.__page, symbol, box.width + 40, box.height + 40);
             api.shapeModifyIsUnion(this.__page, symbol, true);
             const border_style = new BorderStyle(10, 10);
-            const boder = new Border(uuid(), true, types.FillType.SolidColor, new Color(1, 86, 7, 246), BorderPosition.Inner, 2, border_style);
+            const boder = new Border(uuid(), true, types.FillType.SolidColor, new Color(1, 255, 153, 0), BorderPosition.Inner, 2, border_style);
             api.addBorderAt(this.__page, symbol, boder, 0);
             this.__repo.commit();
             return symbol as any as SymbolShape;
