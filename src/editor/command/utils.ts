@@ -1,11 +1,14 @@
-import { exportArtboard, exportFlattenShape, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape, exportSymbolShape } from "../../data/baseexport";
+import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape, exportSymbolShape } from "../../data/baseexport";
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
-import { FlattenShape, GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, TextShape } from "../../data/shape";
+import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, TextShape } from "../../data/shape";
 import { TableCell, TableShape } from "../../data/table";
 import { ContactShape } from "../../data/contact";
 import { Page } from "../../data/page";
 import { SymbolRefShape } from "../../data/classes";
+import { IImportContext, importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "../../data/baseimport";
+import * as types from "../../data/typesdefine"
+import { Document } from "../../data/document";
 
 export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
@@ -197,6 +200,57 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
         next.changed = changed;
     }
     page.__collect.notify('collect'); // 收集辅助线采用的关键点位
+}
+
+export function importShape(data: string, document: Document) {
+    const source: { [key: string]: any } = JSON.parse(data);
+    const ctx: IImportContext = new class implements IImportContext { document: Document = document };
+    // if (source.typeId == 'shape') {
+    //     return importShape(source as types.Shape, ctx)
+    // }
+    if (source.typeId == 'flatten-shape') {
+        return importFlattenShape(source as types.FlattenShape, ctx)
+    }
+    if (source.typeId == 'group-shape') {
+        return importGroupShape(source as types.GroupShape, ctx)
+    }
+    if (source.typeId == 'image-shape') {
+        return importImageShape(source as types.ImageShape, ctx)
+    }
+    if (source.typeId == 'path-shape') {
+        return importPathShape(source as types.PathShape, ctx)
+    }
+    if (source.typeId == 'path-shape2') {
+        return importPathShape2(source as types.PathShape2, ctx)
+    }
+    if (source.typeId == 'rect-shape') {
+        return importRectShape(source as types.RectShape, ctx)
+    }
+    if (source.typeId == 'symbol-ref-shape') {
+        return importSymbolRefShape(source as types.SymbolRefShape, ctx)
+    }
+    if (source.typeId == 'text-shape') {
+        return importTextShape(source as types.TextShape, ctx)
+    }
+    if (source.typeId == 'artboard') {
+        return importArtboard(source as types.Artboard, ctx)
+    }
+    if (source.typeId == 'line-shape') {
+        return importLineShape(source as types.LineShape, ctx)
+    }
+    if (source.typeId == 'oval-shape') {
+        return importOvalShape(source as types.OvalShape, ctx)
+    }
+    if (source.typeId == 'table-shape') {
+        return importTableShape(source as types.TableShape, ctx)
+    }
+    if (source.typeId == 'table-cell') {
+        return importTableCell(source as types.TableCell, ctx)
+    }
+    if (source.typeId == 'contact-shape') {
+        return importContactShape(source as types.ContactShape, ctx)
+    }
+    throw new Error("unknow shape type: " + source.typeId)
 }
 
 export function exportShape(shape: Shape): Object {
