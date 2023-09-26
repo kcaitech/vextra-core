@@ -336,7 +336,39 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    /**
+     * @description 基于内部原有状态建立新状态
+     * @union union
+     */
+    makeStateAt(union: SymbolShape, index: number) {
+        if (!union.isUnionSymbolShape || !union.childs.length) return;
+        if (index > union.childs.length || index < 0) return;
+        const origin = union.childs[index - 1];
+        if (!origin) return;
+        try {
+            const source = exportSymbolShape(origin as unknown as SymbolShape);
+            source.id = uuid();
+            const copy = importSymbolShape(source);
+            const api = this.__repo.start("makeStateAt", {});
+            const new_state = api.shapeInsert(this.__page, union, copy, index);
+            if (new_state) {
+                this.__repo.commit();
+                return new_state as any as SymbolShape;
+            } else {
+                throw new Error('failed');
+            }
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+    /**
+     * @description 从外部引入一个状态
+     * @symbol 外部组件
+     */
+    insertStateAt(union: SymbolShape, symbol: SymbolShape, index: number) {
 
+    }
     /**
      * 将引用的组件解引用
      * todo 考虑union symbol
