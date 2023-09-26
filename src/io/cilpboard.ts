@@ -6,7 +6,7 @@ import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/creator";
 
-function set_childs_id(shapes: Shape[]) {
+export function set_childs_id(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         const shape = shapes[i];
         if (!shape) continue;
