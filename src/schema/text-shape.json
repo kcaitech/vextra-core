@@ -7,9 +7,6 @@
         },
         "fixedRadius": {
             "type": "number"
-        },
-        "textVar": {
-            "type": "string"
         }
     },
     "required": [

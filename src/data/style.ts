@@ -2,9 +2,10 @@ import * as classes from "./baseclasses"
 import {
     Blur, BorderOptions, ColorControls, ContextSettings,
     Shadow, WindingRule, FillType, Gradient, BorderPosition,
-    BorderStyle, MarkerType, ContactRole, VariableType
+    BorderStyle, MarkerType, ContactRole, VariableType, VariableBind
 } from "./baseclasses";
 import { Basic, BasicArray, ResourceMgr, Watchable } from "./basic";
+import { STYLE_VAR_SLOT } from "./consts";
 import { Variable } from "./variable";
 
 export {
@@ -161,16 +162,16 @@ export class Style extends Basic implements classes.Style {
     blur?: Blur
     borderOptions?: BorderOptions
     borders: BasicArray<Border>
-    bordersVar?: string
     colorControls?: ColorControls
     contextSettings?: ContextSettings
     fills: BasicArray<Fill>
-    fillsVar?: string
     innerShadows?: BasicArray<Shadow>
     shadows?: BasicArray<Shadow>
     contacts?: BasicArray<ContactRole>
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
+    varbinds?: BasicArray<VariableBind >
+
     constructor(
         borders: BasicArray<Border>,
         fills: BasicArray<Fill>
@@ -189,9 +190,13 @@ export class Style extends Basic implements classes.Style {
         return !!(this.__parent as any)?.findVar(varId, ret);
     }
     getFills(): BasicArray<Fill> {
-        if (!this.fillsVar) return this.fills;
+        if (!this.varbinds) return this.fills;
+
+        const fillsVar = this.varbinds.find((v) => v.slot === STYLE_VAR_SLOT.fills);
+        if (!fillsVar) return this.fills;
+
         const _vars: Variable[] = [];
-        this.findVar(this.fillsVar, _vars);
+        this.findVar(fillsVar.varId, _vars);
         // watch vars
         this._watch_vars("style.fills", _vars);
         const _var = _vars[_vars.length - 1];
@@ -201,9 +206,13 @@ export class Style extends Basic implements classes.Style {
         return this.fills;
     }
     getBorders(): BasicArray<Border> {
-        if (!this.bordersVar) return this.borders;
+        if (!this.varbinds) return this.borders;
+
+        const bordersVar = this.varbinds.find((v) => v.slot === STYLE_VAR_SLOT.borders);
+        if (!bordersVar) return this.borders;
+
         const _vars: Variable[] = [];
-        this.findVar(this.bordersVar, _vars);
+        this.findVar(bordersVar.varId, _vars);
         // watch vars
         this._watch_vars("style.borders", _vars);
         const _var = _vars[_vars.length - 1];

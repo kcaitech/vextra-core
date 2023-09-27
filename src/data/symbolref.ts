@@ -28,8 +28,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     __data: GroupShape | undefined
     __symMgr?: ResourceMgr<GroupShape>
 
+    // todo
+    // 所有引用的symbol的临时数据都就缓存到这里，如text
+    // 绘制实现不使用拷贝数据的方案，以优化性能
+    // 仅编辑时拷贝数据？
+    __cache: Map<string, any> = new Map();
+
     typeId = 'symbol-ref-shape'
-    refId: string // 得支持变量"Variable:xxxxxx"
+    refId: string // 得支持变量"Variable:xxxxxx" unionsymbol需要引用到子symbol
     overrides: BasicArray<Override>
     variables: BasicArray<Variable>
 

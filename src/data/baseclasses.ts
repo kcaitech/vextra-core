@@ -91,6 +91,22 @@ export class Variable extends Basic {
     }
 }
 /**
+ * variable bind 
+ */
+export class VariableBind extends Basic {
+    typeId = 'variable-bind'
+    slot: string
+    varId: string
+    constructor(
+        slot: string,
+        varId: string
+    ) {
+        super()
+        this.slot = slot
+        this.varId = varId
+    }
+}
+/**
  * user infomation 
  */
 export class UserInfo extends Basic {
@@ -133,16 +149,15 @@ export class Style extends Basic {
     blur?: Blur
     borderOptions?: BorderOptions
     borders: BasicArray<Border >
-    bordersVar?: string
     colorControls?: ColorControls
     contextSettings?: ContextSettings
     fills: BasicArray<Fill >
-    fillsVar?: string
     innerShadows?: BasicArray<Shadow >
     shadows?: BasicArray<Shadow >
     contacts?: BasicArray<ContactRole >
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
+    varbinds?: BasicArray<VariableBind >
     constructor(
         borders: BasicArray<Border >,
         fills: BasicArray<Fill >
@@ -197,14 +212,12 @@ export class Shape extends Basic {
     type: ShapeType
     frame: ShapeFrame
     style: Style
-    styleVar?: string
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isFlippedHorizontal?: boolean
     isFlippedVertical?: boolean
     isLocked?: boolean
     isVisible?: boolean
-    visibleVar?: string
     exportOptions?: ExportOptions
     name: string
     nameIsFixed?: boolean
@@ -215,6 +228,7 @@ export class Shape extends Basic {
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
+    varbinds?: BasicArray<VariableBind >
     constructor(
         id: string,
         name: string,
@@ -825,7 +839,6 @@ export class TextShape extends Shape {
     typeId = 'text-shape'
     text: Text
     fixedRadius?: number
-    textVar?: string
     constructor(
         id: string,
         name: string,

@@ -1,0 +1,17 @@
+{
+    "description": "variable bind",
+    "type": "object",
+    "properties": {
+        "slot": {
+            "type": "string"
+        },
+        "varId": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "slot",
+        "varId"
+    ],
+    "additionalProperties": false
+}

@@ -25,9 +25,6 @@
                 "$ref": "./border.json"
             }
         },
-        "bordersVar": {
-            "type": "string"
-        },
         "colorControls": {
             "$ref": "./color-controls.json"
         },
@@ -39,9 +36,6 @@
             "items": {
                 "$ref": "./fill.json"
             }
-        },
-        "fillsVar": {
-            "type": "string"
         },
         "innerShadows": {
             "type": "array",
@@ -66,6 +60,12 @@
         },
         "endMarkerType": {
             "$ref": "./marker-type.json"
+        },
+        "varbinds": {
+            "type": "array",
+            "items": {
+                "$ref": "./variable-bind.json"
+            }
         }
     },
     "required": [

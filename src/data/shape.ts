@@ -3,13 +3,15 @@ import { Style, Border, Fill, Color } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
-export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType } from "./baseclasses";
-import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Override, OverrideType, VariableType, Gradient } from "./baseclasses"
+export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, 
+    CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
+    VariableBind } from "./baseclasses";
+import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Override, OverrideType, VariableType, Gradient, VariableBind } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { RECT_POINTS } from "./consts";
+import { RECT_POINTS, SHAPE_VAR_SLOT } from "./consts";
 import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
 export { Variable } from "./variable";
@@ -21,14 +23,12 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     type: ShapeType
     frame: ShapeFrame
     style: Style
-    styleVar?: string
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isFlippedHorizontal?: boolean
     isFlippedVertical?: boolean
     isLocked?: boolean
     isVisible?: boolean
-    visibleVar?: string
     exportOptions?: ExportOptions
     name: string
     nameIsFixed?: boolean
@@ -39,6 +39,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
+    varbinds?: BasicArray<VariableBind >
 
     // private __var_rules: Map<string, string[]> = new Map(); // <"shapeid;fills" -> varid[]>
     // private __var_watch_rule: Map<string, string[]> = new Map(); // <varid -> ruleid (含shapeid)[]>
@@ -277,9 +278,13 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     }
 
     getVisible(): boolean {
-        if (!this.visibleVar) return !!this.isVisible;
+        if (!this.varbinds) return !!this.isVisible;
+
+        const visibleVar = this.varbinds.find((v) => v.slot === SHAPE_VAR_SLOT.visible);
+        if (!visibleVar) return !!this.isVisible;
+
         const _vars: Variable[] = [];
-        this.findVar(this.visibleVar, _vars);
+        this.findVar(visibleVar.varId, _vars);
         // watch vars
         this._watch_vars("visible", _vars);
         const _var = _vars[_vars.length - 1];
@@ -825,7 +830,6 @@ export class LineShape extends PathShape implements classes.LineShape {
 export class TextShape extends Shape implements classes.TextShape {
     typeId = 'text-shape'
     text: Text
-    textVar?: string
     fixedRadius?: number
     constructor(
         id: string,
@@ -876,9 +880,14 @@ export class TextShape extends Shape implements classes.TextShape {
     }
 
     getText(): Text {
+        if (!this.varbinds) return this.text;
+
+        const textVar = this.varbinds.find((v) => v.slot === SHAPE_VAR_SLOT.text);
+        if (!textVar) return this.text;
+
         if (!this.textVar) return this.text;
         const _vars: Variable[] = [];
-        this.findVar(this.textVar, _vars);
+        this.findVar(textVar.varId, _vars);
         // watch vars
         this._watch_vars("text", _vars);
         const _var = _vars[_vars.length - 1];

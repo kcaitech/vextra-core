@@ -73,6 +73,14 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
 export function exportVariableType(source: types.VariableType, ctx?: IExportContext): types.VariableType {
     return source
 }
+/* variable bind */
+export function exportVariableBind(source: types.VariableBind, ctx?: IExportContext): types.VariableBind {
+    const ret = {
+        slot: source.slot,
+        varId: source.varId,
+    }
+    return ret
+}
 /* user infomation */
 export function exportUserInfo(source: types.UserInfo, ctx?: IExportContext): types.UserInfo {
     const ret = {
@@ -142,7 +150,6 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
             }
             return ret
         })(),
-        bordersVar: source.bordersVar,
         colorControls: source.colorControls && exportColorControls(source.colorControls, ctx),
         contextSettings: source.contextSettings && exportContextSettings(source.contextSettings, ctx),
         fills: (() => {
@@ -153,7 +160,6 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
             }
             return ret
         })(),
-        fillsVar: source.fillsVar,
         innerShadows: source.innerShadows && (() => {
             const ret = []
             for (let i = 0, len = source.innerShadows.length; i < len; i++) {
@@ -180,6 +186,14 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
         })(),
         startMarkerType: source.startMarkerType && exportMarkerType(source.startMarkerType, ctx),
         endMarkerType: source.endMarkerType && exportMarkerType(source.endMarkerType, ctx),
+        varbinds: source.varbinds && (() => {
+            const ret = []
+            for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                const r = exportVariableBind(source.varbinds[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
     }
     return ret
 }
@@ -221,14 +235,12 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         name: source.name,
         nameIsFixed: source.nameIsFixed,
@@ -239,6 +251,14 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+            const ret = []
+            for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                const r = exportVariableBind(source.varbinds[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
     }
     return ret
 }
@@ -674,14 +694,12 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -691,9 +709,16 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         text: exportText(source.text, ctx),
         fixedRadius: source.fixedRadius,
-        textVar: source.textVar,
     }
     return ret
 }
@@ -706,14 +731,12 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -723,6 +746,14 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         datas: (() => {
             const ret = []
             for (let i = 0, len = source.datas.length; i < len; i++) {
@@ -771,14 +802,12 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -788,6 +817,14 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         cellType: source.cellType && exportTableCellType(source.cellType, ctx),
         text: source.text && exportText(source.text, ctx),
         imageRef: source.imageRef,
@@ -807,14 +844,12 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -824,6 +859,14 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         refId: source.refId,
         overrides: (() => {
             const ret = []
@@ -872,14 +915,12 @@ export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -889,6 +930,14 @@ export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext)
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         pathsegs: (() => {
             const ret = []
             for (let i = 0, len = source.pathsegs.length; i < len; i++) {
@@ -910,14 +959,12 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -927,6 +974,14 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -959,14 +1014,12 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
             })(),
         isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -976,6 +1029,14 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
     }
     return ret
 }
@@ -1038,14 +1099,12 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -1055,6 +1114,14 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         childs: (() => {
             const ret = []
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1138,14 +1205,12 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
             })(),
         isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -1155,6 +1220,14 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         ellipse: exportEllipse(source.ellipse, ctx),
     }
     return ret
@@ -1178,14 +1251,12 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
             })(),
         isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -1195,6 +1266,14 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
     }
     return ret
 }
@@ -1217,14 +1296,12 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
             })(),
         isClosed: source.isClosed,
         fixedRadius: source.fixedRadius,
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -1234,6 +1311,14 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         imageRef: source.imageRef,
     }
     // inject code
@@ -1249,14 +1334,12 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -1266,6 +1349,14 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         childs: (() => {
             const ret = []
             for (let i = 0, len = source.childs.length; i < len; i++) {
@@ -1392,14 +1483,12 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
             })(),
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -1409,6 +1498,14 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         isUnionSymbolShape: source.isUnionSymbolShape,
         unionSymbolRef: source.unionSymbolRef,
         variables: (() => {
@@ -1490,14 +1587,12 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
             })(),
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -1507,6 +1602,14 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
     }
     return ret
 }
@@ -1519,14 +1622,12 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
         type: exportShapeType(source.type, ctx),
         frame: exportShapeFrame(source.frame, ctx),
         style: exportStyle(source.style, ctx),
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -1536,6 +1637,14 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -1620,14 +1729,12 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
             })(),
         isBoolOpShape: source.isBoolOpShape,
         fixedRadius: source.fixedRadius,
-        styleVar: source.styleVar,
         boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
         isFixedToViewport: source.isFixedToViewport,
         isFlippedHorizontal: source.isFlippedHorizontal,
         isFlippedVertical: source.isFlippedVertical,
         isLocked: source.isLocked,
         isVisible: source.isVisible,
-        visibleVar: source.visibleVar,
         exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
         nameIsFixed: source.nameIsFixed,
         resizingConstraint: source.resizingConstraint,
@@ -1637,6 +1744,14 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+        varbinds: source.varbinds && (() => {
+                const ret = []
+                for (let i = 0, len = source.varbinds.length; i < len; i++) {
+                    const r = exportVariableBind(source.varbinds[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
     }
     return ret
 }

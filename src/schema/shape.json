@@ -21,9 +21,6 @@
         "style": {
             "$ref": "./style.json"
         },
-        "styleVar": {
-            "type": "string"
-        },
         "boolOp": {
             "$ref": "./bool-op.json"
         },
@@ -41,9 +38,6 @@
         },
         "isVisible": {
             "type": "boolean"
-        },
-        "visibleVar": {
-            "type": "string"
         },
         "exportOptions": {
             "$ref": "./export-options.json"
@@ -75,6 +69,12 @@
         },
         "shouldBreakMaskChain": {
             "type": "boolean"
+        },
+        "varbinds": {
+            "type": "array",
+            "items": {
+                "$ref": "./variable-bind.json"
+            }
         }
     },
     "required": [

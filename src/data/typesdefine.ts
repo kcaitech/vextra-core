@@ -28,6 +28,11 @@ export enum VariableType {
     Borders = 'borders',
     Style = 'style',
 }
+/* variable bind */
+export type VariableBind = {
+    slot: string
+    varId: string
+}
 /* user infomation */
 export type UserInfo = {
     userId: string
@@ -92,16 +97,15 @@ export type Style = {
     blur?: Blur
     borderOptions?: BorderOptions
     borders: Border[]
-    bordersVar?: string
     colorControls?: ColorControls
     contextSettings?: ContextSettings
     fills: Fill[]
-    fillsVar?: string
     innerShadows?: Shadow[]
     shadows?: Shadow[]
     contacts?: ContactRole[]
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
+    varbinds?: VariableBind[]
 }
 /* strikethrough types */
 export enum StrikethroughType {
@@ -136,14 +140,12 @@ export type Shape = {
     type: ShapeType
     frame: ShapeFrame
     style: Style
-    styleVar?: string
     boolOp?: BoolOp
     isFixedToViewport?: boolean
     isFlippedHorizontal?: boolean
     isFlippedVertical?: boolean
     isLocked?: boolean
     isVisible?: boolean
-    visibleVar?: string
     exportOptions?: ExportOptions
     name: string
     nameIsFixed?: boolean
@@ -154,6 +156,7 @@ export type Shape = {
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
+    varbinds?: VariableBind[]
 }
 /* shape types */
 export enum ShapeType {
@@ -534,7 +537,6 @@ export enum BlendMode {
 export type TextShape = Shape & {
     text: Text
     fixedRadius?: number
-    textVar?: string
 }
 /* table shape */
 export type TableShape = Shape & {

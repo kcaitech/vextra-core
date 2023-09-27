@@ -71,6 +71,14 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
 export function importVariableType(source: types.VariableType, ctx?: IImportContext): impl.VariableType {
     return source
 }
+/* variable bind */
+export function importVariableBind(source: types.VariableBind, ctx?: IImportContext): impl.VariableBind {
+    const ret: impl.VariableBind = new impl.VariableBind (
+        source.slot,
+        source.varId
+    )
+    return ret
+}
 /* user infomation */
 export function importUserInfo(source: types.UserInfo, ctx?: IImportContext): impl.UserInfo {
     const ret: impl.UserInfo = new impl.UserInfo (
@@ -147,10 +155,8 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
     if (source.windingRule !== undefined) ret.windingRule = importWindingRule(source.windingRule, ctx)
     if (source.blur !== undefined) ret.blur = importBlur(source.blur, ctx)
     if (source.borderOptions !== undefined) ret.borderOptions = importBorderOptions(source.borderOptions, ctx)
-    if (source.bordersVar !== undefined) ret.bordersVar = source.bordersVar
     if (source.colorControls !== undefined) ret.colorControls = importColorControls(source.colorControls, ctx)
     if (source.contextSettings !== undefined) ret.contextSettings = importContextSettings(source.contextSettings, ctx)
-    if (source.fillsVar !== undefined) ret.fillsVar = source.fillsVar
     if (source.innerShadows !== undefined) ret.innerShadows = (() => {
         const ret = new BasicArray<impl.Shadow>()
         for (let i = 0, len = source.innerShadows && source.innerShadows.length; i < len; i++) {
@@ -177,6 +183,14 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
     })()
     if (source.startMarkerType !== undefined) ret.startMarkerType = importMarkerType(source.startMarkerType, ctx)
     if (source.endMarkerType !== undefined) ret.endMarkerType = importMarkerType(source.endMarkerType, ctx)
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     return ret
 }
 /* strikethrough types */
@@ -218,14 +232,12 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx)
     )
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -235,6 +247,14 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     return ret
 }
 /* shape types */
@@ -666,14 +686,12 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
         importStyle(source.style, ctx),
         importText(source.text, ctx)
     )
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -683,8 +701,15 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.textVar !== undefined) ret.textVar = source.textVar
     return ret
 }
 /* table shape */
@@ -734,14 +759,12 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
             return ret
         })()
     )
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -751,6 +774,14 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (source.textAttr !== undefined) ret.textAttr = importTextAttr(source.textAttr, ctx)
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
@@ -765,14 +796,12 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx)
     )
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -782,6 +811,14 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (source.cellType !== undefined) ret.cellType = importTableCellType(source.cellType, ctx)
     if (source.text !== undefined) ret.text = importText(source.text, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
@@ -815,14 +852,12 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
             return ret
         })()
     )
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -832,6 +867,14 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     // inject code
     if (ctx?.document) {
         ret.setSymbolMgr(ctx.document.symbolsMgr);
@@ -875,14 +918,12 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
             return ret
         })()
     )
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -892,6 +933,14 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
@@ -913,14 +962,12 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
         })(),
         source.isClosed
     )
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -930,6 +977,14 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
@@ -952,14 +1007,12 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         source.isClosed
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -969,6 +1022,14 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     return ret
 }
 /* span attr */
@@ -1088,14 +1149,12 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
             return ret
         })()
     )
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1105,6 +1164,14 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     return ret
 }
 /* oval shape */
@@ -1127,14 +1194,12 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         importEllipse(source.ellipse, ctx)
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1144,6 +1209,14 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     return ret
 }
 /* line shape */
@@ -1165,14 +1238,12 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         source.isClosed
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1182,6 +1253,14 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     return ret
 }
 /* image shape */
@@ -1255,14 +1334,12 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         source.imageRef
     )
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1272,6 +1349,14 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
@@ -1337,14 +1422,12 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
             return ret
         })()
     )
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1354,6 +1437,14 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
@@ -1429,14 +1520,12 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1446,6 +1535,14 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
     if (source.unionSymbolRef !== undefined) ret.unionSymbolRef = source.unionSymbolRef
     // inject code
@@ -1481,14 +1578,12 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
         importText(source.text, ctx),
         source.mark
     )
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1498,6 +1593,14 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     if (source.from !== undefined) ret.from = importContactForm(source.from, ctx)
     if (source.to !== undefined) ret.to = importContactForm(source.to, ctx)
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
@@ -1566,14 +1669,12 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    if (source.styleVar !== undefined) ret.styleVar = source.styleVar
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
     if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
     if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
     if (source.isLocked !== undefined) ret.isLocked = source.isLocked
     if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.visibleVar !== undefined) ret.visibleVar = source.visibleVar
     if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
     if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
     if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
@@ -1583,6 +1684,14 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicArray<impl.VariableBind>()
+        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
+            const r = importVariableBind(source.varbinds[i], ctx)
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
     // inject code
     if (ctx?.document) ctx.document.artboardMgr.add(ret.id, ret);
     return ret

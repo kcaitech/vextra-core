@@ -79,3 +79,16 @@ export const RECT_POINTS = (() => {
     );
     return [p1, p2, p3, p4];
 })()
+
+export const SHAPE_VAR_SLOT = {
+    visible: "visible",
+    text: "text", // text shape
+    style: "style",
+    unionSymbolRef: "unionSymbolRef", // symbolshape
+    symbolRef: "symbolRef", // symbolrefshape
+}
+
+export const STYLE_VAR_SLOT = {
+    fills: "fills",
+    borders: "borders",
+}
