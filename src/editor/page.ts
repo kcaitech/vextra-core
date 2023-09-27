@@ -343,21 +343,25 @@ export class PageEditor {
      */
     makeStateAt(union: SymbolShape, name: string, index?: number) {
         if (!union.isUnionSymbolShape || !union.childs.length) return;
-        let idx = index || union.childs.length;
-        if (index && (index > union.childs.length || index < 0)) idx = union.childs.length;
-        const origin = union.childs[idx - 1];
+        let idx = index === undefined ? union.childs.length - 1 : index;
+        if (index !== undefined && (index > union.childs.length || index < 0)) idx = union.childs.length;
+        const origin = union.childs[idx];
         if (!origin) return;
         try {
             const source = exportSymbolShape(origin as unknown as SymbolShape);
             source.id = uuid();
             source.name = name;
             set_childs_id(source.childs as Shape[]);
-            const pre_y = find_state_space(union);
-            if (pre_y < 0) throw new Error('failed');
-            source.frame.y = pre_y + 20;
+            if (index === undefined) {
+                const pre_y = find_state_space(union);
+                if (pre_y < 0) throw new Error('failed');
+                source.frame.y = pre_y + 20;
+            } else {
+                source.frame.x += 20, source.frame.y += 20;
+            }
             const copy = importSymbolShape(source);
             const api = this.__repo.start("makeStateAt", {});
-            const new_state = api.shapeInsert(this.__page, union, copy, union.childs.length);
+            const new_state = api.shapeInsert(this.__page, union, copy, idx + 1);
             modify_frame_after_inset_state(this.__page, api, union);
             if (new_state) {
                 this.__repo.commit();
