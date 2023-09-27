@@ -299,7 +299,7 @@ export class PageEditor {
      */
     makeSymbolUnion(symbol: SymbolShape, state_name: string) {
         const p = symbol.parent;
-        if (!p) return;
+        if (!p || p.isUnionSymbolShape) return;
         const state_frame = new ShapeFrame(20, 20, symbol.frame.width, symbol.frame.height);
         const api = this.__repo.start("makeSymbolUnion", {});
         try {
