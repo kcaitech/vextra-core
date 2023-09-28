@@ -266,13 +266,12 @@ export class PageEditor {
                 const frame = shape0.frame;
                 const symbolShape = newSymbolShape(name ?? shape0.name, new ShapeFrame(frame.x, frame.y, frame.width, frame.height));
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
-                api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
+                sym = api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
                 const childs = shape0.childs;
                 for (let i = 0, len = childs.length; i < len; ++i) {
-                    api.shapeMove(this.__page, shape0, i, symbolShape, i);
+                    api.shapeMove(this.__page, shape0, 0, symbolShape, i);
                 }
                 api.shapeDelete(this.__page, shape0.parent as GroupShape, index);
-                sym = (shape0.parent as GroupShape).childs[index];
             }
             else {
                 const frame = shape0.frame;
