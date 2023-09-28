@@ -1,5 +1,5 @@
 import { float_accuracy } from "../basic/consts";
-import { TableShape, Page, Shape, Style, TextBehaviour, Text, TextShape, TableCell, SymbolShape } from "../data/classes";
+import { TableShape, Page, Shape, Style, TextBehaviour, Text, TextShape, TableCell, SymbolShape, SymbolRefShape, ShapeType } from "../data/classes";
 import { Api } from "./command/recordapi";
 
 interface _Api {
@@ -80,4 +80,56 @@ export function modify_frame_after_inset_state(page: Page, api: Api, union: Symb
     if (delta <= 0) {
         api.shapeModifyHeight(page, union, union.frame.height - delta + 20)
     }
+}
+function get_topology_map(shape: Shape, init?: { shape: string, ref: string }[]) {
+    let deps: { shape: string, ref: string }[] = init || [];
+    const childs = shape.type === ShapeType.SymbolRef ? shape.naviChilds : shape.childs;
+    if (!childs || childs.length === 0) return [];
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const child = childs[i];
+        deps.push({ shape: shape.id, ref: childs[i].id });
+        const c_childs = child.type === ShapeType.SymbolRef ? child.naviChilds : child.childs;
+        if (c_childs && c_childs.length) deps = [...get_topology_map(child, deps)];
+    }
+    return deps;
+}
+
+function filter_deps(deps: { shape: string, ref: string }[], key1: 'shape' | 'ref', key2: 'shape' | 'ref') {
+    const result: { shape: string, ref: string }[] = [];
+    const _checked: Map<string, 1> = new Map();
+    const _checked_invalid: Map<string, 1> = new Map();
+    for (let i = 0, len = deps.length; i < len; i++) {
+        const d = deps[i];
+        if (_checked.get(d[key1])) {
+            result.push(d);
+            continue;
+        }
+        if (_checked_invalid.get(d[key1])) continue;
+        let invalid: boolean = true;
+        for (let j = 0, len = deps.length; j < len; j++) {
+            if (deps[j][key2] === d[key1]) {
+                result.push(d);
+                _checked.set(d[key1], 1);
+                invalid = false;
+                break;
+            }
+        }
+        if (invalid) _checked_invalid.set(d[key1], 1);
+    }
+    return result;
+}
+/**
+ * @description 检查symbol与ref之间是否存在循环引用
+ * @param symbol 任意存在子元素的图形
+ * @param ref 想去引用的组件
+ * @returns 
+ */
+export function is_circular_ref(symbol: Shape, ref: SymbolRefShape): boolean {
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), { shape: symbol.id, ref: ref.id }];
+    if (deps.length < 2) return false;
+    // 过滤左侧
+    deps = filter_deps(deps, 'shape', 'ref');
+    // 过滤右侧
+    deps = filter_deps(deps, 'ref', 'shape');
+    return !!deps.length;
 }
