@@ -15,7 +15,8 @@ import {
     TextVerAlign,
     UnderlineType,
     TextShape,
-    TableCell
+    TableCell,
+    ShapeType
 } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
@@ -534,6 +535,42 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    public template(shapes: Shape[]) {
+        const api = this.__repo.start("setTextsBold", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+            }
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+    /**
+     * @description 多选文字对象时，给每个文字对象的全部文字设置粗体
+     */
+    public setTextBoldMulti(shapes: Shape[], bold: boolean) {
+        const api = this.__repo.start("setTextBoldMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.textModifyBold(this.__page, text_shape, bold, 0, text_length)
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
 
     public setTextItalic(italic: boolean, index: number, len: number) {
         if (len === 0) {
@@ -553,7 +590,24 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-
+    public setTextItalicMulti(shapes: Shape[], italic: boolean) {
+        const api = this.__repo.start("setTextItalicMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.textModifyItalic(this.__page, text_shape, italic, 0, text_length);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
     // 需要个占位符
 
     public setTextBulletNumbers(type: BulletNumbersType, index: number, len: number) {
