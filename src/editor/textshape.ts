@@ -517,7 +517,7 @@ export class TextShapeEditor extends ShapeEditor {
                 const text_shape: TextShape = shapes[i] as TextShape;
                 if (text_shape.type !== ShapeType.Text) continue;
                 const text_length = text_shape.text.length;
-                api.textModifyHorAlign(this.__page, this.shape, horAlign, 0, text_length);
+                api.textModifyHorAlign(this.__page, text_shape, horAlign, 0, text_length);
             }
             this.__repo.commit();
             return true;
@@ -571,6 +571,25 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    public setLineHeightMulit(shapes: Shape[],lineHeight: number) {
+        const api = this.__repo.start("setLineHeightMulit", {});
+        try {
+            for (let i = 0; i < shapes.length; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if(text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                api.textModifyMinLineHeight(this.__page, text_shape, lineHeight, 0, text_length)
+                api.textModifyMaxLineHeight(this.__page, text_shape, lineHeight, 0, text_length)
+                this.fixFrameByLayout2(api, text_shape);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
 
     // 字间距 段属性
     public setCharSpacing(kerning: number, index: number, len: number) {
@@ -592,13 +611,48 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-
+    public setCharSpacingMulit(shapes: Shape[],kerning: number) {
+        const api = this.__repo.start("setCharSpacingMulit", {});
+        try {
+            for (let i = 0; i < shapes.length; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if(text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                api.textModifyKerning(this.__page, text_shape, kerning, 0, text_length);
+                this.fixFrameByLayout2(api, text_shape);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
     // 段间距 段属性
     public setParaSpacing(paraSpacing: number, index: number, len: number) {
         const api = this.__repo.start("setParaSpacing", {});
         try {
             api.textModifyParaSpacing(this.__page, this.shape, paraSpacing, index, len)
             this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setParaSpacingMulit(shapes: Shape[] ,paraSpacing: number) {
+        const api = this.__repo.start("setParaSpacingMulit", {});
+        try {
+            for (let i = 0; i < shapes.length; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if(text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                api.textModifyParaSpacing(this.__page, text_shape, paraSpacing, 0, text_length)
+                this.fixFrameByLayout2(api, text_shape);
+            }
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -674,7 +728,7 @@ export class TextShapeEditor extends ShapeEditor {
                 if (text_shape.type !== ShapeType.Text) continue;
                 const text_length = text_shape.text.length;
                 if (text_length === 0) continue;
-                api.textModifyStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined, 0, text_length);
+                api.textModifyStrikethrough(this.__page, text_shape, strikethrough ? StrikethroughType.Single : undefined, 0, text_length);
             }
             this.__repo.commit();
             return true;
@@ -855,6 +909,26 @@ export class TextShapeEditor extends ShapeEditor {
         try {
             api.textModifyTransform(this.__page, this.shape, transform, index, len);
             this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public setTextTransformMulti(shapes: Shape[], type: TextTransformType | undefined) {
+        const api = this.__repo.start("setTextTransformMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.textModifyTransform(this.__page, text_shape, type, 0, text_length);
+                this.fixFrameByLayout2(api, text_shape);
+            }
             this.__repo.commit();
             return true;
         } catch (error) {
