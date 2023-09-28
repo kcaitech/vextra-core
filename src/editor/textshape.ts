@@ -52,6 +52,10 @@ export class TextShapeEditor extends ShapeEditor {
         if (this.shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, this.shape);
         else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.shape);
     }
+    private fixFrameByLayout2(api: Api, shape: TextShape) {
+        if (shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, shape);
+        else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, shape);
+    }
 
     public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape
         if (index < 0) {
@@ -301,6 +305,24 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    public setTextColorMulti(shapes: Shape[], color: Color | undefined) {
+        const api = this.__repo.start("setTextColorMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.textModifyColor(this.__page, text_shape, 0, text_length, color);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
     public setTextHighlightColor(index: number, len: number, color: Color | undefined) {
         if (len === 0) {
             if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
@@ -311,6 +333,24 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextHighlightColor", {});
         try {
             api.textModifyHighlightColor(this.__page, this.shape, index, len, color)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextHighlightColorMulti(shapes: Shape[], color: Color | undefined) {
+        const api = this.__repo.start("setTextHighlightColorMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.textModifyHighlightColor(this.__page, text_shape, 0, text_length, color);
+            }
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -338,6 +378,25 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    public setTextFontNameMulti(shapes: Shape[], fontName: string) {
+        const api = this.__repo.start("setTextFontNameMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.textModifyFontName(this.__page, text_shape, 0, text_length, fontName);
+                this.fixFrameByLayout2(api, text_shape);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
     public setTextFontSize(index: number, len: number, fontSize: number) {
         if (len === 0) {
             if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
@@ -349,6 +408,24 @@ export class TextShapeEditor extends ShapeEditor {
         try {
             api.textModifyFontSize(this.__page, this.shape, index, len, fontSize)
             this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextFontSizeMulti(shapes: Shape[], fontSize: number) {
+        const api = this.__repo.start("setTextFontSizeMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.textModifyFontSize(this.__page, text_shape, 0, text_length, fontSize);
+            }
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -371,11 +448,46 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    public setTextBehaviourMulti(shapes: Shape[], textBehaviour: TextBehaviour) {
+        const api = this.__repo.start("setTextBehaviourMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.shapeModifyTextBehaviour(this.__page, text_shape, textBehaviour);
+                this.fixFrameByLayout2(api, text_shape);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
     // 对象属性
     public setTextVerAlign(verAlign: TextVerAlign) {
         const api = this.__repo.start("setTextVerAlign", {});
         try {
             api.shapeModifyTextVerAlign(this.__page, this.shape, verAlign)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextVerAlignMulti(shapes: Shape[], verAlign: TextVerAlign) {
+        const api = this.__repo.start("setTextVerAlignMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                api.shapeModifyTextVerAlign(this.__page, text_shape, verAlign);
+            }
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -390,6 +502,23 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextHorAlign", {});
         try {
             api.textModifyHorAlign(this.__page, this.shape, horAlign, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextHorAlignMulti(shapes: Shape[], horAlign: TextHorAlign) {
+        const api = this.__repo.start("setTextHorAlignMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                api.textModifyHorAlign(this.__page, this.shape, horAlign, 0, text_length);
+            }
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -497,6 +626,27 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    /**
+     * @description 多选文字对象时，给每个文字对象的全部文字设置下划线
+     */
+    public setTextUnderlineMulti(shapes: Shape[], underline: boolean) {
+        const api = this.__repo.start("setTextUnderlineMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.textModifyUnderline(this.__page, text_shape, underline ? UnderlineType.Single : undefined, 0, text_length);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
 
     public setTextStrikethrough(strikethrough: boolean, index: number, len: number) {
         if (len === 0) {
@@ -508,6 +658,24 @@ export class TextShapeEditor extends ShapeEditor {
         const api = this.__repo.start("setTextStrikethrough", {});
         try {
             api.textModifyStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextStrikethroughMulti(shapes: Shape[], strikethrough: boolean) {
+        const api = this.__repo.start("setTextStrikethroughMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.textModifyStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined, 0, text_length);
+            }
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -544,11 +712,13 @@ export class TextShapeEditor extends ShapeEditor {
                 const text_length = text_shape.text.length;
                 if (text_length === 0) continue;
             }
+            this.__repo.commit();
+            return true;
         } catch (error) {
             console.log(error)
             this.__repo.rollback();
         }
-        return true;
+        return false;
     }
     /**
      * @description 多选文字对象时，给每个文字对象的全部文字设置粗体
@@ -590,6 +760,9 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+    /**
+     * @description 多选文字对象时，给每个文字对象的全部文字设置斜体
+     */
     public setTextItalicMulti(shapes: Shape[], italic: boolean) {
         const api = this.__repo.start("setTextItalicMulti", {});
         try {
@@ -606,7 +779,7 @@ export class TextShapeEditor extends ShapeEditor {
             console.log(error)
             this.__repo.rollback();
         }
-        return true;
+        return false;
     }
     // 需要个占位符
 
@@ -615,6 +788,25 @@ export class TextShapeEditor extends ShapeEditor {
         try {
             api.textModifyBulletNumbers(this.__page, this.shape, type, index, len);
             this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextBulletNumbersMulti(shapes: Shape[], type: BulletNumbersType) {
+        const api = this.__repo.start("setTextBulletNumbersMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const text_length = text_shape.text.length;
+                if (text_length === 0) continue;
+                api.textModifyBulletNumbers(this.__page, text_shape, type, 0, text_length);
+                this.fixFrameByLayout2(api, text_shape);
+            }
             this.__repo.commit();
             return true;
         } catch (error) {
