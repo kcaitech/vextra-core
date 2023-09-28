@@ -87,7 +87,7 @@ function get_topology_map(shape: Shape, init?: { shape: string, ref: string }[])
     if (!childs || childs.length === 0) return [];
     for (let i = 0, len = childs.length; i < len; i++) {
         const child = childs[i];
-        deps.push({ shape: shape.id, ref: childs[i].id });
+        deps.push({ shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? childs[i].refId : childs[i].id });
         const c_childs = child.type === ShapeType.SymbolRef ? child.naviChilds : child.childs;
         if (c_childs && c_childs.length) deps = [...get_topology_map(child, deps)];
     }
@@ -125,7 +125,7 @@ function filter_deps(deps: { shape: string, ref: string }[], key1: 'shape' | 're
  * @returns 
  */
 export function is_circular_ref(symbol: Shape, ref: SymbolRefShape): boolean {
-    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), { shape: symbol.id, ref: ref.id }];
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), { shape: symbol.id, ref: ref.refId }];
     if (deps.length < 2) return false;
     // 过滤左侧
     deps = filter_deps(deps, 'shape', 'ref');
