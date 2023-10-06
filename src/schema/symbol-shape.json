@@ -8,16 +8,35 @@
         "unionSymbolRef": {
             "type": "string"
         },
+        "virbindsEx": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            }
+        },
         "variables": {
-            "type": "array",
-            "items": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
                 "$ref": "./variable.json"
+            }
+        },
+        "vartag": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
             }
         }
     },
-    "required": [
-        "variables"
-    ],
+    "required": [],
     "allOf": [
         {
             "$ref": "./group-shape.json"

@@ -230,6 +230,9 @@ handler['type'] = function (schema: any, className: string, level: number, filen
     else if (schema.type == 'array') {
         return handler['array'](schema, className, level, filename, allschemas)
     }
+    else if (schema.type == 'map') {
+        return handler['map'](schema, className, level, filename, allschemas)
+    }
     else if (schema.oneOf) {
         return handler['oneOf'](schema.oneOf, className, level, filename, allschemas)
     }
@@ -239,6 +242,19 @@ handler['type'] = function (schema: any, className: string, level: number, filen
     else {
         throw new Error("Unknow Type : " + schema)
     }
+}
+
+handler['map'] = function (schema: any, className: string, level: number, filename: string,allschemas: Map<string, {
+    schema: any,
+    dependsOn: Set<string>,
+    className: string,
+    filename: string,
+    filepath: string
+}>) {
+    className = schema.className ?? className
+    const key = schema.key;
+    const value = schema.value;
+    return `BasicMap<${handler['type'](key, className, 0, filename, allschemas)}, ${handler['type'](value, className, 0, filename, allschemas)}>`
 }
 
 handler['oneOf'] = function (schema: any, className: string, level: number, filename: string,allschemas: Map<string, {
@@ -367,7 +383,7 @@ ${ret}
 ${ret}
 } from "./typesdefine"\n`);
 if (basicpath) fs.appendFileSync(outfile, `import {
-    Basic, BasicArray
+    Basic, BasicArray, BasicMap
     } from "./basic"\n`);
 
 // 

@@ -36,8 +36,7 @@
 //     });
 // }
 
-import { OverrideType, findOverride } from "../data/symproxy";
-import { Color, OverrideShape, Shape, SymbolRefShape } from "../data/classes";
+import { Color, Shape } from "../data/classes";
 
 
 // export { h } from "vue";

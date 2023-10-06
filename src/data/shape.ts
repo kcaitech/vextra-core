@@ -1,12 +1,13 @@
-import { Basic, ResourceMgr, Watchable } from "./basic";
+import { Basic, BasicMap, ResourceMgr, Watchable } from "./basic";
 import { Style, Border, Fill, Color } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
-export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, 
+export {
+    CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
-    VariableBind } from "./baseclasses";
-import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Override, OverrideType, VariableType, Gradient, VariableBind } from "./baseclasses"
+} from "./baseclasses";
+import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, OverrideType, VariableType } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
@@ -15,6 +16,60 @@ import { RECT_POINTS, SHAPE_VAR_SLOT } from "./consts";
 import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
 export { Variable } from "./variable";
+
+export interface VarWatcher {
+    __var_onwatch: Map<string, Variable[]>,
+    __has_var_notify: any,
+    _var_watcher(...args: any[]): void,
+    _watch_vars(slot: string, vars: Variable[]): void
+    _var_on_removed(): void;
+}
+
+export function makeVarWatcher(obj: any): VarWatcher {
+    obj.__var_onwatch = new Map<string, Variable[]>(); // 设置了watcher的变量
+    obj.__has_var_notify = undefined;
+    obj._var_watcher = (...args: any[]) => {
+        if (!obj.__has_var_notify) {
+            obj.__has_var_notify = setTimeout(() => {
+                if (obj.__has_var_notify) obj.notify()
+                obj.__has_var_notify = undefined;
+            }, 0);
+        }
+    }
+
+    obj._watch_vars = (slot: string, vars: Variable[]) => {
+        const old = obj.__var_onwatch.get(slot);
+        if (!old) {
+            vars.forEach((v) => v.watch(obj._var_watcher));
+            obj.__var_onwatch.set(slot, vars);
+            return;
+        }
+        if (old.length > vars.length) {
+            for (let i = vars.length, len = old.length; i < len; ++i) {
+                const v = old[i];
+                v.unwatch(obj._var_watcher);
+            }
+        }
+        old.length = vars.length;
+        for (let i = 0, len = old.length; i < len; ++i) {
+            const o = old[i];
+            const v = vars[i];
+            if (o && o.id === v.id) continue;
+            if (o) o.unwatch(obj._var_watcher);
+            v.watch(obj._var_watcher);
+            old[i] = v;
+        }
+    }
+    obj._var_on_removed = () => {
+        obj.__var_onwatch.forEach((v: Variable[]) => {
+            v.forEach((v) => v.unwatch(obj._var_watcher));
+        })
+        obj.__var_onwatch.clear();
+        obj.__has_var_notify = undefined;
+    }
+    return obj;
+}
+
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
@@ -39,44 +94,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
-    varbinds?: BasicArray<VariableBind >
-
-    // private __var_rules: Map<string, string[]> = new Map(); // <"shapeid;fills" -> varid[]>
-    // private __var_watch_rule: Map<string, string[]> = new Map(); // <varid -> ruleid (含shapeid)[]>
-    private __var_onwatch: Map<string, Variable[]> = new Map(); // 设置了watcher的变量
-    private __has_var_notify: any;
-    private _var_watcher(...args: any[]) {
-        if (!this.__has_var_notify) {
-            this.__has_var_notify = setTimeout(() => {
-                if (this.__has_var_notify) this.notify()
-                this.__has_var_notify = undefined;
-            }, 0);
-        }
-    }
-
-    _watch_vars(slot: string, vars: Variable[]) {
-        const old = this.__var_onwatch.get(slot);
-        if (!old) {
-            vars.forEach((v) => v.watch(this._var_watcher));
-            this.__var_onwatch.set(slot, vars);
-            return;
-        }
-        if (old.length > vars.length) {
-            for (let i = vars.length, len = old.length; i < len; ++i) {
-                const v = old[i];
-                v.unwatch(this._var_watcher);
-            }
-        }
-        old.length = vars.length;
-        for (let i = 0, len = old.length; i < len; ++i) {
-            const o = old[i];
-            const v = vars[i];
-            if (o && o.id === v.id) continue;
-            if (o) o.unwatch(this._var_watcher);
-            v.watch(this._var_watcher);
-            old[i] = v;
-        }
-    }
+    varbinds?: BasicMap<string, string>
 
     constructor(
         id: string,
@@ -91,7 +109,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.type = type
         this.frame = frame
         this.style = style
-        this._var_watcher = this._var_watcher.bind(this);
+        makeVarWatcher(this);
     }
 
     /**
@@ -113,10 +131,6 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
     get isVirtualShape() {
         return false;
-    }
-
-    override(type: classes.OverrideType): { container: Shape, over: Override, v: Variable } | undefined {
-        return;
     }
 
     getPath(fixedRadius?: number): Path {
@@ -266,25 +280,25 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     }
 
     onRemoved() {
-        this.__var_onwatch.forEach((v) => {
-            v.forEach((v) => v.unwatch(this._var_watcher));
-        })
-        this.__var_onwatch.clear();
-        this.__has_var_notify = undefined;
+        (this as any as VarWatcher)._var_on_removed();
     }
 
     findVar(varId: string, ret: Variable[]) {
         this.parent?.findVar(varId, ret);
     }
 
+    findOverride(refId: string, type: OverrideType): Variable[] | undefined {
+        return this.parent?.findOverride(refId, type);
+    }
+
     getVisible(): boolean {
         if (!this.varbinds) return !!this.isVisible;
 
-        const visibleVar = this.varbinds.find((v) => v.slot === SHAPE_VAR_SLOT.visible);
+        const visibleVar = this.varbinds.get(SHAPE_VAR_SLOT.visible);
         if (!visibleVar) return !!this.isVisible;
 
         const _vars: Variable[] = [];
-        this.findVar(visibleVar.varId, _vars);
+        this.findVar(visibleVar, _vars);
         // watch vars
         this._watch_vars("visible", _vars);
         const _var = _vars[_vars.length - 1];
@@ -409,7 +423,9 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean // 子对象都为SymbolShape
     unionSymbolRef?: string // Variable:xxxxxx
-    variables: BasicArray<Variable> // 怎么做关联
+    variables?: BasicMap<string, Variable> // 怎么做关联
+    vartag?: BasicMap<string, string>
+    virbindsEx?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
 
     constructor(
         id: string,
@@ -417,8 +433,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<Shape>,
-        variables: BasicArray<Variable>
+        childs: BasicArray<Shape>
     ) {
         super(
             id,
@@ -428,14 +443,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             style,
             childs
         )
-        this.variables = variables;
-    }
-
-    private __varMap?: Map<string, Variable>;
-
-    private get varMap() { // 不可以构造时就初始化，这时的var没有proxy
-        if (!this.__varMap) this.__varMap = new Map(this.variables.map((v) => [v.id, v]));
-        return this.__varMap;
     }
 
     private _createVar4Override(type: OverrideType, value: any) {
@@ -470,17 +477,13 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         refId = genRefId(refId, type); // id+type->var
 
         const v: Variable = this.createVar4Override(type, value);
-        let over = new Override(refId, type, v.id);
 
-        this.overrides.push(over);
-        over = this.overrides[this.overrides.length - 1];
+        if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
+        this.virbindsEx.set(refId, v.id);
 
-        if (this.__overridesMap) {
-            this.__overridesMap.set(refId, over);
-        }
-
-        return { over, v };
+        return { refId, v };
     }
+
 
     // overrideValues
     addOverrid(refId: string, attr: OverrideType, value: any) {
@@ -507,7 +510,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
                     }
                     else {
                         const _val = value as Variable;
-                        override.over.varId = _val.id; // 映射到新变量
+                        this.virbindsEx?.set(override.refId, _val.id);// 映射到新变量
                         override.v = this.addVar(_val);
                     }
                     return override;
@@ -517,31 +520,27 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         }
     }
 
-    getOverrid(refId: string, type: OverrideType): { over: Override, v: Variable } | undefined {
+    getOverrid(refId: string, type: OverrideType): { refId: string, v: Variable } | undefined {
         refId = genRefId(refId, type); // id+type->var
-        const over = this.overrideMap.get(refId);
+        const over = this.virbindsEx && this.virbindsEx.get(refId);
         if (over) {
-            const v = this.varMap.get(over.varId);
-            if (v) return { over, v }
+            const v = this.variables && this.variables.get(over);
+            if (v) return { refId, v }
         }
     }
 
-    addVar(v: Variable) {
-        this.variables.push(v);
-        if (this.__varMap) this.__varMap.set(v.id, this.variables[this.variables.length - 1]);
-        return this.variables[this.variables.length - 1];
+    addVar(v: Variable): Variable {
+        if (!this.variables) this.variables = new BasicMap<string, Variable>();
+        this.variables.set(v.id, v);
+        return this.variables.get(v.id)!;
     }
     deleteVar(varId: string) {
-        const v = this.varMap.get(varId);
-        if (v) {
-            const i = this.variables.findIndex((v) => v.id === varId)
-            this.variables.splice(i, 1);
-            this.varMap.delete(varId);
+        if (this.variables) {
+            this.variables.delete(varId);
         }
-        return v;
     }
     getVar(varId: string) {
-        return this.varMap.get(varId);
+        return this.variables && this.variables.get(varId);
     }
 
     findVar(varId: string, ret: Variable[]) {
@@ -560,20 +559,20 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         super.findVar(varId, ret);
     }
 
-    addVariableAt(_var: Variable, index: number) {
-        this.variables.splice(index, 0, _var);
-        if (this.__varMap) {
-            this.__varMap.set(_var.id, this.variables[index]);
+    findOverride(refId: string, type: OverrideType): Variable[] | undefined {
+        const override = this.getOverrid(refId, type);
+        if (override) {
+            const ret = [override.v];
+            super.findVar(override.v.id, ret);
+            return ret;
         }
-    }
-    deleteVariableAt(idx: number) {
-        const ret = this.variables.splice(idx, 1)[0];
-        if (ret && this.__varMap) {
-            this.__varMap.delete(ret.id);
+        if (this.isVirtualShape) {
+            refId = this.originId + '/' + refId;
         }
-    }
-    modifyVariableAt(idx: number, value: any) {
-        this.variables[idx].value = value;
+        else {
+            refId = this.id + '/' + refId;
+        }
+        return super.findOverride(refId, type);
     }
 }
 
@@ -882,12 +881,12 @@ export class TextShape extends Shape implements classes.TextShape {
     getText(): Text {
         if (!this.varbinds) return this.text;
 
-        const textVar = this.varbinds.find((v) => v.slot === SHAPE_VAR_SLOT.text);
+        const textVar = this.varbinds.get(SHAPE_VAR_SLOT.text);
         if (!textVar) return this.text;
 
         if (!this.textVar) return this.text;
         const _vars: Variable[] = [];
-        this.findVar(textVar.varId, _vars);
+        this.findVar(textVar, _vars);
         // watch vars
         this._watch_vars("text", _vars);
         const _var = _vars[_vars.length - 1];

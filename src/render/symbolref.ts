@@ -8,6 +8,7 @@ function renderSym(h: Function, ref: SymbolRefShape, comsMap: Map<ShapeType, any
     // const isVisible = ref.isVisible ?? true;
     // if (!isVisible) return [];
 
+    // todo 
     const vchilds = ref.virtualChilds;
     const childs: Array<any> = vchilds ? renderGroupChilds2(h, vchilds, comsMap) : [];
     return childs;

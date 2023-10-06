@@ -68,7 +68,7 @@ import {
     BlendMode
 } from "./typesdefine"
 import {
-    Basic, BasicArray
+    Basic, BasicArray, BasicMap
     } from "./basic"
 /**
  * color 
@@ -88,22 +88,6 @@ export class Variable extends Basic {
         this.id = id
         this.type = type
         this.name = name
-    }
-}
-/**
- * variable bind 
- */
-export class VariableBind extends Basic {
-    typeId = 'variable-bind'
-    slot: string
-    varId: string
-    constructor(
-        slot: string,
-        varId: string
-    ) {
-        super()
-        this.slot = slot
-        this.varId = varId
     }
 }
 /**
@@ -157,7 +141,7 @@ export class Style extends Basic {
     contacts?: BasicArray<ContactRole >
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
-    varbinds?: BasicArray<VariableBind >
+    varbinds?: BasicMap<string, string>
     constructor(
         borders: BasicArray<Border >,
         fills: BasicArray<Fill >
@@ -228,7 +212,7 @@ export class Shape extends Basic {
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
-    varbinds?: BasicArray<VariableBind >
+    varbinds?: BasicMap<string, string>
     constructor(
         id: string,
         name: string,
@@ -375,25 +359,6 @@ export class Padding extends Basic {
     constructor(
     ) {
         super()
-    }
-}
-/**
- * override 
- */
-export class Override extends Basic {
-    typeId = 'override'
-    refId: string
-    type: OverrideType
-    varId: string
-    constructor(
-        refId: string,
-        type: OverrideType,
-        varId: string
-    ) {
-        super()
-        this.refId = refId
-        this.type = type
-        this.varId = varId
     }
 }
 /**
@@ -920,17 +885,15 @@ export class TableCell extends Shape {
 export class SymbolRefShape extends Shape {
     typeId = 'symbol-ref-shape'
     refId: string
-    overrides: BasicArray<Override >
-    variables: BasicArray<Variable >
+    virbindsEx?: BasicMap<string, string>
+    variables?: BasicMap<string, Variable>
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        refId: string,
-        overrides: BasicArray<Override >,
-        variables: BasicArray<Variable >
+        refId: string
     ) {
         super(
             id,
@@ -940,8 +903,6 @@ export class SymbolRefShape extends Shape {
             style
         )
         this.refId = refId
-        this.overrides = overrides
-        this.variables = variables
     }
 }
 /**
@@ -1205,15 +1166,16 @@ export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean
     unionSymbolRef?: string
-    variables: BasicArray<Variable >
+    virbindsEx?: BasicMap<string, string>
+    variables?: BasicMap<string, Variable>
+    vartag?: BasicMap<string, string>
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >,
-        variables: BasicArray<Variable >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | Shape | FlattenShape) >
     ) {
         super(
             id,
@@ -1223,7 +1185,6 @@ export class SymbolShape extends GroupShape {
             style,
             childs
         )
-        this.variables = variables
     }
 }
 /**

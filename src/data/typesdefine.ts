@@ -28,11 +28,6 @@ export enum VariableType {
     Borders = 'borders',
     Style = 'style',
 }
-/* variable bind */
-export type VariableBind = {
-    slot: string
-    varId: string
-}
 /* user infomation */
 export type UserInfo = {
     userId: string
@@ -105,7 +100,7 @@ export type Style = {
     contacts?: ContactRole[]
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
-    varbinds?: VariableBind[]
+    varbinds?: Map<string, string>
 }
 /* strikethrough types */
 export enum StrikethroughType {
@@ -156,7 +151,7 @@ export type Shape = {
     clippingMaskMode?: number
     hasClippingMask?: boolean
     shouldBreakMaskChain?: boolean
-    varbinds?: VariableBind[]
+    varbinds?: Map<string, string>
 }
 /* shape types */
 export enum ShapeType {
@@ -235,12 +230,6 @@ export type Padding = {
     top?: number
     right?: number
     bottom?: number
-}
-/* override */
-export type Override = {
-    refId: string
-    type: OverrideType
-    varId: string
 }
 /* override types */
 export enum OverrideType {
@@ -556,8 +545,8 @@ export type TableCell = Shape & {
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
     refId: string
-    overrides: Override[]
-    variables: Variable[]
+    virbindsEx?: Map<string, string>
+    variables?: Map<string, Variable>
 }
 /* span attr */
 export type Span = SpanAttr & {
@@ -617,7 +606,9 @@ export type GroupShape = Shape & {
 export type SymbolShape = GroupShape & {
     isUnionSymbolShape?: boolean
     unionSymbolRef?: string
-    variables: Variable[]
+    virbindsEx?: Map<string, string>
+    variables?: Map<string, Variable>
+    vartag?: Map<string, string>
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {

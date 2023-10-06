@@ -5,7 +5,7 @@
 
 import * as impl from "./classes"
 import * as types from "./typesdefine"
-import { BasicArray } from "./basic"
+import { BasicArray, BasicMap } from "./basic"
 
 
 export interface IImportContext {
@@ -70,14 +70,6 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
 /* variable types */
 export function importVariableType(source: types.VariableType, ctx?: IImportContext): impl.VariableType {
     return source
-}
-/* variable bind */
-export function importVariableBind(source: types.VariableBind, ctx?: IImportContext): impl.VariableBind {
-    const ret: impl.VariableBind = new impl.VariableBind (
-        source.slot,
-        source.varId
-    )
-    return ret
 }
 /* user infomation */
 export function importUserInfo(source: types.UserInfo, ctx?: IImportContext): impl.UserInfo {
@@ -184,11 +176,12 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
     if (source.startMarkerType !== undefined) ret.startMarkerType = importMarkerType(source.startMarkerType, ctx)
     if (source.endMarkerType !== undefined) ret.endMarkerType = importMarkerType(source.endMarkerType, ctx)
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     return ret
@@ -248,11 +241,12 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     return ret
@@ -346,15 +340,6 @@ export function importPadding(source: types.Padding, ctx?: IImportContext): impl
     if (source.top !== undefined) ret.top = source.top
     if (source.right !== undefined) ret.right = source.right
     if (source.bottom !== undefined) ret.bottom = source.bottom
-    return ret
-}
-/* override */
-export function importOverride(source: types.Override, ctx?: IImportContext): impl.Override {
-    const ret: impl.Override = new impl.Override (
-        source.refId,
-        importOverrideType(source.type, ctx),
-        source.varId
-    )
     return ret
 }
 /* override types */
@@ -702,11 +687,12 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
@@ -775,11 +761,12 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     if (source.textAttr !== undefined) ret.textAttr = importTextAttr(source.textAttr, ctx)
@@ -812,11 +799,12 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     if (source.cellType !== undefined) ret.cellType = importTableCellType(source.cellType, ctx)
@@ -834,23 +822,7 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        source.refId,
-        (() => {
-            const ret = new BasicArray<impl.Override>()
-            for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
-                const r = importOverride(source.overrides[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        (() => {
-            const ret = new BasicArray<impl.Variable>()
-            for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
-                const r = importVariable(source.variables[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
+        source.refId
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
@@ -868,11 +840,30 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.virbindsEx !== undefined) ret.virbindsEx = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.virbindsEx as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.variables !== undefined) ret.variables = (() => {
+        const ret = new BasicMap<string, impl.Variable>()
+        const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, importVariable(v, ctx))
+        });
         return ret
     })()
     // inject code
@@ -934,11 +925,12 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
@@ -978,11 +970,12 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
@@ -1023,11 +1016,12 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     return ret
@@ -1165,11 +1159,12 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     return ret
@@ -1210,11 +1205,12 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     return ret
@@ -1254,11 +1250,12 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     return ret
@@ -1350,11 +1347,12 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     // inject code
@@ -1438,11 +1436,12 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
@@ -1508,14 +1507,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                 if (r) ret.push(r)
             }
             return ret
-        })(),
-        (() => {
-            const ret = new BasicArray<impl.Variable>()
-            for (let i = 0, len = source.variables && source.variables.length; i < len; i++) {
-                const r = importVariable(source.variables[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
         })()
     )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
@@ -1536,15 +1527,43 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
     if (source.unionSymbolRef !== undefined) ret.unionSymbolRef = source.unionSymbolRef
+    if (source.virbindsEx !== undefined) ret.virbindsEx = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.virbindsEx as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.variables !== undefined) ret.variables = (() => {
+        const ret = new BasicMap<string, impl.Variable>()
+        const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, importVariable(v, ctx))
+        });
+        return ret
+    })()
+    if (source.vartag !== undefined) ret.vartag = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.vartag as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     // inject code
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
     return ret
@@ -1594,11 +1613,12 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     if (source.from !== undefined) ret.from = importContactForm(source.from, ctx)
@@ -1685,11 +1705,12 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
     if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicArray<impl.VariableBind>()
-        for (let i = 0, len = source.varbinds && source.varbinds.length; i < len; i++) {
-            const r = importVariableBind(source.varbinds[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     // inject code

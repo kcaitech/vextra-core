@@ -6,23 +6,27 @@
             "type": "string",
             "default": "$uuid"
         },
-        "overrides": {
-            "type": "array",
-            "items": {
-                "$ref": "./override.json"
+        "virbindsEx": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
             }
         },
         "variables": {
-            "type": "array",
-            "items": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
                 "$ref": "./variable.json"
             }
         }
     },
     "required": [
-        "refId",
-        "overrides",
-        "variables"
+        "refId"
     ],
     "allOf": [
         {

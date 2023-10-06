@@ -157,6 +157,9 @@ handler['type'] = function (schema: any, className: string, attrname: string, le
     else if (schema.type == 'array') {
         return handler['array'](schema, className, attrname, level, filename, allschemas)
     }
+    else if (schema.type == 'map') {
+        return handler['map'](schema, className, attrname, level, filename, allschemas)
+    }
     else if (schema.oneOf) {
         return handler['oneOf'](schema.oneOf, className, attrname, level, filename, allschemas)
 
@@ -171,6 +174,31 @@ handler['type'] = function (schema: any, className: string, attrname: string, le
         console.error("Unknow Type", schema)
         throw new Error("Unknow Type : " + schema)
     }
+}
+
+handler['map'] = function (schema: any, className: string, attrname: string, level: number, filename: string, allschemas: Map<string, {
+    schema: any,
+    dependsOn: Set<string>,
+    className: string,
+    filename: string,
+    filepath: string
+}>) {
+    className = schema.className ?? className
+    filename = schema.filename ?? filename
+    const keyschema = schema.key;
+    const valueschema = schema.value;
+    let retobj = `new BasicMap<${extractType(keyschema, className, 'impl.')}, ${extractType(valueschema, className, 'impl.')}>()`
+
+    let ret = `(() => {
+${indent(level + 1)}const ret = ${retobj}
+${indent(level + 1)}const val = ${attrname} as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+${indent(level + 1)}Object.keys(val).forEach((k) => {
+${indent(level + 1)}    const v = val[k];
+${indent(level + 1)}    ret.set(k, ${handler['type'](valueschema, className, 'v', level + 2, filename, allschemas)})
+${indent(level + 1)}});
+${indent(level + 1)}return ret
+${indent(level)}})()`
+    return ret
 }
 
 handler['oneOf'] = function (schema: any, className: string, attrname: string, level: number, filename: string, allschemas: Map<string, {
@@ -364,7 +392,7 @@ export function genimport(schemadir: string, outfile: string, implpath: string, 
     fs.appendFileSync(outfile, headTips);
     fs.appendFileSync(outfile, `import * as impl from "${implpath}"\n`);
     fs.appendFileSync(outfile, `import * as types from "${typedefs}"\n`);
-    if (arrayimpl) fs.appendFileSync(outfile, `import { BasicArray } from "${arrayimpl}"\n\n`);
+    if (arrayimpl) fs.appendFileSync(outfile, `import { BasicArray, BasicMap } from "${arrayimpl}"\n\n`);
     fs.appendFileSync(outfile,
         `
 export interface IImportContext {

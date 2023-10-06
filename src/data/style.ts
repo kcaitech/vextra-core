@@ -2,9 +2,9 @@ import * as classes from "./baseclasses"
 import {
     Blur, BorderOptions, ColorControls, ContextSettings,
     Shadow, WindingRule, FillType, Gradient, BorderPosition,
-    BorderStyle, MarkerType, ContactRole, VariableType, VariableBind
+    BorderStyle, MarkerType, ContactRole, VariableType
 } from "./baseclasses";
-import { Basic, BasicArray, ResourceMgr, Watchable } from "./basic";
+import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { STYLE_VAR_SLOT } from "./consts";
 import { Variable } from "./variable";
 
@@ -170,7 +170,7 @@ export class Style extends Basic implements classes.Style {
     contacts?: BasicArray<ContactRole>
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
-    varbinds?: BasicArray<VariableBind >
+    varbinds?: BasicMap<string, string>
 
     constructor(
         borders: BasicArray<Border>,
@@ -192,11 +192,11 @@ export class Style extends Basic implements classes.Style {
     getFills(): BasicArray<Fill> {
         if (!this.varbinds) return this.fills;
 
-        const fillsVar = this.varbinds.find((v) => v.slot === STYLE_VAR_SLOT.fills);
+        const fillsVar = this.varbinds.get(STYLE_VAR_SLOT.fills);
         if (!fillsVar) return this.fills;
 
         const _vars: Variable[] = [];
-        this.findVar(fillsVar.varId, _vars);
+        this.findVar(fillsVar, _vars);
         // watch vars
         this._watch_vars("style.fills", _vars);
         const _var = _vars[_vars.length - 1];
@@ -208,11 +208,11 @@ export class Style extends Basic implements classes.Style {
     getBorders(): BasicArray<Border> {
         if (!this.varbinds) return this.borders;
 
-        const bordersVar = this.varbinds.find((v) => v.slot === STYLE_VAR_SLOT.borders);
+        const bordersVar = this.varbinds.get(STYLE_VAR_SLOT.borders);
         if (!bordersVar) return this.borders;
 
         const _vars: Variable[] = [];
-        this.findVar(bordersVar.varId, _vars);
+        this.findVar(bordersVar, _vars);
         // watch vars
         this._watch_vars("style.borders", _vars);
         const _var = _vars[_vars.length - 1];

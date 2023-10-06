@@ -18,4 +18,9 @@ export class Variable extends Watchable(Basic) implements classes.Variable {
         this.type = type
         this.name = name
     }
+
+    notify(...args: any[]): void {
+        super.notify(...args);
+        this.__parent?.notify("vairable");
+    }
 }

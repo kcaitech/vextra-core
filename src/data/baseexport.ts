@@ -73,14 +73,6 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
 export function exportVariableType(source: types.VariableType, ctx?: IExportContext): types.VariableType {
     return source
 }
-/* variable bind */
-export function exportVariableBind(source: types.VariableBind, ctx?: IExportContext): types.VariableBind {
-    const ret = {
-        slot: source.slot,
-        varId: source.varId,
-    }
-    return ret
-}
 /* user infomation */
 export function exportUserInfo(source: types.UserInfo, ctx?: IExportContext): types.UserInfo {
     const ret = {
@@ -187,12 +179,12 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
         startMarkerType: source.startMarkerType && exportMarkerType(source.startMarkerType, ctx),
         endMarkerType: source.endMarkerType && exportMarkerType(source.endMarkerType, ctx),
         varbinds: source.varbinds && (() => {
-            const ret = []
-            for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                const r = exportVariableBind(source.varbinds[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
+            const val = source.varbinds;
+            const ret: any = {};
+            val.forEach((v, k) => {
+                ret[k] = v
+            });
+            return ret;
         })(),
     }
     return ret
@@ -252,12 +244,12 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-            const ret = []
-            for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                const r = exportVariableBind(source.varbinds[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
+            const val = source.varbinds;
+            const ret: any = {};
+            val.forEach((v, k) => {
+                ret[k] = v
+            });
+            return ret;
         })(),
     }
     return ret
@@ -350,15 +342,6 @@ export function exportPadding(source: types.Padding, ctx?: IExportContext): type
         top: source.top,
         right: source.right,
         bottom: source.bottom,
-    }
-    return ret
-}
-/* override */
-export function exportOverride(source: types.Override, ctx?: IExportContext): types.Override {
-    const ret = {
-        refId: source.refId,
-        type: exportOverrideType(source.type, ctx),
-        varId: source.varId,
     }
     return ret
 }
@@ -710,12 +693,12 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         text: exportText(source.text, ctx),
         fixedRadius: source.fixedRadius,
@@ -747,12 +730,12 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         datas: (() => {
             const ret = []
@@ -818,12 +801,12 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         cellType: source.cellType && exportTableCellType(source.cellType, ctx),
         text: source.text && exportText(source.text, ctx),
@@ -860,29 +843,29 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         refId: source.refId,
-        overrides: (() => {
-            const ret = []
-            for (let i = 0, len = source.overrides.length; i < len; i++) {
-                const r = exportOverride(source.overrides[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
+        virbindsEx: source.virbindsEx && (() => {
+            const val = source.virbindsEx;
+            const ret: any = {};
+            val.forEach((v, k) => {
+                ret[k] = v
+            });
+            return ret;
         })(),
-        variables: (() => {
-            const ret = []
-            for (let i = 0, len = source.variables.length; i < len; i++) {
-                const r = exportVariable(source.variables[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
+        variables: source.variables && (() => {
+            const val = source.variables;
+            const ret: any = {};
+            val.forEach((v, k) => {
+                ret[k] = exportVariable(v, ctx)
+            });
+            return ret;
         })(),
     }
     return ret
@@ -931,12 +914,12 @@ export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext)
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         pathsegs: (() => {
             const ret = []
@@ -975,12 +958,12 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         points: (() => {
             const ret = []
@@ -1030,12 +1013,12 @@ export function exportRectShape(source: types.RectShape, ctx?: IExportContext): 
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
     }
     return ret
@@ -1115,12 +1098,12 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         childs: (() => {
             const ret = []
@@ -1221,12 +1204,12 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         ellipse: exportEllipse(source.ellipse, ctx),
     }
@@ -1267,12 +1250,12 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
     }
     return ret
@@ -1312,12 +1295,12 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         imageRef: source.imageRef,
     }
@@ -1350,12 +1333,12 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         childs: (() => {
             const ret = []
@@ -1499,22 +1482,38 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         isUnionSymbolShape: source.isUnionSymbolShape,
         unionSymbolRef: source.unionSymbolRef,
-        variables: (() => {
-            const ret = []
-            for (let i = 0, len = source.variables.length; i < len; i++) {
-                const r = exportVariable(source.variables[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
+        virbindsEx: source.virbindsEx && (() => {
+            const val = source.virbindsEx;
+            const ret: any = {};
+            val.forEach((v, k) => {
+                ret[k] = v
+            });
+            return ret;
+        })(),
+        variables: source.variables && (() => {
+            const val = source.variables;
+            const ret: any = {};
+            val.forEach((v, k) => {
+                ret[k] = exportVariable(v, ctx)
+            });
+            return ret;
+        })(),
+        vartag: source.vartag && (() => {
+            const val = source.vartag;
+            const ret: any = {};
+            val.forEach((v, k) => {
+                ret[k] = v
+            });
+            return ret;
         })(),
     }
     // inject code
@@ -1603,12 +1602,12 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
     }
     return ret
@@ -1638,12 +1637,12 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
         points: (() => {
             const ret = []
@@ -1745,12 +1744,12 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
         varbinds: source.varbinds && (() => {
-                const ret = []
-                for (let i = 0, len = source.varbinds.length; i < len; i++) {
-                    const r = exportVariableBind(source.varbinds[i], ctx)
-                    if (r) ret.push(r)
-                }
-                return ret
+                const val = source.varbinds;
+                const ret: any = {};
+                val.forEach((v, k) => {
+                    ret[k] = v
+                });
+                return ret;
             })(),
     }
     return ret

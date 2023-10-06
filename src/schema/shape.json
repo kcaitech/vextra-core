@@ -71,9 +71,12 @@
             "type": "boolean"
         },
         "varbinds": {
-            "type": "array",
-            "items": {
-                "$ref": "./variable-bind.json"
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
             }
         }
     },

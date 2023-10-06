@@ -51,7 +51,7 @@ handler['object'] = function (schema: any, className: string, attrname: string, 
         ret += indent(level + 1) + k + ': '
 
         if (required.indexOf(k) < 0) {
-            if (v['$ref'] || v.type == 'array') ret += attrname + '.' + k + ' && '
+            if (v['$ref'] || v.type == 'array' || v.type == 'map') ret += attrname + '.' + k + ' && '
         }
 
         ret += handler['type'](v, className, attrname + '.' + k, level + 1, filename, allschemas)
@@ -108,6 +108,9 @@ handler['type'] = function (schema: any, className: string, attrname: string, le
     else if (schema.type == 'array') {
         return handler['array'](schema, className, attrname, level, filename, allschemas)
     }
+    else if (schema.type == 'map') {
+        return handler['map'](schema, className, attrname, level, filename, allschemas)
+    }
     else if (schema.oneOf) {
         return handler['oneOf'](schema.oneOf, className, attrname, level, filename, allschemas)
 
@@ -122,6 +125,28 @@ handler['type'] = function (schema: any, className: string, attrname: string, le
         console.error("Unknow Type", schema)
         throw new Error("Unknow Type : " + schema)
     }
+}
+
+handler['map'] = function (schema: any, className: string, attrname: string, level: number, filename: string, allschemas: Map<string, {
+    schema: any,
+    dependsOn: Set<string>,
+    className: string,
+    filename: string,
+    filepath: string
+}>) {
+    className = schema.className ?? className
+    filename = schema.filename ?? filename
+    const keyschema = schema.key;
+    const valueschema = schema.value;
+    let ret = `(() => {
+${indent(level)}    const val = ${attrname};
+${indent(level)}    const ret: any = {};
+${indent(level)}    val.forEach((v, k) => {
+${indent(level)}        ret[k] = ${handler['type'](valueschema, className, 'v', level + 2, filename, allschemas)}
+${indent(level)}    });
+${indent(level)}    return ret;
+${indent(level)}})()`
+    return ret;
 }
 
 handler['oneOf'] = function (schema: any, className: string, attrname: string, level: number, filename: string, allschemas: Map<string, {
@@ -227,7 +252,7 @@ handler['allOf'] = function (schema: any, className: string, attrname: string, l
         if (outputed.has(k)) return;
         outputed.add(k);
         ret += indent(level) + k + ': '
-        if (v.schema['$ref'] || v.schema.type == 'array') ret += attrname + '.' + k + ' && '
+        if (v.schema['$ref'] || v.schema.type == 'array' || v.schema.type == 'map') ret += attrname + '.' + k + ' && '
         ret += handler['type'](v.schema, v.className, attrname + '.' + k, level + 1, v.filename, allschemas) + ',\n'
     })
     return ret

@@ -62,9 +62,12 @@
             "$ref": "./marker-type.json"
         },
         "varbinds": {
-            "type": "array",
-            "items": {
-                "$ref": "./variable-bind.json"
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
             }
         }
     },

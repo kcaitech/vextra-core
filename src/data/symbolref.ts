@@ -1,23 +1,16 @@
-import { ResourceMgr } from "./basic";
+import { BasicMap, ResourceMgr } from "./basic";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
-import { BasicArray } from "./basic";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
-    ShapeFrame, Ellipse, PathSegment, OverrideType, Override
+    ShapeFrame, Ellipse, PathSegment, OverrideType,
 } from "./baseclasses"
-import { ShapeType, ShapeFrame, OverrideType, Override } from "./baseclasses"
+import { ShapeType, ShapeFrame, OverrideType } from "./baseclasses"
 import { uuid } from "../basic/uuid";
-import { GroupShape, Shape, SymbolShape } from "./shape";
-import { proxyShape } from "./symproxy";
+import { GroupShape, Shape } from "./shape";
 import { Path } from "./path";
-import { layoutChilds } from "./symlayout";
-import { OverrideShape } from "./overrideshape";
 import { Variable } from "./variable";
-import { IImportContext, importSymbolShape } from "./baseimport";
-import { proxyShape2 } from "./symproxy2";
-import { Document } from "./document";
-
+import { proxyShape } from "./symproxy";
 
 function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
@@ -35,11 +28,11 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     __cache: Map<string, any> = new Map();
 
     typeId = 'symbol-ref-shape'
-    refId: string // 得支持变量"Variable:xxxxxx" unionsymbol需要引用到子symbol
-    overrides: BasicArray<Override>
-    variables: BasicArray<Variable>
+    refId: string
 
-    __proxyIdMap: Map<string, string> = new Map();
+    virbindsEx?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
+    variables?: BasicMap<string, Variable>
+
     __childs?: Shape[];
 
     constructor(
@@ -48,9 +41,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        refId: string,
-        overrides: BasicArray<Override>,
-        variables: BasicArray<Variable>
+        refId: string
     ) {
         super(
             id,
@@ -60,90 +51,43 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             style
         )
         this.refId = refId
-        this.overrides = overrides
-        this.variables = variables;
     }
 
-    mapId(id: string) {
-        let _id = this.__proxyIdMap.get(id);
-        if (_id) return _id;
-        _id = uuid();
-        this.__proxyIdMap.set(id, _id);
-        return _id;
-    }
-
-    private __virtualShape?: OverrideShape;
-    private __proxyedVirtualShape?: Shape;
-    // 虚构一个OverrideShape, proxy?
-    // 修改text fills borders重定向到修改variable
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
-        if (targetId.length === 0) return this;
-
-        const refId = targetId[0] as string; // "xxxx/xxxx/xxxx" or "variable" or "override" or "fills" or "borders"
-        // [0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}
-        if (refId.length < 16) return this;
-
-        if (this.__virtualShape) {
-            this.__virtualShape.id = refId;
-            return this.__proxyedVirtualShape!;
-        }
-        this.__virtualShape = new OverrideShape(refId,
-            "",
-            ShapeType.OverrideShape,
-            new ShapeFrame(0, 0, 0, 0),
-            new Style(new BasicArray(), new BasicArray()));
-        // proxy是为了自动将编辑命令定向到override的数据
-        // 在api层区分是shape修改还是variable、override修改，简单化数据层
-        this.__proxyedVirtualShape = proxyShape(this.__virtualShape, this, [this]);
-        return this.__proxyedVirtualShape;
+        return this;
     }
 
-    getVirtualChilds(symRef: SymbolRefShape[] | undefined, parent: SymbolRefShape): Shape[] | undefined {
+    getVirtualChilds(prefixId: string): Shape[] | undefined {
         if (!this.__data) return;
         const sym = this.__data;
 
-        const _symRef = symRef ? symRef.slice(0) : [];
-        _symRef.push(this);
-
-        let _sym = sym;
+        let _sym: Shape = sym;
         // union symbol
         if (sym.isUnionSymbolShape) {
-            let _sym = sym.childs[0];
+            _sym = sym.childs[0];
             // symbolref.
             if (sym.unionSymbolRef) {
                 const c = sym.findChildById(sym.unionSymbolRef);
                 if (c) _sym = c;
             }
         }
-        // todo 这里必须要拷贝一份对象数据，否则对象数据里的临时数据会起冲突？
-        // 暂时不会，目前所有会修改的都提前拷贝了？？
-        // 会串的有： symbolref.__data, 这个支持不同实例后，是不一样的
-        // text.__layout
-        // objectId
-        // 缺少document, 
 
-        const copy = importSymbolShape(_sym as SymbolShape);
-        // const childs = (_sym.childs || []).map((v: Shape) => proxyShape(v, parent, _symRef));
-
-        const childs = copy.childs;
-        const origin_childs = (_sym as GroupShape).childs;
+        const _childs = [];
+        const childs = (_sym as GroupShape).childs;
+        const prefix = prefixId + '/';
         for (let i = 0, len = childs.length; i < len; ++i) {
-            childs[i] = proxyShape2(childs[i], this, origin_childs[i], _symRef)
+            const c = childs[i];
+            _childs.push(proxyShape(c, this, prefix + c.id));
         }
 
-        const thisframe = this.frame;
-        const symframe = _sym.frame;
-        if (thisframe.width !== symframe.width || thisframe.height !== symframe.height) {
-            layoutChilds(childs, thisframe, symframe);
-        }
-        return childs;
+        return _childs;
     }
 
     // for render
     get virtualChilds(): Shape[] | undefined {
         // return this._virtualChilds;
         if (this.__childs) return this.__childs;
-        this.__childs = this.getVirtualChilds(this.symRefs, this);
+        this.__childs = this.getVirtualChilds(this.id);
         return this.__childs;
     }
 
@@ -240,24 +184,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return new Path(path);
     }
 
-    private __varMap?: Map<string, Variable>;
-    private __overridesMap?: Map<string, Override>;
-    private get overrideMap() {
-        if (!this.__overridesMap) {
-            const map = new Map();
-            this.overrides.forEach((o) => {
-                map.set(o.refId, o);
-            })
-            this.__overridesMap = map;
-        }
-        return this.__overridesMap;
-    }
-
-    private get varMap() { // 不可以构造时就初始化，这时的var没有proxy
-        if (!this.__varMap) this.__varMap = new Map(this.variables.map((v) => [v.id, v]));
-        return this.__varMap;
-    }
-
     private _createVar4Override(type: OverrideType, value: any) {
         switch (type) {
             case OverrideType.Borders:
@@ -290,16 +216,11 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         refId = genRefId(refId, type); // id+type->var
 
         const v: Variable = this.createVar4Override(type, value);
-        let over = new Override(refId, type, v.id);
 
-        this.overrides.push(over);
-        over = this.overrides[this.overrides.length - 1];
+        if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
+        this.virbindsEx.set(refId, v.id);
 
-        if (this.__overridesMap) {
-            this.__overridesMap.set(refId, over);
-        }
-
-        return { over, v };
+        return { refId, v };
     }
 
     // overrideValues
@@ -327,7 +248,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                     }
                     else {
                         const _val = value as Variable;
-                        override.over.varId = _val.id; // 映射到新变量
+                        this.virbindsEx?.set(override.refId, _val.id);// 映射到新变量
                         override.v = this.addVar(_val);
                     }
                     return override;
@@ -337,34 +258,50 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         }
     }
 
-    getOverrid(refId: string, type: OverrideType): { over: Override, v: Variable } | undefined {
+    getOverrid(refId: string, type: OverrideType): { refId: string, v: Variable } | undefined {
         refId = genRefId(refId, type); // id+type->var
-        const over = this.overrideMap.get(refId);
+        const over = this.virbindsEx && this.virbindsEx.get(refId);
         if (over) {
-            const v = this.varMap.get(over.varId);
-            if (v) return { over, v }
+            const v = this.variables && this.variables.get(over);
+            if (v) return { refId, v }
         }
     }
 
+    deleteOverride(overrideId: string) {
+        if (this.varbindsEx) {
+            this.varbindsEx.delete(overrideId);
+        }
+    }
     addVar(v: Variable) {
-        this.variables.push(v);
-        if (this.__varMap) this.__varMap.set(v.id, this.variables[this.variables.length - 1]);
-        return this.variables[this.variables.length - 1];
+        if (!this.variables) this.variables = new BasicMap<string, Variable>();
+        this.variables.set(v.id, v);
+        return this.variables.get(v.id)!;
     }
     deleteVar(varId: string) {
-        const v = this.varMap.get(varId);
-        if (v) {
-            const i = this.variables.findIndex((v) => v.id === varId)
-            this.variables.splice(i, 1);
-            this.varMap.delete(varId);
+        if (this.variables) {
+            return this.variables.delete(varId);
         }
-        return v;
     }
     getVar(varId: string) {
-        return this.varMap.get(varId);
+        return this.variables && this.variables.get(varId);
     }
 
     findVar(varId: string, ret: Variable[]) {
+        if (this.__data) {
+            // todo
+            const override = this.__data.getOverrid(varId, OverrideType.Variable);
+            if (override) {
+                ret.push(override.v);
+                // scope??
+                varId = override.v.id;
+            }
+            else {
+                const _var = this.__data.getVar(varId);
+                if (_var) {
+                    ret.push(_var);
+                }
+            }
+        }
         const override = this.getOverrid(varId, OverrideType.Variable);
         if (override) {
             ret.push(override.v);
@@ -374,48 +311,34 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         const _var = this.getVar(varId);
         if (_var) {
             ret.push(_var);
+            // 考虑scope
+            // varId要叠加上refid
+            if (this.isVirtualShape) {
+                varId = this.originId + '/' + varId;
+            }
+            else {
+                varId = this.id + '/' + varId;
+            }
             super.findVar(varId, ret);
             return;
         }
+
         super.findVar(varId, ret);
     }
 
-    addOverrideAt(over: Override, index: number) {
-        this.overrides.splice(index, 0, over);
-        if (this.__overridesMap) {
-            this.__overridesMap.set(over.refId, over);
+    findOverride(refId: string, type: OverrideType): Variable[] | undefined {
+        const override = this.getOverrid(refId, type);
+        if (override) {
+            const ret = [override.v];
+            super.findVar(override.v.id, ret);
+            return ret;
         }
-    }
-    deleteOverrideAt(idx: number) {
-        const ret = this.overrides.splice(idx, 1)[0];
-        if (ret && this.__overridesMap) {
-            this.__overridesMap.delete(ret.refId);
+        if (this.isVirtualShape) {
+            refId = this.originId + '/' + refId;
         }
-        return ret;
-    }
-    deleteOverride(overrideId: string) {
-        const v = this.overrideMap.get(overrideId);
-        if (v) {
-            const i = this.overrides.findIndex((v) => v.refId === overrideId)
-            this.overrides.splice(i, 1);
-            this.overrideMap.delete(overrideId);
+        else {
+            refId = this.id + '/' + refId;
         }
-        return v;
-    }
-
-    addVariableAt(_var: Variable, index: number) {
-        this.variables.splice(index, 0, _var);
-        if (this.__varMap) {
-            this.__varMap.set(_var.id, this.variables[index]);
-        }
-    }
-    deleteVariableAt(idx: number) {
-        const ret = this.variables.splice(idx, 1)[0];
-        if (ret && this.__varMap) {
-            this.__varMap.delete(ret.id);
-        }
-    }
-    modifyVariableAt(idx: number, value: any) {
-        this.variables[idx].value = value;
+        return super.findOverride(refId, type);
     }
 }
