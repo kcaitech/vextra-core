@@ -48,11 +48,16 @@ export class TableCell extends Shape implements classes.TableCell {
         return [table.id, indexCell];
     }
 
-    getPath(): Path {
+    /**
+     * 没有实例化cell前使用来画边框
+     * @param frame 
+     * @returns 
+     */
+    static getPathOfFrame(frame: ShapeFrame): Path {
         const x = 0;
         const y = 0;
-        const w = this.frame.width;
-        const h = this.frame.height;
+        const w = frame.width;
+        const h = frame.height;
         const path = [["M", x, y],
         ["l", w, 0],
         ["l", 0, h],
@@ -61,7 +66,7 @@ export class TableCell extends Shape implements classes.TableCell {
         return new Path(path);
     }
 
-    static getPathOfFrame(frame: ShapeFrame): Path {
+    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const x = 0;
         const y = 0;
         const w = frame.width;
@@ -258,11 +263,11 @@ export class TableShape extends Shape implements classes.TableShape {
         return this.colWidths.length;
     }
 
-    getPath(): Path {
+    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const x = 0;
         const y = 0;
-        const w = this.frame.width;
-        const h = this.frame.height;
+        const w = frame.width;
+        const h = frame.height;
         const path = [["M", x, y],
         ["l", w, 0],
         ["l", 0, h],

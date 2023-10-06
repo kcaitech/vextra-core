@@ -1,14 +1,38 @@
-import { Shape } from "../data/classes";
+import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
-import { isVisible } from "./basic";
+import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
 
-export function render(h: Function, shape: Shape, reflush?: number) {
+export function render(h: Function, shape: Shape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, reflush?: number) {
     if (!isVisible(shape)) return;
 
-    const frame = shape.frame;
+    const _frame = shape.frame;
+    let x = _frame.x;
+    let y = _frame.y;
+    let width = _frame.width;
+    let height = _frame.height;
+    let rotate = (shape.rotation ?? 0);
+    let hflip = !!shape.isFlippedHorizontal;
+    let vflip = !!shape.isFlippedVertical;
+    let frame = _frame;
+
+    const notTrans = isNoTransform(transform);
+
+    if (!notTrans && transform) {
+         x += transform.dx;
+         y += transform.dy;
+         width *= transform.scaleX;
+         height *= transform.scaleY;
+         rotate += transform.rotate;
+         hflip = transform.hflip ? !hflip : hflip;
+         vflip = transform.vflip ? !vflip : vflip;
+         frame = new ShapeFrame(x, y, width, height);
+         fixFrameByConstrain(shape, transform.parentFrame, frame);
+    }
+
     const childs = [];
-    const path0 = shape.getPath();
+    const path0 = shape.getPathOfFrame(frame);
     const path = path0.toString();
 
     // fill
@@ -26,16 +50,16 @@ export function render(h: Function, shape: Shape, reflush?: number) {
         props.opacity = contextSettings.opacity;
     }
 
-    if (shape.isNoTransform()) {
+    if (shape.isNoTransform() && notTrans) {
         props.transform = `translate(${frame.x},${frame.y})`;
     } else {
         const cx = frame.x + frame.width / 2;
         const cy = frame.y + frame.height / 2;
         const style: any = {}
         style.transform = "translate(" + cx + "px," + cy + "px) "
-        if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
-        if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
-        if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
+        if (hflip) style.transform += "rotateY(180deg) "
+        if (vflip) style.transform += "rotateX(180deg) "
+        if (rotate) style.transform += "rotate(" + shape.rotation + "deg) "
         style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
         props.style = style;
     }

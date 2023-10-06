@@ -57,10 +57,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this;
     }
 
-    getVirtualChilds(prefixId: string): Shape[] | undefined {
+    getSymChilds(): Shape[] | undefined {
         if (!this.__data) return;
         const sym = this.__data;
-
         let _sym: Shape = sym;
         // union symbol
         if (sym.isUnionSymbolShape) {
@@ -71,23 +70,16 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                 if (c) _sym = c;
             }
         }
-
-        const _childs = [];
-        const childs = (_sym as GroupShape).childs;
-        const prefix = prefixId + '/';
-        for (let i = 0, len = childs.length; i < len; ++i) {
-            const c = childs[i];
-            _childs.push(proxyShape(c, this, prefix + c.id));
-        }
-
-        return _childs;
+        return (_sym as GroupShape).childs;
     }
 
     // for render
     get virtualChilds(): Shape[] | undefined {
-        // return this._virtualChilds;
         if (this.__childs) return this.__childs;
-        this.__childs = this.getVirtualChilds(this.id);
+        const childs = this.getSymChilds();
+        if (!childs) return;
+        const prefix = this.id + '/';
+        this.__childs = childs.map((c) => proxyShape(c, this, prefix + c.id));
         return this.__childs;
     }
 
@@ -169,11 +161,11 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         this._reLayout(); // todo 太粗暴了！
     }
 
-    getPath(): Path {
+    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const x = 0;
         const y = 0;
-        const w = this.frame.width;
-        const h = this.frame.height;
+        const w = frame.width;
+        const h = frame.height;
         const path = [
             ["M", x, y],
             ["l", w, 0],

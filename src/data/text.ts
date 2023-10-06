@@ -427,6 +427,24 @@ export class Text extends Basic implements classes.Text {
         this.__layout = undefined;
     }
 
+    // 无缓存
+    getLayout2(width: number, height: number) {
+        if (this.__layout && this.__frameHeight === height && this.__frameWidth === width) {
+            return this.__layout;
+        }
+
+        const layoutWidth = ((b: TextBehaviour) => {
+            switch (b) {
+                case TextBehaviour.Flexible: return Number.MAX_VALUE;
+                case TextBehaviour.Fixed: return width;
+                case TextBehaviour.FixWidthAndHeight: return height;
+            }
+            // return Number.MAX_VALUE
+        })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+
+        return layoutText(this, layoutWidth, height);
+    }
+
     getLayout() {
         if (this.__layout) return this.__layout;
         this.__layout = layoutText(this, this.__layoutWidth, this.__frameHeight);

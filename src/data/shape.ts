@@ -133,8 +133,12 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         return false;
     }
 
-    getPath(fixedRadius?: number): Path {
+    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         return new Path();
+    }
+
+    getPath(fixedRadius?: number): Path {
+        return this.getPathOfFrame(this.frame, fixedRadius);
     }
 
     getPage(): Shape | undefined {
@@ -381,11 +385,11 @@ export class GroupShape extends Shape implements classes.GroupShape {
         })
     }
 
-    getPath(): Path {
+    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const x = 0;
         const y = 0;
-        const w = this.frame.width;
-        const h = this.frame.height;
+        const w = frame.width;
+        const h = frame.height;
         let path = [["M", x, y],
         ["l", w, 0],
         ["l", 0, h],
@@ -611,11 +615,16 @@ export class PathShape extends Shape implements classes.PathShape {
         return this.points.map(f);
     }
 
-    getPath(fixedRadius?: number): Path {
+    /**
+     * 
+     * @param fixedRadius shape自身的fixedRadius优先
+     * @returns 
+     */
+    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const offsetX = 0;
         const offsetY = 0;
-        const width = this.frame.width;
-        const height = this.frame.height;
+        const width = frame.width;
+        const height = frame.height;
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
         const path = parsePath(this.points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
@@ -655,11 +664,11 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         return this.pathsegs.reduce((count, seg) => (count + seg.points.length), 0);
     }
 
-    getPath(fixedRadius?: number): Path {
+    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const offsetX = 0;
         const offsetY = 0;
-        const width = this.frame.width;
-        const height = this.frame.height;
+        const width = frame.width;
+        const height = frame.height;
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
         const path: any[] = [];
@@ -849,9 +858,10 @@ export class TextShape extends Shape implements classes.TextShape {
         text.updateSize(frame.width, frame.height);
     }
 
-    getPath(fixedRadius?: number): Path {
-        const w = this.frame.width;
-        const h = this.frame.height;
+    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+
+        const w = frame.width;
+        const h = frame.height;
 
         fixedRadius = this.fixedRadius ?? fixedRadius;
         if (fixedRadius) {
@@ -876,6 +886,10 @@ export class TextShape extends Shape implements classes.TextShape {
 
     getLayout(): TextLayout {
         return this.text.getLayout();
+    }
+
+    getLayout2(width: number, height: number): TextLayout {
+        return this.text.getLayout2(width, height);
     }
 
     getText(): Text {

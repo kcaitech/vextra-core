@@ -298,7 +298,7 @@ class GroupShapeHdl extends ShapeHdl {
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
-        if (propStr === 'childs') {
+        if (propStr === 'childs' || propStr === 'naviChilds') {
             if (this.__childs) {
                 if (this.__childsIsDirty) {
                     this.__childsIsDirty = false;
@@ -353,32 +353,35 @@ class SymbolRefShapeHdl extends ShapeHdl {
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
         if (propStr === 'virtualChilds' || propStr === 'naviChilds') {
-            if (this.__childs) {
-                if (this.__childsIsDirty) {
-                    this.__childsIsDirty = false;
-                    const childs = (this.__origin as SymbolRefShape).getVirtualChilds(this.__id) || [];
-                    const _childs = this.__childs;
-                    if (_childs.length > childs.length) {
-                        // 回收多余的
-                        for (let i = childs.length, len = _childs.length; i < len; ++i) {
-                            (_childs[i] as any).remove;
-                        }
-                    }
-                    _childs.length = childs.length;
-                    const prefix = this.__id + '/';
-                    for (let i = 0, len = childs.length; i < len; ++i) {
-                        const c = _childs[i]; // 可能undefined
-                        const origin = childs[i];
-                        if (c && (c as any).originId === origin.id) {
-                            continue;
-                        }
-                        if (c) (c as any).remove;
-                        _childs[i] = origin; //proxyShape(origin, receiver as Shape, prefix + origin.id);
+            if (!this.__childs) {
+                const childs = (this.__origin as SymbolRefShape).getSymChilds() || [];
+                const prefix = this.__id + '/';
+                this.__childs = childs.map((origin) => proxyShape(origin, receiver as Shape, prefix + origin.id));
+                this.__childsIsDirty = false;
+                return this.__childs
+            }
+            if (this.__childsIsDirty) {
+                this.__childsIsDirty = false;
+                const childs = (this.__origin as SymbolRefShape).getSymChilds() || [];
+                const _childs = this.__childs;
+                if (_childs.length > childs.length) {
+                    // 回收多余的
+                    for (let i = childs.length, len = _childs.length; i < len; ++i) {
+                        (_childs[i] as any).remove;
                     }
                 }
-                return this.__childs;
+                _childs.length = childs.length;
+                const prefix = this.__id + '/';
+                for (let i = 0, len = childs.length; i < len; ++i) {
+                    const c = _childs[i]; // 可能undefined
+                    const origin = childs[i];
+                    if (c && (c as any).originId === origin.id) {
+                        continue;
+                    }
+                    if (c) (c as any).remove;
+                    _childs[i] = proxyShape(origin, receiver as Shape, prefix + origin.id);
+                }
             }
-            this.__childs = (this.__origin as SymbolRefShape).getVirtualChilds(this.__id)
             return this.__childs;
         }
         return super.get(target, propertyKey, receiver);

@@ -36,7 +36,8 @@
 //     });
 // }
 
-import { Color, Shape } from "../data/classes";
+import { ResizingConstraints } from "../data/consts";
+import { Color, Shape, ShapeFrame } from "../data/classes";
 
 
 // export { h } from "vue";
@@ -55,4 +56,93 @@ export const DefaultColor = Color.DefaultColor;
 
 export function isVisible(shape: Shape) {
     return !!shape.isVisible;
+}
+
+export interface RenderTransform {
+    dx: number
+    dy: number
+    scaleX: number
+    scaleY: number
+    rotate: number
+    hflip: boolean
+    vflip: boolean
+    parentFrame: ShapeFrame
+}
+
+export function isNoTransform(trans: RenderTransform | undefined): boolean {
+    return !trans ||
+        trans.dx === 0 &&
+        trans.dy === 0 &&
+        trans.scaleX === 1 &&
+        trans.scaleY === 1 &&
+        trans.rotate === 0 &&
+        !trans.hflip &&
+        !trans.vflip;
+}
+
+export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame: ShapeFrame) {
+    const originParentFrame = shape.parent?.frame; // 至少有page!
+    if (!originParentFrame) return;
+
+    const cFrame = shape.frame;
+    const resizingConstraint = shape.resizingConstraint;
+    if (!resizingConstraint || ResizingConstraints.isUnset(resizingConstraint)) {
+        return;
+    }
+
+    // 水平
+    const hasWidth = ResizingConstraints.hasWidth(resizingConstraint);
+    const hasLeft = ResizingConstraints.hasLeft(resizingConstraint);
+    const hasRight = ResizingConstraints.hasRight(resizingConstraint);
+    // 计算width, x
+    // 宽度与同时设置左右是互斥关系，万一数据出错，以哪个优先？先以左右吧
+    let cw = hasWidth ? cFrame.width : frame.width;
+    let cx = frame.x;
+    if (hasLeft && hasRight) {
+        cx = cFrame.x;
+        const dis = originParentFrame.width - (cFrame.x + cFrame.width);
+        cw = parentFrame.width - dis - cx;
+    }
+    else if (hasLeft) {
+        cx = cFrame.x;
+    }
+    else if (hasRight) {
+        cx = frame.x;
+        const dis = originParentFrame.width - (cFrame.x + cFrame.width);
+        cw = parentFrame.width - dis - cx;
+    }
+    else if (hasWidth) {
+        // 居中
+        cx += (frame.width - cFrame.width) / 2;
+    }
+
+    // 垂直
+    const hasHeight = ResizingConstraints.hasHeight(resizingConstraint);
+    const hasTop = ResizingConstraints.hasTop(resizingConstraint);
+    const hasBottom = ResizingConstraints.hasBottom(resizingConstraint);
+    // 计算height, y
+    let ch = hasHeight ? cFrame.height : frame.height;
+    let cy = frame.y;
+    if (hasTop && hasBottom) {
+        cy = cFrame.y;
+        const dis = originParentFrame.height - (cFrame.y + cFrame.height);
+        ch = parentFrame.height - dis - cy;
+    }
+    else if (hasTop) {
+        cy = cFrame.y;
+    }
+    else if (hasBottom) {
+        cy = frame.y;
+        const dis = originParentFrame.height - (cFrame.y + cFrame.height);
+        ch = parentFrame.height - dis - cy;
+    }
+    else if (hasHeight) {
+        // 居中
+        cy += (frame.height - cFrame.height) / 2;
+    }
+
+    frame.x = cx;
+    frame.y = cy;
+    frame.width = cw;
+    frame.height = ch;
 }

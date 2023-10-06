@@ -1,21 +1,59 @@
-import { ShapeType, SymbolRefShape } from "../data/classes";
-import { renderGroupChilds2 } from "./group";
+import { ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
+import { renderGroupChilds2, renderGroupChilds3 } from "./group";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
+import { RenderTransform, isNoTransform } from "./basic";
 
-function renderSym(h: Function, ref: SymbolRefShape, comsMap: Map<ShapeType, any>): any {
+function renderSym(h: Function,
+    ref: SymbolRefShape,
+    sym: SymbolShape,
+    comsMap: Map<ShapeType, any>,
+    transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): any {
 
-    // const isVisible = ref.isVisible ?? true;
-    // if (!isVisible) return [];
+    const refframe = ref.frame;
+    const symframe = sym.frame;
+    const noTrans = isNoTransform(transform);
+    if (noTrans && refframe.width === symframe.width && refframe.height === symframe.height) {
+        const vchilds = sym.childs; //ref.virtualChilds;
+        const childs: Array<any> = renderGroupChilds2(h, vchilds, comsMap, undefined, (varsContainer ?? []).concat(ref, sym));
+        return childs;
+    }
 
-    // todo 
-    const vchilds = ref.virtualChilds;
-    const childs: Array<any> = vchilds ? renderGroupChilds2(h, vchilds, comsMap) : [];
-    return childs;
+    if (noTrans) { // 第一个
+        const scaleX = refframe.width / symframe.width;
+        const scaleY = refframe.height / symframe.height;
+        transform = {
+            dx: 0,
+            dy: 0,
+            scaleX,
+            scaleY,
+            parentFrame: refframe,
+            vflip: false,
+            hflip: false,
+            rotate: 0
+        }
+
+        const vchilds = sym.childs;
+        const { nodes } = renderGroupChilds3(h, sym, vchilds, comsMap, transform, (varsContainer ?? []).concat(ref, sym));
+        return nodes;
+    }
+    else {
+        // 应该同groupshape
+        const vchilds = sym.childs;
+        const { nodes } = renderGroupChilds3(h, sym, vchilds, comsMap, transform, (varsContainer ?? []).concat(ref, sym));
+        return nodes;
+    }
 }
 
-export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeType, any>, reflush?: number) {
-    const isVisible = shape.isVisible ?? true;
+export function render(h: Function,
+    shape: SymbolRefShape,
+    comsMap: Map<ShapeType, any>,
+    transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    reflush?: number) {
+
+    const isVisible = shape.isVisible ?? true; // todo
     if (!isVisible) return
 
     const sym = shape.peekSymbol(true);
@@ -32,7 +70,7 @@ export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeTyp
     childs.push(...borderR(h, shape.style.borders, frame, path));
 
     // symbol
-    childs.push(...renderSym(h, shape, comsMap));
+    childs.push(...renderSym(h, shape, sym as SymbolShape, comsMap, transform, varsContainer));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;

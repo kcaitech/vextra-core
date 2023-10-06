@@ -1,11 +1,11 @@
-import { BoolOp, GroupShape, Path, Shape, Style, TextShape } from "../data/classes";
+import { BoolOp, GroupShape, Path, Shape, Style, SymbolRefShape, SymbolShape, TextShape } from "../data/classes";
 // import { difference, intersection, subtract, union } from "./boolop";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
-import { isVisible } from "./basic";
+import { RenderTransform, isVisible } from "./basic";
 
 // find first usable style
 export function findUsableFillStyle(shape: Shape): Style {
@@ -98,7 +98,9 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
     return resultpath;
 }
 
-export function render(h: Function, shape: GroupShape, reflush?: number, consumed?: Array<Shape>): any {
+export function render(h: Function, shape: GroupShape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    reflush?: number, consumed?: Array<Shape>): any {
     if (!isVisible(shape)) return;
 
     const path = render2path(shape, consumed);
