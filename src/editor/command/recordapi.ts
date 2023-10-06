@@ -10,20 +10,20 @@ import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportOverride, exportPage, exportPoint2D, exportTableCell, exportText, exportVariable } from "../../data/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, OVERRIDE_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, VARIABLE_ATTR_ID, VARIABLE_ID } from "./consts";
-import { GroupShape, Shape, PathShape, PathShape2, TextShape, SymbolShape } from "../../data/shape";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../data/baseexport";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { GroupShape, Shape, PathShape, PathShape2, TextShape } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType, Style } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
-import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
+import { RectShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { TableOpTarget } from "../../coop/data/classes";
-import { ContactRole, CurvePoint, Override, Variable } from "../../data/baseclasses";
+import { ContactRole, CurvePoint } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 
 type TextShapeLike = Shape & { text: Text }
@@ -47,7 +47,6 @@ function genShapeId(shape: Shape): Array<string | TableIndex> {
         return new TableIndex(v.rowIdx, v.colIdx);
     });
 }
-
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -106,43 +105,7 @@ export class Api {
     }
 
     private _override(page: Page, shape: Shape, type: OverrideType) {
-        const over: { container: Shape, over: Override, v: Variable } | undefined = shape.override(type);
-        if (over) {
-            const container = over.container as SymbolRefShape;
-            let origin: Variable | undefined;
-            if (over.over.type === OverrideType.Variable && (origin = container.getVar(over.over.refId))) {
-                // 直接修改var
-                this.addCmd(ShapeArrayAttrModify.Make(page.id,
-                    genShapeId(container),
-                    VARIABLE_ID,
-                    origin.id,
-                    VARIABLE_ATTR_ID.value,
-                    exportVariable(over.v).value,
-                    exportVariable(origin).value));
-
-                container.deleteVar(over.v.id);
-                container.deleteOverride(over.over.refId);
-                origin.value = over.v.value;
-
-            } else {
-
-                this.addCmd(ShapeArrayAttrInsert.Make(page.id,
-                    genShapeId(container),
-                    VARIABLE_ID,
-                    over.v.id,
-                    container.variables.length - 1,
-                    exportVariable(over.v)))
-
-
-                this.addCmd(ShapeArrayAttrInsert.Make(page.id,
-                    genShapeId(container),
-                    OVERRIDE_ID,
-                    over.over.refId,
-                    container.override.length - 1,
-                    exportOverride(over.over)))
-            }
-
-        }
+        
     }
 
     private text4edit(page: Page, shape: TextShapeLike): Text {

@@ -1,5 +1,5 @@
-import { Cmd, CmdType, OpType, ShapeCmdModify, TableIndex } from "../../coop"
-import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape, TableCell, OverrideShape } from "../../data/classes"
+import { Cmd, CmdType, OpType, ShapeCmdModify } from "../../coop"
+import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape, TableCell } from "../../data/classes"
 import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
 import { importColor, importText } from "../../data/baseimport";
@@ -399,42 +399,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                     const state = value && JSON.parse(value)
                     api.shapeModifyEditedState(shape as GroupShape, state ?? false);
                 }
-            },
-            // {
-            //     opId: SHAPE_ATTR_ID.override_borders,
-            //     handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-            //         const val = value && JSON.parse(value);
-            //         (shape as OverrideShape).override_borders = val;
-            //     }
-            // },
-            // {
-            //     opId: SHAPE_ATTR_ID.override_fills,
-            //     handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-            //         const val = value && JSON.parse(value);
-            //         (shape as OverrideShape).override_fills = val;
-            //     }
-            // },
-            // {
-            //     opId: SHAPE_ATTR_ID.override_text,
-            //     handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-            //         const val = value && JSON.parse(value);
-            //         (shape as OverrideShape).override_text = val;
-            //     }
-            // },
-            // {
-            //     opId: SHAPE_ATTR_ID.override_image,
-            //     handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-            //         const val = value && JSON.parse(value);
-            //         (shape as OverrideShape).override_image = val;
-            //     }
-            // },
-            // {
-            //     opId: SHAPE_ATTR_ID.override_visible,
-            //     handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-            //         const val = value && JSON.parse(value);
-            //         (shape as OverrideShape).override_visible = val;
-            //     }
-            // },
+            }
         ]
     }
 ]

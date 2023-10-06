@@ -296,7 +296,7 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
 }
 
 export function newSymbolShape(name: string, frame: ShapeFrame): SymbolShape {
-    const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicArray());
+    const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray());
     addCommonAttr(compo);
     compo.isUnionSymbolShape = false;
     return compo;
@@ -305,14 +305,14 @@ export function newSymbolShapeUnion(default_sym: SymbolShape, frame: ShapeFrame)
     const style = newflatStyle();
     const fill = new Fill(uuid(), false, types.FillType.SolidColor, new Color(1, 128, 128, 128));
     style.fills.push(fill);
-    const union = new SymbolShape(default_sym.id, default_sym.name, types.ShapeType.Symbol, frame, style, new BasicArray(), new BasicArray());
+    const union = new SymbolShape(default_sym.id, default_sym.name, types.ShapeType.Symbol, frame, style, new BasicArray());
     addCommonAttr(union);
     default_sym.isUnionSymbolShape = true;
     return union;
 }
 
 export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: ResourceMgr<GroupShape>): SymbolRefShape {
-    const ref = new SymbolRefShape(uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId, new BasicArray(), new BasicArray());
+    const ref = new SymbolRefShape(uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId);
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);
     return ref;
