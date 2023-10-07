@@ -5,12 +5,14 @@ export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
-import { OverrideType, VariableType } from "./baseclasses"
+import { CurvePoint, OverrideType, ShapeFrame, VariableType } from "./baseclasses"
 import { GroupShape, Shape, TextShape, VarWatcher, Variable, makeVarWatcher } from "./shape";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 import { SHAPE_VAR_SLOT, STYLE_VAR_SLOT } from "./consts";
 import { SymbolRefShape } from "./symbolref";
 import { __objidkey } from "../basic/objectid";
+import { importCurvePoint } from "./baseimport";
+import { layoutChilds } from "./symlayout";
 
 // 内核提供给界面的dataface, 仅用于界面获取对象信息
 // 绘制独立计算
@@ -77,7 +79,6 @@ class HdlBase { // protect data
                     }
                     return val;
                 }
-                return Reflect.get(target, propertyKey, receiver).bind(target);
             } else if (propertyKey === 'set') {
                 throw new Error("")
                 // return Map.prototype.set.bind(target);
@@ -222,6 +223,40 @@ class ShapeHdl extends Watchable(HdlBase) {
     __origin: Shape;
     __parent: Shape;
 
+    // layout
+    __frame: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
+    __vflip: boolean = false;
+    __hflip: boolean = false;
+    __rotate: number = 0;
+    __points: CurvePoint[] | undefined;
+
+    resetLayout() {
+        const frame = this.__origin.frame;
+        this.__frame.x = frame.x;
+        this.__frame.y = frame.y;
+        this.__frame.width = frame.width;
+        this.__frame.height = frame.height;
+
+        this.__vflip = !!this.__origin.isFlippedVertical;
+        this.__hflip = !!this.__origin.isFlippedHorizontal;
+        this.__rotate = this.__origin.rotation || 0;
+
+        const points = this.__origin.points;
+        if (points) {
+            const _points: CurvePoint[] = [];
+            points.forEach((p: CurvePoint) => {
+                _points.push(importCurvePoint(p))
+            })
+            this.__points = _points;
+        } else {
+            this.__points = undefined;
+        }
+    }
+
+    fireRelayout() {
+        this.__parent.relayout();
+    }
+
     // cache
     protected __id: string;
     protected __originId: string;
@@ -231,6 +266,7 @@ class ShapeHdl extends Watchable(HdlBase) {
     origin_watcher(...args: any[]) {
         if (args.indexOf("vairable") >= 0) return;
         super.notify(...args);
+        this.fireRelayout();
     }
 
     constructor(origin: Shape, parent: Shape, id: string) {
@@ -249,12 +285,31 @@ class ShapeHdl extends Watchable(HdlBase) {
 
         this.__id = id; // xxxx/xxxx/xxxx
         this.__originId = id.substring(id.lastIndexOf('/') + 1);
+
+        this.resetLayout();
     }
 
     onRemoved(target: object) {
         super.onRemoved(target);
         this.__origin.unwatch(this.origin_watcher);
         if (this.__style) (this.__style as any).remove;
+    }
+
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        const propStr = propertyKey.toString();
+        if (propStr === "isFlippedVertical") {
+            this.__vflip = value;
+            return true;
+        }
+        if (propStr === "isFlippedHorizontal") {
+            this.__hflip = value;
+            return true;
+        }
+        if (propStr === "rotation") {
+            this.__rotate = value;
+            return true;
+        }
+        return super.set(target, propertyKey, value, receiver);
     }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
@@ -287,6 +342,29 @@ class ShapeHdl extends Watchable(HdlBase) {
         }
         if (propStr === "unwatch") {
             return this.unwatch;
+        }
+        if (propStr === "frame") {
+            return this.__frame;
+        }
+        if (propStr === "isFlippedVertical") {
+            return this.__vflip;
+        }
+        if (propStr === "isFlippedHorizontal") {
+            return this.__hflip;
+        }
+        if (propStr === "rotation") {
+            return this.__rotate;
+        }
+        if (propStr === "points") {
+            return this.__points;
+        }
+        if (propStr === "relayout") {
+            return () => {
+                this.__parent.relayout();
+            }
+        }
+        if (propStr === "resetLayout") {
+            return this.resetLayout();
         }
         return super.get(target, propertyKey, receiver);
     }
@@ -325,8 +403,12 @@ class GroupShapeHdl extends ShapeHdl {
                 return this.__childs;
             }
             const prefix = this.__id + '/';
-            this.__childs = (this.__origin as GroupShape).childs.map((child) => proxyShape(child, target as Shape, prefix + child.id));
+            this.__childs = (this.__origin as GroupShape).childs.map((child) => proxyShape(child, receiver as Shape, prefix + child.id));
             return this.__childs;
+        }
+        if (propStr === "layoutChilds") {
+            if (this.__childs) this.__childs.forEach((c) => c.layoutChilds);
+            return;
         }
         return super.get(target, propertyKey, receiver);
     }
@@ -344,19 +426,36 @@ class GroupShapeHdl extends ShapeHdl {
             this.__childs = undefined;
         }
     }
+
+    resetLayout(): void {
+        super.resetLayout();
+        if (this.__childs) {
+            this.__childs.forEach((c) => c.resetLayout);
+        }
+    }
 }
 
 class SymbolRefShapeHdl extends ShapeHdl {
     __childs?: Shape[];
     __childsIsDirty: boolean = false;
+    __saveWidth: number = 0;
+    __saveHeight: number = 0;
+
+    saveFrame() {
+        this.__saveWidth = this.__frame.width;
+        this.__saveHeight = this.__frame.height;
+    }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
         if (propStr === 'virtualChilds' || propStr === 'naviChilds') {
             if (!this.__childs) {
                 const childs = (this.__origin as SymbolRefShape).getSymChilds() || [];
+                if (!childs || childs.length === 0) return;
                 const prefix = this.__id + '/';
                 this.__childs = childs.map((origin) => proxyShape(origin, receiver as Shape, prefix + origin.id));
+                layoutChilds(this.__childs, this.__origin.frame, childs[0].parent!.frame);
+                this.saveFrame();
                 this.__childsIsDirty = false;
                 return this.__childs
             }
@@ -384,6 +483,12 @@ class SymbolRefShapeHdl extends ShapeHdl {
             }
             return this.__childs;
         }
+        if (propStr === "relayout") {
+            return this.relayout();
+        }
+        if (propStr === "layoutChilds") {
+            return this.layoutChilds();
+        }
         return super.get(target, propertyKey, receiver);
     }
 
@@ -398,6 +503,38 @@ class SymbolRefShapeHdl extends ShapeHdl {
         if (this.__childs) {
             this.__childs.forEach((c: any) => c.remove)
             this.__childs = undefined;
+        }
+    }
+
+    private __relayouting: any;
+    relayout() {
+        if (this.__childs && !this.__relayouting) {
+            this.__relayouting = setTimeout(() => {
+                const childs = this.getSymChilds();
+                if (this.__childs && childs && childs.length > 0) {
+                    this.__childs.forEach((c) => c.resetLayout);
+                    layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
+                    this.saveFrame();
+
+                    this.__childs.forEach((c) => c.layoutChilds);
+
+                    this.notify();
+                }
+                this.__relayouting = undefined;
+            }, 0);
+        }
+    }
+
+    // resetLayout(): void { // 需要优化
+    //     super.resetLayout();
+    //     if (this.__childs) {
+    //         this.__childs.forEach((c) => c.resetLayout);
+    //     }
+    // }
+
+    layoutChilds() {
+        if (this.__saveHeight !== this.__frame.height || this.__saveWidth !== this.__frame.width) {
+            this.relayout();
         }
     }
 }

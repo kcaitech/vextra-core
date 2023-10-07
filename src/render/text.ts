@@ -1,11 +1,14 @@
 
 
-import { DefaultColor, RenderTransform, fixFrameByConstrain, isColorEqual, isNoTransform, isVisible } from "./basic";
-import { TextShape, Path, Color, SymbolShape, SymbolRefShape, ShapeFrame } from '../data/classes';
+import { DefaultColor, RenderTransform, findOverrideAndVar, fixFrameByConstrain, isColorEqual, isNoTransform, isVisible } from "./basic";
+import { TextShape, Path, Color, SymbolShape, SymbolRefShape, ShapeFrame, OverrideType, VariableType, Para, ParaAttr, Text, Span, Variable } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
+import { SHAPE_VAR_SLOT } from "../data/consts";
+import { BasicArray } from "../data/basic";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 
 
 function toRGBA(color: Color): string {
@@ -190,8 +193,27 @@ export function renderTextLayout(h: Function, textlayout: TextLayout) {
     return childs;
 }
 
+
+function createTextByString(stringValue: string, refShape: TextShape) {
+    const text = new Text(new BasicArray());
+    if (refShape.text.attr) {
+        mergeTextAttr(text, refShape.text.attr);
+    }
+    const para = new Para('\n', new BasicArray());
+    para.attr = new ParaAttr();
+    text.paras.push(para);
+    const span = new Span(para.length);
+    para.spans.push(span);
+    mergeParaAttr(para, refShape.text.paras[0]);
+    mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
+    text.insertText(stringValue, 0);
+    return text;
+}
+
 export function render(h: Function, shape: TextShape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, reflush?: number) {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+    reflush?: number) {
 
     if (!isVisible(shape)) return;
 
@@ -208,15 +230,15 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     const notTrans = isNoTransform(transform);
 
     if (!notTrans && transform) {
-         x += transform.dx;
-         y += transform.dy;
-         width *= transform.scaleX;
-         height *= transform.scaleY;
-         rotate += transform.rotate;
-         hflip = transform.hflip ? !hflip : hflip;
-         vflip = transform.vflip ? !vflip : vflip;
-         frame = new ShapeFrame(x, y, width, height);
-         fixFrameByConstrain(shape, transform.parentFrame, frame);
+        x += transform.dx;
+        y += transform.dy;
+        width *= transform.scaleX;
+        height *= transform.scaleY;
+        rotate += transform.rotate;
+        hflip = transform.hflip ? !hflip : hflip;
+        vflip = transform.vflip ? !vflip : vflip;
+        frame = new ShapeFrame(x, y, width, height);
+        fixFrameByConstrain(shape, transform.parentFrame, frame);
     }
 
     const childs = []
@@ -227,8 +249,30 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     childs.push(...fillR(h, shape.style.fills, frame, path));
     // text
     // todo
-    const layout = notTrans ? shape.getLayout() : shape.getLayout2(frame.width, frame.height);
-    childs.push(...renderTextLayout(h, layout)); 
+
+    let text = shape.text;
+    // todo watch vars
+    if (varsContainer) {
+        const _vars = findOverrideAndVar(shape, OverrideType.Text, SHAPE_VAR_SLOT.text, varsContainer);
+        if (_vars) {
+            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === VariableType.Text) {
+                // return _var.value;
+                if (typeof _var.value === 'string') {
+                    text = createTextByString(_var.value, shape);
+                }
+                else {
+                    text = _var.value;
+                }
+
+                if (consumedVars) consumedVars.push({ slot: SHAPE_VAR_SLOT.text, vars: _vars })
+            }
+        }
+    }
+
+    const layout = notTrans ? text.getLayout() : text.getLayout2(frame.width, frame.height);
+    childs.push(...renderTextLayout(h, layout));
     // border
     childs.push(...borderR(h, shape.style.borders, frame, path));
 

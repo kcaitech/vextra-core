@@ -1,4 +1,4 @@
-import { BoolOp, GroupShape, Path, Shape, Style, SymbolRefShape, SymbolShape, TextShape } from "../data/classes";
+import { BoolOp, GroupShape, Path, Shape, Style, SymbolRefShape, SymbolShape, TextShape, Variable } from "../data/classes";
 // import { difference, intersection, subtract, union } from "./boolop";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
@@ -100,6 +100,7 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
 
 export function render(h: Function, shape: GroupShape, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number, consumed?: Array<Shape>): any {
     if (!isVisible(shape)) return;
 

@@ -1,11 +1,13 @@
 import { objectId } from "../basic/objectid";
-import { ImageShape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
+import { ImageShape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
 import { render as borderR } from "./border";
 import { render as clippathR } from "./clippath"
 
 export function render(h: Function, shape: ImageShape, imgPH: string, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, reflush?: number) {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+    reflush?: number) {
 
     if (!isVisible(shape)) return;
 

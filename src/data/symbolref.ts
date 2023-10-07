@@ -11,6 +11,7 @@ import { GroupShape, Shape } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { proxyShape } from "./symproxy";
+import { layoutChilds } from "./symlayout";
 
 function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
@@ -77,10 +78,27 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     get virtualChilds(): Shape[] | undefined {
         if (this.__childs) return this.__childs;
         const childs = this.getSymChilds();
-        if (!childs) return;
+        if (!childs || childs.length === 0) return;
         const prefix = this.id + '/';
         this.__childs = childs.map((c) => proxyShape(c, this, prefix + c.id));
+        layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
         return this.__childs;
+    }
+
+    private __relayouting: any;
+    relayout() {
+        if (this.__childs && !this.__relayouting) {
+            this.__relayouting = setTimeout(() => {
+                const childs = this.getSymChilds();
+                if (this.__childs && childs && childs.length > 0) {
+                    this.__childs.forEach((c) => c.resetLayout);
+                    layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
+                    this.__childs.forEach((c) => c.layoutChilds);
+                    this.notify();
+                }
+                this.__relayouting = undefined;
+            }, 0);
+        }
     }
 
     // for navigation column
@@ -303,22 +321,28 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         const _var = this.getVar(varId);
         if (_var) {
             ret.push(_var);
-            // 考虑scope
-            // varId要叠加上refid
-            if (this.isVirtualShape) {
-                varId = this.originId + '/' + varId;
-            }
-            else {
-                varId = this.id + '/' + varId;
-            }
-            super.findVar(varId, ret);
-            return;
         }
-
+        // 考虑scope
+        // varId要叠加上refid
+        if (this.isVirtualShape) {
+            varId = this.originId + '/' + varId;
+        }
+        else {
+            varId = this.id + '/' + varId;
+        }
         super.findVar(varId, ret);
+        return;
     }
 
     findOverride(refId: string, type: OverrideType): Variable[] | undefined {
+        if (this.__data) {
+            const override = this.__data.getOverrid(refId, type);
+            if (override) {
+                const ret = [override.v];
+                this.findVar(override.v.id, ret);
+                return ret;
+            }
+        }
         const override = this.getOverrid(refId, type);
         if (override) {
             const ret = [override.v];

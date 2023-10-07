@@ -1,10 +1,12 @@
-import { ShapeType, SymbolRefShape, SymbolShape, TableCell, TableShape } from "../data/classes";
+import { ShapeType, SymbolRefShape, SymbolShape, TableCell, TableShape, Variable } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { RenderTransform, isVisible } from "./basic";
 
 export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, reflush?: number): any {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+    reflush?: number): any {
 
     if (!isVisible(shape)) return;
     const frame = shape.frame;

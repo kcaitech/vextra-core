@@ -1,9 +1,11 @@
-import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
+import { Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
 import { render as renderB } from "./line_borders";
 
 export function render(h: Function, shape: Shape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, reflush?: number) {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+    reflush?: number) {
 
     if (!isVisible(shape)) return;
 

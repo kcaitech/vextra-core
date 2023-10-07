@@ -1,10 +1,12 @@
-import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
+import { Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
 
 export function render(h: Function, shape: Shape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, reflush?: number) {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+    reflush?: number) {
     if (!isVisible(shape)) return;
 
     const _frame = shape.frame;
@@ -29,6 +31,11 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
          vflip = transform.vflip ? !vflip : vflip;
          frame = new ShapeFrame(x, y, width, height);
          fixFrameByConstrain(shape, transform.parentFrame, frame);
+
+         if (rotate) {
+            // matrix2parent
+
+         }
     }
 
     const childs = [];

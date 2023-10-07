@@ -1,10 +1,12 @@
-import { PathShape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
+import { PathShape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
 import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
 
 export function render(h: Function, shape: PathShape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, reflush?: number) {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+    reflush?: number) {
 
     if (!isVisible(shape)) return;
 
@@ -24,7 +26,7 @@ export function render(h: Function, shape: PathShape, transform: RenderTransform
         x += transform.dx;
         y += transform.dy;
         // todo
-        
+
         width *= transform.scaleX;
         height *= transform.scaleY;
         rotate += transform.rotate;

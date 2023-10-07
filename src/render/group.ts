@@ -1,4 +1,4 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "../data/classes";
+import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
@@ -169,7 +169,9 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
 
 export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>,
     transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, reflush?: number): any {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+    reflush?: number): any {
 
     if (!isVisible(shape)) return;
 
