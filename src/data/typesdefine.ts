@@ -239,6 +239,7 @@ export enum OverrideType {
     Borders = 'borders',
     Visible = 'visible',
     Variable = 'variable',
+    SymbolID = 'symbolID',
 }
 /* marker type */
 export enum MarkerType {

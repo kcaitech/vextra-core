@@ -36,7 +36,7 @@
 //     });
 // }
 
-import { ResizingConstraints } from "../data/consts";
+import { ResizingConstraints, SHAPE_VAR_SLOT } from "../data/consts";
 import { Color, OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable, VariableType } from "../data/classes";
 
 
@@ -54,7 +54,18 @@ export function isColorEqual(lhs: Color, rhs: Color): boolean {
 
 export const DefaultColor = Color.DefaultColor;
 
-export function isVisible(shape: Shape) {
+export function isVisible(shape: Shape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, consumedVars: { slot: string, vars: Variable[] }[] | undefined) {
+    if (!varsContainer) return !!shape.isVisible;
+
+    const _vars = findOverrideAndVar(shape, OverrideType.Visible, SHAPE_VAR_SLOT.visible, varsContainer);
+    if (_vars && _vars.length > 0) {
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === VariableType.Visible) {
+            if (consumedVars) consumedVars.push({ slot: SHAPE_VAR_SLOT.visible, vars: _vars });
+            return !!_var.value;
+        }
+    }
+
     return !!shape.isVisible;
 }
 

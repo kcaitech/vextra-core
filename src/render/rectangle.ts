@@ -4,10 +4,11 @@ import { render as borderR } from "./border";
 import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
 
 export function render(h: Function, shape: Shape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
     consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number) {
-    if (!isVisible(shape)) return;
+    if (!isVisible(shape, varsContainer, consumedVars)) return;
+
 
     const _frame = shape.frame;
     let x = _frame.x;
@@ -22,20 +23,20 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
     const notTrans = isNoTransform(transform);
 
     if (!notTrans && transform) {
-         x += transform.dx;
-         y += transform.dy;
-         width *= transform.scaleX;
-         height *= transform.scaleY;
-         rotate += transform.rotate;
-         hflip = transform.hflip ? !hflip : hflip;
-         vflip = transform.vflip ? !vflip : vflip;
-         frame = new ShapeFrame(x, y, width, height);
-         fixFrameByConstrain(shape, transform.parentFrame, frame);
+        x += transform.dx;
+        y += transform.dy;
+        width *= transform.scaleX;
+        height *= transform.scaleY;
+        rotate += transform.rotate;
+        hflip = transform.hflip ? !hflip : hflip;
+        vflip = transform.vflip ? !vflip : vflip;
+        frame = new ShapeFrame(x, y, width, height);
+        fixFrameByConstrain(shape, transform.parentFrame, frame);
 
-         if (rotate) {
+        if (rotate) {
             // matrix2parent
 
-         }
+        }
     }
 
     const childs = [];

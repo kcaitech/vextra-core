@@ -268,6 +268,12 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         }
     }
 
+    addOverrid2(refId: string, attr: OverrideType, value: string) {
+        refId = genRefId(refId, attr); // id+type->var
+        if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
+        this.virbindsEx.set(refId, value);
+    }
+
     getOverrid(refId: string, type: OverrideType): { refId: string, v: Variable } | undefined {
         refId = genRefId(refId, type); // id+type->var
         const over = this.virbindsEx && this.virbindsEx.get(refId);
@@ -275,6 +281,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             const v = this.variables && this.variables.get(over);
             if (v) return { refId, v }
         }
+    }
+    getOverrid2(refId: string, type: OverrideType) {
+        refId = genRefId(refId, type); // id+type->var
+        return this.virbindsEx && this.virbindsEx.get(refId);
     }
 
     deleteOverride(overrideId: string) {

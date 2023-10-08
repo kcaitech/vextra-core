@@ -202,6 +202,7 @@ class ProxyHandler {
                 } else if (typeof val === 'function') {
                     return val.bind(target);
                 }
+                return val;
             }
         } else {
             const val = Reflect.get(target, propertyKey, receiver);
@@ -230,13 +231,16 @@ class ProxyHandler {
             set(key: any, value: any) {
                 const set_inner = Map.prototype.set.bind(target);
                 // set经过代理的对象
-                if (!isProxy(value)) {
-                    value = deepProxy(value, h)
-                }
+                // if (!isProxy(value)) {
+                //     value = deepProxy(value, h)
+                // }
+                checkSetParent(value, target, h);
+                value = deepProxy(value, h);
                 set_inner(key, value);
                 const map_rec: MapRec = { isContentExist: true, content: value, key };
                 const r = new Rec(target, 'set', map_rec);
                 _con.transact?.push(r);
+                _con.addNotify(castNotifiable(target));
             },
             delete(key: any) {
                 const get = Map.prototype.get.bind(target);
@@ -246,6 +250,7 @@ class ProxyHandler {
                 const map_rec: MapRec = { isContentExist: false, content: ori, key };
                 const r = new Rec(target, 'delete', map_rec);
                 _con.transact?.push(r);
+                _con.addNotify(castNotifiable(target));
             }
         };
     }

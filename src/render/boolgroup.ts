@@ -102,7 +102,7 @@ export function render(h: Function, shape: GroupShape, transform: RenderTransfor
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
     consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number, consumed?: Array<Shape>): any {
-    if (!isVisible(shape)) return;
+    if (!isVisible(shape, varsContainer, consumedVars)) return;
 
     const path = render2path(shape, consumed);
     const frame = shape.frame;

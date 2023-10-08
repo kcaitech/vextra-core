@@ -169,11 +169,10 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
 
 export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>,
     transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
     consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number): any {
-
-    if (!isVisible(shape)) return;
+    if (!isVisible(shape, varsContainer, consumedVars)) return;
 
     const { nodes, frame, notTrans, hflip, vflip, rotate } = renderGroupChilds3(h, shape, shape.childs, comsMap, transform, varsContainer);
 

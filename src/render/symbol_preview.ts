@@ -23,7 +23,8 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
 
 export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
 
-    if (!isVisible(shape)) return;
+    // todo
+    if (!isVisible(shape, undefined, undefined)) return;
 
     const frame = shape.frame;
     const path0 = shape.getPath();

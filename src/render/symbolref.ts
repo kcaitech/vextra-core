@@ -2,7 +2,7 @@ import { ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable } from "..
 import { renderGroupChilds2, renderGroupChilds3 } from "./group";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
-import { RenderTransform, fixFrameByConstrain, isNoTransform } from "./basic";
+import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
 
 function renderSym(h: Function,
     ref: SymbolRefShape,
@@ -54,8 +54,8 @@ export function render(h: Function,
     consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number) {
 
-    const isVisible = shape.isVisible ?? true; // todo
-    if (!isVisible) return
+    if (!isVisible(shape, varsContainer, consumedVars)) return;
+
 
     const sym = shape.peekSymbol(true);
     if (!sym) {
@@ -75,20 +75,20 @@ export function render(h: Function,
     const notTrans = isNoTransform(transform);
 
     if (!notTrans && transform) {
-         x += transform.dx;
-         y += transform.dy;
-         width *= transform.scaleX;
-         height *= transform.scaleY;
-         rotate += transform.rotate;
-         hflip = transform.hflip ? !hflip : hflip;
-         vflip = transform.vflip ? !vflip : vflip;
-         frame = new ShapeFrame(x, y, width, height);
-         fixFrameByConstrain(shape, transform.parentFrame, frame);
+        x += transform.dx;
+        y += transform.dy;
+        width *= transform.scaleX;
+        height *= transform.scaleY;
+        rotate += transform.rotate;
+        hflip = transform.hflip ? !hflip : hflip;
+        vflip = transform.vflip ? !vflip : vflip;
+        frame = new ShapeFrame(x, y, width, height);
+        fixFrameByConstrain(shape, transform.parentFrame, frame);
 
-         if (rotate) {
+        if (rotate) {
             // matrix2parent
 
-         }
+        }
     }
 
     const childs = [];

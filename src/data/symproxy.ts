@@ -273,6 +273,9 @@ class ShapeHdl extends Watchable(HdlBase) {
         super();
         this.__origin = origin;
         this.__parent = parent;
+
+        if (!(parent instanceof SymbolRefShape) && !parent.__symbolproxy) throw new Error("");
+
         this.origin_watcher = this.origin_watcher.bind(this);
 
         // watch unwatch

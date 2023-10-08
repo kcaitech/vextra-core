@@ -5,11 +5,11 @@ import { render as borderR } from "./border";
 import { render as clippathR } from "./clippath"
 
 export function render(h: Function, shape: ImageShape, imgPH: string, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
     consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number) {
 
-    if (!isVisible(shape)) return;
+    if (!isVisible(shape, varsContainer, consumedVars)) return;
 
     const _frame = shape.frame;
     let x = _frame.x;

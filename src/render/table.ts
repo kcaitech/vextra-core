@@ -4,11 +4,12 @@ import { render as borderR } from "./border";
 import { RenderTransform, isVisible } from "./basic";
 
 export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
     consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number): any {
 
-    if (!isVisible(shape)) return;
+    if (!isVisible(shape, varsContainer, consumedVars)) return;
+
     const frame = shape.frame;
 
     const layout = shape.getLayout();

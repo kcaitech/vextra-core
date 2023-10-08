@@ -215,7 +215,8 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number) {
 
-    if (!isVisible(shape)) return;
+    if (!isVisible(shape, varsContainer, consumedVars)) return;
+
 
     const _frame = shape.frame;
     let x = _frame.x;

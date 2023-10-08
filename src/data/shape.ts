@@ -533,6 +533,17 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         }
     }
 
+    getOverrid2(refId: string, type: OverrideType) {
+        refId = genRefId(refId, type); // id+type->var
+        return this.virbindsEx && this.virbindsEx.get(refId);
+    }
+
+    addOverrid2(refId: string, attr: OverrideType, value: string) {
+        refId = genRefId(refId, attr); // id+type->var
+        if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
+        this.virbindsEx.set(refId, value);
+    }
+
     addVar(v: Variable): Variable {
         if (!this.variables) this.variables = new BasicMap<string, Variable>();
         this.variables.set(v.id, v);

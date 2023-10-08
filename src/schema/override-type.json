@@ -6,6 +6,7 @@
         "fills",
         "borders",
         "visible",
-        "variable"
+        "variable",
+        "symbolID"
     ]
 }
