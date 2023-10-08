@@ -1,21 +1,32 @@
-import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2, TextShape } from "../data/shape";
+import { GroupShape, RectShape, Shape, PathShape, PathShape2, TextShape, Variable, SymbolShape } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
-import { expand, expandTo, pathEdit, translate, translateTo } from "./frame";
+import { expand, expandTo, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
 import { BoolOp, CurvePoint, Point2D, ShapeType } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { ContactForm, CurveMode } from "../data/typesdefine";
+import { ContactForm, CurveMode, OverrideType, VariableType } from "../data/typesdefine";
 import { Api } from "./command/recordapi";
 import { update_frame_by_points } from "./path";
 import { exportCurvePoint } from "../data/baseexport";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
-import {  get_box_pagexy, get_nearest_border_point } from "../data/utils";
+import { get_box_pagexy, get_nearest_border_point } from "../data/utils";
 import { Matrix } from "../basic/matrix";
 import { ContactShape } from "../data/contact";
+import { SymbolRefShape } from "../data/classes";
+import { uuid } from "../basic/uuid";
+import { SHAPE_VAR_SLOT } from "../data/consts";
+
+function varParent(_var: Variable) {
+    let p = _var.parent;
+    while (p && !(p instanceof Shape)) p = p.parent;
+    return p;
+}
+
+
 
 export class ShapeEditor {
     protected __shape: Shape;
@@ -27,12 +38,253 @@ export class ShapeEditor {
         this.__page = page;
     }
 
+    overrideVariable(slot: string, varType: VariableType, overrideType: OverrideType, valuefun: () => any) { // 适合text这种，value的修改非原子操作的情况
+        const shape = this.__shape;
+        // symbol shape
+        if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(slot)) {
+            const _vars: Variable[] = [];
+            shape.findVar(shape.varbinds.get(slot)!, _vars);
+
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === varType) {
+                // const api = this.__repo.start('modifyVariable', {});
+                // api.shapeModifyVariable(this.__page, _var, value)
+                // this.__repo.commit();
+                return _var;
+            }
+        }
+        if (!shape.isVirtualShape) return;
+
+        // 先override还是varbinds？？
+
+        // 先查varbinds
+        if (shape.varbinds && shape.varbinds.has(slot)) {
+            const _vars: Variable[] = [];
+            const vars_path: Shape[] = [];
+            shape.findVar(shape.varbinds.get(slot)!, _vars);
+            if (_vars.length !== vars_path.length) throw new Error();
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === varType) {
+
+                let p = varParent(_var);
+                if (!p) throw new Error();
+
+                if (p.isVirtualShape || p instanceof SymbolShape) {
+                    // override variable
+
+                    return this._overrideVariable(shape, _var, valuefun());
+
+                } else {
+                    // const api = this.__repo.start('modifyVariable', {});
+                    // api.shapeModifyVariable(this.__page, _var, value)
+                    // this.__repo.commit();
+                    // return true;
+                    return _var;
+                }
+            }
+        }
+
+        // override
+        let override_id = shape.id;
+        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
+        if (override_id.length === 0) throw new Error();
+
+        const _vars = shape.findOverride(override_id.substring(override_id.lastIndexOf('/') + 1), OverrideType.Variable);
+        if (_vars) {
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === VariableType.Visible) {
+                let p = varParent(_var); // 这里会有问题！如果p是symbolshape，往上追溯就错了。
+                if (!p) throw new Error();
+                if (p.isVirtualShape || p instanceof SymbolShape) {
+
+                    return this._overrideVariable(shape, _var, valuefun());
+
+
+                } else {
+                    // const api = this.__repo.start('modifyVariable', {});
+                    // api.shapeModifyVariable(this.__page, _var, value)
+                    // this.__repo.commit();
+                    // return true;
+                    return _var;
+                }
+            }
+        }
+        //
+        // symRef.addOverrid(override_id, OverrideType.SymbolID, refId);
+
+        // get first not virtual
+        let symRef = shape.parent;
+        while (symRef && symRef.isVirtualShape) symRef = symRef.parent;
+        if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
+
+        // add override
+        // 
+
+        // todo api
+        // add override add variable
+        const api = this.__repo.start('addOverrid', {});
+        const _var2 = new Variable(uuid(), varType, "");
+        _var2.value = valuefun();
+        api.shapeAddVariable(this.__page, symRef, _var2);
+        api.shapeAddOverride(this.__page, symRef, override_id, overrideType, _var2.id);
+        this.__repo.commit();
+        // symRef.addOverrid(override_id, overrideType, value);
+
+        return symRef.getVar(_var2.id)!;
+    }
+
+    _overrideVariable(shape: Shape, _var: Variable, value: any) {
+        let p = varParent(_var);
+        if (!p) throw new Error();
+        if (p instanceof SymbolShape) {
+            if (p.isVirtualShape) throw new Error();
+            p = shape;
+        }
+        let override_id = p.id;
+        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
+        if (override_id.length === 0) throw new Error();
+
+        if (!(p instanceof SymbolRefShape)) {
+            const idx = override_id.lastIndexOf('/');
+            if (idx > 0) {
+                override_id = override_id.substring(0, idx);
+            }
+            else {
+                override_id = ""
+            }
+        }
+        if (override_id.length > 0) override_id += "/";
+        override_id += _var.id;
+
+        // override variable
+        // todo
+        // let override_id = _var.id;
+        let symRef: Shape | undefined = p;
+        while (symRef && symRef.isVirtualShape) {
+            symRef = symRef.parent;
+        }
+        if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
+        // todo
+        // override id
+
+        const api = this.__repo.start('addOverrid', {});
+        const _var2 = new Variable(uuid(), _var.type, _var.name);
+        _var2.value = value;
+        api.shapeAddVariable(this.__page, symRef, _var2);
+        api.shapeAddOverride(this.__page, symRef, _var.id, OverrideType.Variable, _var2.id);
+        this.__repo.commit();
+
+        // symRef.addOverrid(override_id, OverrideType.Variable, value);
+
+        return symRef.getVar(_var2.id)!;
+    }
+
+    modifyVariable(slot: string, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any): boolean {
+        // const _var = this.overrideVariable(slot, varType, ov)
+        const shape = this.__shape;
+        // symbol shape
+        if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(slot)) {
+            const _vars: Variable[] = [];
+            shape.findVar(shape.varbinds.get(slot)!, _vars);
+
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === varType) {
+                const api = this.__repo.start('modifyVariable', {});
+                api.shapeModifyVariable(this.__page, _var, valuefun(_var))
+                this.__repo.commit();
+                return true;
+            }
+        }
+        if (!shape.isVirtualShape) return false;
+
+        // 先override还是varbinds？？应该是override?
+
+        // 先查varbinds
+        if (shape.varbinds && shape.varbinds.has(slot)) {
+            const _vars: Variable[] = [];
+            const vars_path: Shape[] = [];
+            shape.findVar(shape.varbinds.get(slot)!, _vars);
+            if (_vars.length !== vars_path.length) throw new Error();
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === varType) {
+
+                let p = varParent(_var);
+                if (!p) throw new Error();
+
+                if (p.isVirtualShape || p instanceof SymbolShape) {
+                    // override variable
+
+                    this._overrideVariable(shape, _var, valuefun(_var));
+
+                } else {
+                    const api = this.__repo.start('modifyVariable', {});
+                    api.shapeModifyVariable(this.__page, _var, valuefun(_var))
+                    this.__repo.commit();
+                    return true;
+                }
+            }
+        }
+
+        // override
+        let override_id = shape.id;
+        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
+        if (override_id.length === 0) throw new Error();
+
+        const _vars = shape.findOverride(override_id.substring(override_id.lastIndexOf('/') + 1), overrideType);
+        if (_vars) {
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === varType) {
+                let p = varParent(_var); // 这里会有问题！如果p是symbolshape，往上追溯就错了。
+                if (!p) throw new Error();
+                if (p.isVirtualShape || p instanceof SymbolShape) {
+
+                    this._overrideVariable(shape, _var, valuefun(_var));
+
+
+                } else {
+                    const api = this.__repo.start('modifyVariable', {});
+                    api.shapeModifyVariable(this.__page, _var, valuefun(_var))
+                    this.__repo.commit();
+                    return true;
+                }
+            }
+        }
+        //
+        // symRef.addOverrid(override_id, OverrideType.SymbolID, refId);
+
+        // get first not virtual
+        let symRef = shape.parent;
+        while (symRef && symRef.isVirtualShape) symRef = symRef.parent;
+        if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
+
+        // add override
+        // 
+
+        // todo api
+        // add override add variable
+        const api = this.__repo.start('addOverrid', {});
+        const _var2 = new Variable(uuid(), varType, "");
+        _var2.value = valuefun(undefined);
+        api.shapeAddVariable(this.__page, symRef, _var2);
+        api.shapeAddOverride(this.__page, symRef, override_id, overrideType, _var2.id);
+        this.__repo.commit();
+        // symRef.addOverrid(override_id, overrideType, value);
+
+        return true;
+    }
+
     public setName(name: string) {
         const api = this.__repo.start('setName', {});
         api.shapeModifyName(this.__page, this.__shape, name)
         this.__repo.commit();
     }
     public toggleVisible() {
+        //
+        if (this.modifyVariable(SHAPE_VAR_SLOT.visible, VariableType.Visible, OverrideType.Visible, (_var) => {
+            return _var ? !_var.value : !this.__shape.isVisible;
+        })) {
+            return;
+        }
         const api = this.__repo.start('toggleVisible', {});
         api.shapeModifyVisible(this.__page, this.__shape, !this.__shape.isVisible)
         this.__repo.commit();

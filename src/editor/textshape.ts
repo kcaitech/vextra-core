@@ -31,6 +31,10 @@ export class TextShapeEditor extends ShapeEditor {
 
     constructor(shape: TextShapeLike, page: Page, repo: CoopRepository) {
         super(shape, page, repo);
+        // 
+        if (shape.isVirtualShape) {
+            
+        }
     }
     get shape(): TextShapeLike {
         return this.__shape as TextShapeLike;
@@ -83,6 +87,11 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
+        // 
+        if (this.__shape.isVirtualShape) {
+            // 当前text是个variable,或者需要先override
+            
+        }
         attr = attr ?? this.__cachedSpanAttr;
         this.resetCachedSpanAttr();
         const api = this.__repo.start("insertText", {});
