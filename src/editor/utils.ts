@@ -96,25 +96,25 @@ function get_topology_map(shape: Shape, init?: { shape: string, ref: string }[])
 
 function filter_deps(deps: { shape: string, ref: string }[], key1: 'shape' | 'ref', key2: 'shape' | 'ref') {
     const result: { shape: string, ref: string }[] = [];
-    const _checked: Map<string, 1> = new Map();
-    const _checked_invalid: Map<string, 1> = new Map();
+    const _checked: Set<string> = new Set();
+    const _checked_invalid: Set<string> = new Set();
     for (let i = 0, len = deps.length; i < len; i++) {
         const d = deps[i];
-        if (_checked.get(d[key1])) {
+        if (_checked.has(d[key1])) {
             result.push(d);
             continue;
         }
-        if (_checked_invalid.get(d[key1])) continue;
+        if (_checked_invalid.has(d[key1])) continue;
         let invalid: boolean = true;
         for (let j = 0, len = deps.length; j < len; j++) {
             if (deps[j][key2] === d[key1]) {
                 result.push(d);
-                _checked.set(d[key1], 1);
+                _checked.add(d[key1]);
                 invalid = false;
                 break;
             }
         }
-        if (invalid) _checked_invalid.set(d[key1], 1);
+        if (invalid) _checked_invalid.add(d[key1]);
     }
     return result;
 }
