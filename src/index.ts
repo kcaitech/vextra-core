@@ -27,6 +27,7 @@ export * from "./editor/controller"
 
 export * from "./service/shapedirlist"
 export * from "./service/taskmgr"
+export * from "./service/symbollist"
 
 // coop
 export * from "./coop"
