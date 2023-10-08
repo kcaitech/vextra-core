@@ -581,7 +581,7 @@ class TextShapeHdl extends ShapeHdl {
 
         if (propertyKey === 'text') {
             if (this.__text) return this.__text;
-            this.__text = this.getText(target, propertyKey, receiver); // 编辑过variable后要更新
+            this.__text = this.getText(target, propertyKey, receiver); // todo 编辑过variable后要更新
             if (typeof this.__text === 'string') this.__text = createTextByString(this.__text as string, this.__origin as TextShapeLike);
             const frame = (target as TextShape).frame;
             if (this.__text) this.__text.updateSize(frame.width, frame.height);
@@ -589,6 +589,13 @@ class TextShapeHdl extends ShapeHdl {
         }
 
         return super.get(target, propertyKey, receiver);
+    }
+
+    notify(...args: any[]) {
+        if (args.indexOf("vairable") >= 0) {
+            this.__text = undefined; // 重新获取
+        }
+        super.notify(...args);
     }
 }
 

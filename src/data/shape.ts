@@ -31,7 +31,7 @@ export function makeVarWatcher(obj: any): VarWatcher {
     obj._var_watcher = (...args: any[]) => {
         if (!obj.__has_var_notify) {
             obj.__has_var_notify = setTimeout(() => {
-                if (obj.__has_var_notify) obj.notify()
+                if (obj.__has_var_notify) obj.notify("vairable", ...args)
                 obj.__has_var_notify = undefined;
             }, 0);
         }
