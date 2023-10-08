@@ -16,14 +16,39 @@ import {
     UnderlineType,
     TextShape,
     TableCell,
+    VariableType,
+    OverrideType,
+    Para,
+    ParaAttr,
+    Span,
     ShapeType
 } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils";
+import { SHAPE_VAR_SLOT } from "../data/consts";
+import { BasicArray } from "../data/basic";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
+import { importText } from "../data/baseimport";
 
 type TextShapeLike = Shape & { text: Text }
+
+function createTextByString(stringValue: string, refShape: TextShapeLike) {
+    const text = new Text(new BasicArray());
+    if (refShape.text.attr) {
+        mergeTextAttr(text, refShape.text.attr);
+    }
+    const para = new Para('\n', new BasicArray());
+    para.attr = new ParaAttr();
+    text.paras.push(para);
+    const span = new Span(para.length);
+    para.spans.push(span);
+    mergeParaAttr(para, refShape.text.paras[0]);
+    mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
+    text.insertText(stringValue, 0);
+    return text;
+}
 
 export class TextShapeEditor extends ShapeEditor {
 
@@ -33,7 +58,7 @@ export class TextShapeEditor extends ShapeEditor {
         super(shape, page, repo);
         // 
         if (shape.isVirtualShape) {
-            
+
         }
     }
     get shape(): TextShapeLike {
@@ -508,9 +533,22 @@ export class TextShapeEditor extends ShapeEditor {
 
     // 段属性
     public setTextHorAlign(horAlign: TextHorAlign, index: number, len: number) {
+
+        // todo
+        const _var = this.overrideVariable(SHAPE_VAR_SLOT.text, VariableType.Text, OverrideType.Text, (_var) => {
+            if (_var) {
+                if (_var.value instanceof Text) return importText(_var.value);
+                if (typeof _var.value === 'string') return createTextByString(_var.value, this.shape);
+                throw new Error();
+            }
+        })
+
         const api = this.__repo.start("setTextHorAlign", {});
         try {
-            api.textModifyHorAlign(this.__page, this.shape, horAlign, index, len)
+            if (_var && typeof _var.value === 'string')  { // todo 是否会有协作的问题？
+                api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, this.shape));
+            }
+            api.textModifyHorAlign(this.__page, _var || this.shape, horAlign, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -519,6 +557,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+
     public setTextHorAlignMulti(shapes: Shape[], horAlign: TextHorAlign) {
         const api = this.__repo.start("setTextHorAlignMulti", {});
         try {

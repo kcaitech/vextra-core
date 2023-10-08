@@ -371,13 +371,11 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.addoverride, { refId, attr, value }, undefined));
         })
     }
-    shapeModifyVisible(page: Page, shape: Shape | Variable, isVisible: boolean) {
+    shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const isShape = shape instanceof Shape;
-            const save = isShape ? shape.isVisible : shape.value;
-            if (isShape) shape.setVisible(isVisible);
-            else shape.value = isVisible;
+            const save = shape.isVisible;
+            shape.setVisible(isVisible);
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.visible, isVisible, save));
         })
     }

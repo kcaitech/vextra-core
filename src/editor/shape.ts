@@ -38,7 +38,7 @@ export class ShapeEditor {
         this.__page = page;
     }
 
-    overrideVariable(slot: string, varType: VariableType, overrideType: OverrideType, valuefun: () => any) { // 适合text这种，value的修改非原子操作的情况
+    overrideVariable(slot: string, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any) { // 适合text这种，value的修改非原子操作的情况
         const shape = this.__shape;
         // symbol shape
         if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(slot)) {
@@ -72,7 +72,7 @@ export class ShapeEditor {
                 if (p.isVirtualShape || p instanceof SymbolShape) {
                     // override variable
 
-                    return this._overrideVariable(shape, _var, valuefun());
+                    return this._overrideVariable(shape, _var, valuefun(_var));
 
                 } else {
                     // const api = this.__repo.start('modifyVariable', {});
@@ -89,15 +89,15 @@ export class ShapeEditor {
         override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
         if (override_id.length === 0) throw new Error();
 
-        const _vars = shape.findOverride(override_id.substring(override_id.lastIndexOf('/') + 1), OverrideType.Variable);
+        const _vars = shape.findOverride(override_id.substring(override_id.lastIndexOf('/') + 1), overrideType);
         if (_vars) {
             const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === VariableType.Visible) {
+            if (_var && _var.type === varType) {
                 let p = varParent(_var); // 这里会有问题！如果p是symbolshape，往上追溯就错了。
                 if (!p) throw new Error();
                 if (p.isVirtualShape || p instanceof SymbolShape) {
 
-                    return this._overrideVariable(shape, _var, valuefun());
+                    return this._overrideVariable(shape, _var, valuefun(_var));
 
 
                 } else {
@@ -124,7 +124,7 @@ export class ShapeEditor {
         // add override add variable
         const api = this.__repo.start('addOverrid', {});
         const _var2 = new Variable(uuid(), varType, "");
-        _var2.value = valuefun();
+        _var2.value = valuefun(undefined);
         api.shapeAddVariable(this.__page, symRef, _var2);
         api.shapeAddOverride(this.__page, symRef, override_id, overrideType, _var2.id);
         this.__repo.commit();
