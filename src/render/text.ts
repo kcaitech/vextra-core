@@ -6,7 +6,6 @@ import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
-import { SHAPE_VAR_SLOT } from "../data/consts";
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 
@@ -254,7 +253,7 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     let text = shape.text;
     // todo watch vars
     if (varsContainer) {
-        const _vars = findOverrideAndVar(shape, OverrideType.Text, SHAPE_VAR_SLOT.text, varsContainer);
+        const _vars = findOverrideAndVar(shape, OverrideType.Text, varsContainer);
         if (_vars) {
             // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
             const _var = _vars[_vars.length - 1];
@@ -267,7 +266,7 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
                     text = _var.value;
                 }
 
-                if (consumedVars) consumedVars.push({ slot: SHAPE_VAR_SLOT.text, vars: _vars })
+                if (consumedVars) consumedVars.push({ slot: OverrideType.Text, vars: _vars })
             }
         }
     }

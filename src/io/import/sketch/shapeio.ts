@@ -308,7 +308,7 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun): Te
     return shape;
 }
 
-export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): GroupShape {
+export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): SymbolShape {
     // const type = importShapeType(data);
     // const id: string = data['do_objectID'];
     const exportOptions = importExportOptions(data);

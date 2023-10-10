@@ -1,4 +1,4 @@
-import { Document, GroupShape, Page, Shape } from "../../../data/classes";
+import { Document, Page, Shape, SymbolShape } from "../../../data/classes";
 import { IJSON, LzData } from "../../lzdata";
 import { LoadContext } from "./basic";
 import { importArtboard, importGroupShape, importImage, importPage, importPathShape, importRectShape, importShapeGroupShape, importSymbol, importSymbolRef, importTextShape } from "./shapeio";
@@ -56,7 +56,7 @@ export class DataLoader {
         this.__remote = lzdata;
         this.__document = document;
 
-        const symbolsSet = new Map<string, GroupShape>()
+        const symbolsSet = new Map<string, SymbolShape>()
         const ctx: LoadContext = new LoadContext(document.mediasMgr);
 
         const importer = this.importer = this.importer.bind(this)

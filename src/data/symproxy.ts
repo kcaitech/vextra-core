@@ -8,7 +8,6 @@ export {
 import { CurvePoint, OverrideType, ShapeFrame, VariableType } from "./baseclasses"
 import { GroupShape, Shape, TextShape, VarWatcher, Variable, makeVarWatcher } from "./shape";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
-import { SHAPE_VAR_SLOT, STYLE_VAR_SLOT } from "./consts";
 import { SymbolRefShape } from "./symbolref";
 import { __objidkey } from "../basic/objectid";
 import { importCurvePoint } from "./baseimport";
@@ -147,7 +146,6 @@ function _getOnVar(
     hdl: HdlBase,
     propertyKey: PropertyKey,
     overType: OverrideType,
-    varSlot: string,
     varType: VariableType) {
 
     if (!(shape as any).__symbolproxy) throw new Error("");
@@ -165,7 +163,7 @@ function _getOnVar(
             }
         }
     } else {
-        const varId = varbinds.get(varSlot);
+        const varId = varbinds.get(overType);
         if (varId) {
             const _vars: Variable[] = [];
             shape.findVar(varId, _vars);
@@ -195,7 +193,6 @@ class StyleHdl extends HdlBase {
                 this.__parent,
                 this, propertyKey,
                 OverrideType.Fills,
-                STYLE_VAR_SLOT.fills,
                 VariableType.Fills);
             if (val) return val;
             return Reflect.get(target, propertyKey, receiver);
@@ -206,7 +203,6 @@ class StyleHdl extends HdlBase {
                 this,
                 propertyKey,
                 OverrideType.Borders,
-                STYLE_VAR_SLOT.borders,
                 VariableType.Borders);
             if (val) return val;
             return Reflect.get(target, propertyKey, receiver);
@@ -335,7 +331,6 @@ class ShapeHdl extends Watchable(HdlBase) {
                 this,
                 propertyKey,
                 OverrideType.Variable,
-                SHAPE_VAR_SLOT.visible,
                 VariableType.Visible);
             if (val) return val;
             return Reflect.get(target, propertyKey, receiver);
@@ -571,7 +566,6 @@ class TextShapeHdl extends ShapeHdl {
             this,
             propertyKey,
             OverrideType.Text,
-            SHAPE_VAR_SLOT.text,
             VariableType.Text);
         if (val) return val;
         return Reflect.get(target, propertyKey, receiver);

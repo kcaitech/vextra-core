@@ -7,7 +7,7 @@ export {
 } from "./baseclasses"
 import { ShapeType, ShapeFrame, OverrideType } from "./baseclasses"
 import { uuid } from "../basic/uuid";
-import { GroupShape, Shape } from "./shape";
+import { GroupShape, Shape, SymbolShape } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { proxyShape } from "./symproxy";
@@ -19,8 +19,8 @@ function genRefId(refId: string, type: OverrideType) {
 }
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
-    __data: GroupShape | undefined
-    __symMgr?: ResourceMgr<GroupShape>
+    __data: SymbolShape | undefined
+    __symMgr?: ResourceMgr<SymbolShape>
 
     // todo
     // 所有引用的symbol的临时数据都就缓存到这里，如text
@@ -119,14 +119,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     //     // return this.overrides;
     // }
 
-    setSymbolMgr(mgr: ResourceMgr<GroupShape>) {
+    setSymbolMgr(mgr: ResourceMgr<SymbolShape>) {
         this.__symMgr = mgr;
     }
     getSymbolMgr() {
         return this.__symMgr;
     }
     private __startLoad: boolean = false;
-    peekSymbol(startLoad: boolean = false): GroupShape | undefined {
+    peekSymbol(startLoad: boolean = false): SymbolShape | undefined {
         const ret = this.__data;
         if (ret) return ret;
         if (startLoad && !this.__startLoad) {

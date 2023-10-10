@@ -12,7 +12,7 @@ import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { RECT_POINTS, SHAPE_VAR_SLOT } from "./consts";
+import { RECT_POINTS } from "./consts";
 import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
 export { Variable } from "./variable";
@@ -298,7 +298,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     getVisible(): boolean {
         if (!this.varbinds) return !!this.isVisible;
 
-        const visibleVar = this.varbinds.get(SHAPE_VAR_SLOT.visible);
+        const visibleVar = this.varbinds.get(OverrideType.Visible);
         if (!visibleVar) return !!this.isVisible;
 
         const _vars: Variable[] = [];
@@ -447,6 +447,38 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             style,
             childs
         )
+    }
+
+    getTagedSym(shape: Shape /* symbolrefshape */) {
+
+        if (!this.isUnionSymbolShape) return [this];
+
+        const symbols: SymbolShape[] = this.childs as any as SymbolShape[];
+
+        const curState = new Map<string, string>();
+        this.variables?.forEach((v) => {
+            if (v.type === VariableType.Status) {
+                const overrides = shape.findOverride(v.id, OverrideType.Variable);
+                const _v = overrides ? overrides[overrides.length - 1] : v;
+                curState.set(v.id, _v.value);
+            }
+        })
+
+        // 找到对应的shape
+        const matchshapes: SymbolShape[] = [];
+        symbols.forEach((s) => {
+            const vartag = s.vartag;
+            let match = true;
+            curState.forEach((v, k) => {
+                const tag = vartag ? vartag.get(k) : s.name;
+                if (match) match = v === tag;
+            });
+            if (match) {
+                matchshapes.push(s);
+            }
+        })
+
+        return matchshapes;
     }
 
     private _createVar4Override(type: OverrideType, value: any) {
@@ -906,7 +938,7 @@ export class TextShape extends Shape implements classes.TextShape {
     getText(): Text {
         if (!this.varbinds) return this.text;
 
-        const textVar = this.varbinds.get(SHAPE_VAR_SLOT.text);
+        const textVar = this.varbinds.get(OverrideType.Text);
         if (!textVar) return this.text;
 
         if (!this.textVar) return this.text;

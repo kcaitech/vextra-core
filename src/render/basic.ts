@@ -36,7 +36,7 @@
 //     });
 // }
 
-import { ResizingConstraints, SHAPE_VAR_SLOT } from "../data/consts";
+import { ResizingConstraints } from "../data/consts";
 import { Color, OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable, VariableType } from "../data/classes";
 
 
@@ -57,11 +57,11 @@ export const DefaultColor = Color.DefaultColor;
 export function isVisible(shape: Shape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, consumedVars: { slot: string, vars: Variable[] }[] | undefined) {
     if (!varsContainer) return !!shape.isVisible;
 
-    const _vars = findOverrideAndVar(shape, OverrideType.Visible, SHAPE_VAR_SLOT.visible, varsContainer);
+    const _vars = findOverrideAndVar(shape, OverrideType.Visible, varsContainer);
     if (_vars && _vars.length > 0) {
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === VariableType.Visible) {
-            if (consumedVars) consumedVars.push({ slot: SHAPE_VAR_SLOT.visible, vars: _vars });
+            if (consumedVars) consumedVars.push({ slot: OverrideType.Visible, vars: _vars });
             return !!_var.value;
         }
     }
@@ -193,7 +193,6 @@ function findOverride(refId: string, type: OverrideType, varsContainer: (SymbolR
 export function findOverrideAndVar(
     shape: Shape, // proxyed
     overType: OverrideType,
-    varSlot: string,
     varsContainer: (SymbolRefShape | SymbolShape)[]) {
 
     // if (!(shape as any).__symbolproxy) throw new Error("");
@@ -213,7 +212,7 @@ export function findOverrideAndVar(
         // }
         return _vars;
     } else {
-        const varId = varbinds.get(varSlot);
+        const varId = varbinds.get(overType);
         if (varId) {
             const _vars: Variable[] = [];
             findVar(varId, _vars, varsContainer);

@@ -5,7 +5,6 @@ import {
     BorderStyle, MarkerType, ContactRole, VariableType
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
-import { STYLE_VAR_SLOT } from "./consts";
 import { Variable } from "./variable";
 
 export {
@@ -192,7 +191,7 @@ export class Style extends Basic implements classes.Style {
     getFills(): BasicArray<Fill> {
         if (!this.varbinds) return this.fills;
 
-        const fillsVar = this.varbinds.get(STYLE_VAR_SLOT.fills);
+        const fillsVar = this.varbinds.get(classes.OverrideType.Fills);
         if (!fillsVar) return this.fills;
 
         const _vars: Variable[] = [];
@@ -208,7 +207,7 @@ export class Style extends Basic implements classes.Style {
     getBorders(): BasicArray<Border> {
         if (!this.varbinds) return this.borders;
 
-        const bordersVar = this.varbinds.get(STYLE_VAR_SLOT.borders);
+        const bordersVar = this.varbinds.get(classes.OverrideType.Borders);
         if (!bordersVar) return this.borders;
 
         const _vars: Variable[] = [];

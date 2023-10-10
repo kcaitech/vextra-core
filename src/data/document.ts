@@ -4,11 +4,11 @@ import { Page } from "./page";
 import { Artboard } from "./artboard";
 import { BasicArray, ResourceMgr, IDataGuard, Watchable } from "./basic";
 import { Style } from "./style";
-import { GroupShape } from "./shape";
+import { GroupShape, SymbolShape } from "./shape";
 export class Document extends Watchable(DocumentMeta) {
     private __pages: ResourceMgr<Page>;
     private __artboards: ResourceMgr<Artboard>;
-    private __symbols: ResourceMgr<GroupShape>
+    private __symbols: ResourceMgr<SymbolShape>
     private __styles: ResourceMgr<Style>
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
     // private __loader: IDataLoader;
@@ -29,7 +29,7 @@ export class Document extends Watchable(DocumentMeta) {
         this.__name = name;
         this.__pages = new ResourceMgr<Page>(guard);
         this.__artboards = new ResourceMgr<Artboard>(guard);
-        this.__symbols = new ResourceMgr<GroupShape>(guard);
+        this.__symbols = new ResourceMgr<SymbolShape>(guard);
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>();
         this.__styles = new ResourceMgr<Style>();
         return guard.guard(this);
