@@ -5,7 +5,7 @@ export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
-import { CurvePoint, OverrideType, ShapeFrame, VariableType } from "./baseclasses"
+import { CurvePoint, OverrideType, ShapeFrame, TextBehaviour, VariableType } from "./baseclasses"
 import { GroupShape, Shape, TextShape, VarWatcher, Variable, makeVarWatcher } from "./shape";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 import { SymbolRefShape } from "./symbolref";
@@ -555,11 +555,34 @@ function createTextByString(stringValue: string, refShape: TextShapeLike) {
 
 type TextShapeLike = Shape & { text: Text }
 
+const DefaultFontSize = Text.DefaultFontSize;
+export function fixTextShapeFrameByLayout(text: Text, frame: ShapeFrame) {
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    switch (textBehaviour) {
+        case TextBehaviour.FixWidthAndHeight: break;
+        case TextBehaviour.Fixed:
+            {
+                const layout = text.getLayout();
+                const fontsize = text.attr?.fontSize ?? DefaultFontSize;
+                frame.height = Math.max(fontsize, layout.contentHeight);
+                break;
+            }
+        case TextBehaviour.Flexible:
+            {
+                const layout = text.getLayout();
+                const fontsize = text.attr?.fontSize ?? DefaultFontSize;
+                frame.width = Math.max(fontsize, layout.contentWidth);
+                frame.height = Math.max(fontsize, layout.contentHeight);
+                break;
+            }
+    }
+}
+
 class TextShapeHdl extends ShapeHdl {
 
     __text?: Text;
 
-    getText(target: object, propertyKey: PropertyKey, receiver?: any) {
+    _getText(target: object, propertyKey: PropertyKey, receiver?: any) {
 
         const val = _getOnVar(
             receiver as Shape,
@@ -570,16 +593,27 @@ class TextShapeHdl extends ShapeHdl {
         if (val) return val;
         return Reflect.get(target, propertyKey, receiver);
     }
+    getText(target: object, propertyKey: PropertyKey, receiver?: any) {
+        if (this.__text) return this.__text;
+        this.__text = this._getText(target, propertyKey, receiver); // todo 编辑过variable后要更新
+        if (typeof this.__text === 'string') this.__text = createTextByString(this.__text as string, this.__origin as TextShapeLike);
+        const frame = (target as TextShape).frame;
+        if (this.__text) this.__text.updateSize(frame.width, frame.height);
+        return this.__text;
+    }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
 
+        if (propertyKey === 'frame') {
+            const frame = super.get(target, propertyKey, receiver);
+            // update frame
+            const text = this.getText(target, "text", receiver);
+            if (text) fixTextShapeFrameByLayout(text, frame);
+            return frame;
+        }
+
         if (propertyKey === 'text') {
-            if (this.__text) return this.__text;
-            this.__text = this.getText(target, propertyKey, receiver); // todo 编辑过variable后要更新
-            if (typeof this.__text === 'string') this.__text = createTextByString(this.__text as string, this.__origin as TextShapeLike);
-            const frame = (target as TextShape).frame;
-            if (this.__text) this.__text.updateSize(frame.width, frame.height);
-            return this.__text;
+            return this.getText(target, propertyKey, receiver);
         }
 
         return super.get(target, propertyKey, receiver);
