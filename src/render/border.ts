@@ -4,12 +4,17 @@ import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
 import { Border, Gradient, BorderPosition, FillType, GradientType, ShapeFrame } from "../data/classes";
 
+function randomId() {
+    return Math.floor((Math.random()*10000)+1);
+}
+
 const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
 const angularHandler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
 
 angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
-    const clipId = "clippath-border" + objectId(border);
-    const maskId = "mask-border" + objectId(border);
+    const rId = randomId();
+    const clipId = "clippath-border" + objectId(border) + rId;
+    const maskId = "mask-border" + objectId(border) + rId;
     // const frame = shape.frame;
     const thickness = border.thickness;
     const width = frame.width;
@@ -54,7 +59,8 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
 }
 
 angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
-    const maskId = "mask-border" + objectId(border);
+    const rId = randomId();
+    const maskId = "mask-border" + objectId(border) + rId;
     // const frame = shape.frame;
     const thickness = border.thickness;
 
@@ -99,8 +105,9 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
     const height = frame.height + 2 * thickness;
     const x = - thickness;
     const y = - thickness;
-    const mask1Id = "mask1-border" + objectId(border);
-    const mask2Id = "mask2-border" + objectId(border);
+    const rId = randomId();
+    const mask1Id = "mask1-border" + objectId(border) + rId;
+    const mask2Id = "mask2-border" + objectId(border) + rId;
 
     return h("g", [
         h("mask", {
@@ -136,7 +143,8 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
 }
 
 handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border: Border, path: string): any {
-    const clipId = "clippath-border" + objectId(border);
+    const rId = randomId();
+    const clipId = "clippath-border" + objectId(border) + rId;
     // const frame = shape.frame;
     const thickness = border.thickness;
 
@@ -230,7 +238,8 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
         body_props.stroke = "url(#" + g_.id + ")";
     }
 
-    const maskId = "mask-border" + objectId(border);
+    const rId = randomId();
+    const maskId = "mask-border" + objectId(border) + rId;
     body_props.mask = "url(#" + maskId + ")";
 
     const width = frame.width + 2 * thickness;

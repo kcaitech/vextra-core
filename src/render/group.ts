@@ -205,7 +205,7 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
         style.transform = "translate(" + cx + "px," + cy + "px) "
         if (hflip) style.transform += "rotateY(180deg) "
         if (vflip) style.transform += "rotateX(180deg) "
-        if (rotate) style.transform += "rotate(" + shape.rotation + "deg) "
+        if (rotate) style.transform += "rotate(" + rotate + "deg) "
         style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
         props.style = style;
     }

@@ -37,7 +37,8 @@
 // }
 
 import { ResizingConstraints } from "../data/consts";
-import { Color, OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable, VariableType } from "../data/classes";
+import { Color, CurvePoint, OverrideType, Path, Point2D, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable, VariableType } from "../data/classes";
+import { Matrix } from "../basic/matrix";
 
 
 // export { h } from "vue";
@@ -225,4 +226,51 @@ export function findOverrideAndVar(
             return _vars;
         }
     }
+}
+
+
+
+export function matrix2parent(x: number, y: number, width: number, height: number, rotate: number, hflip: boolean, vflip: boolean) {
+    const m = new Matrix();
+    if (rotate || hflip || vflip) {
+        const cx = width / 2;
+        const cy = height / 2;
+        m.trans(-cx, -cy);
+        if (rotate) m.rotate(rotate / 360 * 2 * Math.PI);
+        if (hflip) m.flipHoriz();
+        if (vflip) m.flipVert();
+        m.trans(cx, cy);
+    }
+    m.trans(x, y);
+    return m;
+}
+
+export function boundingBox(m: Matrix, frame: ShapeFrame, path: Path): ShapeFrame {
+    // const path = this.getPath();
+    if (path.length > 0) {
+        path.transform(m);
+        const bounds = path.calcBounds();
+        return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+    }
+
+    // const frame = this.frame;
+    const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, { x: 0, y: frame.height }]
+        .map((p) => m.computeCoord(p));
+    const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+    const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+    const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+    const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+}
+
+export function transformPoints(points: CurvePoint[], matrix: Matrix) {
+    const ret: CurvePoint[] = [];
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = points[i];
+        const curveFrom: Point2D = p.hasCurveFrom ? matrix.computeCoord(p.curveFrom) as Point2D : p.curveFrom;
+        const curveTo: Point2D = p.hasCurveTo ? matrix.computeCoord(p.curveTo) as Point2D: p.curveTo;
+        const point: Point2D = matrix.computeCoord(p.point) as Point2D;
+        ret.push(new CurvePoint("", p.cornerRadius, curveFrom, curveTo, p.hasCurveFrom, p.hasCurveTo, p.curveMode, point))
+    }
+    return ret;
 }

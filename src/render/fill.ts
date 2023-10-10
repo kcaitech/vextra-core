@@ -4,6 +4,10 @@ import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "../basic/objectid";
 
+function randomId() {
+    return Math.floor((Math.random()*10000)+1);
+}
+
 const handler: { [key: string]: (h: Function, frame: ShapeFrame, fill: Fill, path: string) => any } = {};
 handler[FillType.SolidColor] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
     const color = fill.color;
@@ -27,7 +31,7 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fil
     const gid = g_.id;
     const gStyle = g_.style;
     if (gStyle) {
-        const id = "clippath-fill-" + objectId(fill);
+        const id = "clippath-fill-" + objectId(fill) + randomId();
         const cp = clippathR(h, id, path);
         elArr.push(cp);
         elArr.push(h("foreignObject", {
@@ -53,7 +57,7 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fil
 }
 
 handler[FillType.Pattern] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
-    const id = "clippath-fill-" + objectId(fill);
+    const id = "clippath-fill-" + objectId(fill) +  + randomId();
     const cp = clippathR(h, id, path);
 
     const url = fill.peekImage(true);

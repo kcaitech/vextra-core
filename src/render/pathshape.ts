@@ -1,7 +1,8 @@
-import { PathShape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
+import { Path, PathShape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border"
-import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
+import { RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent, transformPoints } from "./basic";
+import { parsePath } from "../data/pathparser";
 
 export function render(h: Function, shape: PathShape, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
@@ -21,23 +22,70 @@ export function render(h: Function, shape: PathShape, transform: RenderTransform
     let vflip = !!shape.isFlippedVertical;
     let frame = _frame;
 
-    const notTrans = isNoTransform(transform);
 
+    let notTrans = isNoTransform(transform);
+
+    let path0: Path;
     if (!notTrans && transform) {
         x += transform.dx;
         y += transform.dy;
-        // todo
-
-        width *= transform.scaleX;
-        height *= transform.scaleY;
         rotate += transform.rotate;
         hflip = transform.hflip ? !hflip : hflip;
         vflip = transform.vflip ? !vflip : vflip;
-        frame = new ShapeFrame(x, y, width, height);
-        fixFrameByConstrain(shape, transform.parentFrame, frame);
+
+        if (rotate) {
+            // matrix2parent
+            const matrix = matrix2parent(x, y, width, height, rotate, hflip, vflip);
+            const f = new ShapeFrame(x, y, width, height);
+            const p = shape.getPathOfFrame(f);
+            // boundingbox
+            const bbox = boundingBox(matrix, f, p);
+
+            matrix.preScale(f.width, f.height);
+
+            rotate = 0;
+            hflip = false;
+            vflip = false;
+            notTrans = true;
+
+            const matrix2 = matrix2parent(bbox.x, bbox.y, bbox.width, bbox.height, 0, false, false);
+            matrix2.preScale(bbox.width, bbox.height); // 当对象太小时，求逆矩阵会infinity
+            matrix.multiAtLeft(matrix2.inverse);
+
+            bbox.width *= transform.scaleX;
+            bbox.height *= transform.scaleY;
+
+            fixFrameByConstrain(shape, transform.parentFrame, bbox); // 这个好象不太对
+
+
+            // transform points （旋转、翻转、缩放、移动）
+            // 再get path
+
+            const points = transformPoints(shape.points, matrix);
+
+            frame = bbox;
+
+            // path0 = shape.getPathOfFrame(bbox);
+            path0 = new Path(parsePath(points, shape.isClosed, 0, 0, bbox.width, bbox.height, shape.fixedRadius))
+            // path0.transform(matrix);
+        }
+        else {
+
+            // 
+            width *= transform.scaleX;
+            height *= transform.scaleY;
+            frame = new ShapeFrame(x, y, width, height);
+            fixFrameByConstrain(shape, transform.parentFrame, frame);
+
+            path0 = shape.getPathOfFrame(frame);
+        }
+    }
+    else {
+        path0 = shape.getPath();
+        notTrans = shape.isNoTransform()
     }
 
-    const path = shape.getPathOfFrame(frame).toString();
+    const path = path0.toString();
     const childs = [];
 
     // fill
@@ -56,7 +104,7 @@ export function render(h: Function, shape: PathShape, transform: RenderTransform
         props.opacity = contextSettings.opacity;
     }
 
-    if (shape.isNoTransform() && notTrans) {
+    if (notTrans) {
         props.transform = `translate(${frame.x},${frame.y})`;
     } else {
         const cx = frame.x + frame.width / 2;
@@ -65,7 +113,7 @@ export function render(h: Function, shape: PathShape, transform: RenderTransform
         style.transform = "translate(" + cx + "px," + cy + "px) "
         if (hflip) style.transform += "rotateY(180deg) "
         if (vflip) style.transform += "rotateX(180deg) "
-        if (rotate) style.transform += "rotate(" + shape.rotation + "deg) "
+        if (rotate) style.transform += "rotate(" + rotate + "deg) "
         style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
         props.style = style;
     }
