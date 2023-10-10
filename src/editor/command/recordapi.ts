@@ -25,6 +25,7 @@ import { uuid } from "../../basic/uuid";
 import { TableOpTarget } from "../../coop/data/classes";
 import { ContactRole, CurvePoint } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
+import { BasicMap } from "../../data/basic";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -352,13 +353,24 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.addvar, exportVariable(_var), undefined));
         })
     }
+    shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const save = shape.varbinds?.get(type);
+            if (!shape.varbinds) shape.varbinds = new BasicMap();
+            shape.varbinds.set(type, varId);
+            const shapeId = genShapeId(shape);
+            shapeId.push(type);
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.bindvar, { type, varId }, { type, varId: save }));
+        })
+    }
     shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.getOverrid2(refId, attr);
             shape.addOverrid2(refId, attr, value);
             const shapeId = genShapeId(shape);
-            shapeId.push(refId + '/' + attr); // todo refid
+            shapeId.push(refId + '/' + attr);
             this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyoverride, { refId, attr, value }, { refId, attr, value: save }));
         })
     }
@@ -367,8 +379,19 @@ export class Api {
         this.__trap(() => {
             shape.addOverrid2(refId, attr, value);
             const shapeId = genShapeId(shape);
-            shapeId.push(refId + '/' + attr); // todo refid
+            shapeId.push(refId + '/' + attr);
             this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.addoverride, { refId, attr, value }, undefined));
+        })
+    }
+    shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const save = shape.vartag?.get(varId);
+            const shapeId = genShapeId(shape);
+            shapeId.push(varId);
+            if (!shape.vartag) shape.vartag = new BasicMap();
+            shape.vartag.set(varId, tag);
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.vartag, { varId, tag }, { varId, tag: save }));
         })
     }
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
@@ -377,6 +400,14 @@ export class Api {
             const save = shape.isVisible;
             shape.setVisible(isVisible);
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.visible, isVisible, save));
+        })
+    }
+    shapeModifySymRef(page: Page, shape: SymbolRefShape, refId: string) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const save = shape.refId;
+            shape.refId = refId;
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.symbolref, refId, save));
         })
     }
     shapeModifyIsUnion(page: Page, shape: Shape, isUnionSymbolShape: boolean) {

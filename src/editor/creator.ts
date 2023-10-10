@@ -311,7 +311,7 @@ export function newSymbolShapeUnion(default_sym: SymbolShape, frame: ShapeFrame)
     return union;
 }
 
-export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: ResourceMgr<GroupShape>): SymbolRefShape {
+export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: ResourceMgr<SymbolShape>): SymbolRefShape {
     const ref = new SymbolRefShape(uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId);
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);

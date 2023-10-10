@@ -27,7 +27,6 @@ import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils";
-import { SHAPE_VAR_SLOT } from "../data/consts";
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { importText } from "../data/baseimport";
@@ -535,7 +534,7 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextHorAlign(horAlign: TextHorAlign, index: number, len: number) {
 
         // todo
-        const _var = this.overrideVariable(SHAPE_VAR_SLOT.text, VariableType.Text, OverrideType.Text, (_var) => {
+        const _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
             if (_var) {
                 if (_var.value instanceof Text) return importText(_var.value);
                 if (typeof _var.value === 'string') return createTextByString(_var.value, this.shape);

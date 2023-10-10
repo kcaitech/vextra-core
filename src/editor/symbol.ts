@@ -4,7 +4,7 @@
 import { BasicMap } from "data/basic";
 import { Shape, SymbolShape, Variable, VariableType } from "../data/shape";
 import { OverrideType, SymbolRefShape } from "../data/symbolref";
-import { uuid } from "basic/uuid";
+import { uuid } from "../basic/uuid";
 
 function switchRef(refId: string, shape: SymbolRefShape) {
 

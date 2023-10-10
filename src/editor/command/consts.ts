@@ -61,6 +61,13 @@ export const SHAPE_ATTR_ID = {
     cellContentText: "cellContentText",
     cellContentImage: "cellContentImage",
     cellSpan: "cellSpan",
+
+    // symbolref
+    symbolref: "symbolref",
+    // symbol
+    vartag: "vartag",
+    // shape
+    bindvar: "bindvar",
 }
 
 export const FILLS_ID = "fills"

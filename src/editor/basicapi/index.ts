@@ -3,7 +3,8 @@ import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
-import { BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, MarkerType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BasicMap } from "../../data/basic";
 
 export * from "./fill";
 export * from "./border";
@@ -472,4 +473,25 @@ export function shapeModifyCurvToPoint(page: Page, shape: PathShape, index: numb
     const p = shape.points[index];
     p.curveTo.x = point.x;
     p.curveTo.y = point.y;
+}
+
+export function shapeModifyVariable(page: Page, _var: Variable, value: any) {
+    _var.value = value;
+}
+export function shapeAddVariable(page: Page, shape: SymbolShape | SymbolRefShape, _var: Variable) {
+    shape.addVar(_var);
+}
+export function shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
+    if (!shape.varbinds) shape.varbinds = new BasicMap();
+    shape.varbinds.set(type, varId);
+}
+export function shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
+    shape.addOverrid2(refId, attr, value);
+}
+export function shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
+    shape.addOverrid2(refId, attr, value);
+}
+export function shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
+    if (!shape.vartag) shape.vartag = new BasicMap();
+    shape.vartag.set(varId, tag);
 }
