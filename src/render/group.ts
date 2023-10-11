@@ -1,7 +1,7 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
+import { GroupShape, Path, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
-import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
+import { RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent } from "./basic";
 import { Matrix } from "../basic/matrix";
 
 export function renderGroupChilds2(h: Function, childs: Array<Shape>, comsMap: Map<ShapeType, any>,
@@ -13,7 +13,7 @@ export function renderGroupChilds2(h: Function, childs: Array<Shape>, comsMap: M
     for (let i = 0; i < cc; i++) {
         const child = childs[i];
         const com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
-        const node = h(com, { data: child, key: child.id, transform, varsContainer });
+        const node = h(com, { data: child, key: child.id, transx: transform, varsContainer });
         nodes.push(node);
     }
 
@@ -36,86 +36,72 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
     let vflip = !!shape.isFlippedVertical;
     let frame = _frame;
 
-    const notTrans = isNoTransform(transform);
+    let notTrans = isNoTransform(transform);
 
     let nodes: Array<any>;
     if (!transform || notTrans) {
-        nodes = renderGroupChilds2(h, childs, comsMap, transform, varsContainer);
-        return { nodes, frame, notTrans, hflip, vflip, rotate };
+        nodes = renderGroupChilds2(h, childs, comsMap, undefined, varsContainer);
+        return { nodes, frame, notTrans: shape.isNoTransform(), hflip, vflip, rotate };
     }
 
+    // 这些是parent的属性！
     x += transform.dx;
     y += transform.dy;
-
-    // todo 先判断scale
-    width *= transform.scaleX;
-    height *= transform.scaleY;
     rotate += transform.rotate;
     hflip = transform.hflip ? !hflip : hflip;
     vflip = transform.vflip ? !vflip : vflip;
+    const scaleX = transform.scaleX;
+    const scaleY = transform.scaleY;
 
     if (!rotate) {
-        frame = new ShapeFrame(x, y, width, height);
-        fixFrameByConstrain(shape, transform.parentFrame, frame);
+
+        x *= scaleX;
+        y *= scaleY;
+        width *= scaleX;
+        height *= scaleY;
+    
+        const parentFrame = new ShapeFrame(x, y, width, height);
+        fixFrameByConstrain(shape, transform.parentFrame, parentFrame);
+
+        const cscaleX = parentFrame.width / _frame.width;
+        const cscaleY = parentFrame.height / _frame.height;
+
         nodes = [];
-        for (let i = 0, len = shape.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
+        for (let i = 0, len = shape.childs.length; i < len; i++) {
             const cc = shape.childs[i]
 
-            const c_frame = cc.frame;
-            const dx: number = c_frame.x * (transform.scaleX - 1);
-            const dy: number = c_frame.y * (transform.scaleY - 1);
-
             transform = {
-                dx,
-                dy,
-                scaleX: transform.scaleX,
-                scaleY: transform.scaleY,
-                parentFrame: frame,
+                dx: 0,
+                dy: 0,
+                scaleX: cscaleX,
+                scaleY: cscaleY,
+                parentFrame,
                 vflip: false,
                 hflip: false,
                 rotate: 0
             }
 
             const com = comsMap.get(cc.type) || comsMap.get(ShapeType.Rectangle);
-            const node = h(com, { data: cc, key: cc.id, transform, varsContainer });
+            const node = h(com, { data: cc, key: cc.id, transx: transform, varsContainer });
             nodes.push(node);
         }
-        return { nodes, frame, notTrans, hflip, vflip, rotate };
+        return { nodes, frame: parentFrame, notTrans, hflip, vflip, rotate };
     }
 
-    // rotated
-    // todo
+    // cur frame
     frame = new ShapeFrame(x, y, width, height);
-    fixFrameByConstrain(shape, transform.parentFrame, frame);
-    const scaleX = frame.width / _frame.width;
-    const scaleY = frame.height / _frame.height;
-
-    // 摆正并将 flip rotate往下传
-    // 非等比缩放
     // matrix2parent
-    const m = new Matrix();
-    const cx = frame.width / 2;
-    const cy = frame.height / 2;
-    m.trans(-cx, -cy);
-    if (rotate) m.rotate(rotate / 360 * 2 * Math.PI);
-    if (hflip) m.flipHoriz();
-    if (vflip) m.flipVert();
-    m.trans(cx, cy);
-    m.trans(frame.x, frame.y);
+    const m = matrix2parent(x, y, width, height, rotate, hflip, vflip);
     // bounds
-    const corners = [{ x: 0, y: 0 },
-    { x: frame.width, y: 0 },
-    { x: frame.width, y: frame.height },
-    { x: 0, y: frame.height }]
-        .map((p) => m.computeCoord(p));
-    const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-    const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-    const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-    const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-    const boundingBox = new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+    const bbox = boundingBox(m, frame, new Path());
+
+    const parentFrame = new ShapeFrame(bbox.x * scaleX, bbox.y * scaleY, bbox.width * scaleX, bbox.height * scaleY);
+    fixFrameByConstrain(shape, transform.parentFrame, parentFrame);
+    const cscaleX = parentFrame.width / _frame.width;
+        const cscaleY = parentFrame.height / _frame.height;
 
     nodes = [];
-    for (let i = 0, len = shape.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
+    for (let i = 0, len = shape.childs.length; i < len; i++) { //摆正： 将旋转、翻转放入到子对象
         const cc = shape.childs[i]
         const m1 = cc.matrix2Parent();
         m1.multiAtLeft(m);
@@ -126,17 +112,9 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
         const c_vflip = vflip ? !!cc.isFlippedVertical : !cc.isFlippedVertical;
         const c_frame = cc.frame;
         // cc matrix2Parent
-        const m2 = new Matrix();
-        const cx = c_frame.width / 2;
-        const cy = c_frame.height / 2;
-        m2.trans(-cx, -cy);
-        if (c_rotate) m2.rotate(c_rotate / 360 * 2 * Math.PI);
-        if (c_hflip) m2.flipHoriz();
-        if (c_vflip) m2.flipVert();
-        m2.trans(cx, cy);
-        m2.trans(c_frame.x, c_frame.y);
+        const m2 = matrix2parent(c_frame.x, c_frame.y, c_frame.width, c_frame.height, c_rotate, c_hflip, c_vflip);
 
-        m2.trans(boundingBox.x, boundingBox.y);
+        m2.trans(bbox.x, bbox.y);
         const cur = m2.computeCoord(0, 0);
 
         const dx = target.x - cur.x;
@@ -145,18 +123,24 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
         transform = {
             dx,
             dy,
-            scaleX,
-            scaleY,
-            parentFrame: boundingBox,
+            scaleX: cscaleX,
+            scaleY: cscaleY,
+            parentFrame: parentFrame,
             vflip,
             hflip,
             rotate
         }
 
         const com = comsMap.get(cc.type) || comsMap.get(ShapeType.Rectangle);
-        const node = h(com, { data: cc, key: cc.id, transform, varsContainer });
+        const node = h(com, { data: cc, key: cc.id, transx: transform, varsContainer });
         nodes.push(node);
     }
+
+    frame = parentFrame;
+    rotate = 0;
+    hflip = false;
+    vflip = false;
+    notTrans = true;
 
     return { nodes, frame, notTrans, hflip, vflip, rotate };
 }
@@ -196,7 +180,7 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
         props.opacity = contextSettings.opacity;
     }
 
-    if (shape.isNoTransform() && notTrans) {
+    if (notTrans) {
         props.transform = `translate(${frame.x},${frame.y})`
     } else {
         const cx = frame.x + frame.width / 2;

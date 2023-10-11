@@ -607,8 +607,9 @@ class TextShapeHdl extends ShapeHdl {
         if (propertyKey === 'frame') {
             const frame = super.get(target, propertyKey, receiver);
             // update frame
-            const text = this.getText(target, "text", receiver);
-            if (text) fixTextShapeFrameByLayout(text, frame);
+            // todo 在layout时更新有问题
+            // const text = this.getText(target, "text", receiver);
+            // if (text) fixTextShapeFrameByLayout(text, frame);
             return frame;
         }
 

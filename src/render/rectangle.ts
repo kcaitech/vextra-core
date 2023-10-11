@@ -51,6 +51,8 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
 
             bbox.width *= transform.scaleX;
             bbox.height *= transform.scaleY;
+            bbox.x *= transform.scaleX;
+            bbox.y *= transform.scaleY;
 
             fixFrameByConstrain(shape, transform.parentFrame, bbox); // 这个好象不太对
 
@@ -67,7 +69,8 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
             // path0.transform(matrix);
         }
         else {
-
+            x *= transform.scaleX;
+            y *= transform.scaleY;
             // 
             width *= transform.scaleX;
             height *= transform.scaleY;

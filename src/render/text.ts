@@ -232,6 +232,8 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     if (!notTrans && transform) {
         x += transform.dx;
         y += transform.dy;
+        x *= transform.scaleX;
+        y *= transform.scaleY;
         width *= transform.scaleX;
         height *= transform.scaleY;
         rotate += transform.rotate;

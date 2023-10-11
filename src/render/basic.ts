@@ -71,14 +71,16 @@ export function isVisible(shape: Shape, varsContainer: (SymbolRefShape | SymbolS
 }
 
 export interface RenderTransform {
+    // 为保持位置及形状不变，提前设置给子对象的参数
     dx: number
     dy: number
-    scaleX: number
-    scaleY: number
     rotate: number
     hflip: boolean
     vflip: boolean
-    parentFrame: ShapeFrame
+
+    scaleX: number // == parent.frame.width / parentFrame.width ?
+    scaleY: number
+    parentFrame: ShapeFrame // parent的实际绘制frame
 }
 
 export function isNoTransform(trans: RenderTransform | undefined): boolean {
