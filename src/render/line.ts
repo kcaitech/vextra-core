@@ -1,6 +1,8 @@
+import { ResizingConstraints } from "../data/consts";
 import { Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
 import { render as renderB } from "./line_borders";
+import { Matrix } from "../basic/matrix";
 
 export function render(h: Function, shape: Shape, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
@@ -19,20 +21,99 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
     let vflip = !!shape.isFlippedVertical;
     let frame = _frame;
 
-    const notTrans = isNoTransform(transform);
-
+    let notTrans = isNoTransform(transform);
+    // let path0: Path;
     if (!notTrans && transform) {
         x += transform.dx;
         y += transform.dy;
-        x *= transform.scaleX;
-        y *= transform.scaleY;
-        width *= transform.scaleX;
-        height *= transform.scaleY;
         rotate += transform.rotate;
         hflip = transform.hflip ? !hflip : hflip;
         vflip = transform.vflip ? !vflip : vflip;
-        frame = new ShapeFrame(x, y, width, height);
-        fixFrameByConstrain(shape, transform.parentFrame, frame);
+        const scaleX = transform.scaleX;
+        const scaleY = transform.scaleY;
+        const resizingConstraint = shape.resizingConstraint;
+        if (!rotate || resizingConstraint && (ResizingConstraints.hasWidth(resizingConstraint) || ResizingConstraints.hasHeight(resizingConstraint))) {
+
+            // const saveW = width;
+            // const saveH = height;
+            if (resizingConstraint && (ResizingConstraints.hasWidth(resizingConstraint) || ResizingConstraints.hasHeight(resizingConstraint))) {
+                const fixWidth = ResizingConstraints.hasWidth(resizingConstraint);
+                const fixHeight = ResizingConstraints.hasHeight(resizingConstraint);
+
+                if (fixWidth && fixHeight) {
+                    // 不需要缩放，但要调整位置
+                    x *= scaleX;
+                    y *= scaleY;
+                    // 居中
+                    x += (width * (scaleX - 1)) / 2;
+                    y += (height * (scaleY - 1)) / 2;
+                }
+
+                else if (rotate) {
+                    const m = new Matrix();
+                    m.rotate(rotate / 360 * 2 * Math.PI);
+                    const newscale = m.inverseRef(scaleX, scaleY);
+                    x *= scaleX;
+                    y *= scaleY;
+
+                    if (fixWidth) {
+                        x += (width * (newscale.x - 1)) / 2;
+                        newscale.x = 1;
+                    }
+                    else {
+                        y += (height * (newscale.y - 1)) / 2;
+                        newscale.y = 1;
+                    }
+
+                    width *= newscale.x;
+                    height *= newscale.y;
+                }
+                else {
+                    const newscaleX = fixWidth ? 1 : scaleX;
+                    const newscaleY = fixHeight ? 1 : scaleY;
+                    x *= scaleX;
+                    y *= scaleY;
+                    if (fixWidth) x += (width * (scaleX - 1)) / 2;
+                    if (fixHeight) y += (height * (scaleY - 1)) / 2;
+                    width *= newscaleX;
+                    height *= newscaleY;
+                }
+            }
+            else {
+                x *= scaleX;
+                y *= scaleY;
+                width *= scaleX;
+                height *= scaleY;
+            }
+
+            frame = new ShapeFrame(x, y, width, height);
+            fixFrameByConstrain(shape, transform.parentFrame, frame);
+
+            // path0 = shape.getPathOfFrame(frame);
+
+        }
+
+        else {
+
+            const m = new Matrix();
+            m.rotate(rotate / 360 * 2 * Math.PI);
+            const newscale = m.inverseRef(scaleX, scaleY);
+            x *= scaleX;
+            y *= scaleY;
+            width *= newscale.x;
+            height *= newscale.y;
+
+            frame = new ShapeFrame(x, y, width, height);
+            fixFrameByConstrain(shape, transform.parentFrame, frame);
+
+            // path0 = shape.getPathOfFrame(frame);
+
+        }
+
+    }
+    else {
+        // path0 = shape.getPath();
+        notTrans = shape.isNoTransform()
     }
 
     const props: any = {}

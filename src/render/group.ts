@@ -3,6 +3,7 @@ import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent } from "./basic";
 import { Matrix } from "../basic/matrix";
+import { ResizingConstraints } from "../data/consts";
 
 export function renderGroupChilds2(h: Function, childs: Array<Shape>, comsMap: Map<ShapeType, any>,
     transform: RenderTransform | undefined,
@@ -53,18 +54,65 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
     const scaleX = transform.scaleX;
     const scaleY = transform.scaleY;
 
-    if (!rotate) {
+    const resizingConstraint = shape.resizingConstraint;
+    if (!rotate || resizingConstraint && (ResizingConstraints.hasWidth(resizingConstraint) || ResizingConstraints.hasHeight(resizingConstraint))) {
 
-        x *= scaleX;
-        y *= scaleY;
-        width *= scaleX;
-        height *= scaleY;
-    
+        const saveW = width;
+        const saveH = height;
+        if (resizingConstraint && (ResizingConstraints.hasWidth(resizingConstraint) || ResizingConstraints.hasHeight(resizingConstraint))) {
+            const fixWidth = ResizingConstraints.hasWidth(resizingConstraint);
+            const fixHeight = ResizingConstraints.hasHeight(resizingConstraint);
+
+            if (fixWidth && fixHeight) {
+                // 不需要缩放，但要调整位置
+                x *= scaleX;
+                y *= scaleY;
+                // 居中
+                x += (width * (scaleX - 1)) / 2;
+                y += (height * (scaleY - 1)) / 2;
+            }
+
+            else if (rotate) {
+                const m = new Matrix();
+                m.rotate(rotate / 360 * 2 * Math.PI);
+                const newscale = m.inverseRef(scaleX, scaleY);
+                x *= scaleX;
+                y *= scaleY;
+
+                if (fixWidth) {
+                    x += (width * (newscale.x - 1)) / 2;
+                    newscale.x = 1;
+                }
+                else {
+                    y += (height * (newscale.y - 1)) / 2;
+                    newscale.y = 1;
+                }
+                width *= newscale.x;
+                height *= newscale.y;
+            }
+            else {
+                const newscaleX = fixWidth ? 1 : scaleX;
+                const newscaleY = fixHeight ? 1 : scaleY;
+                x *= scaleX;
+                y *= scaleY;
+                if (fixWidth) x += (width * (scaleX - 1)) / 2;
+                if (fixHeight) y += (height * (scaleY - 1)) / 2;
+                width *= newscaleX;
+                height *= newscaleY;
+            }
+        }
+        else {
+            x *= scaleX;
+            y *= scaleY;
+            width *= scaleX;
+            height *= scaleY;
+        }
+
         const parentFrame = new ShapeFrame(x, y, width, height);
         fixFrameByConstrain(shape, transform.parentFrame, parentFrame);
 
-        const cscaleX = parentFrame.width / _frame.width;
-        const cscaleY = parentFrame.height / _frame.height;
+        const cscaleX = parentFrame.width / saveW;
+        const cscaleY = parentFrame.height / saveH;
 
         nodes = [];
         for (let i = 0, len = shape.childs.length; i < len; i++) {
@@ -97,8 +145,8 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
 
     const parentFrame = new ShapeFrame(bbox.x * scaleX, bbox.y * scaleY, bbox.width * scaleX, bbox.height * scaleY);
     fixFrameByConstrain(shape, transform.parentFrame, parentFrame);
-    const cscaleX = parentFrame.width / _frame.width;
-        const cscaleY = parentFrame.height / _frame.height;
+    const cscaleX = parentFrame.width / bbox.width;
+    const cscaleY = parentFrame.height / bbox.height;
 
     nodes = [];
     for (let i = 0, len = shape.childs.length; i < len; i++) { //摆正： 将旋转、翻转放入到子对象
