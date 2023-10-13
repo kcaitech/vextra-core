@@ -169,8 +169,8 @@ export class ShapeEditor {
 
     // check and override
     // 适合text这种，value的修改非原子操作的情况
-    overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api) {
-        const shape = this.__shape;
+    overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, shape?: Shape) {
+        shape = shape ?? this.__shape;
         // symbol shape
         if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {
             const _vars: Variable[] = [];
