@@ -54,9 +54,15 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
             }
 
             else if (c.rotation) {
+                // 缩放+旋转后 x,y是会变化位置的
+
                 const m = new Matrix();
                 m.rotate(c.rotation / 360 * 2 * Math.PI);
-                const newscale = m.inverseRef(scaleX, scaleY);
+                m.scale(scaleX, scaleY);
+                const _newscale = m.computeRef(1, 1);
+                m.scale(1 / scaleX, 1 / scaleY);
+                const newscale = m.inverseRef(_newscale.x, _newscale.y);
+
                 const cFrame = c.frame;
                 let cX = cFrame.x * scaleX;
                 let cY = cFrame.y * scaleY;
@@ -197,55 +203,42 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
             setFrame(page, c, f.x, f.y, f.w, f.h, api);
         }
         else { // textshape imageshape symbolrefshape
-            // 需要调整位置跟大小
-            // const cFrame = c.frame;
-            // const matrix = c.matrix2Parent();
-            // const current = [{ x: 0, y: 0 }, { x: cFrame.width, y: cFrame.height }]
-            //     .map((p) => matrix.computeCoord(p));
-
-            // const target = current.map((p) => {
-            //     return { x: p.x * scaleX, y: p.y * scaleY }
-            // })
-            // const matrixarr = matrix.toArray();
-            // matrixarr[4] = target[0].x;
-            // matrixarr[5] = target[0].y;
-            // const m2 = new Matrix(matrixarr);
-            // const m2inverse = new Matrix(m2.inverse)
-
-            // const invertTarget = target.map((p) => m2inverse.computeCoord(p))
-
-            // const wh = { x: invertTarget[1].x - invertTarget[0].x, y: invertTarget[1].y - invertTarget[0].y }
-
-            // // 计算新的matrix 2 parent
-            // const matrix2 = new Matrix();
-            // {
-            //     const cx = wh.x / 2;
-            //     const cy = wh.y / 2;
-            //     matrix2.trans(-cx, -cy);
-            //     if (c.rotation) matrix2.rotate(c.rotation / 180 * Math.PI);
-            //     if (c.isFlippedHorizontal) matrix2.flipHoriz();
-            //     if (c.isFlippedVertical) matrix2.flipVert();
-            //     matrix2.trans(cx, cy);
-            //     matrix2.trans(cFrame.x, cFrame.y);
-            // }
-            // const xy = matrix2.computeCoord(0, 0);
-
-            // const dx = target[0].x - xy.x;
-            // const dy = target[0].y - xy.y;
-            // const f = fixConstrainFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api, originFrame, shape.frame);
-            // setFrame(page, c, f.x, f.y, f.w, f.h, api);
-
-            const m = new Matrix();
-            m.rotate(c.rotation / 360 * 2 * Math.PI);
-            const newscale = m.inverseRef(scaleX, scaleY);
+            // // 需要调整位置跟大小
             const cFrame = c.frame;
-            const cX = cFrame.x * scaleX;
-            const cY = cFrame.y * scaleY;
-            const cW = cFrame.width * newscale.x;
-            const cH = cFrame.height * newscale.y;
+            const matrix = c.matrix2Parent();
+            const current = [{ x: 0, y: 0 }, { x: cFrame.width, y: cFrame.height }]
+                .map((p) => matrix.computeCoord(p));
 
-            // constrain position
-            const f = fixConstrainFrame(page, c, cX, cY, cW, cH, api, originFrame, shape.frame);
+            const target = current.map((p) => {
+                return { x: p.x * scaleX, y: p.y * scaleY }
+            })
+            const matrixarr = matrix.toArray();
+            matrixarr[4] = target[0].x;
+            matrixarr[5] = target[0].y;
+            const m2 = new Matrix(matrixarr);
+            const m2inverse = new Matrix(m2.inverse)
+
+            const invertTarget = target.map((p) => m2inverse.computeCoord(p))
+
+            const wh = { x: invertTarget[1].x - invertTarget[0].x, y: invertTarget[1].y - invertTarget[0].y }
+
+            // 计算新的matrix 2 parent
+            const matrix2 = new Matrix();
+            {
+                const cx = wh.x / 2;
+                const cy = wh.y / 2;
+                matrix2.trans(-cx, -cy);
+                if (c.rotation) matrix2.rotate(c.rotation / 180 * Math.PI);
+                if (c.isFlippedHorizontal) matrix2.flipHoriz();
+                if (c.isFlippedVertical) matrix2.flipVert();
+                matrix2.trans(cx, cy);
+                matrix2.trans(cFrame.x, cFrame.y);
+            }
+            const xy = matrix2.computeCoord(0, 0);
+
+            const dx = target[0].x - xy.x;
+            const dy = target[0].y - xy.y;
+            const f = fixConstrainFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api, originFrame, shape.frame);
             setFrame(page, c, f.x, f.y, f.w, f.h, api);
         }
     }
