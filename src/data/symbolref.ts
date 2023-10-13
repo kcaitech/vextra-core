@@ -54,8 +54,13 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         this.refId = refId
     }
 
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
-        return this;
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
+        const id0 = targetId[0];
+        if (typeof id0 === 'string' && id0.startsWith('varid:')) {
+            const varid = id0.substring('varid:'.length);
+            return this.getVar(varid);
+        }
+        return super.getTarget(targetId);
     }
 
     getSymChilds(): Shape[] | undefined {

@@ -1,4 +1,4 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape, SymbolShape } from "./shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape, SymbolShape, Variable } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, Watchable } from "./basic";
@@ -36,7 +36,7 @@ export class Page extends GroupShape implements classes.Page {
         childs.forEach((c) => this.onAddShape(c))
     }
 
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
         if (targetId.length > 0) {
             const shapeId = targetId[0] as string;
             const shape = this.getShape(shapeId);

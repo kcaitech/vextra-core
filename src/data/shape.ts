@@ -121,7 +121,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     /**
      * for command
      */
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
         return this;
     }
 
@@ -447,6 +447,14 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             style,
             childs
         )
+    }
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
+        const id0 = targetId[0];
+        if (typeof id0 === 'string' && id0.startsWith('varid:')) {
+            const varid = id0.substring('varid:'.length);
+            return this.getVar(varid);
+        }
+        return super.getTarget(targetId);
     }
 
     getTagedSym(shape: Shape /* symbolrefshape */) {

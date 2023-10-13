@@ -2,7 +2,7 @@ import { Border, Fill, Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
-import { Shape } from "./shape";
+import { Shape, Variable } from "./shape";
 import { Path } from "./path";
 import { Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
@@ -225,7 +225,7 @@ export class TableShape extends Shape implements classes.TableShape {
         this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur, 0);
     }
 
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape {
+    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
         if (targetId.length > 0 && typeof targetId[0] !== 'string') {
             const index = targetId[0];
             const cell = this.getCellAt(index.rowIdx, index.colIdx, true);
