@@ -54,8 +54,11 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
 
                 else if (rotate) {
                     const m = new Matrix();
-                    m.rotate(rotate / 360 * 2 * Math.PI);
-                    const newscale = m.inverseRef(scaleX, scaleY);
+                m.rotate(rotate / 360 * 2 * Math.PI);
+                m.scale(scaleX, scaleY);
+                const _newscale = m.computeRef(1, 1);
+                m.scale(1 / scaleX, 1 / scaleY);
+                const newscale = m.inverseRef(_newscale.x, _newscale.y);
                     x *= scaleX;
                     y *= scaleY;
 
@@ -100,7 +103,10 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
 
             const m = new Matrix();
             m.rotate(rotate / 360 * 2 * Math.PI);
-            const newscale = m.inverseRef(scaleX, scaleY);
+            m.scale(scaleX, scaleY);
+            const _newscale = m.computeRef(1, 1);
+            m.scale(1 / scaleX, 1 / scaleY);
+            const newscale = m.inverseRef(_newscale.x, _newscale.y);
             x *= scaleX;
             y *= scaleY;
             width *= newscale.x;

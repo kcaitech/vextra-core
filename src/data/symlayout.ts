@@ -81,9 +81,13 @@ export function layoutChilds(childs: Shape[], containerFrame: ShapeFrame, symbol
             }
 
             else if (c.rotation) {
+                // 
                 const m = new Matrix();
                 m.rotate(c.rotation / 360 * 2 * Math.PI);
-                const newscale = m.inverseRef(scaleX, scaleY);
+                m.scale(scaleX, scaleY);
+                const _newscale = m.computeRef(1, 1);
+                m.scale(1 / scaleX, 1 / scaleY);
+                const newscale = m.inverseRef(_newscale.x, _newscale.y);
                 const cFrame = c.frame;
                 let cX = cFrame.x * scaleX;
                 let cY = cFrame.y * scaleY;
@@ -259,12 +263,20 @@ export function layoutChilds(childs: Shape[], containerFrame: ShapeFrame, symbol
 
             const m = new Matrix();
             m.rotate(c.rotation / 360 * 2 * Math.PI);
-            const newscale = m.inverseRef(scaleX, scaleY);
+            m.scale(scaleX, scaleY);
+
+            const _newscale = m.computeRef(1, 1);
+            m.scale(1 / scaleX, 1 / scaleY);
+            const newscale = m.inverseRef(_newscale.x, _newscale.y);
+
+            const newscaleX = newscale.x;
+            const newscaleY = newscale.y;
+            // const newscale = m.inverseRef(scaleX, scaleY);
             const cFrame = c.frame;
             const cX = cFrame.x * scaleX;
             const cY = cFrame.y * scaleY;
-            const cW = cFrame.width * newscale.x;
-            const cH = cFrame.height * newscale.y;
+            const cW = cFrame.width * newscaleX;
+            const cH = cFrame.height * newscaleY;
 
             // constrain position
             const f = fixConstrainFrame(c, cX, cY, cW, cH, symbolFrame, containerFrame);

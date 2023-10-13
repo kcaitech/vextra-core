@@ -75,7 +75,10 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
             else if (rotate) {
                 const m = new Matrix();
                 m.rotate(rotate / 360 * 2 * Math.PI);
-                const newscale = m.inverseRef(scaleX, scaleY);
+                m.scale(scaleX, scaleY);
+                const _newscale = m.computeRef(1, 1);
+                m.scale(1 / scaleX, 1 / scaleY);
+                const newscale = m.inverseRef(_newscale.x, _newscale.y);
                 x *= scaleX;
                 y *= scaleY;
 

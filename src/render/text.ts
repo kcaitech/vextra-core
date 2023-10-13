@@ -230,7 +230,9 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     let vflip = !!shape.isFlippedVertical;
     let frame = _frame;
 
-    let notTrans = isNoTransform(transform);
+    const noUpperTrans = isNoTransform(transform);
+
+    let notTrans = noUpperTrans;
     let path0: Path;
     if (!notTrans && transform) {
         x += transform.dx;
@@ -260,8 +262,11 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
 
                 else if (rotate) {
                     const m = new Matrix();
-                    m.rotate(rotate / 360 * 2 * Math.PI);
-                    const newscale = m.inverseRef(scaleX, scaleY);
+                m.rotate(rotate / 360 * 2 * Math.PI);
+                m.scale(scaleX, scaleY);
+                const _newscale = m.computeRef(1, 1);
+                m.scale(1 / scaleX, 1 / scaleY);
+                const newscale = m.inverseRef(_newscale.x, _newscale.y);
                     x *= scaleX;
                     y *= scaleY;
 
@@ -304,9 +309,13 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
 
         else {
 
+            // todo
             const m = new Matrix();
             m.rotate(rotate / 360 * 2 * Math.PI);
-            const newscale = m.inverseRef(scaleX, scaleY);
+            m.scale(scaleX, scaleY);
+            const _newscale = m.computeRef(1, 1);
+            m.scale(1 / scaleX, 1 / scaleY);
+            const newscale = m.inverseRef(_newscale.x, _newscale.y);
             x *= scaleX;
             y *= scaleY;
             width *= newscale.x;
@@ -349,13 +358,13 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
                 else {
                     text = _var.value;
                 }
-
+                if (noUpperTrans) text.updateSize(frame.width, frame.height);
                 if (consumedVars) consumedVars.push({ slot: OverrideType.Text, vars: _vars })
             }
         }
     }
 
-    const layout = notTrans ? text.getLayout() : text.getLayout2(frame.width, frame.height);
+    const layout = noUpperTrans ? text.getLayout() : text.getLayout2(frame.width, frame.height);
     childs.push(...renderTextLayout(h, layout));
     // border
     childs.push(...borderR(h, shape.style.borders, frame, path));
