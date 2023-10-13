@@ -85,6 +85,23 @@ export class TextShapeEditor extends ShapeEditor {
         else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, shape);
     }
 
+    private shape4edit(api: Api) {
+        const _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
+            if (_var) {
+                if (_var.value instanceof Text) return importText(_var.value);
+                if (typeof _var.value === 'string') return createTextByString(_var.value, this.shape);
+            }
+            else {
+                return importText(this.shape.text);
+            }
+            throw new Error();
+        }, api)
+        if (_var && typeof _var.value === 'string') {
+            api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, this.shape));
+        }
+        return _var || this.__shape as TextShapeLike;
+    }
+
     public deleteText(index: number, count: number): number { // 清空后，在失去焦点时，删除shape
         if (index < 0) {
             count += index;
@@ -114,15 +131,16 @@ export class TextShapeEditor extends ShapeEditor {
         // 
         if (this.__shape.isVirtualShape) {
             // 当前text是个variable,或者需要先override
-            
+
         }
         attr = attr ?? this.__cachedSpanAttr;
         this.resetCachedSpanAttr();
         const api = this.__repo.start("insertText", {});
         let count = text.length; // 插入字符数
         try {
-            if (del > 0) api.deleteText(this.__page, this.shape, index, del);
-            api.insertSimpleText(this.__page, this.shape, index, text, attr);
+            const shape = this.shape4edit(api);
+            if (del > 0) api.deleteText(this.__page, shape, index, del);
+            api.insertSimpleText(this.__page, shape, index, text, attr);
             this.fixFrameByLayout(api);
             this.__repo.commit();
         } catch (error) {
@@ -139,8 +157,9 @@ export class TextShapeEditor extends ShapeEditor {
                 if (!span0 || !span0.placeholder) {
                     const api = this.__repo.start("auto bullet", {});
                     try {
-                        api.deleteText(this.__page, this.shape, index - 1, 2); // 删除*+空格
-                        api.textModifyBulletNumbers(this.__page, this.shape, BulletNumbersType.Disorded, index - 1, 0);
+                        const shape = this.shape4edit(api);
+                        api.deleteText(this.__page, shape, index - 1, 2); // 删除*+空格
+                        api.textModifyBulletNumbers(this.__page, shape, BulletNumbersType.Disorded, index - 1, 0);
                         this.fixFrameByLayout(api);
                         this.__repo.commit();
                         count = 0;
@@ -158,10 +177,11 @@ export class TextShapeEditor extends ShapeEditor {
 
                     const api = this.__repo.start("auto number", {});
                     try {
+                        const shape = this.shape4edit(api);
                         const paraStartIndex = index - paraInfo.index;
                         if (paraStartIndex !== index - numStr.length - 1) throw new Error("wrong??")
-                        api.deleteText(this.__page, this.shape, index - numStr.length - 1, numStr.length + 2); // 删除数字+.+空格
-                        api.textModifyBulletNumbers(this.__page, this.shape, BulletNumbersType.Ordered1Ai, index - numStr.length - 1, 0);
+                        api.deleteText(this.__page, shape, index - numStr.length - 1, numStr.length + 2); // 删除数字+.+空格
+                        api.textModifyBulletNumbers(this.__page, shape, BulletNumbersType.Ordered1Ai, index - numStr.length - 1, 0);
                         // 找到最近一个有序编号
                         const paras = this.shape.text.paras;
                         const paraIndex = paraInfo.paraIndex;
@@ -196,8 +216,8 @@ export class TextShapeEditor extends ShapeEditor {
                         }
                         if (numInt !== curIdx + 1) {
                             const bnIndex = index - paraInfo.index;
-                            api.textModifyBulletNumbersInherit(this.__page, this.shape, false, bnIndex, 1);
-                            api.textModifyBulletNumbersStart(this.__page, this.shape, numInt - 1, bnIndex, 1);
+                            api.textModifyBulletNumbersInherit(this.__page, shape, false, bnIndex, 1);
+                            api.textModifyBulletNumbersStart(this.__page, shape, numInt - 1, bnIndex, 1);
                         }
                         this.fixFrameByLayout(api);
                         this.__repo.commit();
@@ -219,8 +239,9 @@ export class TextShapeEditor extends ShapeEditor {
         const text = '\n';
         const api = this.__repo.start("insertTextForNewLine", {});
         try {
+            const shape = this.shape4edit(api);
             let count = text.length;
-            if (del > 0) api.deleteText(this.__page, this.shape, index, del);
+            if (del > 0) api.deleteText(this.__page, shape, index, del);
             for (; ;) {
                 const paraInfo = this.shape.text.paraAt(index);
                 if (!paraInfo) {
@@ -242,21 +263,21 @@ export class TextShapeEditor extends ShapeEditor {
                     }
                     else if (paraText === '*\n' && span0.placeholder && span0.length === 1 && span0.bulletNumbers) {
                         // api.deleteText(this.__page, this.shape, index - 1, 1);
-                        api.textModifyBulletNumbers(this.__page, this.shape, undefined, index, 0);
+                        api.textModifyBulletNumbers(this.__page, shape, undefined, index, 0);
                         count = -1;
                         break;
                     }
                 }
 
                 // 非空行回车
-                api.insertSimpleText(this.__page, this.shape, index, text, attr);
+                api.insertSimpleText(this.__page, shape, index, text, attr);
                 // 新增段落
                 if ((!attr || !attr.bulletNumbers) &&
                     span0.placeholder &&
                     span0.length === 1 &&
                     span0.bulletNumbers &&
                     span0.bulletNumbers.type !== BulletNumbersType.None) {
-                    api.textModifyBulletNumbers(this.__page, this.shape, span0.bulletNumbers.type, index, text.length + 1);
+                    api.textModifyBulletNumbers(this.__page, shape, span0.bulletNumbers.type, index, text.length + 1);
                     // if (span0.kerning) api.textModifyKerning()
                     count++;
                 }
@@ -275,8 +296,9 @@ export class TextShapeEditor extends ShapeEditor {
     public insertFormatText(text: Text, index: number, del: number): boolean {
         const api = this.__repo.start("insertText", {});
         try {
-            if (del > 0) api.deleteText(this.__page, this.shape, index, del);
-            api.insertComplexText(this.__page, this.shape, index, text);
+            const shape = this.shape4edit(api);
+            if (del > 0) api.deleteText(this.__page, shape, index, del);
+            api.insertComplexText(this.__page, shape, index, text);
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -296,16 +318,17 @@ export class TextShapeEditor extends ShapeEditor {
         this.__composingIndex = index;
         this.__composingDel = del;
         this.__composingAttr = attr;
-
         const api = this.__repo.start("composingInput", {});
-        if (del > 0) api.deleteText(this.__page, this.shape, index, del);
+        const shape = this.shape4edit(api);
+        if (del > 0) api.deleteText(this.__page, shape, index, del);
     }
     public composingInputUpdate(text: string): boolean {
         this.__repo.rollback("composingInput");
         const api = this.__repo.start("composingInput", {});
-        if (this.__composingDel > 0) api.deleteText(this.__page, this.shape, this.__composingIndex, this.__composingDel);
-        if (text.length > 0) api.insertSimpleText(this.__page, this.shape, this.__composingIndex, text, this.__composingAttr);
-        else this.shape.text.composingInputUpdate(this.__composingIndex);
+        const shape = this.shape4edit(api);
+        if (this.__composingDel > 0) api.deleteText(this.__page, shape, this.__composingIndex, this.__composingDel);
+        if (text.length > 0) api.insertSimpleText(this.__page, shape, this.__composingIndex, text, this.__composingAttr);
+        else (shape instanceof Shape ? shape.text : shape.value as Text).composingInputUpdate(this.__composingIndex);
         this.fixFrameByLayout(api);
         this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
         return true;
@@ -329,7 +352,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         const api = this.__repo.start("setTextColor", {});
         try {
-            api.textModifyColor(this.__page, this.shape, index, len, color)
+            const shape = this.shape4edit(api);
+            api.textModifyColor(this.__page, shape, index, len, color)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -338,12 +362,14 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+
     public setTextColorMulti(shapes: Shape[], color: Color | undefined) {
         const api = this.__repo.start("setTextColorMulti", {});
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
                 if (text_shape.type !== ShapeType.Text) continue;
+
                 const text_length = text_shape.text.length;
                 if (text_length === 0) continue;
                 api.textModifyColor(this.__page, text_shape, 0, text_length, color);
@@ -365,7 +391,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         const api = this.__repo.start("setTextHighlightColor", {});
         try {
-            api.textModifyHighlightColor(this.__page, this.shape, index, len, color)
+            const shape = this.shape4edit(api);
+            api.textModifyHighlightColor(this.__page, shape, index, len, color)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -374,6 +401,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+
     public setTextHighlightColorMulti(shapes: Shape[], color: Color | undefined) {
         const api = this.__repo.start("setTextHighlightColorMulti", {});
         try {
@@ -401,7 +429,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         const api = this.__repo.start("setTextFontName", {});
         try {
-            api.textModifyFontName(this.__page, this.shape, index, len, fontName)
+            const shape = this.shape4edit(api);
+            api.textModifyFontName(this.__page, shape, index, len, fontName)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -437,9 +466,11 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.fontSizeIsSet = true;
             return;
         }
+
         const api = this.__repo.start("setTextFontSize", {});
         try {
-            api.textModifyFontSize(this.__page, this.shape, index, len, fontSize)
+            const shape = this.shape4edit(api);
+            api.textModifyFontSize(this.__page, shape, index, len, fontSize)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -449,6 +480,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+
     public setTextFontSizeMulti(shapes: Shape[], fontSize: number) {
         const api = this.__repo.start("setTextFontSizeMulti", {});
         try {
@@ -471,7 +503,9 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextBehaviour(textBehaviour: TextBehaviour) {
         const api = this.__repo.start("setTextBehaviour", {});
         try {
-            api.shapeModifyTextBehaviour(this.__page, this.shape, textBehaviour)
+            const shape = this.shape4edit(api);
+            const text = shape instanceof Shape ? shape.text : shape.value as Text;
+            api.shapeModifyTextBehaviour(this.__page, text, textBehaviour)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -489,7 +523,7 @@ export class TextShapeEditor extends ShapeEditor {
                 if (text_shape.type !== ShapeType.Text) continue;
                 const text_length = text_shape.text.length;
                 if (text_length === 0) continue;
-                api.shapeModifyTextBehaviour(this.__page, text_shape, textBehaviour);
+                api.shapeModifyTextBehaviour(this.__page, text_shape.text, textBehaviour);
                 this.fixFrameByLayout2(api, text_shape);
             }
             this.__repo.commit();
@@ -504,6 +538,7 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextVerAlign(verAlign: TextVerAlign) {
         const api = this.__repo.start("setTextVerAlign", {});
         try {
+            const shape = this.shape4edit(api);
             api.shapeModifyTextVerAlign(this.__page, this.shape, verAlign)
             this.__repo.commit();
             return true;
@@ -532,22 +567,10 @@ export class TextShapeEditor extends ShapeEditor {
 
     // 段属性
     public setTextHorAlign(horAlign: TextHorAlign, index: number, len: number) {
-
-        // todo
-        const _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
-            if (_var) {
-                if (_var.value instanceof Text) return importText(_var.value);
-                if (typeof _var.value === 'string') return createTextByString(_var.value, this.shape);
-                throw new Error();
-            }
-        })
-
         const api = this.__repo.start("setTextHorAlign", {});
         try {
-            if (_var && typeof _var.value === 'string')  { // todo 是否会有协作的问题？
-                api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, this.shape));
-            }
-            api.textModifyHorAlign(this.__page, _var || this.shape, horAlign, index, len)
+            const shape = this.shape4edit(api);
+            api.textModifyHorAlign(this.__page, shape, horAlign, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -579,7 +602,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setMinLineHeight(minLineHeight: number, index: number, len: number) {
         const api = this.__repo.start("setMinLineHeight", {});
         try {
-            api.textModifyMinLineHeight(this.__page, this.shape, minLineHeight, index, len)
+            const shape = this.shape4edit(api);
+            api.textModifyMinLineHeight(this.__page, shape, minLineHeight, index, len)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -594,7 +618,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setMaxLineHeight(maxLineHeight: number, index: number, len: number) {
         const api = this.__repo.start("setMaxLineHeight", {});
         try {
-            api.textModifyMaxLineHeight(this.__page, this.shape, maxLineHeight, index, len)
+            const shape = this.shape4edit(api);
+            api.textModifyMaxLineHeight(this.__page, shape, maxLineHeight, index, len)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -607,8 +632,9 @@ export class TextShapeEditor extends ShapeEditor {
     public setLineHeight(lineHeight: number, index: number, len: number) {
         const api = this.__repo.start("setLineHeight", {});
         try {
-            api.textModifyMinLineHeight(this.__page, this.shape, lineHeight, index, len)
-            api.textModifyMaxLineHeight(this.__page, this.shape, lineHeight, index, len)
+            const shape = this.shape4edit(api);
+            api.textModifyMinLineHeight(this.__page, shape, lineHeight, index, len)
+            api.textModifyMaxLineHeight(this.__page, shape, lineHeight, index, len)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -648,7 +674,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         const api = this.__repo.start("setCharSpace", {});
         try {
-            api.textModifyKerning(this.__page, this.shape, kerning, index, len)
+            const shape = this.shape4edit(api);
+            api.textModifyKerning(this.__page, shape, kerning, index, len)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -680,7 +707,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setParaSpacing(paraSpacing: number, index: number, len: number) {
         const api = this.__repo.start("setParaSpacing", {});
         try {
-            api.textModifyParaSpacing(this.__page, this.shape, paraSpacing, index, len)
+            const shape = this.shape4edit(api);
+            api.textModifyParaSpacing(this.__page, shape, paraSpacing, index, len)
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -718,7 +746,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         const api = this.__repo.start("setTextUnderline", {});
         try {
-            api.textModifyUnderline(this.__page, this.shape, underline ? UnderlineType.Single : undefined, index, len)
+            const shape = this.shape4edit(api);
+            api.textModifyUnderline(this.__page, shape, underline ? UnderlineType.Single : undefined, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -727,6 +756,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+
     /**
      * @description 多选文字对象时，给每个文字对象的全部文字设置下划线
      */
@@ -758,7 +788,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         const api = this.__repo.start("setTextStrikethrough", {});
         try {
-            api.textModifyStrikethrough(this.__page, this.shape, strikethrough ? StrikethroughType.Single : undefined, index, len)
+            const shape = this.shape4edit(api);
+            api.textModifyStrikethrough(this.__page, shape, strikethrough ? StrikethroughType.Single : undefined, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -767,6 +798,7 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
+
     public setTextStrikethroughMulti(shapes: Shape[], strikethrough: boolean) {
         const api = this.__repo.start("setTextStrikethroughMulti", {});
         try {
@@ -795,7 +827,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         const api = this.__repo.start("setTextBold", {});
         try {
-            api.textModifyBold(this.__page, this.shape, bold, index, len)
+            const shape = this.shape4edit(api);
+            api.textModifyBold(this.__page, shape, bold, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -852,7 +885,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         const api = this.__repo.start("setTextItalic", {});
         try {
-            api.textModifyItalic(this.__page, this.shape, italic, index, len)
+            const shape = this.shape4edit(api);
+            api.textModifyItalic(this.__page, shape, italic, index, len)
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -887,7 +921,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextBulletNumbers(type: BulletNumbersType, index: number, len: number) {
         const api = this.__repo.start("setTextBulletNumbers", {});
         try {
-            api.textModifyBulletNumbers(this.__page, this.shape, type, index, len);
+            const shape = this.shape4edit(api);
+            api.textModifyBulletNumbers(this.__page, shape, type, index, len);
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -920,7 +955,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextBulletNumbersStart(start: number, index: number, len: number) {
         const api = this.__repo.start("setTextBulletNumbersStart", {});
         try {
-            api.textModifyBulletNumbersStart(this.__page, this.shape, start, index, len);
+            const shape = this.shape4edit(api);
+            api.textModifyBulletNumbersStart(this.__page, shape, start, index, len);
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -934,7 +970,8 @@ export class TextShapeEditor extends ShapeEditor {
     public setTextBulletNumbersInherit(inherit: boolean, index: number, len: number) {
         const api = this.__repo.start("setTextBulletNumbersInherit", {});
         try {
-            api.textModifyBulletNumbersInherit(this.__page, this.shape, inherit, index, len);
+            const shape = this.shape4edit(api);
+            api.textModifyBulletNumbersInherit(this.__page, shape, inherit, index, len);
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -954,7 +991,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         const api = this.__repo.start("setTextTransform", {});
         try {
-            api.textModifyTransform(this.__page, this.shape, transform, index, len);
+            const shape = this.shape4edit(api);
+            api.textModifyTransform(this.__page, shape, transform, index, len);
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
@@ -988,14 +1026,15 @@ export class TextShapeEditor extends ShapeEditor {
     public offsetParaIndent(offset: number, index: number, len: number) {
         const api = this.__repo.start("offsetParaIndent", {});
         try {
-
-            _travelTextPara(this.shape.text.paras, index, len || 1, (paraArray, paraIndex, para, _index, length) => {
+            const shape = this.shape4edit(api);
+            const text = (shape instanceof Shape) ? shape.text : shape.value as Text;
+            _travelTextPara(text.paras, index, len || 1, (paraArray, paraIndex, para, _index, length) => {
                 index -= _index;
 
                 const cur = para.attr?.indent || 0;
                 const tar = Math.max(0, cur + offset);
                 if (cur !== tar) {
-                    api.textModifyParaIndent(this.__page, this.shape, tar ? tar : undefined, index, para.length)
+                    api.textModifyParaIndent(this.__page, shape, tar ? tar : undefined, index, para.length)
                 }
 
                 index += para.length;

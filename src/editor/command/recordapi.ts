@@ -56,7 +56,7 @@ function genShapeId(shape: Shape | Variable): Array<string | TableIndex> {
         if (typeof v === 'string') return v;
         return new TableIndex(v.rowIdx, v.colIdx);
     });
-    if (shape !== _shape) shapeId.push(shape.id); // varid
+    if (shape instanceof Variable) shapeId.push("varid:" + shape.id); // varid
     return shapeId;
 }
 
@@ -848,12 +848,14 @@ export class Api {
         })
     }
 
-    shapeModifyTextBehaviour(page: Page, shape: TextShapeLike, textBehaviour: TextBehaviour) {
-        checkShapeAtPage(page, shape);
+    shapeModifyTextBehaviour(page: Page, _text: Text, textBehaviour: TextBehaviour) {
+        checkShapeAtPage(page, _text.parent as Shape);
         this.__trap(() => {
-            const ret = basicapi.shapeModifyTextBehaviour(page, shape, textBehaviour);
+            // const _text = shape instanceof Shape ? shape.text : shape.value;
+            if (!_text || !(_text instanceof Text)) throw Error();
+            const ret = basicapi.shapeModifyTextBehaviour(page, _text, textBehaviour);
             if (ret !== textBehaviour) {
-                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.textBehaviour, textBehaviour, ret));
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(_text.parent as Shape), SHAPE_ATTR_ID.textBehaviour, textBehaviour, ret));
             }
         })
     }

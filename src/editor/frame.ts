@@ -20,7 +20,7 @@ export interface Api {
     shapeModifyRotate(page: Page, shape: Shape, rotate: number): void;
     shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined): void;
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined): void;
-    shapeModifyTextBehaviour(page: Page, shape: TextShapeLike, textBehaviour: TextBehaviour): void;
+    shapeModifyTextBehaviour(page: Page, shapetext: Text, textBehaviour: TextBehaviour): void;
     shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
     shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
     shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D): void;
@@ -330,12 +330,12 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
             const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
             if (h !== frame.height) {
                 if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
-                    api.shapeModifyTextBehaviour(page, shape, TextBehaviour.FixWidthAndHeight);
+                    api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
                 }
             }
             else {
                 if (textBehaviour === TextBehaviour.Flexible) {
-                    api.shapeModifyTextBehaviour(page, shape, TextBehaviour.Fixed);
+                    api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
                 }
             }
             api.shapeModifyWH(page, shape, w, h)

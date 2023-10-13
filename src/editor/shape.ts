@@ -169,7 +169,7 @@ export class ShapeEditor {
 
     // check and override
     // 适合text这种，value的修改非原子操作的情况
-    overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any) {
+    overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api) {
         const shape = this.__shape;
         // symbol shape
         if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {
@@ -234,12 +234,12 @@ export class ShapeEditor {
         if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
 
         // add override add variable
-        const api = this.__repo.start('addOverrid', {});
+        // const api = this.__repo.start('addOverrid', {});
         const _var2 = new Variable(uuid(), varType, "");
         _var2.value = valuefun(undefined);
         api.shapeAddVariable(this.__page, symRef, _var2);
         api.shapeAddOverride(this.__page, symRef, override_id, overrideType, _var2.id);
-        this.__repo.commit();
+        // this.__repo.commit();
 
         return symRef.getVar(_var2.id)!;
     }

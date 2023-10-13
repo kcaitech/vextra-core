@@ -54,7 +54,8 @@ import {
     TextTransformType,
     BulletNumbersBehavior,
     Text,
-    TableShape
+    TableShape,
+    Variable
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -269,7 +270,8 @@ export class CMDExecuter {
         if (!page) return;
         const op = cmd.ops[0]
         if (op.type !== OpType.ArrayInsert) return;
-        const shape = page.getTarget(op.targetId);
+        const shape: Shape | Variable | undefined = page.getTarget(op.targetId);
+        if (!shape) throw new Error("not find target:" + op.targetId);
 
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
@@ -298,7 +300,7 @@ export class CMDExecuter {
         const op = cmd.ops[0]
         if (op.type !== OpType.ArrayRemove) return;
         const shape = page.getTarget(op.targetId);
-
+        if (!shape) throw new Error("not find target:" + op.targetId);
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             api.deleteFillAt(shape.style.fills, (op as ArrayOpRemove).start)
@@ -324,6 +326,11 @@ export class CMDExecuter {
             return;
         }
         const shape = page.getTarget(_op.targetId);
+        if (!shape) throw new Error("not find target:" + _op.targetId);
+
+        if (!(shape instanceof Shape)) {
+            throw new Error();
+        }
 
         const op = _op as IdOpSet;
         const arrayAttr = cmd.arrayAttr;
@@ -501,7 +508,7 @@ export class CMDExecuter {
         const op0 = cmd.ops[0]
         const op1 = cmd.ops[1]
         const shape = page.getTarget(op0.targetId);
-
+        if (!shape) throw new Error("not find target:" + op0.targetId);
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
@@ -531,7 +538,7 @@ export class CMDExecuter {
 
         const op = _op as ArrayOpInsert;
         const text = cmd.parseText();
-        const shapetext = (shape as TextShapeLike).text;
+        const shapetext = (shape instanceof Shape) ? shape.text : shape?.value;
         if (!(shapetext instanceof Text)) {
             throw new Error("shape type wrong, has no text: " + shapetext)
         }
@@ -556,7 +563,7 @@ export class CMDExecuter {
         const shape = page.getTarget(_op.targetId);
 
         const op = _op as ArrayOpRemove;
-        const shapetext = (shape as TextShapeLike).text;
+        const shapetext = (shape instanceof Shape) ? shape.text : shape?.value;
         if (!(shapetext instanceof Text)) {
             throw new Error("shape type wrong")
         }
@@ -574,7 +581,7 @@ export class CMDExecuter {
         const op = _op as ArrayOpAttr;
         const attrId = cmd.attrId
         const value = cmd.value;
-        const shapetext = (shape as TextShapeLike).text;
+        const shapetext = (shape instanceof Shape) ? shape.text : shape?.value;
         if (!(shapetext instanceof Text)) {
             throw new Error("shape type wrong")
         }

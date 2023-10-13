@@ -140,8 +140,9 @@ export function shapeModifyEditedState(shape: Shape, state: boolean) {
 export function shapeModifyName(shape: Shape, name: string) {
     shape.name = name;
 }
-export function shapeModifyVisible(shape: Shape, isVisible: boolean) {
-    shape.setVisible(isVisible);
+export function shapeModifyVisible(shape: Shape | Variable, isVisible: boolean) {
+    if (shape instanceof Shape) shape.setVisible(isVisible);
+    else shape.value = isVisible;
 }
 export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     shape.isLocked = isLocked;
@@ -234,8 +235,8 @@ export function shapeModifyTextFontSize(shapetext: Text, fontSize: number) {
     text.setDefaultFontSize(fontSize);
     return origin;
 }
-export function shapeModifyTextBehaviour(page: Page, shape: TextShapeLike, textBehaviour: TextBehaviour) {
-    const text = shape.text;
+export function shapeModifyTextBehaviour(page: Page, shapetext: Text, textBehaviour: TextBehaviour) {
+    const text = shapetext;
     if (textBehaviour === TextBehaviour.Flexible) {
         // default
         if (!text.attr || !text.attr.textBehaviour || text.attr.textBehaviour === TextBehaviour.Flexible) return TextBehaviour.Flexible;
