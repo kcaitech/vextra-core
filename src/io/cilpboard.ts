@@ -1,10 +1,36 @@
-import { GroupShape, Shape, ShapeType, TextShape } from "../data/shape";
-import { exportArtboard, exportRectShape, exportOvalShape, exportImageShape, exportLineShape, exportTextShape, exportPathShape, exportGroupShape, exportText, exportTableShape } from "./baseexport";
-import { importRectShape, importOvalShape, importImageShape, IImportContext, importLineShape, importTextShape, importPathShape, importGroupShape, importText, importArtboard, importTableShape } from "./baseimport";
+import {GroupShape, Shape, ShapeType, TextShape} from "../data/shape";
+import {
+    exportArtboard,
+    exportRectShape,
+    exportOvalShape,
+    exportImageShape,
+    exportLineShape,
+    exportTextShape,
+    exportPathShape,
+    exportGroupShape,
+    exportText,
+    exportTableShape
+} from "./baseexport";
+import {
+    importRectShape,
+    importOvalShape,
+    importImageShape,
+    IImportContext,
+    importLineShape,
+    importTextShape,
+    importPathShape,
+    importGroupShape,
+    importText,
+    importArtboard,
+    importTableShape
+} from "./baseimport";
 import * as types from "../data/typesdefine";
-import { v4 } from "uuid";
-import { Document } from "../data/document";
-import { newTextShape, newTextShapeByText } from "../editor/creator";
+import {v4} from "uuid";
+import {Document} from "../data/document";
+import {newTextShape, newTextShapeByText} from "../editor/creator";
+import {Api} from "../editor/command/recordapi";
+import {translate, translateTo} from "../editor/frame";
+import {Page} from "../data/page";
 
 function set_childs_id(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
@@ -50,7 +76,9 @@ export function export_shape(shapes: Shape[]) {
 
 // 从剪切板导入图形
 export function import_shape(document: Document, source: types.Shape[]) {
-    const ctx: IImportContext = new class implements IImportContext { document: Document = document };
+    const ctx: IImportContext = new class implements IImportContext {
+        document: Document = document
+    };
     // const ctx = new class implements IImportContext {
     //     afterImport(obj: any): void {
     //         if (obj instanceof ImageShape || obj instanceof Fill || obj instanceof TableCell) {
@@ -107,27 +135,30 @@ export function import_shape(document: Document, source: types.Shape[]) {
     }
     return result;
 }
+
 /**
  * 生成对象副本
  * @param src 原对象
- * @returns 
+ * @returns
  */
 export function transform_data(document: Document, src: Shape[]): Shape[] {
     return import_shape(document, export_shape(src));
 }
+
 /**
  * @description 导出段落
- * @param text 
- * @returns 
+ * @param text
+ * @returns
  */
 export function export_text(text: types.Text): types.Text {
     return exportText(text);
 }
+
 /**
  * @description 导入段落
- * @param text 
+ * @param text
  * @param { boolean } gen 直接生成一个文字图层，否则返回整理之后的text副本
- * @returns 
+ * @returns
  */
 export function import_text(document: Document, text: types.Text, gen?: boolean): types.Text | TextShape {
     if (gen) {
@@ -137,9 +168,10 @@ export function import_text(document: Document, text: types.Text, gen?: boolean)
     }
     return importText(text);
 }
+
 /**
  * @description 段落整理
- * @param text 
+ * @param text
  * @param { boolean } gen 直接生成一个文字图层，否则返回整理之后的text副本
  */
 export function trasnform_text(document: Document, text: types.Text, gen?: boolean): TextShape | types.Text {
@@ -149,4 +181,11 @@ export function trasnform_text(document: Document, text: types.Text, gen?: boole
         return newTextShape(name)
     }
     return _text;
+}
+
+export function after_shapes_add_to_doc(api: Api, page: Page, shapes: Shape[]) {
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const shape = shapes[i];
+        translateTo(api, page, shape, shape.frame.x, shape.frame.y);
+    }
 }
