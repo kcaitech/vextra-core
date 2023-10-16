@@ -994,9 +994,6 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                     if (val.typeId == 'rect-shape') {
                         return exportRectShape(val as types.RectShape, ctx)
                     }
-                    if (val.typeId == 'symbol-ref-shape') {
-                        return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
-                    }
                     if (val.typeId == 'text-shape') {
                         return exportTextShape(val as types.TextShape, ctx)
                     }
@@ -1009,14 +1006,14 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                     if (val.typeId == 'artboard') {
                         return exportArtboard(val as types.Artboard, ctx)
                     }
+                    if (val.typeId == 'contact-shape') {
+                        return exportContactShape(val as types.ContactShape, ctx)
+                    }
                     if (val.typeId == 'symbol-shape') {
                         return exportSymbolShape(val as types.SymbolShape, ctx)
                     }
-                    if (val.typeId == 'line-shape') {
-                        return exportLineShape(val as types.LineShape, ctx)
-                    }
-                    if (val.typeId == 'oval-shape') {
-                        return exportOvalShape(val as types.OvalShape, ctx)
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
                         return exportTableShape(val as types.TableShape, ctx)
@@ -1200,6 +1197,9 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (val.typeId == 'symbol-ref-shape') {
                         return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
+                    if (val.typeId == 'symbol-shape') {
+                        return exportSymbolShape(val as types.SymbolShape, ctx)
+                    }
                     if (val.typeId == 'text-shape') {
                         return exportTextShape(val as types.TextShape, ctx)
                     }
@@ -1214,6 +1214,9 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     }
                     if (val.typeId == 'table-shape') {
                         return exportTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'contact-shape') {
+                        return exportContactShape(val as types.ContactShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1266,6 +1269,9 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
+                        if (val.typeId == 'symbol-shape') {
+                            return exportSymbolShape(val as types.SymbolShape, ctx)
+                        }
                         if (val.typeId == 'text-shape') {
                             return exportTextShape(val as types.TextShape, ctx)
                         }
@@ -1280,6 +1286,9 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         }
                         if (val.typeId == 'table-shape') {
                             return exportTableShape(val as types.TableShape, ctx)
+                        }
+                        if (val.typeId == 'contact-shape') {
+                            return exportContactShape(val as types.ContactShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -1349,6 +1358,9 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
+                        if (val.typeId == 'symbol-shape') {
+                            return exportSymbolShape(val as types.SymbolShape, ctx)
+                        }
                         if (val.typeId == 'text-shape') {
                             return exportTextShape(val as types.TextShape, ctx)
                         }
@@ -1363,6 +1375,9 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         }
                         if (val.typeId == 'table-shape') {
                             return exportTableShape(val as types.TableShape, ctx)
+                        }
+                        if (val.typeId == 'contact-shape') {
+                            return exportContactShape(val as types.ContactShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -1472,6 +1487,9 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
+                        if (val.typeId == 'symbol-shape') {
+                            return exportSymbolShape(val as types.SymbolShape, ctx)
+                        }
                         if (val.typeId == 'text-shape') {
                             return exportTextShape(val as types.TextShape, ctx)
                         }
@@ -1486,6 +1504,9 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         }
                         if (val.typeId == 'table-shape') {
                             return exportTableShape(val as types.TableShape, ctx)
+                        }
+                        if (val.typeId == 'contact-shape') {
+                            return exportContactShape(val as types.ContactShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
