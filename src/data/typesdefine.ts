@@ -551,7 +551,7 @@ export type TextAttr = ParaAttr & {
 }
 /* page */
 export type Page = Shape & {
-    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | OvalShape | LineShape | Artboard | SymbolShape | LineShape | OvalShape | TableShape)[]
+    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolShape | SymbolRefShape | TableShape)[]
 }
 /* oval shape */
 export type OvalShape = PathShape & {
@@ -566,7 +566,7 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | TextShape | Artboard | LineShape | OvalShape | TableShape)[]
+    childs: (GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape)[]
     isBoolOpShape?: boolean
     fixedRadius?: number
 }

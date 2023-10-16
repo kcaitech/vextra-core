@@ -28,6 +28,9 @@
                         "$ref": "./symbol-ref-shape.json"
                     },
                     {
+                        "$ref": "./symbol-shape.json"
+                    },
+                    {
                         "$ref": "./text-shape.json"
                     },
                     {
@@ -41,6 +44,9 @@
                     },
                     {
                         "$ref": "./table-shape.json"
+                    },
+                    {
+                        "$ref": "./contact-shape.json"
                     }
                 ]
             }
