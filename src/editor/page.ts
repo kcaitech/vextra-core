@@ -10,7 +10,7 @@ import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
-import { transform_data } from "../io/cilpboard";
+import {after_shapes_add_to_doc, transform_data} from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
@@ -505,22 +505,23 @@ export class PageEditor {
         }
     }
     /**
-     * @description 同一容器下批量插入shape
-     * @param shapes 未进入文档的shape 
+     * @description 同一容器下批量粘贴shape
+     * @param shapes 未进入文档的shape
+     * @param adjusted 是否提前调整过相对位置
      */
-    insertShapes1(parent: GroupShape, shapes: Shape[], adjusted = false): Shape[] | false {
+    pasteShapes1(parent: GroupShape, shapes: Shape[]): Shape[] | false {
         const api = this.__repo.start("insertShapes1", {});
         try {
-            const p_xy = parent.matrix2Root().computeCoord2(0, 0), result: Shape[] = [];
+            const result: Shape[] = [];
             let index = parent.childs.length;
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
                 shape.id = uuid();
-                if (!adjusted) shape.frame.x -= p_xy.x, shape.frame.y -= p_xy.y;
                 api.shapeInsert(this.__page, parent, shape, index);
                 result.push(parent.childs[index]);
                 index++;
             }
+            after_shapes_add_to_doc(api, this.__page, result);
             this.__repo.commit();
             return result;
         } catch (e) {
@@ -530,11 +531,11 @@ export class PageEditor {
         }
     }
     /**
-     * @description 指定容器插入shape
+     * @description 指定容器下粘贴shape
      * @param shapes 未进入文档的shape
      * @param actions.index 插入位置
      */
-    insertShapes2(shapes: Shape[], actions: { parent: GroupShape, index: number }[]): Shape[] | false {
+    pasteShapes2(shapes: Shape[], actions: { parent: GroupShape, index: number }[]): Shape[] | false {
         const api = this.__repo.start("insertShapes2", {});
         try {
             const result: Shape[] = [];
