@@ -134,9 +134,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     peekSymbol(startLoad: boolean = false): SymbolShape | undefined {
         const ret = this.__data;
         if (ret) return ret;
-        if (startLoad && !this.__startLoad) {
+        if (startLoad && !this.__startLoad && this.__symMgr) {
             this.__startLoad = true;
-            this.__symMgr && this.__symMgr.get(this.refId).then((val) => {
+            this.__symMgr.get(this.refId).then((val) => {
                 if (!this.__data) {
                     this.__data = val;
                     if (val) this.notify();
