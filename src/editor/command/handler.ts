@@ -218,10 +218,10 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const _var = importVariable(JSON.parse(value));
-                        if (!_var.value) {
-                            console.log(_var)
-                            throw new Error();
-                        }
+                        // if (!_var.value) {
+                        //     console.log(_var)
+                        //     throw new Error();
+                        // }
                         shape.addVar(_var);
                     }
                 }
@@ -232,6 +232,16 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
                     if (value) {
                         const overrid = JSON.parse(value);
                         shape.addOverrid2(overrid.refId, overrid.attr, overrid.value);
+                    }
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.modifyvar,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        const _var = importVariable(JSON.parse(value));
+                        if (!(shape instanceof Variable)) throw new Error();
+                        api.shapeModifyVariable(page, shape as Variable, _var.value);
                     }
                 }
             }

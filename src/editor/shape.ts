@@ -35,20 +35,12 @@ export class ShapeEditor {
         this.__page = page;
     }
 
-    // 变量修改的情况
-    // 1. 修改变量值
-    //    是否可以直接修改 是则直接修改，否则先找到host对象，再override到新变量
-    // 2. override到另外一个变量
-    // override
-    //    绑定属性到某个值
-    //    绑定属性到某个变量
-    // 修改对象属性
-    // 1. 原子修改
-    //    判断是否bindvar, 如是则findVar, 后修改变量值
-    //    判断是否virtual, 如是则走override
-    // 2. 非原子修改
-    //    
-
+    /**
+     * 将当前shape的overridetype对应的属性，override到varid的变量
+     * @param varId 
+     * @param type 
+     * @param api 
+     */
     _override2Variable(varId: string, type: OverrideType, api: Api) {
 
         const shape: Shape = this.__shape;
@@ -77,9 +69,16 @@ export class ShapeEditor {
         // }
 
         api.shapeAddOverride(this.__page, sym, override_id, type, varId);
-
     }
 
+    /**
+     * 将变量_var override到值为value的新变量
+     * 变量_var可能来自symbolref(virtual)或者symbolshape
+     * @param _var 
+     * @param value 
+     * @param api 
+     * @returns 
+     */
     _overrideVariable(_var: Variable, value: any, api: Api) {
 
         const shape: Shape = this.__shape;
@@ -119,6 +118,12 @@ export class ShapeEditor {
         return sym.getVar(_var2.id)!;
     }
 
+    /**
+     * 修改_var的值为value，如果_var不可以修改，则override _var到value
+     * @param _var 
+     * @param value 
+     * @param api 
+     */
     modifyVariable2(_var: Variable, value: any, api: Api) {
         const p = varParent(_var);
         if (!p) throw new Error();
@@ -134,6 +139,9 @@ export class ShapeEditor {
         }
     }
 
+    /**
+     * 将变量fromVar override 到id为toVarId的变量
+     * */
     _overrideVariable2(fromVar: Variable, toVarId: string, api: Api) {
         const shape = this.__shape;
 
@@ -167,8 +175,17 @@ export class ShapeEditor {
         api.shapeAddOverride(this.__page, sym, override_id, OverrideType.Variable, toVarId);
     }
 
-    // check and override
-    // 适合text这种，value的修改非原子操作的情况
+    /**
+     * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「返回」var，否则先override再「返回」新的var
+     * 适合text这种，value的修改非原子操作的情况
+     * 
+     * @param varType 
+     * @param overrideType 
+     * @param valuefun 
+     * @param api 
+     * @param shape 
+     * @returns 
+     */
     overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, shape?: Shape) {
         shape = shape ?? this.__shape;
         // symbol shape
@@ -196,9 +213,9 @@ export class ShapeEditor {
 
                 if (p.isVirtualShape || p instanceof SymbolShape) {
                     // override variable
-                    const api = this.__repo.start('overrideVariable', {});
+                    // const api = this.__repo.start('overrideVariable', {});
                     const ret = this._overrideVariable(_var, valuefun(_var), api);
-                    this.__repo.commit();
+                    // this.__repo.commit();
                     return ret;
                 } else {
                     return _var;
@@ -218,9 +235,9 @@ export class ShapeEditor {
                 let p = varParent(_var); // 这里会有问题！如果p是symbolshape，往上追溯就错了。
                 if (!p) throw new Error();
                 if (p.isVirtualShape || p instanceof SymbolShape) {
-                    const api = this.__repo.start('overrideVariable', {});
+                    // const api = this.__repo.start('overrideVariable', {});
                     const ret = this._overrideVariable(_var, valuefun(_var), api);
-                    this.__repo.commit();
+                    // this.__repo.commit();
                     return ret;
                 } else {
                     return _var;
@@ -244,6 +261,13 @@ export class ShapeEditor {
         return symRef.getVar(_var2.id)!;
     }
 
+    /**
+     * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「修改」var，否则先override再「修改」新的var
+     * @param varType 
+     * @param overrideType 
+     * @param valuefun 
+     * @returns 
+     */
     modifyVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any): boolean {
         // const _var = this.overrideVariable(slot, varType, ov)
         const shape = this.__shape;
