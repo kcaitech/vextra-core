@@ -117,8 +117,7 @@ export function import_shape(document: Document, source: types.Shape[]) {
             } else if (type === ShapeType.Artboard) {
                 const childs = (_s as GroupShape).childs;
                 childs && childs.length && set_childs_id(childs);
-                importArtboard(_s as types.Artboard, ctx); // 此时已经进入文档
-                r = importArtboard(_s as types.Artboard);
+                r = importArtboard(_s as types.Artboard, ctx);
             } else if (type === ShapeType.Group) {
                 const childs = (_s as GroupShape).childs;
                 childs && childs.length && set_childs_id(childs);
