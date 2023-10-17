@@ -55,7 +55,9 @@ import {
     BulletNumbersBehavior,
     Text,
     TableShape,
-    Variable
+    Variable,
+    Fill,
+    Border
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -66,9 +68,6 @@ import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert
 import { importShape, updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { CMDHandler } from "./handler";
-
-type TextShapeLike = Shape & { text: Text }
-
 
 export class CMDExecuter {
     private __document: Document;
@@ -276,11 +275,13 @@ export class CMDExecuter {
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             const fill = importFill(JSON.parse(cmd.data))
-            api.addFillAt(shape.style.fills, fill, (op as ArrayOpInsert).start);
+            const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+            api.addFillAt(fills, fill, (op as ArrayOpInsert).start);
         }
         else if (arrayAttr === BORDER_ID) {
             const border = importBorder(JSON.parse(cmd.data))
-            api.addBorderAt(shape.style.borders, border, (op as ArrayOpInsert).start);
+            const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+            api.addBorderAt(borders, border, (op as ArrayOpInsert).start);
         }
         else if (arrayAttr === CONTACTS_ID) {
             const contact_role = importContactRole(JSON.parse(cmd.data));
@@ -303,10 +304,12 @@ export class CMDExecuter {
         if (!shape) throw new Error("not find target:" + op.targetId);
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
-            api.deleteFillAt(shape.style.fills, (op as ArrayOpRemove).start)
+            const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+            api.deleteFillAt(fills, (op as ArrayOpRemove).start)
         }
         else if (arrayAttr === BORDER_ID) {
-            api.deleteBorderAt(shape.style.borders, (op as ArrayOpRemove).start)
+            const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+            api.deleteBorderAt(borders, (op as ArrayOpRemove).start)
         }
         else if (arrayAttr === CONTACTS_ID) {
             api.removeContactRoleAt(shape.style, (op as ArrayOpRemove).start)
@@ -328,17 +331,17 @@ export class CMDExecuter {
         const shape = page.getTarget(_op.targetId);
         if (!shape) throw new Error("not find target:" + _op.targetId);
 
-        if (!(shape instanceof Shape)) {
-            throw new Error();
-        }
+        // if (!(shape instanceof Shape)) {
+        //     throw new Error();
+        // }
 
         const op = _op as IdOpSet;
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             const fillId = cmd.arrayAttrId;
             // find fill
-            const fills = shape.style.fills;
-            const fillIdx = fills.findIndex((fill) => fill.id === fillId);
+            const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+            const fillIdx = fills.findIndex((fill: Fill) => fill.id === fillId);
             if (fillIdx < 0) return;
             const fill = fills[fillIdx];
             const opId = op.opId;
@@ -360,8 +363,8 @@ export class CMDExecuter {
         else if (arrayAttr === BORDER_ID) {
             const borderId = cmd.arrayAttrId;
             // find fill
-            const borders = shape.style.borders;
-            const borderIdx = borders.findIndex((border) => border.id === borderId)
+            const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+            const borderIdx = borders.findIndex((border: Border) => border.id === borderId)
             if (borderIdx < 0) return;
             const border = borders[borderIdx];
             const opId = op.opId;
@@ -433,6 +436,35 @@ export class CMDExecuter {
             console.error("not implemented ", arrayAttr)
         }
     }
+    shapeArrAttrMove(cmd: ShapeArrayAttrMove) {
+        const page = this.__document.pagesMgr.getSync(cmd.blockId);
+        if (!page) return;
+        const op0 = cmd.ops[0]
+        const op1 = cmd.ops[1]
+        const shape = page.getTarget(op0.targetId);
+        if (!shape) throw new Error("not find target:" + op0.targetId);
+        const arrayAttr = cmd.arrayAttr;
+        if (arrayAttr === FILLS_ID) {
+            if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
+                const op0 = cmd.ops[0] as ArrayOpRemove
+                const op1 = cmd.ops[1] as ArrayOpInsert
+                const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+                api.moveFill(fills, op0.start, op1.start)
+            }
+        }
+        else if (arrayAttr === BORDER_ID) {
+            if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
+                const op0 = cmd.ops[0] as ArrayOpRemove
+                const op1 = cmd.ops[1] as ArrayOpInsert
+                const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+                api.moveBorder(borders, op0.start, op1.start)
+            }
+        }
+        else {
+            console.error("not implemented ", arrayAttr)
+        }
+    }
+
     tableInsert(cmd: TableCmdInsert) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
@@ -502,33 +534,7 @@ export class CMDExecuter {
             throw new Error("unknow table target " + op.opTarget)
         }
     }
-    shapeArrAttrMove(cmd: ShapeArrayAttrMove) {
-        const page = this.__document.pagesMgr.getSync(cmd.blockId);
-        if (!page) return;
-        const op0 = cmd.ops[0]
-        const op1 = cmd.ops[1]
-        const shape = page.getTarget(op0.targetId);
-        if (!shape) throw new Error("not find target:" + op0.targetId);
-        const arrayAttr = cmd.arrayAttr;
-        if (arrayAttr === FILLS_ID) {
-            if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
-                const op0 = cmd.ops[0] as ArrayOpRemove
-                const op1 = cmd.ops[1] as ArrayOpInsert
-                api.moveFill(shape.style.fills, op0.start, op1.start)
-            }
-        }
-        else if (arrayAttr === BORDER_ID) {
-            if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {
-                const op0 = cmd.ops[0] as ArrayOpRemove
-                const op1 = cmd.ops[1] as ArrayOpInsert
-                api.moveBorder(shape.style.borders, op0.start, op1.start)
-            }
-        }
-        else {
-            console.error("not implemented ", arrayAttr)
-        }
-    }
-
+    
     textInsert(cmd: TextCmdInsert) {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;

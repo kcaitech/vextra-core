@@ -11,13 +11,14 @@ import { ContactForm, CurveMode, OverrideType, VariableType } from "../data/type
 import { Api } from "./command/recordapi";
 import { update_frame_by_points } from "./path";
 import { exportCurvePoint } from "../data/baseexport";
-import { importCurvePoint } from "../data/baseimport";
+import { importBorder, importCurvePoint, importFill } from "../data/baseimport";
 import { v4 } from "uuid";
 import { get_box_pagexy, get_nearest_border_point } from "../data/utils";
 import { Matrix } from "../basic/matrix";
 import { ContactShape } from "../data/contact";
 import { SymbolRefShape } from "../data/classes";
 import { uuid } from "../basic/uuid";
+import { BasicArray } from "../data/basic";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -451,77 +452,93 @@ export class ShapeEditor {
         this.__repo.commit();
     }
 
+    private shape4fill(api: Api, shape?: Shape) {
+        const _shape = shape ?? this.__shape;
+        const _var = this.overrideVariable(VariableType.Fills, OverrideType.Fills, (_var) => {
+            const fills = _var?.value ?? _shape.style.fills;
+            return new BasicArray(...(fills as Array<Fill>).map((v) => {
+                const ret = importFill(v);
+                const imgmgr = v.getImageMgr();
+                if (imgmgr) ret.setImageMgr(imgmgr)
+                return ret;
+            }
+            ))
+        }, api, shape)
+        return _var || _shape;
+    }
+
     // fill
     public addFill(fill: Fill) {
         const api = this.__repo.start("addFill", {});
-        api.addFillAt(this.__page, this.__shape, fill, this.__shape.style.fills.length);
+        const shape = this.shape4fill(api);
+        api.addFillAt(this.__page, shape, fill, shape instanceof Shape ? shape.style.fills.length : shape.value.length);
         this.__repo.commit();
     }
     public setFillColor(idx: number, color: Color) {
-        const fill: Fill = this.__shape.style.fills[idx];
-        if (fill) {
-            const api = this.__repo.start("setFillColor", {});
-            api.setFillColor(this.__page, this.__shape, idx, color)
-            this.__repo.commit();
-        }
+        const api = this.__repo.start("setFillColor", {});
+        const shape = this.shape4fill(api);
+        api.setFillColor(this.__page, shape, idx, color)
+        this.__repo.commit();
     }
 
     public setFillEnable(idx: number, value: boolean) {
         if (this.__shape.type !== ShapeType.Artboard) {
             const api = this.__repo.start("setFillEnable", {});
-            api.setFillEnable(this.__page, this.__shape, idx, value);
+            const shape = this.shape4fill(api);
+            api.setFillEnable(this.__page, shape, idx, value);
             this.__repo.commit();
         }
     }
     public deleteFill(idx: number) {
-        const fill = this.__shape.style.fills[idx];
-        if (fill) {
-            const api = this.__repo.start("deleteFill", {});
-            api.deleteFillAt(this.__page, this.__shape, idx);
-            this.__repo.commit();
-        }
+        const api = this.__repo.start("deleteFill", {});
+        const shape = this.shape4fill(api);
+        api.deleteFillAt(this.__page, shape, idx);
+        this.__repo.commit();
+    }
+
+    private shape4border(api: Api, shape?: Shape) {
+        const _shape = shape ?? this.__shape;
+        const _var = this.overrideVariable(VariableType.Borders, OverrideType.Borders, (_var) => {
+            const fills = _var?.value ?? _shape.style.borders;
+            return new BasicArray(...(fills as Array<Border>).map((v) => {
+                const ret = importBorder(v);
+                return ret;
+            }
+            ))
+        }, api, shape)
+        return _var || _shape;
     }
 
     // border
     public setBorderEnable(idx: number, isEnabled: boolean) {
-        const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderEnable", {});
-            api.setBorderEnable(this.__page, this.__shape, idx, isEnabled);
-            this.__repo.commit();
-        }
+        const api = this.__repo.start("setBorderEnable", {});
+        const shape = this.shape4border(api);
+        api.setBorderEnable(this.__page, shape, idx, isEnabled);
+        this.__repo.commit();
     }
     public setBorderColor(idx: number, color: Color) {
-        const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderColor", {});
-            api.setBorderColor(this.__page, this.__shape, idx, color);
-            this.__repo.commit();
-        }
+        const api = this.__repo.start("setBorderColor", {});
+        const shape = this.shape4border(api);
+        api.setBorderColor(this.__page, shape, idx, color);
+        this.__repo.commit();
     }
     public setBorderThickness(idx: number, thickness: number) {
-        const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderThickness", {});
-            api.setBorderThickness(this.__page, this.__shape, idx, thickness);
-            this.__repo.commit();
-        }
+        const api = this.__repo.start("setBorderThickness", {});
+        const shape = this.shape4border(api);
+        api.setBorderThickness(this.__page, shape, idx, thickness);
+        this.__repo.commit();
     }
     public setBorderPosition(idx: number, position: BorderPosition) {
-        const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderPosition", {});
-            api.setBorderPosition(this.__page, this.__shape, idx, position);
-            this.__repo.commit();
-        }
+        const api = this.__repo.start("setBorderPosition", {});
+        const shape = this.shape4border(api);
+        api.setBorderPosition(this.__page, shape, idx, position);
+        this.__repo.commit();
     }
     public setBorderStyle(idx: number, borderStyle: BorderStyle) {
-        const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("setBorderStyle", {});
-            api.setBorderStyle(this.__page, this.__shape, idx, borderStyle);
-            this.__repo.commit();
-        }
+        const api = this.__repo.start("setBorderStyle", {});
+        const shape = this.shape4border(api);
+        api.setBorderStyle(this.__page, shape, idx, borderStyle);
+        this.__repo.commit();
     }
     public setMarkerType(mt: MarkerType, isEnd: boolean) {
         const api = this.__repo.start("setMarkerType", {});
@@ -542,16 +559,17 @@ export class ShapeEditor {
         }
     }
     public deleteBorder(idx: number) {
-        const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("deleteBorder", {});
-            api.deleteBorderAt(this.__page, this.__shape, idx)
-            this.__repo.commit();
-        }
+
+        const api = this.__repo.start("deleteBorder", {});
+        const shape = this.shape4border(api);
+        api.deleteBorderAt(this.__page, shape, idx)
+        this.__repo.commit();
+
     }
     public addBorder(border: Border) {
         const api = this.__repo.start("addBorder", {});
-        api.addBorderAt(this.__page, this.__shape, border, this.__shape.style.borders.length);
+        const shape = this.shape4border(api);
+        api.addBorderAt(this.__page, shape, border, this.__shape.style.borders.length);
         this.__repo.commit();
     }
 

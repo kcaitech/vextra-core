@@ -526,19 +526,19 @@ export class Api {
     }
 
     // 添加一次fill
-    addFillAt(page: Page, shape: Shape, fill: Fill, index: number) {
+    addFillAt(page: Page, shape: Shape | Variable, fill: Fill, index: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const fills = shape.style.fills;
+            const fills = shape instanceof Shape ? shape.style.fills : shape.value;
             basicapi.addFillAt(fills, fill, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, index, exportFill(fill)))
         })
     }
     // 添加多次fill
-    addFills(page: Page, shape: Shape, fills: Fill[]) {
+    addFills(page: Page, shape: Shape | Variable, fills: Fill[]) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const fillsOld = shape.style.fills;
+            const fillsOld = shape instanceof Shape ? shape.style.fills : shape.value;
             for (let i = 0; i < fills.length; i++) {
                 const fill = fills[i];
                 basicapi.addFillAt(fillsOld, fill, i);
@@ -547,19 +547,19 @@ export class Api {
         })
     }
     // 添加一条border
-    addBorderAt(page: Page, shape: Shape, border: Border, index: number) {
+    addBorderAt(page: Page, shape: Shape | Variable, border: Border, index: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const borders = shape.style.borders;
+            const borders = shape instanceof Shape ? shape.style.borders : shape.value;
             basicapi.addBorderAt(borders, border, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, index, exportBorder(border)))
         })
     }
     // 添加多条border
-    addBorders(page: Page, shape: Shape, borders: Border[]) {
+    addBorders(page: Page, shape: Shape | Variable, borders: Border[]) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const bordersOld = shape.style.borders;
+            const bordersOld = shape instanceof Shape ? shape.style.borders : shape.value;
             for (let i = 0; i < borders.length; i++) {
                 const border = borders[i];
                 basicapi.addBorderAt(bordersOld, border, i);
@@ -568,20 +568,20 @@ export class Api {
         })
     }
     // 删除一次fill
-    deleteFillAt(page: Page, shape: Shape, index: number) {
+    deleteFillAt(page: Page, shape: Shape | Variable, index: number) {
         checkShapeAtPage(page, shape);
-        if (!shape.style.fills[index]) return;
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        if (!fills[index]) return;
         this.__trap(() => {
-            const fills = shape.style.fills;
             const fill = basicapi.deleteFillAt(fills, index);
             if (fill) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, index, exportFill(fill)));
         })
     }
     // 批量删除fill
-    deleteFills(page: Page, shape: Shape, index: number, strength: number) {
+    deleteFills(page: Page, shape: Shape | Variable, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const fillsOld = shape.style.fills;
+            const fillsOld = shape instanceof Shape ? shape.style.fills : shape.value;
             const fills = basicapi.deleteFills(fillsOld, index, strength);
             if (fills && fills.length) {
                 for (let i = 0; i < fills.length; i++) {
@@ -592,20 +592,20 @@ export class Api {
         })
     }
     // 删除一次border
-    deleteBorderAt(page: Page, shape: Shape, index: number) {
+    deleteBorderAt(page: Page, shape: Shape | Variable, index: number) {
         checkShapeAtPage(page, shape);
-        if (!shape.style.borders[index]) return;
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        if (!borders[index]) return;
         this.__trap(() => {
-            const borders = shape.style.borders;
             const border = basicapi.deleteBorderAt(borders, index);
             if (border) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), BORDER_ID, border.id, index, exportBorder(border)));
         })
     }
     // 批量删除border
-    deleteBorders(page: Page, shape: Shape, index: number, strength: number) {
+    deleteBorders(page: Page, shape: Shape | Variable, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const bordersOld = shape.style.borders;
+            const bordersOld = shape instanceof Shape ? shape.style.borders : shape.value;
             const borders = basicapi.deleteBorders(bordersOld, index, strength);
             if (borders && borders.length) {
                 for (let i = 0; i < borders.length; i++) {
@@ -616,101 +616,96 @@ export class Api {
         })
 
     }
-    setFillColor(page: Page, shape: Shape, idx: number, color: Color) {
+    setFillColor(page: Page, shape: Shape | Variable, idx: number, color: Color) {
         checkShapeAtPage(page, shape);
-        const fill: Fill = shape.style.fills[idx];
-        if (fill) {
-            this.__trap(() => {
-                const fills = shape.style.fills;
-                const fill: Fill = fills[idx];
-                const save = fill.color;
-                basicapi.setFillColor(fill, color);
-                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.color, exportColor(color), exportColor(save)));
-            })
-        }
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        if (!fills[idx]) return;
+
+        this.__trap(() => {
+            const fill: Fill = fills[idx];
+            const save = fill.color;
+            basicapi.setFillColor(fill, color);
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.color, exportColor(color), exportColor(save)));
+        })
+
     }
-    setFillEnable(page: Page, shape: Shape, idx: number, isEnable: boolean) {
+    setFillEnable(page: Page, shape: Shape | Variable, idx: number, isEnable: boolean) {
         checkShapeAtPage(page, shape);
-        const fill: Fill = shape.style.fills[idx];
-        if (fill) {
-            this.__trap(() => {
-                const fills = shape.style.fills;
-                const fill: Fill = fills[idx];
-                const save = fill.isEnabled;
-                basicapi.setFillEnable(fill, isEnable);
-                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.enable, isEnable, save));
-            })
-        }
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        if (!fills[idx]) return;
+
+        this.__trap(() => {
+            const fill: Fill = fills[idx];
+            const save = fill.isEnabled;
+            basicapi.setFillEnable(fill, isEnable);
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.enable, isEnable, save));
+        })
+
     }
-    setBorderColor(page: Page, shape: Shape, idx: number, color: Color) {
+    setBorderColor(page: Page, shape: Shape | Variable, idx: number, color: Color) {
         checkShapeAtPage(page, shape);
-        const border = shape.style.borders[idx];
-        if (border) {
-            this.__trap(() => {
-                const borders = shape.style.borders;
-                const border = borders[idx];
-                const save = border.color;
-                basicapi.setBorderColor(border, color);
-                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.color, exportColor(color), exportColor(save)));
-            })
-        }
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        if (!borders[idx]) return;
+        this.__trap(() => {
+            const border = borders[idx];
+            const save = border.color;
+            basicapi.setBorderColor(border, color);
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.color, exportColor(color), exportColor(save)));
+        })
+
     }
-    setBorderEnable(page: Page, shape: Shape, idx: number, isEnable: boolean) {
+    setBorderEnable(page: Page, shape: Shape | Variable, idx: number, isEnable: boolean) {
         checkShapeAtPage(page, shape);
-        const border = shape.style.borders[idx];
-        if (border) {
-            this.__trap(() => {
-                const borders = shape.style.borders;
-                const border = borders[idx];
-                const save = border.isEnabled;
-                basicapi.setBorderEnable(border, isEnable);
-                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.enable, isEnable, save));
-            })
-        }
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        if (!borders[idx]) return;
+        this.__trap(() => {
+            const border = borders[idx];
+            const save = border.isEnabled;
+            basicapi.setBorderEnable(border, isEnable);
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.enable, isEnable, save));
+        })
+
     }
-    setBorderThickness(page: Page, shape: Shape, idx: number, thickness: number) {
+    setBorderThickness(page: Page, shape: Shape | Variable, idx: number, thickness: number) {
         checkShapeAtPage(page, shape);
-        const border = shape.style.borders[idx];
-        if (border) {
-            this.__trap(() => {
-                const borders = shape.style.borders;
-                const border = borders[idx];
-                const save = border.thickness;
-                basicapi.setBorderThickness(border, thickness);
-                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.thickness, thickness, save));
-            })
-        }
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        if (!borders[idx]) return;
+        this.__trap(() => {
+            const border = borders[idx];
+            const save = border.thickness;
+            basicapi.setBorderThickness(border, thickness);
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.thickness, thickness, save));
+        })
+
     }
-    setBorderPosition(page: Page, shape: Shape, idx: number, position: BorderPosition) {
+    setBorderPosition(page: Page, shape: Shape | Variable, idx: number, position: BorderPosition) {
         checkShapeAtPage(page, shape);
-        const border = shape.style.borders[idx];
-        if (border) {
-            this.__trap(() => {
-                const borders = shape.style.borders;
-                const border = borders[idx];
-                const save = border.position;
-                basicapi.setBorderPosition(border, position);
-                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.position, exportBorderPosition(position), exportBorderPosition(save)));
-            })
-        }
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        if (!borders[idx]) return;
+        this.__trap(() => {
+            const border = borders[idx];
+            const save = border.position;
+            basicapi.setBorderPosition(border, position);
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.position, exportBorderPosition(position), exportBorderPosition(save)));
+        })
+
     }
-    setBorderStyle(page: Page, shape: Shape, idx: number, borderStyle: BorderStyle) {
+    setBorderStyle(page: Page, shape: Shape | Variable, idx: number, borderStyle: BorderStyle) {
         checkShapeAtPage(page, shape);
-        const border = shape.style.borders[idx];
-        if (border) {
-            this.__trap(() => {
-                const borders = shape.style.borders;
-                const border = borders[idx];
-                const save = border.borderStyle;
-                basicapi.setBorderStyle(border, borderStyle);
-                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.borderStyle, exportBorderStyle(borderStyle), exportBorderStyle(save)));
-            })
-        }
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        if (!borders[idx]) return;
+        this.__trap(() => {
+            const border = borders[idx];
+            const save = border.borderStyle;
+            basicapi.setBorderStyle(border, borderStyle);
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.borderStyle, exportBorderStyle(borderStyle), exportBorderStyle(save)));
+        })
+
     }
-    moveFill(page: Page, shape: Shape, idx: number, idx2: number) {
+    moveFill(page: Page, shape: Shape | Variable, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const fills = shape.style.fills;
+            const fills = shape instanceof Shape ? shape.style.fills : shape.value;
             const fill = fills.splice(idx, 1)[0];
             if (fill) {
                 fills.splice(idx2, 0, fill);
@@ -718,10 +713,11 @@ export class Api {
             }
         })
     }
-    moveBorder(page: Page, shape: Shape, idx: number, idx2: number) {
+    moveBorder(page: Page, shape: Shape | Variable, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const borders = shape.style.borders;
+            const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+
             const border = borders.splice(idx, 1)[0];
             if (border) {
                 borders.splice(idx2, 0, border);
