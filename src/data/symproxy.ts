@@ -387,7 +387,8 @@ class GroupShapeHdl extends ShapeHdl {
                         }
                     }
                     _childs.length = childs.length;
-                    const prefix = this.__id + '/';
+
+                    const prefix = this.__id.substring(0, this.__id.lastIndexOf('/') + 1);
                     for (let i = 0, len = childs.length; i < len; ++i) {
                         const c = _childs[i]; // 可能undefined
                         const origin = childs[i];
@@ -400,7 +401,7 @@ class GroupShapeHdl extends ShapeHdl {
                 }
                 return this.__childs;
             }
-            const prefix = this.__id + '/';
+            const prefix = this.__id.substring(0, this.__id.lastIndexOf('/') + 1);
             this.__childs = (this.__origin as GroupShape).childs.map((child) => proxyShape(child, receiver as Shape, prefix + child.id));
             return this.__childs;
         }

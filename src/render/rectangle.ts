@@ -1,7 +1,7 @@
-import { Path, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
+import { OverrideType, Path, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable, VariableType } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
-import { RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent, transformPoints } from "./basic";
+import { RenderTransform, boundingBox, findOverrideAndVar, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent, transformPoints } from "./basic";
 import { parsePath } from "../data/pathparser";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
@@ -149,7 +149,20 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
     const path = path0.toString();
 
     // fill
-    childs.push(...fillR(h, shape.style.fills, frame, path));
+    let fills = shape.style.fills;
+    if (varsContainer) {
+        const _vars = findOverrideAndVar(shape, OverrideType.Fills, varsContainer);
+        if (_vars) {
+            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === VariableType.Fills) {
+                // return _var.value;
+                fills = _var.value;
+                if (consumedVars) consumedVars.push({ slot: OverrideType.Fills, vars: _vars })
+            }
+        }
+    }
+    childs.push(...fillR(h, fills, frame, path));
     // border
     childs.push(...borderR(h, shape.style.borders, frame, path));
 

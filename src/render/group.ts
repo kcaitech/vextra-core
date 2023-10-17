@@ -145,9 +145,10 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
     const m = matrix2parent(x, y, width, height, rotate, hflip, vflip);
     // bounds
     const bbox = boundingBox(m, frame, new Path());
+    // todo 要变换points
 
     const parentFrame = new ShapeFrame(bbox.x * scaleX, bbox.y * scaleY, bbox.width * scaleX, bbox.height * scaleY);
-    fixFrameByConstrain(shape, transform.parentFrame, parentFrame);
+    fixFrameByConstrain(shape, transform.parentFrame, parentFrame); // 左上右下
     const cscaleX = parentFrame.width / bbox.width;
     const cscaleY = parentFrame.height / bbox.height;
 
