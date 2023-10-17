@@ -383,6 +383,10 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.addoverride, { refId, attr, value }, undefined));
         })
     }
+
+    /**
+     * @description 初始化或修改组件的状态属性
+     */
     shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
@@ -390,7 +394,7 @@ export class Api {
             const shapeId = genShapeId(shape);
             shapeId.push(varId);
             if (!shape.vartag) shape.vartag = new BasicMap();
-            shape.vartag.set(varId, tag);
+            shape.setTag(varId, tag);
             this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.vartag, { varId, tag }, { varId, tag: save }));
         })
     }

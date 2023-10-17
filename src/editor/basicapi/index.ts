@@ -494,5 +494,5 @@ export function shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape
 }
 export function shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
     if (!shape.vartag) shape.vartag = new BasicMap();
-    shape.vartag.set(varId, tag);
+    shape.setTag(varId, tag);
 }

@@ -1,28 +1,51 @@
-import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/shape";
-import { ShapeEditor } from "./shape";
-import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
-import { Page } from "../data/page";
-import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape, newSymbolShape, newSymbolRefShape, initFrame, newSymbolShapeUnion } from "./creator";
-import { Document } from "../data/document";
-import { translateTo, translate, expand } from "./frame";
-import { uuid } from "../basic/uuid";
-import { CoopRepository } from "./command/cooprepo";
-import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text, SymbolRefShape } from "../data/classes";
-import { TextShapeEditor } from "./textshape";
-import {get_frame, modify_frame_after_insert, transform_data, set_childs_id} from "../io/cilpboard";
-import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
-import { render2path } from "../render";
-import { Matrix } from "../basic/matrix";
-import { IImportContext, importBorder, importGroupShape, importShapeFrame, importStyle, importSymbolShape } from "../data/baseimport";
-import { gPal } from "../basic/pal";
-import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
-import { BasicArray } from "../data/basic";
-import { TableEditor } from "./table";
-import { exportGroupShape, exportShapeFrame, exportSymbolShape } from "../data/baseexport";
+import {GroupShape, PathShape2, RectShape, Shape, ShapeFrame, SymbolShape, Variable, VariableType} from "../data/shape";
+import {ShapeEditor} from "./shape";
 import * as types from "../data/typesdefine";
-import { SymbolShape } from "../data/shape";
-import { find_state_space, modify_frame_after_inset_state } from "./utils";
+import {BoolOp, BorderPosition, ShapeType} from "../data/typesdefine";
+import {Page} from "../data/page";
+import {
+    initFrame,
+    newArrowShape,
+    newArtboard,
+    newGroupShape,
+    newLineShape,
+    newOvalShape,
+    newPathShape,
+    newRectShape,
+    newSolidColorFill,
+    newSymbolRefShape,
+    newSymbolShape
+} from "./creator";
+import {Document} from "../data/document";
+import {expand, translate, translateTo} from "./frame";
+import {uuid} from "../basic/uuid";
+import {CoopRepository} from "./command/cooprepo";
+import {Api} from "./command/recordapi";
+import {
+    Artboard,
+    Border,
+    BorderStyle,
+    Color,
+    Fill,
+    Path,
+    PathShape,
+    Style,
+    SymbolRefShape,
+    TableShape,
+    Text
+} from "../data/classes";
+import {TextShapeEditor} from "./textshape";
+import {get_frame, modify_frame_after_insert, set_childs_id, transform_data} from "../io/cilpboard";
+import {deleteEmptyGroupShape, expandBounds, group, ungroup} from "./group";
+import {render2path} from "../render";
+import {Matrix} from "../basic/matrix";
+import {IImportContext, importBorder, importGroupShape, importStyle, importSymbolShape} from "../data/baseimport";
+import {gPal} from "../basic/pal";
+import {findUsableBorderStyle, findUsableFillStyle} from "../render/boolgroup";
+import {BasicArray} from "../data/basic";
+import {TableEditor} from "./table";
+import {exportGroupShape, exportSymbolShape} from "../data/baseexport";
+import {find_state_space, modify_frame_after_inset_state} from "./utils";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -294,22 +317,32 @@ export class PageEditor {
     }
 
     /**
-     * @description 创建组件状态集合
+     * @description 创建组件状态集合union
+     * @param symbol 原组件
+     * @param state_name 第一个状态名称
+     * @param attri_name 第一个属性名称
+     * @return symbol 集合union
      */
-    makeSymbolUnion(symbol: SymbolShape, state_name: string) {
+    makeSymbolUnion(symbol: SymbolShape, state_name: string, attri_name: string) {
         const p = symbol.parent;
         if (!p || p.isUnionSymbolShape) return;
+        // 定义第一个状态的frame
         const state_frame = new ShapeFrame(20, 20, symbol.frame.width, symbol.frame.height);
+
         const api = this.__repo.start("makeSymbolUnion", {});
         try {
+            // 新建并插入一个symbol对象，将作为第一个状态
             let n_sym = newSymbolShape(state_name, state_frame);
             const insert_result = api.shapeInsert(this.__page, symbol, n_sym, 0);
             if (!insert_result) throw new Error('failed: !insert_result');
+
             const childs = symbol.childs;
             for (let i = 1, len = childs.length; i < len; ++i) {
                 api.shapeMove(this.__page, symbol, 1, n_sym, i - 1);
             }
             const box = symbol.boundingBox();
+
+            // 调整union对象的frame、style
             if (symbol.rotation) {
                 api.shapeModifyRotate(this.__page, n_sym, symbol.rotation);
                 api.shapeModifyRotate(this.__page, symbol, 0);
@@ -326,9 +359,15 @@ export class PageEditor {
             api.shapeModifyY(this.__page, symbol, box.y - 20);
             api.shapeModifyWH(this.__page, symbol, box.width + 40, box.height + 40);
             api.shapeModifyIsUnion(this.__page, symbol, true);
-            const border_style = new BorderStyle(10, 10);
+            const border_style = new BorderStyle(2, 2);
             const boder = new Border(uuid(), true, types.FillType.SolidColor, new Color(1, 255, 153, 0), BorderPosition.Inner, 2, border_style);
             api.addBorderAt(this.__page, symbol, boder, 0);
+
+            // 将产生union的第一个变量
+            const _var = new Variable(uuid(), VariableType.Status,  attri_name);
+            api.shapeAddVariable(this.__page, symbol as SymbolShape, _var);
+            api.shapeModifyVartag(this.__page, n_sym, _var.id, _var.name);
+
             this.__repo.commit();
             return symbol as any as SymbolShape;
         } catch (error) {
@@ -356,7 +395,8 @@ export class PageEditor {
                 if (pre_y < 0) throw new Error('failed');
                 source.frame.y = pre_y + 20;
             } else {
-                source.frame.x += 20, source.frame.y += 20;
+                source.frame.x += 20;
+                source.frame.y += 20;
             }
             const copy = importSymbolShape(source);
             const api = this.__repo.start("makeStateAt", {});
