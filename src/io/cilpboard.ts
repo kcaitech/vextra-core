@@ -182,9 +182,34 @@ export function trasnform_text(document: Document, text: types.Text, gen?: boole
     return _text;
 }
 
-export function after_shapes_add_to_doc(api: Api, page: Page, shapes: Shape[]) {
+export function modify_frame_after_insert(api: Api, page: Page, shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         const shape = shapes[i];
         translateTo(api, page, shape, shape.frame.x, shape.frame.y);
     }
+}
+export function XYsBounding(points: {x: number, y: number}[]) {
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+        xs.push(points[i].x);
+        ys.push(points[i].y);
+    }
+    const top = Math.min(...ys);
+    const bottom = Math.max(...ys);
+    const left = Math.min(...xs);
+    const right = Math.max(...xs);
+    return { top, bottom, left, right };
+}
+export function get_frame(shapes: Shape[]): {x: number, y: number}[] {
+    const points: { x: number, y: number }[] = [];
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const s = shapes[i];
+        const m = s.matrix2Root();
+        const f = s.frame;
+        const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+        for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
+    }
+    const b = XYsBounding(points);
+    return [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {x: b.left, y: b.bottom}];
 }
