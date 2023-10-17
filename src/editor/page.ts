@@ -521,7 +521,6 @@ export class PageEditor {
                 result.push(parent.childs[index]);
                 index++;
             }
-            console.log('paster1')
             after_shapes_add_to_doc(api, this.__page, result);
             this.__repo.commit();
             return result;
