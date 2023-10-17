@@ -629,6 +629,10 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         }
         return super.findOverride(refId, type);
     }
+    setTag(k: string, v: string) {
+        if (!this.vartag) this.vartag = new BasicMap<string, string>();
+        this.vartag.set(k, v);
+    }
 }
 
 export class PathShape extends Shape implements classes.PathShape {
