@@ -12,7 +12,7 @@ export { render as renderGroup } from "./group";
 export { render as renderImage } from "./image";
 export { render as renderLine } from "./line";
 export { render as renderPathShape } from "./pathshape";
-export { render as renderRecShape } from "./rectangle";
+// export { render as renderRecShape } from "./rectangle";
 export { render as renderBoolOpShape, render2path } from "./boolgroup";
 export { render as renderSymbolRef } from "./symbolref";
 export { render as renderTextShape } from "./text";
