@@ -10,7 +10,7 @@ import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
-import {after_shapes_add_to_doc, transform_data} from "../io/cilpboard";
+import {get_frame, modify_frame_after_insert, transform_data} from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
@@ -164,8 +164,8 @@ export class PageEditor {
     }
     /**
      * @description 创建一个包裹所有shapes容器
-     * @param shapes 
-     * @param artboardname 
+     * @param shapes
+     * @param artboardname
      * @returns { false | Artboard } 成功则返回容器
      */
     create_artboard(shapes: Shape[], artboardname: string): false | Artboard {
@@ -193,7 +193,7 @@ export class PageEditor {
     }
     /**
      * @description 解除容器
-     * @param shape 
+     * @param shape
      * @returns { false | Shape[] } 成功则返回被解除容器的所有子元素
      */
     dissolution_artboard(shape: Artboard): false | Shape[] {
@@ -509,7 +509,7 @@ export class PageEditor {
      * @param shapes 未进入文档的shape
      * @param adjusted 是否提前调整过相对位置
      */
-    pasteShapes1(parent: GroupShape, shapes: Shape[]): Shape[] | false {
+    pasteShapes1(parent: GroupShape, shapes: Shape[]): {shapes: Shape[], frame: {x: number, y: number}[]} | false {
         const api = this.__repo.start("insertShapes1", {});
         try {
             const result: Shape[] = [];
@@ -521,9 +521,10 @@ export class PageEditor {
                 result.push(parent.childs[index]);
                 index++;
             }
-            after_shapes_add_to_doc(api, this.__page, result);
+            modify_frame_after_insert(api, this.__page, result);
+            const frame = get_frame(result);
             this.__repo.commit();
-            return result;
+            return {shapes: result, frame};
         } catch (e) {
             console.log(e);
             this.__repo.rollback();
@@ -572,7 +573,7 @@ export class PageEditor {
      *  target_xy?: 插入位置(frame)
      *  media?: 静态资源
      *  ...
-     * @returns 
+     * @returns
      */
     create2(page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, ex_params: any) {
         const { is_arrow, rotation, target_xy } = ex_params;
@@ -765,7 +766,7 @@ export class PageEditor {
      * wanderer 被拖动的shape item
      * host 处于目的地的shape item
      * offsetOverhalf 鼠标光标在目的地的位置是否超过目的地DOM范围的一半，此参数将影响wanderer插入的位置在host的上下位置
-     * @returns 
+     * @returns
      */
     shapeListDrag(wanderer: Shape, host: Shape, offsetOverhalf: boolean) {
         if (!wanderer || !host) return;
@@ -949,7 +950,7 @@ export class PageEditor {
             // throw new Error(`${error}`);
         }
     }
-    //boders 
+    //boders
     setShapesBorderColor(actions: BorderColorAction[]) {
         try {
             const api = this.__repo.start('setShapesBorderColor', {});
