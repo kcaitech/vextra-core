@@ -25,9 +25,6 @@
                         "$ref": "./rect-shape.json"
                     },
                     {
-                        "$ref": "./symbol-ref-shape.json"
-                    },
-                    {
                         "$ref": "./text-shape.json"
                     },
                     {
@@ -40,10 +37,10 @@
                         "$ref": "./artboard.json"
                     },
                     {
-                        "$ref": "./line-shape.json"
+                        "$ref": "./contact-shape.json"
                     },
                     {
-                        "$ref": "./oval-shape.json"
+                        "$ref": "./symbol-ref-shape.json"
                     },
                     {
                         "$ref": "./table-shape.json"
