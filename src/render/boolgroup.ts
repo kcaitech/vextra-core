@@ -1,7 +1,7 @@
 import { BoolOp, GroupShape, Path, Shape, Style, SymbolRefShape, SymbolShape, TextShape, Variable } from "../data/classes";
 // import { difference, intersection, subtract, union } from "./boolop";
-import { render as fillR } from "./fill";
-import { render as borderR } from "./border"
+import { renderWithVars as fillR } from "./fill";
+import { renderWithVars as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
@@ -113,14 +113,9 @@ export function render(h: Function, shape: GroupShape, transform: RenderTransfor
     const childs = [];
 
     // fill
-    if (shape.style.fills.length > 0) {
-        childs.push(...fillR(h, shape.style.fills, frame, pathstr));
-    }
-
+    childs.push(...fillR(h, shape, frame, pathstr, varsContainer, consumedVars));
     // border
-    if (shape.style.borders.length > 0) {
-        childs.push(...borderR(h, shape.style.borders, frame, pathstr));
-    }
+    childs.push(...borderR(h, shape, frame, pathstr, varsContainer, consumedVars));
 
     // ----------------------------------------------------------
     // shadows todo

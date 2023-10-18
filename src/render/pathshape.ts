@@ -1,7 +1,7 @@
-import { OverrideType, Path, PathShape, ShapeFrame, SymbolRefShape, SymbolShape, Variable, VariableType } from "../data/classes";
-import { render as fillR } from "./fill";
-import { render as borderR } from "./border"
-import { RenderTransform, boundingBox, findOverrideAndVar, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent, transformPoints } from "./basic";
+import { Path, PathShape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
+import { renderWithVars as fillR } from "./fill";
+import { renderWithVars as borderR } from "./border"
+import { RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent, transformPoints } from "./basic";
 import { parsePath } from "../data/pathparser";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
@@ -150,35 +150,9 @@ export function render(h: Function, shape: PathShape, transform: RenderTransform
     const childs = [];
 
     // fill
-    let fills = shape.style.fills;
-    if (varsContainer) {
-        const _vars = findOverrideAndVar(shape, OverrideType.Fills, varsContainer);
-        if (_vars) {
-            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === VariableType.Fills) {
-                // return _var.value;
-                fills = _var.value;
-                if (consumedVars) consumedVars.push({ slot: OverrideType.Fills, vars: _vars })
-            }
-        }
-    }
-    childs.push(...fillR(h, fills, frame, path));
+    childs.push(...fillR(h, shape, frame, path, varsContainer, consumedVars));
     // border
-    let borders = shape.style.borders;
-    if (varsContainer) {
-        const _vars = findOverrideAndVar(shape, OverrideType.Borders, varsContainer);
-        if (_vars) {
-            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === VariableType.Borders) {
-                // return _var.value;
-                borders = _var.value;
-                if (consumedVars) consumedVars.push({ slot: OverrideType.Borders, vars: _vars })
-            }
-        }
-    }
-    childs.push(...borderR(h, borders, frame, path));
+    childs.push(...borderR(h, shape, frame, path, varsContainer, consumedVars));
 
     // ----------------------------------------------------------
     // shadows todo

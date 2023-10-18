@@ -2,10 +2,11 @@
 
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
-import { Border, Gradient, BorderPosition, FillType, GradientType, ShapeFrame } from "../data/classes";
+import { Border, Gradient, BorderPosition, FillType, GradientType, ShapeFrame, Shape, SymbolRefShape, SymbolShape, Variable, OverrideType, VariableType } from "../data/classes";
+import { findOverrideAndVar } from "./basic";
 
 function randomId() {
-    return Math.floor((Math.random()*10000)+1);
+    return Math.floor((Math.random() * 10000) + 1);
 }
 
 const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
@@ -283,5 +284,23 @@ export function render(h: Function, borders: Border[], frame: ShapeFrame, path: 
         })
     }
     return elArr;
+}
 
+export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, path: string,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined) {
+    let borders = shape.style.borders;
+    if (varsContainer) {
+        const _vars = findOverrideAndVar(shape, OverrideType.Borders, varsContainer);
+        if (_vars) {
+            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === VariableType.Borders) {
+                // return _var.value;
+                borders = _var.value;
+                if (consumedVars) consumedVars.push({ slot: OverrideType.Borders, vars: _vars })
+            }
+        }
+    }
+    return render(h, borders, frame, path);
 }

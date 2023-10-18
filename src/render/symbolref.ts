@@ -1,7 +1,7 @@
 import { Path, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { renderGroupChilds2, renderGroupChilds3 } from "./group";
-import { render as fillR } from "./fill";
-import { render as borderR } from "./border"
+import { renderWithVars as fillR } from "./fill";
+import { renderWithVars as borderR } from "./border"
 import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
@@ -180,9 +180,9 @@ export function render(h: Function,
     // const path0 = shape.getPathOfFrame(frame);
     const path = path0.toString();
     // fill
-    childs.push(...fillR(h, shape.style.fills, frame, path));
+    childs.push(...fillR(h, shape, frame, path, varsContainer, consumedVars));
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    childs.push(...borderR(h, shape, frame, path, varsContainer, consumedVars));
 
     // symbol
     childs.push(...renderSym(h, shape, sym as SymbolShape, comsMap, transform, varsContainer));
