@@ -2,7 +2,7 @@ import { ResizingConstraints } from "../data/consts";
 import { objectId } from "../basic/objectid";
 import { ImageShape, Path, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
-import { render as borderR } from "./border";
+import { renderWithVars as borderR } from "./border";
 import { render as clippathR } from "./clippath"
 import { Matrix } from "../basic/matrix";
 
@@ -146,7 +146,7 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
     childs.push(img);
 
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    childs.push(...borderR(h, shape, frame, path, varsContainer, consumedVars));
 
     const props: any = {}
     const contextSettings = shape.style.contextSettings;

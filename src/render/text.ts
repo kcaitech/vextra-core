@@ -1,16 +1,15 @@
 
 
-import { DefaultColor, RenderTransform, boundingBox, findOverrideAndVar, fixFrameByConstrain, isColorEqual, isNoTransform, isVisible, matrix2parent, transformPoints } from "./basic";
+import { DefaultColor, RenderTransform, findOverrideAndVar, fixFrameByConstrain, isColorEqual, isNoTransform, isVisible } from "./basic";
 import { TextShape, Path, Color, SymbolShape, SymbolRefShape, ShapeFrame, OverrideType, VariableType, Para, ParaAttr, Text, Span, Variable } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
-import { render as fillR } from "./fill";
-import { render as borderR } from "./border";
+import { renderWithVars as fillR } from "./fill";
+import { renderWithVars as borderR } from "./border";
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
-import { parsePath } from "data/pathparser";
 
 
 function toRGBA(color: Color): string {
@@ -262,11 +261,11 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
 
                 else if (rotate) {
                     const m = new Matrix();
-                m.rotate(rotate / 360 * 2 * Math.PI);
-                m.scale(scaleX, scaleY);
-                const _newscale = m.computeRef(1, 1);
-                m.scale(1 / scaleX, 1 / scaleY);
-                const newscale = m.inverseRef(_newscale.x, _newscale.y);
+                    m.rotate(rotate / 360 * 2 * Math.PI);
+                    m.scale(scaleX, scaleY);
+                    const _newscale = m.computeRef(1, 1);
+                    m.scale(1 / scaleX, 1 / scaleY);
+                    const newscale = m.inverseRef(_newscale.x, _newscale.y);
                     x *= scaleX;
                     y *= scaleY;
 
@@ -339,7 +338,8 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     const path = path0.toString();
 
     // fill
-    childs.push(...fillR(h, shape.style.fills, frame, path));
+    childs.push(...fillR(h, shape, frame, path, varsContainer, consumedVars));
+
     // text
     // todo
 
@@ -367,7 +367,7 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     const layout = noUpperTrans ? text.getLayout() : text.getLayout2(frame.width, frame.height);
     childs.push(...renderTextLayout(h, layout));
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    childs.push(...borderR(h, shape, frame, path, varsContainer, consumedVars));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;

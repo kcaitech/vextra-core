@@ -1,6 +1,6 @@
 import { GroupShape, Path, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
-import { render as fillR } from "./fill";
-import { render as borderR } from "./border";
+import { renderWithVars as fillR } from "./fill";
+import { renderWithVars as borderR } from "./border";
 import { RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent } from "./basic";
 import { Matrix } from "../basic/matrix";
 import { ResizingConstraints } from "../data/consts";
@@ -166,7 +166,7 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
         // cc matrix2Parent
         const m2 = matrix2parent(c_frame.x, c_frame.y, c_frame.width, c_frame.height, c_rotate, c_hflip, c_vflip);
 
-        m2.trans(parentFrame.x, parentFrame.y);
+        m2.trans(bbox.x, bbox.y); // todo 使用parentFrame.x y会与rect对不齐，待研究
         const cur = m2.computeCoord(0, 0);
 
         const dx = target.x - cur.x;
@@ -217,12 +217,12 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     const childs: Array<any> = [];
 
     // fill
-    childs.push(...fillR(h, shape.style.fills, frame, path));
+    childs.push(...fillR(h, shape, frame, path, varsContainer, consumedVars));
 
     // childs
     childs.push(...nodes);
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    childs.push(...borderR(h, shape, frame, path, varsContainer, consumedVars));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
