@@ -156,32 +156,17 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     onRemoved(): void {
         // 构建symbol proxy shadow, 在这里需要unwatch
 
-        this._reLayout();
-        this.__data?.unwatch(this.watcher);
-    }
-
-    _reLayout() {
         if (this.__childs) {
             // todo compare
             this.__childs.forEach((c: any) => c.remove)
             this.__childs = undefined;
         }
-    }
-
-    private __hasNotify: any;
-    reLayout() {
-        this._reLayout();
-        if (!this.__hasNotify) { // 这里有界面监听实时更新视图，导致反复实例proxy数据
-            this.__hasNotify = setTimeout(() => {
-                this.notify()
-                this.__hasNotify = undefined;
-            }, 0);
-        }
+        this.__data?.unwatch(this.watcher);
     }
 
     setFrameSize(w: number, h: number): void {
         super.setFrameSize(w, h);
-        this._reLayout(); // todo 太粗暴了！
+        this.relayout();
     }
 
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
