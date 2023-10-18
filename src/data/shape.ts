@@ -589,6 +589,11 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         this.variables.set(v.id, v);
         return this.variables.get(v.id)!;
     }
+    removeVar(key: string) {
+        if (!this.variables) return false;
+        // TODO 解绑
+        return this.variables.delete(key);
+    }
     deleteVar(varId: string) {
         if (this.variables) {
             this.variables.delete(varId);

@@ -11,12 +11,14 @@ export class Variable extends Watchable(Basic) implements classes.Variable {
     constructor(
         id: string,
         type: VariableType,
-        name: string
+        name: string,
+        value?: any
     ) {
         super()
         this.id = id
         this.type = type
         this.name = name
+        this.value = value
     }
 
     notify(...args: any[]): void {
