@@ -20,13 +20,14 @@ function genRefId(refId: string, type: OverrideType) {
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     __data: SymbolShape | undefined
+    __subdata: SymbolShape | undefined; // union symbol shape
     __symMgr?: ResourceMgr<SymbolShape>
 
     // todo
     // 所有引用的symbol的临时数据都就缓存到这里，如text
     // 绘制实现不使用拷贝数据的方案，以优化性能
     // 仅编辑时拷贝数据？
-    __cache: Map<string, any> = new Map();
+    // __cache: Map<string, any> = new Map();
 
     typeId = 'symbol-ref-shape'
     refId: string
@@ -52,6 +53,15 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             style
         )
         this.refId = refId
+        this.origin_watcher = this.origin_watcher.bind(this);
+    }
+
+    private __childsIsDirty: boolean = false;
+    origin_watcher(...args: any[]) {
+        if (args.indexOf("vairable") >= 0) return;
+        if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
+        super.notify(...args);
+        this.relayout();
     }
 
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
@@ -63,8 +73,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return super.getTarget(targetId);
     }
 
+    switchRef(refId: string) {
+        // todo
+    }
+
     getSymChilds(): Shape[] | undefined {
         if (!this.__data) return;
+        // todo
+
         const sym = this.__data;
         let _sym: Shape = sym;
         // union symbol
@@ -81,12 +97,37 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     // for render
     get virtualChilds(): Shape[] | undefined {
-        if (this.__childs) return this.__childs;
+        if (this.__childs) {
+            if (this.__childsIsDirty) {
+                // todo
+                const childs = this.getSymChilds() || [];
+                const _childs = this.__childs;
+                if (_childs.length > childs.length) {
+                    // 回收多余的
+                    for (let i = childs.length, len = _childs.length; i < len; ++i) {
+                        (_childs[i] as any).remove;
+                    }
+                }
+                _childs.length = childs.length;
+                const prefix = this.id + '/';
+                for (let i = 0, len = childs.length; i < len; ++i) {
+                    const c = _childs[i]; // 可能undefined
+                    const origin = childs[i];
+                    if (c && (c as any).originId === origin.id) {
+                        continue;
+                    }
+                    if (c) (c as any).remove;
+                    _childs[i] = proxyShape(origin, this, prefix + origin.id);
+                }
+            }
+            return this.__childs;
+        }
         const childs = this.getSymChilds();
         if (!childs || childs.length === 0) return;
         const prefix = this.id + '/';
         this.__childs = childs.map((c) => proxyShape(c, this, prefix + c.id));
         layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
+        this.__childsIsDirty = false;
         return this.__childs;
     }
 
@@ -139,7 +180,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             this.__symMgr.get(this.refId).then((val) => {
                 if (!this.__data) {
                     this.__data = val;
-                    if (val) this.notify();
+                    if (val) {
+                        val.watch(this.origin_watcher)
+                        this.notify();
+                    }
                 }
             })
         }
@@ -148,8 +192,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     async loadSymbol() {
         if (this.__data) return this.__data;
-        this.__data = this.__symMgr && await this.__symMgr.get(this.refId);
-        if (this.__data) this.notify();
+        const val = this.__symMgr && await this.__symMgr.get(this.refId);
+        if (!this.__data) {
+            this.__data = val;
+            if (val) {
+                val.watch(this.origin_watcher)
+                this.notify();
+            }
+        }
         return this.__data;
     }
 
@@ -161,7 +211,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             this.__childs.forEach((c: any) => c.remove)
             this.__childs = undefined;
         }
-        this.__data?.unwatch(this.watcher);
+        this.__data?.unwatch(this.origin_watcher);
     }
 
     setFrameSize(w: number, h: number): void {

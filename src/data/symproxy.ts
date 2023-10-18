@@ -21,6 +21,7 @@ const mutable = new Set([
     "__startLoad",
     "__data",
     "__symMgr",
+    // "__symproxy_cache",
     __objidkey
 ]);
 
@@ -215,7 +216,7 @@ class StyleHdl extends HdlBase {
     }
 }
 
-class ShapeHdl extends Watchable(HdlBase) {
+class ShapeHdl extends HdlBase {
     __origin: Shape;
     __parent: Shape;
 
@@ -225,6 +226,38 @@ class ShapeHdl extends Watchable(HdlBase) {
     __hflip: boolean = false;
     __rotate: number = 0;
     __points: CurvePoint[] | undefined;
+
+    private get __watcher(): Set<((...args: any[]) => void)> {
+        let cache: Map<string, any> = (this.__origin as any).__symproxy_cache;
+        if (!cache) {
+            cache = new Map<string, any>();
+            (this.__origin as any).__symproxy_cache = cache;
+        }
+        const idx = this.__id + '/' + 'watcher';
+        let watcher: Set<((...args: any[]) => void)> = cache.get(idx);
+        if (!watcher) {
+            watcher = new Set<((...args: any[]) => void)>();
+            cache.set(idx, watcher);
+        }
+        return watcher;
+    }
+
+    public watch(watcher: ((...args: any[]) => void)): (() => void) {
+        this.__watcher.add(watcher);
+        return () => {
+            this.__watcher.delete(watcher);
+        };
+    }
+    public unwatch(watcher: ((...args: any[]) => void)): boolean {
+        return this.__watcher.delete(watcher);
+    }
+    public notify(...args: any[]) {
+        if (this.__watcher.size === 0) return;
+        // 在set的foreach内部修改set会导致无限循环
+        Array.from(this.__watcher).forEach(w => {
+            w(...args);
+        });
+    }
 
     resetLayout() {
         const frame = this.__origin.frame;
@@ -261,7 +294,7 @@ class ShapeHdl extends Watchable(HdlBase) {
 
     origin_watcher(...args: any[]) {
         if (args.indexOf("vairable") >= 0) return;
-        super.notify(...args);
+        this.notify(...args);
         this.fireRelayout();
     }
 
@@ -277,6 +310,7 @@ class ShapeHdl extends Watchable(HdlBase) {
         // watch unwatch
         this.watch = this.watch.bind(this);
         this.unwatch = this.unwatch.bind(this);
+        this.notify = this.notify.bind(this);
 
         origin.watch(this.origin_watcher);
 
@@ -340,6 +374,9 @@ class ShapeHdl extends Watchable(HdlBase) {
         }
         if (propStr === "unwatch") {
             return this.unwatch;
+        }
+        if (propStr === "notify") {
+            return this.notify;
         }
         if (propStr === "frame") {
             return this.__frame;
@@ -414,8 +451,8 @@ class GroupShapeHdl extends ShapeHdl {
 
     origin_watcher(...args: any[]): void {
         if (args.indexOf("vairable") >= 0) return;
-        super.origin_watcher(args);
-        this.__childsIsDirty = true;
+        if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
+        super.origin_watcher(...args);
     }
 
     onRemoved(target: object): void {
@@ -493,8 +530,8 @@ class SymbolRefShapeHdl extends ShapeHdl {
 
     origin_watcher(...args: any[]): void {
         if (args.indexOf("vairable") >= 0) return;
-        super.origin_watcher(args);
-        this.__childsIsDirty = true;
+        if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
+        super.origin_watcher(...args);
     }
 
     onRemoved(target: object): void {
@@ -509,10 +546,10 @@ class SymbolRefShapeHdl extends ShapeHdl {
     relayout() {
         if (this.__childs && !this.__relayouting) {
             this.__relayouting = setTimeout(() => {
-                const childs = this.getSymChilds();
+                const childs = this.__origin.getSymChilds();
                 if (this.__childs && childs && childs.length > 0) {
                     this.__childs.forEach((c) => c.resetLayout);
-                    layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
+                    layoutChilds(this.__childs, this.__origin.frame, childs[0].parent!.frame);
                     this.saveFrame();
 
                     this.__childs.forEach((c) => c.layoutChilds);
