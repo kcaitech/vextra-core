@@ -1,8 +1,8 @@
-import {GroupShape, PathShape2, RectShape, Shape, ShapeFrame, SymbolShape, Variable, VariableType} from "../data/shape";
-import {ShapeEditor} from "./shape";
+import { GroupShape, PathShape2, RectShape, Shape, ShapeFrame, SymbolShape, Variable, VariableType } from "../data/shape";
+import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import {BoolOp, BorderPosition, ShapeType} from "../data/typesdefine";
-import {Page} from "../data/page";
+import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
+import { Page } from "../data/page";
 import {
     initFrame,
     newArrowShape,
@@ -16,11 +16,11 @@ import {
     newSymbolRefShape,
     newSymbolShape
 } from "./creator";
-import {Document} from "../data/document";
-import {expand, translate, translateTo} from "./frame";
-import {uuid} from "../basic/uuid";
-import {CoopRepository} from "./command/cooprepo";
-import {Api} from "./command/recordapi";
+import { Document } from "../data/document";
+import { expand, translate, translateTo } from "./frame";
+import { uuid } from "../basic/uuid";
+import { CoopRepository } from "./command/cooprepo";
+import { Api } from "./command/recordapi";
 import {
     Artboard,
     Border,
@@ -34,18 +34,18 @@ import {
     TableShape,
     Text
 } from "../data/classes";
-import {TextShapeEditor} from "./textshape";
-import {get_frame, modify_frame_after_insert, set_childs_id, transform_data} from "../io/cilpboard";
-import {deleteEmptyGroupShape, expandBounds, group, ungroup} from "./group";
-import {render2path} from "../render";
-import {Matrix} from "../basic/matrix";
-import {IImportContext, importBorder, importGroupShape, importStyle, importSymbolShape} from "../data/baseimport";
-import {gPal} from "../basic/pal";
-import {findUsableBorderStyle, findUsableFillStyle} from "../render/boolgroup";
-import {BasicArray} from "../data/basic";
-import {TableEditor} from "./table";
-import {exportGroupShape, exportSymbolShape} from "../data/baseexport";
-import {find_state_space, modify_frame_after_inset_state} from "./utils";
+import { TextShapeEditor } from "./textshape";
+import { get_frame, modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
+import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
+import { render2path } from "../render";
+import { Matrix } from "../basic/matrix";
+import { IImportContext, importBorder, importGroupShape, importStyle, importSymbolShape } from "../data/baseimport";
+import { gPal } from "../basic/pal";
+import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
+import { BasicArray } from "../data/basic";
+import { TableEditor } from "./table";
+import { exportGroupShape, exportSymbolShape } from "../data/baseexport";
+import { find_state_space, modify_frame_after_inset_state } from "./utils";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -364,7 +364,7 @@ export class PageEditor {
             api.addBorderAt(this.__page, symbol, boder, 0);
 
             // 将产生union的第一个变量
-            const _var = new Variable(uuid(), VariableType.Status,  attri_name);
+            const _var = new Variable(uuid(), VariableType.Status, attri_name);
             api.shapeAddVariable(this.__page, symbol as SymbolShape, _var);
             api.shapeModifyVartag(this.__page, n_sym, _var.id, _var.name);
 
@@ -385,21 +385,21 @@ export class PageEditor {
         if (index !== undefined && (index > union.childs.length || index < 0)) idx = union.childs.length;
         const origin = union.childs[idx];
         if (!origin) return;
+        const source = exportSymbolShape(origin as unknown as SymbolShape);
+        source.id = uuid();
+        source.name = name;
+        set_childs_id(source.childs as Shape[]);
+        if (index === undefined) {
+            const pre_y = find_state_space(union);
+            if (pre_y < 0) throw new Error('failed');
+            source.frame.y = pre_y + 20;
+        } else {
+            source.frame.x += 20;
+            source.frame.y += 20;
+        }
+        const copy = importSymbolShape(source);
+        const api = this.__repo.start("makeStateAt", {});
         try {
-            const source = exportSymbolShape(origin as unknown as SymbolShape);
-            source.id = uuid();
-            source.name = name;
-            set_childs_id(source.childs as Shape[]);
-            if (index === undefined) {
-                const pre_y = find_state_space(union);
-                if (pre_y < 0) throw new Error('failed');
-                source.frame.y = pre_y + 20;
-            } else {
-                source.frame.x += 20;
-                source.frame.y += 20;
-            }
-            const copy = importSymbolShape(source);
-            const api = this.__repo.start("makeStateAt", {});
             const new_state = api.shapeInsert(this.__page, union, copy, idx + 1);
             modify_frame_after_inset_state(this.__page, api, union);
             if (new_state) {
@@ -734,7 +734,7 @@ export class PageEditor {
      * @param shapes 未进入文档的shape
      * @param adjusted 是否提前调整过相对位置
      */
-    pasteShapes1(parent: GroupShape, shapes: Shape[]): {shapes: Shape[], frame: {x: number, y: number}[]} | false {
+    pasteShapes1(parent: GroupShape, shapes: Shape[]): { shapes: Shape[], frame: { x: number, y: number }[] } | false {
         const api = this.__repo.start("insertShapes1", {});
         try {
             const result: Shape[] = [];
@@ -749,7 +749,7 @@ export class PageEditor {
             modify_frame_after_insert(api, this.__page, result);
             const frame = get_frame(result);
             this.__repo.commit();
-            return {shapes: result, frame};
+            return { shapes: result, frame };
         } catch (e) {
             console.log(e);
             this.__repo.rollback();
@@ -811,8 +811,8 @@ export class PageEditor {
             default: new_s = newRectShape(name, frame);
         }
         if (!new_s) return false;
-        const api = this.__repo.start("create2", {});
         const m_p2r = parent.matrix2Root();
+        const api = this.__repo.start("create2", {});
         try {
             const index = parent.childs.length;
             const xy = m_p2r.computeCoord2(0, 0);
@@ -983,8 +983,14 @@ export class PageEditor {
     }
     setName(name: string) {
         const api = this.__repo.start("setName", {});
-        api.pageModifyName(this.__document, this.__page.id, name);
-        this.__repo.commit();
+        try {
+            api.pageModifyName(this.__document, this.__page.id, name);
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+            return false;
+        }
     }
 
     /**
@@ -995,9 +1001,9 @@ export class PageEditor {
      */
     shapeListDrag(wanderer: Shape, host: Shape, offsetOverhalf: boolean) {
         if (!wanderer || !host) return;
+        const beforeXY = wanderer.frame2Root();
+        const api = this.__repo.start('shapeLayerMove', {});
         try {
-            const beforeXY = wanderer.frame2Root();
-            const api = this.__repo.start('shapeLayerMove', {});
             if (wanderer.id !== host.parent?.id) {
                 if (host.type === ShapeType.Artboard) {
                     if (offsetOverhalf) {
@@ -1039,8 +1045,8 @@ export class PageEditor {
         }
     }
     arrange(actions: PositonAdjust[]) {
+        const api = this.__repo.start('arrange', {});
         try {
-            const api = this.__repo.start('arrange', {});
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 translate(api, this.__page, action.target, action.transX, action.transY);
@@ -1051,8 +1057,8 @@ export class PageEditor {
         }
     }
     setShapesConstrainerProportions(actions: ConstrainerProportionsAction[]) {
+        const api = this.__repo.start('setShapesConstrainerProportions', {});
         try {
-            const api = this.__repo.start('setShapesConstrainerProportions', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.shapeModifyConstrainerProportions(this.__page, target, value);
@@ -1063,8 +1069,8 @@ export class PageEditor {
         }
     }
     setShapesFrame(actions: FrameAdjust[]) {
+        const api = this.__repo.start('setShapesFrame', {});
         try {
-            const api = this.__repo.start('setShapesFrame', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, widthExtend, heightExtend } = actions[i];
                 expand(api, this.__page, target, widthExtend, heightExtend);
@@ -1075,8 +1081,8 @@ export class PageEditor {
         }
     }
     setShapesRotate(shapes: Shape[], v: number) {
+        const api = this.__repo.start('setShapesRotate', {});
         try {
-            const api = this.__repo.start('setShapesRotate', {});
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
                 if (s.type === ShapeType.Line) {
@@ -1097,8 +1103,8 @@ export class PageEditor {
         }
     }
     shapesFlip(actions: FlipAction[]) {
+        const api = this.__repo.start('shapesFlip', {});
         try {
-            const api = this.__repo.start('shapesFlip', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, direction } = actions[i];
                 if (direction === 'horizontal') {
@@ -1113,8 +1119,8 @@ export class PageEditor {
         }
     }
     setShapesFillColor(actions: FillColorAction[]) {
+        const api = this.__repo.start('setShapesFillColor', {});
         try {
-            const api = this.__repo.start('setShapesFillColor', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
                 api.setFillColor(this.__page, target, index, value);
@@ -1125,8 +1131,8 @@ export class PageEditor {
         }
     }
     setShapesFillEnabled(actions: FillEnableAction[]) {
+        const api = this.__repo.start('setShapesFillEnabled', {});
         try {
-            const api = this.__repo.start('setShapesFillEnabled', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
                 api.setFillEnable(this.__page, target, index, value);
@@ -1137,8 +1143,8 @@ export class PageEditor {
         }
     }
     shapesAddFill(actions: FillAddAction[]) {
+        const api = this.__repo.start('shapesAddFill', {});
         try {
-            const api = this.__repo.start('shapesAddFill', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.addFillAt(this.__page, target, value, target.style.fills.length);
@@ -1149,8 +1155,8 @@ export class PageEditor {
         }
     }
     shapesDeleteFill(actions: FillDeleteAction[]) {
+        const api = this.__repo.start('shapesDeleteFill', {});
         try {
-            const api = this.__repo.start('shapesDeleteFill', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index } = actions[i];
                 api.deleteFillAt(this.__page, target, index);
@@ -1161,8 +1167,8 @@ export class PageEditor {
         }
     }
     shapesFillsUnify(actions: FillsReplaceAction[]) {
+        const api = this.__repo.start('shapesFillsUnify', {}); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
         try {
-            const api = this.__repo.start('shapesFillsUnify', {}); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 // 先清空再填入
@@ -1177,8 +1183,8 @@ export class PageEditor {
     }
     //boders
     setShapesBorderColor(actions: BorderColorAction[]) {
+        const api = this.__repo.start('setShapesBorderColor', {});
         try {
-            const api = this.__repo.start('setShapesBorderColor', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
                 api.setBorderColor(this.__page, target, index, value);
@@ -1189,8 +1195,8 @@ export class PageEditor {
         }
     }
     setShapesBorderEnabled(actions: BorderEnableAction[]) {
+        const api = this.__repo.start('setShapesBorderEnabled', {});
         try {
-            const api = this.__repo.start('setShapesBorderEnabled', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
                 api.setBorderEnable(this.__page, target, index, value);
@@ -1201,8 +1207,8 @@ export class PageEditor {
         }
     }
     shapesAddBorder(actions: BorderAddAction[]) {
+        const api = this.__repo.start('shapesAddBorder', {});
         try {
-            const api = this.__repo.start('shapesAddBorder', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.addBorderAt(this.__page, target, value, target.style.borders.length);
@@ -1213,8 +1219,8 @@ export class PageEditor {
         }
     }
     shapesDeleteBorder(actions: BorderDeleteAction[]) {
+        const api = this.__repo.start('shapesDeleteBorder', {});
         try {
-            const api = this.__repo.start('shapesDeleteBorder', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index } = actions[i];
                 api.deleteBorderAt(this.__page, target, index);
@@ -1225,8 +1231,8 @@ export class PageEditor {
         }
     }
     shapesBordersUnify(actions: BordersReplaceAction[]) {
+        const api = this.__repo.start('shapesBordersUnify', {});
         try {
-            const api = this.__repo.start('shapesBordersUnify', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.deleteBorders(this.__page, target, 0, target.style.borders.length);
@@ -1238,8 +1244,8 @@ export class PageEditor {
         }
     }
     setShapesBorderPosition(actions: BorderPositionAction[]) {
+        const api = this.__repo.start('setShapesBorderPosition', {});
         try {
-            const api = this.__repo.start('setShapesBorderPosition', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
                 api.setBorderPosition(this.__page, target, index, value);
@@ -1250,8 +1256,8 @@ export class PageEditor {
         }
     }
     setShapesBorderThickness(actions: BorderThicknessAction[]) {
+        const api = this.__repo.start('setShapesBorderThickness', {});
         try {
-            const api = this.__repo.start('setShapesBorderThickness', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
                 api.setBorderThickness(this.__page, target, index, value);
@@ -1262,8 +1268,8 @@ export class PageEditor {
         }
     }
     setShapesBorderStyle(actions: BorderStyleAction[]) {
+        const api = this.__repo.start('setShapesBorderStyle', {});
         try {
-            const api = this.__repo.start('setShapesBorderStyle', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
                 api.setBorderStyle(this.__page, target, index, value);
@@ -1274,8 +1280,8 @@ export class PageEditor {
         }
     }
     toggleShapesVisible(shapes: Shape[]) {
+        const api = this.__repo.start('setShapesVisible', {});
         try {
-            const api = this.__repo.start('setShapesVisible', {});
             for (let i = 0; i < shapes.length; i++) {
                 let shape: Shape | undefined = shapes[i];
                 if (shape.type === ShapeType.Group) {
@@ -1290,8 +1296,8 @@ export class PageEditor {
         }
     }
     toggleShapesLock(shapes: Shape[]) {
+        const api = this.__repo.start('setShapesLocked', {});
         try {
-            const api = this.__repo.start('setShapesLocked', {});
             for (let i = 0; i < shapes.length; i++) {
                 let shape: Shape | undefined = shapes[i];
                 if (shape.type === ShapeType.Group) {
@@ -1306,8 +1312,8 @@ export class PageEditor {
         }
     }
     setBackground(color: Color) {
+        const api = this.__repo.start('setBackground', {});
         try {
-            const api = this.__repo.start('setBackground', {});
             api.pageModifyBackground(this.__document, this.__page.id, color);
             this.__repo.commit();
         } catch (error) {
@@ -1316,8 +1322,8 @@ export class PageEditor {
         }
     }
     setShapesRadius(shapes: Shape[], lt: number, rt: number, rb: number, lb: number) {
+        const api = this.__repo.start('setShapesRadius', {});
         try {
-            const api = this.__repo.start('setShapesRadius', {});
             for (let i = 0; i < shapes.length; i++) {
                 const s = shapes[i];
                 if (s instanceof RectShape) api.shapeModifyRadius(this.__page, s, lt, rt, rb, lb);
@@ -1328,8 +1334,8 @@ export class PageEditor {
         }
     }
     setLinesLength(shapes: Shape[], v: number) {
+        const api = this.__repo.start('setLinesLength', {});
         try {
-            const api = this.__repo.start('setLinesLength', {});
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
                 if (s.type !== ShapeType.Line) continue;
