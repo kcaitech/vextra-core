@@ -14,10 +14,14 @@ export const SHAPE_ATTR_ID = {
     rotate: "rotate",
     constrainerProportions: "constrainerProportions",
     name: "name",
+
     addvar: "addvar",
+    removevar: "removevar",
     modifyvar: "modifyvar",
+
     addoverride: "addoverride",
     modifyoverride: "modifyoverride",
+
     visible: "visible",
     lock: "lock",
     resizingConstraint: "resizingConstraint",

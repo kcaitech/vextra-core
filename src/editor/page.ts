@@ -45,7 +45,11 @@ import {findUsableBorderStyle, findUsableFillStyle} from "../render/boolgroup";
 import {BasicArray} from "../data/basic";
 import {TableEditor} from "./table";
 import {exportGroupShape, exportSymbolShape} from "../data/baseexport";
-import {find_state_space, modify_frame_after_inset_state} from "./utils";
+import {
+    find_state_space, init_state,
+    make_union,
+    modify_frame_after_inset_state
+} from "./utils";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -53,19 +57,23 @@ export interface PositonAdjust { // 涉及属性：frame.x、frame.y
     transX: number
     transY: number
 }
+
 export interface ConstrainerProportionsAction { // constrainerProportions
     target: Shape
     value: boolean
 }
+
 export interface FrameAdjust { // frame.width、frame.height
     target: Shape
     widthExtend: number
     heightExtend: number
 }
+
 export interface RotateAdjust { // rotation
     target: Shape
     value: number
 }
+
 export interface FlipAction { // isFlippedHorizontal、isFlippedVertical
     target: Shape
     direction: 'horizontal' | 'vertical'
@@ -76,63 +84,77 @@ export interface FillColorAction { // fill.color
     index: number
     value: Color
 }
+
 export interface FillEnableAction { // fill.Enabled
     target: Shape
     index: number
     value: boolean
 }
+
 export interface FillAddAction { // style.fills
     target: Shape
     value: Fill
 }
+
 export interface FillDeleteAction { // style.fills
     target: Shape
     index: number
 }
+
 export interface FillsReplaceAction { // style.fills
     target: Shape
     value: Fill[]
 }
+
 export interface BorderColorAction { // border.color
     target: Shape
     index: number
     value: Color
 }
+
 export interface BorderEnableAction { // border.Enabled
     target: Shape
     index: number
     value: boolean
 }
+
 export interface BorderAddAction { // style.borders
     target: Shape
     value: Border
 }
+
 export interface BorderDeleteAction { // style.borders
     target: Shape
     index: number
 }
+
 export interface BordersReplaceAction { // style.borders
     target: Shape
     value: Border[]
 }
+
 export interface BorderPositionAction {
     target: Shape
     index: number
     value: BorderPosition
 }
+
 export interface BorderThicknessAction {
     target: Shape
     index: number
     value: number
 }
+
 export interface BorderStyleAction {
     target: Shape
     index: number
     value: BorderStyle
 }
+
 function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
     return Math.atan2(B.y - A.y, B.x - A.x)
 }
+
 export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
     const deltaX = B.x - A.x;
     const deltaY = B.y - A.y;
@@ -145,11 +167,13 @@ export class PageEditor {
     private __repo: CoopRepository;
     private __page: Page;
     private __document: Document;
+
     constructor(repo: CoopRepository, page: Page, document: Document) {
         this.__repo = repo;
         this.__page = page;
         this.__document = document;
     }
+
     group(shapes: Shape[], groupname: string): false | GroupShape { // shapes中元素index越小层级越高，即在图形列表的位置最高
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
@@ -167,8 +191,7 @@ export class PageEditor {
 
             this.__repo.commit();
             return gshape;
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e)
             this.__repo.rollback();
         }
@@ -188,6 +211,7 @@ export class PageEditor {
         }
         return false;
     }
+
     /**
      * @description 创建一个包裹所有shapes容器
      * @param shapes
@@ -210,13 +234,13 @@ export class PageEditor {
 
             this.__repo.commit();
             return artboard;
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e)
             this.__repo.rollback();
         }
         return false;
     }
+
     /**
      * @description 解除容器
      * @param shape
@@ -264,8 +288,7 @@ export class PageEditor {
 
             this.__repo.commit();
             return gshape;
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e)
             this.__repo.rollback();
         }
@@ -295,8 +318,7 @@ export class PageEditor {
                     api.shapeMove(this.__page, shape0, 0, symbolShape, i);
                 }
                 api.shapeDelete(this.__page, shape0.parent as GroupShape, index);
-            }
-            else {
+            } else {
                 const frame = shape0.frame;
                 const symbolShape = newSymbolShape(name ?? shape0.name, new ShapeFrame(frame.x, frame.y, frame.width, frame.height));
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
@@ -309,77 +331,42 @@ export class PageEditor {
             } else {
                 throw new Error('failed')
             }
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e)
             this.__repo.rollback();
         }
     }
 
     /**
-     * @description 创建组件状态集合union
-     * @param symbol 原组件
-     * @param state_name 第一个状态名称
+     * @description 给一个组件symbol添加一个属性，如果该组件不是一个union集合，则先创建一个集合
      * @param attri_name 第一个属性名称
+     * @param dlt 属性默认值
      * @return symbol 集合union
      */
-    makeSymbolUnion(symbol: SymbolShape, state_name: string, attri_name: string) {
-        const p = symbol.parent;
-        if (!p || p.isUnionSymbolShape) return;
-        // 定义第一个状态的frame
-        const state_frame = new ShapeFrame(20, 20, symbol.frame.width, symbol.frame.height);
-
-        const api = this.__repo.start("makeSymbolUnion", {});
+    makeStatus(symbol: SymbolShape, attri_name: string, dlt: string) {
+        const api = this.__repo.start("makeStatus", {});
         try {
-            // 新建并插入一个symbol对象，将作为第一个状态
-            let n_sym = newSymbolShape(state_name, state_frame);
-            const insert_result = api.shapeInsert(this.__page, symbol, n_sym, 0);
-            if (!insert_result) throw new Error('failed: !insert_result');
-
-            const childs = symbol.childs;
-            for (let i = 1, len = childs.length; i < len; ++i) {
-                api.shapeMove(this.__page, symbol, 1, n_sym, i - 1);
+            if (!symbol.isUnionSymbolShape) {
+                const u = make_union(api, this.__page, symbol, dlt, attri_name);
+                if (!u) throw new Error('make union failed!');
+                symbol = u;
+            } else {
+                const _var = new Variable(uuid(), VariableType.Status, attri_name, dlt);
+                api.shapeAddVariable(this.__page, symbol, _var);
             }
-            const box = symbol.boundingBox();
-
-            // 调整union对象的frame、style
-            if (symbol.rotation) {
-                api.shapeModifyRotate(this.__page, n_sym, symbol.rotation);
-                api.shapeModifyRotate(this.__page, symbol, 0);
-            }
-            if (symbol.isFlippedHorizontal) {
-                api.shapeModifyHFlip(this.__page, n_sym, true);
-                api.shapeModifyHFlip(this.__page, symbol, false);
-            }
-            if (symbol.isFlippedVertical) {
-                api.shapeModifyVFlip(this.__page, n_sym, true);
-                api.shapeModifyVFlip(this.__page, symbol, false);
-            }
-            api.shapeModifyX(this.__page, symbol, box.x - 20);
-            api.shapeModifyY(this.__page, symbol, box.y - 20);
-            api.shapeModifyWH(this.__page, symbol, box.width + 40, box.height + 40);
-            api.shapeModifyIsUnion(this.__page, symbol, true);
-            const border_style = new BorderStyle(2, 2);
-            const boder = new Border(uuid(), true, types.FillType.SolidColor, new Color(1, 255, 153, 0), BorderPosition.Inner, 2, border_style);
-            api.addBorderAt(this.__page, symbol, boder, 0);
-
-            // 将产生union的第一个变量
-            const _var = new Variable(uuid(), VariableType.Status,  attri_name);
-            api.shapeAddVariable(this.__page, symbol as SymbolShape, _var);
-            api.shapeModifyVartag(this.__page, n_sym, _var.id, _var.name);
-
             this.__repo.commit();
-            return symbol as any as SymbolShape;
+            return symbol;
         } catch (error) {
             console.log(error)
             this.__repo.rollback();
         }
     }
+
     /**
      * @description 基于内部原有状态建立新状态
      * @union union
      */
-    makeStateAt(union: SymbolShape, name: string, index?: number) {
+    makeStateAt(union: SymbolShape, dlt: string, index?: number) {
         if (!union.isUnionSymbolShape || !union.childs.length) return;
         let idx = index === undefined ? union.childs.length - 1 : index;
         if (index !== undefined && (index > union.childs.length || index < 0)) idx = union.childs.length;
@@ -388,7 +375,6 @@ export class PageEditor {
         try {
             const source = exportSymbolShape(origin as unknown as SymbolShape);
             source.id = uuid();
-            source.name = name;
             set_childs_id(source.childs as Shape[]);
             if (index === undefined) {
                 const pre_y = find_state_space(union);
@@ -402,6 +388,8 @@ export class PageEditor {
             const api = this.__repo.start("makeStateAt", {});
             const new_state = api.shapeInsert(this.__page, union, copy, idx + 1);
             modify_frame_after_inset_state(this.__page, api, union);
+            init_state(api, this.__page, new_state as SymbolShape, dlt);
+
             if (new_state) {
                 this.__repo.commit();
                 return new_state as any as SymbolShape;
@@ -413,6 +401,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     /**
      * @description 从外部引入一个状态
      * @symbol 外部组件
@@ -420,6 +409,7 @@ export class PageEditor {
     insertStateAt(union: SymbolShape, symbol: SymbolShape, index: number) {
 
     }
+
     /**
      * 将引用的组件解引用
      * todo 考虑union symbol
@@ -450,7 +440,9 @@ export class PageEditor {
         if (index < 0) throw new Error("shape not inside parent")
 
         const _this = this;
-        const ctx: IImportContext = new class implements IImportContext { document: Document = _this.__document };
+        const ctx: IImportContext = new class implements IImportContext {
+            document: Document = _this.__document
+        };
 
         const newShape = importGroupShape(symbolData, ctx);
 
@@ -460,8 +452,7 @@ export class PageEditor {
             api.shapeDelete(this.__page, parent as GroupShape, index + 1);
             this.__repo.commit();
             return ret;
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e)
             this.__repo.rollback();
         }
@@ -473,7 +464,9 @@ export class PageEditor {
 
     private cloneStyle(style: Style): Style {
         const _this = this;
-        const ctx: IImportContext = new class implements IImportContext { document: Document = _this.__document };
+        const ctx: IImportContext = new class implements IImportContext {
+            document: Document = _this.__document
+        };
         return importStyle(style, ctx);
     }
 
@@ -504,10 +497,10 @@ export class PageEditor {
                 const m = p.matrix2Root();
                 const lt = m.computeCoord(box.x, box.y);
                 const rb = m.computeCoord(box.x + box.width, box.y + box.height);
-                return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
+                return {x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y}
             })
             const firstXY = boundsArr[0]
-            const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
+            const bounds = {left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y};
 
             boundsArr.reduce((pre, cur) => {
                 expandBounds(pre, cur.x, cur.y);
@@ -528,8 +521,7 @@ export class PageEditor {
 
                 if (pathstr.length > 0) {
                     pathstr = gPal.boolop.union(pathstr, shapepath.toString())
-                }
-                else {
+                } else {
                     pathstr = shapepath.toString();
                 }
             })
@@ -595,6 +587,7 @@ export class PageEditor {
         }
         return false;
     }
+
     private removeContactSides(api: Api, page: Page, shape: types.ContactShape) {
         if (shape.from) {
             const fromShape = page.getShape(shape.from.shapeId);
@@ -631,6 +624,7 @@ export class PageEditor {
             }
         }
     }
+
     private removeContact(api: Api, page: Page, shape: Shape) {
         const contacts = shape.style.contacts;
         if (contacts && contacts.length) {
@@ -642,13 +636,15 @@ export class PageEditor {
                 let idx = -1;
                 for (let j = 0, len = p.childs.length; j < len; j++) {
                     if (p.childs[j].id === shape.id) {
-                        idx = j; break;
+                        idx = j;
+                        break;
                     }
                 }
                 if (idx > -1) api.shapeDelete(page, p as GroupShape, idx);
             }
         }
     }
+
     private delete_inner(page: Page, shape: Shape, api: Api): boolean {
         const p = shape.parent as GroupShape;
         if (!p) return false;
@@ -663,6 +659,7 @@ export class PageEditor {
         }
         return true;
     }
+
     delete(shape: Shape): boolean {
         const page = shape.getPage() as Page;
         if (!page) return false;
@@ -676,8 +673,7 @@ export class PageEditor {
                 }
                 this.__repo.commit()
                 return true;
-            }
-            else {
+            } else {
                 this.__repo.rollback();
             }
         } catch (e) {
@@ -686,6 +682,7 @@ export class PageEditor {
         }
         return false;
     }
+
     // 批量删除
     delete_batch(shapes: Shape[]) {
         const api = this.__repo.start("deleteBatch", {});
@@ -708,6 +705,7 @@ export class PageEditor {
         this.__repo.commit();
         return true;
     }
+
     // 插入成功，返回插入的shape
     insert(parent: GroupShape, index: number, shape: Shape, adjusted = false): Shape | false {
         // adjust shape frame refer to parent
@@ -729,12 +727,13 @@ export class PageEditor {
             return false;
         }
     }
+
     /**
      * @description 同一容器下批量粘贴shape
      * @param shapes 未进入文档的shape
      * @param adjusted 是否提前调整过相对位置
      */
-    pasteShapes1(parent: GroupShape, shapes: Shape[]): {shapes: Shape[], frame: {x: number, y: number}[]} | false {
+    pasteShapes1(parent: GroupShape, shapes: Shape[]): { shapes: Shape[], frame: { x: number, y: number }[] } | false {
         const api = this.__repo.start("insertShapes1", {});
         try {
             const result: Shape[] = [];
@@ -756,6 +755,7 @@ export class PageEditor {
             return false;
         }
     }
+
     /**
      * @description 指定容器下粘贴shape
      * @param shapes 未进入文档的shape
@@ -767,7 +767,7 @@ export class PageEditor {
             const result: Shape[] = [];
             for (let i = 0, len = actions.length; i < len; i++) {
                 const shape = shapes[i];
-                const { parent, index } = actions[i];
+                const {parent, index} = actions[i];
                 shape.id = uuid();
                 api.shapeInsert(this.__page, parent, shape, index);
                 result.push(parent.childs[index]);
@@ -780,16 +780,23 @@ export class PageEditor {
             return false;
         }
     }
+
     // 创建一个shape
     create(type: ShapeType, name: string, frame: ShapeFrame): Shape {
         switch (type) {
-            case ShapeType.Artboard: return newArtboard(name, frame);
-            case ShapeType.Rectangle: return newRectShape(name, frame);
-            case ShapeType.Oval: return newOvalShape(name, frame);
-            case ShapeType.Line: return newLineShape(name, frame);
-            default: return newRectShape(name, frame);
+            case ShapeType.Artboard:
+                return newArtboard(name, frame);
+            case ShapeType.Rectangle:
+                return newRectShape(name, frame);
+            case ShapeType.Oval:
+                return newOvalShape(name, frame);
+            case ShapeType.Line:
+                return newLineShape(name, frame);
+            default:
+                return newRectShape(name, frame);
         }
     }
+
     /**
      * @description 参数可选的创建并插入图形
      * @param ex_params 包含某一些属性的特定参数
@@ -801,14 +808,23 @@ export class PageEditor {
      * @returns
      */
     create2(page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, ex_params: any) {
-        const { is_arrow, rotation, target_xy } = ex_params;
+        const {is_arrow, rotation, target_xy} = ex_params;
         let new_s: Shape | undefined;
         switch (type) {
-            case ShapeType.Artboard: new_s = newArtboard(name, frame); break;
-            case ShapeType.Rectangle: new_s = newRectShape(name, frame); break;
-            case ShapeType.Oval: new_s = newOvalShape(name, frame); break;
-            case ShapeType.Line: new_s = is_arrow ? newArrowShape(name, frame) : newLineShape(name, frame); break;
-            default: new_s = newRectShape(name, frame);
+            case ShapeType.Artboard:
+                new_s = newArtboard(name, frame);
+                break;
+            case ShapeType.Rectangle:
+                new_s = newRectShape(name, frame);
+                break;
+            case ShapeType.Oval:
+                new_s = newOvalShape(name, frame);
+                break;
+            case ShapeType.Line:
+                new_s = is_arrow ? newArrowShape(name, frame) : newLineShape(name, frame);
+                break;
+            default:
+                new_s = newRectShape(name, frame);
         }
         if (!new_s) return false;
         const api = this.__repo.start("create2", {});
@@ -848,14 +864,14 @@ export class PageEditor {
                 api.shapeMove(this.__page, parent, index, target, to)
                 this.__repo.commit();
                 return true;
-            }
-            catch (error) {
+            } catch (error) {
                 console.log(error)
                 this.__repo.rollback();
             }
         }
         return false;
     }
+
     /**
      * @description 提高图形shape的z-index层级
      * @param step 层级数，不传则提高到顶部
@@ -886,6 +902,7 @@ export class PageEditor {
             return false;
         }
     }
+
     /**
      * @description 调低图形shape的z-index层级
      * @param step 层级数，不传则降低到底部
@@ -915,6 +932,7 @@ export class PageEditor {
             return false;
         }
     }
+
     /**
      * @description src中的每个图形都将被替换成replacement
      * @param document 当前文档
@@ -928,7 +946,7 @@ export class PageEditor {
             const len = replacement.length;
             // 寻找replacement的左上角(lt_point)，该点将和src中每个图形的左上角重合
             const any_r_f = replacement[0].frame;
-            const lt_point = { x: any_r_f.x, y: any_r_f.y };
+            const lt_point = {x: any_r_f.x, y: any_r_f.y};
             for (let i = 1; i < len; i++) {
                 const frame = replacement[i].frame;
                 if (frame.x < lt_point.x) lt_point.x = frame.x;
@@ -940,7 +958,7 @@ export class PageEditor {
             for (let i = 0; i < len; i++) {
                 const r = replacement[i];
                 const rf = r.frame;
-                const dt = { x: rf.x - lt_point.x, y: rf.y - lt_point.y };
+                const dt = {x: rf.x - lt_point.x, y: rf.y - lt_point.y};
                 delta_xys.push(dt);
             }
             // 收集被替换上去的元素
@@ -956,7 +974,7 @@ export class PageEditor {
 
                 // 记录被替换掉的图形原先所在的位置
                 const fr = s.frame;
-                const save_frame = { x: fr.x, y: fr.y };
+                const save_frame = {x: fr.x, y: fr.y};
                 // 先删除将被替换的图形
                 const del_res = this.delete_inner(this.__page, s, api);
                 if (!del_res) throw new Error('delete failed');
@@ -981,6 +999,7 @@ export class PageEditor {
             return false;
         }
     }
+
     setName(name: string) {
         const api = this.__repo.start("setName", {});
         api.pageModifyName(this.__document, this.__page.id, name);
@@ -1038,6 +1057,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     arrange(actions: PositonAdjust[]) {
         try {
             const api = this.__repo.start('arrange', {});
@@ -1050,11 +1070,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesConstrainerProportions(actions: ConstrainerProportionsAction[]) {
         try {
             const api = this.__repo.start('setShapesConstrainerProportions', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
+                const {target, value} = actions[i];
                 api.shapeModifyConstrainerProportions(this.__page, target, value);
             }
             this.__repo.commit();
@@ -1062,11 +1083,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFrame(actions: FrameAdjust[]) {
         try {
             const api = this.__repo.start('setShapesFrame', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, widthExtend, heightExtend } = actions[i];
+                const {target, widthExtend, heightExtend} = actions[i];
                 expand(api, this.__page, target, widthExtend, heightExtend);
             }
             this.__repo.commit();
@@ -1074,13 +1096,15 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesRotate(shapes: Shape[], v: number) {
         try {
             const api = this.__repo.start('setShapesRotate', {});
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
                 if (s.type === ShapeType.Line) {
-                    const f = s.frame, m2p = s.matrix2Parent(), lt = m2p.computeCoord2(0, 0), rb = m2p.computeCoord2(f.width, f.height);
+                    const f = s.frame, m2p = s.matrix2Parent(), lt = m2p.computeCoord2(0, 0),
+                        rb = m2p.computeCoord2(f.width, f.height);
                     const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
                     let dr = v - real_r;
                     if (s.isFlippedHorizontal) dr = -dr;
@@ -1096,11 +1120,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesFlip(actions: FlipAction[]) {
         try {
             const api = this.__repo.start('shapesFlip', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, direction } = actions[i];
+                const {target, direction} = actions[i];
                 if (direction === 'horizontal') {
                     api.shapeModifyHFlip(this.__page, target, !target.isFlippedHorizontal);
                 } else if (direction === 'vertical') {
@@ -1112,11 +1137,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillColor(actions: FillColorAction[]) {
         try {
             const api = this.__repo.start('setShapesFillColor', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
+                const {target, index, value} = actions[i];
                 api.setFillColor(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1124,11 +1150,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillEnabled(actions: FillEnableAction[]) {
         try {
             const api = this.__repo.start('setShapesFillEnabled', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
+                const {target, index, value} = actions[i];
                 api.setFillEnable(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1136,11 +1163,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesAddFill(actions: FillAddAction[]) {
         try {
             const api = this.__repo.start('shapesAddFill', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
+                const {target, value} = actions[i];
                 api.addFillAt(this.__page, target, value, target.style.fills.length);
             }
             this.__repo.commit();
@@ -1148,11 +1176,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesDeleteFill(actions: FillDeleteAction[]) {
         try {
             const api = this.__repo.start('shapesDeleteFill', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, index } = actions[i];
+                const {target, index} = actions[i];
                 api.deleteFillAt(this.__page, target, index);
             }
             this.__repo.commit();
@@ -1160,11 +1189,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesFillsUnify(actions: FillsReplaceAction[]) {
         try {
             const api = this.__repo.start('shapesFillsUnify', {}); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
+                const {target, value} = actions[i];
                 // 先清空再填入
                 api.deleteFills(this.__page, target, 0, target.style.fills.length); // 清空
                 api.addFills(this.__page, target, value); // 填入新的值
@@ -1175,12 +1205,13 @@ export class PageEditor {
             // throw new Error(`${error}`);
         }
     }
+
     //boders
     setShapesBorderColor(actions: BorderColorAction[]) {
         try {
             const api = this.__repo.start('setShapesBorderColor', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
+                const {target, index, value} = actions[i];
                 api.setBorderColor(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1188,11 +1219,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesBorderEnabled(actions: BorderEnableAction[]) {
         try {
             const api = this.__repo.start('setShapesBorderEnabled', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, index, value } = actions[i];
+                const {target, index, value} = actions[i];
                 api.setBorderEnable(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1200,11 +1232,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesAddBorder(actions: BorderAddAction[]) {
         try {
             const api = this.__repo.start('shapesAddBorder', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
+                const {target, value} = actions[i];
                 api.addBorderAt(this.__page, target, value, target.style.borders.length);
             }
             this.__repo.commit();
@@ -1212,11 +1245,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesDeleteBorder(actions: BorderDeleteAction[]) {
         try {
             const api = this.__repo.start('shapesDeleteBorder', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, index } = actions[i];
+                const {target, index} = actions[i];
                 api.deleteBorderAt(this.__page, target, index);
             }
             this.__repo.commit();
@@ -1224,11 +1258,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesBordersUnify(actions: BordersReplaceAction[]) {
         try {
             const api = this.__repo.start('shapesBordersUnify', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, value } = actions[i];
+                const {target, value} = actions[i];
                 api.deleteBorders(this.__page, target, 0, target.style.borders.length);
                 api.addBorders(this.__page, target, value);
             }
@@ -1237,11 +1272,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesBorderPosition(actions: BorderPositionAction[]) {
         try {
             const api = this.__repo.start('setShapesBorderPosition', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const {target, value, index} = actions[i];
                 api.setBorderPosition(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1249,11 +1285,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesBorderThickness(actions: BorderThicknessAction[]) {
         try {
             const api = this.__repo.start('setShapesBorderThickness', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const {target, value, index} = actions[i];
                 api.setBorderThickness(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1261,11 +1298,12 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesBorderStyle(actions: BorderStyleAction[]) {
         try {
             const api = this.__repo.start('setShapesBorderStyle', {});
             for (let i = 0; i < actions.length; i++) {
-                const { target, value, index } = actions[i];
+                const {target, value, index} = actions[i];
                 api.setBorderStyle(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1273,6 +1311,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     toggleShapesVisible(shapes: Shape[]) {
         try {
             const api = this.__repo.start('setShapesVisible', {});
@@ -1289,6 +1328,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     toggleShapesLock(shapes: Shape[]) {
         try {
             const api = this.__repo.start('setShapesLocked', {});
@@ -1305,6 +1345,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setBackground(color: Color) {
         try {
             const api = this.__repo.start('setBackground', {});
@@ -1315,6 +1356,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesRadius(shapes: Shape[], lt: number, rt: number, rb: number, lb: number) {
         try {
             const api = this.__repo.start('setShapesRadius', {});
@@ -1327,6 +1369,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setLinesLength(shapes: Shape[], v: number) {
         try {
             const api = this.__repo.start('setLinesLength', {});
@@ -1334,7 +1377,7 @@ export class PageEditor {
                 const s = shapes[i];
                 if (s.type !== ShapeType.Line) continue;
                 const o1 = s.matrix2Root().computeCoord2(0, 0);
-                const f = s.frame, r = getHorizontalRadians({ x: 0, y: 0 }, { x: f.width, y: f.height });
+                const f = s.frame, r = getHorizontalRadians({x: 0, y: 0}, {x: f.width, y: f.height});
                 api.shapeModifyWH(this.__page, s, v * Math.cos(r), v * Math.sin(r));
                 const o2 = s.matrix2Root().computeCoord2(0, 0);
                 translate(api, this.__page, s, o1.x - o2.x, o1.y - o2.y);
@@ -1345,12 +1388,15 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     editor4Shape(shape: Shape): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo);
     }
+
     editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
         return new TextShapeEditor(shape, this.__page, this.__repo);
     }
+
     editor4Table(shape: TableShape): TableEditor {
         return new TableEditor(shape, this.__page, this.__repo);
     }

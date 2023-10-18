@@ -482,6 +482,9 @@ export function shapeModifyVariable(page: Page, _var: Variable, value: any) {
 export function shapeAddVariable(page: Page, shape: SymbolShape | SymbolRefShape, _var: Variable) {
     shape.addVar(_var);
 }
+export function shapeRemoveVariable(page: Page, shape: SymbolShape | SymbolRefShape, key: string) {
+    shape.removeVar(key);
+}
 export function shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
     if (!shape.varbinds) shape.varbinds = new BasicMap();
     shape.varbinds.set(type, varId);

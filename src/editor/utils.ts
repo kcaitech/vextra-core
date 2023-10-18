@@ -1,30 +1,51 @@
-import { float_accuracy } from "../basic/consts";
-import { TableShape, Page, Shape, Style, TextBehaviour, Text, TextShape, TableCell, SymbolShape, SymbolRefShape, ShapeType } from "../data/classes";
-import { Api } from "./command/recordapi";
+import {float_accuracy} from "../basic/consts";
+import {
+    Border, BorderPosition,
+    BorderStyle, Color,
+    Page,
+    Shape, ShapeFrame,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape,
+    TableCell,
+    TableShape,
+    Text,
+    TextBehaviour,
+    TextShape,
+    Variable,
+    VariableType
+} from "../data/classes";
+import {Api} from "./command/recordapi";
+import {BasicMap} from "../data/basic";
+import {newSymbolShape} from "./creator";
+import {uuid} from "../basic/uuid";
+import * as types from "../data/typesdefine";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
+
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
 }
+
 const DefaultFontSize = Text.DefaultFontSize;
+
 export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShape) {
     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     switch (textBehaviour) {
-        case TextBehaviour.FixWidthAndHeight: break;
-        case TextBehaviour.Fixed:
-            {
-                const layout = shape.text.getLayout();
-                const fontsize = shape.text.attr?.fontSize ?? DefaultFontSize;
-                api.shapeModifyWH(page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
-                break;
-            }
-        case TextBehaviour.Flexible:
-            {
-                const layout = shape.text.getLayout();
-                const fontsize = shape.text.attr?.fontSize ?? DefaultFontSize;
-                api.shapeModifyWH(page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
-                break;
-            }
+        case TextBehaviour.FixWidthAndHeight:
+            break;
+        case TextBehaviour.Fixed: {
+            const layout = shape.text.getLayout();
+            const fontsize = shape.text.attr?.fontSize ?? DefaultFontSize;
+            api.shapeModifyWH(page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
+            break;
+        }
+        case TextBehaviour.Flexible: {
+            const layout = shape.text.getLayout();
+            const fontsize = shape.text.attr?.fontSize ?? DefaultFontSize;
+            api.shapeModifyWH(page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
+            break;
+        }
     }
 }
 
@@ -59,6 +80,7 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
         api.shapeModifyWH(page, table, table.frame.width, table.frame.height + layout.contentHeight - height);
     }
 }
+
 export function find_state_space(union: SymbolShape) {
     if (!union.isUnionSymbolShape) return -1;
     const childs = union.childs;
@@ -67,13 +89,17 @@ export function find_state_space(union: SymbolShape) {
     for (let i = 0, len = childs.length; i < len; i++) {
         const child = childs[i];
         const m2p = child.matrix2Parent(), f = child.frame;
-        const point = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m2p.computeCoord3(p));
+        const point = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
+            x: 0,
+            y: f.height
+        }].map(p => m2p.computeCoord3(p));
         for (let j = 0; j < 4; j++) {
             if (point[j].y > y) y = point[j].y;
         }
     }
     return y;
 }
+
 export function modify_frame_after_inset_state(page: Page, api: Api, union: SymbolShape) {
     const y = find_state_space(union);
     const delta = union.frame.height - y;
@@ -81,13 +107,14 @@ export function modify_frame_after_inset_state(page: Page, api: Api, union: Symb
         api.shapeModifyHeight(page, union, union.frame.height - delta + 20)
     }
 }
+
 function get_topology_map(shape: Shape, init?: { shape: string, ref: string }[]) {
     let deps: { shape: string, ref: string }[] = init || [];
     const childs = shape.type === ShapeType.SymbolRef ? shape.naviChilds : shape.childs;
     if (!childs || childs.length === 0) return [];
     for (let i = 0, len = childs.length; i < len; i++) {
         const child = childs[i];
-        deps.push({ shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? childs[i].refId : childs[i].id });
+        deps.push({shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? childs[i].refId : childs[i].id});
         const c_childs = child.type === ShapeType.SymbolRef ? child.naviChilds : child.childs;
         if (c_childs && c_childs.length) deps = [...get_topology_map(child, deps)];
     }
@@ -118,18 +145,129 @@ function filter_deps(deps: { shape: string, ref: string }[], key1: 'shape' | 're
     }
     return result;
 }
+
 /**
  * @description 检查symbol与ref之间是否存在循环引用
  * @param symbol 任意存在子元素的图形
  * @param ref 想去引用的组件
- * @returns 
+ * @returns
  */
 export function is_circular_ref(symbol: Shape, ref: SymbolRefShape): boolean {
-    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), { shape: symbol.id, ref: ref.refId }];
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: symbol.id, ref: ref.refId}];
     if (deps.length < 2) return false;
     // 过滤左侧
     deps = filter_deps(deps, 'shape', 'ref');
     // 过滤右侧
     deps = filter_deps(deps, 'ref', 'shape');
     return !!deps.length;
+}
+
+/**
+ * @description 根据属性值，为可变组件命名
+ * @param symbol
+ */
+export function gen_name_for_state(symbol: SymbolShape) {
+    if (!symbol.parent) return false;
+    if (!symbol.parent.isUnionSymbolShape) return false;
+    if (!symbol.parent.variables) return false;
+    if (!symbol.vartag) return false;
+    const variables = symbol.parent.variables as BasicMap<string, Variable>;
+    let name_slices: string[] = [];
+    variables.forEach((v, k) => {
+        if (v.type !== VariableType.Status) return;
+        const slice = symbol.vartag?.get(k) || v.value;
+        slice && name_slices.push(slice);
+    })
+    return name_slices.toString();
+}
+
+/**
+ * @description 初始化可变组件的属性值，使该可变组件的属性值与其余可变组件不同、给可变组件命名
+ * @param symbol 可变组件
+ */
+export function init_state(api: Api, page: Page, symbol: SymbolShape, dlt: string) {
+    if (!symbol.parent) return;
+    const union = symbol.parent as SymbolShape;
+    if (!union.variables) return;
+    const variables: Variable[] = Array.from(union.variables.values());
+    for (let i = 0, len = variables.length; i < len; i++) {
+        const v = variables[i];
+        if (v.type !== VariableType.Status) continue;
+        const special_name = gen_special_value_for_state(symbol, v, dlt) || dlt;
+        api.shapeModifyVartag(page, symbol, v.id, special_name);
+        break;
+    }
+    const name = gen_name_for_state(symbol);
+    if (!name) return;
+    api.shapeModifyName(page, symbol, name);
+}
+
+export function gen_special_value_for_state(symbol: SymbolShape, variable: Variable, dlt: string) {
+    if (!symbol.parent) return false;
+    if (!symbol.parent.variables) return false;
+    if (!symbol.vartag) return false;
+    const bros: SymbolShape[] = symbol.parent.childs as unknown as SymbolShape[];
+    let index = 2;
+    let type_name = dlt;
+    const reg = new RegExp(`^${dlt}[0-9]*$`);
+    const number_set: Set<number> = new Set();
+    let max = 2;
+    for (let i = 0, len = bros.length; i < len; i++) {
+        const n = bros[i].vartag?.get(variable.id);
+        if (n && reg.test(n)) {
+            const num = Number(n.split(dlt)[1]);
+            number_set.add(num);
+            if (num > max) max = num;
+        }
+    }
+    while (index <= max) {
+        if (!number_set.has(index)) break;
+        index++;
+    }
+    return `${type_name}${index}`;
+}
+
+export function make_union(api: Api, page: Page, symbol: SymbolShape, state_name: string, attri_name: string) {
+    const p = symbol.parent;
+    if (!p || p.isUnionSymbolShape) return false;
+    // 定义第一个状态的frame
+    const state_frame = new ShapeFrame(20, 20, symbol.frame.width, symbol.frame.height);
+    // 新建并插入一个symbol对象，将作为第一个状态
+    let n_sym = newSymbolShape(state_name, state_frame);
+    const insert_result = api.shapeInsert(page, symbol, n_sym, 0);
+    if (!insert_result) return false;
+
+    const childs = symbol.childs;
+    for (let i = 1, len = childs.length; i < len; ++i) {
+        api.shapeMove(page, symbol, 1, n_sym, i - 1);
+    }
+    const box = symbol.boundingBox();
+
+    // 调整union对象的frame、style
+    if (symbol.rotation) {
+        api.shapeModifyRotate(page, n_sym, symbol.rotation);
+        api.shapeModifyRotate(page, symbol, 0);
+    }
+    if (symbol.isFlippedHorizontal) {
+        api.shapeModifyHFlip(page, n_sym, true);
+        api.shapeModifyHFlip(page, symbol, false);
+    }
+    if (symbol.isFlippedVertical) {
+        api.shapeModifyVFlip(page, n_sym, true);
+        api.shapeModifyVFlip(page, symbol, false);
+    }
+    api.shapeModifyX(page, symbol, box.x - 20);
+    api.shapeModifyY(page, symbol, box.y - 20);
+    api.shapeModifyWH(page, symbol, box.width + 40, box.height + 40);
+    api.shapeModifyIsUnion(page, symbol, true);
+    const border_style = new BorderStyle(2, 2);
+    const boder = new Border(uuid(), true, types.FillType.SolidColor, new Color(1, 255, 153, 0), BorderPosition.Inner, 2, border_style);
+    api.addBorderAt(page, symbol, boder, 0);
+
+    // 将产生union的第一个变量
+    const _var = new Variable(uuid(), VariableType.Status, attri_name, state_name);
+    api.shapeAddVariable(page, symbol as SymbolShape, _var);
+    api.shapeModifyVartag(page, n_sym, _var.id, state_name);
+
+    return symbol;
 }

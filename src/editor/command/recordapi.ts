@@ -353,6 +353,16 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.addvar, exportVariable(_var), undefined));
         })
     }
+    shapeRemoveVariable(page: Page, shape: SymbolShape | SymbolRefShape, key: string) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const _var = shape.getVar(key)!;
+            shape.removeVar(key);
+            const shapeId = genShapeId(shape);
+            shapeId.push(key);
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.removevar,undefined, exportVariable(_var)));
+        })
+    }
     shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
