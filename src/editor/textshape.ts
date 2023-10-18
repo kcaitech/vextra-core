@@ -137,8 +137,8 @@ export class TextShapeEditor extends ShapeEditor {
         }
         attr = attr ?? this.__cachedSpanAttr;
         this.resetCachedSpanAttr();
-        const api = this.__repo.start("insertText", {});
         let count = text.length; // 插入字符数
+        const api = this.__repo.start("insertText", {});
         try {
             const shape = this.shape4edit(api);
             if (del > 0) api.deleteText(this.__page, shape, index, del);
