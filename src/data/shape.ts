@@ -492,17 +492,17 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     private _createVar4Override(type: OverrideType, value: any) {
         switch (type) {
             case OverrideType.Borders:
-                return new Variable(uuid(), classes.VariableType.Borders, "");
+                return new Variable(uuid(), classes.VariableType.Borders, "", value);
             case OverrideType.Fills:
-                return new Variable(uuid(), classes.VariableType.Fills, "");
+                return new Variable(uuid(), classes.VariableType.Fills, "", value);
             case OverrideType.Image:
-                return new Variable(uuid(), classes.VariableType.ImageRef, "");
+                return new Variable(uuid(), classes.VariableType.ImageRef, "", value);
             // case OverrideType.StringValue:
             //     return new Variable(uuid(), classes.VariableType.StringValue, "");
             case OverrideType.Text:
-                return new Variable(uuid(), classes.VariableType.Text, "");
+                return new Variable(uuid(), classes.VariableType.Text, "", value);
             case OverrideType.Visible:
-                return new Variable(uuid(), classes.VariableType.Visible, "");
+                return new Variable(uuid(), classes.VariableType.Visible, "", value);
             case OverrideType.Variable:
                 const _val = value as Variable;
                 return _val;
@@ -543,7 +543,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
                     if (!override) {
                         override = this.createOverrid(refId, attr, value);
                     }
-                    override.v.value = value;
+                    // override.v.value = value;
                     return override;
                 }
             case OverrideType.Variable:
@@ -582,6 +582,13 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         refId = genRefId(refId, attr); // id+type->var
         if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
         this.virbindsEx.set(refId, value);
+    }
+
+    removeOverrid2(refId: string, attr: OverrideType) {
+        refId = genRefId(refId, attr); // id+type->var
+        if (this.virbindsEx) {
+            this.virbindsEx.delete(refId);
+        }
     }
 
     addVar(v: Variable): Variable {

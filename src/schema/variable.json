@@ -53,7 +53,8 @@
     "required": [
         "id",
         "type",
-        "name"
+        "name",
+        "value"
     ],
     "additionalProperties": false
 }

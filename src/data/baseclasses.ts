@@ -78,16 +78,18 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value?: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill) >)
+    value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill) >)
     constructor(
         id: string,
         type: VariableType,
-        name: string
+        name: string,
+        value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill) >)
     ) {
         super()
         this.id = id
         this.type = type
         this.name = name
+        this.value = value
     }
 }
 /**

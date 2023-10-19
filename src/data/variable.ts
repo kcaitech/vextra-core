@@ -7,12 +7,12 @@ export class Variable extends Watchable(Basic) implements classes.Variable {
     id: string
     type: VariableType
     name: string
-    value?: any
+    value: any
     constructor(
         id: string,
         type: VariableType,
         name: string,
-        value?: any
+        value: any
     ) {
         super()
         this.id = id
