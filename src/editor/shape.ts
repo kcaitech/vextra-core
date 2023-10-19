@@ -122,8 +122,8 @@ export class ShapeEditor {
         if (override_id.length > 0) override_id += "/";
         override_id += _var.id;
 
-        const _var2 = new Variable(uuid(), _var.type, _var.name);
-        _var2.value = value;
+        const _var2 = new Variable(uuid(), _var.type, _var.name, value);
+        // _var2.value = value;
         api.shapeAddVariable(this.__page, sym, _var2);
         api.shapeAddOverride(this.__page, sym, _var.id, OverrideType.Variable, _var2.id);
 
@@ -259,8 +259,8 @@ export class ShapeEditor {
         if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
 
         // add override add variable
-        const _var2 = new Variable(uuid(), varType, "");
-        _var2.value = valuefun(undefined);
+        const _var2 = new Variable(uuid(), varType, "", valuefun(undefined));
+        // _var2.value = valuefun(undefined);
         api.shapeAddVariable(this.__page, symRef, _var2);
         api.shapeAddOverride(this.__page, symRef, override_id, overrideType, _var2.id);
 
@@ -339,8 +339,8 @@ export class ShapeEditor {
         // add override add variable
         const _symRef = symRef;
         const api = this._repoWrap('addOverrid', (api) => {
-            const _var2 = new Variable(uuid(), varType, "");
-            _var2.value = valuefun(undefined);
+            const _var2 = new Variable(uuid(), varType, "", valuefun(undefined));
+            // _var2.value = valuefun(undefined);
             api.shapeAddVariable(this.__page, _symRef, _var2);
             api.shapeAddOverride(this.__page, _symRef, override_id, overrideType, _var2.id);
         });
@@ -906,8 +906,8 @@ export class ShapeEditor {
                 while (symRef && symRef.isVirtualShape) symRef = symRef.parent;
                 if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
 
-                const _var2 = new Variable(uuid(), VariableType.Status, "");
-                _var2.value = state;
+                const _var2 = new Variable(uuid(), VariableType.Status, "", state);
+                // _var2.value = state;
                 const api = this.__repo.start('switchSymState', {});
                 try {
 
@@ -1046,8 +1046,8 @@ export class ShapeEditor {
 
         // virtual? no
 
-        const _var = new Variable(uuid(), type, name);
-        _var.value = value;
+        const _var = new Variable(uuid(), type, name, value);
+        // _var.value = value;
         const api = this.__repo.start("createVar", {});
         try {
             api.shapeAddVariable(this.__page, this.__shape, _var);
