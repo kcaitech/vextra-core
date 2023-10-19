@@ -213,8 +213,35 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
                     api.tableModifyTextTransform(shape as TableShape, value as TextTransformType);
                 }
             },
+            // {
+            //     opId: SHAPE_ATTR_ID.addvar,
+            //     handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+            //         if (value) {
+            //             const _var = importVariable(JSON.parse(value));
+            //             // if (!_var.value) {
+            //             //     console.log(_var)
+            //             //     throw new Error();
+            //             // }
+            //             shape.addVar(_var);
+            //         }
+            //     }
+            // },
             {
-                opId: SHAPE_ATTR_ID.addvar,
+                opId: SHAPE_ATTR_ID.modifyoverride1,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        const overrid = JSON.parse(value);
+                        if (overrid.value == undefined) {
+                            shape.removeOverrid2(overrid.refId, overrid.attr)
+                        }
+                        else {
+                            shape.addOverrid2(overrid.refId, overrid.attr, overrid.value);
+                        }
+                    }
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.modifyvar1,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const _var = importVariable(JSON.parse(value));
@@ -222,21 +249,17 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
                         //     console.log(_var)
                         //     throw new Error();
                         // }
-                        shape.addVar(_var);
+                        if (_var.value == undefined) {
+                            shape.deleteVar(_var.id);
+                        }
+                        else {
+                            shape.addVar(_var);
+                        }
                     }
                 }
             },
             {
-                opId: SHAPE_ATTR_ID.addoverride,
-                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    if (value) {
-                        const overrid = JSON.parse(value);
-                        shape.addOverrid2(overrid.refId, overrid.attr, overrid.value);
-                    }
-                }
-            },
-            {
-                opId: SHAPE_ATTR_ID.modifyvar,
+                opId: SHAPE_ATTR_ID.modifyvarValue,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const _var = importVariable(JSON.parse(value));

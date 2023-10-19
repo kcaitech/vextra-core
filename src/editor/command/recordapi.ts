@@ -341,7 +341,7 @@ export class Api {
         this.__trap(() => {
             const save = exportVariable(_var);
             _var.value = value;
-            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(_var), SHAPE_ATTR_ID.modifyvar, exportVariable(_var), save));
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(_var), SHAPE_ATTR_ID.modifyvarValue, exportVariable(_var), save));
         })
     }
     shapeAddVariable(page: Page, shape: SymbolShape | SymbolRefShape, _var: Variable) {
@@ -350,7 +350,8 @@ export class Api {
             shape.addVar(_var);
             const shapeId = genShapeId(shape);
             shapeId.push(_var.id);
-            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.addvar, exportVariable(_var), undefined));
+            const origin = new Variable(_var.id, _var.type, _var.name, undefined);
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyvar1, exportVariable(_var), exportVariable(origin)));
         })
     }
     shapeRemoveVariable(page: Page, shape: SymbolShape | SymbolRefShape, key: string) {
@@ -360,7 +361,8 @@ export class Api {
             shape.removeVar(key);
             const shapeId = genShapeId(shape);
             shapeId.push(key);
-            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.removevar,undefined, exportVariable(_var)));
+            const cur = new Variable(_var.id, _var.type, _var.name, undefined);
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyvar1, exportVariable(cur), exportVariable(_var)));
         })
     }
     shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
@@ -374,23 +376,23 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.bindvar, { type, varId }, { type, varId: save }));
         })
     }
-    shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
-        checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const save = shape.getOverrid2(refId, attr);
-            shape.addOverrid2(refId, attr, value);
-            const shapeId = genShapeId(shape);
-            shapeId.push(refId + '/' + attr);
-            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyoverride, { refId, attr, value }, { refId, attr, value: save }));
-        })
-    }
+    // shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
+    //     checkShapeAtPage(page, shape);
+    //     this.__trap(() => {
+    //         const save = shape.getOverrid2(refId, attr);
+    //         shape.addOverrid2(refId, attr, value);
+    //         const shapeId = genShapeId(shape);
+    //         shapeId.push(refId + '/' + attr);
+    //         this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyoverride1, { refId, attr, value }, { refId, attr, value: save }));
+    //     })
+    // }
     shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             shape.addOverrid2(refId, attr, value);
             const shapeId = genShapeId(shape);
             shapeId.push(refId + '/' + attr);
-            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.addoverride, { refId, attr, value }, undefined));
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyoverride1, { refId, attr, value }, { refId, attr, value: undefined }));
         })
     }
 

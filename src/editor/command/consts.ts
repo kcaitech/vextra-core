@@ -15,12 +15,13 @@ export const SHAPE_ATTR_ID = {
     constrainerProportions: "constrainerProportions",
     name: "name",
 
-    addvar: "addvar",
-    removevar: "removevar",
-    modifyvar: "modifyvar",
+    // addvar: "addvar",
+    // removevar: "removevar",
+    modifyvar1: "modifyvar",
+    modifyvarValue: "modifyvarValue",
 
-    addoverride: "addoverride",
-    modifyoverride: "modifyoverride",
+    // addoverride: "addoverride",
+    modifyoverride1: "modifyoverride",
 
     visible: "visible",
     lock: "lock",
