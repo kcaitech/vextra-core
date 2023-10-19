@@ -19,9 +19,11 @@ export const SHAPE_ATTR_ID = {
     // removevar: "removevar",
     modifyvar1: "modifyvar",
     modifyvarValue: "modifyvarValue",
+    modifyvarName: "modifyvarName",
 
     // addoverride: "addoverride",
     modifyoverride1: "modifyoverride",
+
 
     visible: "visible",
     lock: "lock",

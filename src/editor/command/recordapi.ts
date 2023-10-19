@@ -344,6 +344,14 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(_var), SHAPE_ATTR_ID.modifyvarValue, exportVariable(_var), save));
         })
     }
+    shapeModifyVariableName(page: Page, _var: Variable, name: string) {
+        checkShapeAtPage(page, _var);
+        this.__trap(() => {
+            const save = exportVariable(_var);
+            _var.name = name;
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(_var), SHAPE_ATTR_ID.modifyvarName, exportVariable(_var), save));
+        })
+    }
     shapeAddVariable(page: Page, shape: SymbolShape | SymbolRefShape, _var: Variable) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
