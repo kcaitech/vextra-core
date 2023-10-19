@@ -322,9 +322,9 @@ export class PageEditor {
                 const symbolShape = newSymbolShape(name ?? shape0.name, new ShapeFrame(frame.x, frame.y, frame.width, frame.height));
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 sym = group(this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
-                document.symbolsMgr.add(sym.id, sym as SymbolShape);
             }
             if (sym) {
+                document.symbolsMgr.add(sym.id, sym as SymbolShape);
                 this.__repo.commit();
                 return sym as any as SymbolShape;
             } else {
