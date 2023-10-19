@@ -1057,6 +1057,20 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+    removeVar(key: string) {
+        if (!(this.__shape instanceof SymbolShape) && !(this.__shape instanceof SymbolRefShape)) return;
+        if (this.__shape.isVirtualShape) return;
+
+        // virtual? no
+        const api = this.__repo.start("removeVar", {});
+        try {
+            api.shapeRemoveVariable(this.__page, this.__shape, key);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
 
     // shape
     bindVar(slot: OverrideType, varId: string) {
