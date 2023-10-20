@@ -1493,7 +1493,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 return ret;
             })(),
         isUnionSymbolShape: source.isUnionSymbolShape,
-        unionSymbolRef: source.unionSymbolRef,
         virbindsEx: source.virbindsEx && (() => {
             const val = source.virbindsEx;
             const ret: any = {};

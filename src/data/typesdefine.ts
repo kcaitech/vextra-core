@@ -21,7 +21,7 @@ export enum VariableType {
     Gradient = 'gradient',
     Text = 'text',
     Visible = 'visible',
-    Instance = 'instance',
+    SymbolRef = 'symbolRef',
     Status = 'status',
     ImageRef = 'imageRef',
     Fills = 'fills',
@@ -606,7 +606,6 @@ export type GroupShape = Shape & {
 /* symbol shape */
 export type SymbolShape = GroupShape & {
     isUnionSymbolShape?: boolean
-    unionSymbolRef?: string
     virbindsEx?: Map<string, string>
     variables?: Map<string, Variable>
     vartag?: Map<string, string>

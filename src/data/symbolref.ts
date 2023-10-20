@@ -5,13 +5,14 @@ export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType,
 } from "./baseclasses"
-import { ShapeType, ShapeFrame, OverrideType } from "./baseclasses"
+import { ShapeType, ShapeFrame, OverrideType, VariableType } from "./baseclasses"
 import { uuid } from "../basic/uuid";
 import { GroupShape, Shape, SymbolShape } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { proxyShape } from "./symproxy";
 import { layoutChilds } from "./symlayout";
+import { findOverrideAndVar } from "./utils";
 
 function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
@@ -19,8 +20,8 @@ function genRefId(refId: string, type: OverrideType) {
 }
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
-    __data: SymbolShape | undefined
-    __subdata: SymbolShape | undefined; // union symbol shape
+    // __data: SymbolShape | undefined // 不能缓存了，不同的override，不同的data!
+    // __subdata: SymbolShape | undefined; // union symbol shape
     __symMgr?: ResourceMgr<SymbolShape>
 
     // todo
@@ -54,6 +55,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         )
         this.refId = refId
         this.origin_watcher = this.origin_watcher.bind(this);
+        this.updater = this.updater.bind(this);
+        // this.updater();
     }
 
     private __childsIsDirty: boolean = false;
@@ -77,22 +80,42 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         // todo
     }
 
-    getSymChilds(): Shape[] | undefined {
-        if (!this.__data) return;
-        // todo
+    private __data: SymbolShape | undefined;
+    private __subdata: SymbolShape | undefined;
+    private __startLoad: string | undefined;
+    updater() {
+        const symMgr = this.__symMgr;
+        if (!symMgr) return;
+        const refId = this.refId;
+        if (this.__startLoad === refId || !refId) return;
 
-        const sym = this.__data;
-        let _sym: Shape = sym;
-        // union symbol
-        if (sym.isUnionSymbolShape) {
-            _sym = sym.childs[0];
-            // symbolref.
-            if (sym.unionSymbolRef) {
-                const c = sym.findChildById(sym.unionSymbolRef);
-                if (c) _sym = c;
+        this.__startLoad = refId;
+        symMgr.get(refId).then((val) => {
+            if (this.__data) this.__data.unwatch(this.updater);
+            this.__data = val;
+            if (this.__data) this.__data.watch(this.updater);
+            // 处理status
+            if (val && val.isUnionSymbolShape) {
+                const syms = val.getTagedSym(this.__origin);
+                if (this.__subdata) this.__subdata.unwatch(this.updater);
+                this.__subdata = syms[0] || val.childs[0];
+                if (this.__subdata) this.__subdata.watch(this.updater);
             }
+            else if (this.__subdata) {
+                this.__subdata.unwatch(this.updater);
+                this.__subdata = undefined;
+            }
+            this.notify();
+        })
+    }
+
+    // private __startLoad: string | undefined;
+    private getSymChilds(): Shape[] | undefined {
+        if (!this.__data) {
+            if (!this.__startLoad) this.updater();
+            return;
         }
-        return (_sym as GroupShape).childs;
+        return (this.__subdata || this.__data)?.childs || [];
     }
 
     // for render
@@ -171,37 +194,61 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     getSymbolMgr() {
         return this.__symMgr;
     }
-    private __startLoad: boolean = false;
-    peekSymbol(startLoad: boolean = false): SymbolShape | undefined {
-        const ret = this.__data;
-        if (ret) return ret;
-        if (startLoad && !this.__startLoad && this.__symMgr) {
-            this.__startLoad = true;
-            this.__symMgr.get(this.refId).then((val) => {
-                if (!this.__data) {
-                    this.__data = val;
-                    if (val) {
-                        val.watch(this.origin_watcher)
-                        this.notify();
-                    }
-                }
-            })
+
+    getRefId2(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+        if (!varsContainer) return this.refId;
+        const _vars = findOverrideAndVar(this, OverrideType.SymbolID, varsContainer);
+        if (!_vars) return this.refId;
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === VariableType.SymbolRef) {
+            return _var.value;
         }
-        return ret;
+        return this.refId;
     }
 
-    async loadSymbol() {
-        if (this.__data) return this.__data;
-        const val = this.__symMgr && await this.__symMgr.get(this.refId);
-        if (!this.__data) {
-            this.__data = val;
-            if (val) {
-                val.watch(this.origin_watcher)
-                this.notify();
-            }
-        }
-        return this.__data;
-    }
+    // getRefId() { // virtual shape 可用, 
+    //     let refId = this.id;
+    //     refId = refId.substring(refId.lastIndexOf('/') + 1);
+    //     const _vars = super.findOverride(refId, OverrideType.SymbolID);
+    //     if (!_vars) return this.refId;
+    //     // watch vars
+    //     this._watch_vars("symbolRef", _vars);
+    //     const _var = _vars[_vars.length - 1];
+    //     if (_var && _var.type === VariableType.SymbolRef) {
+    //         return _var.value;
+    //     }
+    //     return this.refId;
+    // }
+    // private __startLoad: boolean = false;
+    // peekSymbol(startLoad: boolean = false): SymbolShape | undefined {
+    //     const ret = this.__data;
+    //     if (ret) return ret;
+    //     if (startLoad && !this.__startLoad && this.__symMgr) {
+    //         this.__startLoad = true;
+    //         this.__symMgr.get(this.getRefId([])).then((val) => {
+    //             if (!this.__data) {
+    //                 this.__data = val;
+    //                 if (val) {
+    //                     val.watch(this.origin_watcher)
+    //                     this.notify();
+    //                 }
+    //             }
+    //         })
+    //     }
+    //     return ret;
+    // }
+    // async loadSymbol() {
+    //     if (this.__data) return this.__data;
+    //     const val = this.__symMgr && await this.__symMgr.get(this.getRefId([]));
+    //     if (!this.__data) {
+    //         this.__data = val;
+    //         if (val) {
+    //             val.watch(this.origin_watcher)
+    //             this.notify();
+    //         }
+    //     }
+    //     return this.__data;
+    // }
 
     onRemoved(): void {
         // 构建symbol proxy shadow, 在这里需要unwatch
@@ -211,7 +258,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             this.__childs.forEach((c: any) => c.remove)
             this.__childs = undefined;
         }
-        this.__data?.unwatch(this.origin_watcher);
+        this.__data?.unwatch(this.updater);
+        this.__subdata?.unwatch(this.updater);
     }
 
     setFrameSize(w: number, h: number): void {
@@ -248,6 +296,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                 return new Variable(uuid(), classes.VariableType.Text, "", value);
             case OverrideType.Visible:
                 return new Variable(uuid(), classes.VariableType.Visible, "", value);
+            case OverrideType.SymbolID:
+                return new Variable(uuid(), classes.VariableType.SymbolRef, "", value);
             case OverrideType.Variable:
                 const _val = value as Variable;
                 return _val;
@@ -282,6 +332,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             case OverrideType.Borders:
             case OverrideType.Fills:
             case OverrideType.Visible:
+            case OverrideType.SymbolID:
                 {
                     let override = this.getOverrid(refId, attr);
                     if (!override) {

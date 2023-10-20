@@ -5,9 +5,6 @@
         "isUnionSymbolShape": {
             "type": "boolean"
         },
-        "unionSymbolRef": {
-            "type": "string"
-        },
         "virbindsEx": {
             "type": "map",
             "key": {

@@ -50,6 +50,7 @@ function renderSym(h: Function,
 
 export function render(h: Function,
     shape: SymbolRefShape,
+    sym: SymbolShape | undefined,
     comsMap: Map<ShapeType, any>,
     transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
@@ -59,7 +60,7 @@ export function render(h: Function,
     if (!isVisible(shape, varsContainer, consumedVars)) return;
 
 
-    const sym = shape.peekSymbol(true);
+    // const sym = shape.peekSymbol(true);
     if (!sym) {
         return;
     }

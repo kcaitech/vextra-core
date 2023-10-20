@@ -1539,7 +1539,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         return ret
     })()
     if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
-    if (source.unionSymbolRef !== undefined) ret.unionSymbolRef = source.unionSymbolRef
     if (source.virbindsEx !== undefined) ret.virbindsEx = (() => {
         const ret = new BasicMap<string, string>()
         const val = source.virbindsEx as any; // json没有map对象,导入导出的是{[key: string]: value}对象

@@ -426,7 +426,6 @@ function genRefId(refId: string, type: OverrideType) {
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean // 子对象都为SymbolShape
-    unionSymbolRef?: string // Variable:xxxxxx
     variables?: BasicMap<string, Variable> // 怎么做关联
     vartag?: BasicMap<string, string>
     virbindsEx?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象

@@ -1167,7 +1167,6 @@ export class GroupShape extends Shape {
 export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean
-    unionSymbolRef?: string
     virbindsEx?: BasicMap<string, string>
     variables?: BasicMap<string, Variable>
     vartag?: BasicMap<string, string>

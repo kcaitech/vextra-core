@@ -39,7 +39,8 @@
 import { ResizingConstraints } from "../data/consts";
 import { Color, CurvePoint, OverrideType, Path, Point2D, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable, VariableType } from "../data/classes";
 import { Matrix } from "../basic/matrix";
-
+import { findOverrideAndVar } from "../data/utils";
+export { findOverrideAndVar } from "../data/utils";
 
 // export { h } from "vue";
 // import { VNode } from "vue";
@@ -165,75 +166,6 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
     frame.y = cy;
     frame.width = cw;
     frame.height = ch;
-}
-
-function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], i: number = 0) {
-    for (let len = varsContainer.length; i < len; ++i) {
-        const container = varsContainer[i];
-        const override = container.getOverrid(varId, OverrideType.Variable);
-        if (override) {
-            ret.push(override.v);
-            // scope??
-            varId = override.v.id;
-        }
-        else {
-            const _var = container.getVar(varId);
-            if (_var) {
-                ret.push(_var);
-            }
-        }
-        if (container instanceof SymbolRefShape) varId = container.id + '/' + varId;
-    }
-}
-
-function findOverride(refId: string, type: OverrideType, varsContainer: (SymbolRefShape | SymbolShape)[]) {
-    for (let i = 0, len = varsContainer.length; i < len; ++i) {
-        const container = varsContainer[i];
-        const override = container.getOverrid(refId, type);
-        if (override) {
-            const ret = [override.v];
-            findVar(override.v.id, ret, varsContainer, i + 1);
-            return ret;
-        }
-        if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
-    }
-}
-
-export function findOverrideAndVar(
-    shape: Shape, // proxyed
-    overType: OverrideType,
-    varsContainer: (SymbolRefShape | SymbolShape)[]) {
-
-    // if (!(shape as any).__symbolproxy) throw new Error("");
-    const varbinds = shape.varbinds;
-    if (!varbinds) {
-        // find override
-        // id: xxx/xxx/xxx
-        const id = shape.id;
-
-        const _vars = findOverride(id, overType, varsContainer);
-        // if (_vars) {
-        //     (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
-        //     const _var = _vars[_vars.length - 1];
-        //     if (_var && _var.type === varType) {
-        //         return _var.value;
-        //     }
-        // }
-        return _vars;
-    } else {
-        const varId = varbinds.get(overType);
-        if (varId) {
-            const _vars: Variable[] = [];
-            findVar(varId, _vars, varsContainer);
-            // watch vars
-            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
-            // const _var = _vars[_vars.length - 1];
-            // if (_var && _var.type === varType) {
-            //     return _var.value;
-            // }
-            return _vars;
-        }
-    }
 }
 
 

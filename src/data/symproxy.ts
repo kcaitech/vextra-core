@@ -1,12 +1,12 @@
 import { Style } from "./style";
 import { Para, ParaAttr, Span, Text } from "./text";
-import { BasicArray, Watchable } from "./basic";
+import { BasicArray } from "./basic";
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
 import { CurvePoint, OverrideType, ShapeFrame, TextBehaviour, VariableType } from "./baseclasses"
-import { GroupShape, Shape, TextShape, VarWatcher, Variable, makeVarWatcher } from "./shape";
+import { GroupShape, Shape, SymbolShape, TextShape, VarWatcher, Variable, makeVarWatcher } from "./shape";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 import { SymbolRefShape } from "./symbolref";
 import { __objidkey } from "../basic/objectid";
@@ -477,16 +477,64 @@ class SymbolRefShapeHdl extends ShapeHdl {
     __saveWidth: number = 0;
     __saveHeight: number = 0;
 
+    constructor(origin: Shape, parent: Shape, id: string) {
+        super(origin, parent, id);
+        this.updater = this.updater.bind(this);
+        this.updater();
+    }
+
     saveFrame() {
         this.__saveWidth = this.__frame.width;
         this.__saveHeight = this.__frame.height;
+    }
+    getRefId() {
+        let refId = this.__originId;
+        // 从parent开始查找
+        const _vars = this.__parent.findOverride(refId, OverrideType.SymbolID);
+        if (!_vars) return refId;
+        // watch vars
+        (this as any as VarWatcher)._watch_vars("symbolRef", _vars);
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === VariableType.SymbolRef) {
+            return _var.value;
+        }
+        return refId;
+    }
+
+    private __data: SymbolShape | undefined;
+    private __subdata: SymbolShape | undefined;
+    private __startLoad: string = "";
+    updater() {
+        const symMgr = (this.__origin as SymbolRefShape).getSymbolMgr();
+        if (!symMgr) return;
+        const refId = this.getRefId();
+        if (this.__startLoad === refId) return;
+
+        this.__startLoad = refId;
+        symMgr.get(refId).then((val) => {
+            if (this.__data) this.__data.unwatch(this.updater);
+            this.__data = val;
+            if (this.__data) this.__data.watch(this.updater);
+            // 处理status
+            if (val && val.isUnionSymbolShape) {
+                const syms = val.getTagedSym(this.__origin);
+                if (this.__subdata) this.__subdata.unwatch(this.updater);
+                this.__subdata = syms[0] || val.childs[0];
+                if (this.__subdata) this.__subdata.watch(this.updater);
+            }
+            else if (this.__subdata) {
+                this.__subdata.unwatch(this.updater);
+                this.__subdata = undefined;
+            }
+            this.notify();
+        })
     }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
         const propStr = propertyKey.toString();
         if (propStr === 'virtualChilds' || propStr === 'naviChilds') {
             if (!this.__childs) {
-                const childs = (this.__origin as SymbolRefShape).getSymChilds() || [];
+                const childs: Shape[] = (this.__subdata || this.__data)?.childs || [];
                 if (!childs || childs.length === 0) return;
                 const prefix = this.__id + '/';
                 this.__childs = childs.map((origin) => proxyShape(origin, receiver as Shape, prefix + origin.id));
@@ -497,7 +545,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
             }
             if (this.__childsIsDirty) {
                 this.__childsIsDirty = false;
-                const childs = (this.__origin as SymbolRefShape).getSymChilds() || [];
+                const childs: Shape[] = (this.__subdata || this.__data)?.childs || [];
                 const _childs = this.__childs;
                 if (_childs.length > childs.length) {
                     // 回收多余的
@@ -540,13 +588,15 @@ class SymbolRefShapeHdl extends ShapeHdl {
             this.__childs.forEach((c: any) => c.remove)
             this.__childs = undefined;
         }
+        this.__data?.unwatch(this.updater);
+        this.__subdata?.unwatch(this.updater);
     }
 
     private __relayouting: any;
     relayout() {
         if (this.__childs && !this.__relayouting) {
             this.__relayouting = setTimeout(() => {
-                const childs = this.__origin.getSymChilds();
+                const childs = (this.__subdata || this.__data)?.childs || [];
                 if (this.__childs && childs && childs.length > 0) {
                     this.__childs.forEach((c) => c.resetLayout);
                     layoutChilds(this.__childs, this.__origin.frame, childs[0].parent!.frame);
