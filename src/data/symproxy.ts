@@ -508,7 +508,20 @@ class SymbolRefShapeHdl extends ShapeHdl {
         const symMgr = (this.__origin as SymbolRefShape).getSymbolMgr();
         if (!symMgr) return;
         const refId = this.getRefId();
-        if (this.__startLoad === refId) return;
+        if (this.__startLoad === refId) {
+            if (this.__data) { // 更新subdata
+                if (this.__data.isUnionSymbolShape && !this.__subdata) {
+                    const syms = this.__data.getTagedSym(this.__origin);
+                    this.__subdata = syms[0] || this.__data.childs[0];
+                    if (this.__subdata) this.__subdata.watch(this.updater);
+                }
+                else if (!this.__data.isUnionSymbolShape && this.__subdata) {
+                    this.__subdata.unwatch(this.updater);
+                    this.__subdata = undefined;
+                }
+            }
+            return;
+        }
 
         this.__startLoad = refId;
         symMgr.get(refId).then((val) => {
@@ -527,6 +540,9 @@ class SymbolRefShapeHdl extends ShapeHdl {
                 this.__subdata = undefined;
             }
             this.notify();
+        }, (reject) => {
+            console.log(reject)
+            this.__startLoad = ""
         })
     }
 

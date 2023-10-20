@@ -87,7 +87,21 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         const symMgr = this.__symMgr;
         if (!symMgr) return;
         const refId = this.refId;
-        if (this.__startLoad === refId || !refId) return;
+        if (!refId) return;
+        if (this.__startLoad === refId) {
+            if (this.__data) { // 更新subdata
+                if (this.__data.isUnionSymbolShape && !this.__subdata) {
+                    const syms = this.__data.getTagedSym(this);
+                    this.__subdata = syms[0] || this.__data.childs[0];
+                    if (this.__subdata) this.__subdata.watch(this.updater);
+                }
+                else if (!this.__data.isUnionSymbolShape && this.__subdata) {
+                    this.__subdata.unwatch(this.updater);
+                    this.__subdata = undefined;
+                }
+            }
+            return;
+        }
 
         this.__startLoad = refId;
         symMgr.get(refId).then((val) => {
@@ -404,9 +418,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.variables && this.variables.get(varId);
     }
 
-    findVar(varId: string, ret: Variable[]) {
+    findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
         if (this.__data) {
-            // todo
+
             const override = this.__data.getOverrid(varId, OverrideType.Variable);
             if (override) {
                 ret.push(override.v);

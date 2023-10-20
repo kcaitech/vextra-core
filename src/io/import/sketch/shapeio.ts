@@ -147,8 +147,8 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun): G
     // const imageRef = image && image['_ref'];
     const style = importStyle(ctx, data['style']);
     // sketch groupshape不支持填充与边框
-    style.fills.length = 0;
-    style.borders.length = 0;
+    // style.fills.length = 0;
+    // style.borders.length = 0;
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
