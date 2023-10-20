@@ -1,8 +1,18 @@
-import { GroupShape, PathShape2, RectShape, Shape, ShapeFrame, SymbolShape, Variable, VariableType } from "../data/shape";
-import { ShapeEditor } from "./shape";
+import {
+    GroupShape,
+    PathShape2,
+    RectShape,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    SymbolShape,
+    Variable,
+    VariableType
+} from "../data/shape";
+import {ShapeEditor} from "./shape";
 import * as types from "../data/typesdefine";
-import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
-import { Page } from "../data/page";
+import {BoolOp, BorderPosition} from "../data/typesdefine";
+import {Page} from "../data/page";
 import {
     initFrame,
     newArrowShape,
@@ -16,11 +26,11 @@ import {
     newSymbolRefShape,
     newSymbolShape
 } from "./creator";
-import { Document } from "../data/document";
-import { expand, translate, translateTo } from "./frame";
-import { uuid } from "../basic/uuid";
-import { CoopRepository } from "./command/cooprepo";
-import { Api } from "./command/recordapi";
+import {Document} from "../data/document";
+import {expand, translate, translateTo} from "./frame";
+import {uuid} from "../basic/uuid";
+import {CoopRepository} from "./command/cooprepo";
+import {Api} from "./command/recordapi";
 import {
     Artboard,
     Border,
@@ -34,22 +44,20 @@ import {
     TableShape,
     Text
 } from "../data/classes";
-import { TextShapeEditor } from "./textshape";
-import { get_frame, modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
-import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
-import { render2path } from "../render";
-import { Matrix } from "../basic/matrix";
-import { IImportContext, importBorder, importGroupShape, importStyle, importSymbolShape } from "../data/baseimport";
-import { gPal } from "../basic/pal";
-import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
-import { BasicArray } from "../data/basic";
-import { TableEditor } from "./table";
-import { exportGroupShape, exportSymbolShape } from "../data/baseexport";
-import {
-    find_state_space, init_state,
-    make_union,
-    modify_frame_after_inset_state
-} from "./utils";
+import {TextShapeEditor} from "./textshape";
+import {get_frame, modify_frame_after_insert, set_childs_id, transform_data} from "../io/cilpboard";
+import {deleteEmptyGroupShape, expandBounds, group, ungroup} from "./group";
+import {render2path} from "../render";
+import {Matrix} from "../basic/matrix";
+import {IImportContext, importBorder, importGroupShape, importStyle, importSymbolShape} from "../data/baseimport";
+import {gPal} from "../basic/pal";
+import {findUsableBorderStyle, findUsableFillStyle} from "../render/boolgroup";
+import {BasicArray} from "../data/basic";
+import {TableEditor} from "./table";
+import {exportGroupShape, exportSymbolShape} from "../data/baseexport";
+import {find_state_space, init_state, make_union, modify_frame_after_inset_state} from "./utils";
+import {v4} from "uuid";
+
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
     target: Shape
@@ -353,6 +361,74 @@ export class PageEditor {
                 const _var = new Variable(uuid(), VariableType.Status, attri_name, dlt);
                 api.shapeAddVariable(this.__page, symbol, _var);
             }
+            this.__repo.commit();
+            return symbol;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 给组件创建一个图层显示变量
+     */
+    makeVisibleVar(symbol: SymbolShape, name: string, values: string[]) {
+        const api = this.__repo.start("makeVisibleVar", {});
+        try {
+            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('make union failed!');
+            const _var = new Variable(v4(), VariableType.Visible, name, values);
+            api.shapeAddVariable(this.__page, symbol, _var);
+            this.__repo.commit();
+            return symbol;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 给组件创建一个实例切换变量
+     */
+    makeSymbolRefVar(symbol: SymbolShape, name: string, values: any) {
+        const api = this.__repo.start("makeSymbolRefVar", {});
+        try {
+            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('make union failed!');
+            const _var = new Variable(v4(), VariableType.SymbolRef, name, values);
+            api.shapeAddVariable(this.__page, symbol, _var);
+            this.__repo.commit();
+            return symbol;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 给组件创建一个文本变量
+     */
+    makeTextVar(symbol: SymbolShape, name: string, values: any) {
+        const api = this.__repo.start("makeTextVar", {});
+        try {
+            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('make union failed!');
+            const _var = new Variable(v4(), VariableType.Text, name, values);
+            api.shapeAddVariable(this.__page, symbol, _var);
+            this.__repo.commit();
+            return symbol;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 给组件创建变量
+     */
+    makeVar(type: VariableType, symbol: SymbolShape, name: string, values: any) {
+        const api = this.__repo.start("makeVar", {});
+        try {
+            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('make union failed!');
+            const _var = new Variable(v4(), type, name, values);
+            api.shapeAddVariable(this.__page, symbol, _var);
             this.__repo.commit();
             return symbol;
         } catch (error) {
