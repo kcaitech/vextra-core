@@ -583,6 +583,14 @@ class SymbolRefShapeHdl extends ShapeHdl {
             }
             return this.__childs;
         }
+
+        if (propStr === "__data") { // todo hack: 用于findVar
+            return this.__data;
+        }
+        if (propStr === "__subdata") { // todo hack
+            return this.__subdata;
+        }
+
         if (propStr === "relayout") {
             return this.relayout();
         }
