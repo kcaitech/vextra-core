@@ -912,7 +912,7 @@ export class ShapeEditor {
         if (!(this.__shape instanceof SymbolRefShape)) return;
         // check？
 
-        if (this.modifyVariable(VariableType.Instance, OverrideType.SymbolID, (_var) => {
+        if (this.modifyVariable(VariableType.SymbolRef, OverrideType.SymbolID, (_var) => {
             return refId;
         })) return;
 
