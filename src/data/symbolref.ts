@@ -96,7 +96,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             if (this.__data) this.__data.watch(this.updater);
             // 处理status
             if (val && val.isUnionSymbolShape) {
-                const syms = val.getTagedSym(this.__origin);
+                const syms = val.getTagedSym(this);
                 if (this.__subdata) this.__subdata.unwatch(this.updater);
                 this.__subdata = syms[0] || val.childs[0];
                 if (this.__subdata) this.__subdata.watch(this.updater);
