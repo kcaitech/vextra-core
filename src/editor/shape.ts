@@ -186,7 +186,16 @@ export class ShapeEditor {
             api.shapeModifyVariable(this.__page, _var, value);
         }
     }
-
+    modifySymbolRefStatus(_var: Variable, value: any) {
+        const api = this.__repo.start("modifySymbolRefStatus", {});
+        try {
+            this.modifyVariable2(_var, value, api);
+            this.__repo.commit();
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+        }
+    }
     /**
      * @description 修改_var的名称为name，如果_var不可以修改，则override _var到name
      */
