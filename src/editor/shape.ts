@@ -187,6 +187,12 @@ export class ShapeEditor {
             api.shapeModifyVariable(this.__page, _var, value);
         }
     }
+
+    /**
+     * @description 修改实例身上某一个变量的值 --01b627f5b636
+     * @param _var
+     * @param value
+     */
     modifySymbolRefStatus(_var: Variable, value: any) {
         const api = this.__repo.start("modifySymbolRefStatus", {});
         try {
@@ -1135,7 +1141,7 @@ export class ShapeEditor {
     }
 
     /**
-     * @description 修改可变组件的属性值
+     * @description 修改可变组件的某一个属性var的属性值 --776a0ac3351f
      */
     modifyStateSymTagValue(varId: string, tag: string) {
         if (!this.__shape.parent || !this.__shape.parent.isUnionSymbolShape) return;
