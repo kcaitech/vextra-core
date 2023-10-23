@@ -18,9 +18,9 @@ import { layoutChilds } from "./symlayout";
 // 编辑由api重定向
 
 const mutable = new Set([
-    "__startLoad",
-    "__data",
-    "__symMgr",
+    // "__startLoad",
+    // "__data",
+    // "__symMgr",
     // "__symproxy_cache",
     __objidkey
 ]);
@@ -504,23 +504,33 @@ class SymbolRefShapeHdl extends ShapeHdl {
     private __data: SymbolShape | undefined;
     private __subdata: SymbolShape | undefined;
     private __startLoad: string = "";
-    updater() {
+    updater(notify: boolean = true): boolean { // todo 有父级以上的override，也要更新
         const symMgr = (this.__origin as SymbolRefShape).getSymbolMgr();
-        if (!symMgr) return;
+        if (!symMgr) return false;
         const refId = this.getRefId();
         if (this.__startLoad === refId) {
             if (this.__data) { // 更新subdata
-                if (this.__data.isUnionSymbolShape && !this.__subdata) {
+                if (this.__data.isUnionSymbolShape) {
                     const syms = this.__data.getTagedSym(this.__origin);
-                    this.__subdata = syms[0] || this.__data.childs[0];
-                    if (this.__subdata) this.__subdata.watch(this.updater);
+                    const subdata = syms[0] || this.__data.childs[0];
+                    if (this.__subdata !== subdata) {
+                        if (this.__subdata) this.__subdata.unwatch(this.updater);
+                        this.__subdata = subdata;
+                        if (this.__subdata) this.__subdata.watch(this.updater);
+                        this.__childsIsDirty = true;
+                        if (notify) this.notify();
+                        return true;
+                    }
                 }
                 else if (!this.__data.isUnionSymbolShape && this.__subdata) {
                     this.__subdata.unwatch(this.updater);
                     this.__subdata = undefined;
+                    this.__childsIsDirty = true;
+                    if (notify) this.notify();
+                    return true;
                 }
             }
-            return;
+            return false;
         }
 
         this.__startLoad = refId;
@@ -539,11 +549,14 @@ class SymbolRefShapeHdl extends ShapeHdl {
                 this.__subdata.unwatch(this.updater);
                 this.__subdata = undefined;
             }
-            this.notify();
+            this.__childsIsDirty = true;
+            // if (notify) this.notify();
+            this.notify("childs");
         }, (reject) => {
             console.log(reject)
             this.__startLoad = ""
         })
+        return false;
     }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
@@ -603,7 +616,8 @@ class SymbolRefShapeHdl extends ShapeHdl {
     origin_watcher(...args: any[]): void {
         if (args.indexOf("vairable") >= 0) return;
         if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
-        super.origin_watcher(...args);
+        if (this.updater(false)) super.origin_watcher("childs", ...args);
+        else super.origin_watcher(...args);
     }
 
     onRemoved(target: object): void {

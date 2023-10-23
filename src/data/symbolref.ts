@@ -83,24 +83,34 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     private __data: SymbolShape | undefined;
     private __subdata: SymbolShape | undefined;
     private __startLoad: string | undefined;
-    updater() {
+    updater(notify: boolean = true): boolean { // 自己的override也要更新
         const symMgr = this.__symMgr;
-        if (!symMgr) return;
+        if (!symMgr) return false;
         const refId = this.refId;
-        if (!refId) return;
+        if (!refId) return false;
         if (this.__startLoad === refId) {
             if (this.__data) { // 更新subdata
-                if (this.__data.isUnionSymbolShape && !this.__subdata) {
+                if (this.__data.isUnionSymbolShape) {
                     const syms = this.__data.getTagedSym(this);
-                    this.__subdata = syms[0] || this.__data.childs[0];
-                    if (this.__subdata) this.__subdata.watch(this.updater);
+                    const subdata = syms[0] || this.__data.childs[0];
+                    if (this.__subdata !== subdata) {
+                        if (this.__subdata) this.__subdata.unwatch(this.updater);
+                        this.__subdata = subdata;
+                        if (this.__subdata) this.__subdata.watch(this.updater);
+                        this.__childsIsDirty = true;
+                        if (notify) this.notify();
+                        return true;
+                    }
                 }
                 else if (!this.__data.isUnionSymbolShape && this.__subdata) {
                     this.__subdata.unwatch(this.updater);
                     this.__subdata = undefined;
+                    this.__childsIsDirty = true;
+                    if (notify) this.notify();
+                    return true;
                 }
             }
-            return;
+            return false;
         }
 
         this.__startLoad = refId;
@@ -119,8 +129,11 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                 this.__subdata.unwatch(this.updater);
                 this.__subdata = undefined;
             }
-            this.notify();
+            this.__childsIsDirty = true;
+            // if (notify) this.notify();
+            this.notify("childs");
         })
+        return false;
     }
 
     // private __startLoad: string | undefined;
@@ -156,6 +169,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                     if (c) (c as any).remove;
                     _childs[i] = proxyShape(origin, this, prefix + origin.id);
                 }
+                this.__childsIsDirty = false;
             }
             return this.__childs;
         }
@@ -478,5 +492,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             refId = this.id + '/' + refId;
         }
         return super.findOverride(refId, type);
+    }
+
+    public notify(...args: any[]): void {
+        if (this.updater(false)) super.notify("childs", ...args);// todo
+        else super.notify(...args);
     }
 }
