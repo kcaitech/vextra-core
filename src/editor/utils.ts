@@ -271,3 +271,37 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, state_name
 
     return symbol;
 }
+
+/**
+ * @description 判断可变组件state是否为默认可变组件
+ */
+export function is_default_state(state: SymbolShape) {
+    const parent = state.parent;
+    if (!parent || !parent.isUnionSymbolShape) return false;
+    const childs = (parent as SymbolShape).childs;
+    let index = -1;
+    for (let i = 0, len = childs.length; i < len; i++) {
+        if (childs[i].id === state.id) {
+            index = i;
+            break;
+        }
+    }
+    return index === 0;
+}
+
+/**
+ * @description 获取当前可变组件state的动态名称
+ * @param state
+ */
+export function get_state_name(state: SymbolShape) {
+    if (!state.parent?.isUnionSymbolShape) return state.name;
+    const variables = (state.parent as SymbolShape).variables;
+    if (!variables) return state.name;
+    let name_slice: string[] = [];
+    variables.forEach((v, k) => {
+        if (v.type !== VariableType.Status) return;
+        const slice = state.vartag?.get(k) || v.value;
+        slice && name_slice.push(slice);
+    })
+    return name_slice.toString();
+}

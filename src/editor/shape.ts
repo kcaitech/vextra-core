@@ -19,6 +19,7 @@ import {ContactShape} from "../data/contact";
 import {SymbolRefShape} from "../data/classes";
 import {uuid} from "../basic/uuid";
 import {BasicArray} from "../data/basic";
+import {is_default_state} from "./utils";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -1140,6 +1141,13 @@ export class ShapeEditor {
         if (!this.__shape.parent || !this.__shape.parent.isUnionSymbolShape) return;
         const api = this.__repo.start("modifyStateSymTagValue", {});
         try {
+            const is_default = is_default_state(this.__shape as SymbolShape); // 如果修改的可变组件为默认可变组件，则需要更新组件的默认状态
+            if (is_default) {
+                const variables = (this.__shape.parent as SymbolShape).variables;
+                const _var = variables?.get(varId);
+                if (!_var) throw new Error('wrong variable');
+                api.shapeModifyVariable(this.__page, _var, tag);
+            }
             api.shapeModifyVartag(this.__page, this.__shape as SymbolShape, varId, tag);
             this.__repo.commit();
         } catch (e) {
