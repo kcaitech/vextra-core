@@ -34,3 +34,4 @@ export * from "./coop"
 
 // render
 export * from "./render"
+export * from "./renderStatic"
