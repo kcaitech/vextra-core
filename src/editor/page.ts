@@ -1,5 +1,6 @@
 import {
     GroupShape,
+    OverrideType,
     PathShape2,
     RectShape,
     Shape,
@@ -372,12 +373,16 @@ export class PageEditor {
     /**
      * @description 给组件创建一个图层显示变量
      */
-    makeVisibleVar(symbol: SymbolShape, name: string, values: string[]) {
+    makeVisibleVar(symbol: SymbolShape, name: string, dlt_value: boolean, shapes: Shape[]) {
         const api = this.__repo.start("makeVisibleVar", {});
         try {
             if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
-            const _var = new Variable(v4(), VariableType.Visible, name, values);
+            const _var = new Variable(v4(), VariableType.Visible, name, dlt_value);
             api.shapeAddVariable(this.__page, symbol, _var);
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const item = shapes[i];
+                api.shapeBindVar(this.__page, item, OverrideType.Visible, _var.id);
+            }
             this.__repo.commit();
             return symbol;
         } catch (error) {
