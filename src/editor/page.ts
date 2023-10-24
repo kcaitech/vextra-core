@@ -378,7 +378,7 @@ export class PageEditor {
         try {
             if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), VariableType.Visible, name, dlt_value);
-            api.shapeAddVariable(this.__page, symbol, _var);
+                api.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const item = shapes[i];
                 api.shapeBindVar(this.__page, item, OverrideType.Visible, _var.id);
