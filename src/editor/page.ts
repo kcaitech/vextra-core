@@ -375,7 +375,7 @@ export class PageEditor {
     makeVisibleVar(symbol: SymbolShape, name: string, values: string[]) {
         const api = this.__repo.start("makeVisibleVar", {});
         try {
-            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('make union failed!');
+            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), VariableType.Visible, name, values);
             api.shapeAddVariable(this.__page, symbol, _var);
             this.__repo.commit();
@@ -392,7 +392,7 @@ export class PageEditor {
     makeSymbolRefVar(symbol: SymbolShape, name: string, values: any) {
         const api = this.__repo.start("makeSymbolRefVar", {});
         try {
-            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('make union failed!');
+            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), VariableType.SymbolRef, name, values);
             api.shapeAddVariable(this.__page, symbol, _var);
             this.__repo.commit();
@@ -409,7 +409,7 @@ export class PageEditor {
     makeTextVar(symbol: SymbolShape, name: string, values: any) {
         const api = this.__repo.start("makeTextVar", {});
         try {
-            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('make union failed!');
+            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), VariableType.Text, name, values);
             api.shapeAddVariable(this.__page, symbol, _var);
             this.__repo.commit();
@@ -426,7 +426,7 @@ export class PageEditor {
     makeVar(type: VariableType, symbol: SymbolShape, name: string, values: any) {
         const api = this.__repo.start("makeVar", {});
         try {
-            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('make union failed!');
+            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), type, name, values);
             api.shapeAddVariable(this.__page, symbol, _var);
             this.__repo.commit();
