@@ -5,7 +5,8 @@ import * as api from "../basicapi"
 import { importColor, importText, importVariable } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import { IdOpSet } from "../../coop/data/basictypes";
-import { Variable } from "../../data/shape";
+import { SymbolShape, Variable } from "../../data/shape";
+import { BasicMap } from "../../data/basic";
 
 export type TextShapeLike = Shape & { text: Text }
 export type UpdateFrameArray = { shape: Shape, page: Page }[];
@@ -212,61 +213,6 @@ export const table_handler: (ShapeModifyHandlerArray)[] = [
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     api.tableModifyTextTransform(shape as TableShape, value as TextTransformType);
                 }
-            },
-            // {
-            //     opId: SHAPE_ATTR_ID.addvar,
-            //     handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-            //         if (value) {
-            //             const _var = importVariable(JSON.parse(value));
-            //             // if (!_var.value) {
-            //             //     console.log(_var)
-            //             //     throw new Error();
-            //             // }
-            //             shape.addVar(_var);
-            //         }
-            //     }
-            // },
-            {
-                opId: SHAPE_ATTR_ID.modifyoverride1,
-                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    if (value) {
-                        const overrid = JSON.parse(value);
-                        if (overrid.value == undefined) {
-                            shape.removeOverrid2(overrid.refId, overrid.attr)
-                        }
-                        else {
-                            shape.addOverrid2(overrid.refId, overrid.attr, overrid.value);
-                        }
-                    }
-                }
-            },
-            {
-                opId: SHAPE_ATTR_ID.modifyvar1,
-                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    if (value) {
-                        const _var = importVariable(JSON.parse(value));
-                        // if (!_var.value) {
-                        //     console.log(_var)
-                        //     throw new Error();
-                        // }
-                        if (_var.value == undefined) {
-                            shape.deleteVar(_var.id);
-                        }
-                        else {
-                            shape.addVar(_var);
-                        }
-                    }
-                }
-            },
-            {
-                opId: SHAPE_ATTR_ID.modifyvarValue,
-                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    if (value) {
-                        const _var = importVariable(JSON.parse(value));
-                        if (!(shape instanceof Variable)) throw new Error();
-                        api.shapeModifyVariable(page, shape as Variable, _var.value);
-                    }
-                }
             }
         ]
     }
@@ -455,6 +401,78 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const state = value && JSON.parse(value)
                     api.shapeModifyEditedState(shape as GroupShape, state ?? false);
+                }
+            },
+            // {
+            //     opId: SHAPE_ATTR_ID.addvar,
+            //     handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+            //         if (value) {
+            //             const _var = importVariable(JSON.parse(value));
+            //             // if (!_var.value) {
+            //             //     console.log(_var)
+            //             //     throw new Error();
+            //             // }
+            //             shape.addVar(_var);
+            //         }
+            //     }
+            // },
+            {
+                opId: SHAPE_ATTR_ID.modifyoverride1,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        const overrid = JSON.parse(value);
+                        if (overrid.value == undefined) {
+                            shape.removeOverrid2(overrid.refId, overrid.attr)
+                        }
+                        else {
+                            shape.addOverrid2(overrid.refId, overrid.attr, overrid.value);
+                        }
+                    }
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.modifyvar1,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        const _var = importVariable(JSON.parse(value));
+                        // if (!_var.value) {
+                        //     console.log(_var)
+                        //     throw new Error();
+                        // }
+                        if (_var.value == undefined) {
+                            shape.deleteVar(_var.id);
+                        }
+                        else {
+                            shape.addVar(_var);
+                        }
+                    }
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.modifyvarValue,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        const _var = importVariable(JSON.parse(value));
+                        if (!(shape instanceof Variable)) throw new Error();
+                        api.shapeModifyVariable(page, shape as Variable, _var.value);
+                    }
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.isUnionSymbolShape,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    (shape as SymbolShape).isUnionSymbolShape = value && JSON.parse(value);
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.vartag,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        const _shape = shape as SymbolShape;
+                        if (!_shape.vartag) _shape.vartag = new BasicMap();
+                        let { varId, tag } = JSON.parse(value);
+                        _shape.setTag(varId, tag);
+                    }
                 }
             }
         ]
