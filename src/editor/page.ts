@@ -394,12 +394,16 @@ export class PageEditor {
     /**
      * @description 给组件创建一个实例切换变量
      */
-    makeSymbolRefVar(symbol: SymbolShape, name: string, values: any) {
+    makeSymbolRefVar(symbol: SymbolShape, name: string, shapes: Shape[]) {
         const api = this.__repo.start("makeSymbolRefVar", {});
         try {
+            if (!shapes.length) throw new Error('invalid data');
             if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
-            const _var = new Variable(v4(), VariableType.SymbolRef, name, values);
+            const _var = new Variable(v4(), VariableType.SymbolRef, name, shapes[0].refId);
             api.shapeAddVariable(this.__page, symbol, _var);
+            for (let i= 0, len= shapes.length; i < len; i++) {
+                api.shapeBindVar(this.__page, shapes[i], OverrideType.SymbolID, _var.id);
+            }
             this.__repo.commit();
             return symbol;
         } catch (error) {
