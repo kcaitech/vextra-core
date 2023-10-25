@@ -378,7 +378,7 @@ export class PageEditor {
         try {
             if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), VariableType.Visible, name, dlt_value);
-                api.shapeAddVariable(this.__page, symbol, _var);
+            api.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const item = shapes[i];
                 api.shapeBindVar(this.__page, item, OverrideType.Visible, _var.id);
@@ -415,12 +415,16 @@ export class PageEditor {
     /**
      * @description 给组件创建一个文本变量
      */
-    makeTextVar(symbol: SymbolShape, name: string, values: any) {
+    makeTextVar(symbol: SymbolShape, name: string, dlt: string, shapes: Shape[]) {
         const api = this.__repo.start("makeTextVar", {});
         try {
             if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
-            const _var = new Variable(v4(), VariableType.Text, name, values);
+            const _var = new Variable(v4(), VariableType.Text, name, dlt);
             api.shapeAddVariable(this.__page, symbol, _var);
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const item = shapes[i];
+                api.shapeBindVar(this.__page, item, OverrideType.Text, _var.id);
+            }
             this.__repo.commit();
             return symbol;
         } catch (error) {
