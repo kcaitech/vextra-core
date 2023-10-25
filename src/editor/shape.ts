@@ -193,8 +193,8 @@ export class ShapeEditor {
      * @param _var
      * @param value
      */
-    modifySymbolRefStatus(_var: Variable, value: any) {
-        const api = this.__repo.start("modifySymbolRefStatus", {});
+    modifySymbolRefVariable(_var: Variable, value: any) {
+        const api = this.__repo.start("modifySymbolRefVariable", {});
         try {
             this.modifyVariable2(_var, value, api);
             this.__repo.commit();
