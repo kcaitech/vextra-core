@@ -469,9 +469,28 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const _shape = shape as SymbolShape;
-                        if (!_shape.vartag) _shape.vartag = new BasicMap();
                         let { varId, tag } = JSON.parse(value);
-                        _shape.setTag(varId, tag);
+                        if (tag == undefined) {
+                            if (_shape.vartag) _shape.vartag.delete(varId);
+                        } else {
+                            if (!_shape.vartag) _shape.vartag = new BasicMap();
+                            _shape.vartag.set(varId, tag);
+                        }
+                    }
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.bindvar,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        let { type, varId } = JSON.parse(value);
+                        if (varId == undefined) {
+                            if (shape.varbinds) shape.varbinds.delete(type);
+                        }
+                        else {
+                            if (!shape.varbinds) shape.varbinds = new BasicMap();
+                            shape.varbinds.set(type, varId);
+                        }
                     }
                 }
             }
