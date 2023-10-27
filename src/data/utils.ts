@@ -599,10 +599,9 @@ export function copyShape(source: types.Shape) {
     throw new Error("unknow shape type: " + source.typeId)
 }
 
-
-
-function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], i: number = 0) {
-    for (let len = varsContainer.length; i < len; ++i) {
+function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], i: number | undefined = undefined) {
+    i = i === undefined ? varsContainer.length - 1 : i;
+    for (; i >= 0; --i) {
         const container = varsContainer[i];
         const override = container.getOverrid(varId, OverrideType.Variable);
         if (override) {
@@ -621,12 +620,12 @@ function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape 
 }
 
 function findOverride(refId: string, type: OverrideType, varsContainer: (SymbolRefShape | SymbolShape)[]) {
-    for (let i = 0, len = varsContainer.length; i < len; ++i) {
+    for (let i = varsContainer.length - 1; i >= 0; --i) {
         const container = varsContainer[i];
         const override = container.getOverrid(refId, type);
         if (override) {
             const ret = [override.v];
-            findVar(override.v.id, ret, varsContainer, i + 1);
+            findVar(override.v.id, ret, varsContainer, i - 1);
             return ret;
         }
         if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
