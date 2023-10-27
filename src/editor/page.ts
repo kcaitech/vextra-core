@@ -472,7 +472,11 @@ export class PageEditor {
                 source.frame.x += 20;
                 source.frame.y += 20;
             }
-            const copy = importSymbolShape(source);
+            const _this = this;
+            const ctx: IImportContext = new class implements IImportContext {
+                document: Document = _this.__document
+            };
+            const copy = importSymbolShape(source, ctx); // 需要设置ctx
             const api = this.__repo.start("makeStateAt", {});
             const new_state = api.shapeInsert(this.__page, union, copy, idx + 1);
             modify_frame_after_inset_state(this.__page, api, union);
