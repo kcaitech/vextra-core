@@ -127,6 +127,9 @@ export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, need
 export function shapeModifyConstrainerProportions(shape: Shape, prop: boolean) {
     shape.constrainerProportions = prop;
 }
+export function shapeModifyNameFixed(shape: Shape, isFixed: boolean) {
+    shape.nameIsFixed = isFixed;
+}
 export function shapeModifyContactTo(shape: Shape, to: ContactForm | undefined) {
     shape.to = to;
 }

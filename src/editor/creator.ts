@@ -1,11 +1,30 @@
-import { v4 as uuid } from "uuid";
-import { Page } from "../data/page";
-import { Artboard } from "../data/artboard";
-import { Document, PageListItem } from "../data/document";
-import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment } from "../data/shape";
-import { ContactShape } from "../data/contact"
+import {v4 as uuid} from "uuid";
+import {Page} from "../data/page";
+import {Artboard} from "../data/artboard";
+import {Document, PageListItem} from "../data/document";
+import {
+    GroupShape,
+    RectShape,
+    PathShape,
+    OvalShape,
+    LineShape,
+    Shape,
+    TextShape,
+    ImageShape,
+    PathShape2,
+    PathSegment
+} from "../data/shape";
+import {ContactShape} from "../data/contact"
 import * as types from "../data/typesdefine"
-import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape, importTableCell } from "../io/baseimport";
+import {
+    importGroupShape,
+    importPage,
+    importArtboard,
+    importTextShape,
+    importText,
+    importTableShape,
+    importTableCell
+} from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
@@ -22,13 +41,14 @@ import {
     TextAttr,
     BorderStyle
 } from "../data/classes";
-import { BasicArray } from "../data/basic";
-import { Repository } from "../data/transact";
-import { Comment } from "../data/comment";
-import { ResourceMgr } from "../data/basic";
-import { TableShape } from "../data/table";
-import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
-import { ContactForm } from "../data/baseclasses";
+import {BasicArray} from "../data/basic";
+import {Repository} from "../data/transact";
+import {Comment} from "../data/comment";
+import {ResourceMgr} from "../data/basic";
+import {TableShape} from "../data/table";
+import {mergeParaAttr, mergeSpanAttr} from "../data/textutils";
+import {ContactForm} from "../data/baseclasses";
+
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {
@@ -36,13 +56,13 @@ export function addCommonAttr(shape: Shape) {
     shape.isVisible = true;
     shape.isLocked = false;
     shape.constrainerProportions = false;
+    shape.nameIsFixed = false;
 }
 
 export function newDocument(documentName: string, repo: Repository): Document {
     const dId = uuid();
     const pageList = new BasicArray<PageListItem>();
-    const document = new Document(dId, "", "", documentName, pageList, repo);
-    return document;
+    return new Document(dId, "", "", documentName, pageList, repo);
 }
 
 export function newPage(name: string): Page {
@@ -66,8 +86,7 @@ export function newGroupShape(name: string, style?: Style): GroupShape {
 
 export function newSolidColorFill(): Fill {
     const fillColor = new Color(1, 216, 216, 216);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
-    return fill;
+    return new Fill(uuid(), true, FillType.SolidColor, fillColor);
 }
 
 export function newStyle(): Style {
@@ -104,8 +123,7 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
         const shape = new PathShape(id, name, types.ShapeType.Path, frame, style, curvePoint, !!isClosed);
         addCommonAttr(shape);
         return shape;
-    }
-    else {
+    } else {
         const pathsegs = new BasicArray<PathSegment>();
         segs.forEach((seg) => {
             const points = seg.points;
@@ -218,7 +236,10 @@ export function newComment(user: UserInfo, createAt: string, pageId: string, fra
     return comment;
 }
 
-export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>, ref?: string): ImageShape {
+export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: ResourceMgr<{
+    buff: Uint8Array,
+    base64: string
+}>, ref?: string): ImageShape {
     const id = uuid();
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
@@ -234,7 +255,10 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     return img;
 }
 
-export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>): TableShape {
+export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{
+    buff: Uint8Array,
+    base64: string
+}>): TableShape {
     template_table_shape.id = uuid();
     template_table_shape.name = name // i18n
     template_table_shape.rowHeights.length = 0;
@@ -256,6 +280,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     table.setImageMgr(mediasMgr);
     return table;
 }
+
 export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm): ContactShape {
     const style = newStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
