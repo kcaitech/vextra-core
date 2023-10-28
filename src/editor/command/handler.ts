@@ -7,7 +7,7 @@ import * as types from "../../data/typesdefine"
 import { IdOpSet } from "../../coop/data/basictypes";
 import { SymbolShape, Variable } from "../../data/shape";
 import { BasicMap } from "../../data/basic";
-
+import {shapeModifyNameFixed} from "../basicapi";
 export type TextShapeLike = Shape & { text: Text }
 export type UpdateFrameArray = { shape: Shape, page: Page }[];
 export type Handler = (...args: any[]) => void;
@@ -336,6 +336,13 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isLock = value && JSON.parse(value) || false;
                     api.shapeModifyConstrainerProportions(shape as Shape, isLock);
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.nameIsFixed,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const isFixed = value && JSON.parse(value) || false;
+                    api.shapeModifyNameFixed(shape as Shape, isFixed);
                 }
             },
             {

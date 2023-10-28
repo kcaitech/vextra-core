@@ -180,7 +180,7 @@ export class ShapeEditor {
 
         const shape = this.__shape;
         if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
-            // override 
+            // override
             // const api = this.__repo.
             this._overrideVariable(_var, value, api);
         } else {
@@ -405,7 +405,7 @@ export class ShapeEditor {
         if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
 
         // add override
-        // 
+        //
 
         // todo api
         // add override add variable
@@ -422,9 +422,10 @@ export class ShapeEditor {
     }
 
     public setName(name: string) {
-        this._repoWrap('setName', (api) => {
-            api.shapeModifyName(this.__page, this.__shape, name)
-        });
+        const api = this.__repo.start('setName', {});
+        api.shapeModifyName(this.__page, this.__shape, name)
+        api.shapeModifyNameFixed(this.__page, this.__shape, true);
+        this.__repo.commit();
     }
 
     public toggleVisible() {
@@ -990,7 +991,7 @@ export class ShapeEditor {
                 matchshapes.push(s);
             }
         })
-        // 
+        //
         if (matchshapes.length > 0) {
             // 可以修改
 
@@ -1063,7 +1064,7 @@ export class ShapeEditor {
             }
 
         } else {
-            // 
+            //
             throw new Error();
         }
     }
@@ -1116,7 +1117,7 @@ export class ShapeEditor {
         // 同步修改当前var的值，判断下是不是选择了这个sym?
 
         // 检查重复值，这个无法避免完全不重复，还是有可能同步修改过来的
-        // 
+        //
 
         const api = this.__repo.start("modifySymTag", {});
         try {
@@ -1207,7 +1208,7 @@ export class ShapeEditor {
         const shape = this.__shape;
         // check virtual
         if (shape.isVirtualShape) {
-            // override 
+            // override
             if (shape.varbinds && shape.varbinds.has(slot)) {
                 // override variable
                 // this.modifyVariable(VariableType., slot, () => varId)

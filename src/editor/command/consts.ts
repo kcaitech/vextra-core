@@ -40,6 +40,7 @@ export const SHAPE_ATTR_ID = {
     contactFrom: "contactFrom",
     contactTo: "contactTo",
     isEdited: "isEdited",
+    nameIsFixed: 'nameIsFixed',
     // text shape
     textBehaviour: "textBehaviour",
     textVerAlign: "textVerAlign",

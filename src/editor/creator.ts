@@ -38,13 +38,13 @@ export function addCommonAttr(shape: Shape) {
     shape.isVisible = true;
     shape.isLocked = false;
     shape.constrainerProportions = false;
+    shape.nameIsFixed = false;
 }
 
 export function newDocument(documentName: string, repo: Repository): Document {
     const dId = uuid();
     const pageList = new BasicArray<PageListItem>();
-    const document = new Document(dId, "", "", documentName, pageList, repo);
-    return document;
+    return new Document(dId, "", "", documentName, pageList, repo);
 }
 
 export function newPage(name: string): Page {
@@ -73,8 +73,7 @@ export function initFrame(shape: Shape, frame: ShapeFrame) {
 }
 export function newSolidColorFill(): Fill {
     const fillColor = new Color(1, 216, 216, 216);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
-    return fill;
+    return new Fill(uuid(), true, FillType.SolidColor, fillColor);
 }
 
 export function newStyle(): Style {
@@ -117,8 +116,7 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?
         const shape = new PathShape(id, name, types.ShapeType.Path, frame, style, curvePoint, !!isClosed);
         addCommonAttr(shape);
         return shape;
-    }
-    else {
+    } else {
         const pathsegs = new BasicArray<PathSegment>();
         segs.forEach((seg) => {
             const points = seg.points;
@@ -231,7 +229,10 @@ export function newComment(user: UserInfo, createAt: string, pageId: string, fra
     return comment;
 }
 
-export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>, ref?: string): ImageShape {
+export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: ResourceMgr<{
+    buff: Uint8Array,
+    base64: string
+}>, ref?: string): ImageShape {
     const id = uuid();
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
@@ -247,7 +248,10 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     return img;
 }
 
-export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>): TableShape {
+export function newTable(name: string, frame: ShapeFrame, rowCount: number, columCount: number, mediasMgr: ResourceMgr<{
+    buff: Uint8Array,
+    base64: string
+}>): TableShape {
     template_table_shape.id = uuid();
     template_table_shape.name = name // i18n
     template_table_shape.rowHeights.length = 0;
@@ -269,6 +273,7 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     table.setImageMgr(mediasMgr);
     return table;
 }
+
 export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm): ContactShape {
     const style = newStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
