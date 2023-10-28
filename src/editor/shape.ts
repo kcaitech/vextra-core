@@ -224,7 +224,6 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
-
     /**
      * 将变量fromVar override 到id为toVarId的变量
      * */
@@ -341,7 +340,7 @@ export class ShapeEditor {
     }
 
     /**
-     * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「修改」var，否则先override再「修改」新的var
+     * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「修改」var，否则先override再「修改」新的var zrx?是否用于修改组件身上的变量
      * @param varType
      * @param overrideType
      * @param valuefun
