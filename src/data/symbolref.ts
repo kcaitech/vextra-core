@@ -469,7 +469,11 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         super.findVar(varId, ret);
         return;
     }
-
+    removeVar(key: string) {
+        if (!this.variables) return false;
+        // TODO 解绑
+        return this.variables.delete(key);
+    }
     findOverride(refId: string, type: OverrideType): Variable[] | undefined {
         if (this.__data) {
             const override = this.__data.getOverrid(refId, type);
