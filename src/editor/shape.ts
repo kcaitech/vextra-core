@@ -203,6 +203,23 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+    resetSymbolRefVariable() {
+        const variables = (this.__shape as SymbolRefShape).variables;
+        const virbindsEx = (this.__shape as SymbolRefShape).virbindsEx;
+        if (!variables || !virbindsEx) return false;
+        try {
+            const api = this.__repo.start('resetSymbolRefVariable', {});
+            variables.forEach((_, k) => {
+                api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
+            });
+            // virbindsEx.forEach((_, k) => virbindsEx.delete(k));
+            this.__repo.commit();
+            if (variables.size === 0) return true;
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+        }
+    }
     /**
      * @description 修改_var的名称为name，如果_var不可以修改，则override _var到name
      */
@@ -719,8 +736,8 @@ export class ShapeEditor {
                         this.__repo.rollback();
                     }
                 } catch (error) {
+                    console.log(error);
                     this.__repo.rollback();
-                    throw new Error(`${error}`);
                 }
             }
         }
