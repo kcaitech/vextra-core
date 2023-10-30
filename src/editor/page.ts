@@ -376,7 +376,7 @@ export class PageEditor {
     makeVisibleVar(symbol: SymbolShape, name: string, dlt_value: boolean, shapes: Shape[]) {
         const api = this.__repo.start("makeVisibleVar", {});
         try {
-            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
+            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), VariableType.Visible, name, dlt_value);
             api.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
@@ -398,10 +398,10 @@ export class PageEditor {
         const api = this.__repo.start("makeSymbolRefVar", {});
         try {
             if (!shapes.length) throw new Error('invalid data');
-            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
+            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), VariableType.SymbolRef, name, shapes[0].refId);
             api.shapeAddVariable(this.__page, symbol, _var);
-            for (let i= 0, len= shapes.length; i < len; i++) {
+            for (let i = 0, len = shapes.length; i < len; i++) {
                 api.shapeBindVar(this.__page, shapes[i], OverrideType.SymbolID, _var.id);
             }
             this.__repo.commit();
@@ -418,7 +418,7 @@ export class PageEditor {
     makeTextVar(symbol: SymbolShape, name: string, dlt: string, shapes: Shape[]) {
         const api = this.__repo.start("makeTextVar", {});
         try {
-            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
+            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), VariableType.Text, name, dlt);
             api.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
@@ -439,7 +439,7 @@ export class PageEditor {
     makeVar(type: VariableType, symbol: SymbolShape, name: string, values: any) {
         const api = this.__repo.start("makeVar", {});
         try {
-            if (symbol.type !== ShapeType.Symbol ||(symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
+            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), type, name, values);
             api.shapeAddVariable(this.__page, symbol, _var);
             this.__repo.commit();
@@ -454,7 +454,7 @@ export class PageEditor {
      * @description 基于内部原有状态建立新状态
      * @union union
      */
-    makeStateAt(union: SymbolShape, dlt: string, index?: number) {
+    makeStateAt(union: SymbolShape, dlt: string, index?: number, hor_align?: number) {
         if (!union.isUnionSymbolShape || !union.childs.length) return;
         let idx = index === undefined ? union.childs.length - 1 : index;
         if (index !== undefined && (index > union.childs.length || index < 0)) idx = union.childs.length;
@@ -465,12 +465,11 @@ export class PageEditor {
             source.id = uuid();
             set_childs_id(source.childs as Shape[]);
             if (index === undefined) {
-                const pre_y = find_state_space(union);
-                if (pre_y < 0) throw new Error('failed');
-                source.frame.y = pre_y + 20;
+                const space = find_state_space(union);
+                if (!space) throw new Error('failed');
+                source.frame.y = space.y + 20;
             } else {
-                source.frame.x += 20;
-                source.frame.y += 20;
+                source.frame.x = hor_align || source.frame.x + 20;
             }
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
@@ -840,7 +839,7 @@ export class PageEditor {
             modify_frame_after_insert(api, this.__page, result);
             const frame = get_frame(result);
             this.__repo.commit();
-            return { shapes: result, frame };
+            return {shapes: result, frame};
         } catch (e) {
             console.log(e);
             this.__repo.rollback();

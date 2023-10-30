@@ -82,29 +82,38 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
 }
 
 export function find_state_space(union: SymbolShape) {
-    if (!union.isUnionSymbolShape) return -1;
+    if (!union.isUnionSymbolShape) return;
     const childs = union.childs;
-    if (!childs.length) return -1;
-    let y = -1;
+    if (!childs.length) return;
+    let space_y = -1;
+    let space_x = -1;
     for (let i = 0, len = childs.length; i < len; i++) {
         const child = childs[i];
         const m2p = child.matrix2Parent(), f = child.frame;
-        const point = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
-            x: 0,
-            y: f.height
-        }].map(p => m2p.computeCoord3(p));
+        const point = [
+            {x: 0, y: 0},
+            {x: f.width, y: 0},
+            {x: f.width, y: f.height},
+            {x: 0, y: f.height}
+        ].map(p => m2p.computeCoord3(p));
         for (let j = 0; j < 4; j++) {
-            if (point[j].y > y) y = point[j].y;
+            if (point[j].x > space_x) space_x = point[j].x;
+            if (point[j].y > space_y) space_y = point[j].y;
         }
     }
-    return y;
+    return {x: space_x, y: space_y};
 }
 
 export function modify_frame_after_inset_state(page: Page, api: Api, union: SymbolShape) {
-    const y = find_state_space(union);
-    const delta = union.frame.height - y;
-    if (delta <= 0) {
-        api.shapeModifyHeight(page, union, union.frame.height - delta + 20)
+    const space = find_state_space(union)
+    if (!space) return;
+    const delta_x = union.frame.width - space.x;
+    const delta_y = union.frame.height - space.y;
+    if (delta_x <= 0) {
+        api.shapeModifyWidth(page, union, union.frame.width - delta_x + 20)
+    }
+    if (delta_y <= 0) {
+        api.shapeModifyHeight(page, union, union.frame.height - delta_y + 20)
     }
 }
 
