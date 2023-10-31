@@ -1,4 +1,4 @@
-import {float_accuracy} from "../basic/consts";
+import { float_accuracy } from "../basic/consts";
 import {
     Border, BorderPosition,
     BorderStyle, Color,
@@ -15,10 +15,10 @@ import {
     Variable,
     VariableType
 } from "../data/classes";
-import {Api} from "./command/recordapi";
-import {BasicMap} from "../data/basic";
-import {newSymbolShape} from "./creator";
-import {uuid} from "../basic/uuid";
+import { Api } from "./command/recordapi";
+import { BasicMap } from "../data/basic";
+import { newSymbolShape } from "./creator";
+import { uuid } from "../basic/uuid";
 import * as types from "../data/typesdefine";
 
 interface _Api {
@@ -91,17 +91,17 @@ export function find_state_space(union: SymbolShape) {
         const child = childs[i];
         const m2p = child.matrix2Parent(), f = child.frame;
         const point = [
-            {x: 0, y: 0},
-            {x: f.width, y: 0},
-            {x: f.width, y: f.height},
-            {x: 0, y: f.height}
+            { x: 0, y: 0 },
+            { x: f.width, y: 0 },
+            { x: f.width, y: f.height },
+            { x: 0, y: f.height }
         ].map(p => m2p.computeCoord3(p));
         for (let j = 0; j < 4; j++) {
             if (point[j].x > space_x) space_x = point[j].x;
             if (point[j].y > space_y) space_y = point[j].y;
         }
     }
-    return {x: space_x, y: space_y};
+    return { x: space_x, y: space_y };
 }
 
 export function modify_frame_after_inset_state(page: Page, api: Api, union: SymbolShape) {
@@ -123,7 +123,7 @@ function get_topology_map(shape: Shape, init?: { shape: string, ref: string }[])
     if (!childs || childs.length === 0) return [];
     for (let i = 0, len = childs.length; i < len; i++) {
         const child = childs[i];
-        deps.push({shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? childs[i].refId : childs[i].id});
+        deps.push({ shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? childs[i].refId : childs[i].id });
         const c_childs = child.type === ShapeType.SymbolRef ? child.naviChilds : child.childs;
         if (c_childs && c_childs.length) deps = [...get_topology_map(child, deps)];
     }
@@ -162,7 +162,7 @@ function filter_deps(deps: { shape: string, ref: string }[], key1: 'shape' | 're
  * @returns
  */
 export function is_circular_ref(symbol: Shape, ref: SymbolRefShape): boolean {
-    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: symbol.id, ref: ref.refId}];
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), { shape: symbol.id, ref: ref.refId }];
     if (deps.length < 2) return false;
     // 过滤左侧
     deps = filter_deps(deps, 'shape', 'ref');
@@ -313,4 +313,11 @@ export function get_state_name(state: SymbolShape) {
         slice && name_slice.push(slice);
     })
     return name_slice.toString();
+}
+/**
+ * @description 是否为可变组件
+ * @param shape
+ */
+export function is_state(shape: Shape) {
+    return shape.type === ShapeType.Symbol && shape?.parent?.isUnionSymbolShape;
 }
