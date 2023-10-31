@@ -5,6 +5,11 @@ import { Artboard } from "./artboard";
 import { BasicArray, ResourceMgr, IDataGuard, Watchable } from "./basic";
 import { Style } from "./style";
 import { GroupShape, SymbolShape } from "./shape";
+class SpecialActionCorrespondent extends Watchable(Object) {
+    constructor() {
+        super();
+    }
+}
 export class Document extends Watchable(DocumentMeta) {
     private __pages: ResourceMgr<Page>;
     private __artboards: ResourceMgr<Artboard>;
@@ -15,7 +20,7 @@ export class Document extends Watchable(DocumentMeta) {
     // private __guard?: IDataGruad;
     private __versionId: string;
     private __name: string;
-
+    __correspondent: SpecialActionCorrespondent; // 额外动作通信
     constructor(
         id: string,
         versionId: string, // 版本id
@@ -32,6 +37,7 @@ export class Document extends Watchable(DocumentMeta) {
         this.__symbols = new ResourceMgr<SymbolShape>(guard);
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>();
         this.__styles = new ResourceMgr<Style>();
+        this.__correspondent = new SpecialActionCorrespondent();
         return guard.guard(this);
     }
     get versionId() {
