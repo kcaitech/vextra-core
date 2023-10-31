@@ -508,7 +508,9 @@ export class PageEditor {
      */
     extractSymbol(shape: SymbolRefShape) {
         // 创建一个新对象
-        const symbol = shape.peekSymbol();
+        // const symbol = shape.peekSymbol();
+        const symmgr = shape.getSymbolMgr();
+        const symbol = symmgr?.getSync(shape.refId);
         if (!symbol) return;
         // 构造一个临时group用于导出symbol
         const tmpGroup = newGroupShape(shape.name, shape.style);
