@@ -1,8 +1,17 @@
-import {GroupShape, RectShape, Shape, PathShape, PathShape2, TextShape, Variable, SymbolShape} from "../data/shape";
-import {Color, MarkerType} from "../data/style";
+import {
+    GroupShape,
+    PathShape,
+    PathShape2,
+    RectShape,
+    Shape,
+    ShapeType,
+    SymbolShape,
+    TextShape,
+    Variable
+} from "../data/shape";
+import {Border, BorderPosition, BorderStyle, Color, Fill, MarkerType} from "../data/style";
 import {expand, expandTo, translate, translateTo} from "./frame";
-import {Border, BorderPosition, BorderStyle, Fill} from "../data/style";
-import {BoolOp, CurvePoint, Point2D, ShapeType} from "../data/baseclasses";
+import {BoolOp, CurvePoint, Point2D} from "../data/baseclasses";
 import {Artboard} from "../data/artboard";
 import {createHorizontalBox} from "../basic/utils";
 import {Page} from "../data/page";
@@ -16,7 +25,7 @@ import {v4} from "uuid";
 import {get_box_pagexy, get_nearest_border_point} from "../data/utils";
 import {Matrix} from "../basic/matrix";
 import {ContactShape} from "../data/contact";
-import {SymbolRefShape} from "../data/classes";
+import {Document, SymbolRefShape} from "../data/classes";
 import {uuid} from "../basic/uuid";
 import {BasicArray} from "../data/basic";
 import {is_default_state} from "./utils";
@@ -31,11 +40,13 @@ export class ShapeEditor {
     protected __shape: Shape;
     protected __repo: CoopRepository;
     protected __page: Page;
+    protected __document: Document
 
-    constructor(shape: Shape, page: Page, repo: CoopRepository) {
+    constructor(shape: Shape, page: Page, repo: CoopRepository, document: Document) {
         this.__shape = shape;
         this.__repo = repo;
         this.__page = page;
+        this.__document =  document;
     }
 
     private _repoWrap(name: string, func: (api: Api) => void) {
@@ -763,6 +774,9 @@ export class ShapeEditor {
                         const _p = parent.parent;
                         const _idx = (_p as GroupShape).childs.findIndex(c => c.id === parent.id);
                         api.shapeDelete(this.__page, (_p as GroupShape), _idx);
+                    }
+                    if (this.__shape.type === ShapeType.Symbol) {
+                        this.__document.__correspondent.notify('update-symbol-list');
                     }
                     this.__repo.commit();
                 } catch (error) {

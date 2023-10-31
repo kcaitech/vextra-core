@@ -762,6 +762,9 @@ export class PageEditor {
                 if (!savep.childs.length && savep.type === ShapeType.Group) {
                     this.delete_inner(page, savep, api);
                 }
+                if (shape.type === ShapeType.Symbol) {
+                    this.__document.__correspondent.notify('update-symbol-list');
+                }
                 this.__repo.commit()
                 return true;
             } else {
@@ -777,9 +780,11 @@ export class PageEditor {
     // 批量删除
     delete_batch(shapes: Shape[]) {
         const api = this.__repo.start("deleteBatch", {});
+        let need_special_notify = false;
         for (let i = 0; i < shapes.length; i++) {
             try {
                 const shape = shapes[i];
+                if (shape.type === ShapeType.Symbol) need_special_notify = true;
                 const page = shape.getPage() as Page;
                 if (!page) return false;
                 const savep = shape.parent as GroupShape;
@@ -792,6 +797,10 @@ export class PageEditor {
                 this.__repo.rollback();
                 return false;
             }
+        }
+        console.log(need_special_notify)
+        if (need_special_notify) {
+            this.__document.__correspondent.notify('update-symbol-list');
         }
         this.__repo.commit();
         return true;
@@ -1487,14 +1496,14 @@ export class PageEditor {
     }
 
     editor4Shape(shape: Shape): ShapeEditor {
-        return new ShapeEditor(shape, this.__page, this.__repo);
+        return new ShapeEditor(shape, this.__page, this.__repo, this.__document);
     }
 
     editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
-        return new TextShapeEditor(shape, this.__page, this.__repo);
+        return new TextShapeEditor(shape, this.__page, this.__repo, this.__document);
     }
 
     editor4Table(shape: TableShape): TableEditor {
-        return new TableEditor(shape, this.__page, this.__repo);
+        return new TableEditor(shape, this.__page, this.__repo, this.__document);
     }
 }

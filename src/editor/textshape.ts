@@ -22,7 +22,7 @@ import {
     ParaAttr,
     Span,
     ShapeType,
-    Variable
+    Variable, Document
 } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
@@ -54,8 +54,8 @@ export class TextShapeEditor extends ShapeEditor {
 
     private __cachedSpanAttr?: SpanAttrSetter;
 
-    constructor(shape: TextShapeLike, page: Page, repo: CoopRepository) {
-        super(shape, page, repo);
+    constructor(shape: TextShapeLike, page: Page, repo: CoopRepository, document: Document) {
+        super(shape, page, repo, document);
         //
         if (shape.isVirtualShape) {
 

@@ -9,6 +9,7 @@ import { Border, Color, Fill } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils";
 import { Api } from "./command/recordapi";
 import { importBorder, importFill } from "../data/baseimport";
+import {Document} from "../data/classes";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;
@@ -16,8 +17,8 @@ const MaxRowCount = TableShape.MaxRowCount;
 
 export class TableEditor extends ShapeEditor {
 
-    constructor(shape: TableShape, page: Page, repo: CoopRepository) {
-        super(shape, page, repo)
+    constructor(shape: TableShape, page: Page, repo: CoopRepository, document: Document) {
+        super(shape, page, repo, document)
     }
 
     get shape(): TableShape {
