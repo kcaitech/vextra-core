@@ -28,6 +28,7 @@ export class DocEditor {
         const api = this.__repo.start('deletepage', {});
         try {
             api.pageDelete(this.__document, index);
+
             this.__repo.commit();
         } catch (error) {
             console.log(error)
