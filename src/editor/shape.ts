@@ -46,7 +46,7 @@ export class ShapeEditor {
         this.__shape = shape;
         this.__repo = repo;
         this.__page = page;
-        this.__document =  document;
+        this.__document = document;
     }
 
     private _repoWrap(name: string, func: (api: Api) => void) {
@@ -214,6 +214,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+
     resetSymbolRefVariable() {
         const variables = (this.__shape as SymbolRefShape).variables;
         const virbindsEx = (this.__shape as SymbolRefShape).virbindsEx;
@@ -231,6 +232,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+
     /**
      * @description 修改_var的名称为name，如果_var不可以修改，则override _var到name
      */
@@ -252,6 +254,7 @@ export class ShapeEditor {
             this.__repo.rollback();
         }
     }
+
     /**
      * 将变量fromVar override 到id为toVarId的变量
      * */
@@ -974,11 +977,15 @@ export class ShapeEditor {
     }
 
     // symbolref
+    /**
+     * @description 是否已经被废弃 zrx?
+     */
     switchSymState(varId: string, state: string) {
         if (!(this.__shape instanceof SymbolRefShape)) return;
 
         const shape: SymbolRefShape = this.__shape;
-        const sym: SymbolShape | undefined = shape.peekSymbol();
+        const symmgr = shape.getSymbolMgr();
+        const sym = symmgr?.getSync(shape.refId);
         if (!sym) return;
 
         if (!sym.isUnionSymbolShape) return;
@@ -1003,7 +1010,7 @@ export class ShapeEditor {
         })
 
         if (!_var) {
-            throw new Error();
+            return console.log('no _var');
         }
 
         // 找到对应的shape
@@ -1078,9 +1085,10 @@ export class ShapeEditor {
                     needModifyVars.push(curVars.get(k)!);
                 }
             })
-
             // check varId inside
-            if (!needModifyVars.find((v) => v.id === varId)) throw new Error();
+            if (!needModifyVars.find((v) => v.id === varId)) {
+                return console.log('wrong vars data', needModifyVars);
+            }
 
             const api = this.__repo.start("switchSymState", {});
             try {
@@ -1212,6 +1220,9 @@ export class ShapeEditor {
         }
     }
 
+    /**
+     * @description 给组件移除一个变量
+     */
     removeVar(key: string) {
         if (!(this.__shape instanceof SymbolShape) && !(this.__shape instanceof SymbolRefShape)) return;
         if (this.__shape.isVirtualShape) return;
