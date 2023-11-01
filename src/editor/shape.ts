@@ -188,7 +188,6 @@ export class ShapeEditor {
     modifyVariable2(_var: Variable, value: any, api: Api) {
         const p = varParent(_var);
         if (!p) throw new Error();
-
         const shape = this.__shape;
         if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
             // override
@@ -398,11 +397,19 @@ export class ShapeEditor {
         // 先override还是varbinds？？应该是override?
 
         // 先查varbinds
-        if (shape.varbinds && shape.varbinds.has(overrideType)) {
+        // if (shape.varbinds && shape.varbinds.has(overrideType)) {
+        if (shape.varbinds?.get(overrideType)) {
             const _vars: Variable[] = [];
             const vars_path: Shape[] = [];
             shape.findVar(shape.varbinds.get(overrideType)!, _vars);
-            if (_vars.length !== vars_path.length) throw new Error();
+            // if (_vars.length !== vars_path.length) {
+            //     console.log('wrong data: _vars.length !== vars_path.length');
+            //     return false;
+            // }
+            if (!_vars.length) {
+                console.log('wrong data: _vars.length !== vars_path.length');
+                return false;
+            }
             const _var = _vars[_vars.length - 1];
             if (_var && _var.type === varType) {
                 this._repoWrap('modifyVariable', (api) => {
@@ -1238,10 +1245,13 @@ export class ShapeEditor {
         }
     }
 
+    /**
+     * @description 解除一个对象上的后一个变量绑定
+     * @param type
+     */
     removeBinds(type: OverrideType) {
         if (!is_part_of_symbol(this.__shape)) return;
-        if (this.__shape instanceof SymbolShape) return;
-        const api = this.__repo.start("removeVar", {});
+        const api = this.__repo.start("removeBinds", {});
         try {
             api.shapeUnbinVar(this.__page, this.__shape, type);
             this.__repo.commit();

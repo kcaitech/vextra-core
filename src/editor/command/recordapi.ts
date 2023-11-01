@@ -395,10 +395,12 @@ export class Api {
         })
     }
     shapeUnbinVar(page: Page, shape: Shape, type: OverrideType) {
+
         checkShapeAtPage(page, shape);
-        if (!shape.varbinds?.get(type)) return;
+        const save = shape.varbinds?.get(type);
+        console.log('emit', type, shape.varbinds, shape);
+        if (!save) return;
         this.__trap(() => {
-            const save = shape.varbinds!.get(type);
             const shapeId = genShapeId(shape);
             shape.varbinds!.delete(type);
             shapeId.push(type);
