@@ -340,3 +340,14 @@ export function is_symbol_but_not_union(shape: Shape) {
 export function unable_to_migrate(target: Shape, wonder: Shape) {
     return (target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wonder);
 }
+/**
+ * @description 判断图层是否为组件的组成部分
+ */
+export function is_part_of_symbol(shape: Shape) {
+    let s: Shape | undefined = shape;
+    while (s) {
+        if (s.type === ShapeType.Symbol) return true;
+        s = s.parent;
+    }
+    return false;
+}

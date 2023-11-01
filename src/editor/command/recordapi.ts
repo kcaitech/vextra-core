@@ -394,6 +394,17 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.bindvar, { type, varId }, { type, varId: save }));
         })
     }
+    shapeUnbinVar(page: Page, shape: Shape, type: OverrideType) {
+        checkShapeAtPage(page, shape);
+        if (!shape.varbinds?.get(type)) return;
+        this.__trap(() => {
+            const save = shape.varbinds!.get(type);
+            const shapeId = genShapeId(shape);
+            shape.varbinds!.delete(type);
+            shapeId.push(type);
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyoverride1, { type, varId: undefined }, { type, varId: save }));
+        })
+    }
     // shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
     //     checkShapeAtPage(page, shape);
     //     this.__trap(() => {

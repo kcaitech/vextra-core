@@ -28,7 +28,7 @@ import {ContactShape} from "../data/contact";
 import {Document, SymbolRefShape} from "../data/classes";
 import {uuid} from "../basic/uuid";
 import {BasicArray} from "../data/basic";
-import {is_default_state} from "./utils";
+import {is_default_state, is_part_of_symbol} from "./utils";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -1231,6 +1231,19 @@ export class ShapeEditor {
         const api = this.__repo.start("removeVar", {});
         try {
             api.shapeRemoveVariable(this.__page, this.__shape, key);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
+    }
+
+    removeBinds(type: OverrideType) {
+        if (!is_part_of_symbol(this.__shape)) return;
+        if (this.__shape instanceof SymbolShape) return;
+        const api = this.__repo.start("removeVar", {});
+        try {
+            api.shapeUnbinVar(this.__page, this.__shape, type);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
