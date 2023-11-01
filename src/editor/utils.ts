@@ -248,7 +248,7 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, state_name
     let n_sym = newSymbolShape(state_name, state_frame);
     const insert_result = api.shapeInsert(page, symbol, n_sym, 0);
     if (!insert_result) return false;
-
+    n_sym = insert_result as SymbolShape;
     const childs = symbol.childs;
     for (let i = 1, len = childs.length; i < len; ++i) {
         api.shapeMove(page, symbol, 1, n_sym, i - 1);
@@ -280,7 +280,6 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, state_name
     const _var = new Variable(uuid(), VariableType.Status, attri_name, state_name);
     api.shapeAddVariable(page, symbol as SymbolShape, _var);
     api.shapeModifyVartag(page, n_sym, _var.id, state_name);
-
     return symbol;
 }
 
@@ -340,6 +339,7 @@ export function is_symbol_but_not_union(shape: Shape) {
 export function unable_to_migrate(target: Shape, wonder: Shape) {
     return (target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wonder);
 }
+
 /**
  * @description 判断图层是否为组件的组成部分
  */
