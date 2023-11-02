@@ -257,6 +257,55 @@ export class Api {
             })
         }
     }
+
+    shapeModifyWideX(page: Page, shape: Shape, x: number) {
+        checkShapeAtPage(page, shape);
+        const frame = (shape as GroupShape).wideframe;
+        if (x !== frame.x) {
+            this.__trap(() => {
+                const save = frame.x;
+                frame.x = x;
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.x, x, save))
+            })
+        }
+    }
+    shapeModifyWideY(page: Page, shape: Shape, y: number) {
+        checkShapeAtPage(page, shape);
+        const frame = (shape as GroupShape).wideframe;
+        if (y !== frame.y) {
+            this.__trap(() => {
+                const save = frame.y;
+                frame.y = y;
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.y, y, save))
+            })
+        }
+    }
+    shapeModifyWideWidth(page: Page, shape: Shape, w: number) {
+        checkShapeAtPage(page, shape);
+        const frame = (shape as GroupShape).wideframe;
+        if (w !== frame.width) {
+            this.__trap(() => {
+                const save = frame.width;
+                frame.width = w;
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.width, w, save))
+            })
+        }
+    }
+    shapeModifyWideHeight(page: Page, shape: Shape, h: number) {
+        checkShapeAtPage(page, shape);
+        const frame = (shape as GroupShape).wideframe;
+        if (h !== frame.height) {
+            this.__trap(() => {
+                const save = frame.height;
+                frame.height = h;
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.height, h, save))
+            })
+        }
+    }
+    shapeModifyWideWH(page: Page, shape: Shape, w: number, h: number) {
+        this.shapeModifyWideWidth(page, shape, w);
+        this.shapeModifyWideHeight(page, shape, h);
+    }
     shapeModifyStartMarkerType(page: Page, shape: Shape, mt: MarkerType) {
         checkShapeAtPage(page, shape);
         const style = shape.style;

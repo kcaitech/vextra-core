@@ -1,14 +1,59 @@
-import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape, exportSymbolShape } from "../../data/baseexport";
-import { Matrix } from "../../basic/matrix";
-import { Artboard } from "../../data/artboard";
-import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, TextShape } from "../../data/shape";
-import { TableCell, TableShape } from "../../data/table";
-import { ContactShape } from "../../data/contact";
-import { Page } from "../../data/page";
-import { SymbolRefShape } from "../../data/classes";
-import { IImportContext, importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape } from "../../data/baseimport";
+import {
+    exportArtboard,
+    exportGroupShape,
+    exportImageShape,
+    exportLineShape,
+    exportOvalShape,
+    exportPathShape,
+    exportRectShape,
+    exportSymbolRefShape,
+    exportTextShape,
+    exportTableShape,
+    exportPathShape2,
+    exportTableCell,
+    exportContactShape,
+    exportSymbolShape
+} from "../../data/baseexport";
+import {Matrix} from "../../basic/matrix";
+import {Artboard} from "../../data/artboard";
+import {
+    GroupShape,
+    ImageShape,
+    LineShape,
+    OvalShape,
+    PathShape,
+    PathShape2,
+    RectShape,
+    Shape,
+    ShapeType,
+    SymbolShape,
+    TextShape
+} from "../../data/shape";
+import {TableCell, TableShape} from "../../data/table";
+import {ContactShape} from "../../data/contact";
+import {Page} from "../../data/page";
+import {SymbolRefShape} from "../../data/classes";
+import {
+    IImportContext,
+    importArtboard,
+    importContactShape,
+    importFlattenShape,
+    importGroupShape,
+    importImageShape,
+    importLineShape,
+    importOvalShape,
+    importPathShape,
+    importPathShape2,
+    importRectShape,
+    importSymbolRefShape,
+    importSymbolShape,
+    importTableCell,
+    importTableShape,
+    importTextShape
+} from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
-import { Document } from "../../data/document";
+import {Document} from "../../data/document";
+import {log} from "console";
 
 export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
@@ -30,10 +75,13 @@ export function setFrame(page: Page, shape: Shape, x: number, y: number, w: numb
 
 const float_accuracy = 1e-7;
 
+/**
+ * @description 更新frame
+ */
 function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
     const p: Shape | undefined = shape.parent;
-    if (!p || (p instanceof Artboard || p instanceof SymbolRefShape || p instanceof SymbolShape)) return false;
-
+    if (!p || (p instanceof Artboard)) return false;
+    const need_modify_parent_frame = !(p instanceof SymbolRefShape || p instanceof SymbolShape);
     const cf = shape.boundingBox();
     let xychanged = false;
     for (; ;) { // update xy
@@ -46,8 +94,12 @@ function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
         api.shapeModifyY(page, shape, shape.frame.y + deltaY)
 
         if (p.isNoTransform()) {
-            if (deltaX > 0) api.shapeModifyX(page, p, p.frame.x - deltaX); // p.frame.x -= deltaX;
-            if (deltaY > 0) api.shapeModifyY(page, p, p.frame.y - deltaY); // p.frame.y -= deltaY
+            if (need_modify_parent_frame) {
+                if (deltaX > 0) api.shapeModifyX(page, p, p.frame.x - deltaX); // p.frame.x -= deltaX;
+                if (deltaY > 0) api.shapeModifyY(page, p, p.frame.y - deltaY); // p.frame.y -= deltaY
+            }
+            if (deltaX > 0) api.shapeModifyWideX(page, p, p.frame.x - deltaX);
+            if (deltaY > 0) api.shapeModifyWideY(page, p, p.frame.y - deltaY);
         } else {
             const m = p.matrix2Parent();
             const x1 = -deltaX;
@@ -56,14 +108,19 @@ function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
             const cur = m.computeCoord(0, 0);
             const dx = target.x - cur.x;
             const dy = target.y - cur.y;
-            api.shapeModifyX(page, p, p.frame.x + dx)
-            api.shapeModifyY(page, p, p.frame.y + dy)
+            if (need_modify_parent_frame) {
+                api.shapeModifyX(page, p, p.frame.x + dx);
+                api.shapeModifyY(page, p, p.frame.y + dy);
+            }
+            api.shapeModifyWideX(page, p, p.frame.x + dx);
+            api.shapeModifyWideY(page, p, p.frame.y + dy);
         }
 
-        p.childs.forEach((c: Shape) => {
+
+        p.childs.forEach((c: Shape) => { // 调整子元素相对父元素的位置
             if (c.id === shape.id) return;
-            api.shapeModifyX(page, c, c.frame.x + deltaX)
-            api.shapeModifyY(page, c, c.frame.y + deltaY)
+            api.shapeModifyX(page, c, c.frame.x + deltaX);
+            api.shapeModifyY(page, c, c.frame.y + deltaY);
         })
         xychanged = true;
         break;
@@ -89,7 +146,13 @@ function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
         }
         // 
         if (p.isNoTransform()) {
-            whchanged = setFrame(page, p, pf.x + l, pf.y + t, r - l, b - t, api);
+            if (need_modify_parent_frame) {
+                whchanged = setFrame(page, p, pf.x + l, pf.y + t, r - l, b - t, api);
+            }
+            api.shapeModifyWideX(page, p, pf.x + l);
+            api.shapeModifyWideY(page, p, pf.y + t);
+            api.shapeModifyWideWH(page, p, r - l, b - t);
+
         } else {
             const m = p.matrix2Parent();
 
@@ -120,8 +183,12 @@ function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
                 dx += target.x - cur.x;
                 dy += target.y - cur.y;
             }
-
-            whchanged = setFrame(page, p, pf.x + dx, pf.y + dy, w, h, api)
+            if (need_modify_parent_frame) {
+                whchanged = setFrame(page, p, pf.x + dx, pf.y + dy, w, h, api)
+            }
+            api.shapeModifyWideX(page, p, pf.x + dx);
+            api.shapeModifyWideY(page, p, pf.y + dy);
+            api.shapeModifyWideWH(page, p, w, h);
         }
 
         if (whchanged && (Math.abs(l) > float_accuracy || Math.abs(t) > float_accuracy)) { // 仅在对象被删除后要更新？
@@ -139,8 +206,16 @@ function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
 
 interface Api {
     shapeModifyX(page: Page, shape: Shape, x: number): void;
+
     shapeModifyY(page: Page, shape: Shape, y: number): void;
+
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
+
+    shapeModifyWideX(page: Page, shape: Shape, x: number): void;
+
+    shapeModifyWideY(page: Page, shape: Shape, y: number): void;
+
+    shapeModifyWideWH(page: Page, shape: Shape, w: number, h: number): void;
 }
 
 export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
@@ -152,7 +227,7 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
             n.needupdate = true;
             return;
         }
-        n = { shape: s, updated: false, childs: [], changed: false, needupdate: true }
+        n = {shape: s, updated: false, childs: [], changed: false, needupdate: true}
         updatetree.set(s.id, n);
 
         let p = s.parent;
@@ -160,9 +235,8 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
             let pn: Node | undefined = updatetree.get(p.id);
             if (pn) {
                 pn.childs.push(n);
-            }
-            else {
-                pn = { shape: p, updated: false, childs: [n], changed: false, needupdate: false }
+            } else {
+                pn = {shape: p, updated: false, childs: [n], changed: false, needupdate: false}
                 updatetree.set(p.id, pn);
             }
             n = pn;
@@ -204,7 +278,9 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
 
 export function importShape(data: string, document: Document) {
     const source: { [key: string]: any } = JSON.parse(data);
-    const ctx: IImportContext = new class implements IImportContext { document: Document = document };
+    const ctx: IImportContext = new class implements IImportContext {
+        document: Document = document
+    };
     // if (source.typeId == 'shape') {
     //     return importShape(source as types.Shape, ctx)
     // }
@@ -258,21 +334,36 @@ export function importShape(data: string, document: Document) {
 
 export function exportShape(shape: Shape): Object {
     switch (shape.type) {
-        case ShapeType.Artboard: return (exportArtboard(shape as Artboard))
-        case ShapeType.Image: return (exportImageShape(shape as ImageShape)) // todo 图片？？
-        case ShapeType.Line: return (exportLineShape(shape as LineShape))
-        case ShapeType.Oval: return (exportOvalShape(shape as OvalShape))
-        case ShapeType.Path: return (exportPathShape(shape as PathShape))
-        case ShapeType.Path2: return (exportPathShape2(shape as PathShape2))
-        case ShapeType.Rectangle: return (exportRectShape(shape as RectShape))
-        case ShapeType.SymbolRef: return (exportSymbolRefShape(shape as SymbolRefShape))
-        case ShapeType.Text: return (exportTextShape(shape as TextShape))
-        case ShapeType.Group: return (exportGroupShape(shape as GroupShape))
+        case ShapeType.Artboard:
+            return (exportArtboard(shape as Artboard))
+        case ShapeType.Image:
+            return (exportImageShape(shape as ImageShape)) // todo 图片？？
+        case ShapeType.Line:
+            return (exportLineShape(shape as LineShape))
+        case ShapeType.Oval:
+            return (exportOvalShape(shape as OvalShape))
+        case ShapeType.Path:
+            return (exportPathShape(shape as PathShape))
+        case ShapeType.Path2:
+            return (exportPathShape2(shape as PathShape2))
+        case ShapeType.Rectangle:
+            return (exportRectShape(shape as RectShape))
+        case ShapeType.SymbolRef:
+            return (exportSymbolRefShape(shape as SymbolRefShape))
+        case ShapeType.Text:
+            return (exportTextShape(shape as TextShape))
+        case ShapeType.Group:
+            return (exportGroupShape(shape as GroupShape))
         // case ShapeType.FlattenShape: return exportFlattenShape(shape as FlattenShape);
-        case ShapeType.Table: return exportTableShape(shape as TableShape)
-        case ShapeType.TableCell: return exportTableCell(shape as TableCell);
-        case ShapeType.Contact: return exportContactShape(shape as ContactShape);
-        case ShapeType.Symbol: return exportSymbolShape(shape as SymbolShape);
-        default: throw new Error("unknow shape type: " + shape.type)
+        case ShapeType.Table:
+            return exportTableShape(shape as TableShape)
+        case ShapeType.TableCell:
+            return exportTableCell(shape as TableCell);
+        case ShapeType.Contact:
+            return exportContactShape(shape as ContactShape);
+        case ShapeType.Symbol:
+            return exportSymbolShape(shape as SymbolShape);
+        default:
+            throw new Error("unknow shape type: " + shape.type)
     }
 }

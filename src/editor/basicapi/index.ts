@@ -89,6 +89,24 @@ export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, ne
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     }
 }
+export function shapeModifyWideX(page: Page, shape: Shape, x: number) {
+    const frame = (shape as GroupShape).frame;
+    if (x !== frame.x) {
+        frame.x = x;
+    }
+}
+export function shapeModifyWideY(page: Page, shape: Shape, y: number) {
+    const frame = (shape as GroupShape).frame;
+    if (y !== frame.y) {
+        frame.y = y;
+    }
+}
+export function shapeModifyWideWH(page: Page, shape: Shape, w: number, h: number) {
+    const frame = shape.frame;
+    if (w !== frame.width || h !== frame.height) {
+        (shape as GroupShape).setWideFrameSize(w, h);
+    }
+}
 export function shapeModifyStartMarkerType(shape: Shape, mt: MarkerType) {
     const style = shape.style;
     if (mt !== style.startMarkerType) {
