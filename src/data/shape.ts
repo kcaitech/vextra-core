@@ -338,10 +338,9 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 export class GroupShape extends Shape implements classes.GroupShape {
     typeId = 'group-shape';
     childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape)>
-
+    wideframe: ShapeFrame
     isBoolOpShape?: boolean
     fixedRadius?: number
-    wideframe: ShapeFrame
 
     constructor(
         id: string,
@@ -438,10 +437,6 @@ export class GroupShape extends Shape implements classes.GroupShape {
             }
         }
         return {op}
-    }
-
-    get wideFrame() {
-        return this.wideframe;
     }
 
     setWideFrameSize(w: number, h: number) {
