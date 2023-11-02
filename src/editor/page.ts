@@ -45,12 +45,13 @@ import {BasicArray} from "../data/basic";
 import {TableEditor} from "./table";
 import {exportGroupShape, exportSymbolShape} from "../data/baseexport";
 import {
+    adjust_selection_before_group,
     clear_binds_effect,
     find_state_space,
     get_symbol_by_layer,
     init_state,
     make_union,
-    modify_frame_after_inset_state
+    modify_frame_after_inset_state, trans_after_make_symbol
 } from "./utils";
 import {v4} from "uuid";
 
@@ -308,6 +309,8 @@ export class PageEditor {
         if (shapes.length === 0) return;
         const api = this.__repo.start("makeSymbol", {});
         try {
+            const need_trans_data: Shape[] = [];
+            adjust_selection_before_group(document, this.__page, shapes, api, need_trans_data);
             let sym: Shape;
             const shape0 = shapes[0];
             if (shapes.length === 1 && shape0 instanceof GroupShape && !shape0.fixedRadius
@@ -329,6 +332,9 @@ export class PageEditor {
             }
             if (sym) {
                 document.symbolsMgr.add(sym.id, sym as SymbolShape);
+                if (need_trans_data.length) {
+                    trans_after_make_symbol(this.__page, sym as SymbolShape, need_trans_data, api);
+                }
                 this.__repo.commit();
                 return sym as any as SymbolShape;
             } else {
