@@ -509,49 +509,50 @@ export class PageEditor {
     }
 
     /**
-     * 将引用的组件解引用
+     * @description 将引用的组件解引用
      * todo 考虑union symbol
-     * @param shape
      */
-    extractSymbol(shape: SymbolRefShape) {
-        // 创建一个新对象
-        // const symbol = shape.peekSymbol();
-        const symmgr = shape.getSymbolMgr();
-        const symbol = symmgr?.getSync(shape.refId);
-        if (!symbol) return;
-        // 构造一个临时group用于导出symbol
-        const tmpGroup = newGroupShape(shape.name, shape.style);
-        initFrame(tmpGroup, shape.frame);
-        tmpGroup.childs = shape.virtualChilds! as BasicArray<Shape>;
-        const symbolData = exportGroupShape(tmpGroup); // todo 如果symbol只有一个child时
-        // replaceid
+    extractSymbol(shapes: Shape[]) {
+        const actions: { parent: Shape, self: Shape, insertIndex: number }[] = []
         const replaceId = (shape: types.Shape) => {
             shape.id = uuid();
             if ((shape as types.GroupShape).childs) {
                 (shape as types.GroupShape).childs.forEach((c) => replaceId(c));
             }
         }
-        replaceId(symbolData);
-
-        const parent = shape.parent;
-        if (!parent) throw new Error("shape has no parent")
-
-        const index = (parent as GroupShape).indexOfChild(shape);
-        if (index < 0) throw new Error("shape not inside parent")
-
-        const _this = this;
-        const ctx: IImportContext = new class implements IImportContext {
-            document: Document = _this.__document
-        };
-
-        const newShape = importGroupShape(symbolData, ctx);
-
+        for (let i = 0, len = shapes.length; i < len; i++) {
+            const shape = shapes[i];
+            const symmgr = shape.getSymbolMgr();
+            const symbol = symmgr?.getSync(shape.refId);
+            if (!symbol) continue;
+            const tmpGroup = newGroupShape(shape.name, shape.style);
+            initFrame(tmpGroup, shape.frame);
+            tmpGroup.childs = shape.virtualChilds! as BasicArray<Shape>;
+            const symbolData = exportGroupShape(tmpGroup); // todo 如果symbol只有一个child时
+            replaceId(symbolData);
+            const parent = shape.parent;
+            if (!parent) continue;
+            const insertIndex = (parent as GroupShape).indexOfChild(shape);
+            if (insertIndex < 0) continue;
+            const _this = this;
+            const ctx: IImportContext = new class implements IImportContext {
+                document: Document = _this.__document
+            };
+            const newShape = importGroupShape(symbolData, ctx);
+            actions.push({parent, self: newShape, insertIndex});
+        }
+        if (!actions.length) return;
         const api = this.__repo.start("extractSymbol", {});
         try {
-            const ret = api.shapeInsert(this.__page, parent as GroupShape, newShape, index);
-            api.shapeDelete(this.__page, parent as GroupShape, index + 1);
+            const results: Shape[] = [];
+            for (let i = 0, len = actions.length; i < len; i++) {
+                const {parent, self, insertIndex} = actions[i];
+                const ret = api.shapeInsert(this.__page, parent as GroupShape, self, insertIndex);
+                api.shapeDelete(this.__page, parent as GroupShape, insertIndex + 1);
+                results.push(ret);
+            }
             this.__repo.commit();
-            return ret;
+            return results;
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
