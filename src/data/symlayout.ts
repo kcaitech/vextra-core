@@ -18,6 +18,16 @@ function shapeModifyWH(shape: Shape, w: number, h: number): void {
     frame.width = w;
     frame.height = h;
 }
+function shapeModifyWideX(shape: Shape, x: number) {
+    (shape as GroupShape).wideframe.x = x;
+}
+function shapeMofifyWideY(shape: Shape, y: number) {
+    (shape as GroupShape).wideframe.y = y;
+}
+function shapeModifyWideWH(shape: Shape, w: number, h:number) {
+    (shape as GroupShape).wideframe.width = w;
+    (shape as GroupShape).wideframe.width = h;
+}
 function shapeModifyRotate(shape: Shape, rotate: number): void {
     shape.rotation = rotate;
 }

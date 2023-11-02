@@ -1,27 +1,42 @@
-import { Basic, BasicMap, ResourceMgr, Watchable } from "./basic";
-import { Style, Border, Fill, Color } from "./style";
-import { Text } from "./text";
+import {Basic, BasicMap, ResourceMgr, Watchable} from "./basic";
+import {Style, Border, Fill, Color} from "./style";
+import {Text} from "./text";
 import * as classes from "./baseclasses"
-import { BasicArray } from "./basic";
+import {BasicArray} from "./basic";
+
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
     CurvePoint, ShapeFrame, Ellipse, PathSegment, OverrideType, VariableType,
 } from "./baseclasses";
-import { ShapeType, CurvePoint, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, OverrideType, VariableType } from "./baseclasses"
-import { Path } from "./path";
-import { Matrix } from "../basic/matrix";
-import { TextLayout } from "./textlayout";
-import { parsePath } from "./pathparser";
-import { RECT_POINTS } from "./consts";
-import { uuid } from "../basic/uuid";
-import { Variable } from "./variable";
-export { Variable } from "./variable";
+import {
+    ShapeType,
+    CurvePoint,
+    ShapeFrame,
+    BoolOp,
+    ExportOptions,
+    ResizeType,
+    PathSegment,
+    OverrideType,
+    VariableType
+} from "./baseclasses"
+import {Path} from "./path";
+import {Matrix} from "../basic/matrix";
+import {TextLayout} from "./textlayout";
+import {parsePath} from "./pathparser";
+import {RECT_POINTS} from "./consts";
+import {uuid} from "../basic/uuid";
+import {Variable} from "./variable";
+
+export {Variable} from "./variable";
 
 export interface VarWatcher {
     __var_onwatch: Map<string, Variable[]>,
     __has_var_notify: any,
+
     _var_watcher(...args: any[]): void,
+
     _watch_vars(slot: string, vars: Variable[]): void
+
     _var_on_removed(): void;
 }
 
@@ -118,6 +133,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
         return [this.id];
     }
+
     /**
      * for command
      */
@@ -155,7 +171,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
     /**
      * @deprecated 这个坐标是没有经过旋转变换的
-     * @returns 
+     * @returns
      */
     realXY(): { x: number, y: number, width: number, height: number } {
         return this.frame2Root();
@@ -163,7 +179,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
     /**
      * root: page 往上一级
-     * @returns 
+     * @returns
      */
     frame2Root(): ShapeFrame {
         const frame = this.frame;
@@ -184,7 +200,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
     /**
      * root: page 往上一级
-     * @returns 
+     * @returns
      */
     matrix2Root() {
         let s: Shape | undefined = this;
@@ -217,6 +233,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         m.trans(frame.x, frame.y);
         return m;
     }
+
     // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) return this.frame;
@@ -230,7 +247,10 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
         const frame = this.frame;
         const m = this.matrix2Parent();
-        const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, { x: 0, y: frame.height }]
+        const corners = [{x: 0, y: 0}, {x: frame.width, y: 0}, {x: frame.width, y: frame.height}, {
+            x: 0,
+            y: frame.height
+        }]
             .map((p) => m.computeCoord(p));
         const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
         const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
@@ -263,6 +283,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     setName(name: string) {
         this.name = name;
     }
+
     toggleVisible() {
         this.isVisible = !this.isVisible;
     }
@@ -270,6 +291,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     toggleLock() {
         this.isLocked = !this.isLocked;
     }
+
     setShapesConstrainerProportions(val: boolean) {
         this.constrainerProportions = val;
     }
@@ -319,6 +341,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
 
     isBoolOpShape?: boolean
     fixedRadius?: number
+    wideframe: ShapeFrame
 
     constructor(
         id: string,
@@ -336,6 +359,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
             style
         )
         this.childs = childs;
+        this.wideframe = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
         (childs as any).typeId = "childs";
     }
 
@@ -350,6 +374,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
         }
         return idx >= 0;
     }
+
     removeChildAt(idx: number): Shape | undefined {
         if (idx >= 0) {
             const del = this.childs.splice(idx, 1);
@@ -357,14 +382,16 @@ export class GroupShape extends Shape implements classes.GroupShape {
         }
         return undefined;
     }
+
     addChild(child: Shape) {
         this.childs.push(child);
     }
+
     /**
-     * 
+     *
      * @param child 返回带proxy的对象
-     * @param idx 
-     * @returns 
+     * @param idx
+     * @returns
      */
     addChildAt(child: Shape, idx?: number): Shape {
         if (idx && idx > this.childs.length) {
@@ -374,11 +401,13 @@ export class GroupShape extends Shape implements classes.GroupShape {
         this.childs.splice(index, 0, child);
         return this.childs[index];
     }
+
     indexOfChild(shape: Shape): number {
         return this.childs.findIndex((val) => {
             return val.id == shape.id
         })
     }
+
     findChildById(id: string): Shape | undefined {
         return this.childs.find((val) => {
             if (val.id == id) return val;
@@ -391,24 +420,33 @@ export class GroupShape extends Shape implements classes.GroupShape {
         const w = frame.width;
         const h = frame.height;
         let path = [["M", x, y],
-        ["l", w, 0],
-        ["l", 0, h],
-        ["l", -w, 0],
-        ["z"]];
+            ["l", w, 0],
+            ["l", 0, h],
+            ["l", -w, 0],
+            ["z"]];
         return new Path(path);
     }
 
     getBoolOp(): { op: BoolOp, isMulti?: boolean } {
-        if (!this.isBoolOpShape || this.childs.length === 0) return { op: BoolOp.None }
+        if (!this.isBoolOpShape || this.childs.length === 0) return {op: BoolOp.None}
         const childs = this.childs;
         const op: BoolOp = childs[0].boolOp ?? BoolOp.None;
         for (let i = 1, len = childs.length; i < len; i++) {
             const op1 = childs[i].boolOp ?? BoolOp.None;
             if (op1 !== op) {
-                return { op, isMulti: true }
+                return {op, isMulti: true}
             }
         }
-        return { op }
+        return {op}
+    }
+
+    get wideFrame() {
+        return this.wideframe;
+    }
+
+    setWideFrameSize(w: number, h: number) {
+        this.wideframe.width = w;
+        this.wideframe.height = h;
     }
 }
 
@@ -447,6 +485,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             childs
         )
     }
+
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
         const id0 = targetId[0];
         if (typeof id0 === 'string' && id0.startsWith('varid:')) {
@@ -524,7 +563,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
         this.virbindsEx.set(refId, v.id);
 
-        return { refId, v };
+        return {refId, v};
     }
 
 
@@ -536,28 +575,25 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             case OverrideType.Image:
             case OverrideType.Borders:
             case OverrideType.Fills:
-            case OverrideType.Visible:
-                {
-                    let override = this.getOverrid(refId, attr);
-                    if (!override) {
-                        override = this.createOverrid(refId, attr, value);
-                    }
-                    // override.v.value = value;
-                    return override;
+            case OverrideType.Visible: {
+                let override = this.getOverrid(refId, attr);
+                if (!override) {
+                    override = this.createOverrid(refId, attr, value);
                 }
-            case OverrideType.Variable:
-                {
-                    let override = this.getOverrid(refId, attr);
-                    if (!override) {
-                        override = this.createOverrid(refId, attr, value);
-                    }
-                    else {
-                        const _val = value as Variable;
-                        this.virbindsEx?.set(override.refId, _val.id);// 映射到新变量
-                        override.v = this.addVar(_val);
-                    }
-                    return override;
+                // override.v.value = value;
+                return override;
+            }
+            case OverrideType.Variable: {
+                let override = this.getOverrid(refId, attr);
+                if (!override) {
+                    override = this.createOverrid(refId, attr, value);
+                } else {
+                    const _val = value as Variable;
+                    this.virbindsEx?.set(override.refId, _val.id);// 映射到新变量
+                    override.v = this.addVar(_val);
                 }
+                return override;
+            }
             default:
                 console.error("unknow override: " + attr, value)
         }
@@ -568,7 +604,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         const over = this.virbindsEx && this.virbindsEx.get(refId);
         if (over) {
             const v = this.variables && this.variables.get(over);
-            if (v) return { refId, v }
+            if (v) return {refId, v}
         }
     }
 
@@ -595,16 +631,19 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         this.variables.set(v.id, v);
         return this.variables.get(v.id)!;
     }
+
     removeVar(key: string) {
         if (!this.variables) return false;
         // TODO 解绑
         return this.variables.delete(key);
     }
+
     deleteVar(varId: string) {
         if (this.variables) {
             this.variables.delete(varId);
         }
     }
+
     getVar(varId: string) {
         return this.variables && this.variables.get(varId);
     }
@@ -634,12 +673,12 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         }
         if (this.isVirtualShape) {
             refId = this.originId + '/' + refId;
-        }
-        else {
+        } else {
             refId = this.id + '/' + refId;
         }
         return super.findOverride(refId, type);
     }
+
     setTag(k: string, v: string) {
         if (!this.vartag) this.vartag = new BasicMap<string, string>();
         this.vartag.set(k, v);
@@ -651,6 +690,7 @@ export class PathShape extends Shape implements classes.PathShape {
     points: BasicArray<CurvePoint>
     isClosed: boolean
     fixedRadius?: number
+
     constructor(
         id: string,
         name: string,
@@ -670,21 +710,24 @@ export class PathShape extends Shape implements classes.PathShape {
         this.points = points;
         this.isClosed = isClosed;
     }
+
     // path shape
     get pointsCount() {
         return this.points.length;
     }
+
     getPointByIndex(idx: number) {
         return this.points[idx];
     }
+
     mapPoints<T>(f: (value: CurvePoint, index: number, array: CurvePoint[]) => T): T[] {
         return this.points.map(f);
     }
 
     /**
-     * 
+     *
      * @param fixedRadius shape自身的fixedRadius优先
-     * @returns 
+     * @returns
      */
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const offsetX = 0;
@@ -696,9 +739,11 @@ export class PathShape extends Shape implements classes.PathShape {
         const path = parsePath(this.points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
         return new Path(path);
     }
+
     setRadius(radius: number): void {
         this.points.forEach((p) => p.cornerRadius = radius);
     }
+
     getRadius(): number[] {
         return this.points.map((p) => p.cornerRadius);
     }
@@ -708,6 +753,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     typeId = 'path-shape2'
     pathsegs: BasicArray<PathSegment>
     fixedRadius?: number
+
     constructor(
         id: string,
         name: string,
@@ -725,6 +771,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         )
         this.pathsegs = pathsegs
     }
+
     // path shape
     get pointsCount() {
         return this.pathsegs.reduce((count, seg) => (count + seg.points.length), 0);
@@ -743,16 +790,22 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         });
         return new Path(path);
     }
+
     setRadius(radius: number): void {
         this.pathsegs.forEach((seg) => seg.points.forEach((p) => (p.cornerRadius = radius)));
     }
+
     getRadius(): number[] {
-        return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => { radius.push(p.cornerRadius); return radius; }, radius), []);
+        return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => {
+            radius.push(p.cornerRadius);
+            return radius;
+        }, radius), []);
     }
 }
 
 export class RectShape extends PathShape implements classes.RectShape {
     typeId = 'rect-shape'
+
     constructor(
         id: string,
         name: string,
@@ -773,6 +826,7 @@ export class RectShape extends PathShape implements classes.RectShape {
         )
         this.isClosed = true;
     }
+
     setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
         const ps = this.points;
         if (ps.length === 4) {
@@ -782,8 +836,9 @@ export class RectShape extends PathShape implements classes.RectShape {
             ps[3].cornerRadius = lb;
         }
     }
+
     getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
-        const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
+        const ret = {lt: 0, rt: 0, rb: 0, lb: 0};
         const ps = this.points;
         if (ps.length === 4) {
             ret.lt = ps[0].cornerRadius;
@@ -824,10 +879,13 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         this.imageRef = imageRef
         this.isClosed = true;
     }
+
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
         this.__imageMgr = imageMgr;
     }
+
     private __startLoad: boolean = false;
+
     peekImage(startLoad: boolean = false) {
         const ret = this.__cacheData?.base64;
         if (ret) return ret;
@@ -843,6 +901,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         }
         return ret;
     }
+
     // image shape
     async loadImage(): Promise<string> {
         if (this.__cacheData) return this.__cacheData.base64;
@@ -855,6 +914,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
 export class OvalShape extends PathShape implements classes.OvalShape {
     typeId = 'oval-shape'
     ellipse: classes.Ellipse
+
     constructor(
         id: string,
         name: string,
@@ -881,6 +941,7 @@ export class OvalShape extends PathShape implements classes.OvalShape {
 
 export class LineShape extends PathShape implements classes.LineShape {
     typeId = 'line-shape'
+
     constructor(
         id: string,
         name: string,
@@ -901,10 +962,12 @@ export class LineShape extends PathShape implements classes.LineShape {
         )
     }
 }
+
 export class TextShape extends Shape implements classes.TextShape {
     typeId = 'text-shape'
     text: Text
     fixedRadius?: number
+
     constructor(
         id: string,
         name: string,
@@ -938,10 +1001,10 @@ export class TextShape extends Shape implements classes.TextShape {
         const x = 0;
         const y = 0;
         const path = [["M", x, y],
-        ["l", w, 0],
-        ["l", 0, h],
-        ["l", -w, 0],
-        ["z"]];
+            ["l", w, 0],
+            ["l", 0, h],
+            ["l", -w, 0],
+            ["z"]];
         return new Path(path);
     }
 
