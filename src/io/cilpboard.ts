@@ -1,32 +1,33 @@
 import {GroupShape, Shape, ShapeType, SymbolShape, TextShape} from "../data/shape";
 import {
     exportArtboard,
-    exportRectShape,
-    exportOvalShape,
+    exportGroupShape,
     exportImageShape,
     exportLineShape,
-    exportTextShape,
+    exportOvalShape,
     exportPathShape,
-    exportGroupShape,
-    exportText,
-    exportTableShape,
+    exportRectShape,
     exportShapeFrame,
-    exportSymbolShape
+    exportSymbolRefShape,
+    exportSymbolShape,
+    exportTableShape,
+    exportText,
+    exportTextShape
 } from "../data/baseexport";
 import {
-    importRectShape,
-    importOvalShape,
-    importImageShape,
     IImportContext,
-    importLineShape,
-    importTextShape,
-    importPathShape,
-    importGroupShape,
-    importText,
     importArtboard,
+    importGroupShape,
+    importImageShape,
+    importLineShape,
+    importOvalShape,
+    importPathShape,
+    importRectShape,
+    importShapeFrame, importSymbolRefShape,
+    importSymbolShape,
     importTableShape,
-    importShapeFrame,
-    importSymbolShape
+    importText,
+    importTextShape
 } from "../data/baseimport";
 import * as types from "../data/typesdefine";
 import {v4} from "uuid";
@@ -71,6 +72,8 @@ export function export_shape(shapes: Shape[]) {
             content = exportTableShape(shape as unknown as types.TableShape);
         } else if (type === ShapeType.Symbol) {
             content = exportSymbolShape(shape as unknown as types.SymbolShape);
+        } else if (type === ShapeType.SymbolRef) {
+            content = exportSymbolRefShape(shape as unknown as types.SymbolRefShape);
         }
         if (content) {
             content.style.contacts && (content.style.contacts = undefined);
@@ -136,6 +139,8 @@ export function import_shape(document: Document, source: types.Shape[]) {
                 const childs = (_s as GroupShape).childs;
                 childs && childs.length && set_childs_id(childs);
                 r = importSymbolShape(_s as types.SymbolShape);
+            } else if (type === ShapeType.SymbolRef) {
+                r = importSymbolRefShape(_s as types.SymbolRefShape, ctx);
             }
             r && result.push(r);
         }
