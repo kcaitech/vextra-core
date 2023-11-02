@@ -20,7 +20,7 @@ import { layoutChilds } from "./symlayout";
 const mutable = new Set([
     // "__startLoad",
     // "__data",
-    // "__symMgr",
+    "__symMgr",
     // "__symproxy_cache",
     __objidkey
 ]);
@@ -488,9 +488,9 @@ class SymbolRefShapeHdl extends ShapeHdl {
         this.__saveHeight = this.__frame.height;
     }
     getRefId() {
-        let refId = this.__originId;
+        let refId = (this.__origin as SymbolRefShape).refId;
         // 从parent开始查找
-        const _vars = this.__parent.findOverride(refId, OverrideType.SymbolID);
+        const _vars = this.__parent.findOverride(this.__originId, OverrideType.SymbolID);
         if (!_vars) return refId;
         // watch vars
         (this as any as VarWatcher)._watch_vars("symbolRef", _vars);
