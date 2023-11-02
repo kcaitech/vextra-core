@@ -406,9 +406,9 @@ export class Api {
     shapeModifyVariableName(page: Page, _var: Variable, name: string) {
         checkShapeAtPage(page, _var);
         this.__trap(() => {
-            const save = exportVariable(_var);
+            const save = _var.name;
             _var.name = name;
-            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(_var), SHAPE_ATTR_ID.modifyvarName, exportVariable(_var), save));
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(_var), SHAPE_ATTR_ID.modifyvarName, name, save));
         })
     }
     shapeAddVariable(page: Page, shape: SymbolShape | SymbolRefShape, _var: Variable) {
