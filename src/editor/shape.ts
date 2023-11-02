@@ -28,7 +28,13 @@ import {ContactShape} from "../data/contact";
 import {Document, SymbolRefShape} from "../data/classes";
 import {uuid} from "../basic/uuid";
 import {BasicArray} from "../data/basic";
-import {is_default_state, is_part_of_symbol} from "./utils";
+import {
+    clear_binds_effect,
+    find_layers_by_varid,
+    get_symbol_by_layer,
+    is_default_state,
+    is_part_of_symbol
+} from "./utils";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -778,6 +784,10 @@ export class ShapeEditor {
                     } else {
                         this.removeContact(api, this.__page, this.__shape);
                     }
+                    const symbol = get_symbol_by_layer(this.__shape);
+                    if (symbol) {
+                        clear_binds_effect(this.__page, this.__shape, symbol, api);
+                    }
                     api.shapeDelete(this.__page, parent, index);
                     // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
                     if (!parent.childs.length && parent.type === ShapeType.Group) {
@@ -1253,7 +1263,18 @@ export class ShapeEditor {
         if (!is_part_of_symbol(this.__shape)) return;
         const api = this.__repo.start("removeBinds", {});
         try {
+            const varid = this.__shape.varbinds?.get(type);
+            if (!varid) throw new Error('Invalid Override');
             api.shapeUnbinVar(this.__page, this.__shape, type);
+            const symbol = get_symbol_by_layer(this.__shape);
+            if (!symbol) {
+                this.__repo.commit();
+                return;
+            }
+            const layers = find_layers_by_varid(symbol, varid, type);
+            if (!layers.length) {
+                api.shapeRemoveVariable(this.__page, symbol, varid);
+            }
             this.__repo.commit();
         } catch (e) {
             console.error(e);

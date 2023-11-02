@@ -4,6 +4,7 @@ import {
     BorderPosition,
     BorderStyle,
     Color,
+    OverrideType,
     Page,
     Shape,
     ShapeFrame,
@@ -325,6 +326,10 @@ export function is_state(shape: Shape) {
     return shape.type === ShapeType.Symbol && shape?.parent?.isUnionSymbolShape;
 }
 
+function is_sym(shape: Shape) {
+    return shape.type === ShapeType.Symbol;
+}
+
 /**
  * @description 仅为组件(不是union)
  * @param shape
@@ -350,4 +355,110 @@ export function is_part_of_symbol(shape: Shape) {
         s = s.parent;
     }
     return false;
+}
+
+/**
+ * @description 给一个变量的id(varid)，当前以组件(symbol)为范围查看有多少图层绑定了这个变量
+ */
+export function find_layers_by_varid(symbol: SymbolShape, varid: string, type: OverrideType) {
+    const shapes: Shape[] = [];
+    if (symbol.isUnionSymbolShape) { // 存在可变组件
+        const childs = symbol.childs;
+        for (let i = 0, len = childs.length; i < len; i++) {
+            const group = childs[i];
+            get_x_type_option(symbol, group, get_vt_by_ot(type)!, varid, shapes);
+        }
+    } else { // 不存在可变组件
+        get_x_type_option(symbol, symbol, get_vt_by_ot(type)!, varid, shapes);
+    }
+    console.log('shapes: ', shapes);
+    return shapes;
+}
+
+/**
+ * @description 给一个图层，返回这个图层所在的组件，如果不是组件内的图层，则return undefined;
+ */
+export function get_symbol_by_layer(layer: Shape): SymbolShape | undefined {
+    let s: Shape | undefined = layer;
+    while (s && !is_sym(s)) {
+        s = s.parent;
+    }
+    if (s) return is_state(s) ? s.parent as SymbolShape : s as SymbolShape;
+}
+
+function de_check(item: Shape) {
+    return !item.childs?.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
+}
+
+function is_bind_x_type_var(symbol: SymbolShape, shape: Shape, type: OverrideType, vari: string, container: Shape[]) {
+    if (!shape.varbinds) return;
+    shape.varbinds.forEach((v, k) => {
+        if (!symbol.variables?.get(v)) return;
+        if (vari === v) {
+            container.push(shape);
+            return;
+        }
+    })
+}
+
+function get_target_type_by_vt(vt: VariableType) {
+    if (vt === VariableType.SymbolRef) return ShapeType.SymbolRef;
+    if (vt === VariableType.Text) return ShapeType.Text;
+}
+
+function get_ot_by_vt(vt: VariableType) {
+    if (vt === VariableType.SymbolRef) return OverrideType.SymbolID;
+    if (vt === VariableType.Text) return OverrideType.Text;
+}
+
+function get_vt_by_ot(ot: OverrideType) {
+    if (ot === OverrideType.Visible) return VariableType.Visible;
+    if (ot === OverrideType.Text) return VariableType.Text;
+    if (ot === OverrideType.SymbolID) return VariableType.SymbolRef;
+}
+
+function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, variId: string, container: Shape[]) {
+    const childs = group.childs;
+    if (!childs?.length) return;
+    if (type === VariableType.Visible) {
+        for (let i = 0, len = childs.length; i < len; i++) {
+            const item = childs[i];
+            is_bind_x_type_var(symbol as SymbolShape, item, OverrideType.Visible, variId, container);
+            if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
+                get_x_type_option(symbol, item, type, variId, container)
+            }
+        }
+    } else {
+        if (de_check(group)) return;
+        for (let i = 0, len = childs.length; i < len; i++) {
+            const item = childs[i];
+            if (item.type === get_target_type_by_vt(type)) {
+                is_bind_x_type_var(symbol as SymbolShape, item, get_ot_by_vt(type)!, variId, container)
+            } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
+                get_x_type_option(symbol, item, type, variId, container)
+            }
+        }
+    }
+}
+
+/**
+ * @description 删除图层在组件身上留下的影响
+ */
+export function clear_binds_effect(page: Page, shape: Shape, symbol: SymbolShape, api: Api) {
+    if (!shape.varbinds) return;
+    const v1 = shape.varbinds.get(OverrideType.Visible);
+    if (v1) {
+        const layers = find_layers_by_varid(symbol, v1, OverrideType.Visible);
+        if (layers.length < 2) api.shapeRemoveVariable(page, symbol, v1);
+    }
+    const v2 = shape.varbinds.get(OverrideType.SymbolID);
+    if (v2) {
+        const layers = find_layers_by_varid(symbol, v2, OverrideType.SymbolID);
+        if (layers.length < 2) api.shapeRemoveVariable(page, symbol, v2);
+    }
+    const v3 = shape.varbinds.get(OverrideType.Text);
+    if (v3) {
+        const layers = find_layers_by_varid(symbol, v3, OverrideType.Text);
+        if (layers.length < 2) api.shapeRemoveVariable(page, symbol, v3);
+    }
 }

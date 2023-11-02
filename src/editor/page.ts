@@ -56,7 +56,14 @@ import {findUsableBorderStyle, findUsableFillStyle} from "../render/boolgroup";
 import {BasicArray} from "../data/basic";
 import {TableEditor} from "./table";
 import {exportGroupShape, exportSymbolShape} from "../data/baseexport";
-import {find_state_space, init_state, make_union, modify_frame_after_inset_state} from "./utils";
+import {
+    clear_binds_effect,
+    find_state_space,
+    get_symbol_by_layer,
+    init_state,
+    make_union,
+    modify_frame_after_inset_state
+} from "./utils";
 import {v4} from "uuid";
 
 // 用于批量操作的单个操作类型
@@ -760,6 +767,10 @@ export class PageEditor {
         if (!savep) return false;
         const api = this.__repo.start("delete", {});
         try {
+            const symbol = get_symbol_by_layer(shape);
+            if (symbol) {
+                clear_binds_effect(this.__page, shape, symbol, api);
+            }
             if (this.delete_inner(page, shape, api)) {
                 if (!savep.childs.length && savep.type === ShapeType.Group) {
                     this.delete_inner(page, savep, api);
@@ -786,6 +797,10 @@ export class PageEditor {
         for (let i = 0; i < shapes.length; i++) {
             try {
                 const shape = shapes[i];
+                const symbol = get_symbol_by_layer(shape);
+                if (symbol) {
+                    clear_binds_effect(this.__page, shape, symbol, api);
+                }
                 if (shape.type === ShapeType.Symbol) need_special_notify = true;
                 const page = shape.getPage() as Page;
                 if (!page) return false;
@@ -800,7 +815,6 @@ export class PageEditor {
                 return false;
             }
         }
-        console.log(need_special_notify)
         if (need_special_notify) {
             this.__document.__correspondent.notify('update-symbol-list');
         }

@@ -447,7 +447,6 @@ export class Api {
 
         checkShapeAtPage(page, shape);
         const save = shape.varbinds?.get(type);
-        console.log('emit', type, shape.varbinds, shape);
         if (!save) return;
         this.__trap(() => {
             const shapeId = genShapeId(shape);
