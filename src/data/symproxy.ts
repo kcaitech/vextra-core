@@ -31,8 +31,10 @@ function checkNotProxyed(val: Object) {
 
 class HdlBase { // protect data
     // __cache: Map<PropertyKey, any> = new Map();
-    constructor() {
+    __parent: any;
+    constructor(parent: any) {
         makeVarWatcher(this);
+        this.__parent = parent;
     }
 
     public notify(...args: any[]) {
@@ -66,6 +68,13 @@ class HdlBase { // protect data
         if (mutable.has(propertyKey.toString())) {
             return Reflect.get(target, propertyKey, receiver);
         }
+        if (propertyKey === "remove") {
+            // 清除watch
+            return this.onRemoved(target);
+        }
+        if (propertyKey === 'parent' || propertyKey === '__parent') {
+            return this.__parent;
+        }
         if (target instanceof Map) { // map对象上的属性和方法都会进入get
             if (propertyKey === 'get') { // 高频操作，单独提出并置顶，提高响应速度
                 // return this.map_get.bind(target);
@@ -75,7 +84,7 @@ class HdlBase { // protect data
                     if (typeof val === 'object') {
                         if (val instanceof Shape) throw new Error("");
                         checkNotProxyed(val);
-                        return new Proxy(val, new HdlBase());
+                        return new Proxy(val, new HdlBase(receiver));
                     }
                     return val;
                 }
@@ -118,15 +127,13 @@ class HdlBase { // protect data
                 return val;
             }
         }
-        if (propertyKey === "remove") {
-            // 清除watch
-            return this.onRemoved(target);
-        }
+
         const val = Reflect.get(target, propertyKey, receiver);
         if (typeof val === 'object') {
             if (val instanceof Shape) throw new Error("");
-            checkNotProxyed(val);
-            return new Proxy(val, new HdlBase());
+            // checkNotProxyed(val);
+            if ((val as any).__symbolproxy) return val;
+            return new Proxy(val, new HdlBase(receiver));
         }
         return val;
     }
@@ -182,7 +189,7 @@ class StyleHdl extends HdlBase {
     __parent: Shape; // proxyed shape
 
     constructor(parent: Shape) {
-        super();
+        super(parent);
         this.__parent = parent;
     }
 
@@ -299,7 +306,7 @@ class ShapeHdl extends HdlBase {
     }
 
     constructor(origin: Shape, parent: Shape, id: string) {
-        super();
+        super(parent);
         this.__origin = origin;
         this.__parent = parent;
 
