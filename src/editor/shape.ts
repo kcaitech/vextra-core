@@ -1040,7 +1040,7 @@ export class ShapeEditor {
             curState.forEach((v, k) => {
                 const tag = vartag ? vartag.get(k) : s.name;
                 if (match) match = v === tag;
-                if (k === originVarId && v === state) candidateshape.push(s);
+                if (k === originVarId && v === tag) candidateshape.push(s);
             });
             if (match) {
                 matchshapes.push(s);
@@ -1095,15 +1095,18 @@ export class ShapeEditor {
             const vartag = candidate.vartag;
 
             // 收集要同步修改的变量
-            const needModifyVars: Variable[] = [];
+            const needModifyVars: {v: Variable, tag: string | undefined}[] = [];
             curState.forEach((v, k) => {
                 const tag = vartag ? vartag.get(k) : candidate.name;
-                if (tag !== v) {
-                    needModifyVars.push(curVars.get(k)!);
+                if (k === originVarId) {
+                    needModifyVars.push({ v: curVars.get(k)!, tag: v }); // 如果改回默认，要删了？
+                }
+                else if (tag !== v) {
+                    needModifyVars.push({ v: curVars.get(k)!, tag });
                 }
             })
             // check varId inside
-            if (!needModifyVars.find((v) => v.id === varId)) {
+            if (!needModifyVars.find((v) => v.v.id === varId)) {
                 return console.log('wrong vars data', needModifyVars);
             }
 
@@ -1111,7 +1114,7 @@ export class ShapeEditor {
             try {
                 // todo 要判断var是否可修改！
                 needModifyVars.forEach((v) => {
-                    this.modifyVariable2(v, state, api);
+                    this.modifyVariable2(v.v, v.tag, api);
                 })
                 this.__repo.commit();
             } catch (e) {
