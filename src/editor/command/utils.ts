@@ -76,7 +76,7 @@ export function setFrame(page: Page, shape: Shape, x: number, y: number, w: numb
 const float_accuracy = 1e-7;
 
 /**
- * @description 更新frame
+ * @description 更新frame  todo 对于组合对象, 需要更新一个由子元素撑起的frame --wideframe
  */
 function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
     const p: Shape | undefined = shape.parent;
