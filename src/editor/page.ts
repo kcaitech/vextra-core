@@ -32,19 +32,7 @@ import {expand, translate, translateTo} from "./frame";
 import {uuid} from "../basic/uuid";
 import {CoopRepository} from "./command/cooprepo";
 import {Api} from "./command/recordapi";
-import {
-    Artboard,
-    Border,
-    BorderStyle,
-    Color,
-    Fill,
-    Path,
-    PathShape,
-    Style,
-    SymbolRefShape,
-    TableShape,
-    Text
-} from "../data/classes";
+import {Artboard, Border, BorderStyle, Color, Fill, Path, PathShape, Style, TableShape, Text} from "../data/classes";
 import {TextShapeEditor} from "./textshape";
 import {get_frame, modify_frame_after_insert, set_childs_id, transform_data} from "../io/cilpboard";
 import {deleteEmptyGroupShape, expandBounds, group, ungroup} from "./group";
@@ -520,20 +508,34 @@ export class PageEditor {
                 (shape as types.GroupShape).childs.forEach((c) => replaceId(c));
             }
         }
+        const returnshapes: Shape[] = [];
         for (let i = 0, len = shapes.length; i < len; i++) {
             const shape = shapes[i];
+            if (shape.type !== ShapeType.SymbolRef) {
+                returnshapes.push(shape);
+                continue;
+            }
             const symmgr = shape.getSymbolMgr();
             const symbol = symmgr?.getSync(shape.refId);
-            if (!symbol) continue;
+            if (!symbol) {
+                returnshapes.push(shape);
+                continue;
+            }
             const tmpGroup = newGroupShape(shape.name, shape.style);
             initFrame(tmpGroup, shape.frame);
             tmpGroup.childs = shape.virtualChilds! as BasicArray<Shape>;
             const symbolData = exportGroupShape(tmpGroup); // todo 如果symbol只有一个child时
             replaceId(symbolData);
             const parent = shape.parent;
-            if (!parent) continue;
+            if (!parent) {
+                returnshapes.push(shape);
+                continue;
+            }
             const insertIndex = (parent as GroupShape).indexOfChild(shape);
-            if (insertIndex < 0) continue;
+            if (insertIndex < 0) {
+                returnshapes.push(shape);
+                continue;
+            }
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document
@@ -541,7 +543,7 @@ export class PageEditor {
             const newShape = importGroupShape(symbolData, ctx);
             actions.push({parent, self: newShape, insertIndex});
         }
-        if (!actions.length) return;
+        if (!actions.length) return shapes;
         const api = this.__repo.start("extractSymbol", {});
         try {
             const results: Shape[] = [];
@@ -552,7 +554,7 @@ export class PageEditor {
                 results.push(ret);
             }
             this.__repo.commit();
-            return results;
+            return [...returnshapes, ...results];
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
