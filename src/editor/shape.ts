@@ -995,7 +995,7 @@ export class ShapeEditor {
 
     // symbolref
     /**
-     * @description 是否已经被废弃 zrx?
+     * @description 切换实例的可变组件状态
      */
     switchSymState(varId: string, state: string) {
         if (!(this.__shape instanceof SymbolRefShape)) return;
