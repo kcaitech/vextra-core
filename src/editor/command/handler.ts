@@ -466,6 +466,15 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 }
             },
             {
+                opId: SHAPE_ATTR_ID.modifyvarName,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        if (!(shape instanceof Variable)) throw new Error();
+                        shape.name = value;
+                    }
+                }
+            },
+            {
                 opId: SHAPE_ATTR_ID.isUnionSymbolShape,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     (shape as SymbolShape).isUnionSymbolShape = value && JSON.parse(value);
