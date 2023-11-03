@@ -147,7 +147,7 @@ export class ShapeEditor {
         return sym.getVar(_var2.id)!;
     }
 
-    _overrideVariableName(_var: Variable, name: string, api: Api) {
+    _overrideVariableName(_var: Variable, name: string, dlt: any, api: Api) {
 
         const shape: Shape = this.__shape;
 
@@ -249,7 +249,7 @@ export class ShapeEditor {
             const api = this.__repo.start("modifyVariableName", {});
             if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
                 // override
-                this._overrideVariableName(_var, name, api);
+                this._overrideVariableName(_var, name, _var.value, api);
             } else {
                 api.shapeModifyVariableName(this.__page, _var, name);
             }
@@ -257,6 +257,123 @@ export class ShapeEditor {
         } catch (e) {
             console.log(e);
             this.__repo.rollback();
+        }
+    }
+
+    modifyVariableDltValue(_var: Variable, dlt: any) {
+        try {
+            const p = varParent(_var);
+            if (!p) throw new Error('wrong shape type');
+            const shape = this.__shape;
+            const api = this.__repo.start("modifyVariableName", {});
+            if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
+                // override
+                this._overrideVariable(_var, _var.value, api);
+            } else {
+                api.shapeModifyVariable(this.__page, _var, dlt);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 给组件创建一个图层显示变量
+     */
+    makeVisibleVar(symbol: SymbolShape, name: string, dlt_value: boolean, shapes: Shape[]) {
+        const api = this.__repo.start("makeVisibleVar", {});
+        try {
+            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
+            const _var = new Variable(v4(), VariableType.Visible, name, dlt_value);
+            api.shapeAddVariable(this.__page, symbol, _var);
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const item = shapes[i];
+                api.shapeBindVar(this.__page, item, OverrideType.Visible, _var.id);
+            }
+            this.__repo.commit();
+            return symbol;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 给组件创建一个实例切换变量
+     */
+    makeSymbolRefVar(symbol: SymbolShape, name: string, shapes: Shape[]) {
+        const api = this.__repo.start("makeSymbolRefVar", {});
+        try {
+            if (!shapes.length) throw new Error('invalid data');
+            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
+            const _var = new Variable(v4(), VariableType.SymbolRef, name, shapes[0].refId);
+            api.shapeAddVariable(this.__page, symbol, _var);
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                api.shapeBindVar(this.__page, shapes[i], OverrideType.SymbolID, _var.id);
+            }
+            this.__repo.commit();
+            return symbol;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 给组件创建一个文本变量
+     */
+    makeTextVar(symbol: SymbolShape, name: string, dlt: string, shapes: Shape[]) {
+        const api = this.__repo.start("makeTextVar", {});
+        try {
+            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
+            const _var = new Variable(v4(), VariableType.Text, name, dlt);
+            api.shapeAddVariable(this.__page, symbol, _var);
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const item = shapes[i];
+                api.shapeBindVar(this.__page, item, OverrideType.Text, _var.id);
+            }
+            this.__repo.commit();
+            return symbol;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+
+    /**
+     * @description 修改图层显示、文本内容、实例切换变量
+     */
+    modifyVar(symbol: SymbolShape, variable: Variable, new_name: string, new_dlt_value: any, new_layers: Shape[], old_layers: Shape[]) {
+        const api = this.__repo.start("modifyVar", {});
+        const type: any = {};
+        type[VariableType.Text] = OverrideType.Text;
+        type[VariableType.Visible] = OverrideType.Visible;
+        type[VariableType.SymbolRef] = OverrideType.SymbolID;
+        try {
+            if (symbol.type !== ShapeType.Symbol || (symbol.parent?.isUnionSymbolShape)) throw new Error('wrong role!');
+            for (let i = 0, len = new_layers.length; i < len; i++) {
+                const item = new_layers[i];
+                api.shapeBindVar(this.__page, item, type[variable.type], variable.id);
+            }
+            for (let i = 0, len = old_layers.length; i < len; i++) {
+                const item = old_layers[i];
+                api.shapeUnbinVar(this.__page, item, type[variable.type]);
+            }
+            if (new_name !== variable.name) {
+                this.modifyVariableName(variable, new_name);
+            }
+            if (new_dlt_value !== variable.value) {
+                this.modifyVariableDltValue(variable, new_dlt_value);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+            return false;
         }
     }
 
@@ -1095,14 +1212,13 @@ export class ShapeEditor {
             const vartag = candidate.vartag;
 
             // 收集要同步修改的变量
-            const needModifyVars: {v: Variable, tag: string | undefined}[] = [];
+            const needModifyVars: { v: Variable, tag: string | undefined }[] = [];
             curState.forEach((v, k) => {
                 const tag = vartag ? vartag.get(k) : candidate.name;
                 if (k === originVarId) {
-                    needModifyVars.push({ v: curVars.get(k)!, tag: v }); // 如果改回默认，要删了？
-                }
-                else if (tag !== v) {
-                    needModifyVars.push({ v: curVars.get(k)!, tag });
+                    needModifyVars.push({v: curVars.get(k)!, tag: v}); // 如果改回默认，要删了？
+                } else if (tag !== v) {
+                    needModifyVars.push({v: curVars.get(k)!, tag});
                 }
             })
             // check varId inside
