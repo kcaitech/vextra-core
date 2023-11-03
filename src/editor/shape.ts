@@ -363,10 +363,22 @@ export class ShapeEditor {
                 api.shapeUnbinVar(this.__page, item, type[variable.type]);
             }
             if (new_name !== variable.name) {
-                this.modifyVariableName(variable, new_name);
+                const p = varParent(variable);
+                if (!p) throw new Error('wrong shape type');
+                if (p.isVirtualShape || (p instanceof SymbolShape && !(this.__shape instanceof SymbolShape))) {
+                    this._overrideVariableName(variable, new_name, variable.value, api);
+                } else {
+                    api.shapeModifyVariableName(this.__page, variable, new_name);
+                }
             }
             if (new_dlt_value !== variable.value) {
-                this.modifyVariableDltValue(variable, new_dlt_value);
+                const p = varParent(variable);
+                if (!p) throw new Error('wrong shape type');
+                if (p.isVirtualShape || (p instanceof SymbolShape && !(this.__shape instanceof SymbolShape))) {
+                    this._overrideVariable(variable, variable.value, api);
+                } else {
+                    api.shapeModifyVariable(this.__page, variable, new_dlt_value);
+                }
             }
             this.__repo.commit();
             return true;
