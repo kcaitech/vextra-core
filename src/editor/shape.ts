@@ -1183,14 +1183,15 @@ export class ShapeEditor {
             if (!host) throw new Error();
             if (host.isVirtualShape || host instanceof SymbolShape) {
 
-                // todo host is symbolshape
-                let override_id = host.id;
+                // todo host is symbolshape // todo
+                let override_id = host.isVirtualShape ? host.id : this.__shape.id;
                 override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
                 if (override_id.length === 0) throw new Error();
+                override_id += '/' + _var.id;
 
                 // override
                 // get first not virtual
-                let symRef = host.parent;
+                let symRef: Shape | undefined = this.__shape;//host.parent;
                 while (symRef && symRef.isVirtualShape) symRef = symRef.parent;
                 if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
 
