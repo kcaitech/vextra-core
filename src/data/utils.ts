@@ -619,7 +619,7 @@ function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape 
     }
 }
 
-function findOverride(refId: string, type: OverrideType, varsContainer: (SymbolRefShape | SymbolShape)[]) {
+export function findOverride(refId: string, type: OverrideType, varsContainer: (SymbolRefShape | SymbolShape)[]) {
     for (let i = varsContainer.length - 1; i >= 0; --i) {
         const container = varsContainer[i];
         const override = container.getOverrid(refId, type);

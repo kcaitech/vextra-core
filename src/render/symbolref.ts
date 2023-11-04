@@ -13,12 +13,18 @@ function renderSym(h: Function,
     transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): any {
 
+    if (sym.parent instanceof SymbolShape && sym.parent.isUnionSymbolShape) {
+        varsContainer = (varsContainer || []).concat(ref, sym.parent, sym);
+    } else {
+        varsContainer = (varsContainer || []).concat(ref, sym);
+    }
+
     const refframe = ref.frame;
     const symframe = sym.frame;
     const noTrans = isNoTransform(transform);
     if (noTrans && refframe.width === symframe.width && refframe.height === symframe.height) {
         const vchilds = sym.childs; //ref.virtualChilds;
-        const childs: Array<any> = renderGroupChilds2(h, vchilds, comsMap, undefined, (varsContainer ?? []).concat(ref, sym));
+        const childs: Array<any> = renderGroupChilds2(h, vchilds, comsMap, undefined, varsContainer);
         return childs;
     }
 
@@ -37,13 +43,13 @@ function renderSym(h: Function,
         }
 
         const vchilds = sym.childs;
-        const { nodes } = renderGroupChilds3(h, sym, vchilds, comsMap, transform, (varsContainer ?? []).concat(ref, sym));
+        const { nodes } = renderGroupChilds3(h, sym, vchilds, comsMap, transform, varsContainer);
         return nodes;
     }
     else {
         // 应该同groupshape
         const vchilds = sym.childs;
-        const { nodes } = renderGroupChilds3(h, sym, vchilds, comsMap, transform, (varsContainer ?? []).concat(ref, sym));
+        const { nodes } = renderGroupChilds3(h, sym, vchilds, comsMap, transform, varsContainer);
         return nodes;
     }
 }
@@ -75,7 +81,7 @@ export function render(h: Function,
     let vflip = !!shape.isFlippedVertical;
     let frame = _frame;
 
-    
+
     let notTrans = isNoTransform(transform);
     let path0: Path;
     if (!notTrans && transform) {
@@ -106,11 +112,11 @@ export function render(h: Function,
 
                 else if (rotate) {
                     const m = new Matrix();
-                m.rotate(rotate / 360 * 2 * Math.PI);
-                m.scale(scaleX, scaleY);
-                const _newscale = m.computeRef(1, 1);
-                m.scale(1 / scaleX, 1 / scaleY);
-                const newscale = m.inverseRef(_newscale.x, _newscale.y);
+                    m.rotate(rotate / 360 * 2 * Math.PI);
+                    m.scale(scaleX, scaleY);
+                    const _newscale = m.computeRef(1, 1);
+                    m.scale(1 / scaleX, 1 / scaleY);
+                    const newscale = m.inverseRef(_newscale.x, _newscale.y);
                     x *= scaleX;
                     y *= scaleY;
 

@@ -58,7 +58,7 @@ class HdlBase { // protect data
         if (mutable.has(propertyKey.toString())) {
             return Reflect.set(target, propertyKey, value, receiver);
         }
-        throw new Error("")
+        throw new Error(propertyKey.toString())
     }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any): any {
@@ -130,7 +130,7 @@ class HdlBase { // protect data
 
         const val = Reflect.get(target, propertyKey, receiver);
         if (typeof val === 'object') {
-            if (val instanceof Shape) throw new Error("");
+            if (val instanceof Shape) throw new Error(propertyKey.toString());
             // checkNotProxyed(val);
             if ((val as any).__symbolproxy) return val;
             return new Proxy(val, new HdlBase(receiver));
@@ -357,6 +357,7 @@ class ShapeHdl extends HdlBase {
         if (propStr === 'isVirtualShape') return true;
         if (propStr === 'id') return this.__id;
         if (propStr === 'originId') return this.__originId;
+        if (propStr === '__origin') return this.__origin;
         if (propStr === 'parent' || propStr === '__parent') return this.__parent;
         if (propStr === 'style') {
             if (this.__style) return this.__style;
@@ -488,6 +489,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
         super(origin, parent, id);
         this.updater = this.updater.bind(this);
         this.updater();
+        this.relayout = this.relayout.bind(this);
     }
 
     saveFrame() {
@@ -508,6 +510,24 @@ class SymbolRefShapeHdl extends ShapeHdl {
         return refId;
     }
 
+    getVarsContainer() {
+        const varsContainer = [];
+        let p: Shape | undefined = this.__parent;
+        while (p) {
+            if (p instanceof SymbolRefShape) {
+                if (p.__subdata) varsContainer.push(p.__subdata);
+                if (p.__data) varsContainer.push(p.__data);
+                if (!((p as any).__symbolproxy)) {
+                    varsContainer.push(p);
+                    break;
+                }
+                varsContainer.push(p.__origin)
+            }
+            p = p.parent;
+        }
+        return varsContainer.reverse();
+    }
+
     private __data: SymbolShape | undefined;
     private __subdata: SymbolShape | undefined;
     private __startLoad: string = "";
@@ -518,7 +538,9 @@ class SymbolRefShapeHdl extends ShapeHdl {
         if (this.__startLoad === refId) {
             if (this.__data) { // 更新subdata
                 if (this.__data.isUnionSymbolShape) {
-                    const syms = this.__data.getTagedSym(this.__origin);
+                    // varscontainer
+                    const varsContainer = this.getVarsContainer();
+                    const syms = this.__data.getTagedSym(this.__origin, varsContainer); // 不对
                     const subdata = syms[0] || this.__data.childs[0];
                     if (this.__subdata !== subdata) {
                         if (this.__subdata) this.__subdata.unwatch(this.updater);
@@ -547,7 +569,8 @@ class SymbolRefShapeHdl extends ShapeHdl {
             if (this.__data) this.__data.watch(this.updater);
             // 处理status
             if (val && val.isUnionSymbolShape) {
-                const syms = val.getTagedSym(this.__origin);
+                const varsContainer = this.getVarsContainer();
+                const syms = val.getTagedSym(this.__origin, varsContainer);
                 if (this.__subdata) this.__subdata.unwatch(this.updater);
                 this.__subdata = syms[0] || val.childs[0];
                 if (this.__subdata) this.__subdata.watch(this.updater);
@@ -612,7 +635,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
         }
 
         if (propStr === "relayout") {
-            return this.relayout();
+            return this.relayout;
         }
         if (propStr === "layoutChilds") {
             return this.layoutChilds();

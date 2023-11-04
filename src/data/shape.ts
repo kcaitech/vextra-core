@@ -1,8 +1,8 @@
-import {Basic, BasicMap, ResourceMgr, Watchable} from "./basic";
-import {Style, Border, Fill, Color} from "./style";
-import {Text} from "./text";
+import { Basic, BasicMap, ResourceMgr, Watchable } from "./basic";
+import { Style, Border } from "./style";
+import { Text } from "./text";
 import * as classes from "./baseclasses"
-import {BasicArray} from "./basic";
+import { BasicArray } from "./basic";
 
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D,
@@ -19,15 +19,16 @@ import {
     OverrideType,
     VariableType
 } from "./baseclasses"
-import {Path} from "./path";
-import {Matrix} from "../basic/matrix";
-import {TextLayout} from "./textlayout";
-import {parsePath} from "./pathparser";
-import {RECT_POINTS} from "./consts";
-import {uuid} from "../basic/uuid";
-import {Variable} from "./variable";
+import { Path } from "./path";
+import { Matrix } from "../basic/matrix";
+import { TextLayout } from "./textlayout";
+import { parsePath } from "./pathparser";
+import { RECT_POINTS } from "./consts";
+import { uuid } from "../basic/uuid";
+import { Variable } from "./variable";
+import { findOverride } from "./utils";
 
-export {Variable} from "./variable";
+export { Variable } from "./variable";
 
 export interface VarWatcher {
     __var_onwatch: Map<string, Variable[]>,
@@ -247,7 +248,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
         const frame = this.frame;
         const m = this.matrix2Parent();
-        const corners = [{x: 0, y: 0}, {x: frame.width, y: 0}, {x: frame.width, y: frame.height}, {
+        const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
             x: 0,
             y: frame.height
         }]
@@ -419,24 +420,24 @@ export class GroupShape extends Shape implements classes.GroupShape {
         const w = frame.width;
         const h = frame.height;
         let path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return new Path(path);
     }
 
     getBoolOp(): { op: BoolOp, isMulti?: boolean } {
-        if (!this.isBoolOpShape || this.childs.length === 0) return {op: BoolOp.None}
+        if (!this.isBoolOpShape || this.childs.length === 0) return { op: BoolOp.None }
         const childs = this.childs;
         const op: BoolOp = childs[0].boolOp ?? BoolOp.None;
         for (let i = 1, len = childs.length; i < len; i++) {
             const op1 = childs[i].boolOp ?? BoolOp.None;
             if (op1 !== op) {
-                return {op, isMulti: true}
+                return { op, isMulti: true }
             }
         }
-        return {op}
+        return { op }
     }
 
     setWideFrameSize(w: number, h: number) {
@@ -490,16 +491,17 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         return super.getTarget(targetId);
     }
 
-    getTagedSym(shape: Shape /* symbolrefshape */) {
+    getTagedSym(shape: Shape/* SymbolRefShape */, varsContainer: Shape[]/*(SymbolRefShape | SymbolShape)[] */) {
 
         if (!this.isUnionSymbolShape) return [this];
 
         const symbols: SymbolShape[] = this.childs as any as SymbolShape[];
+        const vc = varsContainer.concat(shape);
 
         const curState = new Map<string, string>();
         this.variables?.forEach((v) => {
             if (v.type === VariableType.Status) {
-                const overrides = shape.findOverride(v.id, OverrideType.Variable);
+                const overrides = findOverride(v.id, OverrideType.Variable, vc as any);
                 const _v = overrides ? overrides[overrides.length - 1] : v;
                 curState.set(v.id, _v.value);
             }
@@ -558,7 +560,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
         this.virbindsEx.set(refId, v.id);
 
-        return {refId, v};
+        return { refId, v };
     }
 
 
@@ -599,7 +601,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         const over = this.virbindsEx && this.virbindsEx.get(refId);
         if (over) {
             const v = this.variables && this.variables.get(over);
-            if (v) return {refId, v}
+            if (v) return { refId, v }
         }
     }
 
@@ -833,7 +835,7 @@ export class RectShape extends PathShape implements classes.RectShape {
     }
 
     getRectRadius(): { lt: number, rt: number, rb: number, lb: number } {
-        const ret = {lt: 0, rt: 0, rb: 0, lb: 0};
+        const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
         const ps = this.points;
         if (ps.length === 4) {
             ret.lt = ps[0].cornerRadius;
@@ -996,10 +998,10 @@ export class TextShape extends Shape implements classes.TextShape {
         const x = 0;
         const y = 0;
         const path = [["M", x, y],
-            ["l", w, 0],
-            ["l", 0, h],
-            ["l", -w, 0],
-            ["z"]];
+        ["l", w, 0],
+        ["l", 0, h],
+        ["l", -w, 0],
+        ["z"]];
         return new Path(path);
     }
 

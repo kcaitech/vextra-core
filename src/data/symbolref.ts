@@ -80,8 +80,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         // todo
     }
 
-    private __data: SymbolShape | undefined;
-    private __subdata: SymbolShape | undefined;
+    __data: SymbolShape | undefined;
+    __subdata: SymbolShape | undefined;
     private __startLoad: string | undefined;
     updater(notify: boolean = true): boolean { // 自己的override也要更新
         const symMgr = this.__symMgr;
@@ -91,7 +91,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         if (this.__startLoad === refId) {
             if (this.__data) { // 更新subdata
                 if (this.__data.isUnionSymbolShape) {
-                    const syms = this.__data.getTagedSym(this);
+                    const syms = this.__data.getTagedSym(this, []);
                     const subdata = syms[0] || this.__data.childs[0];
                     if (this.__subdata !== subdata) {
                         if (this.__subdata) this.__subdata.unwatch(this.updater);
@@ -120,7 +120,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             if (this.__data) this.__data.watch(this.updater);
             // 处理status
             if (val && val.isUnionSymbolShape) {
-                const syms = val.getTagedSym(this);
+                const syms = val.getTagedSym(this, []);
                 if (this.__subdata) this.__subdata.unwatch(this.updater);
                 this.__subdata = syms[0] || val.childs[0];
                 if (this.__subdata) this.__subdata.watch(this.updater);
