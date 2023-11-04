@@ -486,7 +486,15 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         const override = this.getOverrid(refId, type);
         if (override) {
             const ret = [override.v];
-            super.findVar(override.v.id, ret);
+            // this.id
+            refId = override.v.id;
+            if (this.isVirtualShape) {
+                refId = this.originId + '/' + refId;
+            }
+            else {
+                refId = this.id + '/' + refId;
+            }
+            super.findVar(refId, ret);
             return ret;
         }
         if (this.isVirtualShape) {

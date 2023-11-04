@@ -625,7 +625,9 @@ export function findOverride(refId: string, type: OverrideType, varsContainer: (
         const override = container.getOverrid(refId, type);
         if (override) {
             const ret = [override.v];
-            findVar(override.v.id, ret, varsContainer, i - 1);
+            refId = override.v.id;
+            if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
+            findVar(refId, ret, varsContainer, i - 1);
             return ret;
         }
         if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
