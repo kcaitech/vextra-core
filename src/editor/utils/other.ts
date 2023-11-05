@@ -408,48 +408,44 @@ export function clear_binds_effect(page: Page, shape: Shape, symbol: SymbolShape
 export function adjust_selection_before_group(document: Document, page: Page, shapes: Shape[], api: Api, need_trans_data: Shape[]) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         let shape = shapes[i];
-        const childs = shape.childs;
-        if (shape.type !== ShapeType.Symbol) {
-            if (childs?.length) {
-                handler_childs(document, page, (shape as GroupShape).childs, api, need_trans_data);
-            }
-            continue;
-        }
-        need_trans_data.push(shape);
-        const parent: GroupShape | undefined = shape.parent as GroupShape;
-        if (!parent) throw new Error('wrong data: invaild parent');
-        const insert_index = parent.indexOfChild(shape);
-        api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
-        if (!(shape as SymbolShape).isUnionSymbolShape) {
+        if (shape.type === ShapeType.Symbol) {
+            need_trans_data.push(shape);
+            const parent: GroupShape | undefined = shape.parent as GroupShape;
+            if (!parent) throw new Error('wrong data: invaild parent');
+            const insert_index = parent.indexOfChild(shape);
+            api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
+            if (shape.isUnionSymbolShape) continue;
             const { x, y, width, height } = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
             shapes[i] = api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;
+            continue;
         }
+        const childs = shape.childs;
+        if (shape.type === ShapeType.Table || !childs?.length) continue;
+        handler_childs(document, page, (shape as GroupShape).childs, api, need_trans_data);
     }
 }
 
 function handler_childs(document: Document, page: Page, shapes: Shape[], api: Api, need_trans_data: Shape[]) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         let shape = shapes[i];
-        const childs = shape.childs;
-        if (shape.type !== ShapeType.Symbol) {
-            if (childs?.length) {
-                handler_childs(document, page, (shape as GroupShape).childs, api, need_trans_data);
-            }
-            continue;
-        }
-        need_trans_data.push(shape);
-        const parent: GroupShape | undefined = shape.parent as GroupShape;
-        if (!parent) throw new Error('wrong data: invaild parent');
-        const insert_index = parent.indexOfChild(shape);
-        api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
-        if (!(shape as SymbolShape).isUnionSymbolShape) {
+        if (shape.type === ShapeType.Symbol) {
+            need_trans_data.push(shape);
+            const parent: GroupShape | undefined = shape.parent as GroupShape;
+            if (!parent) throw new Error('wrong data: invaild parent');
+            const insert_index = parent.indexOfChild(shape);
+            api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
+            if (shape.isUnionSymbolShape) continue;
             const { x, y, width, height } = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
             api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;
+            continue;
         }
+        const childs = shape.childs;
+        if (shape.type === ShapeType.Table || !childs?.length) continue;
+        handler_childs(document, page, (shape as GroupShape).childs, api, need_trans_data);
     }
 }
 

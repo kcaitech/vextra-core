@@ -23,6 +23,12 @@ export function unable_to_migrate(document: Document, target: Shape, wonder: Sha
     }
     if ((target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wonder)) return 1;
     if (wonder.type === ShapeType.Symbol) return 2;
+  } else {
+    let p = target.parent;
+    while (p) {
+      if (p.type === ShapeType.Symbol) return 1;
+      p = p.parent;
+    }
   }
   return 0;
 }
