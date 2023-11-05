@@ -9,32 +9,32 @@ import {
     TextShape,
     Variable
 } from "../data/shape";
-import {Border, BorderPosition, BorderStyle, Color, Fill, MarkerType} from "../data/style";
-import {expand, expandTo, translate, translateTo} from "./frame";
-import {BoolOp, CurvePoint, Point2D} from "../data/baseclasses";
-import {Artboard} from "../data/artboard";
-import {createHorizontalBox} from "../basic/utils";
-import {Page} from "../data/page";
-import {CoopRepository} from "./command/cooprepo";
-import {ContactForm, CurveMode, OverrideType, VariableType} from "../data/typesdefine";
-import {Api} from "./command/recordapi";
-import {update_frame_by_points} from "./path";
-import {exportCurvePoint} from "../data/baseexport";
-import {importBorder, importCurvePoint, importFill} from "../data/baseimport";
-import {v4} from "uuid";
-import {get_box_pagexy, get_nearest_border_point} from "../data/utils";
-import {Matrix} from "../basic/matrix";
-import {ContactShape} from "../data/contact";
-import {Document, SymbolRefShape} from "../data/classes";
-import {uuid} from "../basic/uuid";
-import {BasicArray} from "../data/basic";
+import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "../data/style";
+import { expand, expandTo, translate, translateTo } from "./frame";
+import { BoolOp, CurvePoint, Point2D } from "../data/baseclasses";
+import { Artboard } from "../data/artboard";
+import { createHorizontalBox } from "../basic/utils";
+import { Page } from "../data/page";
+import { CoopRepository } from "./command/cooprepo";
+import { ContactForm, CurveMode, OverrideType, VariableType } from "../data/typesdefine";
+import { Api } from "./command/recordapi";
+import { update_frame_by_points } from "./path";
+import { exportCurvePoint } from "../data/baseexport";
+import { importBorder, importCurvePoint, importFill } from "../data/baseimport";
+import { v4 } from "uuid";
+import { get_box_pagexy, get_nearest_border_point } from "../data/utils";
+import { Matrix } from "../basic/matrix";
+import { ContactShape } from "../data/contact";
+import { Document, SymbolRefShape } from "../data/classes";
+import { uuid } from "../basic/uuid";
+import { BasicArray } from "../data/basic";
 import {
     clear_binds_effect,
     find_layers_by_varid,
     get_symbol_by_layer,
     is_default_state,
     is_part_of_symbol
-} from "./utils";
+} from "./utils/other";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -721,11 +721,11 @@ export class ShapeEditor {
         const _var = this.overrideVariable(VariableType.Fills, OverrideType.Fills, (_var) => {
             const fills = _var?.value ?? _shape.style.fills;
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
-                    const ret = importFill(v);
-                    const imgmgr = v.getImageMgr();
-                    if (imgmgr) ret.setImageMgr(imgmgr)
-                    return ret;
-                }
+                const ret = importFill(v);
+                const imgmgr = v.getImageMgr();
+                if (imgmgr) ret.setImageMgr(imgmgr)
+                return ret;
+            }
             ))
         }, api, shape)
         return _var || _shape;
@@ -767,9 +767,9 @@ export class ShapeEditor {
         const _var = this.overrideVariable(VariableType.Borders, OverrideType.Borders, (_var) => {
             const fills = _var?.value ?? _shape.style.borders;
             return new BasicArray(...(fills as Array<Border>).map((v) => {
-                    const ret = importBorder(v);
-                    return ret;
-                }
+                const ret = importBorder(v);
+                return ret;
+            }
             ))
         }, api, shape)
         return _var || _shape;
@@ -822,7 +822,7 @@ export class ShapeEditor {
     }
 
     public exchangeMarkerType() {
-        const {endMarkerType, startMarkerType} = this.__shape.style;
+        const { endMarkerType, startMarkerType } = this.__shape.style;
         if (endMarkerType !== startMarkerType) {
             this._repoWrap("exchangeMarkerType", (api) => {
                 api.shapeModifyEndMarkerType(this.__page, this.__shape, startMarkerType || MarkerType.Line);
@@ -864,7 +864,7 @@ export class ShapeEditor {
                 try {
                     const __points: [number, number][] = [];
                     childs.forEach(p => {
-                        const {width, height} = p.frame;
+                        const { width, height } = p.frame;
                         let _ps: [number, number][] = [
                             [0, 0],
                             [width, 0],
@@ -880,8 +880,8 @@ export class ShapeEditor {
                     })
                     const box = createHorizontalBox(__points);
                     if (box) {
-                        const {x: ox, y: oy} = this.__shape.frame2Root();
-                        const {dx, dy} = {dx: ox - box.left, dy: oy - box.top};
+                        const { x: ox, y: oy } = this.__shape.frame2Root();
+                        const { dx, dy } = { dx: ox - box.left, dy: oy - box.top };
                         for (let i = 0; i < childs.length; i++) {
                             translate(api, this.__page, childs[i], dx, dy);
                         }
@@ -1022,7 +1022,7 @@ export class ShapeEditor {
             if (!fromShape) return result;
             const xy_result = get_box_pagexy(fromShape);
             if (!xy_result) return result;
-            const {xy1, xy2} = xy_result;
+            const { xy1, xy2 } = xy_result;
             let p = get_nearest_border_point(fromShape, from.contactType, fromShape.matrix2Root(), xy1, xy2);
             if (!p) return result
 
@@ -1044,7 +1044,7 @@ export class ShapeEditor {
             if (!toShape) return result;
             const xy_result = get_box_pagexy(toShape);
             if (!xy_result) return result;
-            const {xy1, xy2} = xy_result;
+            const { xy1, xy2 } = xy_result;
             let p = get_nearest_border_point(toShape, to.contactType, toShape.matrix2Root(), xy1, xy2);
             if (!p) return result
 
@@ -1229,9 +1229,9 @@ export class ShapeEditor {
             curState.forEach((v, k) => {
                 const tag = vartag ? vartag.get(k) : candidate.name;
                 if (k === originVarId) {
-                    needModifyVars.push({v: curVars.get(k)!, tag: v}); // 如果改回默认，要删了？
+                    needModifyVars.push({ v: curVars.get(k)!, tag: v }); // 如果改回默认，要删了？
                 } else if (tag !== v) {
-                    needModifyVars.push({v: curVars.get(k)!, tag});
+                    needModifyVars.push({ v: curVars.get(k)!, tag });
                 }
             })
             // check varId inside

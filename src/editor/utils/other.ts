@@ -1,4 +1,4 @@
-import {float_accuracy} from "../basic/consts";
+import { float_accuracy } from "../../basic/consts";
 import {
     Border,
     BorderPosition,
@@ -18,13 +18,13 @@ import {
     TextShape,
     Variable,
     VariableType
-} from "../data/classes";
-import {Api} from "./command/recordapi";
-import {BasicMap} from "../data/basic";
-import {newSymbolRefShape, newSymbolShape} from "./creator";
-import {uuid} from "../basic/uuid";
-import * as types from "../data/typesdefine";
-import {translate, translateTo} from "./frame";
+} from "../../data/classes";
+import { Api } from "../command/recordapi";
+import { BasicMap } from "../../data/basic";
+import { newSymbolRefShape, newSymbolShape } from "../creator";
+import { uuid } from "../../basic/uuid";
+import * as types from "../../data/typesdefine";
+import { translate, translateTo } from "../frame";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
@@ -96,17 +96,17 @@ export function find_state_space(union: SymbolShape) {
         const child = childs[i];
         const m2p = child.matrix2Parent(), f = child.frame;
         const point = [
-            {x: 0, y: 0},
-            {x: f.width, y: 0},
-            {x: f.width, y: f.height},
-            {x: 0, y: f.height}
+            { x: 0, y: 0 },
+            { x: f.width, y: 0 },
+            { x: f.width, y: f.height },
+            { x: 0, y: f.height }
         ].map(p => m2p.computeCoord3(p));
         for (let j = 0; j < 4; j++) {
             if (point[j].x > space_x) space_x = point[j].x;
             if (point[j].y > space_y) space_y = point[j].y;
         }
     }
-    return {x: space_x, y: space_y};
+    return { x: space_x, y: space_y };
 }
 
 export function modify_frame_after_inset_state(page: Page, api: Api, union: SymbolShape) {
@@ -120,60 +120,6 @@ export function modify_frame_after_inset_state(page: Page, api: Api, union: Symb
     if (delta_y <= 0) {
         api.shapeModifyHeight(page, union, union.frame.height - delta_y + 20)
     }
-}
-
-function get_topology_map(shape: Shape, init?: { shape: string, ref: string }[]) {
-    let deps: { shape: string, ref: string }[] = init || [];
-    const childs = shape.type === ShapeType.SymbolRef ? shape.naviChilds : shape.childs;
-    if (!childs || childs.length === 0) return [];
-    for (let i = 0, len = childs.length; i < len; i++) {
-        const child = childs[i];
-        deps.push({shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? childs[i].refId : childs[i].id});
-        const c_childs = child.type === ShapeType.SymbolRef ? child.naviChilds : child.childs;
-        if (c_childs && c_childs.length) deps = [...get_topology_map(child, deps)];
-    }
-    return deps;
-}
-
-function filter_deps(deps: { shape: string, ref: string }[], key1: 'shape' | 'ref', key2: 'shape' | 'ref') {
-    const result: { shape: string, ref: string }[] = [];
-    const _checked: Set<string> = new Set();
-    const _checked_invalid: Set<string> = new Set();
-    for (let i = 0, len = deps.length; i < len; i++) {
-        const d = deps[i];
-        if (_checked.has(d[key1])) {
-            result.push(d);
-            continue;
-        }
-        if (_checked_invalid.has(d[key1])) continue;
-        let invalid: boolean = true;
-        for (let j = 0, len = deps.length; j < len; j++) {
-            if (deps[j][key2] === d[key1]) {
-                result.push(d);
-                _checked.add(d[key1]);
-                invalid = false;
-                break;
-            }
-        }
-        if (invalid) _checked_invalid.add(d[key1]);
-    }
-    return result;
-}
-
-/**
- * @description 检查symbol与ref之间是否存在循环引用
- * @param symbol 任意存在子元素的图形
- * @param ref 想去引用的组件
- * @returns
- */
-export function is_circular_ref(symbol: Shape, ref: SymbolRefShape): boolean {
-    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: symbol.id, ref: ref.refId}];
-    if (deps.length < 2) return false;
-    // 过滤左侧
-    deps = filter_deps(deps, 'shape', 'ref');
-    // 过滤右侧
-    deps = filter_deps(deps, 'ref', 'shape');
-    return !!deps.length;
 }
 
 /**
@@ -338,14 +284,6 @@ function is_sym(shape: Shape) {
 export function is_symbol_but_not_union(shape: Shape) {
     return shape.type === ShapeType.Symbol && !(shape as SymbolShape).isUnionSymbolShape;
 }
-
-/**
- * @description 是否不满足迁移条件
- */
-export function unable_to_migrate(target: Shape, wonder: Shape) {
-    return (target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wonder);
-}
-
 /**
  * @description 判断图层是否为组件的组成部分
  */
@@ -483,7 +421,7 @@ export function adjust_selection_before_group(document: Document, page: Page, sh
         const insert_index = parent.indexOfChild(shape);
         api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
         if (!(shape as SymbolShape).isUnionSymbolShape) {
-            const {x, y, width, height} = shape.frame;
+            const { x, y, width, height } = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
             shapes[i] = api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;
@@ -507,7 +445,7 @@ function handler_childs(document: Document, page: Page, shapes: Shape[], api: Ap
         const insert_index = parent.indexOfChild(shape);
         api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
         if (!(shape as SymbolShape).isUnionSymbolShape) {
-            const {x, y, width, height} = shape.frame;
+            const { x, y, width, height } = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
             api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;

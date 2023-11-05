@@ -27,7 +27,7 @@ import {
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
-import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils";
+import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { importText } from "../data/baseimport";

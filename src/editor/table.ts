@@ -6,10 +6,10 @@ import { newText } from "./creator";
 import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
 import { Border, Color, Fill } from "../data/style";
-import { fixTableShapeFrameByLayout } from "./utils";
+import { fixTableShapeFrameByLayout } from "./utils/other";
 import { Api } from "./command/recordapi";
 import { importBorder, importFill } from "../data/baseimport";
-import {Document} from "../data/classes";
+import { Document } from "../data/classes";
 
 const MinCellSize = TableShape.MinCellSize;
 const MaxColCount = TableShape.MaxColCount;
@@ -274,7 +274,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     // 批量初始化单元格
-    private _initCells(rs: number, re: number, cs: number, ce: number, api: Api) {        
+    private _initCells(rs: number, re: number, cs: number, ce: number, api: Api) {
         for (let r = rs; r <= re; r++) {
             for (let c = cs; c <= ce; c++) {
                 const cell = this.shape.getCellAt(r, c);
@@ -300,7 +300,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    private  _resetCells(rs: number, re: number, cs: number, ce: number, api: Api) {
+    private _resetCells(rs: number, re: number, cs: number, ce: number, api: Api) {
         for (let r = rs; r <= re; r++) {
             for (let c = cs; c <= ce; c++) {
                 const cell = this.shape.getCellAt(r, c);

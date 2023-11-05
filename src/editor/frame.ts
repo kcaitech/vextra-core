@@ -3,7 +3,7 @@ import { Matrix } from "../basic/matrix";
 import { GroupShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { Text } from "../data/text";
 import { ContactType, Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
-import { fixTextShapeFrameByLayout } from "./utils";
+import { fixTextShapeFrameByLayout } from "./utils/other";
 import { TableShape } from "../data/table";
 import { ResizingConstraints } from "../data/consts";
 
