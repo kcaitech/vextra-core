@@ -146,17 +146,19 @@ export class Style extends Basic implements classes.Style {
     contextSettings?: ContextSettings
     fills: BasicArray<Fill>
     innerShadows?: BasicArray<Shadow>
-    shadows?: BasicArray<Shadow>
+    shadows: BasicArray<Shadow>
     contacts?: BasicArray<ContactRole>
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     constructor(
         borders: BasicArray<Border>,
-        fills: BasicArray<Fill>
+        fills: BasicArray<Fill>,
+        shadows: BasicArray<Shadow>,
     ) {
         super()
         this.borders = borders
         this.fills = fills
+        this.shadows = shadows
         borders.setTypeId("borders");
         fills.setTypeId("fills");
     }

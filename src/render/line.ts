@@ -1,5 +1,6 @@
 import { Shape } from "../data/classes";
 import { render as renderB } from "./line_borders";
+import { render as shadowR } from "./shadow";
 
 export function render(h: Function, shape: Shape, reflush?: number) {
     const isVisible = shape.isVisible ?? true;
@@ -32,7 +33,19 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     if (shape.style.borders.length) {
         const path = shape.getPath().toString();
         childs = childs.concat(renderB(h, shape.style, path, shape));
-        return h('g', props, childs);
+        const shadows = shape.style.shadows;
+        if (shadows.length) {
+            const ex_props = Object.assign({}, props);
+            delete props.style;
+            delete props.transform;
+            const fliter_id = `dorp-shadow-${shape.id.slice(0, 4)}`
+            const shadow = shadowR(h, fliter_id, shadows[0]);
+            props.filter = `url(#${fliter_id})`;
+            const body = h("g", props, childs);
+            return h("g", ex_props, [shadow, body]);
+        } else {
+            return h("g", props, childs);
+        }
     } else {
         props.stroke = '#000000', props['stroke-width'] = 1, props.d = shape.getPath().toString();
         return h('path', props);

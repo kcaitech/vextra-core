@@ -75,7 +75,7 @@ export type Style = {
     contextSettings?: ContextSettings
     fills: Fill[]
     innerShadows?: Shadow[]
-    shadows?: Shadow[]
+    shadows: Shadow[]
     contacts?: ContactRole[]
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
@@ -164,6 +164,7 @@ export type ShapeFrame = {
 }
 /* shadow */
 export type Shadow = {
+    id: string
     isEnabled: boolean
     blurRadius: number
     color: Color

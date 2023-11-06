@@ -218,10 +218,16 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         fill.setImageMgr(ctx.mediasMgr);
         return fill;
     });
+    const shadows: Shadow[] = (data['shadows'] || []).map((d: IJSON) => {
+        const isEnabled: boolean = d['isEnabled'];
+        const color: Color = importColor(d['color']);
+        const blurRadius = d["blurRadius"], offsetX = d["offsetX"], offsetY = d["offsetY"], spread = d["spread"]
+        const shadow = new Shadow(uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread);
+        return shadow;
+    });
 
-    const style: Style = new Style(
-        new BasicArray<Border>(...borders),
-        new BasicArray<Fill>(...fills));
+    const style: Style = new Style(new BasicArray<Border>(...borders), new BasicArray<Fill>(...fills), new BasicArray<Shadow>(...shadows));
+
     style.startMarkerType = startMarkerType;
     style.endMarkerType = endMarkerType;
 

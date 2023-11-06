@@ -1,4 +1,5 @@
 import { BasicArray } from "./basic";
+import { Border, Fill, Style, Shadow } from "./style";
 import { TableCell, TableShape } from "./table";
 
 export function tableInsertRow(table: TableShape, idx: number, height: number, data: (TableCell | undefined)[]) {

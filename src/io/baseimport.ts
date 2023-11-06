@@ -85,6 +85,14 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
                 if (r) ret.push(r)
             }
             return ret
+        })(),
+        (() => {
+            const ret = new BasicArray<impl.Shadow>()
+            for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
+                const r = importShadow(source.shadows[i], ctx)
+                if (r) ret.push(r)
+            }
+            return ret
         })()
     )
     if (source.miterLimit !== undefined) ret.miterLimit = source.miterLimit
@@ -101,6 +109,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         }
         return ret
     })()
+<<<<<<< HEAD
     if (source.shadows !== undefined) ret.shadows = (() => {
         const ret = new BasicArray<impl.Shadow>()
         for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
@@ -117,6 +126,8 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         }
         return ret
     })()
+=======
+>>>>>>> af8c2e6b9779946c4f68847058d9a1dc13aa1d8d
     if (source.startMarkerType !== undefined) ret.startMarkerType = importMarkerType(source.startMarkerType, ctx)
     if (source.endMarkerType !== undefined) ret.endMarkerType = importMarkerType(source.endMarkerType, ctx)
     return ret
@@ -196,6 +207,7 @@ export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext)
 /* shadow */
 export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.Shadow {
     const ret: impl.Shadow = new impl.Shadow (
+        source.id,
         source.isEnabled,
         source.blurRadius,
         importColor(source.color, ctx),
