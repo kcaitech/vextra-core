@@ -239,6 +239,20 @@ export class ShapeEditor {
         this.__repo.commit();
     }
 
+    // shadow
+    public addShadow() {
+        const api = this.__repo.start("addShadow", {});
+        api.addShadow(this.__page, this.__shape);
+        this.__repo.commit();
+    }
+    public deleteShadow(idx: number) {
+        const border = this.__shape.style.borders[idx];
+        if (border) {
+            const api = this.__repo.start("deleteBorder", {});
+            api.deleteShadowAt(this.__page, this.__shape, idx)
+            this.__repo.commit();
+        }
+    }
 
     // 容器自适应大小
     public adapt() {

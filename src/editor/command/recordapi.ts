@@ -10,8 +10,8 @@ import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText } from "../../io/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText, exportShadow } from "../../io/baseexport";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, SHADOW_ID } from "./consts";
 import { GroupShape, Shape, PathShape, PathShape2, CurvePoint } from "../../data/shape";
 import { ContactShape } from "../../data/contact";
 import { exportShape, updateShapesFrame } from "./utils";
@@ -655,6 +655,20 @@ export class Api {
         this.__trap(() => {
             const contactRole = basicapi.removeContactRoleAt(shape.style, index);
             if (contactRole) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), CONTACTS_ID, contactRole.id, index, exportContactRole(contactRole)));
+        })
+    }
+    addShadow(page: Page, shape: Shape) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const shadow = basicapi.addShadow(shape.style);
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, shape.style.shadows.length, exportShadow(shadow)))
+        })
+    }
+    deleteShadowAt(page: Page, shape: Shape, idx: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const shadow = basicapi.deleteShadowAt(shape.style, idx);
+            if (shadow) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, idx, exportShadow(shadow)));
         })
     }
     // text

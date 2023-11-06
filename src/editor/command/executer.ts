@@ -52,7 +52,8 @@ import {
     importTableCell,
     importContactShape,
     importContactRole,
-    importCurvePoint
+    importCurvePoint,
+    importShadow
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -73,7 +74,7 @@ import {
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID, TABLE_ATTR_ID, SHADOW_ID, SHAPE_ATTR_ID, } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
 import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
@@ -366,6 +367,10 @@ export class CMDExecuter {
                 const border = importBorder(JSON.parse(cmd.data))
                 api.addBorderAt(shape.style, border, (op as ArrayOpInsert).start);
             }
+        } else if (arrayAttr === SHADOW_ID) {
+            if (op.type === OpType.ArrayInsert) {
+                api.addShadow(shape.style);
+            }
         }
         else if (arrayAttr === CONTACTS_ID) {
             if (op.type === OpType.ArrayInsert) {
@@ -410,6 +415,10 @@ export class CMDExecuter {
         else if (arrayAttr === BORDER_ID) {
             if (op.type === OpType.ArrayRemove) {
                 api.deleteBorderAt(shape.style, (op as ArrayOpRemove).start)
+            }
+        } else if (arrayAttr === SHADOW_ID) {
+            if (op.type === OpType.ArrayRemove) {
+                api.deleteShadowAt(shape.style, (op as ArrayOpRemove).start)
             }
         }
         else if (arrayAttr === CONTACTS_ID) {

@@ -31,7 +31,8 @@
                 }
             }
         ],
-        "fills": []
+        "fills": [],
+        "shadows": []
     },
     "childs": [],
     "rowHeights": [],
