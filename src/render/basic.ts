@@ -57,7 +57,7 @@ export function isColorEqual(lhs: Color, rhs: Color): boolean {
 export const DefaultColor = Color.DefaultColor;
 
 export function isVisible(shape: Shape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, consumedVars: { slot: string, vars: Variable[] }[] | undefined) {
-    if (!varsContainer) return !!shape.isVisible;
+    if (!varsContainer) return shape.getVisible();
 
     const _vars = findOverrideAndVar(shape, OverrideType.Visible, varsContainer);
     if (_vars && _vars.length > 0) {
