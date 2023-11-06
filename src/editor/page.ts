@@ -458,6 +458,10 @@ export class PageEditor {
                 returnshapes.push(shape);
                 continue;
             }
+            if (shape.parent && shape.parent.type === ShapeType.SymbolRef) { // 实例内引用组件
+                returnshapes.push(shape);
+                continue;
+            }
             const symmgr = shape.getSymbolMgr();
             const symbol = symmgr?.getSync(shape.refId);
             if (!symbol) {
