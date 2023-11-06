@@ -186,6 +186,7 @@ function _getOnVar(
 }
 
 class StyleHdl extends HdlBase {
+
     __parent: Shape; // proxyed shape
 
     constructor(parent: Shape) {
@@ -224,6 +225,7 @@ class StyleHdl extends HdlBase {
 }
 
 class ShapeHdl extends HdlBase {
+    __root: SymbolRefShape;
     __origin: Shape;
     __parent: Shape;
 
@@ -305,14 +307,22 @@ class ShapeHdl extends HdlBase {
         this.fireRelayout();
     }
 
-    constructor(origin: Shape, parent: Shape, id: string) {
+    root_watcher(...args: any[]) {
+        // if (args.indexOf("vairable") >= 0) return;
+        // this.notify(...args);
+        // this.fireRelayout();
+    }
+
+    constructor(root: SymbolRefShape, origin: Shape, parent: Shape, id: string) {
         super(parent);
+        this.__root = root;
         this.__origin = origin;
         this.__parent = parent;
 
         if (!(parent instanceof SymbolRefShape) && !parent.__symbolproxy) throw new Error("");
 
         this.origin_watcher = this.origin_watcher.bind(this);
+        this.root_watcher = this.root_watcher.bind(this);
 
         // watch unwatch
         this.watch = this.watch.bind(this);
@@ -320,6 +330,8 @@ class ShapeHdl extends HdlBase {
         this.notify = this.notify.bind(this);
 
         origin.watch(this.origin_watcher);
+
+        root.watch(this.root_watcher);
 
         if (id.startsWith('undefined')) throw new Error("");
 
@@ -332,6 +344,7 @@ class ShapeHdl extends HdlBase {
     onRemoved(target: object) {
         super.onRemoved(target);
         this.__origin.unwatch(this.origin_watcher);
+        this.__root.unwatch(this.root_watcher);
         if (this.__style) (this.__style as any).remove;
     }
 
@@ -441,13 +454,13 @@ class GroupShapeHdl extends ShapeHdl {
                             continue;
                         }
                         if (c) (c as any).remove;
-                        _childs[i] = proxyShape(origin, receiver as Shape, prefix + origin.id);
+                        _childs[i] = proxyShape(this.__root, origin, receiver as Shape, prefix + origin.id);
                     }
                 }
                 return this.__childs;
             }
             const prefix = this.__id.substring(0, this.__id.lastIndexOf('/') + 1);
-            this.__childs = (this.__origin as GroupShape).childs.map((child) => proxyShape(child, receiver as Shape, prefix + child.id));
+            this.__childs = (this.__origin as GroupShape).childs.map((child) => proxyShape(this.__root, child, receiver as Shape, prefix + child.id));
             return this.__childs;
         }
         if (propStr === "layoutChilds") {
@@ -485,8 +498,8 @@ class SymbolRefShapeHdl extends ShapeHdl {
     __saveWidth: number = 0;
     __saveHeight: number = 0;
 
-    constructor(origin: Shape, parent: Shape, id: string) {
-        super(origin, parent, id);
+    constructor(root: SymbolRefShape, origin: Shape, parent: Shape, id: string) {
+        super(root, origin, parent, id);
         this.updater = this.updater.bind(this);
         this.updater();
         this.relayout = this.relayout.bind(this);
@@ -596,7 +609,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
                 const childs: Shape[] = (this.__subdata || this.__data)?.childs || [];
                 if (!childs || childs.length === 0) return;
                 const prefix = this.__id + '/';
-                this.__childs = childs.map((origin) => proxyShape(origin, receiver as Shape, prefix + origin.id));
+                this.__childs = childs.map((origin) => proxyShape(this.__root, origin, receiver as Shape, prefix + origin.id));
                 layoutChilds(this.__childs, this.__origin.frame, childs[0].parent!.frame);
                 this.saveFrame();
                 this.__childsIsDirty = false;
@@ -621,7 +634,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
                         continue;
                     }
                     if (c) (c as any).remove;
-                    _childs[i] = proxyShape(origin, receiver as Shape, prefix + origin.id);
+                    _childs[i] = proxyShape(this.__root, origin, receiver as Shape, prefix + origin.id);
                 }
             }
             return this.__childs;
@@ -782,27 +795,34 @@ class TextShapeHdl extends ShapeHdl {
         }
         super.notify(...args);
     }
+    root_watcher(...args: any[]): void {
+        if (args.indexOf("vairable") >= 0) {
+            this.__text = undefined; // 重新获取
+            return;
+        }
+        super.root_watcher(...args);
+    }
 }
 
-function createHandler(origin: Shape, parent: Shape, id: string) {
+function createHandler(root: SymbolRefShape, origin: Shape, parent: Shape, id: string) {
     if (origin instanceof GroupShape) {
-        return new GroupShapeHdl(origin, parent, id);
+        return new GroupShapeHdl(root, origin, parent, id);
     }
     if (origin instanceof TextShape) {
-        return new TextShapeHdl(origin, parent, id);
+        return new TextShapeHdl(root, origin, parent, id);
     }
 
     if (origin instanceof SymbolRefShape) {
-        return new SymbolRefShapeHdl(origin, parent, id);
+        return new SymbolRefShapeHdl(root, origin, parent, id);
     }
 
-    return new ShapeHdl(origin, parent, id);
+    return new ShapeHdl(root, origin, parent, id);
 }
 
 // 适配左侧导航栏
 // 需要cache
-export function proxyShape(origin: Shape, parent: Shape, id: string): Shape {
-    const hdl = createHandler(origin, parent, id);
+export function proxyShape(root: SymbolRefShape, origin: Shape, parent: Shape, id: string): Shape {
+    const hdl = createHandler(root, origin, parent, id);
     checkNotProxyed(origin);
     const ret = new Proxy<Shape>(origin, hdl);
     return ret;

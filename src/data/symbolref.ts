@@ -167,7 +167,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                         continue;
                     }
                     if (c) (c as any).remove;
-                    _childs[i] = proxyShape(origin, this, prefix + origin.id);
+                    _childs[i] = proxyShape(this, origin, this, prefix + origin.id);
                 }
                 this.__childsIsDirty = false;
             }
@@ -176,7 +176,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         const childs = this.getSymChilds();
         if (!childs || childs.length === 0) return;
         const prefix = this.id + '/';
-        this.__childs = childs.map((c) => proxyShape(c, this, prefix + c.id));
+        this.__childs = childs.map((c) => proxyShape(this, c, this, prefix + c.id));
         layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
         this.__childsIsDirty = false;
         return this.__childs;
