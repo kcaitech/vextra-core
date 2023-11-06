@@ -154,7 +154,7 @@ function _getOnVar(
     hdl: HdlBase,
     propertyKey: PropertyKey,
     overType: OverrideType,
-    varType: VariableType) {
+    varType: VariableType): Variable | undefined {
 
     if (!(shape as any).__symbolproxy) throw new Error("");
     const varbinds = shape.varbinds;
@@ -167,7 +167,7 @@ function _getOnVar(
             (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
             const _var = _vars[_vars.length - 1];
             if (_var && _var.type === varType) {
-                return _var.value;
+                return _var;
             }
         }
     } else {
@@ -179,7 +179,7 @@ function _getOnVar(
             (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
             const _var = _vars[_vars.length - 1];
             if (_var && _var.type === varType) {
-                return _var.value;
+                return _var;
             }
         }
     }
@@ -202,7 +202,7 @@ class StyleHdl extends HdlBase {
                 this, propertyKey,
                 OverrideType.Fills,
                 VariableType.Fills);
-            if (val) return val;
+            if (val) return val.value;
             return Reflect.get(target, propertyKey, receiver);
         }
         if (propStr === 'borders') {
@@ -212,7 +212,7 @@ class StyleHdl extends HdlBase {
                 propertyKey,
                 OverrideType.Borders,
                 VariableType.Borders);
-            if (val) return val;
+            if (val) return val.value;
             return Reflect.get(target, propertyKey, receiver);
         }
         return super.get(target, propertyKey, receiver);
@@ -372,9 +372,9 @@ class ShapeHdl extends HdlBase {
                 receiver as Shape,
                 this,
                 propertyKey,
-                OverrideType.Variable,
+                OverrideType.Visible,
                 VariableType.Visible);
-            if (val) return val;
+            if (val) return val.value;
             return Reflect.get(target, propertyKey, receiver);
         }
         if (propStr === "watch") {
@@ -746,7 +746,7 @@ class TextShapeHdl extends ShapeHdl {
             propertyKey,
             OverrideType.Text,
             VariableType.Text);
-        if (val) return val;
+        if (val) return val.value;
         return Reflect.get(target, propertyKey, receiver);
     }
     getText(target: object, propertyKey: PropertyKey, receiver?: any) {
