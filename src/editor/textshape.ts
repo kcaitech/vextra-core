@@ -22,7 +22,7 @@ import {
     ParaAttr,
     Span,
     ShapeType,
-    Variable, Document
+    Variable, Document, TableShape
 } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
@@ -31,6 +31,7 @@ import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/o
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { importText } from "../data/baseimport";
+import * as basicapi from "./basicapi"
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -48,6 +49,12 @@ function createTextByString(stringValue: string, refShape: TextShapeLike) {
     mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
     text.insertText(stringValue, 0);
     return text;
+}
+
+interface _Api {
+    shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
+
+    tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
 }
 
 export class TextShapeEditor extends ShapeEditor {
@@ -77,11 +84,13 @@ export class TextShapeEditor extends ShapeEditor {
         return this.insertText2(text, index, 0, attr);
     }
 
-    private fixFrameByLayout(api: Api) {
+    private fixFrameByLayout(api: _Api) {
+        if (this.shape.isVirtualShape) api = basicapi;
         if (this.shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, this.shape);
         else if (this.shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, this.shape);
     }
-    private fixFrameByLayout2(api: Api, shape: TextShapeLike | Variable) {
+    private fixFrameByLayout2(api: _Api, shape: TextShapeLike | Variable) {
+        if (this.shape.isVirtualShape) api = basicapi;
         if (shape instanceof TextShape) fixTextShapeFrameByLayout(api, this.__page, shape);
         else if (shape instanceof TableCell) fixTableShapeFrameByLayout(api, this.__page, shape);
     }
@@ -130,7 +139,7 @@ export class TextShapeEditor extends ShapeEditor {
         return 0;
     }
     public updateName(api: Api) {
-        if (this.__shape.nameIsFixed) return;
+        if (this.__shape.nameIsFixed || this.__shape.isVirtualShape) return;
         const name = (this.__shape as TextShape).text.getText(0, Infinity);
         const i = name.indexOf('\n');
         api.shapeModifyName(this.__page, this.__shape, name.slice(0, i));
