@@ -724,28 +724,28 @@ function createTextByString(stringValue: string, refShape: TextShapeLike) {
 
 type TextShapeLike = Shape & { text: Text }
 
-// const DefaultFontSize = Text.DefaultFontSize;
-// export function fixTextShapeFrameByLayout(text: Text, frame: ShapeFrame) {
-//     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
-//     switch (textBehaviour) {
-//         case TextBehaviour.FixWidthAndHeight: break;
-//         case TextBehaviour.Fixed:
-//             {
-//                 const layout = text.getLayout();
-//                 const fontsize = text.attr?.fontSize ?? DefaultFontSize;
-//                 frame.height = Math.max(fontsize, layout.contentHeight);
-//                 break;
-//             }
-//         case TextBehaviour.Flexible:
-//             {
-//                 const layout = text.getLayout();
-//                 const fontsize = text.attr?.fontSize ?? DefaultFontSize;
-//                 frame.width = Math.max(fontsize, layout.contentWidth);
-//                 frame.height = Math.max(fontsize, layout.contentHeight);
-//                 break;
-//             }
-//     }
-// }
+const DefaultFontSize = Text.DefaultFontSize;
+export function fixTextShapeFrameByLayout(text: Text, frame: ShapeFrame) {
+    const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
+    switch (textBehaviour) {
+        case TextBehaviour.FixWidthAndHeight: break;
+        case TextBehaviour.Fixed:
+            {
+                const layout = text.getLayout();
+                const fontsize = text.attr?.fontSize ?? DefaultFontSize;
+                frame.height = Math.max(fontsize, layout.contentHeight);
+                break;
+            }
+        case TextBehaviour.Flexible:
+            {
+                const layout = text.getLayout();
+                const fontsize = text.attr?.fontSize ?? DefaultFontSize;
+                frame.width = Math.max(fontsize, layout.contentWidth);
+                frame.height = Math.max(fontsize, layout.contentHeight);
+                break;
+            }
+    }
+}
 
 class TextShapeHdl extends ShapeHdl {
 
@@ -776,9 +776,10 @@ class TextShapeHdl extends ShapeHdl {
         if (propertyKey === 'frame') {
             const frame = super.get(target, propertyKey, receiver);
             // update frame
-            // todo 在layout时更新有问题
-            // const text = this.getText(target, "text", receiver);
-            // if (text) fixTextShapeFrameByLayout(text, frame);
+            if (!this.__text) {
+                const text = this.getText(target, "text", receiver);
+                if (text) fixTextShapeFrameByLayout(text, frame);
+            }
             return frame;
         }
 
