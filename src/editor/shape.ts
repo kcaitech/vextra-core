@@ -1194,10 +1194,18 @@ export class ShapeEditor {
             if (host.isVirtualShape || host instanceof SymbolShape) {
 
                 // todo host is symbolshape // todo
+                // 
                 let override_id = host.isVirtualShape ? host.id : this.__shape.id;
-                override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-                if (override_id.length === 0) throw new Error();
-                override_id += '/' + _var.id;
+                const splitIdx = override_id.indexOf('/');
+                // 需要截掉第一个
+                if (splitIdx >= 0) {
+                    override_id = override_id.substring(splitIdx + 1);
+                    if (override_id.length === 0) throw new Error();
+                    override_id += '/' + _var.id;
+                }
+                else {
+                    override_id = _var.id;
+                }
 
                 // override
                 // get first not virtual
