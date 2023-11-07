@@ -7,7 +7,7 @@ export {
 } from "./baseclasses"
 import { ShapeType, ShapeFrame, OverrideType, VariableType } from "./baseclasses"
 import { uuid } from "../basic/uuid";
-import { GroupShape, Shape, SymbolShape } from "./shape";
+import { Shape, SymbolShape } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { proxyShape } from "./symproxy";
@@ -98,7 +98,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                         this.__subdata = subdata;
                         if (this.__subdata) this.__subdata.watch(this.updater);
                         this.__childsIsDirty = true;
-                        if (notify) this.notify();
+                        if (notify) this.notify("childs");
                         return true;
                     }
                 }
@@ -106,9 +106,13 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                     this.__subdata.unwatch(this.updater);
                     this.__subdata = undefined;
                     this.__childsIsDirty = true;
-                    if (notify) this.notify();
+                    if (notify) this.notify("childs");
                     return true;
                 }
+                // 也要更新下
+                this.__childsIsDirty = true;
+                if (notify) this.notify("childs");
+                return true;
             }
             return false;
         }

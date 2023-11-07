@@ -320,6 +320,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
     getVisible(): boolean {
         if (!this.varbinds) return !!this.isVisible;
+        if (this.isVirtualShape) return !!this.isVisible; // 由proxy处理
 
         const visibleVar = this.varbinds.get(OverrideType.Visible);
         if (!visibleVar) return !!this.isVisible;

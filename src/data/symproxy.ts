@@ -560,7 +560,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
                         this.__subdata = subdata;
                         if (this.__subdata) this.__subdata.watch(this.updater);
                         this.__childsIsDirty = true;
-                        if (notify) this.notify();
+                        if (notify) this.notify("childs");
                         return true;
                     }
                 }
@@ -568,9 +568,13 @@ class SymbolRefShapeHdl extends ShapeHdl {
                     this.__subdata.unwatch(this.updater);
                     this.__subdata = undefined;
                     this.__childsIsDirty = true;
-                    if (notify) this.notify();
+                    if (notify) this.notify("childs");
                     return true;
                 }
+                // 也要更新下
+                this.__childsIsDirty = true;
+                if (notify) this.notify("childs");
+                return true;
             }
             return false;
         }
