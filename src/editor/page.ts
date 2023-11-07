@@ -719,7 +719,10 @@ export class PageEditor {
         const api = this.__repo.start("delete", {});
         try {
             if (is_part_of_symbolref(shape)) {
-                // todo
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
+                    return _var ? !_var.value : !shape.isVisible;
+                })) return true;
+                api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
                 return true;
             }
             const symbol = get_symbol_by_layer(shape);
@@ -956,6 +959,7 @@ export class PageEditor {
      * @returns { boolean }
      */
     uppper_layer(shape: Shape, step?: number) {
+        if (is_part_of_symbolref(shape)) return true; // 组件实例内部图形不可以移动图层
         const parent = shape.parent as GroupShape | undefined;
         if (!parent) return false;
         const index = parent.indexOfChild(shape);
@@ -987,6 +991,7 @@ export class PageEditor {
      * @returns { boolean }
      */
     lower_layer(shape: Shape, step?: number) {
+        if (is_part_of_symbolref(shape)) return true; // 组件实例内部图形不可以移动图层
         const parent = shape.parent as GroupShape | undefined;
         if (!parent) return false;
         const index = parent.indexOfChild(shape);
