@@ -3,9 +3,6 @@ import {SymbolRefShape} from "../../data/symbolref";
 import {uuid} from "../../basic/uuid";
 import {Page} from "../../data/page";
 import {Api} from "../command/recordapi";
-import {Document} from "../../data/document";
-import {log} from "console";
-
 /**
  * @description 图层是否为组件实例的引用部分
  * @param shape
