@@ -83,6 +83,12 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     __data: SymbolShape | undefined;
     __subdata: SymbolShape | undefined;
     private __startLoad: string | undefined;
+    get rootData() {
+        return this.__data;
+    }
+    get subData() {
+        return this.__subdata;
+    }
     updater(notify: boolean = true): boolean { // 自己的override也要更新
         const symMgr = this.__symMgr;
         if (!symMgr) return false;
