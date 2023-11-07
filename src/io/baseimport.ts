@@ -109,15 +109,6 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         }
         return ret
     })()
-<<<<<<< HEAD
-    if (source.shadows !== undefined) ret.shadows = (() => {
-        const ret = new BasicArray<impl.Shadow>()
-        for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
-            const r = importShadow(source.shadows[i], ctx)
-            if (r) ret.push(r)
-        }
-        return ret
-    })()
     if (source.contacts !== undefined) ret.contacts = (() => {
         const ret = new BasicArray<impl.ContactRole>()
         for (let i = 0, len = source.contacts && source.contacts.length; i < len; i++) {
@@ -126,8 +117,6 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         }
         return ret
     })()
-=======
->>>>>>> af8c2e6b9779946c4f68847058d9a1dc13aa1d8d
     if (source.startMarkerType !== undefined) ret.startMarkerType = importMarkerType(source.startMarkerType, ctx)
     if (source.endMarkerType !== undefined) ret.endMarkerType = importMarkerType(source.endMarkerType, ctx)
     return ret
@@ -213,10 +202,15 @@ export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.S
         importColor(source.color, ctx),
         source.offsetX,
         source.offsetY,
-        source.spread
+        source.spread,
+        importShadowPosition(source.position, ctx)
     )
     if (source.contextSettings !== undefined) ret.contextSettings = importGraphicsContextSettings(source.contextSettings, ctx)
     return ret
+}
+/* shadow position */
+export function importShadowPosition(source: types.ShadowPosition, ctx?: IImportContext): impl.ShadowPosition {
+    return source
 }
 /* resize type */
 export function importResizeType(source: types.ResizeType, ctx?: IImportContext): impl.ResizeType {

@@ -201,12 +201,17 @@ export function exportShadow(source: types.Shadow, ctx?: IExportContext): types.
         isEnabled: source.isEnabled,
         blurRadius: source.blurRadius,
         color: exportColor(source.color, ctx),
+        position: exportShadowPosition(source.position, ctx),
         contextSettings: source.contextSettings && exportGraphicsContextSettings(source.contextSettings, ctx),
         offsetX: source.offsetX,
         offsetY: source.offsetY,
         spread: source.spread,
     }
     return ret
+}
+/* shadow position */
+export function exportShadowPosition(source: types.ShadowPosition, ctx?: IExportContext): types.ShadowPosition {
+    return source
 }
 /* resize type */
 export function exportResizeType(source: types.ResizeType, ctx?: IExportContext): types.ResizeType {

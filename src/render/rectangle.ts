@@ -1,7 +1,7 @@
 import { Shape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
-import { render as shadowR } from "./shadow";
+import { innerShadowId, render as shadowR } from "./shadow";
 
 export function render(h: Function, shape: Shape, reflush?: number) {
     // if (this.data.booleanOperation != BooleanOperation.None) {
@@ -54,15 +54,16 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     }
     else {
         const shadows = shape.style.shadows;
-        if (shadows.length) {
-            const ex_props = Object.assign({}, props);
+        const ex_props = Object.assign({}, props);
+        const shape_id = shape.id.slice(0, 4);
+        const shadow = shadowR(h, shape.style, frame, shape_id);
+        if (shadow.length) {
             delete props.style;
             delete props.transform;
-            const fliter_id = `dorp-shadow-${shape.id.slice(0, 4)}`
-            const shadow = shadowR(h, fliter_id, shadows[0]);
-            props.filter = `url(#${fliter_id})`;
+            const inner_url = innerShadowId(shape_id, shadows);
+            if(shadows.length) props.filter = `url(#dorp-shadow-${shape_id}) ${inner_url}`;
             const body = h("g", props, childs);
-            return h("g", ex_props, [shadow, body]);
+            return h("g", ex_props, [...shadow, body]);
         } else {
             return h("g", props, childs);
         }

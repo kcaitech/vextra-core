@@ -28,7 +28,8 @@ export {
     ContactForm,
     ContactType,
     ContactRole,
-    ContactRoleType
+    ContactRoleType, 
+    ShadowPosition
 } from "./baseclasses"
 
 export class Color extends classes.Color {

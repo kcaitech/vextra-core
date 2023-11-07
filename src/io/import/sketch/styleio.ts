@@ -15,6 +15,7 @@ import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyl
 import { BasicArray } from "../../../data/basic";
 import { uuid } from "../../../basic/uuid";
 import { IJSON, LoadContext } from "./basic";
+import { ShadowPosition } from "../../../data/baseclasses";
 
 export function importColor(data: IJSON): Color {
     // if (!data)
@@ -222,7 +223,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         const isEnabled: boolean = d['isEnabled'];
         const color: Color = importColor(d['color']);
         const blurRadius = d["blurRadius"], offsetX = d["offsetX"], offsetY = d["offsetY"], spread = d["spread"]
-        const shadow = new Shadow(uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread);
+        const shadow = new Shadow(uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread, ShadowPosition.Outer);
         return shadow;
     });
 

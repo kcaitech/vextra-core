@@ -168,10 +168,16 @@ export type Shadow = {
     isEnabled: boolean
     blurRadius: number
     color: Color
+    position: ShadowPosition
     contextSettings?: GraphicsContextSettings
     offsetX: number
     offsetY: number
     spread: number
+}
+/* shadow position */
+export enum ShadowPosition {
+    Inner = 'inner',
+    Outer = 'outer',
 }
 /* resize type */
 export enum ResizeType {

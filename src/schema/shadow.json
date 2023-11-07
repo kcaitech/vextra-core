@@ -19,6 +19,9 @@
         "color": {
             "$ref": "./color.json"
         },
+        "position": {
+            "$ref": "./shadow-position.json"
+        },
         "contextSettings": {
             "$ref": "./graphics-context-settings.json"
         },
@@ -42,7 +45,8 @@
         "color",
         "offsetX",
         "offsetY",
-        "spread"
+        "spread", 
+        "position"
     ],
     "additionalProperties": false
 }
