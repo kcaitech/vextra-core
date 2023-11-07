@@ -118,35 +118,3 @@ export function modify_variable_with_api(api: Api, page: Page, shape: Shape, var
     api.shapeAddOverride(page, _symRef, override_id, overrideType, _var2.id);
     return true;
 }
-
-/**
- * @description 确定当前实例引用的是组件中的哪个可变组件
- */
-export function get_state_by_ref(document: Document, symref: SymbolRefShape) {
-    const mgr = document.symbolsMgr;
-    const symbol = mgr.getSync(symref.refId);
-    if (!symbol) return;
-    const variables = symbol.variables;
-    if (!symbol.isUnionSymbolShape || !variables) return symbol;
-    const states = symbol.childs;
-    if (!states.length) return console.log('Error: No State`s Union');
-    const dlt_state: SymbolShape = states[0] as SymbolShape;
-    if (states.length < 2) return dlt_state;
-    const tag_map = new Map<string, string>(); // 当前实例的标签值
-    variables.forEach(v => {
-        if (v.type !== VariableType.Status) return;
-        const overrides = symref.findOverride(v.id, OverrideType.Variable);
-        tag_map.set(v.id, overrides ? overrides[overrides.length - 1].value : v.value);
-    })
-    for (let i = 0, l = states.length; i < l; i++) { // 在可变组件state中寻找标签值符合实例标签组合的那一个
-        const state = states[i] as SymbolShape;
-        const tags = (state as SymbolShape).vartag;
-        if (!tags) continue;
-        let is_target = true;
-        tags.forEach((v, k) => {
-            if (tag_map.get(k) !== v) is_target = false;
-        })
-        if (is_target) return state;
-    }
-    return dlt_state; // 如果没有找到，返回默认可变组件，如果到这里则已经在某一个环节出问题了
-}
