@@ -158,7 +158,8 @@ function _getOnVar(
 
     if (!(shape as any).__symbolproxy) throw new Error("");
     const varbinds = shape.varbinds;
-    if (!varbinds) {
+    const varId = varbinds?.get(overType);
+    if (!varId) {
         // find override
         // id: xxx/xxx/xxx
         const id = shape.id;
@@ -171,16 +172,13 @@ function _getOnVar(
             }
         }
     } else {
-        const varId = varbinds.get(overType);
-        if (varId) {
-            const _vars: Variable[] = [];
-            shape.findVar(varId, _vars);
-            // watch vars
-            (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                return _var;
-            }
+        const _vars: Variable[] = [];
+        shape.findVar(varId, _vars);
+        // watch vars
+        (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === varType) {
+            return _var;
         }
     }
 }
