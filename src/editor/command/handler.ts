@@ -509,6 +509,21 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                         }
                     }
                 }
+            },
+            {
+                opId: SHAPE_ATTR_ID.virbindsEx,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        let { type, varId } = JSON.parse(value);
+                        if (varId == undefined) {
+                            if (shape.virbindsEx) shape.virbindsEx.delete(type);
+                        }
+                        else {
+                            if (!shape.virbindsEx) shape.virbindsEx = new BasicMap();
+                            shape.virbindsEx.set(type, varId);
+                        }
+                    }
+                }
             }
         ]
     }
