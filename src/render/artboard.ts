@@ -1,10 +1,17 @@
 import { renderGroupChilds as gR } from "./group";
 import { render as borderR } from "./border";
-import { Artboard, ShapeType, Color } from '../data/classes';
+import { Artboard, ShapeType, Color, SymbolShape, SymbolRefShape, Variable } from '../data/classes';
+import { RenderTransform } from "./basic";
 
 const defaultColor = Color.DefaultColor;
 // artboard单独一个svg节点，需要设置overflow
-export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any>, reflush?: number) {
+export function render(h: Function,
+    shape: Artboard,
+    comsMap: Map<ShapeType, any>,
+    transform: RenderTransform | undefined, // todo
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined, // todo
+    reflush?: number) {
     const isVisible = shape.isVisible ?? true;
     if (!isVisible) return;
 
@@ -38,7 +45,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
             }))
         }
     }
-    childs.push(...gR(h, shape, comsMap, undefined, undefined)); // 后代元素放中间
+    childs.push(...gR(h, shape, comsMap, undefined, varsContainer)); // 后代元素放中间
     const b_len = shape.style.borders.length;
     if (shape.isNoTransform()) {
         if (b_len) {
