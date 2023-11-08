@@ -87,10 +87,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     __data: SymbolShape | undefined;
     __subdata: SymbolShape | undefined;
     private __startLoad: string | undefined;
-    get rootData() {
+    getRootData() {
         return this.__data;
     }
-    get subData() {
+    getSubData() {
         return this.__subdata;
     }
     updater(notify: boolean = true): boolean { // 自己的override也要更新
