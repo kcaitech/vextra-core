@@ -74,6 +74,15 @@ export const BORDER_ATTR_ID = {
     position: "position",
     borderStyle: "borderStyle",
 }
+export const SHADOW_ATTR_ID = {
+    enable: "enable",
+    color: "color",
+    position: "position",
+    offsetX: "offserX",
+    offsetY: "offsetY",
+    blurRadius: "blurRadius",
+    spread: "spread"
+}
 export const POINT_ID = "point"
 
 export const TEXT_ATTR_ID = {
