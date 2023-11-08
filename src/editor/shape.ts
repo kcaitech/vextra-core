@@ -197,7 +197,8 @@ export class ShapeEditor {
         if (!p) throw new Error();
         const shape = this.__shape;
         // if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
-        if (shape instanceof SymbolRefShape || (p.isVirtualShape && p instanceof SymbolShape && !(shape instanceof SymbolShape))) { // 实例、实例组成图层
+        // if (shape instanceof SymbolRefShape || (p.isVirtualShape && p instanceof SymbolShape && !(shape instanceof SymbolShape))) { // 实例、实例组成图层
+        if ((shape instanceof SymbolRefShape && p.id !== shape.id) || (p.isVirtualShape && p instanceof SymbolShape && !(shape instanceof SymbolShape))) { // 实例、实例组成图层
             // override
             // const api = this.__repo.
             this._overrideVariable(_var, value, api);
