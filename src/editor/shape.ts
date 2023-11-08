@@ -1202,8 +1202,7 @@ export class ShapeEditor {
                     override_id = override_id.substring(splitIdx + 1);
                     if (override_id.length === 0) throw new Error();
                     override_id += '/' + _var.id;
-                }
-                else {
+                } else {
                     override_id = _var.id;
                 }
 
