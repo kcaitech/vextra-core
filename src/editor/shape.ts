@@ -221,21 +221,32 @@ export class ShapeEditor {
         }
     }
 
+    /**
+     * @description 重置实例属性
+     */
     resetSymbolRefVariable() {
         const variables = (this.__shape as SymbolRefShape).variables;
         const virbindsEx = (this.__shape as SymbolRefShape).virbindsEx;
-        if (!variables || !virbindsEx) return false;
+        const root_data = (this.__shape as SymbolRefShape).rootData;
+        if (!variables || !virbindsEx || !root_data) return false;
+        const root_variables = root_data.variables;
+        if (!root_variables) return false;
         try {
             const api = this.__repo.start('resetSymbolRefVariable', {});
-            variables.forEach((_, k) => {
+            variables.forEach((v, k) => {
+                if (v.type === VariableType.Status) return;
                 api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
             });
-            // virbindsEx.forEach((_, k) => virbindsEx.delete(k));
+            root_variables.forEach((v, k) => {
+                if (v.type === VariableType.Status || !virbindsEx.has(k)) return;
+                api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, v.id, v.type);
+            })
             this.__repo.commit();
-            if (variables.size === 0) return true;
+            return variables.size === 0;
         } catch (e) {
             console.log(e);
             this.__repo.rollback();
+            return false;
         }
     }
 
@@ -1405,7 +1416,7 @@ export class ShapeEditor {
     }
 
     /**
-     * @description 解除一个对象上的后一个变量绑定
+     * @description 解除一个对象上的某一个变量绑定
      * @param type
      */
     removeBinds(type: OverrideType) {

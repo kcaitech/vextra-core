@@ -76,6 +76,7 @@ export const SHAPE_ATTR_ID = {
     vartag: "vartag",
     // shape
     bindvar: "bindvar",
+    virbindsEx: "virbindsEx"
 }
 
 export const FILLS_ID = "fills"
