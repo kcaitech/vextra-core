@@ -300,13 +300,13 @@ class ShapeHdl extends HdlBase {
     private __style?: Style;
 
     origin_watcher(...args: any[]) {
-        if (args.indexOf("vairable") >= 0) return;
+        if (args.indexOf("variable") >= 0) return;
         this.notify(...args);
         this.fireRelayout();
     }
 
     root_watcher(...args: any[]) {
-        // if (args.indexOf("vairable") >= 0) return;
+        // if (args.indexOf("variable") >= 0) return;
         // this.notify(...args);
         // this.fireRelayout();
     }
@@ -469,7 +469,7 @@ class GroupShapeHdl extends ShapeHdl {
     }
 
     origin_watcher(...args: any[]): void {
-        if (args.indexOf("vairable") >= 0) return;
+        if (args.indexOf("variable") >= 0) return;
         if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
         super.origin_watcher(...args);
     }
@@ -659,7 +659,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
     }
 
     origin_watcher(...args: any[]): void {
-        if (args.indexOf("vairable") >= 0) return;
+        if (args.indexOf("variable") >= 0) return;
         if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
         if (this.updater(false)) super.origin_watcher("childs", ...args);
         else super.origin_watcher(...args);
@@ -793,13 +793,13 @@ class TextShapeHdl extends ShapeHdl {
     }
 
     notify(...args: any[]) {
-        if (args.indexOf("vairable") >= 0) {
+        if (args.indexOf("variable") >= 0) {
             this.__text = undefined; // 重新获取
         }
         super.notify(...args);
     }
     root_watcher(...args: any[]): void {
-        if (args.indexOf("vairable") >= 0) {
+        if (args.indexOf("variable") >= 0) {
             this.__text = undefined; // 重新获取
             return;
         }

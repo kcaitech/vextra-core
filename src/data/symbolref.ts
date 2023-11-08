@@ -61,7 +61,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     private __childsIsDirty: boolean = false;
     origin_watcher(...args: any[]) {
-        if (args.indexOf("vairable") >= 0) return;
+        if (args.indexOf("variable") >= 0) return;
         if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
         super.notify(...args);
         this.relayout();

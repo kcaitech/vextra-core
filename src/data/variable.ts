@@ -23,6 +23,6 @@ export class Variable extends Watchable(Basic) implements classes.Variable {
 
     notify(...args: any[]): void {
         super.notify(...args);
-        this.__parent?.notify("vairable");
+        this.__parent?.notify("variable");
     }
 }
