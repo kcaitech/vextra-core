@@ -79,6 +79,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     switchRef(refId: string) {
         // todo
     }
+    removeVirbindsEx(key: string) {
+        if (!this.virbindsEx) return false;
+        return this.virbindsEx.delete(key);
+    }
 
     __data: SymbolShape | undefined;
     __subdata: SymbolShape | undefined;
