@@ -285,18 +285,6 @@ export function is_symbol_but_not_union(shape: Shape) {
     return shape.type === ShapeType.Symbol && !(shape as SymbolShape).isUnionSymbolShape;
 }
 /**
- * @description 判断图层是否为组件的组成部分
- */
-export function is_part_of_symbol(shape: Shape) {
-    let s: Shape | undefined = shape;
-    while (s) {
-        if (s.type === ShapeType.Symbol) return true;
-        s = s.parent;
-    }
-    return false;
-}
-
-/**
  * @description 给一个变量的id(varid)，当前以组件(symbol)为范围查看有多少图层绑定了这个变量
  */
 export function find_layers_by_varid(symbol: SymbolShape, varid: string, type: OverrideType) {

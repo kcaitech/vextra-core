@@ -32,10 +32,10 @@ import {
     clear_binds_effect,
     find_layers_by_varid,
     get_symbol_by_layer,
-    is_default_state,
-    is_part_of_symbol
+    is_default_state
 } from "./utils/other";
-import {is_part_of_symbolref} from "./utils/symbol";
+import {is_part_of_symbol, is_part_of_symbolref} from "./utils/symbol";
+import {after_toggle_shapes_visible} from "./utils/visible";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -196,7 +196,8 @@ export class ShapeEditor {
         const p = varParent(_var);
         if (!p) throw new Error();
         const shape = this.__shape;
-        if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
+        // if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
+        if (shape instanceof SymbolRefShape || (p.isVirtualShape && p instanceof SymbolShape && !(shape instanceof SymbolShape))) { // 实例、实例组成图层
             // override
             // const api = this.__repo.
             this._overrideVariable(_var, value, api);
@@ -227,7 +228,7 @@ export class ShapeEditor {
     resetSymbolRefVariable() {
         const variables = (this.__shape as SymbolRefShape).variables;
         const virbindsEx = (this.__shape as SymbolRefShape).virbindsEx;
-        const root_data = (this.__shape as SymbolRefShape).rootData;
+        const root_data = (this.__shape as SymbolRefShape).getRootData();
         if (!variables || !virbindsEx || !root_data) return false;
         const root_variables = root_data.variables;
         if (!root_variables) return false;
@@ -614,14 +615,16 @@ export class ShapeEditor {
     }
 
     public toggleVisible() {
-        //
+
+        // 实例图层
         if (this.modifyVariable(VariableType.Visible, OverrideType.Visible, (_var) => {
             return _var ? !_var.value : !this.__shape.isVisible;
         })) {
             return;
         }
         this._repoWrap('toggleVisible', (api) => {
-            api.shapeModifyVisible(this.__page, this.__shape, !this.__shape.isVisible)
+            api.shapeModifyVisible(this.__page, this.__shape, !this.__shape.isVisible);
+            // after_toggle_shapes_visible(api, this.__page, [this.__shape]);
         })
     }
 

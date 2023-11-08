@@ -3,6 +3,7 @@ import {SymbolRefShape} from "../../data/symbolref";
 import {uuid} from "../../basic/uuid";
 import {Page} from "../../data/page";
 import {Api} from "../command/recordapi";
+
 /**
  * @description 图层是否为组件实例的引用部分
  * @param shape
@@ -14,6 +15,37 @@ export function is_part_of_symbolref(shape: Shape) {
         p = p.parent;
     }
     return false;
+}
+
+/**
+ * @description 判断图层是否为组件的组成部分
+ */
+export function is_part_of_symbol(shape: Shape) {
+    let s: Shape | undefined = shape;
+    while (s) {
+        if (s.type === ShapeType.Symbol) return true;
+        s = s.parent;
+    }
+    return false;
+}
+
+export function is_state(shape: Shape) {
+    return shape.type === ShapeType.Symbol && shape?.parent?.isUnionSymbolShape;
+}
+
+function is_sym(shape: Shape) {
+    return shape.type === ShapeType.Symbol;
+}
+
+/**
+ * @description 给一个图层，返回这个图层所在的组件，如果不是组件内的图层，则return undefined;
+ */
+export function get_symbol_by_layer(layer: Shape): SymbolShape | undefined {
+    let s: Shape | undefined = layer;
+    while (s && !is_sym(s)) {
+        s = s.parent;
+    }
+    if (s) return is_state(s) ? s.parent as SymbolShape : s as SymbolShape;
 }
 
 function varParent(_var: Variable) {
