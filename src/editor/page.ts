@@ -1048,6 +1048,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    // shadow
     toggleShapesVisible(shapes: Shape[]) {
         try {
             const api = this.__repo.start('setShapesVisible', {});

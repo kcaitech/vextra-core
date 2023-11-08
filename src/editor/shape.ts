@@ -7,7 +7,7 @@ import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { ContactForm, CurveMode } from "../data/typesdefine";
+import { ContactForm, CurveMode, ShadowPosition } from "../data/typesdefine";
 import { Api } from "./command/recordapi";
 import { update_frame_by_points } from "./path";
 import { exportCurvePoint } from "../io/baseexport";
@@ -246,10 +246,66 @@ export class ShapeEditor {
         this.__repo.commit();
     }
     public deleteShadow(idx: number) {
-        const border = this.__shape.style.borders[idx];
-        if (border) {
-            const api = this.__repo.start("deleteBorder", {});
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("deleteShadow", {});
             api.deleteShadowAt(this.__page, this.__shape, idx)
+            this.__repo.commit();
+        }
+    }
+    public setShadowPosition(idx: number, position: ShadowPosition) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowPosition", {});
+            api.setShadowPosition(this.__page, this.__shape, idx, position);
+            this.__repo.commit();
+        }
+    }
+    public setShadowEnable(idx: number, isEnabled: boolean) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowEnable", {});
+            api.setShadowEnable(this.__page, this.__shape, idx, isEnabled);
+            this.__repo.commit();
+        }
+    }
+    public setShadowColor(idx: number, color: Color) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowColor", {});
+            api.setShadowColor(this.__page, this.__shape, idx, color);
+            this.__repo.commit();
+        }
+    }
+    public setShadowOffsetX(idx: number, offserX: number) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowOffsetX", {});
+            api.setShadowOffsetX(this.__page, this.__shape, idx, offserX);
+            this.__repo.commit();
+        }
+    }
+    public setShadowOffsetY(idx: number, offsetY: number) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowOffsetY", {});
+            api.setShadowOffsetY(this.__page, this.__shape, idx, offsetY);
+            this.__repo.commit();
+        }
+    }
+    public setShadowBlur(idx: number, blur: number) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowBlur", {});
+            api.setShadowBlur(this.__page, this.__shape, idx, blur);
+            this.__repo.commit();
+        }
+    }
+    public setShadowSpread(idx: number, spread: number) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowSpread", {});
+            api.setShadowSpread(this.__page, this.__shape, idx, spread);
             this.__repo.commit();
         }
     }
