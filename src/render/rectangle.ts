@@ -61,7 +61,7 @@ export function render(h: Function, shape: Shape, reflush?: number) {
             delete props.style;
             delete props.transform;
             const inner_url = innerShadowId(shape_id, shadows);
-            if(shadows.length) props.filter = `url(#dorp-shadow-${shape_id}) ${inner_url}`;
+            if(shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
             const body = h("g", props, childs);
             return h("g", ex_props, [...shadow, body]);
         } else {

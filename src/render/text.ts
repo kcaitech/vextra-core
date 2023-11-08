@@ -6,7 +6,7 @@ import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
-import { render as shadowR } from "./shadow";
+import { innerShadowId, render as shadowR } from "./shadow";
 
 function toRGBA(color: Color): string {
     return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
@@ -234,10 +234,11 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
     if (shadow.length) {
         delete props.style;
         delete props.transform;
-        if(shadows.length) props.filter = `url(#dorp-shadow-${shape_id})`;
+        const inner_url = innerShadowId(shape_id, shadows);
+        if (shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
         const body = h("g", props, childs);
         return h("g", ex_props, [...shadow, body]);
-    }  else {
+    } else {
         return h("g", props, childs);
     }
 }

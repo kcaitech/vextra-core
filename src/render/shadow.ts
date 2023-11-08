@@ -88,6 +88,7 @@ export function render(h: Function, style: Style, frame: ShapeFrame, id: string)
   const shadows = style.shadows;
   let filterNode = [];
   let feMergeNode = [];
+  const inner_f = [];
   const f_id = `dorp-shadow-${id}`;
   const filter_props = { id: f_id, x: '-30%', y: '-30%', height: '160%', width: '160%' };
   const fe_merge_node2_porps = { in: "SourceGraphic" };
@@ -101,7 +102,7 @@ export function render(h: Function, style: Style, frame: ShapeFrame, id: string)
       feMergeNode.push(mergeNode);
     } else if (position === ShadowPosition.Inner) {
       const filter = shadowOri[position](h, style.shadows, frame, id, i);
-      elArr.push(filter);
+      inner_f.push(filter);
     }
   }
   if (filterNode.length) {
@@ -110,6 +111,7 @@ export function render(h: Function, style: Style, frame: ShapeFrame, id: string)
     filterNode.push(merge);
     elArr.push(h('filter', filter_props, filterNode));
   }
+  elArr.push(...inner_f);
   return elArr;
 }
 
