@@ -186,13 +186,14 @@ export function render(h: Function,
     const childs = [];
     // const path0 = shape.getPathOfFrame(frame);
     const path = path0.toString();
-    // fill
-    childs.push(...fillR(h, shape, frame, path, varsContainer, consumedVars));
-    // border
-    childs.push(...borderR(h, shape, frame, path, varsContainer, consumedVars));
 
+    const varsContainer2 = (varsContainer || []).concat(shape);
+    // fill
+    childs.push(...fillR(h, sym, frame, path, varsContainer2, consumedVars));
     // symbol
     childs.push(...renderSym(h, shape, sym as SymbolShape, comsMap, transform, varsContainer));
+    // border
+    childs.push(...borderR(h, sym, frame, path, varsContainer2, consumedVars));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
