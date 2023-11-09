@@ -467,7 +467,7 @@ export class ShapeEditor {
             const _vars: Variable[] = [];
             const vars_path: Shape[] = [];
             shape.findVar(shape.varbinds.get(overrideType)!, _vars);
-            if (_vars.length !== vars_path.length) throw new Error();
+            // if (_vars.length !== vars_path.length) throw new Error();
             const _var = _vars[_vars.length - 1];
             if (_var && _var.type === varType) {
 
