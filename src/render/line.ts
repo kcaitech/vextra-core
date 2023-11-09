@@ -139,7 +139,7 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
     let childs = new Array();
     if (shape.style.borders.length) {
         const path = shape.getPathOfFrame(frame).toString();
-        childs = childs.concat(renderB(h, shape.style, path, shape));
+        childs = childs.concat(renderB(h, shape, shape.frame, path, varsContainer, consumedVars));
         return h('g', props, childs);
     } else {
         props.stroke = '#000000';
