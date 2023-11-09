@@ -1,9 +1,11 @@
-import { float_accuracy } from "../../basic/consts";
+import {float_accuracy} from "../../basic/consts";
 import {
     Border,
     BorderPosition,
     BorderStyle,
-    Color, Document, GroupShape,
+    Color,
+    Document,
+    GroupShape,
     OverrideType,
     Page,
     Shape,
@@ -19,12 +21,12 @@ import {
     Variable,
     VariableType
 } from "../../data/classes";
-import { Api } from "../command/recordapi";
-import { BasicMap } from "../../data/basic";
-import { newSymbolRefShape, newSymbolShape } from "../creator";
-import { uuid } from "../../basic/uuid";
+import {Api} from "../command/recordapi";
+import {BasicMap} from "../../data/basic";
+import {newSymbolRefShape, newSymbolShape} from "../creator";
+import {uuid} from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
-import { translate, translateTo } from "../frame";
+import {translateTo} from "../frame";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
@@ -96,17 +98,17 @@ export function find_state_space(union: SymbolShape) {
         const child = childs[i];
         const m2p = child.matrix2Parent(), f = child.frame;
         const point = [
-            { x: 0, y: 0 },
-            { x: f.width, y: 0 },
-            { x: f.width, y: f.height },
-            { x: 0, y: f.height }
+            {x: 0, y: 0},
+            {x: f.width, y: 0},
+            {x: f.width, y: f.height},
+            {x: 0, y: f.height}
         ].map(p => m2p.computeCoord3(p));
         for (let j = 0; j < 4; j++) {
             if (point[j].x > space_x) space_x = point[j].x;
             if (point[j].y > space_y) space_y = point[j].y;
         }
     }
-    return { x: space_x, y: space_y };
+    return {x: space_x, y: space_y};
 }
 
 export function modify_frame_after_inset_state(page: Page, api: Api, union: SymbolShape) {
@@ -284,6 +286,7 @@ function is_sym(shape: Shape) {
 export function is_symbol_but_not_union(shape: Shape) {
     return shape.type === ShapeType.Symbol && !(shape as SymbolShape).isUnionSymbolShape;
 }
+
 /**
  * @description 给一个变量的id(varid)，当前以组件(symbol)为范围查看有多少图层绑定了这个变量
  */
@@ -403,7 +406,7 @@ export function adjust_selection_before_group(document: Document, page: Page, sh
             const insert_index = parent.indexOfChild(shape);
             api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
             if (shape.isUnionSymbolShape) continue;
-            const { x, y, width, height } = shape.frame;
+            const {x, y, width, height} = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
             shapes[i] = api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;
@@ -425,7 +428,7 @@ function handler_childs(document: Document, page: Page, shapes: Shape[], api: Ap
             const insert_index = parent.indexOfChild(shape);
             api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
             if (shape.isUnionSymbolShape) continue;
-            const { x, y, width, height } = shape.frame;
+            const {x, y, width, height} = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
             api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;
@@ -449,4 +452,14 @@ export function trans_after_make_symbol(page: Page, symbol: SymbolShape, need_tr
         const lt = s.matrix2Root().computeCoord2(0, 0);
         translateTo(api, page, s, right + 36, lt.y);
     }
+}
+
+export function modify_index(parent: GroupShape, s1: Shape, s2: Shape, index: number) {
+    return (parent.indexOfChild(s1) < parent.indexOfChild(s2)) ? index - 1 : index;
+}
+
+export function after_move(parent: GroupShape) {
+    if (parent.childs.length) return false;
+    if (parent.type === ShapeType.Group || parent.isUnionSymbolShape) return true;
+    return false;
 }
