@@ -150,7 +150,9 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
         childs = childs.concat(renderB(h, shape.style, path, shape));
         return h('g', props, childs);
     } else {
-        props.stroke = '#000000', props['stroke-width'] = 1, props.d = shape.getPathOfFrame(frame).toString();
+        props.stroke = '#000000';
+        props['stroke-width'] = 1;
+        props.d = shape.getPathOfFrame(frame).toString();
         return h('path', props);
     }
 }

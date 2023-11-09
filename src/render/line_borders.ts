@@ -1,10 +1,21 @@
+import {
+    Border,
+    FillType,
+    MarkerType, OverrideType,
+    Shape,
+    ShapeFrame,
+    Style,
+    SymbolRefShape,
+    SymbolShape,
+    Variable, VariableType
+} from "../data/classes";
+import {render as ra} from "./apex";
+import {findOverrideAndVar} from "../data/utils";
 
-
-import { Border, FillType, MarkerType, Shape, Style } from "../data/classes";
-import { render as ra } from "./apex";
 function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
     return Math.atan2(B.y - A.y, B.x - A.x)
 }
+
 function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.thickness;
     const body_props: any = {
@@ -13,7 +24,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         stroke: '',
         'stroke-width': thickness
     }
-    const { length, gap } = border.borderStyle;
+    const {length, gap} = border.borderStyle;
     if (length || gap) body_props['stroke-dasharray'] = `${length}, ${gap}`;
     const fillType = border.fillType;
     if (fillType === FillType.SolidColor) {
@@ -23,7 +34,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
     }
     if (endMarkerType !== MarkerType.Line || startMarkerType !== MarkerType.Line) {
         const f = shape.frame, t = border.thickness;
-        let s = { x: 0, y: 0 }, e = { x: f.width, y: f.height };
+        let s = {x: 0, y: 0}, e = {x: f.width, y: f.height};
         const r = getHorizontalRadians(s, e);
         const g_cs: any[] = ra(h, style, f, border, r, startMarkerType, endMarkerType);
         if (startMarkerType && startMarkerType !== MarkerType.Line && startMarkerType !== MarkerType.OpenArrow && startMarkerType !== MarkerType.Round && startMarkerType !== MarkerType.Square) {
@@ -41,12 +52,12 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
 }
 
 
-export function render(h: Function, style: Style, path: string, shape: Shape): Array<any> {
-    const bc = style.borders.length;
+export function render(h: Function, style: Style, borders: Border[], path: string, shape: Shape): Array<any> {
+    const bc = borders.length;
     let elArr = new Array();
     const sm = style.startMarkerType, em = style.endMarkerType;
     for (let i = 0; i < bc; i++) {
-        const border: Border = style.borders[i];
+        const border: Border = borders[i];
         if (!border.isEnabled) continue;
         const fillType = border.fillType;
         (fillType === FillType.SolidColor) && (() => {
@@ -54,4 +65,23 @@ export function render(h: Function, style: Style, path: string, shape: Shape): A
         })()
     }
     return elArr;
+}
+
+export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, path: string,
+                               varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+                               consumedVars: { slot: string, vars: Variable[] }[] | undefined) {
+    let borders = shape.style.borders;
+    if (varsContainer) {
+        const _vars = findOverrideAndVar(shape, OverrideType.Borders, varsContainer);
+        if (_vars) {
+            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === VariableType.Borders) {
+                // return _var.value;
+                borders = _var.value;
+                if (consumedVars) consumedVars.push({slot: OverrideType.Borders, vars: _vars})
+            }
+        }
+    }
+    return render(h, shape.style, borders, path, shape);
 }
