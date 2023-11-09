@@ -1,13 +1,13 @@
-import { ResizingConstraints } from "../data/consts";
-import { Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
-import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
-import { render as renderB } from "./line_borders";
-import { Matrix } from "../basic/matrix";
+import {ResizingConstraints} from "../data/consts";
+import {Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable} from "../data/classes";
+import {RenderTransform, fixFrameByConstrain, isNoTransform, isVisible} from "./basic";
+import {renderWithVars as renderB} from "./line_borders";
+import {Matrix} from "../basic/matrix";
 
 export function render(h: Function, shape: Shape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
-    reflush?: number) {
+                       varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+                       consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+                       reflush?: number) {
 
     if (!isVisible(shape, varsContainer, consumedVars)) return;
 
@@ -47,31 +47,27 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
                     // 居中
                     x += (width * (scaleX - 1)) / 2;
                     y += (height * (scaleY - 1)) / 2;
-                }
-
-                else if (rotate) {
+                } else if (rotate) {
                     const m = new Matrix();
-                m.rotate(rotate / 360 * 2 * Math.PI);
-                m.scale(scaleX, scaleY);
-                const _newscale = m.computeRef(1, 1);
-                m.scale(1 / scaleX, 1 / scaleY);
-                const newscale = m.inverseRef(_newscale.x, _newscale.y);
+                    m.rotate(rotate / 360 * 2 * Math.PI);
+                    m.scale(scaleX, scaleY);
+                    const _newscale = m.computeRef(1, 1);
+                    m.scale(1 / scaleX, 1 / scaleY);
+                    const newscale = m.inverseRef(_newscale.x, _newscale.y);
                     x *= scaleX;
                     y *= scaleY;
 
                     if (fixWidth) {
                         x += (width * (newscale.x - 1)) / 2;
                         newscale.x = 1;
-                    }
-                    else {
+                    } else {
                         y += (height * (newscale.y - 1)) / 2;
                         newscale.y = 1;
                     }
 
                     width *= newscale.x;
                     height *= newscale.y;
-                }
-                else {
+                } else {
                     const newscaleX = fixWidth ? 1 : scaleX;
                     const newscaleY = fixHeight ? 1 : scaleY;
                     x *= scaleX;
@@ -81,8 +77,7 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
                     width *= newscaleX;
                     height *= newscaleY;
                 }
-            }
-            else {
+            } else {
                 x *= scaleX;
                 y *= scaleY;
                 width *= scaleX;
@@ -94,9 +89,7 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
 
             // path0 = shape.getPathOfFrame(frame);
 
-        }
-
-        else {
+        } else {
 
             const m = new Matrix();
             m.rotate(rotate / 360 * 2 * Math.PI);
@@ -116,8 +109,7 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
 
         }
 
-    }
-    else {
+    } else {
         // path0 = shape.getPath();
         notTrans = shape.isNoTransform()
     }
