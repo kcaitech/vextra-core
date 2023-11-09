@@ -232,19 +232,29 @@ export class ShapeEditor {
         const root_data = (this.__shape as SymbolRefShape).getRootData();
         if (!variables || !virbindsEx || !root_data) return false;
         const root_variables = root_data.variables;
-        if (!root_variables) return false;
         try {
             const api = this.__repo.start('resetSymbolRefVariable', {});
-            variables.forEach((v, k) => {
-                if (v.type === VariableType.Status) return;
-                api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
-            });
-            root_variables.forEach((v, k) => {
-                if (v.type === VariableType.Status || !virbindsEx.has(k)) return;
-                api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, v.id, v.type);
-            })
+            if (!root_variables) {
+                virbindsEx.forEach((v, k) => {
+                    const variable = variables.get(v);
+                    if (!variable) return;
+                    api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, k, variable.id, variable.type);
+                })
+                variables.forEach((_, k) => {
+                    api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
+                });
+            } else {
+                variables.forEach((v, k) => {
+                    if (v.type === VariableType.Status) return;
+                    api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
+                });
+                root_variables.forEach((v, k) => {
+                    if (v.type === VariableType.Status || !virbindsEx.has(k)) return;
+                    api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, k, v.id, v.type);
+                })
+            }
             this.__repo.commit();
-            return variables.size === 0;
+            return true;
         } catch (e) {
             console.log(e);
             this.__repo.rollback();
