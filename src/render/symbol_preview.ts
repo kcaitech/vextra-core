@@ -1,27 +1,21 @@
-import { GroupShape, Shape, ShapeType } from "../data/classes";
+import { SymbolShape, ShapeType } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { isVisible } from "./basic";
+import { renderGroupChilds2 } from "./group";
 
-export function renderGroupChilds2(h: Function, childs: Array<Shape>, comsMap: Map<ShapeType, any>): Array<any> {
-    const nodes: Array<any> = [];
-    const cc = childs.length;
+function renderSym(h: Function,
+    sym: SymbolShape,
+    comsMap: Map<ShapeType, any>): any {
 
-    for (let i = 0; i < cc; i++) {
-        const child = childs[i];
-        const com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
-        const node = h(com, { data: child, key: child.id });
-        nodes.push(node);
-    }
-
+    // 应该同groupshape
+    const childs = sym.childs;
+    const nodes = renderGroupChilds2(h, childs, comsMap, undefined, [sym]);
     return nodes;
+
 }
 
-export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>): Array<any> {
-    return renderGroupChilds2(h, shape.childs, comsMap);
-}
-
-export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
+export function render(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
 
     // todo
     if (!isVisible(shape, undefined, undefined)) return;
@@ -34,7 +28,7 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     // fill
     childs.push(...fillR(h, shape.style.fills, frame, path));
     // childs
-    childs.push(...renderGroupChilds(h, shape, comsMap));
+    childs.push(...renderSym(h, shape, comsMap));
     // border
     childs.push(...borderR(h, shape.style.borders, frame, path));
 

@@ -1019,12 +1019,12 @@ export class TextShape extends Shape implements classes.TextShape {
     }
 
     getText(): Text {
+        if (this.isVirtualShape) return this.text; // 走proxy
         if (!this.varbinds) return this.text;
 
         const textVar = this.varbinds.get(OverrideType.Text);
         if (!textVar) return this.text;
 
-        if (!this.textVar) return this.text;
         const _vars: Variable[] = [];
         this.findVar(textVar, _vars);
         // watch vars

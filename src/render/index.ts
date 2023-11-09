@@ -15,6 +15,7 @@ export { render as renderPathShape } from "./pathshape";
 // export { render as renderRecShape } from "./rectangle";
 export { render as renderBoolOpShape, render2path } from "./boolgroup";
 export { render as renderSymbolRef } from "./symbolref";
+export { render as renderSymbol } from "./symbol";
 export { render as renderTextShape } from "./text";
 export { render as renderTable } from "./table";
 export { render as renderContact } from "./contact";

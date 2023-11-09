@@ -120,6 +120,11 @@ export class TableCell extends Shape implements classes.TableCell {
         if (this.text) this.text.updateSize(this.frame.width, this.frame.height)
     }
 
+    getText(): Text {
+        if (!this.text) throw new Error("");
+        return this.text;
+    }
+
     getLayout(): TextLayout | undefined {
         if (!this.text) return;
         const table = this.parent as TableShape;
