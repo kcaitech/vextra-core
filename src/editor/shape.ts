@@ -29,6 +29,7 @@ import {Document, SymbolRefShape} from "../data/classes";
 import {uuid} from "../basic/uuid";
 import {BasicArray} from "../data/basic";
 import {
+    after_remove,
     clear_binds_effect,
     find_layers_by_varid,
     get_symbol_by_layer,
@@ -111,7 +112,6 @@ export class ShapeEditor {
      * @returns
      */
     _overrideVariable(_var: Variable, value: any, api: Api) {
-
         const shape: Shape = this.__shape;
 
         let p = varParent(_var);
@@ -386,6 +386,7 @@ export class ShapeEditor {
                 const item = old_layers[i];
                 api.shapeUnbinVar(this.__page, item, type[variable.type]);
             }
+
             if (new_name !== variable.name) {
                 const p = varParent(variable);
                 if (!p) throw new Error('wrong shape type');
@@ -395,6 +396,7 @@ export class ShapeEditor {
                     api.shapeModifyVariableName(this.__page, variable, new_name);
                 }
             }
+
             if (new_dlt_value !== variable.value) {
                 const p = varParent(variable);
                 if (!p) throw new Error('wrong shape type');
@@ -404,6 +406,7 @@ export class ShapeEditor {
                     api.shapeModifyVariable(this.__page, variable, new_dlt_value);
                 }
             }
+
             this.__repo.commit();
             return true;
         } catch (error) {
@@ -954,8 +957,8 @@ export class ShapeEditor {
                     }
                     api.shapeDelete(this.__page, parent, index);
                     // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
-                    if (!parent.childs.length && parent.type === ShapeType.Group) {
-                        const _p = parent.parent;
+                    const _p = parent.parent;
+                    if (after_remove(_p as any)) {
                         const _idx = (_p as GroupShape).childs.findIndex(c => c.id === parent.id);
                         api.shapeDelete(this.__page, (_p as GroupShape), _idx);
                     }

@@ -45,7 +45,7 @@ import {BasicArray} from "../data/basic";
 import {TableEditor} from "./table";
 import {exportGroupShape, exportSymbolShape} from "../data/baseexport";
 import {
-    adjust_selection_before_group, after_move,
+    adjust_selection_before_group, after_remove,
     clear_binds_effect,
     find_state_space,
     get_symbol_by_layer,
@@ -358,7 +358,7 @@ export class PageEditor {
         const api = this.__repo.start("makeStatus", {});
         try {
             if (!symbol.isUnionSymbolShape) {
-                const u = make_union(api, this.__page, symbol, dlt, attri_name);
+                const u = make_union(api, this.__document, this.__page, symbol, dlt, attri_name);
                 if (!u) throw new Error('make union failed!');
                 symbol = u;
             } else {
@@ -731,7 +731,7 @@ export class PageEditor {
                 clear_binds_effect(this.__page, shape, symbol, api);
             }
             if (this.delete_inner(page, shape, api)) {
-                if (!savep.childs.length && savep.type === ShapeType.Group) {
+                if (after_remove(savep)) {
                     this.delete_inner(page, savep, api);
                 }
                 if (shape.type === ShapeType.Symbol) {
@@ -773,7 +773,7 @@ export class PageEditor {
                 const savep = shape.parent as GroupShape;
                 if (!savep) return false;
                 this.delete_inner(page, shape, api);
-                if (!savep.childs.length && savep.type === ShapeType.Group) {
+                if (after_remove(savep)) {
                     this.delete_inner(page, savep, api);
                 }
             } catch (error) {
@@ -1467,6 +1467,7 @@ export class PageEditor {
         if (is_part_of_symbolref(host)) return;
         const host_parent: GroupShape | undefined = host.parent as GroupShape;
         if (!host_parent) return;
+        if (host_parent.isVirtualShape) return;
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
             if (item.id === host.id) return;
@@ -1488,7 +1489,7 @@ export class PageEditor {
                     }
                     api.shapeMove(this.__page, parent, parent.indexOfChild(item), host as GroupShape, last);
                     translateTo(api, this.__page, item, beforeXY.x, beforeXY.y);
-                    if (after_move(parent)) this.delete_inner(this.__page, parent, api);
+                    if (after_remove(parent)) this.delete_inner(this.__page, parent, api);
                 }
             } else {
                 for (let i = 0, l = pre.length; i < l; i++) {
@@ -1505,7 +1506,7 @@ export class PageEditor {
                     }
                     api.shapeMove(this.__page, parent, parent.indexOfChild(item), host_parent as GroupShape, index);
                     translateTo(api, this.__page, item, beforeXY.x, beforeXY.y);
-                    if (after_move(parent)) this.delete_inner(this.__page, parent, api);
+                    if (after_remove(parent)) this.delete_inner(this.__page, parent, api);
                 }
             }
             this.__repo.commit();

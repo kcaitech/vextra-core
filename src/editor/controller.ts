@@ -573,7 +573,7 @@ export class Controller {
             let index = targetParent.childs.length;
             for (let i = 0, len = sortedShapes.length; i < len; i++) {
                 const shape = sortedShapes[i];
-                const error = unable_to_migrate(this.__document, targetParent, shape);
+                const error = unable_to_migrate(targetParent, shape);
                 if (error) console.log('migrate error:', error);
                 if (Boolean(error)) continue;
                 const origin: GroupShape = shape.parent as GroupShape;

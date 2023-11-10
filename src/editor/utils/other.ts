@@ -189,7 +189,7 @@ export function gen_special_value_for_state(symbol: SymbolShape, variable: Varia
     return `${type_name}${index}`;
 }
 
-export function make_union(api: Api, page: Page, symbol: SymbolShape, state_name: string, attri_name: string) {
+export function make_union(api: Api, document: Document, page: Page, symbol: SymbolShape, state_name: string, attri_name: string) {
     const p = symbol.parent;
     if (!p || p.isUnionSymbolShape) return false;
     // 定义第一个状态的frame
@@ -199,6 +199,7 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, state_name
     const insert_result = api.shapeInsert(page, symbol, n_sym, 0);
     if (!insert_result) return false;
     n_sym = insert_result as SymbolShape;
+    document.symbolsMgr.add(n_sym.id, n_sym as SymbolShape);
     const childs = symbol.childs;
     for (let i = 1, len = childs.length; i < len; ++i) {
         api.shapeMove(page, symbol, 1, n_sym, i - 1);
@@ -458,8 +459,8 @@ export function modify_index(parent: GroupShape, s1: Shape, s2: Shape, index: nu
     return (parent.indexOfChild(s1) < parent.indexOfChild(s2)) ? index - 1 : index;
 }
 
-export function after_move(parent: GroupShape) {
-    if (parent.childs.length) return false;
-    if (parent.type === ShapeType.Group || parent.isUnionSymbolShape) return true;
+export function after_remove(parent: GroupShape) {
+    if (parent?.childs?.length) return false;
+    else if (parent.type === ShapeType.Group || parent.isUnionSymbolShape) return true;
     return false;
 }

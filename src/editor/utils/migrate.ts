@@ -14,23 +14,20 @@ import {Page} from "../../data/page";
  *          1 不满足：只有组件可以迁移到union里
  *          2 target、wonder都为组件且target不为union
  *          3 无法通过循环引用检查
+ *          4 是实例组成部分
  *          999 其他
  */
-export function unable_to_migrate(document: Document, target: Shape, wonder: Shape): number {
+export function unable_to_migrate(target: Shape, wonder: Shape): number {
     if (target.type === ShapeType.Symbol) {
         if (wonder.type === ShapeType.SymbolRef) {
-            const wonder_from = document.symbolsMgr.getSync((wonder as SymbolRefShape).refId);
+            const wonder_from = (wonder as SymbolRefShape).getRootData();
             if (!wonder_from) return 999;
             if (is_circular_ref2(wonder_from, target.id)) return 3;
         }
         if ((target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wonder)) return 1;
         if (wonder.type === ShapeType.Symbol) return 2;
     } else {
-        let p = target.parent;
-        while (p) {
-            if (p.type === ShapeType.Symbol) return 1;
-            p = p.parent;
-        }
+        if (target.isVirtualShape) return 4;
     }
     return 0;
 }
