@@ -1,17 +1,18 @@
-import { Style } from "./style";
-import { Para, ParaAttr, Span, Text } from "./text";
-import { BasicArray } from "./basic";
+import {Style} from "./style";
+import {Para, ParaAttr, Span, Text} from "./text";
+import {BasicArray} from "./basic";
+
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
-import { CurvePoint, OverrideType, ShapeFrame, TextBehaviour, VariableType } from "./baseclasses"
-import { GroupShape, Shape, SymbolShape, TextShape, VarWatcher, Variable, makeVarWatcher } from "./shape";
-import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
-import { SymbolRefShape } from "./symbolref";
-import { __objidkey } from "../basic/objectid";
-import { importCurvePoint } from "./baseimport";
-import { layoutChilds } from "./symlayout";
+import {CurvePoint, OverrideType, ShapeFrame, TextBehaviour, VariableType} from "./baseclasses"
+import {GroupShape, Shape, SymbolShape, TextShape, VarWatcher, Variable, makeVarWatcher} from "./shape";
+import {mergeParaAttr, mergeSpanAttr, mergeTextAttr} from "./textutils";
+import {SymbolRefShape} from "./symbolref";
+import {__objidkey} from "../basic/objectid";
+import {importCurvePoint} from "./baseimport";
+import {layoutChilds} from "./symlayout";
 
 // 内核提供给界面的dataface, 仅用于界面获取对象信息
 // 绘制独立计算
@@ -32,6 +33,7 @@ function checkNotProxyed(val: Object) {
 class HdlBase { // protect data
     // __cache: Map<PropertyKey, any> = new Map();
     __parent: any;
+
     constructor(parent: any) {
         makeVarWatcher(this);
         this.__parent = parent;
@@ -137,6 +139,7 @@ class HdlBase { // protect data
         }
         return val;
     }
+
     has(target: object, propertyKey: PropertyKey) {
         if (target instanceof Map || target instanceof Set) {
             return target.has(propertyKey);
@@ -255,9 +258,11 @@ class ShapeHdl extends HdlBase {
             this.__watcher.delete(watcher);
         };
     }
+
     public unwatch(watcher: ((...args: any[]) => void)): boolean {
         return this.__watcher.delete(watcher);
     }
+
     public notify(...args: any[]) {
         if (this.__watcher.size === 0) return;
         // 在set的foreach内部修改set会导致无限循环
@@ -507,6 +512,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
         this.__saveWidth = this.__frame.width;
         this.__saveHeight = this.__frame.height;
     }
+
     getRefId() {
         let refId = (this.__origin as SymbolRefShape).refId;
         // 从parent开始查找
@@ -542,6 +548,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
     private __data: SymbolShape | undefined;
     private __subdata: SymbolShape | undefined;
     private __startLoad: string = "";
+
     updater(notify: boolean = true): boolean { // todo 有父级以上的override，也要更新
         const symMgr = (this.__origin as SymbolRefShape).getSymbolMgr();
         if (!symMgr) return false;
@@ -561,8 +568,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
                         if (notify) this.notify("childs");
                         return true;
                     }
-                }
-                else if (!this.__data.isUnionSymbolShape && this.__subdata) {
+                } else if (!this.__data.isUnionSymbolShape && this.__subdata) {
                     this.__subdata.unwatch(this.updater);
                     this.__subdata = undefined;
                     this.__childsIsDirty = true;
@@ -589,8 +595,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
                 if (this.__subdata) this.__subdata.unwatch(this.updater);
                 this.__subdata = syms[0] || val.childs[0];
                 if (this.__subdata) this.__subdata.watch(this.updater);
-            }
-            else if (this.__subdata) {
+            } else if (this.__subdata) {
                 this.__subdata.unwatch(this.updater);
                 this.__subdata = undefined;
             }
@@ -655,6 +660,9 @@ class SymbolRefShapeHdl extends ShapeHdl {
         if (propStr === "layoutChilds") {
             return this.layoutChilds();
         }
+        if (propStr === "varsContainer") {
+            return this.getVarsContainer();
+        }
         return super.get(target, propertyKey, receiver);
     }
 
@@ -676,6 +684,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
     }
 
     private __relayouting: any;
+
     relayout() {
         if (this.__childs && !this.__relayouting) {
             this.__relayouting = setTimeout(() => {
@@ -727,25 +736,25 @@ function createTextByString(stringValue: string, refShape: TextShapeLike) {
 type TextShapeLike = Shape & { text: Text }
 
 const DefaultFontSize = Text.DefaultFontSize;
+
 export function fixTextShapeFrameByLayout(text: Text, frame: ShapeFrame) {
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
     switch (textBehaviour) {
-        case TextBehaviour.FixWidthAndHeight: break;
-        case TextBehaviour.Fixed:
-            {
-                const layout = text.getLayout();
-                const fontsize = text.attr?.fontSize ?? DefaultFontSize;
-                frame.height = Math.max(fontsize, layout.contentHeight);
-                break;
-            }
-        case TextBehaviour.Flexible:
-            {
-                const layout = text.getLayout();
-                const fontsize = text.attr?.fontSize ?? DefaultFontSize;
-                frame.width = Math.max(fontsize, layout.contentWidth);
-                frame.height = Math.max(fontsize, layout.contentHeight);
-                break;
-            }
+        case TextBehaviour.FixWidthAndHeight:
+            break;
+        case TextBehaviour.Fixed: {
+            const layout = text.getLayout();
+            const fontsize = text.attr?.fontSize ?? DefaultFontSize;
+            frame.height = Math.max(fontsize, layout.contentHeight);
+            break;
+        }
+        case TextBehaviour.Flexible: {
+            const layout = text.getLayout();
+            const fontsize = text.attr?.fontSize ?? DefaultFontSize;
+            frame.width = Math.max(fontsize, layout.contentWidth);
+            frame.height = Math.max(fontsize, layout.contentHeight);
+            break;
+        }
     }
 }
 
@@ -764,6 +773,7 @@ class TextShapeHdl extends ShapeHdl {
         if (val) return val.value;
         return Reflect.get(target, propertyKey, receiver);
     }
+
     getText(target: object, propertyKey: PropertyKey, receiver?: any) {
         if (this.__text) return this.__text;
         this.__text = this._getText(target, propertyKey, receiver); // todo 编辑过variable后要更新
@@ -798,6 +808,7 @@ class TextShapeHdl extends ShapeHdl {
         }
         super.notify(...args);
     }
+
     root_watcher(...args: any[]): void {
         if (args.indexOf("variable") >= 0) {
             this.__text = undefined; // 重新获取
