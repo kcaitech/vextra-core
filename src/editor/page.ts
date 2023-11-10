@@ -1465,7 +1465,7 @@ export class PageEditor {
         // todo 数据校验
         if (host.type === ShapeType.SymbolRef && position === 'inner') return;
         if (is_part_of_symbolref(host)) return;
-        const host_parent = host.parent;
+        const host_parent: GroupShape | undefined = host.parent as GroupShape;
         if (!host_parent) return;
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
@@ -1481,11 +1481,13 @@ export class PageEditor {
                     const item = pre[i];
                     const parent: GroupShape | undefined = item.parent as GroupShape;
                     if (!parent) continue;
+                    const beforeXY = item.frame2Root();
                     let last = (host as GroupShape).childs.length;
                     if (parent.id === host.id) { // 同一父级
                         last--;
                     }
                     api.shapeMove(this.__page, parent, parent.indexOfChild(item), host as GroupShape, last);
+                    translateTo(api, this.__page, item, beforeXY.x, beforeXY.y);
                     if (after_move(parent)) this.delete_inner(this.__page, parent, api);
                 }
             } else {
@@ -1493,7 +1495,8 @@ export class PageEditor {
                     const item = pre[i];
                     const parent: GroupShape | undefined = item.parent as GroupShape;
                     if (!parent) continue;
-                    let index = parent.indexOfChild(host);
+                    const beforeXY = item.frame2Root();
+                    let index = host_parent.indexOfChild(host);
                     if (parent.id === host_parent.id) { // 同一父级
                         index = modify_index((parent) as GroupShape, item, host, index);
                     }
@@ -1501,6 +1504,7 @@ export class PageEditor {
                         index++;
                     }
                     api.shapeMove(this.__page, parent, parent.indexOfChild(item), host_parent as GroupShape, index);
+                    translateTo(api, this.__page, item, beforeXY.x, beforeXY.y);
                     if (after_move(parent)) this.delete_inner(this.__page, parent, api);
                 }
             }
