@@ -2,7 +2,6 @@ import {SymbolRefShape} from "../../data/symbolref";
 import {GroupShape, Shape, ShapeType, SymbolShape} from "../../data/shape";
 import {is_symbol_but_not_union} from "./other";
 import {is_circular_ref2} from "./ref_check";
-import {Document} from "../../data/document";
 import {Api} from "../command/recordapi";
 import {Page} from "../../data/page";
 
