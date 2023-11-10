@@ -73,11 +73,7 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadows: Shadow[], fram
     in2: `SourceGraphic`,
   }
 
-  const props_w = width + Math.max(0, offsetX) + blurRadius + Math.max(0, spread) + (width * 0.3);
-  const props_h = height + Math.max(0, offsetY) + blurRadius + Math.max(0, spread) + (height * 0.3);
-  const props_x = -(Math.min(0, offsetX) + blurRadius + Math.max(0, spread) + (width * 0.3));
-  const props_y = -(Math.min(0, offsetY) + blurRadius + Math.max(0, spread) + (height * 0.3));
-  const filter_props = { id: f_id, x: props_x + 'px', y: props_y+ 'px', height: props_w+ 'px', width: props_h+ 'px' };
+  const filter_props = { id: f_id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
   const h_node = [
     h('feOffset', fe_offset_props),
     h('feGaussianBlur', fe_gaussian_blur_props),
@@ -97,7 +93,7 @@ export function render(h: Function, style: Style, frame: ShapeFrame, id: string)
   const inner_f = [];
   const f_props: any = {props_w: [], props_h: [], props_x: [], props_y: []}
   const f_id = `dorp-shadow-${id}`;
-  const filter_props = { id: f_id, x: '-30%', y: '-30%', height: '160%', width: '160%' };
+  const filter_props: any = { id: f_id, x: '-30%', y: '-30%', height: '160%', width: '160%' };
   const fe_merge_node2_porps = { in: "SourceGraphic" };
   for (let i = 0; i < shadows.length; i++) {
     const shadow = shadows[i];
@@ -114,10 +110,10 @@ export function render(h: Function, style: Style, frame: ShapeFrame, id: string)
     }
   }
   if (filterNode.length) {
-    filter_props.width = Math.max(...f_props.props_w) + 'px';
-    filter_props.height = Math.max(...f_props.props_h) + 'px';
-    filter_props.x = Math.min(...f_props.props_x) + 'px';
-    filter_props.y = Math.min(...f_props.props_y) + 'px';
+    filter_props.width = Math.max(...f_props.props_w);
+    filter_props.height = Math.max(...f_props.props_h);
+    filter_props.x = Math.min(...f_props.props_x);
+    filter_props.y = Math.min(...f_props.props_y);
     feMergeNode.push(h('feMergeNode', fe_merge_node2_porps));
     const merge = h('feMerge', {}, feMergeNode)
     filterNode.push(merge);
@@ -144,10 +140,10 @@ export function innerShadowId(id: string, shadows?: Shadow[]) {
 const getFilterPropsValue = (shadow: Shadow, frame: ShapeFrame, f_props: any) => {
   const { color, offsetX, offsetY, blurRadius, spread } = shadow;
   const { width, height } = frame;
-  const props_w = width + Math.max(0, offsetX) + blurRadius + Math.max(0, spread) + (width * 0.3);
-  const props_h = height + Math.max(0, offsetY) + blurRadius + Math.max(0, spread) + (height * 0.3);
-  const props_x = -(Math.min(0, offsetX) + blurRadius + Math.max(0, spread) + (width * 0.3));
-  const props_y = -(Math.min(0, offsetY) + blurRadius + Math.max(0, spread) + (height * 0.3));
+  const props_x = -(Math.min(0, offsetX) + blurRadius + Math.max(0, spread) + (width * 0.1));
+  const props_y = -(Math.min(0, offsetY) + blurRadius + Math.max(0, spread) + (height * 0.1));
+  const props_w = width + Math.max(0, offsetX) + blurRadius + Math.max(0, spread) + (width * 0.2);
+  const props_h = height + Math.max(0, offsetY) + blurRadius + Math.max(0, spread) + (height * 0.2);
   f_props.props_h.push(props_h);
   f_props.props_w.push(props_w);
   f_props.props_x.push(props_x);
