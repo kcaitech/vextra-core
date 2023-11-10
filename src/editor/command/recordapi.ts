@@ -15,7 +15,7 @@ import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_A
 import { GroupShape, Shape, PathShape, PathShape2, CurvePoint } from "../../data/shape";
 import { ContactShape } from "../../data/contact";
 import { exportShape, updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, Color, ContactForm, ContextSettings, Fill, MarkerType } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, Color, ContactForm, ContextSettings, Fill, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape, TableCell, TableCellType, TableShape } from "../../data/classes";
@@ -658,12 +658,35 @@ export class Api {
         })
     }
     // shadow
-    addShadow(page: Page, shape: Shape) {
+    addShadows(page: Page, shape: Shape, shadows: Shadow[]) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const shadow = basicapi.addShadow(shape.style);
-            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, shape.style.shadows.length, exportShadow(shadow)))
+            for (let i = 0; i < shadows.length; i++) {
+                const shadow = shadows[i];
+                basicapi.addShadow(shape.style, shadow, i);
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, i, exportShadow(shadow)));
+            }
         })
+    }
+    addShadow(page: Page, shape: Shape, shadow: Shadow, index: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            basicapi.addShadow(shape.style, shadow, index);
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, index, exportShadow(shadow)))
+        })
+    }
+    deleteShadows(page: Page, shape: Shape, index: number, strength: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const shadows = basicapi.deleteShadows(shape.style, index, strength);
+            if (shadows && shadows.length) {
+                for (let i = 0; i < shadows.length; i++) {
+                    const shadow = shadows[i];
+                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, index, exportShadow(shadow)));
+                }
+            }
+        })
+
     }
     deleteShadowAt(page: Page, shape: Shape, idx: number) {
         checkShapeAtPage(page, shape);

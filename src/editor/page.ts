@@ -1,6 +1,6 @@
 import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/shape";
 import { ShapeEditor } from "./shape";
-import { BoolOp, BorderPosition, ShapeType } from "../data/typesdefine";
+import { BoolOp, BorderPosition, ShadowPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape } from "./creator";
 import { Document } from "../data/document";
@@ -19,7 +19,7 @@ import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
-import { ContactShape } from "../data/baseclasses";
+import { ContactShape, Shadow } from "../data/baseclasses";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -103,6 +103,53 @@ export interface BorderStyleAction {
     target: Shape
     index: number
     value: BorderStyle
+}
+export interface ShadowReplaceAction {
+    target: Shape;
+    value: Shadow[];
+}
+export interface ShadowAddAction { 
+    target: Shape
+    value: Shadow
+}
+export interface ShadowDeleteAction {
+    target: Shape
+    index: number
+}
+export interface ShadowEnableAction { 
+    target: Shape
+    index: number
+    value: boolean
+}
+export interface ShadowPositionAction {
+    target: Shape
+    index: number
+    value: ShadowPosition
+}
+export interface ShadowColorAction { // border.color
+    target: Shape
+    index: number
+    value: Color
+}
+export interface ShadowBlurRadiusAction {
+    target: Shape
+    index: number
+    value: number
+}
+export interface ShadowSpreadAction {
+    target: Shape
+    index: number
+    value: number
+}
+export interface ShadowOffsetXAction {
+    target: Shape
+    index: number
+    value: number
+}
+export interface ShadowOffsetYAction {
+    target: Shape
+    index: number
+    value: number
 }
 function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
     return Math.atan2(B.y - A.y, B.x - A.x)
@@ -1049,6 +1096,127 @@ export class PageEditor {
         }
     }
     // shadow
+    setShapesShadowOffsetY(actions: ShadowOffsetYAction[]) {
+        try {
+            const api = this.__repo.start('setShapesShadowOffsetY', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setShadowOffsetY(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesShadowOffsetX(actions: ShadowOffsetXAction[]) {
+        try {
+            const api = this.__repo.start('setShapesShadowOffsetX', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setShadowOffsetX(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesShadowSpread(actions: ShadowSpreadAction[]) {
+        try {
+            const api = this.__repo.start('setShapesShadowSpread', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setShadowSpread(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesShadowBlurRadius(actions: ShadowBlurRadiusAction[]) {
+        try {
+            const api = this.__repo.start('setShapesShadowBlurRadius', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setShadowBlur(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesShadowColor(actions: ShadowColorAction[]) {
+        try {
+            const api = this.__repo.start('setShapesShadowColor', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setShadowColor(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesShadowPosition(actions: ShadowPositionAction[]) {
+        try {
+            const api = this.__repo.start('setShapesShadowPosition', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value, index } = actions[i];
+                api.setShadowPosition(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesShadowEnabled(actions: ShadowEnableAction[]) {
+        try {
+            const api = this.__repo.start('setShapesShadowEnabled', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setShadowEnable(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesDeleteShasow(actions: ShadowDeleteAction[]) {
+        try {
+            const api = this.__repo.start('shapesDeleteShasow', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index } = actions[i];
+                api.deleteShadowAt(this.__page, target, index);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesAddShadow(actions: ShadowAddAction[]) {
+        try {
+            const api = this.__repo.start('shapesAddShadow', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addShadow(this.__page, target, value, target.style.borders.length);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesShadowsUnify(actions: ShadowReplaceAction[]) {
+        try {
+            const api = this.__repo.start('shapesShadowsUnify', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.deleteShadows(this.__page, target, 0, target.style.shadows.length);
+                api.addShadows(this.__page, target, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
     toggleShapesVisible(shapes: Shape[]) {
         try {
             const api = this.__repo.start('setShapesVisible', {});

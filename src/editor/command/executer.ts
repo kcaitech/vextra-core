@@ -53,7 +53,8 @@ import {
     importContactShape,
     importContactRole,
     importCurvePoint,
-    importShadow
+    importShadow,
+    importShadowPosition
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -74,7 +75,7 @@ import {
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID, TABLE_ATTR_ID, SHADOW_ID, SHAPE_ATTR_ID, } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID, TABLE_ATTR_ID, SHADOW_ID, SHAPE_ATTR_ID, SHADOW_ATTR_ID, } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
 import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
@@ -369,7 +370,8 @@ export class CMDExecuter {
             }
         } else if (arrayAttr === SHADOW_ID) {
             if (op.type === OpType.ArrayInsert) {
-                api.addShadow(shape.style);
+                const shadow = importShadow(JSON.parse(cmd.data))
+                api.addShadow(shape.style, shadow, (op as ArrayOpInsert).start);
             }
         }
         else if (arrayAttr === CONTACTS_ID) {
@@ -546,6 +548,41 @@ export class CMDExecuter {
                 }
             }
             else {
+                console.error("not implemented ", op)
+            }
+        }
+        else if (arrayAttr === SHADOW_ID) {
+            const shadowId = cmd.arrayAttrId;
+            const shadowIdx = shape.style.shadows.findIndex((shadow) => shadow.id === shadowId);
+            if (shadowIdx < 0) return;
+            const opId = op.opId;
+            const value = cmd.value;
+            if (opId === SHADOW_ATTR_ID.position) {
+                if (value) {
+                    const position = importShadowPosition(value as any);
+                    api.setShadowPosition(shape.style, shadowIdx, position);
+                }
+            } else if (opId === SHADOW_ATTR_ID.enable) {
+                const enable = value && JSON.parse(value);
+                api.setShadowEnable(shape.style, shadowIdx, enable ?? false);
+            } else if (opId === SHADOW_ATTR_ID.offsetX) {
+                const offsetX = value && JSON.parse(value);
+                api.setShadowOffsetX(shape.style, shadowIdx, offsetX ?? 0);
+            } else if (opId === SHADOW_ATTR_ID.offsetY) {
+                const offsetY = value && JSON.parse(value);
+                api.setShadowOffsetY(shape.style, shadowIdx, offsetY ?? 0);
+            } else if (opId === SHADOW_ATTR_ID.blurRadius) {
+                const blurRadius = value && JSON.parse(value);
+                api.setShadowBlur(shape.style, shadowIdx, blurRadius ?? 0);
+            } else if (opId === SHADOW_ATTR_ID.spread) {
+                const spread = value && JSON.parse(value);
+                api.setShadowSpread(shape.style, shadowIdx, spread ?? 0);
+            } else if (opId === SHADOW_ATTR_ID.color) {
+                if (value) {
+                    const color = importColor(JSON.parse(value))
+                    api.setShadowColor(shape.style, shadowIdx, color);
+                }
+            } else {
                 console.error("not implemented ", op)
             }
         }

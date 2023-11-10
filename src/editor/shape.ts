@@ -1,7 +1,7 @@
 import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2 } from "../data/shape";
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, pathEdit, translate, translateTo } from "./frame";
-import { Border, BorderPosition, BorderStyle, Fill } from "../data/style";
+import { Border, BorderPosition, BorderStyle, Fill, Shadow } from "../data/style";
 import { BoolOp, CurvePoint, Point2D, ShapeType } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
@@ -240,9 +240,9 @@ export class ShapeEditor {
     }
 
     // shadow
-    public addShadow() {
+    public addShadow(shadow: Shadow) {
         const api = this.__repo.start("addShadow", {});
-        api.addShadow(this.__page, this.__shape);
+        api.addShadow(this.__page, this.__shape, shadow, this.__shape.style.shadows.length);
         this.__repo.commit();
     }
     public deleteShadow(idx: number) {
