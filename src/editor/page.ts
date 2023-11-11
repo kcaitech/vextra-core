@@ -1470,8 +1470,16 @@ export class PageEditor {
         if (host_parent.isVirtualShape) return;
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
-            if (item.id === host.id) return;
-            if (item.type === ShapeType.Contact) continue;
+            let p: Shape | undefined = host;
+            let next = false;
+            while (p) {
+                if (p.id === item.id) {
+                    next = true;
+                    break;
+                }
+                p = p.parent;
+            }
+            if (next || item.type === ShapeType.Contact) continue;
             pre.push(item);
         }
 
