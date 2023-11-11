@@ -941,11 +941,6 @@ export class ShapeEditor {
             if (index >= 0) {
                 const api = this.__repo.start("deleteShape", {});
                 try {
-                    // if (is_part_of_symbolref(this.__shape)) { // 在将要执行删除实例内图层时，只对该图层进行隐藏
-                    //     api.shapeModifyVisible(this.__page, this.__shape, false);
-                    //     this.__repo.commit();
-                    //     return;
-                    // }
                     if (this.__shape.type === ShapeType.Contact) { // 将执行删除连接线，需要清除连接线对起始两边的影响
                         this.removeContactSides(api, this.__page, this.__shape as unknown as ContactShape);
                     } else {

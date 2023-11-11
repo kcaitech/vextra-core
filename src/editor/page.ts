@@ -1461,17 +1461,17 @@ export class PageEditor {
     }
 
     afterShapeListDrag(shapes: Shape[], host: Shape, position: 'upper' | 'inner' | 'lower') {
-        const pre: Shape[] = [];
-        // todo 数据校验
-        if (host.type === ShapeType.SymbolRef && position === 'inner') return;
-        if (is_part_of_symbolref(host)) return;
+        // 数据校验
+        if (host.type === ShapeType.SymbolRef && position === 'inner') return false;
+        if (is_part_of_symbolref(host)) return false;
         const host_parent: GroupShape | undefined = host.parent as GroupShape;
-        if (!host_parent) return;
-        if (host_parent.isVirtualShape) return;
+        if (!host_parent || host_parent.isVirtualShape) return false;
+        const pre: Shape[] = [];
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
-            let p: Shape | undefined = host;
+            if (item.type === ShapeType.Contact) continue;
             let next = false;
+            let p: Shape | undefined = host;
             while (p) {
                 if (p.id === item.id) {
                     next = true;
@@ -1479,9 +1479,10 @@ export class PageEditor {
                 }
                 p = p.parent;
             }
-            if (next || item.type === ShapeType.Contact) continue;
+            if (next) continue;
             pre.push(item);
         }
+        if (!pre.length) return false;
 
         const api = this.__repo.start('afterShapeListDrag', {});
         try {
@@ -1518,9 +1519,11 @@ export class PageEditor {
                 }
             }
             this.__repo.commit();
+            return true;
         } catch (e) {
             console.log(e);
             this.__repo.rollback();
+            return false;
         }
     }
 
