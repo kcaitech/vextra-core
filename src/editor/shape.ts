@@ -957,8 +957,8 @@ export class ShapeEditor {
                     }
                     api.shapeDelete(this.__page, parent, index);
                     // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
-                    const _p = parent.parent;
-                    if (after_remove(_p as any)) {
+                    if (after_remove(parent)) {
+                        const _p = parent.parent;
                         const _idx = (_p as GroupShape).childs.findIndex(c => c.id === parent.id);
                         api.shapeDelete(this.__page, (_p as GroupShape), _idx);
                     }
