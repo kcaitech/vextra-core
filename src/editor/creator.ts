@@ -28,7 +28,7 @@ import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
 import { TableShape } from "../data/table";
-import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
+export { newText } from "../data/textutils";
 import { ContactForm } from "../data/baseclasses";
 import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
@@ -185,23 +185,23 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     return shape;
 }
 
-export function newText(textAttr?: TextAttr): Text {
-    const text = new Text(new BasicArray());
-    const para = new Para('\n', new BasicArray());
-    para.attr = new ParaAttr();
-    para.attr.minimumLineHeight = 24;
-    text.paras.push(para);
-    const span = new Span(para.length);
-    span.fontName = "PingFangSC-Regular";
-    span.fontSize = 14;
-    span.color = new Color(0.85, 0, 0, 0);
-    para.spans.push(span);
-    if (textAttr) {
-        mergeParaAttr(para, textAttr);
-        mergeSpanAttr(span, textAttr);
-    }
-    return text;
-}
+// export function newText(textAttr?: TextAttr): Text {
+//     const text = new Text(new BasicArray());
+//     const para = new Para('\n', new BasicArray());
+//     para.attr = new ParaAttr();
+//     para.attr.minimumLineHeight = 24;
+//     text.paras.push(para);
+//     const span = new Span(para.length);
+//     span.fontName = "PingFangSC-Regular";
+//     span.fontSize = 14;
+//     span.color = new Color(0.85, 0, 0, 0);
+//     para.spans.push(span);
+//     if (textAttr) {
+//         mergeParaAttr(para, textAttr);
+//         mergeSpanAttr(span, textAttr);
+//     }
+//     return text;
+// }
 
 // 后续需要传入字体、字号、颜色信息
 export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
