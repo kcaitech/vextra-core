@@ -485,6 +485,7 @@ export class PageEditor {
             const tmpGroup = newGroupShape(shape.name, shape.style);
             initFrame(tmpGroup, shape.frame);
             tmpGroup.childs = shape.virtualChilds! as BasicArray<Shape>;
+            tmpGroup.varbinds = shape.varbinds;
             const symbolData = exportGroupShape(tmpGroup); // todo 如果symbol只有一个child时
             replaceId(symbolData);
             const parent = shape.parent;
