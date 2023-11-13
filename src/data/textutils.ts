@@ -1,6 +1,7 @@
 import { importParaAttr, importTextAttr } from "./baseimport";
+import { BasicArray } from "./basic";
 import { BulletNumbers, Color } from "./classes";
-import { Para, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter } from "./text";
+import { Para, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter, Span } from "./text";
 
 export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (attr.color) {
@@ -274,4 +275,22 @@ export function mergeTextAttr(text: Text, attr: TextAttr) {
     if (attr.verAlign) text.attr.verAlign = attr.verAlign;
     if (attr.orientation) text.attr.orientation = attr.orientation;
     if (attr.textBehaviour) text.attr.textBehaviour = attr.textBehaviour;
+}
+
+export function newText(textAttr?: TextAttr): Text {
+    const text = new Text(new BasicArray());
+    const para = new Para('\n', new BasicArray());
+    para.attr = new ParaAttr();
+    para.attr.minimumLineHeight = 24;
+    text.paras.push(para);
+    const span = new Span(para.length);
+    span.fontName = "PingFangSC-Regular";
+    span.fontSize = 14;
+    span.color = new Color(0.85, 0, 0, 0);
+    para.spans.push(span);
+    if (textAttr) {
+        mergeParaAttr(para, textAttr);
+        mergeSpanAttr(span, textAttr);
+    }
+    return text;
 }

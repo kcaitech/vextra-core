@@ -314,6 +314,10 @@ export class Text extends Basic implements classes.Text {
         }
         return getSimpleText(this, index, count);
     }
+    toString() {
+        const str = getSimpleText(this, 0, Number.MAX_VALUE);
+        return str.substring(0, str.length - 1); // 去掉最后回车符
+    }
     getTextWithFormat(index: number, count: number): Text {
         if (index < 0) {
             throw new Error("index < 0");
