@@ -32,7 +32,19 @@ import {expand, translate, translateTo} from "./frame";
 import {uuid} from "../basic/uuid";
 import {CoopRepository} from "./command/cooprepo";
 import {Api} from "./command/recordapi";
-import {Artboard, Border, BorderStyle, Color, Fill, Path, PathShape, Style, TableShape, Text} from "../data/classes";
+import {
+    Artboard,
+    Border,
+    BorderStyle,
+    Color,
+    Fill,
+    Path,
+    PathShape,
+    Style,
+    SymbolRefShape,
+    TableShape,
+    Text
+} from "../data/classes";
 import {TextShapeEditor} from "./textshape";
 import {get_frame, modify_frame_after_insert, set_childs_id, transform_data} from "../io/cilpboard";
 import {deleteEmptyGroupShape, expandBounds, group, ungroup} from "./group";
@@ -55,7 +67,7 @@ import {
     trans_after_make_symbol
 } from "./utils/other";
 import {v4} from "uuid";
-import {is_part_of_symbolref, modify_variable_with_api} from "./utils/symbol";
+import {is_part_of_symbolref, modify_variable_with_api, shape4border, shape4fill} from "./utils/symbol";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1259,7 +1271,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, value} = actions[i];
-                api.addFillAt(this.__page, target, value, target.style.fills.length);
+                const s = shape4fill(api, this.__page, target);
+                api.addFillAt(this.__page, s, value,s instanceof Shape ? s.style.fills.length : s.value.length);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1328,10 +1341,13 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, value} = actions[i];
-                api.addBorderAt(this.__page, target, value, target.style.borders.length);
+                const s = shape4border(api, this.__page, target);
+                const l = s instanceof Shape ? s.style.borders.length : s.value.length;
+                api.addBorderAt(this.__page, s, value, l);
             }
             this.__repo.commit();
         } catch (error) {
+            console.log(error);
             this.__repo.rollback();
         }
     }
@@ -1341,7 +1357,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, index} = actions[i];
-                api.deleteBorderAt(this.__page, target, index);
+                const s = shape4border(api, this.__page, target);
+                api.deleteBorderAt(this.__page, s, index);
             }
             this.__repo.commit();
         } catch (error) {

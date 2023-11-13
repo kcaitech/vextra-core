@@ -104,6 +104,7 @@ export class ShapeEditor {
     }
 
     /**
+     * 已提出到 "editor/utils/symbol"
      * 将变量_var override到值为value的新变量
      * 变量_var可能来自symbolref(virtual)或者symbolshape
      * @param _var
@@ -453,7 +454,7 @@ export class ShapeEditor {
 
     /**
      * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「返回」var，否则先override再「返回」新的var
-     * 适合text这种，value的修改非原子操作的情况
+     * 适合text这种，value的修改非原子操作的情况 已提出到 "editor/utils/symbol"
      *
      * @param varType
      * @param overrideType
@@ -745,6 +746,9 @@ export class ShapeEditor {
         });
     }
 
+    /**
+     * @description 已提出到 "editor/utils/symbol"
+     */
     private shape4fill(api: Api, shape?: Shape) {
         const _shape = shape ?? this.__shape;
         const _var = this.overrideVariable(VariableType.Fills, OverrideType.Fills, (_var) => {
@@ -764,7 +768,8 @@ export class ShapeEditor {
     public addFill(fill: Fill) {
         this._repoWrap("addFill", (api) => {
             const shape = this.shape4fill(api);
-            api.addFillAt(this.__page, shape, fill, shape instanceof Shape ? shape.style.fills.length : shape.value.length);
+            const l = shape instanceof Shape ? shape.style.fills.length : shape.value.length;
+            api.addFillAt(this.__page, shape, fill, l);
         });
     }
 
@@ -791,6 +796,9 @@ export class ShapeEditor {
         });
     }
 
+    /**
+     * @description 已提出到 "editor/utils/symbol"
+     */
     private shape4border(api: Api, shape?: Shape) {
         const _shape = shape ?? this.__shape;
         const _var = this.overrideVariable(VariableType.Borders, OverrideType.Borders, (_var) => {
@@ -872,7 +880,8 @@ export class ShapeEditor {
     public addBorder(border: Border) {
         this._repoWrap("addBorder", (api) => {
             const shape = this.shape4border(api);
-            api.addBorderAt(this.__page, shape, border, this.__shape.style.borders.length);
+            const l = shape instanceof Shape ? shape.style.borders.length : shape.value.length;
+            api.addBorderAt(this.__page, shape, border, l);
         });
     }
 
