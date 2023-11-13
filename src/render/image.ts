@@ -55,7 +55,7 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
     const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape.style, frame, shape_id);
+        const shadow = shadowR(h, shape.style, frame, shape_id, path);
         if (shadow.length) {
             delete props.style;
             delete props.transform;
