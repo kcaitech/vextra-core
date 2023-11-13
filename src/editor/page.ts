@@ -1273,7 +1273,8 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const {target, value} = actions[i];
                 const s = shape4fill(api, this.__page, target);
-                api.addFillAt(this.__page, s, value,s instanceof Shape ? s.style.fills.length : s.value.length);
+                const l = s instanceof Shape ? s.style.fills.length : s.value.length
+                api.addFillAt(this.__page, s, value, l);
             }
             this.__repo.commit();
         } catch (error) {
