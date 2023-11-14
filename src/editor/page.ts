@@ -1430,11 +1430,17 @@ export class PageEditor {
         const api = this.__repo.start('setShapesVisible', {});
         try {
             for (let i = 0; i < shapes.length; i++) {
-                let shape: Shape | undefined = shapes[i];
-                if (shape.type === ShapeType.Group) {
-                    shape = this.__page.shapes.get(shape.id)
-                }
+                let shape: Shape = shapes[i];
                 if (!shape) continue;
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
+                    return _var ? !_var.value : !shape.isVisible;
+                })) {
+                    continue;
+                }
+                if (shape.type === ShapeType.Group) {
+                    shape = this.__page.shapes.get(shape.id)!;
+                    if (!shape) continue;
+                }
                 api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
             }
             this.__repo.commit();
