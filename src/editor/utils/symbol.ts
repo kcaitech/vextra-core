@@ -95,10 +95,11 @@ function _override_variable(page: Page, shape: Shape, _var: Variable, value: any
             override_id = ""
         }
     }
-    if (override_id.length > 0) override_id = override_id + "/" + _var.id;
+    if (override_id.length > 0) override_id = override_id + "/";
+    override_id += _var.id;
     const _var2 = new Variable(uuid(), _var.type, _var.name, value);
     api.shapeAddVariable(page, sym, _var2);
-    api.shapeAddOverride(page, sym, _var.id, OverrideType.Variable, _var2.id);
+    api.shapeAddOverride(page, sym, override_id, OverrideType.Variable, _var2.id);
     return sym.getVar(_var2.id)!;
 }
 
@@ -236,6 +237,7 @@ export function shape4border(api: Api, page: Page, shape: Shape) {
     }, api, shape)
     return _var || shape;
 }
+
 /**
  * @description override "editor/shape/shape4fill"
  */

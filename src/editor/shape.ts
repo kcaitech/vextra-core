@@ -144,7 +144,6 @@ export class ShapeEditor {
 
         const _var2 = new Variable(uuid(), _var.type, _var.name, value);
         api.shapeAddVariable(this.__page, sym, _var2);
-        // api.shapeAddOverride(this.__page, sym, _var.id, OverrideType.Variable, _var2.id);
         api.shapeAddOverride(this.__page, sym, override_id, OverrideType.Variable, _var2.id);
         return sym.getVar(_var2.id)!;
     }
@@ -584,7 +583,7 @@ export class ShapeEditor {
      * @returns
      */
     modifyVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any): boolean {
-        // const _var = this.overrideVariable(slot, varType, ov)
+         // const _var = this.overrideVariable(slot, varType, ov)
         const shape = this.__shape;
         // symbol shape
         if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {
@@ -631,6 +630,7 @@ export class ShapeEditor {
         override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
         if (override_id.length === 0) throw new Error();
 
+        // x 找不到已有的
         const _vars = shape.findOverride(override_id.substring(override_id.lastIndexOf('/') + 1), overrideType);
         if (_vars) {
             const _var = _vars[_vars.length - 1];
@@ -661,6 +661,7 @@ export class ShapeEditor {
             api.shapeAddVariable(this.__page, _symRef, _var2);
             api.shapeAddOverride(this.__page, _symRef, override_id, overrideType, _var2.id);
         });
+
         // symRef.addOverrid(override_id, overrideType, value);
 
         return true;
@@ -674,7 +675,6 @@ export class ShapeEditor {
     }
 
     public toggleVisible() {
-
         // 实例图层
         if (this.modifyVariable(VariableType.Visible, OverrideType.Visible, (_var) => {
             return _var ? !_var.value : !this.__shape.isVisible;
