@@ -48,15 +48,19 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadows: Shadow[], fram
   filter_props.y = Math.min(...f_props.props_y);
   const multi = 1 + (spread * 2) / width;
   const filter = h("filter", filter_props, [
-    h('feGaussianBlur', { stdDeviation: `${blurRadius}`, in: "SourceGraphic" }),
+    h('feComponentTransfer', { in: "SourceAlpha" }, [
+      h('feFuncA', { type: "linear", slope: "0.7" })
+    ]),
+    // h('feMorphology', { operator: "dilate", radius: `${spread}` }),
+    h('feGaussianBlur', { stdDeviation: `${blurRadius}` }),
     h('feOffset', { dx: offsetX / multi, dy: offsetY / multi, })
   ])
   const body_props: any = {
     d: path,
     fill: `rgba(${red}, ${green}, ${blue}, ${alpha})`,
     'clip-path': "url(#" + clipId + ")",
-    filter: `url(#${id + i})`,
     style: ` position: absolute; transform-origin: center center; transform: scale(${multi});`,
+    filter: `url(#${id + i})`,
   }
   const p = h('path', body_props);
   return { filter, p }
@@ -72,8 +76,9 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadows: Shadow[], fram
     result: `offsetBlur`
   }
   const fe_gaussian_blur_props = {
-    stdDeviation: `${blurRadius} ${spread}`,
+    stdDeviation: `${blurRadius}`,
     in: `offsetBlur`,
+    in2: 'spread',
     result: `blur`
   }
   const fe_composite1 = {
@@ -98,10 +103,16 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadows: Shadow[], fram
     in: `shadow`,
     in2: `SourceGraphic`,
   }
+  const fe_morphology = {
+    operator: "erode",
+    radius: `${spread}`,
+    result: 'spread'
+  }
 
   const filter_props = { id: f_id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
   const h_node = [
     h('feOffset', fe_offset_props),
+    h('feMorphology', fe_morphology),
     h('feGaussianBlur', fe_gaussian_blur_props),
     h('feComposite', fe_composite1),
     h('feFlood', fe_flood),
@@ -140,8 +151,8 @@ export function render(h: Function, style: Style, frame: ShapeFrame, id: string,
       inner_f.push(filter);
     }
   }
-  if(filters.length) {
-    elArr.push(h("g", [...filters,...paths]));
+  if (filters.length) {
+    elArr.push(h("g", [...filters, ...paths]));
   }
   // if (filterNode.length) {
   //   filter_props.width = Math.max(...f_props.props_w);
