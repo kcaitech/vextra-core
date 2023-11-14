@@ -18,10 +18,11 @@ import {Page} from "../../data/page";
  */
 export function unable_to_migrate(target: Shape, wander: Shape): number {
     if (target.type === ShapeType.Symbol) {
-        if (wander.type === ShapeType.SymbolRef) {
-            const wander_from = (wander as SymbolRefShape).getRootData();
-            if (!wander_from) return 999;
-            if (is_circular_ref2(wander_from, target.id)) return 3;
+        const children = wander.naviChilds || wander.childs;
+        if (children?.length) {
+            const tree = wander instanceof SymbolRefShape ? wander.getRootData() : wander;
+            if (!tree) return 999;
+            if (is_circular_ref2(tree, target.id)) return 3;
         }
         if ((target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wander)) return 1;
         if (wander.type === ShapeType.Symbol) return 2;

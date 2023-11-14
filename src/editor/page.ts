@@ -57,17 +57,20 @@ import {BasicArray} from "../data/basic";
 import {TableEditor} from "./table";
 import {exportGroupShape, exportSymbolShape} from "../data/baseexport";
 import {
-    adjust_selection_before_group, after_remove,
+    adjust_selection_before_group,
+    after_remove,
     clear_binds_effect,
     find_state_space,
     get_symbol_by_layer,
     init_state,
     make_union,
-    modify_frame_after_inset_state, modify_index,
+    modify_frame_after_inset_state,
+    modify_index,
     trans_after_make_symbol
 } from "./utils/other";
 import {v4} from "uuid";
 import {is_part_of_symbolref, modify_variable_with_api, shape4border, shape4fill} from "./utils/symbol";
+import {is_circular_ref2} from "./utils/ref_check";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -217,6 +220,7 @@ export class PageEditor {
     }
 
     ungroup(shape: GroupShape): false | Shape[] {
+        if (shape.isVirtualShape) return false;
         if (!shape.parent) return false;
         const api = this.__repo.start("", {});
         try {
@@ -265,6 +269,7 @@ export class PageEditor {
      * @returns { false | Shape[] } 成功则返回被解除容器的所有子元素
      */
     dissolution_artboard(shape: Artboard): false | Shape[] {
+        if (shape.isVirtualShape) return false;
         if (!shape.parent) return false;
         const api = this.__repo.start("dissolution_artboard", {});
         try {
@@ -973,7 +978,7 @@ export class PageEditor {
      * @returns { boolean }
      */
     uppper_layer(shape: Shape, step?: number) {
-        if (is_part_of_symbolref(shape)) return true; // 组件实例内部图形不可以移动图层
+        if (shape.isVirtualShape) return true; // 组件实例内部图形不可以移动图层
         const parent = shape.parent as GroupShape | undefined;
         if (!parent) return false;
         const index = parent.indexOfChild(shape);
@@ -1005,7 +1010,7 @@ export class PageEditor {
      * @returns { boolean }
      */
     lower_layer(shape: Shape, step?: number) {
-        if (is_part_of_symbolref(shape)) return true; // 组件实例内部图形不可以移动图层
+        if (shape.isVirtualShape) return true; // 组件实例内部图形不可以移动图层
         const parent = shape.parent as GroupShape | undefined;
         if (!parent) return false;
         const index = parent.indexOfChild(shape);
@@ -1510,6 +1515,13 @@ export class PageEditor {
                     const item = pre[i];
                     const parent: GroupShape | undefined = item.parent as GroupShape;
                     if (!parent) continue;
+                    if (host.type === ShapeType.SymbolRef) continue;
+                    const children = item.naviChilds || item.childs;
+                    if (children?.length) {
+                        const tree = item instanceof SymbolRefShape ? item.getRootData() : item;
+                        if (!tree) continue;
+                        if (is_circular_ref2(tree, parent.id)) continue;
+                    }
                     const beforeXY = item.frame2Root();
                     let last = (host as GroupShape).childs.length;
                     if (parent.id === host.id) { // 同一父级
@@ -1524,6 +1536,13 @@ export class PageEditor {
                     const item = pre[i];
                     const parent: GroupShape | undefined = item.parent as GroupShape;
                     if (!parent) continue;
+                    if (host_parent.type === ShapeType.SymbolRef) continue;
+                    const children = item.naviChilds || item.childs;
+                    if (children?.length) {
+                        const tree = item instanceof SymbolRefShape ? item.getRootData() : item;
+                        if (!tree) continue;
+                        if (is_circular_ref2(tree, host_parent.id)) continue;
+                    }
                     const beforeXY = item.frame2Root();
                     let index = host_parent.indexOfChild(host);
                     if (parent.id === host_parent.id) { // 同一父级
