@@ -8,7 +8,7 @@ import {Page} from "../../data/page";
 /**
  * @description 检查是否满足迁移条件
  * @param target 计划迁移到的目标
- * @param wonder 迁移对象
+ * @param wander 迁移对象
  * @returns 0 满足迁移条件
  *          1 不满足：只有组件可以迁移到union里
  *          2 target、wonder都为组件且target不为union
@@ -16,15 +16,15 @@ import {Page} from "../../data/page";
  *          4 是实例组成部分
  *          999 其他
  */
-export function unable_to_migrate(target: Shape, wonder: Shape): number {
+export function unable_to_migrate(target: Shape, wander: Shape): number {
     if (target.type === ShapeType.Symbol) {
-        if (wonder.type === ShapeType.SymbolRef) {
-            const wonder_from = (wonder as SymbolRefShape).getRootData();
-            if (!wonder_from) return 999;
-            if (is_circular_ref2(wonder_from, target.id)) return 3;
+        if (wander.type === ShapeType.SymbolRef) {
+            const wander_from = (wander as SymbolRefShape).getRootData();
+            if (!wander_from) return 999;
+            if (is_circular_ref2(wander_from, target.id)) return 3;
         }
-        if ((target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wonder)) return 1;
-        if (wonder.type === ShapeType.Symbol) return 2;
+        if ((target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wander)) return 1;
+        if (wander.type === ShapeType.Symbol) return 2;
     } else {
         if (target.isVirtualShape) return 4;
     }

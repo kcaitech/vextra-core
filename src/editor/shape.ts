@@ -143,10 +143,9 @@ export class ShapeEditor {
         override_id += _var.id;
 
         const _var2 = new Variable(uuid(), _var.type, _var.name, value);
-        // _var2.value = value;
         api.shapeAddVariable(this.__page, sym, _var2);
-        api.shapeAddOverride(this.__page, sym, _var.id, OverrideType.Variable, _var2.id);
-
+        // api.shapeAddOverride(this.__page, sym, _var.id, OverrideType.Variable, _var2.id);
+        api.shapeAddOverride(this.__page, sym, override_id, OverrideType.Variable, _var2.id);
         return sym.getVar(_var2.id)!;
     }
 
