@@ -366,7 +366,7 @@ export class PageEditor {
      * @param dlt 属性默认值
      * @return symbol 集合union
      */
-    makeStatus(symbol: SymbolShape, attri_name: string, dlt: string) {
+    makeStatus(symbol: SymbolShape, attri_name: string, dlt: string, isDefault: boolean) {
         const api = this.__repo.start("makeStatus", {});
         try {
             if (!symbol.isUnionSymbolShape) {
@@ -374,7 +374,7 @@ export class PageEditor {
                 if (!u) throw new Error('make union failed!');
                 symbol = u;
             } else {
-                const _var = new Variable(uuid(), VariableType.Status, attri_name, dlt);
+                const _var = new Variable(uuid(), VariableType.Status, attri_name, isDefault ? SymbolShape.Default_State : dlt);
                 api.shapeAddVariable(this.__page, symbol, _var);
             }
             this.__repo.commit();

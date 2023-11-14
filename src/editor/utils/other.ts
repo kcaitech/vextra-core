@@ -228,9 +228,9 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
     api.addBorderAt(page, symbol, boder, 0);
 
     // 将产生union的第一个变量
-    const _var = new Variable(uuid(), VariableType.Status, attri_name, state_name);
+    const _var = new Variable(uuid(), VariableType.Status, attri_name, SymbolShape.Default_State); // default
     api.shapeAddVariable(page, symbol as SymbolShape, _var);
-    api.shapeModifyVartag(page, n_sym, _var.id, state_name);
+    // api.shapeModifyVartag(page, n_sym, _var.id, state_name);
     return symbol;
 }
 

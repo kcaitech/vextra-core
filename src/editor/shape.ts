@@ -1253,7 +1253,7 @@ export class ShapeEditor {
 
             let match = true;
             curState.forEach((v, k) => {
-                const tag = vartag ? vartag.get(k) : s.name;
+                const tag = vartag?.get(k) ?? SymbolShape.Default_State;
                 if (match) match = v === tag;
                 if (k === originVarId && v === tag) candidateshape.push(s);
             });
@@ -1320,7 +1320,7 @@ export class ShapeEditor {
             // 收集要同步修改的变量
             const needModifyVars: { v: Variable, tag: string | undefined }[] = [];
             curState.forEach((v, k) => {
-                const tag = vartag ? vartag.get(k) : candidate.name;
+                const tag = vartag?.get(k) ?? SymbolShape.Default_State;
                 if (k === originVarId) {
                     needModifyVars.push({v: curVars.get(k)!, tag: v}); // 如果改回默认，要删了？
                 } else if (tag !== v) {
@@ -1386,7 +1386,7 @@ export class ShapeEditor {
 
             let match = true;
             curState.forEach((v, k) => {
-                const tag = vartag ? vartag.get(k) : s.name;
+                const tag = vartag?.get(k) ?? SymbolShape.Default_State;
                 if (match) match = v === tag;
             });
             if (match) {
