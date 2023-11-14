@@ -4,7 +4,7 @@ import { ShapeFrame } from "../data/classes";
 
 const shadowOri: { [key: string]: (h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, i: number, path: string) => any } = {};
 
-shadowOri[ShadowPosition.Outer] = function (h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, d: number, path: string): any {
+shadowOri[ShadowPosition.Outer] = function (h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, i: number, path: string): any {
   // const shadow = shadows[i];
   // const { color, offsetX, offsetY, blurRadius, spread } = shadow;
   // const fe_color_matrix = {
@@ -35,44 +35,31 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadows: Shadow[], fram
   // const mergeNode = h('feMergeNode', fe_merge_node1_porps);
   // return { h_node, mergeNode }
   const { width, height } = frame;
-  const x = 0;
-  const y = 0;
-  let style;
-  let shad: string[] = [];
-  const filters = []
   const clipId = "clippath-shadow" + id;
-  const paths = []
-  for (let i = 0; i < shadows.length; i++) {
-    const shadow = shadows[i];
-    const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
-    getFilterPropsValue(shadow, frame, f_props);
-    const { color, offsetX, offsetY, blurRadius, spread } = shadow;
-    const { red, green, blue, alpha } = color;
-    const filter_props: any = { id: id + i, x: '-20%', y: '-20%', height: '140%', width: '140%' };
-    filter_props.width = Math.max(...f_props.props_w);
-    filter_props.height = Math.max(...f_props.props_h);
-    filter_props.x = Math.min(...f_props.props_x);
-    filter_props.y = Math.min(...f_props.props_y);
-    const filter = h("filter", filter_props, [
-      h('feGaussianBlur', { stdDeviation: `${blurRadius}`, in: "SourceGraphic" }),
-      h('feOffset', { dx: offsetX, dy: offsetY, })
-    ])
-    filters.push(filter);
-    const body_props: any = {
-      d: path,
-      fill: `rgba(${red}, ${green}, ${blue}, ${alpha})`,
-      'clip-path': "url(#" + clipId + ")",
-      style: `transform: scale(${1 + spread / width}); transform-origin: center center;`,
-      filter: `url(#${id + i})`
-    }
-    paths.push(h('path', body_props))
-  }
-  const box_s = shad.join(',');
-  style = `box-shadow: ${box_s}; height: 100%; width: 100%;`
-  return h("g", [
-    ...filters,
-    ...paths
+  const shadow = shadows[i];
+  const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
+  getFilterPropsValue(shadow, frame, f_props);
+  const { color, offsetX, offsetY, blurRadius, spread } = shadow;
+  const { red, green, blue, alpha } = color;
+  const filter_props: any = { id: id + i, x: '-20%', y: '-20%', height: '140%', width: '140%' };
+  filter_props.width = Math.max(...f_props.props_w);
+  filter_props.height = Math.max(...f_props.props_h);
+  filter_props.x = Math.min(...f_props.props_x);
+  filter_props.y = Math.min(...f_props.props_y);
+  const multi = 1 + (spread * 2) / width;
+  const filter = h("filter", filter_props, [
+    h('feGaussianBlur', { stdDeviation: `${blurRadius}`, in: "SourceGraphic" }),
+    h('feOffset', { dx: offsetX / multi, dy: offsetY / multi, })
   ])
+  const body_props: any = {
+    d: path,
+    fill: `rgba(${red}, ${green}, ${blue}, ${alpha})`,
+    'clip-path': "url(#" + clipId + ")",
+    filter: `url(#${id + i})`,
+    style: ` position: absolute; transform-origin: center center; transform: scale(${multi});`,
+  }
+  const p = h('path', body_props);
+  return { filter, p }
 }
 shadowOri[ShadowPosition.Inner] = function (h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, i: number, path: string): any {
   const f_id = `inner-shadow-${id + i}`;
@@ -133,9 +120,9 @@ export function render(h: Function, style: Style, frame: ShapeFrame, id: string,
   const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
   const f_id = `dorp-shadow-${id}`;
   const filter_props: any = { id: f_id, x: '-30%', y: '-30%', height: '160%', width: '160%' };
-  const s = shadowOri[ShadowPosition.Outer](h, style.shadows, frame, id, 1, path);
-  if (s) elArr.push(s);
   const fe_merge_node2_porps = { in: "SourceGraphic" };
+  const filters = [];
+  const paths = [];
   for (let i = 0; i < shadows.length; i++) {
     const shadow = shadows[i];
     getFilterPropsValue(shadow, frame, f_props);
@@ -145,22 +132,27 @@ export function render(h: Function, style: Style, frame: ShapeFrame, id: string,
       // const { h_node, mergeNode } = shadowOri[position](h, style.shadows, frame, id, i);
       // filterNode.push(...h_node);
       // feMergeNode.push(mergeNode);
-
+      const { filter, p } = shadowOri[position](h, style.shadows, frame, id, i, path);
+      filters.push(filter);
+      paths.push(p);
     } else if (position === ShadowPosition.Inner) {
       const filter = shadowOri[position](h, style.shadows, frame, id, i, path);
       inner_f.push(filter);
     }
   }
-  if (filterNode.length) {
-    filter_props.width = Math.max(...f_props.props_w);
-    filter_props.height = Math.max(...f_props.props_h);
-    filter_props.x = Math.min(...f_props.props_x);
-    filter_props.y = Math.min(...f_props.props_y);
-    feMergeNode.push(h('feMergeNode', fe_merge_node2_porps));
-    const merge = h('feMerge', {}, feMergeNode)
-    filterNode.push(merge);
-    elArr.push(h('filter', filter_props, filterNode));
+  if(filters.length) {
+    elArr.push(h("g", [...filters,...paths]));
   }
+  // if (filterNode.length) {
+  //   filter_props.width = Math.max(...f_props.props_w);
+  //   filter_props.height = Math.max(...f_props.props_h);
+  //   filter_props.x = Math.min(...f_props.props_x);
+  //   filter_props.y = Math.min(...f_props.props_y);
+  //   feMergeNode.push(h('feMergeNode', fe_merge_node2_porps));
+  //   const merge = h('feMerge', {}, feMergeNode)
+  //   filterNode.push(merge);
+  //   elArr.push(h('filter', filter_props, filterNode));
+  // }
   elArr.push(...inner_f);
   return elArr;
 }
