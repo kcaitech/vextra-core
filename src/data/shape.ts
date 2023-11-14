@@ -459,6 +459,9 @@ function genRefId(refId: string, type: OverrideType) {
 }
 
 export class SymbolShape extends GroupShape implements classes.SymbolShape {
+
+    static Default_State = "49751e86-9b2c-4d1b-81b0-36f19b5407d2"
+
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean // 子对象都为SymbolShape
     variables?: BasicMap<string, Variable> // 怎么做关联
@@ -514,7 +517,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             const vartag = s.vartag;
             let match = true;
             curState.forEach((v, k) => {
-                const tag = vartag ? vartag.get(k) : s.name;
+                const tag = vartag?.get(k) ?? SymbolShape.Default_State;
                 if (match) match = v === tag;
             });
             if (match) {
