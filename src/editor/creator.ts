@@ -304,8 +304,9 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     return shape;
 }
 
-export function newSymbolShape(name: string, frame: ShapeFrame): SymbolShape {
+export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): SymbolShape {
     const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray());
+    if (style) compo.style = style;
     addCommonAttr(compo);
     compo.isUnionSymbolShape = false;
     return compo;

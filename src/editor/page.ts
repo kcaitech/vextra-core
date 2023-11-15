@@ -53,7 +53,7 @@ import {Matrix} from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
-    importBorder,
+    importBorder, importShapeFrame,
     importStyle,
     importSymbolShape
 } from "../data/baseimport";
@@ -61,7 +61,7 @@ import {gPal} from "../basic/pal";
 import {findUsableBorderStyle, findUsableFillStyle} from "../render/boolgroup";
 import {BasicArray} from "../data/basic";
 import {TableEditor} from "./table";
-import {exportArtboard, exportStyle, exportSymbolShape} from "../data/baseexport";
+import {exportArtboard, exportShapeFrame, exportStyle, exportSymbolShape} from "../data/baseexport";
 import {
     adjust_selection_before_group,
     after_remove,
@@ -327,8 +327,6 @@ export class PageEditor {
     /**
      * 创建组件
      * symbolref引用的symbol可能被其他人取消，那么symbolref应该能引用普通的对象！
-     *
-     * @param shape
      */
     makeSymbol(document: Document, shapes: Shape[], name?: string) {
         if (shapes.length === 0) return;
@@ -338,20 +336,19 @@ export class PageEditor {
             adjust_selection_before_group(document, this.__page, shapes, api, need_trans_data);
             let sym: Shape;
             const shape0 = shapes[0];
-            if (shapes.length === 1 && shape0 instanceof GroupShape && !shape0.fixedRadius
-                && shape0.style.fills.length === 0 && shape0.style.borders.length === 0) {
-                const frame = shape0.frame;
-                const symbolShape = newSymbolShape(name ?? shape0.name, new ShapeFrame(frame.x, frame.y, frame.width, frame.height));
+            const frame = importShapeFrame((exportShapeFrame(shape0.frame)));
+            if (shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius) {
+                const style = importStyle(exportStyle(shape0.style));
+                const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 sym = api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
-                const childs = shape0.childs;
-                for (let i = 0, len = childs.length; i < len; ++i) {
+                const children = shape0.childs;
+                for (let i = 0, len = children.length; i < len; ++i) {
                     api.shapeMove(this.__page, shape0, 0, symbolShape, i);
                 }
                 api.shapeDelete(this.__page, shape0.parent as GroupShape, index);
             } else {
-                const frame = shape0.frame;
-                const symbolShape = newSymbolShape(name ?? shape0.name, new ShapeFrame(frame.x, frame.y, frame.width, frame.height));
+                const symbolShape = newSymbolShape(name ?? shape0.name, frame);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 sym = group(this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
             }
