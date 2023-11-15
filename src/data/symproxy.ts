@@ -393,6 +393,16 @@ class ShapeHdl extends HdlBase {
             if (val) return val.value;
             return Reflect.get(target, propertyKey, receiver);
         }
+        if (propStr === "isLocked") {
+            const val = _getOnVar(
+                receiver as Shape,
+                this,
+                propertyKey,
+                OverrideType.Lock,
+                VariableType.Lock);
+            if (val) return val.value;
+            return Reflect.get(target, propertyKey, receiver);
+        }
         if (propStr === "watch") {
             return this.watch;
         }
@@ -671,6 +681,14 @@ class SymbolRefShapeHdl extends ShapeHdl {
         if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
         if (this.updater(false)) super.origin_watcher("childs", ...args);
         else super.origin_watcher(...args);
+    }
+
+    root_watcher(...args: any[]) {
+        if (args.indexOf("variable") >= 0) {
+            this.updater(); // 重新获取
+            return;
+        }
+        super.root_watcher(...args);
     }
 
     onRemoved(target: object): void {

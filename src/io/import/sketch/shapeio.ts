@@ -18,7 +18,7 @@ import { importText } from "./textio";
 import { Artboard } from "../../../data/artboard";
 import { Text } from "../../../data/text";
 import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D, SymbolRefShape } from "../../../data/classes"
-import { BasicArray } from "../../../data/basic";
+import { BasicArray, BasicMap } from "../../../data/basic";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
 import { Fill, FillType } from "../../../data/classes";
@@ -325,7 +325,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): Symbo
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs));
+    const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicMap());
 
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
@@ -350,7 +350,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun): Sy
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    const shape = new SymbolRefShape(id, name, ShapeType.SymbolRef, frame, style, data['symbolID']);
+    const shape = new SymbolRefShape(id, name, ShapeType.SymbolRef, frame, style, data['symbolID'], new BasicMap());
 
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);

@@ -859,7 +859,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
             });
             return ret;
         })(),
-        variables: source.variables && (() => {
+        variables: (() => {
             const val = source.variables;
             const ret: any = {};
             val.forEach((v, k) => {
@@ -1501,7 +1501,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
             });
             return ret;
         })(),
-        variables: source.variables && (() => {
+        variables: (() => {
             const val = source.variables;
             const ret: any = {};
             val.forEach((v, k) => {

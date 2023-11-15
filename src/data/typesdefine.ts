@@ -21,6 +21,7 @@ export enum VariableType {
     Gradient = 'gradient',
     Text = 'text',
     Visible = 'visible',
+    Lock = 'lock',
     SymbolRef = 'symbolRef',
     Status = 'status',
     ImageRef = 'imageRef',
@@ -238,6 +239,7 @@ export enum OverrideType {
     Fills = 'fills',
     Borders = 'borders',
     Visible = 'visible',
+    Lock = 'lock',
     Variable = 'variable',
     SymbolID = 'symbolID',
 }
@@ -547,7 +549,7 @@ export type TableCell = Shape & {
 export type SymbolRefShape = Shape & {
     refId: string
     virbindsEx?: Map<string, string>
-    variables?: Map<string, Variable>
+    variables: Map<string, Variable>
 }
 /* span attr */
 export type Span = SpanAttr & {
@@ -607,7 +609,7 @@ export type GroupShape = Shape & {
 export type SymbolShape = GroupShape & {
     isUnionSymbolShape?: boolean
     virbindsEx?: Map<string, string>
-    variables?: Map<string, Variable>
+    variables: Map<string, Variable>
     vartag?: Map<string, string>
 }
 /* flatten shape */

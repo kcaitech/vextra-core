@@ -34,7 +34,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     refId: string
 
     virbindsEx?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
-    variables?: BasicMap<string, Variable>
+    variables: BasicMap<string, Variable>
 
     __childs?: Shape[];
 
@@ -44,7 +44,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        refId: string
+        refId: string,
+        variables: BasicMap<string, Variable>
     ) {
         super(
             id,
@@ -54,6 +55,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             style
         )
         this.refId = refId
+        this.variables = variables;
+        (variables as any).typeId = "variable";
         this.origin_watcher = this.origin_watcher.bind(this);
         this.updater = this.updater.bind(this);
         // this.updater();
@@ -248,50 +251,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.refId;
     }
 
-    // getRefId() { // virtual shape 可用, 
-    //     let refId = this.id;
-    //     refId = refId.substring(refId.lastIndexOf('/') + 1);
-    //     const _vars = super.findOverride(refId, OverrideType.SymbolID);
-    //     if (!_vars) return this.refId;
-    //     // watch vars
-    //     this._watch_vars("symbolRef", _vars);
-    //     const _var = _vars[_vars.length - 1];
-    //     if (_var && _var.type === VariableType.SymbolRef) {
-    //         return _var.value;
-    //     }
-    //     return this.refId;
-    // }
-    // private __startLoad: boolean = false;
-    // peekSymbol(startLoad: boolean = false): SymbolShape | undefined {
-    //     const ret = this.__data;
-    //     if (ret) return ret;
-    //     if (startLoad && !this.__startLoad && this.__symMgr) {
-    //         this.__startLoad = true;
-    //         this.__symMgr.get(this.getRefId([])).then((val) => {
-    //             if (!this.__data) {
-    //                 this.__data = val;
-    //                 if (val) {
-    //                     val.watch(this.origin_watcher)
-    //                     this.notify();
-    //                 }
-    //             }
-    //         })
-    //     }
-    //     return ret;
-    // }
-    // async loadSymbol() {
-    //     if (this.__data) return this.__data;
-    //     const val = this.__symMgr && await this.__symMgr.get(this.getRefId([]));
-    //     if (!this.__data) {
-    //         this.__data = val;
-    //         if (val) {
-    //             val.watch(this.origin_watcher)
-    //             this.notify();
-    //         }
-    //     }
-    //     return this.__data;
-    // }
-
     onRemoved(): void {
         // 构建symbol proxy shadow, 在这里需要unwatch
 
@@ -338,6 +297,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                 return new Variable(uuid(), classes.VariableType.Text, "", value);
             case OverrideType.Visible:
                 return new Variable(uuid(), classes.VariableType.Visible, "", value);
+            case OverrideType.Lock:
+                return new Variable(uuid(), classes.VariableType.Lock, "", value);
             case OverrideType.SymbolID:
                 return new Variable(uuid(), classes.VariableType.SymbolRef, "", value);
             case OverrideType.Variable:
@@ -374,6 +335,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             case OverrideType.Borders:
             case OverrideType.Fills:
             case OverrideType.Visible:
+            case OverrideType.Lock:
             case OverrideType.SymbolID:
                 {
                     let override = this.getOverrid(refId, attr);
@@ -511,12 +473,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             super.findVar(refId, ret);
             return ret;
         }
-        if (this.isVirtualShape) {
-            refId = this.originId + '/' + refId;
-        }
-        else {
-            refId = this.id + '/' + refId;
-        }
+        const thisId = this.isVirtualShape ? this.originId : this.id;
+        if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
+
         return super.findOverride(refId, type);
     }
 

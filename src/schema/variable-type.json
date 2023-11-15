@@ -5,6 +5,7 @@
         "gradient",
         "text",
         "visible",
+        "lock",
         "symbolRef",
         "status",
         "imageRef",
