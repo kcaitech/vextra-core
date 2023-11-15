@@ -3,17 +3,13 @@ import {ShapeType} from "../../data/typesdefine";
 
 /**
  * @description 检查symbol与symbol2之间是否存在循环引用
- * 组件symbol2内是否可以存在symbol的实例
+ * symbol2将包含symbol，若用symbol建一棵树，这颗树上不可以存在一条以symbol2为形的枝叶，若存在则存在循环
  */
 export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
     let deps: { shape: string, ref: string }[] = [
         ...get_topology_map(symbol),
-        {
-            shape: symbol2,
-            ref: symbol.id
-        }
+        {shape: symbol2, ref: symbol.id}
     ];
-    // if (deps.length < 2) return false;
     while (deps.length && is_exist_single_stick(deps)) { // 剪枝
         deps = filter_deps(deps, 'shape', 'ref');
         deps = filter_deps(deps, 'ref', 'shape');
@@ -93,8 +89,4 @@ function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
         if (!set1.has(v)) is_single = true;
     })
     return is_single;
-}
-
-function get_id(raw_id: string) {
-    return raw_id;
 }

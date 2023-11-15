@@ -23,7 +23,7 @@ import {
     BorderStyle,
     SymbolRefShape
 } from "../data/classes";
-import { BasicArray } from "../data/basic";
+import { BasicArray, BasicMap } from "../data/basic";
 import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
@@ -91,14 +91,18 @@ export function newflatStyle(): Style {
     return style;
 }
 
-export function newArtboard(name: string, frame: ShapeFrame): Artboard {
+export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Artboard {
     template_artboard.id = uuid();
     template_artboard.name = name;
     template_artboard.frame = frame;
     const artboard = importArtboard(template_artboard as types.Artboard);
-    const fillColor = new Color(1, 255, 255, 255);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
-    artboard.style.fills.push(fill);
+    if (style) {
+        artboard.style = style;
+    } else {
+        const fillColor = new Color(1, 255, 255, 255);
+        const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
+        artboard.style.fills.push(fill);
+    }
     artboard.isVisible = true;
     artboard.isLocked = false;
     return artboard
@@ -300,8 +304,9 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     return shape;
 }
 
-export function newSymbolShape(name: string, frame: ShapeFrame): SymbolShape {
-    const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray());
+export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): SymbolShape {
+    const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicMap());
+    if (style) compo.style = style;
     addCommonAttr(compo);
     compo.isUnionSymbolShape = false;
     return compo;
@@ -310,14 +315,14 @@ export function newSymbolShapeUnion(default_sym: SymbolShape, frame: ShapeFrame)
     const style = newflatStyle();
     const fill = new Fill(uuid(), false, types.FillType.SolidColor, new Color(1, 128, 128, 128));
     style.fills.push(fill);
-    const union = new SymbolShape(default_sym.id, default_sym.name, types.ShapeType.Symbol, frame, style, new BasicArray());
+    const union = new SymbolShape(default_sym.id, default_sym.name, types.ShapeType.Symbol, frame, style, new BasicArray(), new BasicMap());
     addCommonAttr(union);
     default_sym.isUnionSymbolShape = true;
     return union;
 }
 
 export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: ResourceMgr<SymbolShape>): SymbolRefShape {
-    const ref = new SymbolRefShape(uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId);
+    const ref = new SymbolRefShape(uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId, new BasicMap());
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);
     return ref;

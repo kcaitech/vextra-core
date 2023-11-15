@@ -50,12 +50,18 @@ import {get_frame, modify_frame_after_insert, set_childs_id, transform_data} fro
 import {deleteEmptyGroupShape, expandBounds, group, ungroup} from "./group";
 import {render2path} from "../render";
 import {Matrix} from "../basic/matrix";
-import {IImportContext, importBorder, importGroupShape, importStyle, importSymbolShape} from "../data/baseimport";
+import {
+    IImportContext,
+    importArtboard,
+    importBorder, importShapeFrame,
+    importStyle,
+    importSymbolShape
+} from "../data/baseimport";
 import {gPal} from "../basic/pal";
 import {findUsableBorderStyle, findUsableFillStyle} from "../render/boolgroup";
 import {BasicArray} from "../data/basic";
 import {TableEditor} from "./table";
-import {exportGroupShape, exportSymbolShape} from "../data/baseexport";
+import {exportArtboard, exportShapeFrame, exportStyle, exportSymbolShape} from "../data/baseexport";
 import {
     adjust_selection_before_group,
     after_remove,
@@ -69,7 +75,13 @@ import {
     trans_after_make_symbol
 } from "./utils/other";
 import {v4} from "uuid";
-import {is_part_of_symbolref, modify_variable_with_api, shape4border, shape4fill} from "./utils/symbol";
+import {
+    is_exist_invalid_shape,
+    is_part_of_symbolref,
+    modify_variable_with_api,
+    shape4border,
+    shape4fill
+} from "./utils/symbol";
 import {is_circular_ref2} from "./utils/ref_check";
 
 // 用于批量操作的单个操作类型
@@ -321,8 +333,6 @@ export class PageEditor {
     /**
      * 创建组件
      * symbolref引用的symbol可能被其他人取消，那么symbolref应该能引用普通的对象！
-     *
-     * @param shape
      */
     makeSymbol(document: Document, shapes: Shape[], name?: string) {
         if (shapes.length === 0) return;
@@ -332,20 +342,19 @@ export class PageEditor {
             adjust_selection_before_group(document, this.__page, shapes, api, need_trans_data);
             let sym: Shape;
             const shape0 = shapes[0];
-            if (shapes.length === 1 && shape0 instanceof GroupShape && !shape0.fixedRadius
-                && shape0.style.fills.length === 0 && shape0.style.borders.length === 0) {
-                const frame = shape0.frame;
-                const symbolShape = newSymbolShape(name ?? shape0.name, new ShapeFrame(frame.x, frame.y, frame.width, frame.height));
+            const frame = importShapeFrame((exportShapeFrame(shape0.frame)));
+            if (shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius) {
+                const style = importStyle(exportStyle(shape0.style));
+                const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 sym = api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
-                const childs = shape0.childs;
-                for (let i = 0, len = childs.length; i < len; ++i) {
+                const children = shape0.childs;
+                for (let i = 0, len = children.length; i < len; ++i) {
                     api.shapeMove(this.__page, shape0, 0, symbolShape, i);
                 }
                 api.shapeDelete(this.__page, shape0.parent as GroupShape, index);
             } else {
-                const frame = shape0.frame;
-                const symbolShape = newSymbolShape(name ?? shape0.name, new ShapeFrame(frame.x, frame.y, frame.width, frame.height));
+                const symbolShape = newSymbolShape(name ?? shape0.name, frame);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 sym = group(this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
             }
@@ -470,44 +479,53 @@ export class PageEditor {
                 (shape as types.GroupShape).childs.forEach((c) => replaceId(c));
             }
         }
-        const returnshapes: Shape[] = [];
+        const return_shapes: Shape[] = [];
         for (let i = 0, len = shapes.length; i < len; i++) {
-            const shape = shapes[i];
+            const shape: SymbolRefShape = shapes[i] as SymbolRefShape;
             if (shape.type !== ShapeType.SymbolRef) {
-                returnshapes.push(shape);
+                return_shapes.push(shape);
                 continue;
             }
             if (shape.parent && shape.parent.type === ShapeType.SymbolRef) { // 实例内引用组件
-                returnshapes.push(shape);
+                return_shapes.push(shape);
                 continue;
             }
             const symmgr = shape.getSymbolMgr();
             const symbol = symmgr?.getSync(shape.refId);
             if (!symbol) {
-                returnshapes.push(shape);
+                return_shapes.push(shape);
                 continue;
             }
-            const tmpGroup = newGroupShape(shape.name, shape.style);
-            initFrame(tmpGroup, shape.frame);
-            tmpGroup.childs = shape.virtualChilds! as BasicArray<Shape>;
-            tmpGroup.varbinds = shape.varbinds;
-            const symbolData = exportGroupShape(tmpGroup); // todo 如果symbol只有一个child时
-            replaceId(symbolData);
-            const parent = shape.parent;
-            if (!parent) {
-                returnshapes.push(shape);
-                continue;
-            }
-            const insertIndex = (parent as GroupShape).indexOfChild(shape);
-            if (insertIndex < 0) {
-                returnshapes.push(shape);
-                continue;
-            }
+            const {x, y, width, height} = shape.frame;
+            const tmpFrame = new ShapeFrame(x, y, width, height);
+            const sym = shape.getSymbolMgr()?.getSync(shape.refId);
+            if (!sym) continue;
+            let style: any = sym.isUnionSymbolShape ? shape.getSubData()?.style : shape.getRootData()?.style;
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document
             };
-            const newShape = importGroupShape(symbolData, ctx);
+            if (style) {
+                style = importStyle(exportStyle(style), ctx);
+            }
+            const tmpArtboard: Artboard = newArtboard(shape.name, tmpFrame, style);
+            initFrame(tmpArtboard, shape.frame);
+            tmpArtboard.childs = shape.virtualChilds! as BasicArray<Shape>;
+            tmpArtboard.varbinds = shape.varbinds;
+            const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
+            replaceId(symbolData);
+            const parent = shape.parent;
+            if (!parent) {
+                return_shapes.push(shape);
+                continue;
+            }
+            const insertIndex = (parent as GroupShape).indexOfChild(shape);
+            if (insertIndex < 0) {
+                return_shapes.push(shape);
+                continue;
+            }
+
+            const newShape = importArtboard(symbolData, ctx);
             actions.push({parent, self: newShape, insertIndex});
         }
         if (!actions.length) return shapes;
@@ -521,7 +539,7 @@ export class PageEditor {
                 results.push(ret);
             }
             this.__repo.commit();
-            return [...returnshapes, ...results];
+            return [...return_shapes, ...results];
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
@@ -1499,7 +1517,7 @@ export class PageEditor {
         const pre: Shape[] = [];
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
-            if (item.type === ShapeType.Contact) continue;
+            if (is_exist_invalid_shape([item])) continue;
             let next = false;
             let p: Shape | undefined = host;
             while (p) {

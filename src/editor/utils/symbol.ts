@@ -60,9 +60,20 @@ function varParent(_var: Variable) {
 }
 
 function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
-    const p = varParent(_var);
+    const p = varParent(_var); // todo 如果p是symbolref(root), shape.isVirtual
     if (!p) throw new Error();
-    if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
+    let r: Shape | undefined = shape;
+    while (r && r.isVirtualShape) r = r.parent;
+    if (!r) throw new Error();
+
+    // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
+    // shape, 可能是virtual, 任意对象，比如在修改填充，它的root是symbolref
+    // shape, 非virtual的情况：symbolref, symbol, 其它不需要修改variable, root是自己
+    // r.id === p.id时，p非virtual(symbolref or symbol), 同时p是shape的直接父级，可直接修改
+    // r.id !== p.id时
+    //     p为virtual，则应该override
+    //     p非virtual，p应该是symbol，不是shape的直接父级，应该override
+    if (r.id !== p.id) {
         _override_variable(page, shape, _var, value, api);
     } else {
         api.shapeModifyVariable(page, _var, value);
@@ -254,3 +265,16 @@ export function shape4fill(api: Api, page: Page, shape: Shape) {
     }, api, shape)
     return _var || shape;
 }
+
+export function is_exist_invalid_shape(selected: Shape[]) {
+    let result = false;
+    for (let i = 0, len = selected.length; i < len; i++) {
+        const item = selected[i];
+        if ([ShapeType.Contact, ShapeType.Table].includes(item.type)) return true;
+        if (item.childs?.length) result = is_exist_invalid_shape(item.childs);
+        if (result) return true;
+    }
+    return false;
+}
+
+
