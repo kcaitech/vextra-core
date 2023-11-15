@@ -8,12 +8,8 @@ import {ShapeType} from "../../data/typesdefine";
 export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
     let deps: { shape: string, ref: string }[] = [
         ...get_topology_map(symbol),
-        {
-            shape: symbol2,
-            ref: symbol.id
-        }
+        {shape: symbol2, ref: symbol.id}
     ];
-    // if (deps.length < 2) return false;
     while (deps.length && is_exist_single_stick(deps)) { // 剪枝
         deps = filter_deps(deps, 'shape', 'ref');
         deps = filter_deps(deps, 'ref', 'shape');
@@ -93,8 +89,4 @@ function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
         if (!set1.has(v)) is_single = true;
     })
     return is_single;
-}
-
-function get_id(raw_id: string) {
-    return raw_id;
 }
