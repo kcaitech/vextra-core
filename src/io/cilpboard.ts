@@ -1,4 +1,4 @@
-import {GroupShape, Shape, ShapeType, SymbolShape, TextShape} from "../data/shape";
+import {GroupShape, Shape, ShapeFrame, ShapeType, SymbolShape, TextShape} from "../data/shape";
 import {
     exportArtboard,
     exportGroupShape,
@@ -32,7 +32,7 @@ import {
 import * as types from "../data/typesdefine";
 import {v4} from "uuid";
 import {Document} from "../data/document";
-import {newTextShape, newTextShapeByText} from "../editor/creator";
+import {newSymbolRefShape, newTextShape, newTextShapeByText} from "../editor/creator";
 import {Api} from "../editor/command/recordapi";
 import {translateTo} from "../editor/frame";
 import {Page} from "../data/page";
@@ -136,9 +136,17 @@ export function import_shape(document: Document, source: types.Shape[]) {
                 childs && childs.length && set_childs_id(childs);
                 r = importTableShape(_s as types.TableShape, ctx);
             } else if (type === ShapeType.Symbol) {
-                const childs = (_s as GroupShape).childs;
-                childs && childs.length && set_childs_id(childs);
-                r = importSymbolShape(_s as types.SymbolShape);
+                const frame = new ShapeFrame(_s.frame.x, _s.frame.y, _s.frame.width, _s.frame.height);
+                if ((_s as any).isUnionSymbolShape) {
+                    const one = (_s as any)?.childs[0];
+                    if (one) {
+                        frame.x = one.frame.x;
+                        frame.y = one.frame.y
+                        frame.width = one.frame.width;
+                        frame.height = one.frame.height;
+                    }
+                }
+                r = newSymbolRefShape(_s.name, frame, _s.id, document.symbolsMgr);
             } else if (type === ShapeType.SymbolRef) {
                 r = importSymbolRefShape(_s as types.SymbolRefShape, ctx);
             }
