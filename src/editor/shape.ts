@@ -193,14 +193,21 @@ export class ShapeEditor {
      * @param api
      */
     modifyVariable2(_var: Variable, value: any, api: Api) {
-        const p = varParent(_var);
+        const p = varParent(_var); // todo 如果p是symbolref(root), shape.isVirtual
         if (!p) throw new Error();
         const shape = this.__shape;
-        // if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
-        // if (shape instanceof SymbolRefShape || (p.isVirtualShape && p instanceof SymbolShape && !(shape instanceof SymbolShape))) { // 实例、实例组成图层
-        if ((shape instanceof SymbolRefShape && p.id !== shape.id) || (p.isVirtualShape && p instanceof SymbolShape && !(shape instanceof SymbolShape))) { // 实例、实例组成图层
-            // override
-            // const api = this.__repo.
+        let r: Shape | undefined = shape;
+        while(r && r.isVirtualShape) r = r.parent;
+        if (!r) throw new Error();
+
+        // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
+        // shape, 可能是virtual, 任意对象，比如在修改填充，它的root是symbolref
+        // shape, 非virtual的情况：symbolref, symbol, 其它不需要修改variable, root是自己
+        // r.id === p.id时，p非virtual(symbolref or symbol), 同时p是shape的直接父级，可直接修改
+        // r.id !== p.id时
+        //     p为virtual，则应该override
+        //     p非virtual，p应该是symbol，不是shape的直接父级，应该override
+        if (r.id !== p.id) {
             this._overrideVariable(_var, value, api);
         } else {
             api.shapeModifyVariable(this.__page, _var, value);
