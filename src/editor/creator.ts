@@ -91,14 +91,18 @@ export function newflatStyle(): Style {
     return style;
 }
 
-export function newArtboard(name: string, frame: ShapeFrame): Artboard {
+export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Artboard {
     template_artboard.id = uuid();
     template_artboard.name = name;
     template_artboard.frame = frame;
     const artboard = importArtboard(template_artboard as types.Artboard);
-    const fillColor = new Color(1, 255, 255, 255);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
-    artboard.style.fills.push(fill);
+    if (style) {
+        artboard.style = style;
+    } else {
+        const fillColor = new Color(1, 255, 255, 255);
+        const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
+        artboard.style.fills.push(fill);
+    }
     artboard.isVisible = true;
     artboard.isLocked = false;
     return artboard

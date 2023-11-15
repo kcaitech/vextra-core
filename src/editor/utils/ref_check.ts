@@ -3,7 +3,7 @@ import {ShapeType} from "../../data/typesdefine";
 
 /**
  * @description 检查symbol与symbol2之间是否存在循环引用
- * 组件symbol2内是否可以存在symbol的实例
+ * symbol2将包含symbol，若用symbol建一棵树，这颗树上不可以存在一条以symbol2为形的枝叶，若包含则存在循环
  */
 export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
     let deps: { shape: string, ref: string }[] = [
