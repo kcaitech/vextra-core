@@ -75,7 +75,13 @@ import {
     trans_after_make_symbol
 } from "./utils/other";
 import {v4} from "uuid";
-import {is_part_of_symbolref, modify_variable_with_api, shape4border, shape4fill} from "./utils/symbol";
+import {
+    is_exist_invalid_shape,
+    is_part_of_symbolref,
+    modify_variable_with_api,
+    shape4border,
+    shape4fill
+} from "./utils/symbol";
 import {is_circular_ref2} from "./utils/ref_check";
 
 // 用于批量操作的单个操作类型
@@ -1505,7 +1511,7 @@ export class PageEditor {
         const pre: Shape[] = [];
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
-            if (item.type === ShapeType.Contact) continue;
+            if (is_exist_invalid_shape([item])) continue;
             let next = false;
             let p: Shape | undefined = host;
             while (p) {

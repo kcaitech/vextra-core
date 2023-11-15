@@ -265,3 +265,16 @@ export function shape4fill(api: Api, page: Page, shape: Shape) {
     }, api, shape)
     return _var || shape;
 }
+
+export function is_exist_invalid_shape(selected: Shape[]) {
+    let result = false;
+    for (let i = 0, len = selected.length; i < len; i++) {
+        const item = selected[i];
+        if ([ShapeType.Contact, ShapeType.Table].includes(item.type)) return true;
+        if (item.childs?.length) result = is_exist_invalid_shape(item.childs);
+        if (result) return true;
+    }
+    return false;
+}
+
+
