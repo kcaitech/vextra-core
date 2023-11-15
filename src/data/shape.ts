@@ -674,11 +674,11 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             super.findVar(override.v.id, ret);
             return ret;
         }
-        if (this.isVirtualShape) {
-            refId = this.originId + '/' + refId;
-        } else {
-            refId = this.id + '/' + refId;
-        }
+        // if (this.isVirtualShape) {
+        //     refId = this.originId + '/' + refId;
+        // } else {
+        //     refId = this.id + '/' + refId;
+        // }
         return super.findOverride(refId, type);
     }
 

@@ -473,12 +473,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             super.findVar(refId, ret);
             return ret;
         }
-        if (this.isVirtualShape) {
-            refId = this.originId + '/' + refId;
-        }
-        else {
-            refId = this.id + '/' + refId;
-        }
+        const thisId = this.isVirtualShape ? this.originId : this.id;
+        if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
+
         return super.findOverride(refId, type);
     }
 
