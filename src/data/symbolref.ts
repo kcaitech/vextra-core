@@ -251,50 +251,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.refId;
     }
 
-    // getRefId() { // virtual shape 可用, 
-    //     let refId = this.id;
-    //     refId = refId.substring(refId.lastIndexOf('/') + 1);
-    //     const _vars = super.findOverride(refId, OverrideType.SymbolID);
-    //     if (!_vars) return this.refId;
-    //     // watch vars
-    //     this._watch_vars("symbolRef", _vars);
-    //     const _var = _vars[_vars.length - 1];
-    //     if (_var && _var.type === VariableType.SymbolRef) {
-    //         return _var.value;
-    //     }
-    //     return this.refId;
-    // }
-    // private __startLoad: boolean = false;
-    // peekSymbol(startLoad: boolean = false): SymbolShape | undefined {
-    //     const ret = this.__data;
-    //     if (ret) return ret;
-    //     if (startLoad && !this.__startLoad && this.__symMgr) {
-    //         this.__startLoad = true;
-    //         this.__symMgr.get(this.getRefId([])).then((val) => {
-    //             if (!this.__data) {
-    //                 this.__data = val;
-    //                 if (val) {
-    //                     val.watch(this.origin_watcher)
-    //                     this.notify();
-    //                 }
-    //             }
-    //         })
-    //     }
-    //     return ret;
-    // }
-    // async loadSymbol() {
-    //     if (this.__data) return this.__data;
-    //     const val = this.__symMgr && await this.__symMgr.get(this.getRefId([]));
-    //     if (!this.__data) {
-    //         this.__data = val;
-    //         if (val) {
-    //             val.watch(this.origin_watcher)
-    //             this.notify();
-    //         }
-    //     }
-    //     return this.__data;
-    // }
-
     onRemoved(): void {
         // 构建symbol proxy shadow, 在这里需要unwatch
 
@@ -341,6 +297,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                 return new Variable(uuid(), classes.VariableType.Text, "", value);
             case OverrideType.Visible:
                 return new Variable(uuid(), classes.VariableType.Visible, "", value);
+            case OverrideType.Lock:
+                return new Variable(uuid(), classes.VariableType.Lock, "", value);
             case OverrideType.SymbolID:
                 return new Variable(uuid(), classes.VariableType.SymbolRef, "", value);
             case OverrideType.Variable:
@@ -377,6 +335,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             case OverrideType.Borders:
             case OverrideType.Fills:
             case OverrideType.Visible:
+            case OverrideType.Lock:
             case OverrideType.SymbolID:
                 {
                     let override = this.getOverrid(refId, attr);

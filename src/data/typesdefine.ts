@@ -21,6 +21,7 @@ export enum VariableType {
     Gradient = 'gradient',
     Text = 'text',
     Visible = 'visible',
+    Lock = 'lock',
     SymbolRef = 'symbolRef',
     Status = 'status',
     ImageRef = 'imageRef',
@@ -238,6 +239,7 @@ export enum OverrideType {
     Fills = 'fills',
     Borders = 'borders',
     Visible = 'visible',
+    Lock = 'lock',
     Variable = 'variable',
     SymbolID = 'symbolID',
 }

@@ -393,6 +393,16 @@ class ShapeHdl extends HdlBase {
             if (val) return val.value;
             return Reflect.get(target, propertyKey, receiver);
         }
+        if (propStr === "isLocked") {
+            const val = _getOnVar(
+                receiver as Shape,
+                this,
+                propertyKey,
+                OverrideType.Lock,
+                VariableType.Lock);
+            if (val) return val.value;
+            return Reflect.get(target, propertyKey, receiver);
+        }
         if (propStr === "watch") {
             return this.watch;
         }
