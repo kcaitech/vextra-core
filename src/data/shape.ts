@@ -1,18 +1,25 @@
-import { Basic, ResourceMgr, Watchable } from "./basic";
-import { Style, Border } from "./style";
-import { Text } from "./text";
+import {Basic, BasicArray, ResourceMgr, Watchable} from "./basic";
+import {BlendMode, Border, ContextSettings, Style} from "./style";
+import {Text} from "./text";
 import * as classes from "./baseclasses"
-import { BasicArray } from "./basic";
+import {
+    BoolOp,
+    CurvePoint,
+    ExportOptions,
+    OverrideItem,
+    PathSegment,
+    Point2D,
+    ResizeType,
+    ShapeFrame,
+    ShapeType
+} from "./baseclasses"
+import {Path} from "./path";
+import {Matrix} from "../basic/matrix";
+import {TextLayout} from "./textlayout";
+import {parsePath} from "./pathparser";
+import {CurveMode} from "./typesdefine";
+
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, OverrideItem, Ellipse, PathSegment } from "./baseclasses"
-import { ShapeType, CurvePoint, OverrideItem, ShapeFrame, BoolOp, ExportOptions, ResizeType, PathSegment, Point2D } from "./baseclasses"
-import { Path } from "./path";
-import { Matrix } from "../basic/matrix";
-import { TextLayout } from "./textlayout";
-import { parsePath } from "./pathparser";
-import { ContactForm, ContactType, CurveMode } from "./typesdefine";
-import { v4 } from "uuid";
-import { d, gen_baisc_params, gen_matrix1, gen_path, gen_raw, slice_invalid_point } from "./utils";
-import { Page } from "./page";
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
@@ -174,7 +181,12 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     setResizingConstraint(value: number) {
         this.resizingConstraint = value;
     }
-
+    setContextSettingsOpacity(value: number) {
+        if (!this.style.contextSettings) {
+            this.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+        }
+        this.resizingConstraint = value;
+    }
     getBorderIndex(border: Border): number {
         return this.style.borders.findIndex(i => i === border);
     }
