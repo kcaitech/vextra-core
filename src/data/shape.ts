@@ -81,7 +81,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
     /**
      * @deprecated 这个坐标是没有经过旋转变换的
-     * @returns 
+     * @returns
      */
     realXY(): { x: number, y: number, width: number, height: number } {
         return this.frame2Root();
@@ -89,7 +89,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
     /**
      * root: page 往上一级
-     * @returns 
+     * @returns
      */
     frame2Root(): ShapeFrame {
         const frame = this.frame;
@@ -110,7 +110,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
     /**
      * root: page 往上一级
-     * @returns 
+     * @returns
      */
     matrix2Root() {
         let s: Shape | undefined = this;
@@ -185,7 +185,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         if (!this.style.contextSettings) {
             this.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
         }
-        this.resizingConstraint = value;
+        this.style.contextSettings.opacity = value;
     }
     getBorderIndex(border: Border): number {
         return this.style.borders.findIndex(i => i === border);
@@ -257,10 +257,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
         this.childs.push(child);
     }
     /**
-     * 
+     *
      * @param child 返回带proxy的对象
-     * @param idx 
-     * @returns 
+     * @param idx
+     * @returns
      */
     addChildAt(child: Shape, idx?: number): Shape {
         if (idx && idx > this.childs.length) {
