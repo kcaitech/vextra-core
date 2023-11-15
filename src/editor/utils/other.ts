@@ -4,7 +4,7 @@ import {
     BorderPosition,
     BorderStyle,
     Color,
-    Document,
+    Document, Fill,
     GroupShape,
     OverrideType,
     Page,
@@ -27,6 +27,8 @@ import {newSymbolRefShape, newSymbolShape} from "../creator";
 import {uuid} from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
 import {translateTo} from "../frame";
+import {exportStyle} from "../../data/baseexport";
+import {importStyle} from "../../data/baseimport";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
@@ -223,7 +225,28 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
     api.shapeModifyY(page, symbol, box.y - 20);
     api.shapeModifyWH(page, symbol, box.width + 40, box.height + 40);
     api.shapeModifyIsUnion(page, symbol, true);
-    const border_style = new BorderStyle(2, 2);
+    const origin_style = importStyle(exportStyle(symbol.style));
+    let fl = symbol.style.fills.length;
+    if (fl) {
+        api.deleteFills(page, symbol, 0, fl);
+        const _fills = origin_style.fills;
+        for (let i = _fills.length - 1; i > -1; i--) {
+            const f = _fills[i];
+            const _f = new Fill(uuid(), f.isEnabled, f.fillType, f.color);
+            api.addFillAt(page, n_sym, _f, 0)
+        }
+    }
+    let bl = symbol.style.borders.length;
+    if (bl) {
+        api.deleteBorders(page, symbol, 0, bl);
+        const _borders = origin_style.borders;
+        for (let i = _borders.length - 1; i > -1; i--) {
+            const b = _borders[i];
+            const _b = new Border(uuid(), b.isEnabled, b.fillType, b.color, b.position, b.thickness, b.borderStyle);
+            api.addBorderAt(page, n_sym, _b, 0);
+        }
+    }
+    const border_style = new BorderStyle(4, 4);
     const boder = new Border(uuid(), true, types.FillType.SolidColor, new Color(1, 255, 153, 0), BorderPosition.Inner, 2, border_style);
     api.addBorderAt(page, symbol, boder, 0);
 
