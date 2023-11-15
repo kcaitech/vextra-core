@@ -145,7 +145,6 @@ export function gen_name_for_state(symbol: SymbolShape) {
 
 /**
  * @description 初始化可变组件的属性值，使该可变组件的属性值与其余可变组件不同、给可变组件命名
- * @param symbol 可变组件
  */
 export function init_state(api: Api, page: Page, symbol: SymbolShape, dlt: string) {
     if (!symbol.parent) return;
@@ -156,6 +155,7 @@ export function init_state(api: Api, page: Page, symbol: SymbolShape, dlt: strin
         const v = variables[i];
         if (v.type !== VariableType.Status) continue;
         const special_name = gen_special_value_for_state(symbol, v, dlt) || dlt;
+        console.log('special_name:', special_name);
         api.shapeModifyVartag(page, symbol, v.id, special_name);
         break;
     }
@@ -167,13 +167,9 @@ export function init_state(api: Api, page: Page, symbol: SymbolShape, dlt: strin
 export function gen_special_value_for_state(symbol: SymbolShape, variable: Variable, dlt: string) {
     if (!symbol.parent) return false;
     if (!symbol.parent.variables) return false;
-    if (!symbol.vartag) return false;
     const bros: SymbolShape[] = symbol.parent.childs as unknown as SymbolShape[];
-    let index = 2;
-    let type_name = dlt;
-    const reg = new RegExp(`^${dlt}[0-9]*$`);
-    const number_set: Set<number> = new Set();
-    let max = 2;
+    let index = 2, type_name = dlt, max = 2;
+    const reg = new RegExp(`^${dlt}[0-9]*$`), number_set: Set<number> = new Set();
     for (let i = 0, len = bros.length; i < len; i++) {
         const n = bros[i].vartag?.get(variable.id);
         if (n && reg.test(n)) {
@@ -186,6 +182,7 @@ export function gen_special_value_for_state(symbol: SymbolShape, variable: Varia
         if (!number_set.has(index)) break;
         index++;
     }
+    console.log('`${type_name}${index}`:', `${type_name}${index}`);
     return `${type_name}${index}`;
 }
 
