@@ -20,6 +20,7 @@ import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup"
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
 import { ContactShape } from "data/baseclasses";
+import {log} from "console";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -209,7 +210,22 @@ export class PageEditor {
         }
         return false;
     }
-
+    modifyShapesContextSettingOpacity(shapes: Shape[], value: number) {
+        if (!shapes.length) return console.log('invalid data');
+        try {
+            const api = this.__repo.start("modifyShapesContextSettingOpacity", {});
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const item = shapes[i];
+                api.shapeModifyContextSettingsOpacity(this.__page, item, value);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+            return false;
+        }
+    }
     boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | GroupShape {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
