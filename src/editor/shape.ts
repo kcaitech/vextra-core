@@ -220,6 +220,7 @@ export class ShapeEditor {
      * @param value
      */
     modifySymbolRefVariable(_var: Variable, value: any) {
+        console.log('EMIT')
         const api = this.__repo.start("modifySymbolRefVariable", {});
         try {
             this.modifyVariable2(_var, value, api);
