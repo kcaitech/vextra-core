@@ -696,6 +696,11 @@ export class ShapeEditor {
     }
 
     public toggleLock() {
+        if (this.modifyVariable(VariableType.Lock, OverrideType.Lock, (_var) => {
+            return _var ? !_var.value : !this.__shape.isLocked;
+        })) {
+            return;
+        }
         this._repoWrap('toggleLock', (api) => {
             api.shapeModifyLock(this.__page, this.__shape, !this.__shape.isLocked);
         });
