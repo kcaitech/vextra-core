@@ -74,6 +74,12 @@ inject['TableShape']['after'] = `\
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 `
 inject['SymbolRefShape'] = {};
+inject['SymbolRefShape']['before'] = `\
+    // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
+`
 inject['SymbolRefShape']['after'] = `\
     // inject code
     if (ctx?.document) {
@@ -97,6 +103,12 @@ inject['FlattenShape']['content'] = `\
 `
 
 inject['SymbolShape'] = {};
+inject['SymbolShape']['before'] = `\
+    // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
+`
 inject['SymbolShape']['after'] = `\
     // inject code
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);

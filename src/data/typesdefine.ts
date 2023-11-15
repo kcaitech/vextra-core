@@ -547,7 +547,7 @@ export type TableCell = Shape & {
 export type SymbolRefShape = Shape & {
     refId: string
     virbindsEx?: Map<string, string>
-    variables?: Map<string, Variable>
+    variables: Map<string, Variable>
 }
 /* span attr */
 export type Span = SpanAttr & {
@@ -607,7 +607,7 @@ export type GroupShape = Shape & {
 export type SymbolShape = GroupShape & {
     isUnionSymbolShape?: boolean
     virbindsEx?: Map<string, string>
-    variables?: Map<string, Variable>
+    variables: Map<string, Variable>
     vartag?: Map<string, string>
 }
 /* flatten shape */

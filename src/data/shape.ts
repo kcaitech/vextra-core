@@ -464,7 +464,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
 
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean // 子对象都为SymbolShape
-    variables?: BasicMap<string, Variable> // 怎么做关联
+    variables: BasicMap<string, Variable> // 怎么做关联
     vartag?: BasicMap<string, string>
     virbindsEx?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
 
@@ -474,7 +474,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<Shape>
+        childs: BasicArray<Shape>,
+        variables: BasicMap<string, Variable>
     ) {
         super(
             id,
@@ -484,6 +485,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             style,
             childs
         )
+        this.variables = variables;
+        (variables as any).typeId = "variable";
     }
 
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {

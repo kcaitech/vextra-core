@@ -888,14 +888,15 @@ export class SymbolRefShape extends Shape {
     typeId = 'symbol-ref-shape'
     refId: string
     virbindsEx?: BasicMap<string, string>
-    variables?: BasicMap<string, Variable>
+    variables: BasicMap<string, Variable>
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        refId: string
+        refId: string,
+        variables: BasicMap<string, Variable>
     ) {
         super(
             id,
@@ -905,6 +906,7 @@ export class SymbolRefShape extends Shape {
             style
         )
         this.refId = refId
+        this.variables = variables
     }
 }
 /**
@@ -1168,7 +1170,7 @@ export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean
     virbindsEx?: BasicMap<string, string>
-    variables?: BasicMap<string, Variable>
+    variables: BasicMap<string, Variable>
     vartag?: BasicMap<string, string>
     constructor(
         id: string,
@@ -1176,7 +1178,8 @@ export class SymbolShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >,
+        variables: BasicMap<string, Variable>
     ) {
         super(
             id,
@@ -1186,6 +1189,7 @@ export class SymbolShape extends GroupShape {
             style,
             childs
         )
+        this.variables = variables
     }
 }
 /**

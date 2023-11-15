@@ -673,6 +673,14 @@ class SymbolRefShapeHdl extends ShapeHdl {
         else super.origin_watcher(...args);
     }
 
+    root_watcher(...args: any[]) {
+        if (args.indexOf("variable") >= 0) {
+            this.updater(); // 重新获取
+            return;
+        }
+        super.root_watcher(...args);
+    }
+
     onRemoved(target: object): void {
         super.onRemoved(target);
         if (this.__childs) {

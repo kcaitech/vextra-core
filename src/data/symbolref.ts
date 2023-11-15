@@ -34,7 +34,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     refId: string
 
     virbindsEx?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
-    variables?: BasicMap<string, Variable>
+    variables: BasicMap<string, Variable>
 
     __childs?: Shape[];
 
@@ -44,7 +44,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        refId: string
+        refId: string,
+        variables: BasicMap<string, Variable>
     ) {
         super(
             id,
@@ -54,6 +55,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             style
         )
         this.refId = refId
+        this.variables = variables;
+        (variables as any).typeId = "variable";
         this.origin_watcher = this.origin_watcher.bind(this);
         this.updater = this.updater.bind(this);
         // this.updater();

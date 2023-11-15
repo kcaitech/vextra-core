@@ -816,13 +816,26 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
 }
 /* symbol ref shape */
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
+    // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
     const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        source.refId
+        source.refId,
+        (() => {
+            const ret = new BasicMap<string, impl.Variable>()
+            const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+            Object.keys(val).forEach((k) => {
+                const v = val[k];
+                ret.set(k, importVariable(v, ctx))
+            });
+            return ret
+        })()
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
@@ -854,15 +867,6 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         Object.keys(val).forEach((k) => {
             const v = val[k];
             ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.variables !== undefined) ret.variables = (() => {
-        const ret = new BasicMap<string, impl.Variable>()
-        const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, importVariable(v, ctx))
         });
         return ret
     })()
@@ -1450,6 +1454,10 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
 }
 /* symbol shape */
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
+    // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
     const ret: impl.SymbolShape = new impl.SymbolShape (
         source.id,
         source.name,
@@ -1510,6 +1518,15 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                 if (r) ret.push(r)
             }
             return ret
+        })(),
+        (() => {
+            const ret = new BasicMap<string, impl.Variable>()
+            const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+            Object.keys(val).forEach((k) => {
+                const v = val[k];
+                ret.set(k, importVariable(v, ctx))
+            });
+            return ret
         })()
     )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
@@ -1545,15 +1562,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         Object.keys(val).forEach((k) => {
             const v = val[k];
             ret.set(k, v)
-        });
-        return ret
-    })()
-    if (source.variables !== undefined) ret.variables = (() => {
-        const ret = new BasicMap<string, impl.Variable>()
-        const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, importVariable(v, ctx))
         });
         return ret
     })()
