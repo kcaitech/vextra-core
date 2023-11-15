@@ -154,7 +154,6 @@ export class CoopRepository {
     }
     commit() {
         if (!this.isNeedCommit()) {
-            console.log("no cmd to commit")
             this.rollback("commit", false);
             return;
         }
