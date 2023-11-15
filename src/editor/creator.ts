@@ -4,47 +4,56 @@ import {Artboard} from "../data/artboard";
 import {Document, PageListItem} from "../data/document";
 import {
     GroupShape,
-    RectShape,
-    PathShape,
-    OvalShape,
-    LineShape,
-    Shape,
-    TextShape,
     ImageShape,
+    LineShape,
+    OvalShape,
+    PathSegment,
+    PathShape,
     PathShape2,
-    PathSegment
+    RectShape,
+    Shape,
+    TextShape
 } from "../data/shape";
 import {ContactShape} from "../data/contact"
 import * as types from "../data/typesdefine"
+import {BlendMode} from "../data/typesdefine"
 import {
+    importArtboard,
     importGroupShape,
     importPage,
-    importArtboard,
-    importTextShape,
-    importText,
     importTableShape,
-    importTableCell
+    importText,
+    importTextShape
 } from "../io/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import template_table_shape from "./template/table-shape.json"
-import template_table_cell from "./template/table-cell.json"
 import {
-    Point2D, CurvePoint,
-    Color, Border, Style, Fill, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
-    Text,
+    Border,
+    BorderStyle,
+    Color,
+    ContextSettings,
+    CurveMode,
+    CurvePoint,
+    Ellipse,
+    Fill,
+    FillType,
     Para,
-    Span,
     ParaAttr,
+    Path,
+    Point2D,
+    ShapeFrame,
+    Span,
+    Style,
+    Text,
     TextAttr,
-    BorderStyle
+    UserInfo
 } from "../data/classes";
-import {BasicArray} from "../data/basic";
+import {BasicArray, ResourceMgr} from "../data/basic";
 import {Repository} from "../data/transact";
 import {Comment} from "../data/comment";
-import {ResourceMgr} from "../data/basic";
 import {TableShape} from "../data/table";
 import {mergeParaAttr, mergeSpanAttr} from "../data/textutils";
 import {ContactForm} from "../data/baseclasses";
@@ -94,6 +103,7 @@ export function newStyle(): Style {
     const fill = newSolidColorFill();
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills);
+    style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
     style.fills.push(fill);
     return style;
 }
