@@ -5,6 +5,7 @@ import { render as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
+import { innerShadowId, render as shadowR } from "./shadow";
 
 // find first usable style
 export function findUsableFillStyle(shape: Shape): Style {
@@ -152,6 +153,19 @@ export function render(h: Function, shape: GroupShape, reflush?: number, consume
         return h('path', props);
     }
     else {
-        return h("g", props, childs);
+        const shadows = shape.style.shadows;
+        const ex_props = Object.assign({}, props);
+        const shape_id = shape.id.slice(0, 4);
+        const shadow = shadowR(h, shape.style, frame, shape_id, '', shape);
+        if (shadow.length) {
+            delete props.style;
+            delete props.transform;
+            const inner_url = innerShadowId(shape_id, shadows);
+            if(shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
+            const body = h("g", props, childs);
+            return h("g", ex_props, [...shadow, body]);
+        }else {
+            return h("g", props, childs);
+        }
     }
 }

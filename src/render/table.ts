@@ -2,6 +2,7 @@ import { TableCell, TableShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { render as rCell } from "./tablecell";
+import { innerShadowId, render as shadowR } from "./shadow";
 
 export function render(h: Function, shape: TableShape, reflush?: number): any {
     const isVisible = shape.isVisible ?? true;
@@ -77,5 +78,18 @@ export function render(h: Function, shape: TableShape, reflush?: number): any {
     else {
         props.transform = `translate(${frame.x},${frame.y})`;
     }
-    return h('g', props, nodes);
+    const shadows = shape.style.shadows;
+        const ex_props = Object.assign({}, props);
+        const shape_id = shape.id.slice(0, 4);
+        const shadow = shadowR(h, shape.style, frame, shape_id, path, shape);
+        if (shadow.length) {
+            delete props.style;
+            delete props.transform;
+            const inner_url = innerShadowId(shape_id, shadows);
+            if(shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
+            const body = h("g", props, nodes);
+            return h("g", ex_props, [...shadow, body]);
+        } else {
+            return h('g', props, nodes);
+        }
 }

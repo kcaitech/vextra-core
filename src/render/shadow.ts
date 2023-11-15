@@ -1,40 +1,10 @@
-import { Shadow, ShadowPosition } from "../data/baseclasses";
+import { Shadow, ShadowPosition, ShapeType } from "../data/baseclasses";
 import { Style } from "data/style";
-import { ShapeFrame } from "../data/classes";
+import { Shape, ShapeFrame } from "../data/classes";
 
 const shadowOri: { [key: string]: (h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, i: number, path: string) => any } = {};
-
 shadowOri[ShadowPosition.Outer] = function (h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, i: number, path: string): any {
-  // const shadow = shadows[i];
-  // const { color, offsetX, offsetY, blurRadius, spread } = shadow;
-  // const fe_color_matrix = {
-  //   type: "matrix",
-  //   values: `0 0 0 ${color.red / 255} 0
-  //              0 0 0 ${color.green / 255} 0
-  //              0 0 0 ${color.blue / 255} 0
-  //              0 0 0 ${color.alpha} 0`,
-  //   result: `color${i}`
-  // }
-  // const fe_gaussian_blur_props = {
-  //   stdDeviation: `${blurRadius} ${spread}`,
-  //   in: `color${i}`,
-  //   result: `blur${i}`
-  // }
-  // const fe_offset_props = {
-  //   in: `blur${i}`,
-  //   dx: offsetX,
-  //   dy: offsetY,
-  //   result: `offsetBlur${i}`
-  // }
-  // const fe_merge_node1_porps = { in: `offsetBlur${i}` };
-  // const h_node = [
-  //   h('feColorMatrix', fe_color_matrix),
-  //   h('feGaussianBlur', fe_gaussian_blur_props),
-  //   h('feOffset', fe_offset_props)
-  // ];
-  // const mergeNode = h('feMergeNode', fe_merge_node1_porps);
-  // return { h_node, mergeNode }
-  const { width, height } = frame;
+  const { width, height, x, y } = frame;
   const clipId = "clippath-shadow" + id;
   const shadow = shadows[i];
   const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
@@ -46,28 +16,23 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadows: Shadow[], fram
   filter_props.height = Math.max(...f_props.props_h);
   filter_props.x = Math.min(...f_props.props_x);
   filter_props.y = Math.min(...f_props.props_y);
-  const multi = 1 + (spread * 2) / width;
+  const multi = 1 + (spread * 2) / 100;
   const filter = h("filter", filter_props, [
-    h('feComponentTransfer', { in: "SourceAlpha" }, [
-      h('feFuncA', { type: "linear", slope: "0.7" })
-    ]),
-    // h('feMorphology', { operator: "dilate", radius: `${spread}` }),
-    h('feGaussianBlur', { stdDeviation: `${blurRadius}` }),
-    h('feOffset', { dx: offsetX / multi, dy: offsetY / multi, })
+    h('feGaussianBlur', { stdDeviation: `${blurRadius / 2}` }),
+    h('feOffset', { dx: offsetX / multi, dy: offsetY / multi, }),
   ])
   const body_props: any = {
     d: path,
-    fill: `rgba(${red}, ${green}, ${blue}, ${alpha})`,
     'clip-path': "url(#" + clipId + ")",
-    style: ` position: absolute; transform-origin: center center; transform: scale(${multi});`,
     filter: `url(#${id + i})`,
+    style: `transform-origin: left top; transform: translate(${width / 2}px, ${height / 2}px) scale(${multi}) translate(${-width / 2}px, ${-height / 2}px) `,
+    fill: `rgba(${red}, ${green}, ${blue}, ${alpha})`,
   }
   const p = h('path', body_props);
   return { filter, p }
 }
 shadowOri[ShadowPosition.Inner] = function (h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, i: number, path: string): any {
   const f_id = `inner-shadow-${id + i}`;
-  const { width, height } = frame;
   const shadow = shadows[i];
   const { color, offsetX, offsetY, blurRadius, spread } = shadow;
   const fe_offset_props = {
@@ -76,9 +41,9 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadows: Shadow[], fram
     result: `offsetBlur`
   }
   const fe_gaussian_blur_props = {
-    stdDeviation: `${blurRadius}`,
-    in: `offsetBlur`,
-    in2: 'spread',
+    stdDeviation: `${blurRadius / 2}`,
+    in: `spread`,
+    in2: 'offsetBlur',
     result: `blur`
   }
   const fe_composite1 = {
@@ -122,30 +87,63 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadows: Shadow[], fram
   return h('filter', filter_props, h_node);
 }
 
-export function render(h: Function, style: Style, frame: ShapeFrame, id: string, path: string) {
+function shadowType (h: Function, shadows: Shadow[], i: number): any {
+  const shadow = shadows[i];
+  const { color, offsetX, offsetY, blurRadius, spread } = shadow;
+  const fe_color_matrix = {
+    type: "matrix",
+    values: `0 0 0 ${color.red / 255} 0
+               0 0 0 ${color.green / 255} 0
+               0 0 0 ${color.blue / 255} 0
+               0 0 0 ${color.alpha} 0`,
+    result: `color${i}`
+  }
+  const fe_gaussian_blur_props = {
+    stdDeviation: `${blurRadius / 2}`,
+    in: `color${i}`,
+    result: `blur${i}`
+  }
+  const fe_offset_props = {
+    in: `blur${i}`,
+    dx: offsetX,
+    dy: offsetY,
+    result: `offsetBlur${i}`
+  }
+  const fe_merge_node1_porps = { in: `offsetBlur${i}` };
+  const h_node = [
+    h('feColorMatrix', fe_color_matrix),
+    h('feGaussianBlur', fe_gaussian_blur_props),
+    h('feOffset', fe_offset_props)
+  ];
+  const mergeNode = h('feMergeNode', fe_merge_node1_porps);
+  return { h_node, mergeNode }
+}
+
+export function render(h: Function, style: Style, frame: ShapeFrame, id: string, path: string, shape: Shape) {
   const elArr = new Array();
   const shadows = style.shadows;
-  let filterNode = [];
-  let feMergeNode = [];
   const inner_f = [];
   const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
-  const f_id = `dorp-shadow-${id}`;
-  const filter_props: any = { id: f_id, x: '-30%', y: '-30%', height: '160%', width: '160%' };
-  const fe_merge_node2_porps = { in: "SourceGraphic" };
   const filters = [];
   const paths = [];
+  const filterNode = [];
+  const feMergeNode = [];
+  const f_id = `dorp-shadow-${id}`;
   for (let i = 0; i < shadows.length; i++) {
     const shadow = shadows[i];
     getFilterPropsValue(shadow, frame, f_props);
     const position = shadow.position;
     if (!shadow.isEnabled) continue;
     if (position === ShadowPosition.Outer) {
-      // const { h_node, mergeNode } = shadowOri[position](h, style.shadows, frame, id, i);
-      // filterNode.push(...h_node);
-      // feMergeNode.push(mergeNode);
-      const { filter, p } = shadowOri[position](h, style.shadows, frame, id, i, path);
-      filters.push(filter);
-      paths.push(p);
+      if (shape.type === ShapeType.Rectangle || shape.type === ShapeType.Artboard || shape.type === ShapeType.Oval) {
+        const { filter, p } = shadowOri[position](h, style.shadows, frame, id, i, path);
+        filters.push(filter);
+        paths.push(p);
+      } else {
+        const { h_node, mergeNode } = shadowType(h, style.shadows, i);
+        filterNode.push(...h_node);
+        feMergeNode.push(mergeNode);
+      }
     } else if (position === ShadowPosition.Inner) {
       const filter = shadowOri[position](h, style.shadows, frame, id, i, path);
       inner_f.push(filter);
@@ -154,16 +152,18 @@ export function render(h: Function, style: Style, frame: ShapeFrame, id: string,
   if (filters.length) {
     elArr.push(h("g", [...filters, ...paths]));
   }
-  // if (filterNode.length) {
-  //   filter_props.width = Math.max(...f_props.props_w);
-  //   filter_props.height = Math.max(...f_props.props_h);
-  //   filter_props.x = Math.min(...f_props.props_x);
-  //   filter_props.y = Math.min(...f_props.props_y);
-  //   feMergeNode.push(h('feMergeNode', fe_merge_node2_porps));
-  //   const merge = h('feMerge', {}, feMergeNode)
-  //   filterNode.push(merge);
-  //   elArr.push(h('filter', filter_props, filterNode));
-  // }
+  const filter_props: any = { id: f_id, x: '-30%', y: '-30%', height: '160%', width: '160%' };
+  const fe_merge_node2_porps = { in: "SourceGraphic" };
+  if (filterNode.length) {
+    filter_props.width = Math.max(...f_props.props_w);
+    filter_props.height = Math.max(...f_props.props_h);
+    filter_props.x = Math.min(...f_props.props_x);
+    filter_props.y = Math.min(...f_props.props_y);
+    feMergeNode.push(h('feMergeNode', fe_merge_node2_porps));
+    const merge = h('feMerge', {}, feMergeNode)
+    filterNode.push(merge);
+    elArr.push(h('filter', filter_props, filterNode));
+  }
   elArr.push(...inner_f);
   return elArr;
 }
