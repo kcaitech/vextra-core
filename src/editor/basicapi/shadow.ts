@@ -12,6 +12,8 @@ export function setShadowEnable(style: Style, idx: number, enable: boolean) {
 }
 
 export function addShadow(style: Style, shadow: Shadow, index: number) {
+  console.log(shadow, 'addshadow');
+  
   style.shadows.splice(index, 0, shadow);
 }
 
