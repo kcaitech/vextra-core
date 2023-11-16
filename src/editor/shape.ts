@@ -242,11 +242,11 @@ export class ShapeEditor {
             const root_ref_shape = this.__page.getShape(_id);
             if (!root_ref_shape) return;
             const variables = (root_ref_shape as SymbolRefShape).variables;
-            const virbindsEx = (root_ref_shape as SymbolRefShape).virbindsEx;
-            if (!variables || !virbindsEx) return;
+            const overrides = (root_ref_shape as SymbolRefShape).overrides;
+            if (!variables || !overrides) return;
             const need_clear_vars: string[] = [];
             const need_clear_ex: { key: string, variable: Variable }[] = [];
-            virbindsEx.forEach((v, k) => {
+            overrides.forEach((v, k) => {
                 if (k.indexOf(_self_id) < 0) return;
                 const var_real = variables.get(v);
                 if (!var_real || var_real.type === VariableType.Status) return;
@@ -273,14 +273,14 @@ export class ShapeEditor {
             }
         }
         const variables = (this.__shape as SymbolRefShape).variables;
-        const virbindsEx = (this.__shape as SymbolRefShape).virbindsEx;
+        const overrides = (this.__shape as SymbolRefShape).overrides;
         const root_data = (this.__shape as SymbolRefShape).getRootData();
-        if (!variables || !virbindsEx || !root_data) return false;
+        if (!variables || !overrides || !root_data) return false;
         const root_variables = root_data.variables;
         try {
             const api = this.__repo.start('resetSymbolRefVariable', {});
             if (!root_variables) {
-                virbindsEx.forEach((v, k) => {
+                overrides.forEach((v, k) => {
                     const variable = variables.get(v);
                     if (!variable) return;
                     api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, k, variable.id, variable.type);
@@ -294,7 +294,7 @@ export class ShapeEditor {
                     api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
                 });
                 root_variables.forEach((v, k) => {
-                    if (v.type === VariableType.Status || !virbindsEx.has(k)) return;
+                    if (v.type === VariableType.Status || !overrides.has(k)) return;
                     api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, k, v.id, v.type);
                 })
             }
