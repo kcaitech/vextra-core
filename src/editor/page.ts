@@ -1549,7 +1549,7 @@ export class PageEditor {
                     if (children?.length) {
                         const tree = item instanceof SymbolRefShape ? item.getRootData() : item;
                         if (!tree) continue;
-                        if (is_circular_ref2(tree, parent.id)) continue;
+                        if (is_circular_ref2(tree, host.id)) continue;
                     }
                     const beforeXY = item.frame2Root();
                     let last = (host as GroupShape).childs.length;

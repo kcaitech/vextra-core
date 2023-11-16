@@ -14,10 +14,12 @@ import {Page} from "../../data/page";
  *          2 target、wonder都为组件且target不为union
  *          3 无法通过循环引用检查
  *          4 是实例组成部分
+ *          5 不被允许的图形类型
  *          999 其他
  */
 export function unable_to_migrate(target: Shape, wander: Shape): number {
     if (target.type === ShapeType.Symbol) {
+        if (wander.type === ShapeType.Table || wander.type === ShapeType.Contact) return 5;
         const children = wander.naviChilds || wander.childs;
         if (children?.length) {
             const tree = wander instanceof SymbolRefShape ? wander.getRootData() : wander;
