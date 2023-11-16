@@ -457,7 +457,5 @@ export function modify_index(parent: GroupShape, s1: Shape, s2: Shape, index: nu
 }
 
 export function after_remove(parent: GroupShape) {
-    if (parent?.childs?.length) return false;
-    else if (parent.type === ShapeType.Group || parent.isUnionSymbolShape) return true;
-    return false;
+    return (parent?.type === ShapeType.Group || parent?.isUnionSymbolShape) && !parent?.childs?.length;
 }
