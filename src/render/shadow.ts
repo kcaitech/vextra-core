@@ -4,7 +4,7 @@ import { Shape, ShapeFrame } from "../data/classes";
 
 const shadowOri: { [key: string]: (h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, i: number, path: string) => any } = {};
 shadowOri[ShadowPosition.Outer] = function (h: Function, shadows: Shadow[], frame: ShapeFrame, id: string, i: number, path: string): any {
-  const { width, height, x, y } = frame;
+  const { width, height } = frame;
   const clipId = "clippath-shadow" + id;
   const shadow = shadows[i];
   const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
@@ -25,7 +25,7 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadows: Shadow[], fram
     d: path,
     'clip-path': "url(#" + clipId + ")",
     filter: `url(#${id + i})`,
-    style: `transform-origin: left top; transform: translate(${width / 2}px, ${height / 2}px) scale(${multi}) translate(${-width / 2}px, ${-height / 2}px) `,
+    style: `transform-origin: left top; transform: translate(${width / 2}px, ${height / 2}px) scale(${multi >= 0 ? multi : 0}) translate(${-width / 2}px, ${-height / 2}px) `,
     fill: `rgba(${red}, ${green}, ${blue}, ${alpha})`,
   }
   const p = h('path', body_props);
