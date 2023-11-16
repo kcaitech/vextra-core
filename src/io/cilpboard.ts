@@ -213,10 +213,12 @@ export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
         const s = shapes[i];
         const m = s.matrix2Root();
         const f = s.frame;
-        const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
-            x: 0,
-            y: f.height
-        }];
+        const ps: { x: number, y: number }[] = [
+            {x: 0, y: 0},
+            {x: f.width, y: 0},
+            {x: f.width, y: f.height},
+            {x: 0, y: f.height}
+        ];
         for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
     }
     const b = XYsBounding(points);
