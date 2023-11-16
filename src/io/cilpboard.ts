@@ -1,4 +1,4 @@
-import {GroupShape, Shape, ShapeType, SymbolShape, TextShape} from "../data/shape";
+import {GroupShape, Shape, ShapeFrame, ShapeType, SymbolShape, TextShape} from "../data/shape";
 import {
     exportArtboard,
     exportGroupShape,
@@ -32,7 +32,7 @@ import {
 import * as types from "../data/typesdefine";
 import {v4} from "uuid";
 import {Document} from "../data/document";
-import {newTextShape, newTextShapeByText} from "../editor/creator";
+import {newSymbolRefShape, newTextShape, newTextShapeByText} from "../editor/creator";
 import {Api} from "../editor/command/recordapi";
 import {translateTo} from "../editor/frame";
 import {Page} from "../data/page";
@@ -109,8 +109,19 @@ export function import_shape(document: Document, source: types.Shape[]) {
     try {
         for (let i = 0, len = source.length; i < len; i++) {
             const _s = source[i], type = _s.type;
-            _s.id = v4();
             let r: Shape | undefined = undefined;
+            if (type === ShapeType.Symbol) {
+                const f = new ShapeFrame(_s.frame.x, _s.frame.y, _s.frame.width, _s.frame.height);
+                if ((_s as any).isUnionSymbolShape) {
+                    const dlt = (_s as any).childs[0];
+                    f.width = dlt.frame.width;
+                    f.height = dlt.frame.height;
+                }
+                r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr);
+                r && result.push(r);
+                continue;
+            }
+            _s.id = v4();
             if (type === ShapeType.Rectangle) {
                 r = importRectShape(_s as types.RectShape);
             } else if (type === ShapeType.Oval) {
@@ -124,21 +135,17 @@ export function import_shape(document: Document, source: types.Shape[]) {
             } else if (type === ShapeType.Path) {
                 r = importPathShape(_s as types.PathShape);
             } else if (type === ShapeType.Artboard) {
-                const childs = (_s as GroupShape).childs;
-                childs && childs.length && set_childs_id(childs);
+                const children = (_s as GroupShape).childs;
+                children && children.length && set_childs_id(children);
                 r = importArtboard(_s as types.Artboard, ctx);
             } else if (type === ShapeType.Group) {
-                const childs = (_s as GroupShape).childs;
-                childs && childs.length && set_childs_id(childs);
+                const children = (_s as GroupShape).childs;
+                children && children.length && set_childs_id(children);
                 r = importGroupShape(_s as types.GroupShape, ctx);
             } else if (type === ShapeType.Table) {
-                const childs = (_s as GroupShape).childs;
-                childs && childs.length && set_childs_id(childs);
+                const children = (_s as GroupShape).childs;
+                children && children.length && set_childs_id(children);
                 r = importTableShape(_s as types.TableShape, ctx);
-            } else if (type === ShapeType.Symbol) {
-                const childs = (_s as GroupShape).childs;
-                childs && childs.length && set_childs_id(childs);
-                r = importSymbolShape(_s as types.SymbolShape);
             } else if (type === ShapeType.SymbolRef) {
                 r = importSymbolRefShape(_s as types.SymbolRefShape, ctx);
             }
@@ -203,7 +210,8 @@ export function modify_frame_after_insert(api: Api, page: Page, shapes: Shape[])
         translateTo(api, page, shape, shape.frame.x, shape.frame.y);
     }
 }
-export function XYsBounding(points: {x: number, y: number}[]) {
+
+export function XYsBounding(points: { x: number, y: number }[]) {
     const xs: number[] = [];
     const ys: number[] = [];
     for (let i = 0; i < points.length; i++) {
@@ -214,20 +222,25 @@ export function XYsBounding(points: {x: number, y: number}[]) {
     const bottom = Math.max(...ys);
     const left = Math.min(...xs);
     const right = Math.max(...xs);
-    return { top, bottom, left, right };
+    return {top, bottom, left, right};
 }
-export function get_frame(shapes: Shape[]): {x: number, y: number}[] {
+
+export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
     const points: { x: number, y: number }[] = [];
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
         const m = s.matrix2Root();
         const f = s.frame;
-        const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+        const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
+            x: 0,
+            y: f.height
+        }];
         for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
     }
     const b = XYsBounding(points);
     return [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {x: b.left, y: b.bottom}];
 }
+
 export async function symbol2ref(document: Document, symbol: SymbolShape) {
     const is_existed = await document.symbolsMgr.get(symbol.id);
     if (is_existed) {
