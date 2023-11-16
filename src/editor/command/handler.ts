@@ -5,6 +5,7 @@ import * as api from "../basicapi"
 import { importColor, importText } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import { IdOpSet } from "coop/data/basictypes";
+import {shapeModifyNameFixed} from "../basicapi";
 
 export type TextShapeLike = Shape & { text: Text }
 export type UpdateFrameArray = { shape: Shape, page: Page }[];
@@ -352,6 +353,13 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isLock = value && JSON.parse(value) || false;
                     api.shapeModifyConstrainerProportions(shape, isLock);
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.nameIsFixed,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const isFixed = value && JSON.parse(value) || false;
+                    api.shapeModifyNameFixed(shape, isFixed);
                 }
             },
             {

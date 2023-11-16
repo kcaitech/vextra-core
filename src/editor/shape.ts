@@ -30,6 +30,7 @@ export class ShapeEditor {
     public setName(name: string) {
         const api = this.__repo.start('setName', {});
         api.shapeModifyName(this.__page, this.__shape, name)
+        api.shapeModifyNameFixed(this.__page, this.__shape, true);
         this.__repo.commit();
     }
     public toggleVisible() {

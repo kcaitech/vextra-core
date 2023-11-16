@@ -21,6 +21,7 @@ import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils";
+import {log} from "console";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -67,6 +68,7 @@ export class TextShapeEditor extends ShapeEditor {
                 return 0;
             }
             this.fixFrameByLayout(api);
+            this.updateName(api);
             this.__repo.commit();
             return count;
 
@@ -76,7 +78,12 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return 0;
     }
-
+    public updateName(api: Api) {
+        if (this.__shape.nameIsFixed) return;
+        const name = (this.__shape as TextShape).text.getText(0, Infinity);
+        const i = name.indexOf('\n');
+        api.shapeModifyName(this.__page, this.__shape, name.slice(0, i));
+    }
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
         attr = attr ?? this.__cachedSpanAttr;
         this.resetCachedSpanAttr();
@@ -86,6 +93,7 @@ export class TextShapeEditor extends ShapeEditor {
             if (del > 0) api.deleteText(this.__page, this.shape, index, del);
             api.insertSimpleText(this.__page, this.shape, index, text, attr);
             this.fixFrameByLayout(api);
+            this.updateName(api);
             this.__repo.commit();
         } catch (error) {
             console.log(error)

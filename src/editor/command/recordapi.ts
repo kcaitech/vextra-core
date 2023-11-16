@@ -321,6 +321,16 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.name, name, save));
         })
     }
+    shapeModifyNameFixed(page: Page, shape: Shape, isFixed: boolean) {
+        checkShapeAtPage(page, shape);
+        if (shape.nameIsFixed !== isFixed) {
+            this.__trap(() => {
+                const save = !!shape.nameIsFixed;
+                shape.nameIsFixed = isFixed;
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.nameIsFixed, isFixed, save));
+            })
+        }
+    }
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
