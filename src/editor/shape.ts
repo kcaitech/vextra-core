@@ -122,16 +122,18 @@ export class ShapeEditor {
             if (p.isVirtualShape) throw new Error();
             p = shape;
         }
+        let symisp = true;
         let sym: Shape | undefined = p;
         while (sym && sym.isVirtualShape) {
             sym = sym.parent;
+            symisp = false;
         }
         if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
 
-        let override_id = p.id;
-        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (override_id.length === 0) throw new Error();
-        if (!(p instanceof SymbolRefShape)) {
+        let override_id = symisp ? "" : p.id;
+        if (!symisp) override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
+        if (!symisp && override_id.length === 0) throw new Error();
+        if (!(p instanceof SymbolRefShape)) { // 普通对象
             const idx = override_id.lastIndexOf('/');
             if (idx > 0) {
                 override_id = override_id.substring(0, idx);
