@@ -511,16 +511,16 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 }
             },
             {
-                opId: SHAPE_ATTR_ID.virbindsEx,
+                opId: SHAPE_ATTR_ID.overrides,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         let { type, varId } = JSON.parse(value);
                         if (varId == undefined) {
-                            if (shape.virbindsEx) shape.virbindsEx.delete(type);
+                            if (shape.overrides) shape.overrides.delete(type);
                         }
                         else {
-                            if (!shape.virbindsEx) shape.virbindsEx = new BasicMap();
-                            shape.virbindsEx.set(type, varId);
+                            if (!shape.overrides) shape.overrides = new BasicMap();
+                            shape.overrides.set(type, varId);
                         }
                     }
                 }

@@ -10,25 +10,25 @@ import {
     Variable,
     VariableType
 } from "../data/shape";
-import {Border, BorderPosition, BorderStyle, Color, Fill, MarkerType} from "../data/style";
-import {expand, expandTo, translate, translateTo} from "./frame";
-import {BoolOp, CurvePoint, Point2D} from "../data/baseclasses";
-import {Artboard} from "../data/artboard";
-import {createHorizontalBox} from "../basic/utils";
-import {Page} from "../data/page";
-import {CoopRepository} from "./command/cooprepo";
-import {ContactForm, CurveMode, OverrideType} from "../data/typesdefine";
-import {Api} from "./command/recordapi";
-import {update_frame_by_points} from "./path";
-import {exportCurvePoint} from "../data/baseexport";
-import {importBorder, importCurvePoint, importFill} from "../data/baseimport";
-import {v4} from "uuid";
-import {get_box_pagexy, get_nearest_border_point} from "../data/utils";
-import {Matrix} from "../basic/matrix";
-import {ContactShape} from "../data/contact";
-import {Document, SymbolRefShape} from "../data/classes";
-import {uuid} from "../basic/uuid";
-import {BasicArray} from "../data/basic";
+import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "../data/style";
+import { expand, expandTo, translate, translateTo } from "./frame";
+import { BoolOp, CurvePoint, Point2D } from "../data/baseclasses";
+import { Artboard } from "../data/artboard";
+import { createHorizontalBox } from "../basic/utils";
+import { Page } from "../data/page";
+import { CoopRepository } from "./command/cooprepo";
+import { ContactForm, CurveMode, OverrideType } from "../data/typesdefine";
+import { Api } from "./command/recordapi";
+import { update_frame_by_points } from "./path";
+import { exportCurvePoint } from "../data/baseexport";
+import { importBorder, importCurvePoint, importFill } from "../data/baseimport";
+import { v4 } from "uuid";
+import { get_box_pagexy, get_nearest_border_point } from "../data/utils";
+import { Matrix } from "../basic/matrix";
+import { ContactShape } from "../data/contact";
+import { Document, SymbolRefShape } from "../data/classes";
+import { uuid } from "../basic/uuid";
+import { BasicArray } from "../data/basic";
 import {
     after_remove,
     clear_binds_effect,
@@ -36,8 +36,8 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-import {is_part_of_symbol, is_part_of_symbolref} from "./utils/symbol";
-import {newText} from "./creator";
+import { is_part_of_symbol, is_part_of_symbolref } from "./utils/symbol";
+import { newText } from "./creator";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -122,16 +122,18 @@ export class ShapeEditor {
             if (p.isVirtualShape) throw new Error();
             p = shape;
         }
+        let symisp = true;
         let sym: Shape | undefined = p;
         while (sym && sym.isVirtualShape) {
             sym = sym.parent;
+            symisp = false;
         }
         if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
 
-        let override_id = p.id;
-        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (override_id.length === 0) throw new Error();
-        if (!(p instanceof SymbolRefShape)) {
+        let override_id = symisp ? "" : p.id;
+        if (!symisp) override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
+        if (!symisp && override_id.length === 0) throw new Error();
+        if (!(p instanceof SymbolRefShape)) { // 普通对象
             const idx = override_id.lastIndexOf('/');
             if (idx > 0) {
                 override_id = override_id.substring(0, idx);
@@ -197,7 +199,7 @@ export class ShapeEditor {
         if (!p) throw new Error();
         const shape = this.__shape;
         let r: Shape | undefined = shape;
-        while(r && r.isVirtualShape) r = r.parent;
+        while (r && r.isVirtualShape) r = r.parent;
         if (!r) throw new Error();
 
         // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
@@ -220,7 +222,6 @@ export class ShapeEditor {
      * @param value
      */
     modifySymbolRefVariable(_var: Variable, value: any) {
-        console.log('EMIT')
         const api = this.__repo.start("modifySymbolRefVariable", {});
         try {
             this.modifyVariable2(_var, value, api);
@@ -242,15 +243,15 @@ export class ShapeEditor {
             const root_ref_shape = this.__page.getShape(_id);
             if (!root_ref_shape) return;
             const variables = (root_ref_shape as SymbolRefShape).variables;
-            const virbindsEx = (root_ref_shape as SymbolRefShape).virbindsEx;
-            if (!variables || !virbindsEx) return;
+            const overrides = (root_ref_shape as SymbolRefShape).overrides;
+            if (!variables || !overrides) return;
             const need_clear_vars: string[] = [];
             const need_clear_ex: { key: string, variable: Variable }[] = [];
-            virbindsEx.forEach((v, k) => {
+            overrides.forEach((v, k) => {
                 if (k.indexOf(_self_id) < 0) return;
                 const var_real = variables.get(v);
                 if (!var_real || var_real.type === VariableType.Status) return;
-                need_clear_ex.push({key: k, variable: var_real});
+                need_clear_ex.push({ key: k, variable: var_real });
                 need_clear_vars.push(v);
             })
             if (!need_clear_ex.length) return;
@@ -261,7 +262,7 @@ export class ShapeEditor {
                     api.shapeRemoveVariable(this.__page, root_ref_shape as SymbolRefShape, item);
                 }
                 for (let i = 0, l = need_clear_ex.length; i < l; i++) {
-                    const {key, variable} = need_clear_ex[i];
+                    const { key, variable } = need_clear_ex[i];
                     api.shapeRemoveVirbindsEx(this.__page, root_ref_shape as SymbolRefShape, key, variable.id, variable.type);
                 }
                 this.__repo.commit();
@@ -273,14 +274,14 @@ export class ShapeEditor {
             }
         }
         const variables = (this.__shape as SymbolRefShape).variables;
-        const virbindsEx = (this.__shape as SymbolRefShape).virbindsEx;
+        const overrides = (this.__shape as SymbolRefShape).overrides;
         const root_data = (this.__shape as SymbolRefShape).getRootData();
-        if (!variables || !virbindsEx || !root_data) return false;
+        if (!variables || !overrides || !root_data) return false;
         const root_variables = root_data.variables;
         try {
             const api = this.__repo.start('resetSymbolRefVariable', {});
             if (!root_variables) {
-                virbindsEx.forEach((v, k) => {
+                overrides.forEach((v, k) => {
                     const variable = variables.get(v);
                     if (!variable) return;
                     api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, k, variable.id, variable.type);
@@ -294,7 +295,7 @@ export class ShapeEditor {
                     api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
                 });
                 root_variables.forEach((v, k) => {
-                    if (v.type === VariableType.Status || !virbindsEx.has(k)) return;
+                    if (v.type === VariableType.Status || !overrides.has(k)) return;
                     api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, k, v.id, v.type);
                 })
             }
@@ -591,7 +592,7 @@ export class ShapeEditor {
      * @returns
      */
     modifyVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any): boolean {
-         // const _var = this.overrideVariable(slot, varType, ov)
+        // const _var = this.overrideVariable(slot, varType, ov)
         const shape = this.__shape;
         // symbol shape
         if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {
@@ -811,11 +812,11 @@ export class ShapeEditor {
         const _var = this.overrideVariable(VariableType.Fills, OverrideType.Fills, (_var) => {
             const fills = _var?.value ?? _shape.style.fills;
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
-                    const ret = importFill(v);
-                    const imgmgr = v.getImageMgr();
-                    if (imgmgr) ret.setImageMgr(imgmgr)
-                    return ret;
-                }
+                const ret = importFill(v);
+                const imgmgr = v.getImageMgr();
+                if (imgmgr) ret.setImageMgr(imgmgr)
+                return ret;
+            }
             ))
         }, api, shape)
         return _var || _shape;
@@ -861,9 +862,9 @@ export class ShapeEditor {
         const _var = this.overrideVariable(VariableType.Borders, OverrideType.Borders, (_var) => {
             const fills = _var?.value ?? _shape.style.borders;
             return new BasicArray(...(fills as Array<Border>).map((v) => {
-                    const ret = importBorder(v);
-                    return ret;
-                }
+                const ret = importBorder(v);
+                return ret;
+            }
             ))
         }, api, shape)
         return _var || _shape;
@@ -916,7 +917,7 @@ export class ShapeEditor {
     }
 
     public exchangeMarkerType() {
-        const {endMarkerType, startMarkerType} = this.__shape.style;
+        const { endMarkerType, startMarkerType } = this.__shape.style;
         if (endMarkerType !== startMarkerType) {
             this._repoWrap("exchangeMarkerType", (api) => {
                 api.shapeModifyEndMarkerType(this.__page, this.__shape, startMarkerType || MarkerType.Line);
@@ -959,7 +960,7 @@ export class ShapeEditor {
                 try {
                     const __points: [number, number][] = [];
                     childs.forEach(p => {
-                        const {width, height} = p.frame;
+                        const { width, height } = p.frame;
                         let _ps: [number, number][] = [
                             [0, 0],
                             [width, 0],
@@ -975,8 +976,8 @@ export class ShapeEditor {
                     })
                     const box = createHorizontalBox(__points);
                     if (box) {
-                        const {x: ox, y: oy} = this.__shape.frame2Root();
-                        const {dx, dy} = {dx: ox - box.left, dy: oy - box.top};
+                        const { x: ox, y: oy } = this.__shape.frame2Root();
+                        const { dx, dy } = { dx: ox - box.left, dy: oy - box.top };
                         for (let i = 0; i < childs.length; i++) {
                             translate(api, this.__page, childs[i], dx, dy);
                         }
@@ -1121,7 +1122,7 @@ export class ShapeEditor {
             if (!fromShape) return result;
             const xy_result = get_box_pagexy(fromShape);
             if (!xy_result) return result;
-            const {xy1, xy2} = xy_result;
+            const { xy1, xy2 } = xy_result;
             let p = get_nearest_border_point(fromShape, from.contactType, fromShape.matrix2Root(), xy1, xy2);
             if (!p) return result
 
@@ -1143,7 +1144,7 @@ export class ShapeEditor {
             if (!toShape) return result;
             const xy_result = get_box_pagexy(toShape);
             if (!xy_result) return result;
-            const {xy1, xy2} = xy_result;
+            const { xy1, xy2 } = xy_result;
             let p = get_nearest_border_point(toShape, to.contactType, toShape.matrix2Root(), xy1, xy2);
             if (!p) return result
 
@@ -1335,9 +1336,9 @@ export class ShapeEditor {
             curState.forEach((v, k) => {
                 const tag = vartag?.get(k) ?? SymbolShape.Default_State;
                 if (k === originVarId) {
-                    needModifyVars.push({v: curVars.get(k)!, tag: v}); // 如果改回默认，要删了？
+                    needModifyVars.push({ v: curVars.get(k)!, tag: v }); // 如果改回默认，要删了？
                 } else if (tag !== v) {
-                    needModifyVars.push({v: curVars.get(k)!, tag});
+                    needModifyVars.push({ v: curVars.get(k)!, tag });
                 }
             })
             // check varId inside
@@ -1483,8 +1484,45 @@ export class ShapeEditor {
         if (this.__shape.isVirtualShape) return;
 
         // virtual? no
+        const _var = this.__shape.getVar(key);
+        if (!_var) return;
+
+        // 遍历所有子对象
+        const traval = (g: GroupShape, f: (s: Shape) => void) => {
+            const childs = g.childs;
+            childs.forEach((s) => {
+                f(s);
+                if (s instanceof GroupShape) traval(s, f);
+            })
+        }
+
         const api = this.__repo.start("removeVar", {});
         try {
+            // 将_var的值保存到对象中
+            if (this.__shape instanceof SymbolShape) switch (_var.type) {
+                case VariableType.Visible:
+                    traval(this.__shape, (s: Shape) => {
+                        const bindid = s.varbinds?.get(OverrideType.Visible);
+                        if (bindid && bindid === _var.id && (!!s.isVisible !== !!_var.value)) {
+                            api.shapeModifyVisible(this.__page, s, !s.isVisible);
+                        }
+                    });
+                    break;
+                case VariableType.Text:
+                    traval(this.__shape, (s: Shape) => {
+                        const bindid = s.varbinds?.get(OverrideType.Text);
+                        if (bindid && bindid === _var.id && s instanceof TextShape) {
+                            api.deleteText(this.__page, s, 0, s.text.length - 1);
+                            if (typeof _var.value === 'string') {
+                                api.insertSimpleText(this.__page, s, 0, _var.value);
+                            }
+                            else {
+                                api.insertComplexText(this.__page, s, 0, _var.value);
+                            }
+                        }
+                    });
+                    break;
+            }
             api.shapeRemoveVariable(this.__page, this.__shape, key);
             this.__repo.commit();
         } catch (e) {
