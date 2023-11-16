@@ -1345,7 +1345,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, index, value} = actions[i];
-                api.setBorderColor(this.__page, target, index, value);
+                const s = shape4border(api, this.__page, target);
+                api.setBorderColor(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1358,7 +1359,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, index, value} = actions[i];
-                api.setBorderEnable(this.__page, target, index, value);
+                const s = shape4border(api, this.__page, target);
+                api.setBorderEnable(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1401,8 +1403,9 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, value} = actions[i];
-                api.deleteBorders(this.__page, target, 0, target.style.borders.length);
-                api.addBorders(this.__page, target, value);
+                const s = shape4border(api, this.__page, target);
+                api.deleteBorders(this.__page, s, 0, target.style.borders.length);
+                api.addBorders(this.__page, s, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1415,7 +1418,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, value, index} = actions[i];
-                api.setBorderPosition(this.__page, target, index, value);
+                const s = shape4border(api, this.__page, target);
+                api.setBorderPosition(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1428,7 +1432,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, value, index} = actions[i];
-                api.setBorderThickness(this.__page, target, index, value);
+                const s = shape4border(api, this.__page, target);
+                api.setBorderThickness(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1441,7 +1446,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, value, index} = actions[i];
-                api.setBorderStyle(this.__page, target, index, value);
+                const s = shape4border(api, this.__page, target);
+                api.setBorderStyle(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
