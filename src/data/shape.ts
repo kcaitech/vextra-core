@@ -466,7 +466,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     isUnionSymbolShape?: boolean // 子对象都为SymbolShape
     variables: BasicMap<string, Variable> // 怎么做关联
     vartag?: BasicMap<string, string>
-    virbindsEx?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
+    overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
 
     constructor(
         id: string,
@@ -564,8 +564,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
 
         const v: Variable = this.createVar4Override(type, value);
 
-        if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
-        this.virbindsEx.set(refId, v.id);
+        if (!this.overrides) this.overrides = new BasicMap<string, string>();
+        this.overrides.set(refId, v.id);
 
         return { refId, v };
     }
@@ -593,7 +593,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
                     override = this.createOverrid(refId, attr, value);
                 } else {
                     const _val = value as Variable;
-                    this.virbindsEx?.set(override.refId, _val.id);// 映射到新变量
+                    this.overrides?.set(override.refId, _val.id);// 映射到新变量
                     override.v = this.addVar(_val);
                 }
                 return override;
@@ -605,7 +605,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
 
     getOverrid(refId: string, type: OverrideType): { refId: string, v: Variable } | undefined {
         refId = genRefId(refId, type); // id+type->var
-        const over = this.virbindsEx && this.virbindsEx.get(refId);
+        const over = this.overrides && this.overrides.get(refId);
         if (over) {
             const v = this.variables && this.variables.get(over);
             if (v) return { refId, v }
@@ -614,19 +614,19 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
 
     getOverrid2(refId: string, type: OverrideType) {
         refId = genRefId(refId, type); // id+type->var
-        return this.virbindsEx && this.virbindsEx.get(refId);
+        return this.overrides && this.overrides.get(refId);
     }
 
     addOverrid2(refId: string, attr: OverrideType, value: string) {
         refId = genRefId(refId, attr); // id+type->var
-        if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
-        this.virbindsEx.set(refId, value);
+        if (!this.overrides) this.overrides = new BasicMap<string, string>();
+        this.overrides.set(refId, value);
     }
 
     removeOverrid2(refId: string, attr: OverrideType) {
         refId = genRefId(refId, attr); // id+type->var
-        if (this.virbindsEx) {
-            this.virbindsEx.delete(refId);
+        if (this.overrides) {
+            this.overrides.delete(refId);
         }
     }
 

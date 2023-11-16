@@ -851,8 +851,8 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
                 return ret;
             })(),
         refId: source.refId,
-        virbindsEx: source.virbindsEx && (() => {
-            const val = source.virbindsEx;
+        overrides: source.overrides && (() => {
+            const val = source.overrides;
             const ret: any = {};
             val.forEach((v, k) => {
                 ret[k] = v
@@ -1493,8 +1493,8 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 return ret;
             })(),
         isUnionSymbolShape: source.isUnionSymbolShape,
-        virbindsEx: source.virbindsEx && (() => {
-            const val = source.virbindsEx;
+        overrides: source.overrides && (() => {
+            const val = source.overrides;
             const ret: any = {};
             val.forEach((v, k) => {
                 ret[k] = v
