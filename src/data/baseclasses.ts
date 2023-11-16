@@ -887,7 +887,7 @@ export class TableCell extends Shape {
 export class SymbolRefShape extends Shape {
     typeId = 'symbol-ref-shape'
     refId: string
-    virbindsEx?: BasicMap<string, string>
+    overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
     constructor(
         id: string,
@@ -1169,7 +1169,7 @@ export class GroupShape extends Shape {
 export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
     isUnionSymbolShape?: boolean
-    virbindsEx?: BasicMap<string, string>
+    overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
     vartag?: BasicMap<string, string>
     constructor(

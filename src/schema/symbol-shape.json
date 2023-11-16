@@ -5,7 +5,7 @@
         "isUnionSymbolShape": {
             "type": "boolean"
         },
-        "virbindsEx": {
+        "overrides": {
             "type": "map",
             "key": {
                 "type": "string"

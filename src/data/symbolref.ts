@@ -33,7 +33,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     typeId = 'symbol-ref-shape'
     refId: string
 
-    virbindsEx?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
+    overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
     variables: BasicMap<string, Variable>
 
     __childs?: Shape[];
@@ -83,8 +83,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         // todo
     }
     removeVirbindsEx(key: string) {
-        if (!this.virbindsEx) return false;
-        return this.virbindsEx.delete(key);
+        if (!this.overrides) return false;
+        return this.overrides.delete(key);
     }
 
     __data: SymbolShape | undefined;
@@ -320,8 +320,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
         const v: Variable = this.createVar4Override(type, value);
 
-        if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
-        this.virbindsEx.set(refId, v.id);
+        if (!this.overrides) this.overrides = new BasicMap<string, string>();
+        this.overrides.set(refId, v.id);
 
         return { refId, v };
     }
@@ -353,7 +353,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                     }
                     else {
                         const _val = value as Variable;
-                        this.virbindsEx?.set(override.refId, _val.id);// 映射到新变量
+                        this.overrides?.set(override.refId, _val.id);// 映射到新变量
                         override.v = this.addVar(_val);
                     }
                     return override;
@@ -365,20 +365,20 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     addOverrid2(refId: string, attr: OverrideType, value: string) {
         refId = genRefId(refId, attr); // id+type->var
-        if (!this.virbindsEx) this.virbindsEx = new BasicMap<string, string>();
-        this.virbindsEx.set(refId, value);
+        if (!this.overrides) this.overrides = new BasicMap<string, string>();
+        this.overrides.set(refId, value);
     }
 
     removeOverrid2(refId: string, attr: OverrideType) {
         refId = genRefId(refId, attr); // id+type->var
-        if (this.virbindsEx) {
-            this.virbindsEx.delete(refId);
+        if (this.overrides) {
+            this.overrides.delete(refId);
         }
     }
 
     getOverrid(refId: string, type: OverrideType): { refId: string, v: Variable } | undefined {
         refId = genRefId(refId, type); // id+type->var
-        const over = this.virbindsEx && this.virbindsEx.get(refId);
+        const over = this.overrides && this.overrides.get(refId);
         if (over) {
             const v = this.variables && this.variables.get(over);
             if (v) return { refId, v }
@@ -386,7 +386,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     }
     getOverrid2(refId: string, type: OverrideType) {
         refId = genRefId(refId, type); // id+type->var
-        return this.virbindsEx && this.virbindsEx.get(refId);
+        return this.overrides && this.overrides.get(refId);
     }
 
     deleteOverride(overrideId: string) {
