@@ -443,13 +443,13 @@ export class Api {
     }
     shapeRemoveVirbindsEx(page: Page, shape: SymbolShape | SymbolRefShape, key: string, varId: string, type: VariableType) {
         checkShapeAtPage(page, shape);
-        const save = shape.virbindsEx?.get(key);
+        const save = shape.overrides?.get(key);
         if (!save) return
         this.__trap(() => {
             const shapeId = genShapeId(shape);
             (shape as SymbolRefShape).removeVirbindsEx(key);
             shapeId.push(type);
-            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.virbindsEx, {type, varId: undefined}, {  type,  varId: save  }));
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.overrides, {type, varId: undefined}, {  type,  varId: save  }));
         })
     }
     shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
