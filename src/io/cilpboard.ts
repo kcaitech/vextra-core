@@ -7,7 +7,6 @@ import {
     exportOvalShape,
     exportPathShape,
     exportRectShape,
-    exportShapeFrame,
     exportSymbolRefShape,
     exportSymbolShape,
     exportTableShape,
@@ -23,8 +22,7 @@ import {
     importOvalShape,
     importPathShape,
     importRectShape,
-    importShapeFrame, importSymbolRefShape,
-    importSymbolShape,
+    importSymbolRefShape,
     importTableShape,
     importText,
     importTextShape
@@ -105,6 +103,7 @@ export function import_shape(document: Document, source: types.Shape[]) {
                 r && result.push(r);
                 continue;
             }
+
             _s.id = v4();
             if (type === ShapeType.Rectangle) {
                 r = importRectShape(_s as types.RectShape);
