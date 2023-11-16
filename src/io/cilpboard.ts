@@ -86,25 +86,8 @@ export function export_shape(shapes: Shape[]) {
 // 从剪切板导入图形
 export function import_shape(document: Document, source: types.Shape[]) {
     const ctx: IImportContext = new class implements IImportContext {
-        document: Document = document
+        document: Document = document;
     };
-    // const ctx = new class implements IImportContext {
-    //     afterImport(obj: any): void {
-    //         if (obj instanceof ImageShape || obj instanceof Fill || obj instanceof TableCell) {
-    //             obj.setImageMgr(document.mediasMgr)
-    //         } else if (obj instanceof SymbolRefShape) {
-    //             obj.setSymbolMgr(document.symbolsMgr)
-    //             // } else if (obj instanceof ArtboardRef) {
-    //             //     obj.setArtboardMgr(document.artboardMgr)
-    //         } else if (obj instanceof Artboard) {
-    //             document.artboardMgr.add(obj.id, obj);
-    //         } else if (obj instanceof SymbolShape) {
-    //             document.symbolsMgr.add(obj.id, obj);
-    //         } else if (obj instanceof FlattenShape) {
-    //             obj.isBoolOpShape = true;
-    //         }
-    //     }
-    // }
     const result: Shape[] = [];
     try {
         for (let i = 0, len = source.length; i < len; i++) {
@@ -114,6 +97,7 @@ export function import_shape(document: Document, source: types.Shape[]) {
                 const f = new ShapeFrame(_s.frame.x, _s.frame.y, _s.frame.width, _s.frame.height);
                 if ((_s as any).isUnionSymbolShape) {
                     const dlt = (_s as any).childs[0];
+                    if (!dlt) continue;
                     f.width = dlt.frame.width;
                     f.height = dlt.frame.height;
                 }
@@ -184,8 +168,7 @@ export function export_text(text: types.Text): types.Text {
 export function import_text(document: Document, text: types.Text, gen?: boolean): types.Text | TextShape {
     if (gen) {
         const name = text.paras[0].text || 'text';
-        const shape = newTextShapeByText(name, text);
-        return shape;
+        return newTextShapeByText(name, text);
     }
     return importText(text);
 }
@@ -239,16 +222,4 @@ export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
     }
     const b = XYsBounding(points);
     return [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {x: b.left, y: b.bottom}];
-}
-
-export async function symbol2ref(document: Document, symbol: SymbolShape) {
-    const is_existed = await document.symbolsMgr.get(symbol.id);
-    if (is_existed) {
-        const frame = importShapeFrame(exportShapeFrame(symbol.frame));
-        const name = symbol.name;
-        // return newSymbolRefShape(name, frame, symbol.id);
-        return symbol;
-    } else {
-        return symbol;
-    }
 }
