@@ -197,7 +197,7 @@ export class ShapeEditor {
         if (!p) throw new Error();
         const shape = this.__shape;
         let r: Shape | undefined = shape;
-        while(r && r.isVirtualShape) r = r.parent;
+        while (r && r.isVirtualShape) r = r.parent;
         if (!r) throw new Error();
 
         // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
@@ -591,7 +591,7 @@ export class ShapeEditor {
      * @returns
      */
     modifyVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any): boolean {
-         // const _var = this.overrideVariable(slot, varType, ov)
+        // const _var = this.overrideVariable(slot, varType, ov)
         const shape = this.__shape;
         // symbol shape
         if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {

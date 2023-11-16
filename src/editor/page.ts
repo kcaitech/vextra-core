@@ -83,6 +83,7 @@ import {
     shape4fill
 } from "./utils/symbol";
 import {is_circular_ref2} from "./utils/ref_check";
+import {log} from "debug";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1269,7 +1270,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, index, value} = actions[i];
-                api.setFillColor(this.__page, target, index, value);
+                const s = shape4fill(api, this.__page, target);
+                api.setFillColor(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1282,7 +1284,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, index, value} = actions[i];
-                api.setFillEnable(this.__page, target, index, value);
+                const s = shape4fill(api, this.__page, target);
+                api.setFillEnable(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1296,7 +1299,7 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const {target, value} = actions[i];
                 const s = shape4fill(api, this.__page, target);
-                const l = s instanceof Shape ? s.style.fills.length : s.value.length
+                const l = s instanceof Shape ? s.style.fills.length : s.value.length;
                 api.addFillAt(this.__page, s, value, l);
             }
             this.__repo.commit();
@@ -1310,7 +1313,8 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, index} = actions[i];
-                api.deleteFillAt(this.__page, target, index);
+                const s = shape4fill(api, this.__page, target);
+                api.deleteFillAt(this.__page, s, index);
             }
             this.__repo.commit();
         } catch (error) {
@@ -1323,9 +1327,10 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const {target, value} = actions[i];
+                const s = shape4fill(api, this.__page, target);
                 // 先清空再填入
-                api.deleteFills(this.__page, target, 0, target.style.fills.length); // 清空
-                api.addFills(this.__page, target, value); // 填入新的值
+                api.deleteFills(this.__page, s, 0, target.style.fills.length); // 清空
+                api.addFills(this.__page, s, value); // 填入新的值
             }
             this.__repo.commit();
         } catch (error) {
