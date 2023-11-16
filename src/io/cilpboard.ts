@@ -92,6 +92,7 @@ export function import_shape(document: Document, source: types.Shape[]) {
             const _s = source[i], type = _s.type;
             let r: Shape | undefined = undefined;
             if (type === ShapeType.Symbol) {
+                if (!document.symbolsMgr.getSync(_s.id)) continue;
                 const f = new ShapeFrame(_s.frame.x, _s.frame.y, _s.frame.width, _s.frame.height);
                 if ((_s as any).isUnionSymbolShape) {
                     const dlt = (_s as any).childs[0];
