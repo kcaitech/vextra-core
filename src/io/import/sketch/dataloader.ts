@@ -1,5 +1,5 @@
 import { Document, Page, Shape, SymbolShape } from "../../../data/classes";
-import { IJSON, LzData } from "../../lzdata";
+import { IJSON, LzData } from "./lzdata";
 import { LoadContext } from "./basic";
 import { importArtboard, importGroupShape, importImage, importPage, importPathShape, importRectShape, importShapeGroupShape, importSymbol, importSymbolRef, importTextShape } from "./shapeio";
 import {base64Encode} from "../../../basic/utils";
