@@ -102,14 +102,16 @@ export class CMDReverter {
     }
     pageDelete(cmd: PageCmdDelete): PageCmdInsert {
         const cmdop = cmd.ops[0];
+        let pageId = cmd.pageId;
         let op;
         if (cmdop.type === OpType.ShapeRemove) {
             const _op = cmdop as ShapeOpRemove;
             op = ShapeOpInsert.Make(cmdop.targetId[0] as string, _op.shapeId, _op.index);
+            pageId = _op.shapeId;
         } else {
             op = NoneOp.Make(cmdop.targetId);
         }
-        return new PageCmdInsert(CmdType.PageInsert, uuid(), cmd.blockId, [op], cmd.pageId, cmd.data);
+        return new PageCmdInsert(CmdType.PageInsert, uuid(), cmd.blockId, [op], pageId, cmd.data);
     }
     pageModify(cmd: PageCmdModify): PageCmdModify {
         const cmdop = cmd.ops[0];
