@@ -14,6 +14,8 @@ export * from "./io/import"
 export * from "./io/export"
 export * from "./io/lzdata"
 export * from "./io/cilpboard"
+// export
+export * from "./io/export/svg"
 
 // editor
 export * from "./editor/command/cooprepo"
