@@ -6,7 +6,7 @@ import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
-import { innerShadowId, render as shadowR } from "./shadow";
+import { innerShadowId, outerShadowId, render as shadowR } from "./shadow";
 
 function toRGBA(color: Color): string {
     return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
@@ -235,9 +235,14 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
         delete props.style;
         delete props.transform;
         const inner_url = innerShadowId(shape_id, shadows);
-        if (shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
+        const outer_url = outerShadowId(shape_id, shape.type, shadows);
         const body = h("g", props, childs);
-        return h("g", ex_props, [...shadow, body]);
+        if (outer_url.length) {
+            const f = h("g", { filter: `${outer_url}` }, [h("g", ex_props, shadow)]);
+            return h("g", { filter: `${inner_url} url(#dorp-shadow-${shape_id})` }, [f, h("g", ex_props, [body])]);
+        } else {
+            return h("g", { filter: `${inner_url} url(#dorp-shadow-${shape_id})` }, [h("g", ex_props, [...shadow, body])]);
+        }
     } else {
         return h("g", props, childs);
     }

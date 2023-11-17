@@ -24,7 +24,6 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadows: Shadow[], fram
   const body_props: any = {
     d: path,
     'clip-path': "url(#" + clipId + ")",
-    filter: `url(#${id + i})`,
     style: `transform-origin: left top; transform: translate(${width / 2}px, ${height / 2}px) scale(${multi >= 0 ? multi : 0}) translate(${-width / 2}px, ${-height / 2}px) `,
     fill: `rgba(${red}, ${green}, ${blue}, ${alpha})`,
   }
@@ -87,7 +86,7 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadows: Shadow[], fram
   return h('filter', filter_props, h_node);
 }
 
-function shadowType (h: Function, shadows: Shadow[], i: number): any {
+function shadowType(h: Function, shadows: Shadow[], i: number): any {
   const shadow = shadows[i];
   const { color, offsetX, offsetY, blurRadius, spread } = shadow;
   const fe_color_matrix = {
@@ -176,6 +175,21 @@ export function innerShadowId(id: string, shadows?: Shadow[]) {
       if (shadow.position === ShadowPosition.Inner) {
         let _id = `url(#inner-shadow-${id + i})`;
         ids.push(_id)
+      }
+    }
+  }
+  return ids.join(' ');
+}
+export function outerShadowId(id: string, type: ShapeType, shadows?: Shadow[]) {
+  let ids = [];
+  if (shadows && shadows.length) {
+    for (let i = 0; i < shadows.length; i++) {
+      const shadow = shadows[i];
+      if (shadow.position === ShadowPosition.Outer) {
+        if (type === ShapeType.Rectangle || type === ShapeType.Artboard || type === ShapeType.Oval) {
+          let _id = `url(#${id + i})`;
+          ids.push(_id)
+        }
       }
     }
   }
