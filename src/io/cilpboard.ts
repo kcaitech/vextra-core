@@ -131,6 +131,7 @@ export function import_shape(document: Document, source: types.Shape[]) {
                 children && children.length && set_childs_id(children);
                 r = importTableShape(_s as types.TableShape, ctx);
             } else if (type === ShapeType.SymbolRef) {
+                if (!document.symbolsMgr.getSync((_s as any).refId)) continue;
                 r = importSymbolRefShape(_s as types.SymbolRefShape, ctx);
             }
             r && result.push(r);

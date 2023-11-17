@@ -9,6 +9,7 @@ import * as types from "./typesdefine"
 export interface IExportContext {
     symbols?:Set<string>
     medias?:Set<string>
+    referenced?:Set<string>
 }
 /* winding rule */
 export function exportWindingRule(source: types.WindingRule, ctx?: IExportContext): types.WindingRule {
@@ -868,6 +869,8 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
             return ret;
         })(),
     }
+    // inject code
+    if (ctx?.referenced) ctx.referenced.add(ret.refId);
     return ret
 }
 /* span attr */
