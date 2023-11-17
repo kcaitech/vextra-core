@@ -111,16 +111,17 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
     document_syms.map(i => i.symbols)
         .flat(1)
         .forEach(i => exportedSymbols.add(i));
-
+    const _record = new Set<string>();
     // 文档内寻找被引用但是未导出的组件
     const _referenced_symbols: any = [];
     referenced_syms.map(i => i.symbols)
         .flat(1)
         .forEach((i) => {
-            if (exportedSymbols.has(i)) return;
+            if (exportedSymbols.has(i) || _record.has(i)) return;
             const _rs = symsMgr.getSync(i);
             if (!_rs) return;
             _referenced_symbols.push(exportSymbolShape(_rs));
+            _record.add(i);
         });
 
     if (_referenced_symbols.length) {
