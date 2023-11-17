@@ -1,5 +1,5 @@
 import { GroupShape, ImageShape, PathShape, RectShape, Shape, SymbolShape, TextShape } from "../../../data/shape";
-import { renderArtboard as art } from "../../../render";
+import { RenderTransform, renderArtboard as art } from "../../../render";
 import { renderGroup as group } from "../../../render";
 import { renderImage as image } from "../../../render";
 import { renderPathShape as path } from "../../../render";
@@ -13,39 +13,58 @@ import { ShapeType, SymbolRefShape } from "../../../data/classes";
 
 const comsMap: Map<ShapeType, ComType> = new Map();
 
-comsMap.set(ShapeType.Artboard, (data: Shape) => {
-    return art(h, data as Artboard, comsMap, undefined, undefined, undefined);
+comsMap.set(ShapeType.Artboard, (data: Shape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return art(h, data as Artboard, comsMap, transform, varsContainer, undefined);
 });
-comsMap.set(ShapeType.Group, (data: Shape) => {
-    return group(h, data as GroupShape, comsMap, undefined, undefined, undefined);
-});
-
-comsMap.set(ShapeType.Image, (data: Shape) => {
-    return image(h, data as ImageShape, "", undefined, undefined, undefined);
-});
-comsMap.set(ShapeType.Page, (data: Shape) => {
-    return group(h, data as GroupShape, comsMap, undefined, undefined, undefined);
-});
-comsMap.set(ShapeType.Path, (data: Shape) => {
-    return path(h, data as PathShape, undefined, undefined, undefined);
-});
-comsMap.set(ShapeType.Rectangle, (data: Shape) => {
-    return rect(h, data as RectShape, undefined, undefined, undefined);
-});
-comsMap.set(ShapeType.Text, (data: Shape) => {
-    return text(h, data as TextShape, undefined, undefined, undefined);
+comsMap.set(ShapeType.Group, (data: Shape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return group(h, data as GroupShape, comsMap, transform, varsContainer, undefined);
 });
 
-comsMap.set(ShapeType.SymbolRef, (data: Shape) => {
-    // todo get symbolshape
-    return symref(h, data as SymbolRefShape, undefined, comsMap, undefined, undefined, undefined);
+comsMap.set(ShapeType.Image, (data: Shape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return image(h, data as ImageShape, "", transform, varsContainer, undefined);
 });
-comsMap.set(ShapeType.Symbol, (data: Shape) => {
+comsMap.set(ShapeType.Page, (data: Shape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return group(h, data as GroupShape, comsMap, transform, varsContainer, undefined);
+});
+comsMap.set(ShapeType.Path, (data: Shape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return path(h, data as PathShape, transform, varsContainer, undefined);
+});
+comsMap.set(ShapeType.Rectangle, (data: Shape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return rect(h, data as RectShape, transform, varsContainer, undefined);
+});
+comsMap.set(ShapeType.Text, (data: Shape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return text(h, data as TextShape, transform, varsContainer, undefined);
+});
+
+comsMap.set(ShapeType.SymbolRef, (data: Shape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+
+    const symMgr = data.getSymbolMgr();
+    if (!symMgr) return "";
+    const refId = data.getRefId2(varsContainer);
+    const sym0 = symMgr.getSync(refId);
+    if (!sym0) return "";
+
+    let sym1;
+    if (sym0 && sym0.isUnionSymbolShape) {
+        sym1 = sym0.getTagedSym(data, varsContainer || []);
+    }
+
+    return symref(h, data as SymbolRefShape, sym1 || sym0, comsMap, transform, varsContainer, undefined);
+});
+comsMap.set(ShapeType.Symbol, (data: Shape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return sym(h, data as SymbolShape, comsMap);
 });
 
 export function exportSvg(shape: Shape): string {
-    // todo svg head
 
     const com = comsMap.get(shape.type);
     if (!com) throw new Error("export svg, unknow shape type : " + shape.type)
@@ -62,7 +81,6 @@ export function exportSvg(shape: Shape): string {
     attrs.height = frame.height;
     attrs.viewBox = `${frame.x} ${frame.y} ${frame.width} ${frame.height}`;
     attrs.overflow = "visible";
-    // attrs.style = "{ transform: matrixWithFrame.toString() }";
 
     return h('svg', attrs, [content]);
 }
