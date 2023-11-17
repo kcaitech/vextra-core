@@ -4,6 +4,7 @@ import {is_symbol_but_not_union} from "./other";
 import {is_circular_ref2} from "./ref_check";
 import {Api} from "../command/recordapi";
 import {Page} from "../../data/page";
+import {is_exist_invalid_shape, is_exist_invalid_shape2, is_part_of_symbol} from "./symbol";
 
 /**
  * @description 检查是否满足迁移条件
@@ -18,13 +19,15 @@ import {Page} from "../../data/page";
  *          999 其他
  */
 export function unable_to_migrate(target: Shape, wander: Shape): number {
-    if (target.type === ShapeType.Symbol) {
-        if (wander.type === ShapeType.Table || wander.type === ShapeType.Contact) return 5;
-        const children = wander.naviChilds || wander.childs;
-        if (children?.length) {
-            const tree = wander instanceof SymbolRefShape ? wander.getRootData() : wander;
-            if (!tree) return 999;
-            if (is_circular_ref2(tree, target.id)) return 3;
+    if (is_part_of_symbol(target)) {
+        if (is_exist_invalid_shape2([wander])) return 5;
+        if (target.type === ShapeType.Symbol) {
+            const children = wander.naviChilds || wander.childs;
+            if (children?.length) {
+                const tree = wander instanceof SymbolRefShape ? wander.getRootData() : wander;
+                if (!tree) return 999;
+                if (is_circular_ref2(tree, target.id)) return 3;
+            }
         }
         if ((target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wander)) return 1;
         if (wander.type === ShapeType.Symbol) return 2;

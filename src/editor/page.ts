@@ -76,7 +76,7 @@ import {
 } from "./utils/other";
 import {v4} from "uuid";
 import {
-    is_exist_invalid_shape,
+    is_exist_invalid_shape, is_exist_invalid_shape2, is_part_of_symbol,
     is_part_of_symbolref,
     modify_variable_with_api,
     shape4border,
@@ -1483,6 +1483,11 @@ export class PageEditor {
         try {
             for (let i = 0; i < shapes.length; i++) {
                 let shape: Shape | undefined = shapes[i];
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Lock, OverrideType.Lock, (_var) => {
+                    return _var ? !_var.value : !shape?.isLocked;
+                })) {
+                    continue;
+                }
                 if (shape.type === ShapeType.Group) {
                     shape = this.__page.shapes.get(shape.id)
                 }
@@ -1551,8 +1556,10 @@ export class PageEditor {
                     const parent: GroupShape | undefined = item.parent as GroupShape;
                     if (!parent) continue;
                     if (host.type === ShapeType.SymbolRef) continue;
-                    // if ((host as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(item)) continue;
                     if ((host as SymbolShape).isUnionSymbolShape) continue;
+                    if (is_part_of_symbol(host)) {
+                        if (is_exist_invalid_shape2([item])) continue;
+                    }
                     const children = item.naviChilds || item.childs;
                     if (children?.length) {
                         const tree = item instanceof SymbolRefShape ? item.getRootData() : item;
@@ -1575,6 +1582,9 @@ export class PageEditor {
                     if (!parent) continue;
                     if (host_parent.type === ShapeType.SymbolRef) continue;
                     if ((host_parent as SymbolShape).isUnionSymbolShape) continue;
+                    if (is_part_of_symbol(host_parent)) {
+                        if (is_exist_invalid_shape2([item])) continue;
+                    }
                     const children = item.naviChilds || item.childs;
                     if (children?.length) {
                         const tree = item instanceof SymbolRefShape ? item.getRootData() : item;

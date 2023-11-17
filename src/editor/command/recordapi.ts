@@ -10,7 +10,22 @@ import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText, exportVariable } from "../../data/baseexport";
+import {
+    exportBorder,
+    exportBorderPosition,
+    exportBorderStyle,
+    exportColor,
+    exportContactForm,
+    exportContactRole,
+    exportCurvePoint,
+    exportFill,
+    exportPage,
+    exportPoint2D,
+    exportTableCell,
+    exportText,
+    exportVariable,
+    IExportContext
+} from "../../data/baseexport";
 import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
 import {
     GroupShape,
@@ -35,6 +50,7 @@ import { TableOpTarget } from "../../coop/data/classes";
 import { ContactRole, CurvePoint } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { BasicMap } from "../../data/basic";
+import {IImportContext} from "../../data/baseimport";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -68,6 +84,7 @@ function genShapeId(shape: Shape | Variable): Array<string | TableIndex> {
     if (shape instanceof Variable) shapeId.push("varid:" + shape.id); // varid
     return shapeId;
 }
+
 
 export class Api {
     private cmds: Cmd[] = [];
@@ -188,7 +205,7 @@ export class Api {
         this.needUpdateFrame.push({ page, shape });
         return shape;
     }
-    shapeDelete(page: Page, parent: GroupShape, index: number) {
+    shapeDelete( page: Page, parent: GroupShape, index: number) {
         let shape: Shape | undefined;
         this.__trap(() => {
             shape = parent.removeChildAt(index);

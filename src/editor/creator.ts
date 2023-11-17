@@ -19,7 +19,6 @@ import {
     Para,
     Span,
     ParaAttr,
-    TextAttr,
     BorderStyle,
     SymbolRefShape
 } from "../data/classes";
