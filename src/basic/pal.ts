@@ -2,13 +2,13 @@
 
 export type MeasureFun = (code: number, font: string) => TextMetrics | undefined;
 
-export interface IZip {
-    entryDataJson(entry: string): Promise<{ [key: string]: any }>;
-    entryData(entry: string): Promise<Uint8Array>;
-    close(): void;
-    on(event: 'ready', handler: () => void): void;
-    on(event: 'error', handler: (error: any) => void): void;
-}
+// export interface IZip {
+//     entryDataJson(entry: string): Promise<{ [key: string]: any }>;
+//     entryData(entry: string): Promise<Uint8Array>;
+//     close(): void;
+//     on(event: 'ready', handler: () => void): void;
+//     on(event: 'error', handler: (error: any) => void): void;
+// }
 
 type BOPFun = (path0: string, path1: string) => string;
 export type BoolOpFuns = {
@@ -37,7 +37,6 @@ export const gPal: {
     },
     boolop: BoolOpFuns,
     makePalPath: (path: string) => IPalPath,
-    unzip: (file: File | string) => IZip
 } = {
     text: {
         textMeasure: (code: number, font: string) => undefined,
@@ -50,9 +49,6 @@ export const gPal: {
         union: (path0: string, path1: string) => ""
     },
     makePalPath: (path: string): IPalPath => {
-        throw new Error("not implemented")
-    },
-    unzip: (file: File | string) => {
         throw new Error("not implemented")
     }
 }
