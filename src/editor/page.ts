@@ -68,7 +68,7 @@ import {
     clear_binds_effect,
     find_state_space,
     get_symbol_by_layer,
-    init_state,
+    init_state, is_symbol_but_not_union,
     make_union,
     modify_frame_after_inset_state,
     modify_index,
@@ -1551,6 +1551,8 @@ export class PageEditor {
                     const parent: GroupShape | undefined = item.parent as GroupShape;
                     if (!parent) continue;
                     if (host.type === ShapeType.SymbolRef) continue;
+                    // if ((host as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(item)) continue;
+                    if ((host as SymbolShape).isUnionSymbolShape) continue;
                     const children = item.naviChilds || item.childs;
                     if (children?.length) {
                         const tree = item instanceof SymbolRefShape ? item.getRootData() : item;
@@ -1572,6 +1574,7 @@ export class PageEditor {
                     const parent: GroupShape | undefined = item.parent as GroupShape;
                     if (!parent) continue;
                     if (host_parent.type === ShapeType.SymbolRef) continue;
+                    if ((host_parent as SymbolShape).isUnionSymbolShape) continue;
                     const children = item.naviChilds || item.childs;
                     if (children?.length) {
                         const tree = item instanceof SymbolRefShape ? item.getRootData() : item;
