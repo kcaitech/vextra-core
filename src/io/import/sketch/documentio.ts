@@ -22,7 +22,7 @@ async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicA
 
     for (let i = 0, len = pageIds.length; i < len; i++) {
         const id = pageIds[i]
-        if (id === LibType.Symbol) continue; // 组件库页面
+        // if (id === LibType.Symbol) continue; // 组件库页面
         const name = metaMap.get(id) || 'Unknow'
         pageList.push(new PageListItem(id, name))
     }
