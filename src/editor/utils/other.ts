@@ -157,7 +157,6 @@ export function init_state(api: Api, page: Page, symbol: SymbolShape, dlt: strin
         const v = variables[i];
         if (v.type !== VariableType.Status) continue;
         const special_name = gen_special_value_for_state(symbol, v, dlt) || dlt;
-        console.log('special_name:', special_name);
         api.shapeModifyVartag(page, symbol, v.id, special_name);
         break;
     }
@@ -184,7 +183,6 @@ export function gen_special_value_for_state(symbol: SymbolShape, variable: Varia
         if (!number_set.has(index)) break;
         index++;
     }
-    console.log('`${type_name}${index}`:', `${type_name}${index}`);
     return `${type_name}${index}`;
 }
 
@@ -260,15 +258,8 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
 export function is_default_state(state: SymbolShape) {
     const parent = state.parent;
     if (!parent || !parent.isUnionSymbolShape) return false;
-    const childs = (parent as SymbolShape).childs;
-    let index = -1;
-    for (let i = 0, len = childs.length; i < len; i++) {
-        if (childs[i].id === state.id) {
-            index = i;
-            break;
-        }
-    }
-    return index === 0;
+    const children = (parent as SymbolShape).childs;
+    return children[0]?.id === state.id;
 }
 
 /**
