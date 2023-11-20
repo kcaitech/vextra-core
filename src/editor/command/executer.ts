@@ -258,8 +258,7 @@ export class CMDExecuter {
             const _op = op as ShapeOpRemove;
             // check
             const item = this.__document.pagesList[_op.index];
-            if (item && item.id !== cmd.pageId) throw new Error("page id not equals: " + item.id + " " + cmd.pageId)
-
+            if (item && item.id !== cmd.pageId) throw new Error(`page id not equals: (localPageId)${item.id} (cmdPageId)${cmd.pageId}`)
             api.pageDelete(this.__document, _op.index)
         }
     }
