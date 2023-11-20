@@ -10,25 +10,26 @@ import {
     Variable,
     VariableType
 } from "../data/shape";
-import {Border, BorderPosition, BorderStyle, Color, Fill, MarkerType} from "../data/style";
-import {expand, expandTo, translate, translateTo} from "./frame";
-import {BoolOp, CurvePoint, Point2D} from "../data/baseclasses";
-import {Artboard} from "../data/artboard";
-import {createHorizontalBox} from "../basic/utils";
-import {Page} from "../data/page";
-import {CoopRepository} from "./command/cooprepo";
-import {ContactForm, CurveMode, OverrideType} from "../data/typesdefine";
-import {Api} from "./command/recordapi";
-import {update_frame_by_points} from "./path";
-import {exportCurvePoint} from "../data/baseexport";
-import {importBorder, importCurvePoint, importFill} from "../data/baseimport";
-import {v4} from "uuid";
-import {get_box_pagexy, get_nearest_border_point} from "../data/utils";
-import {Matrix} from "../basic/matrix";
-import {ContactShape} from "../data/contact";
-import {Document, SymbolRefShape} from "../data/classes";
-import {uuid} from "../basic/uuid";
-import {BasicArray} from "../data/basic";
+import { Text } from "../data/text"
+import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType } from "../data/style";
+import { expand, expandTo, translate, translateTo } from "./frame";
+import { BoolOp, CurvePoint, Point2D } from "../data/baseclasses";
+import { Artboard } from "../data/artboard";
+import { createHorizontalBox } from "../basic/utils";
+import { Page } from "../data/page";
+import { CoopRepository } from "./command/cooprepo";
+import { ContactForm, CurveMode, OverrideType } from "../data/typesdefine";
+import { Api } from "./command/recordapi";
+import { update_frame_by_points } from "./path";
+import { exportCurvePoint } from "../data/baseexport";
+import { importBorder, importCurvePoint, importFill } from "../data/baseimport";
+import { v4 } from "uuid";
+import { get_box_pagexy, get_nearest_border_point } from "../data/utils";
+import { Matrix } from "../basic/matrix";
+import { ContactShape } from "../data/contact";
+import { Document, SymbolRefShape } from "../data/classes";
+import { uuid } from "../basic/uuid";
+import { BasicArray } from "../data/basic";
 import {
     after_remove,
     clear_binds_effect,
@@ -36,8 +37,8 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-import {is_part_of_symbol, is_part_of_symbolref} from "./utils/symbol";
-import {newText} from "./creator";
+import { is_part_of_symbol, is_part_of_symbolref } from "./utils/symbol";
+import { newText, newText2 } from "./creator";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -144,6 +145,14 @@ export class ShapeEditor {
         if (override_id.length > 0) override_id += "/";
         override_id += _var.id;
 
+        // override text
+        if (_var.type === VariableType.Text
+            && typeof value === 'string') {
+            const origin = _var.value as Text;
+            const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
+            text.insertText(value, 0);
+            value = text;
+        }
         const _var2 = new Variable(uuid(), _var.type, _var.name, value);
         api.shapeAddVariable(this.__page, sym, _var2);
         api.shapeAddOverride(this.__page, sym, override_id, OverrideType.Variable, _var2.id);
@@ -251,7 +260,7 @@ export class ShapeEditor {
                 if (k.indexOf(_self_id) < 0) return;
                 const var_real = variables.get(v);
                 if (!var_real || var_real.type === VariableType.Status) return;
-                need_clear_ex.push({key: k, variable: var_real});
+                need_clear_ex.push({ key: k, variable: var_real });
                 need_clear_vars.push(v);
             })
             if (!need_clear_ex.length) return;
@@ -262,7 +271,7 @@ export class ShapeEditor {
                     api.shapeRemoveVariable(this.__page, root_ref_shape as SymbolRefShape, item);
                 }
                 for (let i = 0, l = need_clear_ex.length; i < l; i++) {
-                    const {key, variable} = need_clear_ex[i];
+                    const { key, variable } = need_clear_ex[i];
                     api.shapeRemoveVirbindsEx(this.__page, root_ref_shape as SymbolRefShape, key, variable.id, variable.type);
                 }
                 this.__repo.commit();
@@ -812,11 +821,11 @@ export class ShapeEditor {
         const _var = this.overrideVariable(VariableType.Fills, OverrideType.Fills, (_var) => {
             const fills = _var?.value ?? _shape.style.fills;
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
-                    const ret = importFill(v);
-                    const imgmgr = v.getImageMgr();
-                    if (imgmgr) ret.setImageMgr(imgmgr)
-                    return ret;
-                }
+                const ret = importFill(v);
+                const imgmgr = v.getImageMgr();
+                if (imgmgr) ret.setImageMgr(imgmgr)
+                return ret;
+            }
             ))
         }, api, shape)
         return _var || _shape;
@@ -862,9 +871,9 @@ export class ShapeEditor {
         const _var = this.overrideVariable(VariableType.Borders, OverrideType.Borders, (_var) => {
             const fills = _var?.value ?? _shape.style.borders;
             return new BasicArray(...(fills as Array<Border>).map((v) => {
-                    const ret = importBorder(v);
-                    return ret;
-                }
+                const ret = importBorder(v);
+                return ret;
+            }
             ))
         }, api, shape)
         return _var || _shape;
@@ -917,7 +926,7 @@ export class ShapeEditor {
     }
 
     public exchangeMarkerType() {
-        const {endMarkerType, startMarkerType} = this.__shape.style;
+        const { endMarkerType, startMarkerType } = this.__shape.style;
         if (endMarkerType !== startMarkerType) {
             this._repoWrap("exchangeMarkerType", (api) => {
                 api.shapeModifyEndMarkerType(this.__page, this.__shape, startMarkerType || MarkerType.Line);
@@ -960,7 +969,7 @@ export class ShapeEditor {
                 try {
                     const __points: [number, number][] = [];
                     childs.forEach(p => {
-                        const {width, height} = p.frame;
+                        const { width, height } = p.frame;
                         let _ps: [number, number][] = [
                             [0, 0],
                             [width, 0],
@@ -976,8 +985,8 @@ export class ShapeEditor {
                     })
                     const box = createHorizontalBox(__points);
                     if (box) {
-                        const {x: ox, y: oy} = this.__shape.frame2Root();
-                        const {dx, dy} = {dx: ox - box.left, dy: oy - box.top};
+                        const { x: ox, y: oy } = this.__shape.frame2Root();
+                        const { dx, dy } = { dx: ox - box.left, dy: oy - box.top };
                         for (let i = 0; i < childs.length; i++) {
                             translate(api, this.__page, childs[i], dx, dy);
                         }
@@ -1122,7 +1131,7 @@ export class ShapeEditor {
             if (!fromShape) return result;
             const xy_result = get_box_pagexy(fromShape);
             if (!xy_result) return result;
-            const {xy1, xy2} = xy_result;
+            const { xy1, xy2 } = xy_result;
             let p = get_nearest_border_point(fromShape, from.contactType, fromShape.matrix2Root(), xy1, xy2);
             if (!p) return result
 
@@ -1144,7 +1153,7 @@ export class ShapeEditor {
             if (!toShape) return result;
             const xy_result = get_box_pagexy(toShape);
             if (!xy_result) return result;
-            const {xy1, xy2} = xy_result;
+            const { xy1, xy2 } = xy_result;
             let p = get_nearest_border_point(toShape, to.contactType, toShape.matrix2Root(), xy1, xy2);
             if (!p) return result
 
@@ -1336,9 +1345,9 @@ export class ShapeEditor {
             curState.forEach((v, k) => {
                 const tag = vartag?.get(k) ?? SymbolShape.Default_State;
                 if (k === originVarId) {
-                    needModifyVars.push({v: curVars.get(k)!, tag: v}); // 如果改回默认，要删了？
+                    needModifyVars.push({ v: curVars.get(k)!, tag: v }); // 如果改回默认，要删了？
                 } else if (tag !== v) {
-                    needModifyVars.push({v: curVars.get(k)!, tag});
+                    needModifyVars.push({ v: curVars.get(k)!, tag });
                 }
             })
             // check varId inside

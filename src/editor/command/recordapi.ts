@@ -422,10 +422,20 @@ export class Api {
         }
     }
     shapeModifyVariable(page: Page, _var: Variable, value: any) {
+
+        // modify text var
+        if (_var.value instanceof Text) {
+            const _str = value.toString();
+            const _len = _var.value.length;
+            this.insertSimpleText(page, _var, 0, _str);
+            this.deleteText(page, _var, _str.length, _len);
+            return;
+        }
+
         checkShapeAtPage(page, _var);
         this.__trap(() => {
             const save = exportVariable(_var);
-            _var.value = value;
+            basicapi.shapeModifyVariable(page, _var, value);
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(_var), SHAPE_ATTR_ID.modifyvarValue, exportVariable(_var), save));
         })
     }
