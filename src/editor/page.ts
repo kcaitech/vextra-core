@@ -469,7 +469,7 @@ export class PageEditor {
     }
 
     /**
-     * @description 将引用的组件解引用
+     * @description 将引用的组件解引用(解绑)
      * todo 考虑union symbol
      */
     extractSymbol(shapes: Shape[]) {
@@ -489,6 +489,7 @@ export class PageEditor {
             }
             if (shape.parent && shape.parent.type === ShapeType.SymbolRef) { // 实例内引用组件
                 return_shapes.push(shape);
+                // todo 失去变量的情况下保持当前状态
                 continue;
             }
             const symmgr = shape.getSymbolMgr();
