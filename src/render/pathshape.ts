@@ -59,19 +59,15 @@ export function render(h: Function, shape: PathShape, reflush?: number) {
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape.style, frame, shape_id, path, shape);
+        const shadow = shadowR(h, shape_id, path, shape);
         if (shadow.length) {
             delete props.style;
             delete props.transform;
             const inner_url = innerShadowId(shape_id, shadows);
-            const outer_url = outerShadowId(shape_id, shape.type, shadows);
+            const outer_url = outerShadowId(shape_id, shadows);
+            if(shadows.length) props.filter = `${inner_url} ${outer_url}`;
             const body = h("g", props, childs);
-            if (outer_url.length) {
-                const f = h("g", { filter: `${outer_url}` }, [h("g", ex_props, shadow)]);
-                return h("g", { filter: `${inner_url} url(#dorp-shadow-${shape_id})` }, [f, h("g", ex_props, [body])]);
-            } else {
-                return h("g", { filter: `${inner_url} url(#dorp-shadow-${shape_id})` }, [h("g", ex_props, [...shadow, body])]);
-            }
+            return h("g", ex_props, [...shadow, body]);
         }  else {
             return h("g", props, childs);
         }
