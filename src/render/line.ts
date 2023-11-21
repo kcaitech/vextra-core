@@ -1,6 +1,6 @@
 import { Shape } from "../data/classes";
 import { render as renderB } from "./line_borders";
-import { innerShadowId, outerShadowId, render as shadowR } from "./shadow";
+import { innerShadowId, render as shadowR } from "./shadow";
 
 export function render(h: Function, shape: Shape, reflush?: number) {
     const isVisible = shape.isVisible ?? true;
@@ -41,8 +41,7 @@ export function render(h: Function, shape: Shape, reflush?: number) {
             delete props.style;
             delete props.transform;
             const inner_url = innerShadowId(shape_id, shadows);
-            const outer_url = outerShadowId(shape_id, shadows);
-            if(shadows.length) props.filter = `${inner_url} ${outer_url}`;
+            if(shadows.length) props.filter = `${inner_url}`;
             const body = h("g", props, childs);
             return h("g", ex_props, [...shadow, body]);
         } else {

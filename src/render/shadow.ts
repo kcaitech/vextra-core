@@ -1,5 +1,5 @@
-import { BorderPosition, Shadow, ShadowPosition, ShapeType } from "../data/baseclasses";
-import { Border, Style } from "data/style";
+import { Shadow, ShadowPosition, ShapeType } from "../data/baseclasses";
+import { Style } from "data/style";
 import { GroupShape, Shape, ShapeFrame } from "../data/classes";
 import { render as borderR } from "./border";
 import { render as renderB } from "./line_borders";
@@ -33,11 +33,8 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, style: Style, frame: Sh
     h('feGaussianBlur', { stdDeviation: `${blurRadius / 2}` }),
     h('feOffset', { dx: offsetX / multi, dy: offsetY / multi, }),
   ])
-  let thick = 0;
   let fill = 'none';
-  if (style && style.borders.length) {
-    thick = getBorderThick(style.borders);
-  }
+
   if (style && style.fills.length) {
     for (let i = 0; i < style.fills.length; i++) {
       const _fill = style.fills[i];
@@ -118,14 +115,13 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, style: Style, frame: Sh
 }
 
 function shadowType(h: Function, shape: Shape, i: number, id: string, pathstr: string, comsMap?: Map<ShapeType, any>): any {
-  const { width, height } = shape.frame;
   const style = shape.style;
   const shadow = style.shadows[i];
   const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
   getFilterPropsValue(shadow, shape.frame, f_props);
   const { color, offsetX, offsetY, blurRadius, spread } = shadow;
   const { red, green, blue, alpha } = color;
-  const filter_props: any = { id: id + i, x: '-20%', y: '-20%', height: '140%', width: '140%' };
+  const filter_props: any = { id: 'outer' + id + i, x: '-20%', y: '-20%', height: '140%', width: '140%' };
   filter_props.width = Math.max(...f_props.props_w);
   filter_props.height = Math.max(...f_props.props_h);
   filter_props.x = Math.min(...f_props.props_x);
@@ -144,11 +140,7 @@ function shadowType(h: Function, shape: Shape, i: number, id: string, pathstr: s
     h('feGaussianBlur', { stdDeviation: `${blurRadius / 2}` }),
     h('feOffset', { dx: offsetX / multi, dy: offsetY / multi, }),
   ])
-  let thick = 0;
   let fill = 'none';
-  if (style && style.borders.length) {
-    thick = getBorderThick(style.borders);
-  }
   if (style && style.fills.length) {
     for (let i = 0; i < style.fills.length; i++) {
       const _fill = style.fills[i];
@@ -159,7 +151,7 @@ function shadowType(h: Function, shape: Shape, i: number, id: string, pathstr: s
     }
   }
   const g_props: any = {
-    filter: `url(#${id + i})`,
+    filter: `url(#outer${id + i})`,
   }
   if (shape.type === ShapeType.Group) {
     g_props["fill-rule"] = "evenodd"
@@ -238,19 +230,6 @@ export function innerShadowId(id: string, shadows?: Shadow[]) {
   }
   return ids.join(' ');
 }
-export function outerShadowId(id: string, shadows?: Shadow[]) {
-  let ids = [];
-  if (shadows && shadows.length) {
-    for (let i = 0; i < shadows.length; i++) {
-      const shadow = shadows[i];
-      if (shadow.position === ShadowPosition.Outer) {
-        let _id = `url(#dorp-shadow-${id + i})`;
-        ids.push(_id)
-      }
-    }
-  }
-  return ids.join(' ');
-}
 
 const getFilterPropsValue = (shadow: Shadow, frame: ShapeFrame, f_props: any) => {
   const { color, offsetX, offsetY, blurRadius, spread } = shadow;
@@ -263,20 +242,4 @@ const getFilterPropsValue = (shadow: Shadow, frame: ShapeFrame, f_props: any) =>
   f_props.props_w.push(props_w);
   f_props.props_x.push(props_x);
   f_props.props_y.push(props_y);
-}
-
-const getBorderThick = (borders: Border[]) => {
-  let thick = [];
-  if (!borders.length) return 0;
-  for (let i = 0; i < borders.length; i++) {
-    const border = borders[i];
-    let thickness = 0;
-    if (border.position === BorderPosition.Center) {
-      thickness = border.thickness;
-    } else if (border.position === BorderPosition.Outer) {
-      thickness = border.thickness * 2;
-    }
-    thick.push(thickness);
-  }
-  return Math.max(...thick);
 }
