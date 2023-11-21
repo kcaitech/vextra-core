@@ -19,7 +19,7 @@ import {Page} from "../data/page";
 import {CoopRepository} from "./command/cooprepo";
 import {ContactForm, CurveMode, OverrideType} from "../data/typesdefine";
 import {Api} from "./command/recordapi";
-import {update_frame_by_points} from "./path";
+import {modify_points_xy, update_frame_by_points} from "./path";
 import {exportCurvePoint} from "../data/baseexport";
 import {importBorder, importCurvePoint, importFill} from "../data/baseimport";
 import {v4} from "uuid";
@@ -977,7 +977,21 @@ export class ShapeEditor {
             this.__repo.commit();
             return true;
         } catch (e) {
-            console.log(e);
+            console.log("removePoints:", e);
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
+    public modifyPointsXY(actions: { x: number, y: number, index: number }[]) {
+        try {
+            if (!(this.__shape instanceof PathShape)) return;
+            const api = this.__repo.start("deleteShape", {});
+            modify_points_xy(api, this.__page, this.__shape, actions);
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.log('modifyPointsXY:', e);
             this.__repo.rollback();
             return false;
         }

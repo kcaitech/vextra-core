@@ -1,6 +1,7 @@
 import {CurvePoint, PathShape, Shape} from "../data/shape";
 import {Api} from "./command/recordapi";
 import {Page} from "../data/page";
+import {Matrix} from "../basic/matrix";
 
 function get_box_by_points(s: Shape, points: CurvePoint[]) {
     const point_raw = points;
@@ -35,7 +36,7 @@ export function init_points(api: Api, page: Page, s: Shape, points: CurvePoint[]
  * @description 根据points更新shape frame
  */
 export function update_frame_by_points(api: Api, page: Page, s: Shape) {
-    const nf = get_box_by_points(s, s.getPoints());
+    const nf = get_box_by_points(s, (s as PathShape).points);
     if (!nf) return;
     const w = s.frame.width, h = s.frame.height;
     const mp = s.matrix2Parent();
@@ -62,4 +63,22 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape) {
         }
         api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord3(p.point));
     }
+}
+
+export function modify_points_xy(api: Api, page: Page, s: PathShape, actions: {
+    index: number,
+    x: number,
+    y: number
+}[]) {
+    let m = new Matrix();
+    const f = s.frame;
+    m.preScale(f.width, f.height);
+    m.multiAtLeft(s.matrix2Parent());
+    m = new Matrix(m.inverse);
+    for (let i = 0, l = actions.length; i < l; i++) {
+        const action = actions[i];
+        const new_xy = m.computeCoord2(action.x, action.y);
+        api.shapeModifyCurvPoint(page, s, action.index, new_xy);
+    }
+    update_frame_by_points(api, page, s);
 }
