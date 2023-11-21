@@ -85,26 +85,28 @@ export class CoopRepository {
         if (!this.canUndo()) {
             return;
         }
-        const undoCmd = this.__localcmds[this.__index - 1];
-        const oldCmdId = undoCmd.unitId;
-        let revertCmd = this.__cmdrevert.revert(undoCmd);
-        if (revertCmd) {
+        const sourceCmd = this.__localcmds[this.__index - 1];
+        const sourceCmdId = sourceCmd.unitId;
+        let undoCmd = this.__cmdrevert.revert(sourceCmd);
+        if (undoCmd) {
             const unitId = uuid();
-            if (revertCmd instanceof CmdGroup) {
-                revertCmd.setUnitId(unitId);
+            if (undoCmd instanceof CmdGroup) {
+                undoCmd.setUnitId(unitId);
             }
             else {
-                revertCmd.unitId = unitId;
+                undoCmd.unitId = unitId;
             }
+            console.log("undo cmd", undoCmd)
             for (const h of this.__undoRedoListener) {
-                const newCmd = h(UndoRedoType.Undo, revertCmd, oldCmdId)
+                const newCmd = h(UndoRedoType.Undo, undoCmd, sourceCmdId)
                 if (newCmd === undefined) {
                     console.log("undo变换失败")
                     return
                 }
-                revertCmd = newCmd as any
+                undoCmd = newCmd as any
             }
-            if (this._exec(revertCmd, false)) {
+            console.log("undo cmd (after transform)", undoCmd)
+            if (this._exec(undoCmd, false)) {
                 this.__index--;
             }
         }
@@ -125,6 +127,7 @@ export class CoopRepository {
             else {
                 redoCmd.unitId = unitId;
             }
+            console.log("redo cmd", redoCmd)
             for (const h of this.__undoRedoListener) {
                 const newCmd = h(UndoRedoType.Redo, redoCmd, oldCmdId)
                 if (newCmd === undefined) {
@@ -133,6 +136,7 @@ export class CoopRepository {
                 }
                 redoCmd = newCmd as any
             }
+            console.log("redo cmd (after transform)", redoCmd)
             if (this._exec(redoCmd, false)) {
                 this.__index++;
             }
