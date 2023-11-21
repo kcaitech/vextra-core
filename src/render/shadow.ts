@@ -19,7 +19,9 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, style: Style, frame: Sh
   filter_props.height = Math.max(...f_props.props_h);
   filter_props.x = Math.min(...f_props.props_x);
   filter_props.y = Math.min(...f_props.props_y);
-  const multi = 1 + (spread * 2) / 100;
+  const s = (spread / 10000)
+  const multix = 1 * +((((spread * 2) + width) - (spread / 100)) / width - s).toFixed(3);
+  const multiy = 1 * +((((spread * 2) + height) - (spread / 100)) / height - s).toFixed(3);
   const fe_color_matrix = {
     type: "matrix",
     values: `0 0 0 ${red / 255} 0
@@ -31,7 +33,7 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, style: Style, frame: Sh
   const filter = h("filter", filter_props, [
     h('feColorMatrix', fe_color_matrix),
     h('feGaussianBlur', { stdDeviation: `${blurRadius / 2}` }),
-    h('feOffset', { dx: offsetX / multi, dy: offsetY / multi, }),
+    h('feOffset', { dx: offsetX / multix, dy: offsetY / multiy, }),
   ])
   let fill = 'none';
 
@@ -53,7 +55,7 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, style: Style, frame: Sh
   }
   const g_props = {
     filter: `url(#spread${id + i})`,
-    style: `transform-origin: left top; transform: translate(${width / 2}px, ${height / 2}px) scale(${multi >= 0 ? multi : 0}) translate(${-width / 2}px, ${-height / 2}px) `,
+    style: `transform-origin: left top; transform: translate(${width / 2}px, ${height / 2}px) scale(${multix >= 0 ? multix : 0}, ${multiy >= 0 ? multiy : 0}) translate(${-width / 2}px, ${-height / 2}px) `,
   }
   const p = h('g', g_props, [h('path', body_props), ...border]);
   return { filter, p }
@@ -126,7 +128,6 @@ function shadowType(h: Function, shape: Shape, i: number, id: string, pathstr: s
   filter_props.height = Math.max(...f_props.props_h);
   filter_props.x = Math.min(...f_props.props_x);
   filter_props.y = Math.min(...f_props.props_y);
-  const multi = 1 + (spread * 2) / 100;
   const fe_color_matrix = {
     type: "matrix",
     values: `0 0 0 ${red / 255} 0
@@ -138,7 +139,7 @@ function shadowType(h: Function, shape: Shape, i: number, id: string, pathstr: s
   const filter = h("filter", filter_props, [
     h('feColorMatrix', fe_color_matrix),
     h('feGaussianBlur', { stdDeviation: `${blurRadius / 2}` }),
-    h('feOffset', { dx: offsetX / multi, dy: offsetY / multi, }),
+    h('feOffset', { dx: offsetX, dy: offsetY, }),
   ])
   let fill = 'none';
   if (style && style.fills.length) {
