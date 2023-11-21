@@ -283,7 +283,7 @@ export function exportOverrideItem(source: types.OverrideItem, ctx?: IExportCont
                 return exportStyle(val as types.Style, ctx)
             }
             {
-                throw new Error('unknow val: ' + val.typeId)
+                throw new Error('unknow val: ' + val)
             }
         })(),
     }
@@ -668,7 +668,7 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
                         return exportTableCell(val as types.TableCell, ctx)
                     }
                     {
-                        throw new Error('unknow val: ' + val.typeId)
+                        throw new Error('unknow val: ' + val)
                     }
                 })()
                 ret.push(r)
@@ -1019,7 +1019,7 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                         return exportTableShape(val as types.TableShape, ctx)
                     }
                     {
-                        throw new Error('unknow val: ' + val.typeId)
+                        throw new Error('unknow val: ' + val)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1219,7 +1219,7 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                         return exportContactShape(val as types.ContactShape, ctx)
                     }
                     {
-                        throw new Error('unknow val: ' + val.typeId)
+                        throw new Error('unknow val: ' + val)
                     }
                 })()
                 if (r) ret.push(r)
@@ -1291,7 +1291,7 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                             return exportContactShape(val as types.ContactShape, ctx)
                         }
                         {
-                            throw new Error('unknow val: ' + val.typeId)
+                            throw new Error('unknow val: ' + val)
                         }
                     })()
                     if (r) ret.push(r)
@@ -1380,7 +1380,7 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                             return exportContactShape(val as types.ContactShape, ctx)
                         }
                         {
-                            throw new Error('unknow val: ' + val.typeId)
+                            throw new Error('unknow val: ' + val)
                         }
                     })()
                     if (r) ret.push(r)
@@ -1509,7 +1509,7 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                             return exportContactShape(val as types.ContactShape, ctx)
                         }
                         {
-                            throw new Error('unknow val: ' + val.typeId)
+                            throw new Error('unknow val: ' + val)
                         }
                     })()
                     if (r) ret.push(r)
