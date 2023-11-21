@@ -872,6 +872,14 @@ export class Api {
             }
         })
     }
+    deletePoint(page: Page, shape: PathShape, index: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const point = basicapi.deletePoints(shape, index, 1)[0];
+            if (!point) return;
+            this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), POINTS_ID, point.id, index, exportCurvePoint(point)));
+        })
+    }
     addPoints(page: Page, shape: PathShape, points: CurvePoint[]) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
@@ -880,6 +888,14 @@ export class Api {
                 basicapi.addPointAt(shape, point, i);
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), POINTS_ID, point.id, i, exportCurvePoint(point)));
             }
+        })
+    }
+    setCloseStatus(page: Page, shape: PathShape, isClosed: boolean) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const save = shape.isClosed;
+            shape.setClosedState(isClosed);
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.isClosed, isClosed, save));
         })
     }
     // contacts

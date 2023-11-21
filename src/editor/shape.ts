@@ -950,6 +950,38 @@ export class ShapeEditor {
         });
     }
 
+    /**
+     * @description 删除编辑点，从后面往前面删
+     * @param indexes 需要转化成有序索引
+     */
+    public removePoints(indexes: number[]) {
+        if (!(this.__shape instanceof PathShape)) return false;
+        indexes = indexes.sort((a, b) => {
+            if (a > b) {
+                return 1;
+            } else {
+                return -1;
+            }
+        });
+        if (!indexes.length) return false;
+        try {
+            const api = this.__repo.start("deleteShape", {});
+            for (let i = indexes.length - 1; i > -1; i--) {
+                api.deletePoint(this.__page, this.__shape as PathShape, indexes[i]);
+            }
+            const p = this.__shape.parent as GroupShape;
+            if (!this.__shape.points.length && p) {
+                const index = p.indexOfChild(this.__shape);
+                api.shapeDelete(this.__page, p, index)
+            }
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+            return false;
+        }
+    }
 
     // 容器自适应大小
     public adapt() {
@@ -1006,8 +1038,8 @@ export class ShapeEditor {
             const childs = parent.type === ShapeType.SymbolRef ? ((parent as GroupShape).naviChilds || []) : (parent as GroupShape).childs;
             const index = childs.findIndex(s => s.id === this.__shape.id);
             if (index >= 0) {
-                const api = this.__repo.start("deleteShape", {});
                 try {
+                    const api = this.__repo.start("deleteShape", {});
                     if (this.__shape.type === ShapeType.Contact) { // 将执行删除连接线，需要清除连接线对起始两边的影响
                         this.removeContactSides(api, this.__page, this.__shape as unknown as ContactShape);
                     } else {
@@ -1030,7 +1062,7 @@ export class ShapeEditor {
                     this.__repo.commit();
                 } catch (error) {
                     this.__repo.rollback();
-                    throw new Error(`${error}`);
+                    console.log(error);
                 }
             }
         }
