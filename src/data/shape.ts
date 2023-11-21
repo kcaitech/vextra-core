@@ -713,7 +713,9 @@ export class PathShape extends Shape implements classes.PathShape {
         this.points = points;
         this.isClosed = isClosed;
     }
-
+    setClosedState(state: boolean) {
+        this.isClosed = state;
+    }
     // path shape
     get pointsCount() {
         return this.points.length;
