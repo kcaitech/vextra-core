@@ -12,7 +12,7 @@ export * from "./data/consts"
 export * from "./io"
 export * from "./io/import"
 export * from "./io/export"
-export * from "./io/lzdata"
+export * from "./io/import/sketch/lzdata"
 export * from "./io/cilpboard"
 // export
 export * from "./io/export/svg"

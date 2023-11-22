@@ -1,8 +1,8 @@
 
 import { uuid } from "../../../basic/uuid";
 import { BasicArray, IDataGuard } from "../../../data/basic";
-import {Document, LibType, PageListItem} from "../../../data/document";
-import { LzData } from "../../lzdata";
+import {Document, PageListItem} from "../../../data/document";
+import { LzData } from "./lzdata";
 import { IJSON } from "./basic";
 import { DataLoader } from "./dataloader";
 
