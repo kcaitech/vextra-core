@@ -286,7 +286,7 @@ export class CMDExecuter {
             api.addBorderAt(borders, border, (op as ArrayOpInsert).start);
             if (op.type === OpType.ArrayInsert) {
                 const border = importBorder(JSON.parse(cmd.data))
-                api.addBorderAt(shape.style, border, (op as ArrayOpInsert).start);
+                api.addBorderAt(borders, border, (op as ArrayOpInsert).start);
             }
         } else if (arrayAttr === SHADOW_ID) {
             if (op.type === OpType.ArrayInsert) {
