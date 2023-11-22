@@ -14,6 +14,7 @@ import { __objidkey } from "../basic/objectid";
 import { importCurvePoint } from "./baseimport";
 import { layoutChilds } from "./symlayout";
 import { TextLayout } from "./textlayout";
+import { findOverrideAndVar } from "./utils";
 
 // 内核提供给界面的dataface, 仅用于界面获取对象信息
 // 绘制独立计算
@@ -577,11 +578,12 @@ class SymbolRefShapeHdl extends ShapeHdl {
         this.__saveHeight = this.__frame.height;
     }
 
-    getRefId() {
+    getRefId(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
         let refId = (this.__origin as SymbolRefShape).refId;
-        // 从parent开始查找
-        const _vars = this.__parent.findOverride(this.__originId, OverrideType.SymbolID);
+        if (!varsContainer) return refId;
+        const _vars = findOverrideAndVar(this.__origin, OverrideType.SymbolID, varsContainer);
         if (!_vars) return refId;
+
         // watch vars
         (this as any as VarWatcher)._watch_vars("symbolRef", _vars);
         const _var = _vars[_vars.length - 1];
@@ -616,12 +618,12 @@ class SymbolRefShapeHdl extends ShapeHdl {
     updater(notify: boolean = true): boolean { // todo 有父级以上的override，也要更新
         const symMgr = (this.__origin as SymbolRefShape).getSymbolMgr();
         if (!symMgr) return false;
-        const refId = this.getRefId();
+        const varsContainer = this.getVarsContainer();
+        const refId = this.getRefId(varsContainer);
         if (this.__startLoad === refId) {
             if (this.__data) { // 更新subdata
                 if (this.__data.isUnionSymbolShape) {
                     // varscontainer
-                    const varsContainer = this.getVarsContainer();
                     const syms = this.__data.getTagedSym(this.__origin, varsContainer); // 不对
                     const subdata = syms[0] || this.__data.childs[0];
                     if (this.__subdata !== subdata) {
@@ -654,7 +656,6 @@ class SymbolRefShapeHdl extends ShapeHdl {
             if (this.__data) this.__data.watch(this.updater);
             // 处理status
             if (val && val.isUnionSymbolShape) {
-                const varsContainer = this.getVarsContainer();
                 const syms = val.getTagedSym(this.__origin, varsContainer);
                 if (this.__subdata) this.__subdata.unwatch(this.updater);
                 this.__subdata = syms[0] || val.childs[0];
