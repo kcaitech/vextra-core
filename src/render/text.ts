@@ -10,7 +10,7 @@ import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
-import { innerShadowId, render as shadowR } from "./shadow";
+import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 
 
 function toRGBA(color: Color): string {
@@ -394,7 +394,7 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     const shadows = shape.style.shadows;
     const ex_props = Object.assign({}, props);
     const shape_id = shape.id.slice(0, 4);
-    const shadow = shadowR(h, shape_id, path, shape);
+    const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars);
     if (shadow.length) {
         delete props.style;
         delete props.transform;

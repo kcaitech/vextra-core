@@ -2,7 +2,7 @@ import {renderGroupChilds as gR} from "./group";
 import {render as borderR} from "./border";
 import {Artboard, ShapeType, Color, SymbolShape, SymbolRefShape, Variable} from '../data/classes';
 import {isVisible, RenderTransform} from "./basic";
-import { innerShadowId, render as shadowR } from "./shadow";
+import {innerShadowId, renderWithVars as shadowR} from "./shadow";
 
 const defaultColor = Color.DefaultColor;
 
@@ -52,7 +52,7 @@ export function render(h: Function,
     if (shape.isNoTransform()) {
         const shadows = shape.style.shadows;
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, path, shape);
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars, comsMap);
         if (b_len) {
             const props: any = {}
             if (reflush) props.reflush = reflush;
@@ -101,7 +101,7 @@ export function render(h: Function,
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, path, shape);
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars, comsMap);
         if (b_len) {
             const path = shape.getPath().toString();
             if (shadow.length) {

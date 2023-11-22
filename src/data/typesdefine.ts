@@ -27,6 +27,7 @@ export enum VariableType {
     ImageRef = 'imageRef',
     Fills = 'fills',
     Borders = 'borders',
+    Shadows = 'shadows',
     Style = 'style',
 }
 /* user infomation */
@@ -245,6 +246,7 @@ export enum OverrideType {
     Image = 'image',
     Fills = 'fills',
     Borders = 'borders',
+    Shadows = 'shadows',
     Visible = 'visible',
     Lock = 'lock',
     Variable = 'variable',

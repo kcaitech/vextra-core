@@ -5,6 +5,7 @@
         "image",
         "fills",
         "borders",
+        "shadows",
         "visible",
         "lock",
         "variable",

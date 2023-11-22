@@ -1,16 +1,16 @@
-import { ResizingConstraints } from "../data/consts";
-import { objectId } from "../basic/objectid";
-import { ImageShape, Path, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
-import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
-import { renderWithVars as borderR } from "./border";
-import { render as clippathR } from "./clippath"
-import { Matrix } from "../basic/matrix";
-import { innerShadowId, render as shadowR } from "./shadow";
+import {ResizingConstraints} from "../data/consts";
+import {objectId} from "../basic/objectid";
+import {ImageShape, Path, ShapeFrame, SymbolRefShape, SymbolShape, Variable} from "../data/classes";
+import {RenderTransform, fixFrameByConstrain, isNoTransform, isVisible} from "./basic";
+import {renderWithVars as borderR} from "./border";
+import {render as clippathR} from "./clippath"
+import {Matrix} from "../basic/matrix";
+import {innerShadowId, renderWithVars as shadowR} from "./shadow";
 
 export function render(h: Function, shape: ImageShape, imgPH: string, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
-    reflush?: number) {
+                       varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+                       consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+                       reflush?: number) {
 
     if (!isVisible(shape, varsContainer, consumedVars)) return;
 
@@ -51,31 +51,27 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
                     // 居中
                     x += (width * (scaleX - 1)) / 2;
                     y += (height * (scaleY - 1)) / 2;
-                }
-
-                else if (rotate) {
+                } else if (rotate) {
                     const m = new Matrix();
-                m.rotate(rotate / 360 * 2 * Math.PI);
-                m.scale(scaleX, scaleY);
-                const _newscale = m.computeRef(1, 1);
-                m.scale(1 / scaleX, 1 / scaleY);
-                const newscale = m.inverseRef(_newscale.x, _newscale.y);
+                    m.rotate(rotate / 360 * 2 * Math.PI);
+                    m.scale(scaleX, scaleY);
+                    const _newscale = m.computeRef(1, 1);
+                    m.scale(1 / scaleX, 1 / scaleY);
+                    const newscale = m.inverseRef(_newscale.x, _newscale.y);
                     x *= scaleX;
                     y *= scaleY;
 
                     if (fixWidth) {
                         x += (width * (newscale.x - 1)) / 2;
                         newscale.x = 1;
-                    }
-                    else {
+                    } else {
                         y += (height * (newscale.y - 1)) / 2;
                         newscale.y = 1;
                     }
 
                     width *= newscale.x;
                     height *= newscale.y;
-                }
-                else {
+                } else {
                     const newscaleX = fixWidth ? 1 : scaleX;
                     const newscaleY = fixHeight ? 1 : scaleY;
                     x *= scaleX;
@@ -85,8 +81,7 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
                     width *= newscaleX;
                     height *= newscaleY;
                 }
-            }
-            else {
+            } else {
                 x *= scaleX;
                 y *= scaleY;
                 width *= scaleX;
@@ -98,9 +93,7 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
 
             path0 = shape.getPathOfFrame(frame);
 
-        }
-
-        else {
+        } else {
 
             const m = new Matrix();
             m.rotate(rotate / 360 * 2 * Math.PI);
@@ -120,8 +113,7 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
 
         }
 
-    }
-    else {
+    } else {
         path0 = shape.getPath();
         notTrans = shape.isNoTransform()
     }
@@ -159,8 +151,7 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
     props.height = frame.height;
     if (notTrans) {
         props.transform = `translate(${frame.x},${frame.y})`
-    }
-    else {
+    } else {
         const cx = frame.x + frame.width / 2;
         const cy = frame.y + frame.height / 2;
         const style: any = {}
@@ -175,14 +166,14 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
     const shadows = shape.style.shadows;
     const ex_props = Object.assign({}, props);
     const shape_id = shape.id.slice(0, 4);
-    const shadow = shadowR(h, shape_id, path, shape);
+    const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars);
     if (shadow.length) {
         delete props.style;
         delete props.transform;
         const inner_url = innerShadowId(shape_id, shadows);
-        if(shadows.length) props.filter = `${inner_url}`;
-            const body = h("g", props, childs);
-            return h("g", ex_props, [...shadow, body]);
+        if (shadows.length) props.filter = `${inner_url}`;
+        const body = h("g", props, childs);
+        return h("g", ex_props, [...shadow, body]);
     } else {
         return h("g", props, childs);
     }

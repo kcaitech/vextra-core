@@ -4,7 +4,7 @@ import {renderWithVars as borderR} from "./border";
 import {RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent} from "./basic";
 import {Matrix} from "../basic/matrix";
 import {ResizingConstraints} from "../data/consts";
-import {innerShadowId, render as shadowR} from "./shadow";
+import {innerShadowId, renderWithVars as shadowR} from "./shadow";
 
 export function renderGroupChilds2(h: Function, childs: Array<Shape>, comsMap: Map<ShapeType, any>,
                                    transform: RenderTransform | undefined,
@@ -251,7 +251,7 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     const shadows = shape.style.shadows;
     const ex_props = Object.assign({}, props);
     const shape_id = shape.id.slice(0, 4);
-    const shadow = shadowR(h, shape_id, path, shape, comsMap);
+    const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars, comsMap);
     if (shadow.length) {
         delete props.style;
         delete props.transform;

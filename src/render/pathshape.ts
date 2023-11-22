@@ -5,7 +5,7 @@ import { RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVis
 import { parsePath } from "../data/pathparser";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
-import { innerShadowId, render as shadowR } from "./shadow";
+import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 
 export function render(h: Function, shape: PathShape, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
@@ -186,12 +186,11 @@ export function render(h: Function, shape: PathShape, transform: RenderTransform
         props.stroke = 'none';
         props["stroke-width"] = 0;
         return h('path', props);
-    }
-    else {
+    } else {
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, path, shape);
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars);
         if (shadow.length) {
             delete props.style;
             delete props.transform;

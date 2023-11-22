@@ -6,7 +6,7 @@ import { renderText2Path } from "./text";
 import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
 import { RenderTransform, isVisible } from "./basic";
-import { innerShadowId, render as shadowR } from "./shadow";
+import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 
 // find first usable style
 export function findUsableFillStyle(shape: Shape): Style {
@@ -156,7 +156,7 @@ export function render(h: Function, shape: GroupShape, transform: RenderTransfor
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, pathstr, shape);
+        const shadow = shadowR(h, shape_id, shape, pathstr, varsContainer, consumedVars);
         if (shadow.length) {
             delete props.style;
             delete props.transform;

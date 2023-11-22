@@ -12,7 +12,7 @@
 
 import {Document, LibType} from "../data/document";
 import {ShapeFrame, ShapeType} from "../data/baseclasses";
-import {Border, Fill, Page, Shape, Style} from "../data/classes";
+import {Border, Fill, Page, Shadow, Style} from "../data/classes";
 import * as types from "../data/typesdefine"
 import {exportDocumentMeta, exportPage, exportSymbolShape, IExportContext} from "../data/baseexport";
 import {BasicArray} from "../data/basic";
@@ -20,7 +20,8 @@ import {BasicArray} from "../data/basic";
 export function newStyle(): Style {
     const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
-    return new Style(borders, fills);
+    const shadows = new BasicArray<Shadow>();
+    return new Style(borders, fills, shadows);
 }
 
 export interface ExFromJson {

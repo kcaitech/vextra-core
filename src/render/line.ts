@@ -3,7 +3,7 @@ import {Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable} from "../data/
 import {RenderTransform, fixFrameByConstrain, isNoTransform, isVisible} from "./basic";
 import {renderWithVars as renderB} from "./line_borders";
 import {Matrix} from "../basic/matrix";
-import {innerShadowId, render as shadowR} from "./shadow";
+import {innerShadowId, renderWithVars as shadowR} from "./shadow";
 
 export function render(h: Function, shape: Shape, transform: RenderTransform | undefined,
                        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
@@ -141,13 +141,10 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
     if (shape.style.borders.length) {
         const path = shape.getPathOfFrame(frame).toString();
         childs = childs.concat(renderB(h, shape, shape.frame, path, varsContainer, consumedVars));
-        return h('g', props, childs);
-        const path = shape.getPath().toString();
-        childs = childs.concat(renderB(h, shape.style, path, shape));
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, path, shape);
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars);
         if (shadow.length) {
             delete props.style;
             delete props.transform;

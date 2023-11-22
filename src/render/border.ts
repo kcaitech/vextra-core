@@ -265,7 +265,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
 
 export function render(h: Function, borders: Border[], frame: ShapeFrame, path: string): Array<any> {
     const bc = borders.length;
-    const elArr = new Array();
+    const elArr = [];
     for (let i = 0; i < bc; i++) {
         const border: Border = borders[i];
         if (!border.isEnabled) {
