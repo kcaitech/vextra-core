@@ -137,6 +137,8 @@ export const POINTS_ATTR_ID = {
     from: "from",
     to: "to",
     point: "point",
+    curveMode: 'curveMode',
+    cornerRadius: 'cornerRadius'
 }
 
 export const TABLE_ATTR_ID = {

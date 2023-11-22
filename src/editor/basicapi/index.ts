@@ -1,7 +1,7 @@
 import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
-import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
+import {CurveMode, GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable} from "../../data/shape";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 import { BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
@@ -496,6 +496,14 @@ export function shapeModifyCurvToPoint(page: Page, shape: PathShape, index: numb
     const p = shape.points[index];
     p.curveTo.x = point.x;
     p.curveTo.y = point.y;
+}
+export function shapeModifyCurveMode(page: Page, shape: PathShape, index: number, curveMode: CurveMode) {
+    const p = shape.points[index];
+    p.curveMode = curveMode;
+}
+export function shapeModifyPointCornerRadius(page: Page, shape: PathShape, index: number, cornerRadius: number) {
+    const p = shape.points[index];
+    p.cornerRadius = cornerRadius;
 }
 
 export function shapeModifyVariable(page: Page, _var: Variable, value: any) {

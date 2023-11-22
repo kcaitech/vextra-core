@@ -40,7 +40,7 @@ import {
     importCurvePoint,
     importVariable,
     importShadow,
-    importShadowPosition
+    importShadowPosition, importCurveMode
 } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -70,7 +70,8 @@ import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert
 import { importShape, updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { CMDHandler } from "./handler";
-import {Shadow} from "../../data/typesdefine";
+import {CurveMode, Shadow} from "../../data/typesdefine";
+import {shapeModifyCurveMode} from "../basicapi";
 
 export class CMDExecuter {
     private __document: Document;
@@ -444,6 +445,16 @@ export class CMDExecuter {
                 if (value) {
                     const p = importPoint2D(JSON.parse(value));
                     api.shapeModifyCurvToPoint(page, shape, pointIdx, p);
+                }
+            }
+            else if (opId === POINTS_ATTR_ID.curveMode) {
+                if (value) {
+                    api.shapeModifyCurveMode(page, shape, pointIdx, value as CurveMode);
+                }
+            }
+            else if(opId === POINTS_ATTR_ID.cornerRadius) {
+                if (value) {
+                    api.shapeModifyPointCornerRadius(page, shape, pointIdx, Number(value));
                 }
             }
             else {

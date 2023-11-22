@@ -16,7 +16,7 @@ import {
     exportBorderStyle,
     exportColor,
     exportContactForm,
-    exportContactRole,
+    exportContactRole, exportCurveMode,
     exportCurvePoint,
     exportFill,
     exportPage,
@@ -35,7 +35,7 @@ import {
     TextShape,
     Variable,
     SymbolShape,
-    VariableType
+    VariableType, CurveMode
 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType, Style, Shadow } from "../../data/style";
@@ -898,6 +898,26 @@ export class Api {
                 basicapi.addPointAt(shape, point, i);
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), POINTS_ID, point.id, i, exportCurvePoint(point)));
             }
+        })
+    }
+    modifyPointCurveMode(page: Page, shape: PathShape, index: number, curveMode: CurveMode) {
+        checkShapeAtPage(page, shape);
+        const point = shape.points[index];
+        if (!point) return;
+        this.__trap(() => {
+            const save = point.curveMode;
+            point.curveMode = curveMode;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.curveMode, exportCurveMode(curveMode), exportCurveMode(save)));
+        })
+    }
+    modifyPointCornerRadius(page: Page, shape: PathShape, index: number, cornerRadius: number) {
+        checkShapeAtPage(page, shape);
+        const point = shape.points[index];
+        if (!point) return;
+        this.__trap(() => {
+            const save = point.cornerRadius;
+            point.cornerRadius = cornerRadius;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.cornerRadius, cornerRadius, save));
         })
     }
     setCloseStatus(page: Page, shape: PathShape, isClosed: boolean) {
