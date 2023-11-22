@@ -1,20 +1,21 @@
-import { GroupShape, Path, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
-import { renderWithVars as fillR } from "./fill";
-import { renderWithVars as borderR } from "./border";
-import { RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent } from "./basic";
-import { Matrix } from "../basic/matrix";
-import { ResizingConstraints } from "../data/consts";
+import {GroupShape, Path, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable} from "../data/classes";
+import {renderWithVars as fillR} from "./fill";
+import {renderWithVars as borderR} from "./border";
+import {RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent} from "./basic";
+import {Matrix} from "../basic/matrix";
+import {ResizingConstraints} from "../data/consts";
+import {innerShadowId, render as shadowR} from "./shadow";
 
 export function renderGroupChilds2(h: Function, childs: Array<Shape>, comsMap: Map<ShapeType, any>,
-    transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): Array<any> {
+                                   transform: RenderTransform | undefined,
+                                   varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): Array<any> {
     const nodes: Array<any> = [];
     const cc = childs.length;
 
     for (let i = 0; i < cc; i++) {
         const child = childs[i];
         const com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
-        const node = h(com, { data: child, key: child.id, transx: transform, varsContainer });
+        const node = h(com, {data: child, key: child.id, transx: transform, varsContainer});
         nodes.push(node);
     }
 
@@ -22,8 +23,8 @@ export function renderGroupChilds2(h: Function, childs: Array<Shape>, comsMap: M
 }
 
 export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shape>, comsMap: Map<ShapeType, any>,
-    transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+                                   transform: RenderTransform | undefined,
+                                   varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     // const nodes: Array<any> = [];
     // const cc = childs.length;
 
@@ -42,7 +43,7 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
     let nodes: Array<any>;
     if (!transform || notTrans) {
         nodes = renderGroupChilds2(h, childs, comsMap, undefined, varsContainer);
-        return { nodes, frame, notTrans: shape.isNoTransform(), hflip, vflip, rotate };
+        return {nodes, frame, notTrans: shape.isNoTransform(), hflip, vflip, rotate};
     }
 
     // 这些是parent的属性！
@@ -70,9 +71,7 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
                 // 居中
                 x += (width * (scaleX - 1)) / 2;
                 y += (height * (scaleY - 1)) / 2;
-            }
-
-            else if (rotate) {
+            } else if (rotate) {
                 const m = new Matrix();
                 m.rotate(rotate / 360 * 2 * Math.PI);
                 m.scale(scaleX, scaleY);
@@ -85,15 +84,13 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
                 if (fixWidth) {
                     x += (width * (newscale.x - 1)) / 2;
                     newscale.x = 1;
-                }
-                else {
+                } else {
                     y += (height * (newscale.y - 1)) / 2;
                     newscale.y = 1;
                 }
                 width *= newscale.x;
                 height *= newscale.y;
-            }
-            else {
+            } else {
                 const newscaleX = fixWidth ? 1 : scaleX;
                 const newscaleY = fixHeight ? 1 : scaleY;
                 x *= scaleX;
@@ -103,8 +100,7 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
                 width *= newscaleX;
                 height *= newscaleY;
             }
-        }
-        else {
+        } else {
             x *= scaleX;
             y *= scaleY;
             width *= scaleX;
@@ -133,10 +129,10 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
             }
 
             const com = comsMap.get(cc.type) || comsMap.get(ShapeType.Rectangle);
-            const node = h(com, { data: cc, key: cc.id, transx: transform, varsContainer });
+            const node = h(com, {data: cc, key: cc.id, transx: transform, varsContainer});
             nodes.push(node);
         }
-        return { nodes, frame: parentFrame, notTrans, hflip, vflip, rotate };
+        return {nodes, frame: parentFrame, notTrans, hflip, vflip, rotate};
     }
 
     // cur frame
@@ -184,7 +180,7 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
         }
 
         const com = comsMap.get(cc.type) || comsMap.get(ShapeType.Rectangle);
-        const node = h(com, { data: cc, key: cc.id, transx: transform, varsContainer });
+        const node = h(com, {data: cc, key: cc.id, transx: transform, varsContainer});
         nodes.push(node);
     }
 
@@ -194,23 +190,30 @@ export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shap
     vflip = false;
     notTrans = true;
 
-    return { nodes, frame, notTrans, hflip, vflip, rotate };
+    return {nodes, frame, notTrans, hflip, vflip, rotate};
 }
 
 export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>,
-    transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): Array<any> {
+                                  transform: RenderTransform | undefined,
+                                  varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): Array<any> {
     return renderGroupChilds2(h, shape.childs, comsMap, transform, varsContainer);
 }
 
 export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>,
-    transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
-    reflush?: number): any {
+                       transform: RenderTransform | undefined,
+                       varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+                       consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+                       reflush?: number): any {
     if (!isVisible(shape, varsContainer, consumedVars)) return;
 
-    const { nodes, frame, notTrans, hflip, vflip, rotate } = renderGroupChilds3(h, shape, shape.childs, comsMap, transform, varsContainer);
+    const {
+        nodes,
+        frame,
+        notTrans,
+        hflip,
+        vflip,
+        rotate
+    } = renderGroupChilds3(h, shape, shape.childs, comsMap, transform, varsContainer);
 
     const path0 = shape.getPathOfFrame(frame);
     const path = path0.toString();
@@ -245,6 +248,18 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
         style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
         props.style = style;
     }
-
-    return h('g', props, childs);
+    const shadows = shape.style.shadows;
+    const ex_props = Object.assign({}, props);
+    const shape_id = shape.id.slice(0, 4);
+    const shadow = shadowR(h, shape_id, path, shape, comsMap);
+    if (shadow.length) {
+        delete props.style;
+        delete props.transform;
+        const inner_url = innerShadowId(shape_id, shadows);
+        if (shadows.length) props.filter = `${inner_url}`;
+        const body = h("g", props, childs);
+        return h("g", ex_props, [...shadow, body]);
+    } else {
+        return h("g", props, childs);
+    }
 }

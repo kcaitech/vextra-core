@@ -74,7 +74,8 @@
     "required": [
         "typeId",
         "borders",
-        "fills"
+        "fills",
+        "shadows"
     ],
     "additionalProperties": false
 }

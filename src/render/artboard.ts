@@ -2,6 +2,7 @@ import {renderGroupChilds as gR} from "./group";
 import {render as borderR} from "./border";
 import {Artboard, ShapeType, Color, SymbolShape, SymbolRefShape, Variable} from '../data/classes';
 import {isVisible, RenderTransform} from "./basic";
+import { innerShadowId, render as shadowR } from "./shadow";
 
 const defaultColor = Color.DefaultColor;
 
@@ -47,17 +48,42 @@ export function render(h: Function,
     }
     childs.push(...gR(h, shape, comsMap, undefined, varsContainer)); // 后代元素放中间
     const b_len = shape.style.borders.length;
+    const path = shape.getPath().toString();
     if (shape.isNoTransform()) {
+        const shadows = shape.style.shadows;
+        const shape_id = shape.id.slice(0, 4);
+        const shadow = shadowR(h, shape_id, path, shape);
         if (b_len) {
             const props: any = {}
             if (reflush) props.reflush = reflush;
             props.transform = `translate(${frame.x},${frame.y})`;
             const path = shape.getPath().toString();
             ab_props.x = 0, ab_props.y = 0;
-            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
+            const ex_props = Object.assign({}, props);
+            if (shadow.length) {
+                delete props.style;
+                delete props.transform;
+                const inner_url = innerShadowId(shape_id, shadows);
+                if (shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
+                const body = h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
+                return h("g", ex_props, [...shadow, body]);
+            } else {
+                return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
+            }
         } else {
             ab_props.x = frame.x, ab_props.y = frame.y;
-            return h('svg', ab_props, childs);
+            const ex_props = Object.assign({});
+            if (shadow.length) {
+                ab_props.x = 0, ab_props.y = 0;
+                const props: any = {}
+                ex_props.transform = `translate(${frame.x},${frame.y})`;
+                const inner_url = innerShadowId(shape_id, shadows);
+                if (shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
+                const body = h("g", props, [h('svg', ab_props, childs)]);
+                return h("g", ex_props, [...shadow, body]);
+            } else {
+                return h('svg', ab_props, childs);
+            }
         }
     } else {
         const props: any = {}
@@ -72,11 +98,33 @@ export function render(h: Function,
         props.style = style;
         if (reflush) props.reflush = reflush;
         ab_props.x = 0, ab_props.y = 0;
+        const shadows = shape.style.shadows;
+        const ex_props = Object.assign({}, props);
+        const shape_id = shape.id.slice(0, 4);
+        const shadow = shadowR(h, shape_id, path, shape);
         if (b_len) {
             const path = shape.getPath().toString();
-            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
+            if (shadow.length) {
+                delete props.style;
+                delete props.transform;
+                const inner_url = innerShadowId(shape_id, shadows);
+                if (shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
+                const body = h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
+                return h("g", ex_props, [...shadow, body]);
+            } else {
+                return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape.style.borders, frame, path)]);
+            }
         } else {
-            return h("g", props, [h('svg', ab_props, childs)]);
+            if (shadow.length) {
+                delete props.style;
+                delete props.transform;
+                const inner_url = innerShadowId(shape_id, shadows);
+                if (shadows.length) props.filter = `${inner_url} url(#dorp-shadow-${shape_id})`;
+                const body = h("g", props, [h('svg', ab_props, childs)]);
+                return h("g", ex_props, [...shadow, body]);
+            } else {
+                return h("g", props, [h('svg', ab_props, childs)]);
+            }
         }
     }
 }

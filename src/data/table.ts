@@ -1,4 +1,4 @@
-import { Border, Fill, Style } from "./style";
+import { Border, Fill, Style, Shadow } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
@@ -184,7 +184,8 @@ export class TableCell extends Shape implements classes.TableCell {
 export function newCell(): TableCell {
     return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
         new BasicArray<Border>(),
-        new BasicArray<Fill>()
+        new BasicArray<Fill>(),
+        new BasicArray<Shadow>()
     ))
 }
 

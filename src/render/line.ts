@@ -3,6 +3,7 @@ import {Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable} from "../data/
 import {RenderTransform, fixFrameByConstrain, isNoTransform, isVisible} from "./basic";
 import {renderWithVars as renderB} from "./line_borders";
 import {Matrix} from "../basic/matrix";
+import {innerShadowId, render as shadowR} from "./shadow";
 
 export function render(h: Function, shape: Shape, transform: RenderTransform | undefined,
                        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
@@ -141,6 +142,22 @@ export function render(h: Function, shape: Shape, transform: RenderTransform | u
         const path = shape.getPathOfFrame(frame).toString();
         childs = childs.concat(renderB(h, shape, shape.frame, path, varsContainer, consumedVars));
         return h('g', props, childs);
+        const path = shape.getPath().toString();
+        childs = childs.concat(renderB(h, shape.style, path, shape));
+        const shadows = shape.style.shadows;
+        const ex_props = Object.assign({}, props);
+        const shape_id = shape.id.slice(0, 4);
+        const shadow = shadowR(h, shape_id, path, shape);
+        if (shadow.length) {
+            delete props.style;
+            delete props.transform;
+            const inner_url = innerShadowId(shape_id, shadows);
+            if (shadows.length) props.filter = `${inner_url}`;
+            const body = h("g", props, childs);
+            return h("g", ex_props, [...shadow, body]);
+        } else {
+            return h("g", props, childs);
+        }
     } else {
         props.stroke = '#000000';
         props['stroke-width'] = 1;
