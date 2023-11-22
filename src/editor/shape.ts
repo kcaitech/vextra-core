@@ -36,8 +36,8 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-import { is_part_of_symbol, is_part_of_symbolref } from "./utils/symbol";
-import { newText, newText2 } from "./creator";
+import {is_part_of_symbol, is_part_of_symbolref} from "./utils/symbol";
+import {newText, newText2} from "./creator";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -259,7 +259,7 @@ export class ShapeEditor {
                 if (k.indexOf(_self_id) < 0) return;
                 const var_real = variables.get(v);
                 if (!var_real || var_real.type === VariableType.Status) return;
-                need_clear_ex.push({ key: k, variable: var_real });
+                need_clear_ex.push({key: k, variable: var_real});
                 need_clear_vars.push(v);
             })
             if (!need_clear_ex.length) return;
@@ -270,7 +270,7 @@ export class ShapeEditor {
                     api.shapeRemoveVariable(this.__page, root_ref_shape as SymbolRefShape, item);
                 }
                 for (let i = 0, l = need_clear_ex.length; i < l; i++) {
-                    const { key, variable } = need_clear_ex[i];
+                    const {key, variable} = need_clear_ex[i];
                     api.shapeRemoveVirbindsEx(this.__page, root_ref_shape as SymbolRefShape, key, variable.id, variable.type);
                 }
                 this.__repo.commit();
@@ -820,11 +820,11 @@ export class ShapeEditor {
         const _var = this.overrideVariable(VariableType.Fills, OverrideType.Fills, (_var) => {
             const fills = _var?.value ?? _shape.style.fills;
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
-                const ret = importFill(v);
-                const imgmgr = v.getImageMgr();
-                if (imgmgr) ret.setImageMgr(imgmgr)
-                return ret;
-            }
+                    const ret = importFill(v);
+                    const imgmgr = v.getImageMgr();
+                    if (imgmgr) ret.setImageMgr(imgmgr)
+                    return ret;
+                }
             ))
         }, api, shape)
         return _var || _shape;
@@ -870,9 +870,9 @@ export class ShapeEditor {
         const _var = this.overrideVariable(VariableType.Borders, OverrideType.Borders, (_var) => {
             const fills = _var?.value ?? _shape.style.borders;
             return new BasicArray(...(fills as Array<Border>).map((v) => {
-                const ret = importBorder(v);
-                return ret;
-            }
+                    const ret = importBorder(v);
+                    return ret;
+                }
             ))
         }, api, shape)
         return _var || _shape;
@@ -925,7 +925,7 @@ export class ShapeEditor {
     }
 
     public exchangeMarkerType() {
-        const { endMarkerType, startMarkerType } = this.__shape.style;
+        const {endMarkerType, startMarkerType} = this.__shape.style;
         if (endMarkerType !== startMarkerType) {
             this._repoWrap("exchangeMarkerType", (api) => {
                 api.shapeModifyEndMarkerType(this.__page, this.__shape, startMarkerType || MarkerType.Line);
@@ -1011,6 +1011,7 @@ export class ShapeEditor {
         api.addShadow(this.__page, this.__shape, shadow, this.__shape.style.shadows.length);
         this.__repo.commit();
     }
+
     public deleteShadow(idx: number) {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
@@ -1019,6 +1020,7 @@ export class ShapeEditor {
             this.__repo.commit();
         }
     }
+
     public setShadowPosition(idx: number, position: ShadowPosition) {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
@@ -1027,6 +1029,7 @@ export class ShapeEditor {
             this.__repo.commit();
         }
     }
+
     public setShadowEnable(idx: number, isEnabled: boolean) {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
@@ -1035,6 +1038,7 @@ export class ShapeEditor {
             this.__repo.commit();
         }
     }
+
     public setShadowColor(idx: number, color: Color) {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
@@ -1043,6 +1047,7 @@ export class ShapeEditor {
             this.__repo.commit();
         }
     }
+
     public setShadowOffsetX(idx: number, offserX: number) {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
@@ -1051,6 +1056,7 @@ export class ShapeEditor {
             this.__repo.commit();
         }
     }
+
     public setShadowOffsetY(idx: number, offsetY: number) {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
@@ -1059,6 +1065,7 @@ export class ShapeEditor {
             this.__repo.commit();
         }
     }
+
     public setShadowBlur(idx: number, blur: number) {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
@@ -1067,6 +1074,7 @@ export class ShapeEditor {
             this.__repo.commit();
         }
     }
+
     public setShadowSpread(idx: number, spread: number) {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
@@ -1085,7 +1093,7 @@ export class ShapeEditor {
                 try {
                     const __points: [number, number][] = [];
                     childs.forEach(p => {
-                        const { width, height } = p.frame;
+                        const {width, height} = p.frame;
                         let _ps: [number, number][] = [
                             [0, 0],
                             [width, 0],
@@ -1101,8 +1109,8 @@ export class ShapeEditor {
                     })
                     const box = createHorizontalBox(__points);
                     if (box) {
-                        const { x: ox, y: oy } = this.__shape.frame2Root();
-                        const { dx, dy } = { dx: ox - box.left, dy: oy - box.top };
+                        const {x: ox, y: oy} = this.__shape.frame2Root();
+                        const {dx, dy} = {dx: ox - box.left, dy: oy - box.top};
                         for (let i = 0; i < childs.length; i++) {
                             translate(api, this.__page, childs[i], dx, dy);
                         }
@@ -1247,7 +1255,7 @@ export class ShapeEditor {
             if (!fromShape) return result;
             const xy_result = get_box_pagexy(fromShape);
             if (!xy_result) return result;
-            const { xy1, xy2 } = xy_result;
+            const {xy1, xy2} = xy_result;
             let p = get_nearest_border_point(fromShape, from.contactType, fromShape.matrix2Root(), xy1, xy2);
             if (!p) return result
 
@@ -1269,7 +1277,7 @@ export class ShapeEditor {
             if (!toShape) return result;
             const xy_result = get_box_pagexy(toShape);
             if (!xy_result) return result;
-            const { xy1, xy2 } = xy_result;
+            const {xy1, xy2} = xy_result;
             let p = get_nearest_border_point(toShape, to.contactType, toShape.matrix2Root(), xy1, xy2);
             if (!p) return result
 
@@ -1354,9 +1362,10 @@ export class ShapeEditor {
     switchSymState(varId: string, state: string) {
         if (!(this.__shape instanceof SymbolRefShape)) return;
 
+        // 寻找目标组件
         const shape: SymbolRefShape = this.__shape;
-        const symmgr = shape.getSymbolMgr();
-        const sym = symmgr?.getSync(shape.refId);
+        const varsContainer = shape.varsContainer;
+        const sym = shape.getSymbolMgr()?.getSync(shape.getRefId2(varsContainer));
         if (!sym) return;
 
         if (!sym.isUnionSymbolShape) return;
@@ -1461,9 +1470,9 @@ export class ShapeEditor {
             curState.forEach((v, k) => {
                 const tag = vartag?.get(k) ?? SymbolShape.Default_State;
                 if (k === originVarId) {
-                    needModifyVars.push({ v: curVars.get(k)!, tag: v }); // 如果改回默认，要删了？
+                    needModifyVars.push({v: curVars.get(k)!, tag: v}); // 如果改回默认，要删了？
                 } else if (tag !== v) {
-                    needModifyVars.push({ v: curVars.get(k)!, tag });
+                    needModifyVars.push({v: curVars.get(k)!, tag});
                 }
             })
             // check varId inside
