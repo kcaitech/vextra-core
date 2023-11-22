@@ -5,7 +5,6 @@ import {
     RectShape,
     Shape,
     ShapeFrame,
-    ShapeType,
     SymbolShape,
     Variable,
     VariableType

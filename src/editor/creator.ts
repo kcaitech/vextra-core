@@ -1,11 +1,31 @@
-import { v4 as uuid } from "uuid";
-import { Page } from "../data/page";
-import { Artboard } from "../data/artboard";
-import { Document, PageListItem } from "../data/document";
-import { GroupShape, RectShape, PathShape, OvalShape, LineShape, Shape, TextShape, ImageShape, PathShape2, PathSegment, SymbolShape } from "../data/shape";
-import { ContactShape } from "../data/contact"
+import {v4 as uuid} from "uuid";
+import {Page} from "../data/page";
+import {Artboard} from "../data/artboard";
+import {Document, PageListItem} from "../data/document";
+import {
+    GroupShape,
+    RectShape,
+    PathShape,
+    OvalShape,
+    LineShape,
+    Shape,
+    TextShape,
+    ImageShape,
+    PathShape2,
+    PathSegment,
+    SymbolShape
+} from "../data/shape";
+import {ContactShape} from "../data/contact"
 import * as types from "../data/typesdefine"
-import { importGroupShape, importPage, importArtboard, importTextShape, importText, importTableShape, importShapeFrame } from "../data/baseimport";
+import {
+    importGroupShape,
+    importPage,
+    importArtboard,
+    importTextShape,
+    importText,
+    importTableShape,
+    importShapeFrame
+} from "../data/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
@@ -23,14 +43,16 @@ import {
     BorderStyle,
     SymbolRefShape
 } from "../data/classes";
-import { BasicArray, BasicMap } from "../data/basic";
-import { Repository } from "../data/transact";
-import { Comment } from "../data/comment";
-import { ResourceMgr } from "../data/basic";
-import { TableShape } from "../data/table";
-export { newText } from "../data/textutils";
-import { ContactForm } from "../data/baseclasses";
-import { exportShapeFrame } from "../data/baseexport";
+import {BasicArray, BasicMap} from "../data/basic";
+import {Repository} from "../data/transact";
+import {Comment} from "../data/comment";
+import {ResourceMgr} from "../data/basic";
+import {TableShape} from "../data/table";
+
+export {newText} from "../data/textutils";
+import {ContactForm} from "../data/baseclasses";
+import {exportShapeFrame} from "../data/baseexport";
+
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {
@@ -65,12 +87,14 @@ export function newGroupShape(name: string, style?: Style): GroupShape {
     addCommonAttr(group);
     return group;
 }
+
 /**
  * @description 给未进入文档(guard之前)的图形设置frame
  */
 export function initFrame(shape: Shape, frame: ShapeFrame) {
     shape.frame = importShapeFrame(exportShapeFrame(frame));
 }
+
 export function newSolidColorFill(): Fill {
     const fillColor = new Color(1, 216, 216, 216);
     return new Fill(uuid(), true, FillType.SolidColor, fillColor);
@@ -84,11 +108,12 @@ export function newStyle(): Style {
     style.fills.push(fill);
     return style;
 }
+
 export function newflatStyle(): Style {
     const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
-    const style = new Style(borders, fills);
-    return style;
+    const shadows = new BasicArray<Shadow>();
+    return new Style(borders, fills, shadows);
 }
 
 export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Artboard {
@@ -311,6 +336,7 @@ export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): 
     compo.isUnionSymbolShape = false;
     return compo;
 }
+
 export function newSymbolShapeUnion(default_sym: SymbolShape, frame: ShapeFrame): SymbolShape {
     const style = newflatStyle();
     const fill = new Fill(uuid(), false, types.FillType.SolidColor, new Color(1, 128, 128, 128));

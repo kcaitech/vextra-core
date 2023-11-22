@@ -20,7 +20,7 @@ import {
     exportCurvePoint,
     exportFill,
     exportPage,
-    exportPoint2D,
+    exportPoint2D, exportShadow, exportShadowPosition,
     exportTableCell,
     exportText,
     exportVariable,

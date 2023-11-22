@@ -70,6 +70,7 @@ import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert
 import { importShape, updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { CMDHandler } from "./handler";
+import {Shadow} from "../../data/typesdefine";
 
 export class CMDExecuter {
     private __document: Document;
@@ -451,7 +452,7 @@ export class CMDExecuter {
         }
         else if (arrayAttr === SHADOW_ID) {
             const shadowId = cmd.arrayAttrId;
-            const shadowIdx = shape.style.shadows.findIndex((shadow) => shadow.id === shadowId);
+            const shadowIdx = shape.style.shadows.findIndex((shadow: Shadow) => shadow.id === shadowId);
             if (shadowIdx < 0) return;
             const opId = op.opId;
             const value = cmd.value;
