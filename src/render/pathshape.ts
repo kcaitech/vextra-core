@@ -1,6 +1,8 @@
 import { PathShape } from "../data/classes";
 import { render as fillR } from "./fill";
-import { render as borderR } from "./border"
+import { render as borderR } from "./border";
+import { innerShadowId, render as shadowR } from "./shadow";
+
 
 export function render(h: Function, shape: PathShape, reflush?: number) {
     // if (this.data.boolOp != BoolOp.None) {
@@ -54,6 +56,19 @@ export function render(h: Function, shape: PathShape, reflush?: number) {
         return h('path', props);
     }
     else {
-        return h("g", props, childs);
+        const shadows = shape.style.shadows;
+        const ex_props = Object.assign({}, props);
+        const shape_id = shape.id.slice(0, 4);
+        const shadow = shadowR(h, shape_id, path, shape);
+        if (shadow.length) {
+            delete props.style;
+            delete props.transform;
+            const inner_url = innerShadowId(shape_id, shadows);
+            if(shadows.length) props.filter = `${inner_url}`;
+            const body = h("g", props, childs);
+            return h("g", ex_props, [...shadow, body]);
+        }  else {
+            return h("g", props, childs);
+        }
     }
 }

@@ -100,7 +100,7 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
             }
             return ret
         })(),
-        shadows: source.shadows && (() => {
+        shadows: (() => {
             const ret = []
             for (let i = 0, len = source.shadows.length; i < len; i++) {
                 const r = exportShadow(source.shadows[i], ctx)
@@ -197,15 +197,21 @@ export function exportShapeFrame(source: types.ShapeFrame, ctx?: IExportContext)
 /* shadow */
 export function exportShadow(source: types.Shadow, ctx?: IExportContext): types.Shadow {
     const ret = {
+        id: source.id,
         isEnabled: source.isEnabled,
         blurRadius: source.blurRadius,
         color: exportColor(source.color, ctx),
+        position: exportShadowPosition(source.position, ctx),
         contextSettings: source.contextSettings && exportGraphicsContextSettings(source.contextSettings, ctx),
         offsetX: source.offsetX,
         offsetY: source.offsetY,
         spread: source.spread,
     }
     return ret
+}
+/* shadow position */
+export function exportShadowPosition(source: types.ShadowPosition, ctx?: IExportContext): types.ShadowPosition {
+    return source
 }
 /* resize type */
 export function exportResizeType(source: types.ResizeType, ctx?: IExportContext): types.ResizeType {

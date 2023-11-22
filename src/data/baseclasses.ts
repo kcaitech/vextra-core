@@ -14,6 +14,7 @@ export {
     TableCellType,
     StrikethroughType,
     ShapeType,
+    ShadowPosition,
     ResizeType,
     MarkerType,
     LineJoinStyle,
@@ -44,6 +45,7 @@ import {
     TableCellType,
     StrikethroughType,
     ShapeType,
+    ShadowPosition,
     ResizeType,
     MarkerType,
     LineJoinStyle,
@@ -113,17 +115,19 @@ export class Style extends Basic {
     contextSettings?: ContextSettings
     fills: BasicArray<Fill >
     innerShadows?: BasicArray<Shadow >
-    shadows?: BasicArray<Shadow >
+    shadows: BasicArray<Shadow >
     contacts?: BasicArray<ContactRole >
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     constructor(
         borders: BasicArray<Border >,
-        fills: BasicArray<Fill >
+        fills: BasicArray<Fill >,
+        shadows: BasicArray<Shadow >
     ) {
         super()
         this.borders = borders
         this.fills = fills
+        this.shadows = shadows
     }
 }
 /**
@@ -231,28 +235,34 @@ export class ShapeFrame extends Basic {
  */
 export class Shadow extends Basic {
     typeId = 'shadow'
+    id: string
     isEnabled: boolean
     blurRadius: number
     color: Color
+    position: ShadowPosition
     contextSettings?: GraphicsContextSettings
     offsetX: number
     offsetY: number
     spread: number
     constructor(
+        id: string,
         isEnabled: boolean,
         blurRadius: number,
         color: Color,
         offsetX: number,
         offsetY: number,
-        spread: number
+        spread: number,
+        position: ShadowPosition
     ) {
         super()
+        this.id = id
         this.isEnabled = isEnabled
         this.blurRadius = blurRadius
         this.color = color
         this.offsetX = offsetX
         this.offsetY = offsetY
         this.spread = spread
+        this.position = position
     }
 }
 /**

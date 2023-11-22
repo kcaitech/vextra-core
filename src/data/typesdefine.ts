@@ -75,7 +75,7 @@ export type Style = {
     contextSettings?: ContextSettings
     fills: Fill[]
     innerShadows?: Shadow[]
-    shadows?: Shadow[]
+    shadows: Shadow[]
     contacts?: ContactRole[]
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
@@ -164,13 +164,20 @@ export type ShapeFrame = {
 }
 /* shadow */
 export type Shadow = {
+    id: string
     isEnabled: boolean
     blurRadius: number
     color: Color
+    position: ShadowPosition
     contextSettings?: GraphicsContextSettings
     offsetX: number
     offsetY: number
     spread: number
+}
+/* shadow position */
+export enum ShadowPosition {
+    Inner = 'inner',
+    Outer = 'outer',
 }
 /* resize type */
 export enum ResizeType {

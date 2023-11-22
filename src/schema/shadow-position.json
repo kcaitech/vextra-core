@@ -1,0 +1,8 @@
+{
+    "description": "shadow position",
+    "enum": [
+        "inner",
+        "outer"
+    ],
+    "default": "outer"
+}
