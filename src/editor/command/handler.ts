@@ -306,28 +306,28 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.hflip,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const hflip = value && JSON.parse(value)
-                    api.shapeModifyHFlip(page, shape, hflip, needUpdateFrame)
+                    api.shapeModifyHFlip(page, shape, !!hflip, needUpdateFrame)
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.vflip,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const vflip = value && JSON.parse(value)
-                    api.shapeModifyVFlip(page, shape, vflip, needUpdateFrame)
+                    api.shapeModifyVFlip(page, shape, !!vflip, needUpdateFrame)
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.visible,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isVisible = value && JSON.parse(value)
-                    api.shapeModifyVisible(shape, isVisible ?? false);
+                    api.shapeModifyVisible(shape, !!isVisible);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.lock,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isLock = value && JSON.parse(value)
-                    api.shapeModifyLock(shape, isLock ?? false);
+                    api.shapeModifyLock(shape, !!isLock);
                 }
             },
             {
@@ -351,15 +351,15 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.constrainerProportions,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const isLock = value && JSON.parse(value) || false;
-                    api.shapeModifyConstrainerProportions(shape, isLock);
+                    const isLock = value && JSON.parse(value);
+                    api.shapeModifyConstrainerProportions(shape, !!isLock);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.nameIsFixed,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const isFixed = value && JSON.parse(value) || false;
-                    api.shapeModifyNameFixed(shape, isFixed);
+                    const isFixed = value && JSON.parse(value);
+                    api.shapeModifyNameFixed(shape, !!isFixed);
                 }
             },
             {
@@ -389,7 +389,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.isboolopshape,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isOpShape = value && JSON.parse(value);
-                    api.shapeModifyBoolOpShape(shape as GroupShape, isOpShape);
+                    api.shapeModifyBoolOpShape(shape as GroupShape, !!isOpShape);
                 }
             },
             {
@@ -417,7 +417,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.isEdited,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const state = value && JSON.parse(value)
-                    api.shapeModifyEditedState(shape as GroupShape, state ?? false);
+                    api.shapeModifyEditedState(shape as GroupShape, !!state);
                 }
             },
         ]
