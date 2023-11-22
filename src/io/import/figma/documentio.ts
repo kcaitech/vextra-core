@@ -1,7 +1,7 @@
 import { Document } from "../../../data/document";
 import { getFigJsonData } from "./tojson";
 
-export async function importDocument(file: File, inflateRawSync: (data: Uint8Array)=> Uint8Array): Promise<Document> {
+export async function importDocument(file: File, /*inflateRawSync: (data: Uint8Array)=> Uint8Array*/): Promise<Document> {
 
     const buffer = await file.arrayBuffer();
 
