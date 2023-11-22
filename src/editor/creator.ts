@@ -49,7 +49,8 @@ import {
     Style,
     Text,
     TextAttr,
-    UserInfo
+    UserInfo,
+    Shadow
 } from "../data/classes";
 import {BasicArray, ResourceMgr} from "../data/basic";
 import {Repository} from "../data/transact";
@@ -102,8 +103,7 @@ export function newStyle(): Style {
     const borders = new BasicArray<Border>();
     const fill = newSolidColorFill();
     const fills = new BasicArray<Fill>();
-    const style = new Style(borders, fills);
-    style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+    const style = new Style(borders, fills, new BasicArray<Shadow>());
     style.fills.push(fill);
     return style;
 }

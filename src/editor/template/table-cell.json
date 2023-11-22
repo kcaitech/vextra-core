@@ -12,6 +12,7 @@
     "style": {
         "typeId": "style",
         "borders": [],
-        "fills": []
+        "fills": [],
+        "shadows": []
     }
 }
