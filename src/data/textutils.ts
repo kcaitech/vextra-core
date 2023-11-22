@@ -314,7 +314,7 @@ export function newText2(textAttr?: TextAttr, paraAttr?: ParaAttr, spanAttr?: Sp
         mergeParaAttr(para, paraAttr);
     }
     if (spanAttr) {
-        mergeParaAttr(para, spanAttr);
+        mergeSpanAttr(span, spanAttr);
     }
     return text;
 }
