@@ -35,7 +35,7 @@ import {
     exportCurvePoint,
     exportFill,
     exportPage,
-    exportPoint2D,
+    exportPoint2D, exportShadow, exportShadowPosition,
     exportTableCell,
     exportText
 } from "../../io/baseexport";
@@ -47,7 +47,7 @@ import {
     FILLS_ID,
     PAGE_ATTR_ID,
     POINTS_ATTR_ID,
-    POINTS_ID,
+    POINTS_ID, SHADOW_ATTR_ID, SHADOW_ID,
     SHAPE_ATTR_ID,
     TABLE_ATTR_ID,
     TEXT_ATTR_ID
@@ -64,7 +64,7 @@ import {
     ContactForm,
     ContextSettings,
     Fill,
-    MarkerType, Shadow
+    MarkerType, Shadow, ShadowPosition
 } from "../../data/style";
 import {
     BulletNumbers,
