@@ -43,16 +43,14 @@ import {
     BorderStyle,
     SymbolRefShape
 } from "../data/classes";
-import {BasicArray, BasicMap} from "../data/basic";
-import {Repository} from "../data/transact";
-import {Comment} from "../data/comment";
-import {ResourceMgr} from "../data/basic";
-import {TableShape} from "../data/table";
-
-export {newText} from "../data/textutils";
-import {ContactForm} from "../data/baseclasses";
-import {exportShapeFrame} from "../data/baseexport";
-
+import { BasicArray, BasicMap } from "../data/basic";
+import { Repository } from "../data/transact";
+import { Comment } from "../data/comment";
+import { ResourceMgr } from "../data/basic";
+import { TableShape } from "../data/table";
+export { newText, newText2 } from "../data/textutils";
+import { ContactForm } from "../data/baseclasses";
+import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 
 export function addCommonAttr(shape: Shape) {
