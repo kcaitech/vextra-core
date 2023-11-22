@@ -27,7 +27,7 @@ import { Repository } from "../data/transact";
 import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
 import { TableShape } from "../data/table";
-export { newText } from "../data/textutils";
+export { newText, newText2 } from "../data/textutils";
 import { ContactForm } from "../data/baseclasses";
 import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
