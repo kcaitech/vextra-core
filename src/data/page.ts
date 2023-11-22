@@ -16,13 +16,15 @@ export class Page extends GroupShape implements classes.Page {
     __allshapes: Map<string, WeakRef<Shape>> = new Map(); // 包含被删除的
     __collect: PageCollectNotify = new PageCollectNotify();
     __symbolshapes: Map<string, SymbolShape> = new Map();
+    isReserveLib: boolean;
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
+        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
+        isReserveLib?: boolean
     ) {
         super(
             id,
@@ -33,7 +35,8 @@ export class Page extends GroupShape implements classes.Page {
             childs
         )
         // this.onAddShape(this); // 不能add 自己
-        childs.forEach((c) => this.onAddShape(c))
+        childs.forEach((c) => this.onAddShape(c));
+        this.isReserveLib = !!isReserveLib;
     }
 
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {

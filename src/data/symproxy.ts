@@ -1,18 +1,19 @@
-import {Style} from "./style";
-import {Para, ParaAttr, Span, Text} from "./text";
-import {BasicArray} from "./basic";
+import { Style } from "./style";
+import { Para, ParaAttr, Span, Text } from "./text";
+import { BasicArray } from "./basic";
 
 export {
     CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint,
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
-import {CurvePoint, OverrideType, ShapeFrame, TextBehaviour, VariableType} from "./baseclasses"
-import {GroupShape, Shape, SymbolShape, TextShape, VarWatcher, Variable, makeVarWatcher} from "./shape";
-import {mergeParaAttr, mergeSpanAttr, mergeTextAttr} from "./textutils";
-import {SymbolRefShape} from "./symbolref";
-import {__objidkey} from "../basic/objectid";
-import {importCurvePoint} from "./baseimport";
-import {layoutChilds} from "./symlayout";
+import { CurvePoint, OverrideType, ShapeFrame, TextBehaviour, VariableType } from "./baseclasses"
+import { GroupShape, Shape, SymbolShape, TextShape, VarWatcher, Variable, makeVarWatcher } from "./shape";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
+import { SymbolRefShape } from "./symbolref";
+import { __objidkey } from "../basic/objectid";
+import { importCurvePoint } from "./baseimport";
+import { layoutChilds } from "./symlayout";
+import { TextLayout } from "./textlayout";
 
 // 内核提供给界面的dataface, 仅用于界面获取对象信息
 // 绘制独立计算
@@ -22,7 +23,7 @@ const mutable = new Set([
     // "__startLoad",
     // "__data",
     "__symMgr",
-    // "__symproxy_cache",
+    "__watcher",
     __objidkey
 ]);
 
@@ -135,6 +136,7 @@ class HdlBase { // protect data
             if (val instanceof Shape) throw new Error(propertyKey.toString());
             // checkNotProxyed(val);
             if ((val as any).__symbolproxy) return val;
+            if (val instanceof Text) return new Proxy(val, new TextHdl(val, receiver))
             return new Proxy(val, new HdlBase(receiver));
         }
         return val;
@@ -222,6 +224,58 @@ class StyleHdl extends HdlBase {
 
     public notify(...args: any[]): void {
         this.__parent.notify(...args);
+    }
+}
+
+class TextHdl extends HdlBase {
+
+    private __layout?: TextLayout;
+    private __layoutWidth: number = 0;
+    private __frameWidth: number = 0;
+    private __frameHeight: number = 0;
+
+    constructor(text: Text, parent: any) {
+        super(parent)
+
+        if ((text as any).__symbolproxy) throw new Error("");
+    }
+
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        const propStr = propertyKey.toString();
+        if (propStr === "__layout") {
+            this.__layout = value;
+            return true;
+        }
+        if (propStr === "__layoutWidth") {
+            this.__layoutWidth = value;
+            return true;
+        }
+        if (propStr === "__frameWidth") {
+            this.__frameWidth = value;
+            return true;
+        }
+        if (propStr === "__frameHeight") {
+            this.__frameHeight = value;
+            return true;
+        }
+        return super.set(target, propertyKey, value, receiver);
+    }
+
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const propStr = propertyKey.toString();
+        if (propStr === "__layout") {
+            return this.__layout;
+        }
+        if (propStr === "__layoutWidth") {
+            return this.__layoutWidth;
+        }
+        if (propStr === "__frameWidth") {
+            return this.__frameWidth;
+        }
+        if (propStr === "__frameHeight") {
+            return this.__frameHeight;
+        }
+        return super.get(target, propertyKey, receiver);
     }
 }
 
@@ -794,11 +848,15 @@ class TextShapeHdl extends ShapeHdl {
 
     getText(target: object, propertyKey: PropertyKey, receiver?: any) {
         if (this.__text) return this.__text;
-        this.__text = this._getText(target, propertyKey, receiver); // todo 编辑过variable后要更新
-        if (typeof this.__text === 'string') this.__text = createTextByString(this.__text as string, this.__origin as TextShapeLike);
+        let text = this._getText(target, propertyKey, receiver); // todo 编辑过variable后要更新
+        if (typeof text === 'string') text = createTextByString(text as string, this.__origin as TextShapeLike);
         const frame = (target as TextShape).frame;
-        if (this.__text) this.__text.updateSize(frame.width, frame.height);
-        return this.__text;
+        if (text) {
+            if (!(text as any).__symbolproxy) text = new Proxy(text, new TextHdl(text, receiver));
+            text.updateSize(frame.width, frame.height);
+        }
+        this.__text = text;
+        return text;
     }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {

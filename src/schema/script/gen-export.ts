@@ -330,6 +330,7 @@ export function genexport(schemadir: string, outfile: string, typedefs: string) 
 export interface IExportContext {
     symbols?:Set<string>
     medias?:Set<string>
+    referenced?:Set<string>
 }
 `
     )

@@ -8,9 +8,15 @@ function renderSym(h: Function,
     sym: SymbolShape,
     comsMap: Map<ShapeType, any>): any {
 
+    const p = sym.parent;
+    const varsContainer = [];
+    if (p && p instanceof SymbolShape && p.isUnionSymbolShape) {
+        varsContainer.push(p);
+    }
+    varsContainer.push(sym);
     // 应该同groupshape
     const childs = sym.childs;
-    const nodes = renderGroupChilds2(h, childs, comsMap, undefined, [sym]);
+    const nodes = renderGroupChilds2(h, childs, comsMap, undefined, varsContainer);
     return nodes;
 
 }
@@ -39,7 +45,7 @@ export function render(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, 
     if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
         props.opacity = contextSettings.opacity;
     }
-    
+
     if (frame.width > frame.height) {
         props.transform = `translate(0, ${(frame.width - frame.height) / 2})`;
     } else {

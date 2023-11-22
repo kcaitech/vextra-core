@@ -9,6 +9,7 @@ import * as types from "./typesdefine"
 export interface IExportContext {
     symbols?:Set<string>
     medias?:Set<string>
+    referenced?:Set<string>
 }
 /* winding rule */
 export function exportWindingRule(source: types.WindingRule, ctx?: IExportContext): types.WindingRule {
@@ -851,8 +852,8 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
                 return ret;
             })(),
         refId: source.refId,
-        virbindsEx: source.virbindsEx && (() => {
-            const val = source.virbindsEx;
+        overrides: source.overrides && (() => {
+            const val = source.overrides;
             const ret: any = {};
             val.forEach((v, k) => {
                 ret[k] = v
@@ -868,6 +869,8 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
             return ret;
         })(),
     }
+    // inject code
+    if (ctx?.referenced) ctx.referenced.add(ret.refId);
     return ret
 }
 /* span attr */
@@ -1493,8 +1496,8 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 return ret;
             })(),
         isUnionSymbolShape: source.isUnionSymbolShape,
-        virbindsEx: source.virbindsEx && (() => {
-            const val = source.virbindsEx;
+        overrides: source.overrides && (() => {
+            const val = source.overrides;
             const ret: any = {};
             val.forEach((v, k) => {
                 ret[k] = v

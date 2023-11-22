@@ -294,3 +294,27 @@ export function newText(textAttr?: TextAttr): Text {
     }
     return text;
 }
+
+export function newText2(textAttr?: TextAttr, paraAttr?: ParaAttr, spanAttr?: SpanAttr): Text {
+    const text = new Text(new BasicArray());
+    const para = new Para('\n', new BasicArray());
+    para.attr = new ParaAttr();
+    para.attr.minimumLineHeight = 24;
+    text.paras.push(para);
+    const span = new Span(para.length);
+    span.fontName = "PingFangSC-Regular";
+    span.fontSize = 14;
+    span.color = new Color(0.85, 0, 0, 0);
+    para.spans.push(span);
+    if (textAttr) {
+        mergeParaAttr(para, textAttr);
+        mergeSpanAttr(span, textAttr);
+    }
+    if (paraAttr) {
+        mergeParaAttr(para, paraAttr);
+    }
+    if (spanAttr) {
+        mergeParaAttr(para, spanAttr);
+    }
+    return text;
+}

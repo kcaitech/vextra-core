@@ -1,15 +1,24 @@
-import { DocumentMeta, PageListItem } from "./baseclasses";
-export { DocumentMeta, PageListItem, DocumentSyms } from "./baseclasses";
-import { Page } from "./page";
-import { Artboard } from "./artboard";
-import { BasicArray, ResourceMgr, IDataGuard, Watchable } from "./basic";
-import { Style } from "./style";
-import { GroupShape, SymbolShape } from "./shape";
+import {DocumentMeta, PageListItem, ShapeFrame, ShapeType} from "./baseclasses";
+import {Page} from "./page";
+import {Artboard} from "./artboard";
+import {BasicArray, IDataGuard, ResourceMgr, Watchable} from "./basic";
+import {Border, Fill, Style} from "./style";
+import {Shape, SymbolShape} from "./shape";
+import {uuid} from "../basic/uuid";
+
+export {DocumentMeta, PageListItem, DocumentSyms} from "./baseclasses";
+
+export enum LibType {
+    Symbol = 'symbol-lib',
+    Media = 'media-lib'
+}
+
 class SpecialActionCorrespondent extends Watchable(Object) {
     constructor() {
         super();
     }
 }
+
 export class Document extends Watchable(DocumentMeta) {
     private __pages: ResourceMgr<Page>;
     private __artboards: ResourceMgr<Artboard>;
@@ -21,6 +30,7 @@ export class Document extends Watchable(DocumentMeta) {
     private __versionId: string;
     private __name: string;
     __correspondent: SpecialActionCorrespondent; // 额外动作通信
+
     constructor(
         id: string,
         versionId: string, // 版本id
@@ -40,30 +50,38 @@ export class Document extends Watchable(DocumentMeta) {
         this.__correspondent = new SpecialActionCorrespondent();
         return guard.guard(this);
     }
+
     get versionId() {
         return this.__versionId;
     }
+
     get pagesMgr() {
         return this.__pages;
     }
+
     get artboardMgr() {
         return this.__artboards;
     }
+
     get symbolsMgr() {
         return this.__symbols;
     }
+
     get mediasMgr() {
         return this.__medias;
     }
+
     get stylesMgr() {
         return this.__styles;
     }
+
     insertPage(index: number, page: Page) {
         if (index < 0) return;
         const pageListItem = new PageListItem(page.id, page.name);
         this.pagesList.splice(index, 0, pageListItem);
         this.__pages.add(page.id, page);
     }
+
     deletePage(id: string): boolean {
         if (this.pagesList.length > 1) {
             const index = this.pagesList.findIndex(p => p.id === id);
@@ -74,25 +92,28 @@ export class Document extends Watchable(DocumentMeta) {
             return false;
         }
     }
+
     deletePageAt(index: number): boolean {
         if (index < 0 || index >= this.pagesList.length) return false;
         this.pagesList.splice(index, 1);
         return true;
     }
+
     getPageItemAt(index: number): PageListItem | undefined {
         if (index < 0 || index >= this.pagesList.length) return;
         return this.pagesList[index];
     }
+
     indexOfPage(pageOrId: Page | string): number {
         const id = typeof pageOrId === 'string' ? pageOrId : pageOrId.id;
         return this.pagesList.findIndex(p => p.id === id);
     }
+
     getPageMetaById(id: string): PageListItem | undefined {
-        const page = this.pagesList.find((p: PageListItem) => p.id === id);
-        return page;
+        return this.pagesList.find((p: PageListItem) => p.id === id);
     }
+
     getPageIndexById(id: string): number {
-        const index = this.pagesList.findIndex(p => p.id === id);
-        return index;
+        return this.pagesList.findIndex(p => p.id === id);
     }
 }
