@@ -26,7 +26,7 @@ import {
     exportVariable,
     IExportContext
 } from "../../data/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, SHADOW_ID, SHADOW_ATTR_ID } from "./consts";
 import {
     GroupShape,
     Shape,
@@ -38,12 +38,12 @@ import {
     VariableType
 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType, Style } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType, Style, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { TableOpTarget } from "../../coop/data/classes";
@@ -913,6 +913,121 @@ export class Api {
             const contactRole = basicapi.removeContactRoleAt(shape.style, index);
             if (contactRole) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), CONTACTS_ID, contactRole.id, index, exportContactRole(contactRole)));
         })
+    }
+    // shadow
+    addShadows(page: Page, shape: Shape, shadows: Shadow[]) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            for (let i = 0; i < shadows.length; i++) {
+                const shadow = shadows[i];
+                basicapi.addShadow(shape.style, shadow, i);
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, i, exportShadow(shadow)));
+            }
+        })
+    }
+    addShadow(page: Page, shape: Shape, shadow: Shadow, index: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            basicapi.addShadow(shape.style, shadow, index);
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, index, exportShadow(shadow)))
+        })
+    }
+    deleteShadows(page: Page, shape: Shape, index: number, strength: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const shadows = basicapi.deleteShadows(shape.style, index, strength);
+            if (shadows && shadows.length) {
+                for (let i = 0; i < shadows.length; i++) {
+                    const shadow = shadows[i];
+                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, index, exportShadow(shadow)));
+                }
+            }
+        })
+
+    }
+    deleteShadowAt(page: Page, shape: Shape, idx: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const shadow = basicapi.deleteShadowAt(shape.style, idx);
+            if (shadow) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, idx, exportShadow(shadow)));
+        })
+    }
+    setShadowEnable(page: Page, shape: Shape, idx: number, isEnable: boolean) {
+        checkShapeAtPage(page,shape);
+        const shadow = shape.style.shadows[idx];
+        if(shadow) {
+            this.__trap(() => {
+                const save = shadow.isEnabled;
+                shadow.isEnabled = isEnable;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.enable, isEnable, save));
+            })
+        }
+    }
+    setShadowOffsetX(page: Page, shape: Shape, idx: number, offsetX: number) {
+        checkShapeAtPage(page,shape);
+        const shadow = shape.style.shadows[idx];
+        if(shadow) {
+            this.__trap(() => {
+                const save = shadow.offsetX;
+                shadow.offsetX = offsetX;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.offsetX, offsetX, save));
+            })
+        }
+    }
+    setShadowOffsetY(page: Page, shape: Shape, idx: number, offsetY: number) {
+        checkShapeAtPage(page,shape);
+        const shadow = shape.style.shadows[idx];
+        if(shadow) {
+            this.__trap(() => {
+                const save = shadow.offsetY;
+                shadow.offsetY = offsetY;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.offsetY, offsetY, save));
+            })
+        }
+    }
+    setShadowBlur(page: Page, shape: Shape, idx: number, blur: number) {
+        checkShapeAtPage(page,shape);
+        const shadow = shape.style.shadows[idx];
+        if(shadow) {
+            this.__trap(() => {
+                const save = shadow.blurRadius;
+                shadow.blurRadius = blur;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.blurRadius, blur, save));
+            })
+        }
+    }
+    setShadowSpread(page: Page, shape: Shape, idx: number, spread: number) {
+        checkShapeAtPage(page,shape);
+        const shadow = shape.style.shadows[idx];
+        if(shadow) {
+            this.__trap(() => {
+                const save = shadow.spread;
+                shadow.spread = spread;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.spread, spread, save));
+            })
+        }
+    }
+    setShadowColor(page: Page, shape: Shape, idx: number, color: Color) {
+        checkShapeAtPage(page, shape);
+        const shadow = shape.style.shadows[idx];
+        if (shadow) {
+            this.__trap(() => {
+                const save = shadow.color;
+                shadow.color = color;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.color, exportColor(color), exportColor(save)));
+            })
+        }
+    }
+    setShadowPosition(page: Page, shape: Shape, idx: number, position: ShadowPosition) {
+        checkShapeAtPage(page, shape);
+        const shadow = shape.style.shadows[idx];
+        if (shadow) {
+            this.__trap(() => {
+                const save = shadow.position;
+                shadow.position = position;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.position, exportShadowPosition(position), exportShadowPosition(save)));
+            })
+        }
     }
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {

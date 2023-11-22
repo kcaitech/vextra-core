@@ -10,14 +10,14 @@ import {
     Variable,
     VariableType
 } from "../data/shape";
-import {Border, BorderPosition, BorderStyle, Color, Fill, MarkerType} from "../data/style";
-import {expand, expandTo, translate, translateTo} from "./frame";
+import {Border, BorderPosition, BorderStyle, Color, Fill, MarkerType, Shadow} from "../data/style";
+import {expand, expandTo, translate, pathEdit, translateTo} from "./frame";
 import {BoolOp, CurvePoint, Point2D} from "../data/baseclasses";
 import {Artboard} from "../data/artboard";
 import {createHorizontalBox} from "../basic/utils";
 import {Page} from "../data/page";
 import {CoopRepository} from "./command/cooprepo";
-import {ContactForm, CurveMode, OverrideType} from "../data/typesdefine";
+import {ContactForm, CurveMode, OverrideType, ShadowPosition} from "../data/typesdefine";
 import {Api} from "./command/recordapi";
 import {modify_points_xy, update_frame_by_points} from "./path";
 import {exportCurvePoint} from "../data/baseexport";
@@ -997,6 +997,77 @@ export class ShapeEditor {
         }
     }
 
+    // shadow
+    public addShadow(shadow: Shadow) {
+        const api = this.__repo.start("addShadow", {});
+        api.addShadow(this.__page, this.__shape, shadow, this.__shape.style.shadows.length);
+        this.__repo.commit();
+    }
+    public deleteShadow(idx: number) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("deleteShadow", {});
+            api.deleteShadowAt(this.__page, this.__shape, idx)
+            this.__repo.commit();
+        }
+    }
+    public setShadowPosition(idx: number, position: ShadowPosition) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowPosition", {});
+            api.setShadowPosition(this.__page, this.__shape, idx, position);
+            this.__repo.commit();
+        }
+    }
+    public setShadowEnable(idx: number, isEnabled: boolean) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowEnable", {});
+            api.setShadowEnable(this.__page, this.__shape, idx, isEnabled);
+            this.__repo.commit();
+        }
+    }
+    public setShadowColor(idx: number, color: Color) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowColor", {});
+            api.setShadowColor(this.__page, this.__shape, idx, color);
+            this.__repo.commit();
+        }
+    }
+    public setShadowOffsetX(idx: number, offserX: number) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowOffsetX", {});
+            api.setShadowOffsetX(this.__page, this.__shape, idx, offserX);
+            this.__repo.commit();
+        }
+    }
+    public setShadowOffsetY(idx: number, offsetY: number) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowOffsetY", {});
+            api.setShadowOffsetY(this.__page, this.__shape, idx, offsetY);
+            this.__repo.commit();
+        }
+    }
+    public setShadowBlur(idx: number, blur: number) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowBlur", {});
+            api.setShadowBlur(this.__page, this.__shape, idx, blur);
+            this.__repo.commit();
+        }
+    }
+    public setShadowSpread(idx: number, spread: number) {
+        const shadow = this.__shape.style.shadows[idx];
+        if (shadow) {
+            const api = this.__repo.start("setShadowSpread", {});
+            api.setShadowSpread(this.__page, this.__shape, idx, spread);
+            this.__repo.commit();
+        }
+    }
+
     // 容器自适应大小
     public adapt() {
         if (this.__shape.type === ShapeType.Artboard) {
@@ -1330,7 +1401,7 @@ export class ShapeEditor {
             if (host.isVirtualShape || host instanceof SymbolShape) {
 
                 // todo host is symbolshape // todo
-                // 
+                //
                 let override_id = host.isVirtualShape ? host.id : this.__shape.id;
                 const splitIdx = override_id.indexOf('/');
                 // 需要截掉第一个

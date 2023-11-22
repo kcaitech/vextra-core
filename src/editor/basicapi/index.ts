@@ -8,6 +8,7 @@ import { BasicMap } from "../../data/basic";
 
 export * from "./fill";
 export * from "./border";
+export * from "./shadow";
 export * from "./table";
 export * from "./points";
 export * from "./contact";

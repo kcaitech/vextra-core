@@ -88,6 +88,7 @@ export const FILLS_ATTR_ID = {
 }
 
 export const BORDER_ID = "border"
+export const SHADOW_ID = "shadow"
 
 export const BORDER_ATTR_ID = {
     enable: "enable",
@@ -95,6 +96,15 @@ export const BORDER_ATTR_ID = {
     thickness: "thickness",
     position: "position",
     borderStyle: "borderStyle",
+}
+export const SHADOW_ATTR_ID = {
+    enable: "enable",
+    color: "color",
+    position: "position",
+    offsetX: "offserX",
+    offsetY: "offsetY",
+    blurRadius: "blurRadius",
+    spread: "spread"
 }
 export const POINT_ID = "point"
 
