@@ -149,7 +149,7 @@ export interface AsyncContactEditor {
 }
 
 export interface AsyncOpacityEditor {
-    execute: () => undefined;
+    execute: (contextSettingOpacity: number) => void;
     close: () => undefined;
 }
 
@@ -730,7 +730,28 @@ export class Controller {
         return {pre, modify_contact_from, modify_contact_to, modify_sides, migrate, close}
     }
 
-
+    public asyncOpacityEditor(shapes: Shape[], page: Page): AsyncOpacityEditor {
+        const api = this.__repo.start("asyncOpacityEditor", {});
+        let status: Status = Status.Pending;
+        const execute = (contextSettingOpacity: number) => {
+            status = Status.Pending;
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return {execute, close}
+    }
 }
 
 function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
