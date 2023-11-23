@@ -325,10 +325,10 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             },
             {
                 opId: SHAPE_ATTR_ID.contextSettingsOpacity,
-                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const v = JSON.parse(value);
-                        api.shapeModifyContextSettingOpacity(shape, v)
+                        api.shapeModifyContextSettingOpacity(shape as Shape, v)
                     }
                 }
             },

@@ -16,7 +16,6 @@ import {
     TableCmdModify,
     TableCmdRemove,
     TableIndex,
-    TableOpTarget,
     TextCmdInsert,
     TextCmdModify,
     TextCmdRemove
