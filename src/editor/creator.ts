@@ -105,6 +105,7 @@ export function newStyle(): Style {
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
     style.fills.push(fill);
+    style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
     return style;
 }
 
