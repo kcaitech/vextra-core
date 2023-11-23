@@ -682,6 +682,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
                 if (!childs || childs.length === 0) return;
                 const prefix = this.__id + '/';
                 this.__childs = childs.map((origin) => proxyShape(this.__root, origin, receiver as Shape, prefix + origin.id));
+                console.log("before layoutChilds",this.__origin.frame, childs[0].parent!.frame);
                 layoutChilds(this.__childs, this.__origin.frame, childs[0].parent!.frame);
                 this.saveFrame();
                 this.__childsIsDirty = false;
