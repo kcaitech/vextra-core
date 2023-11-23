@@ -149,6 +149,11 @@ export interface AsyncContactEditor {
     close: () => undefined;
 }
 
+export interface AsyncOpacityEditor {
+    execute: (contextSettingOpacity: number) => void;
+    close: () => undefined;
+}
+
 export enum Status {
     Pending = 'pending',
     Fulfilled = 'fulfilled'
@@ -673,7 +678,6 @@ export class Controller {
                 points[i] = p;
             }
             api.addPoints(page, shape as PathShape, points);
-            console.log('--pre--', shape.points);
         }
         const modify_contact_from = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {
             status = Status.Pending;
@@ -734,6 +738,29 @@ export class Controller {
             return undefined;
         }
         return {pre, modify_contact_from, modify_contact_to, modify_sides, migrate, close}
+    }
+
+    public asyncOpacityEditor(shapes: Shape[], page: Page): AsyncOpacityEditor {
+        const api = this.__repo.start("asyncOpacityEditor", {});
+        let status: Status = Status.Pending;
+        const execute = (contextSettingOpacity: number) => {
+            status = Status.Pending;
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return {execute, close}
     }
 }
 

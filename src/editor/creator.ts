@@ -4,27 +4,27 @@ import {Artboard} from "../data/artboard";
 import {Document, PageListItem} from "../data/document";
 import {
     GroupShape,
-    RectShape,
-    PathShape,
-    OvalShape,
-    LineShape,
-    Shape,
-    TextShape,
     ImageShape,
-    PathShape2,
+    LineShape,
+    OvalShape,
     PathSegment,
-    SymbolShape
+    PathShape,
+    PathShape2,
+    SymbolShape,
+    RectShape,
+    Shape,
+    TextShape
 } from "../data/shape";
 import {ContactShape} from "../data/contact"
 import * as types from "../data/typesdefine"
+import {BlendMode} from "../data/typesdefine"
 import {
+    importArtboard,
     importGroupShape,
     importPage,
-    importArtboard,
-    importTextShape,
-    importText,
     importTableShape,
-    importShapeFrame
+    importText,
+    importShapeFrame, importTextShape
 } from "../data/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
@@ -33,13 +33,25 @@ import template_text_shape from "./template/text-shape.json"
 import template_table_shape from "./template/table-shape.json"
 
 import {
-    Point2D, CurvePoint,
-    Color, Border, Style, Fill, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
-    Text,
-    Shadow,
+    Border,
+    Color,
+    ContextSettings,
+    CurveMode,
+    CurvePoint,
+    Ellipse,
+    Fill,
+    FillType,
     Para,
-    Span,
     ParaAttr,
+    Path,
+    Point2D,
+    ShapeFrame,
+    Span,
+    Style,
+    Text,
+    TextAttr,
+    UserInfo,
+    Shadow,
     BorderStyle,
     SymbolRefShape
 } from "../data/classes";
@@ -49,9 +61,10 @@ import { Comment } from "../data/comment";
 import { ResourceMgr } from "../data/basic";
 import { TableShape } from "../data/table";
 export { newText, newText2 } from "../data/textutils";
-import { ContactForm } from "../data/baseclasses";
 import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
+import {mergeParaAttr, mergeSpanAttr} from "../data/textutils";
+import {ContactForm} from "../data/baseclasses";
 
 export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
@@ -104,6 +117,7 @@ export function newStyle(): Style {
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
     style.fills.push(fill);
+    style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
     return style;
 }
 

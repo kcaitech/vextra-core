@@ -4,10 +4,11 @@ import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
 import { importColor, importText, importVariable } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
-import { IdOpSet } from "../../coop/data/basictypes";
 import { SymbolShape, Variable } from "../../data/shape";
 import { BasicMap } from "../../data/basic";
-import {shapeModifyNameFixed} from "../basicapi";
+import { IdOpSet } from "coop/data/basictypes";
+import {shapeModifyContextSettingOpacity, shapeModifyNameFixed} from "../basicapi";
+
 export type TextShapeLike = Shape & { text: Text }
 export type UpdateFrameArray = { shape: Shape, page: Page }[];
 export type Handler = (...args: any[]) => void;
@@ -319,6 +320,15 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                     if (value) {
                         const v = JSON.parse(value);
                         api.shapeModifyResizingConstraint(shape as Shape, v)
+                    }
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.contextSettingsOpacity,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        const v = JSON.parse(value);
+                        api.shapeModifyContextSettingOpacity(shape, v)
                     }
                 }
             },

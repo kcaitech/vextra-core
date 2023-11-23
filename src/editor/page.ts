@@ -341,7 +341,22 @@ export class PageEditor {
         }
         return false;
     }
-
+    modifyShapesContextSettingOpacity(shapes: Shape[], value: number) {
+        if (!shapes.length) return console.log('invalid data');
+        try {
+            const api = this.__repo.start("modifyShapesContextSettingOpacity", {});
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const item = shapes[i];
+                api.shapeModifyContextSettingsOpacity(this.__page, item, value);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+            return false;
+        }
+    }
     boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | GroupShape {
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
