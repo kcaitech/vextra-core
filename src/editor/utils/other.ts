@@ -302,18 +302,17 @@ export function is_symbol_but_not_union(shape: Shape) {
 /**
  * @description 给一个变量的id(varid)，当前以组件(symbol)为范围查看有多少图层绑定了这个变量
  */
-export function find_layers_by_varid(symbol: SymbolShape, varid: string, type: OverrideType) {
+export function find_layers_by_varid(symbol: SymbolShape, var_id: string, type: OverrideType) {
     const shapes: Shape[] = [];
     if (symbol.isUnionSymbolShape) { // 存在可变组件
-        const childs = symbol.childs;
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const group = childs[i];
-            get_x_type_option(symbol, group, get_vt_by_ot(type)!, varid, shapes);
+        const children = symbol.childs;
+        for (let i = 0, len = children.length; i < len; i++) {
+            const group = children[i];
+            get_x_type_option(symbol, group, get_vt_by_ot(type)!, var_id, shapes);
         }
     } else { // 不存在可变组件
-        get_x_type_option(symbol, symbol, get_vt_by_ot(type)!, varid, shapes);
+        get_x_type_option(symbol, symbol, get_vt_by_ot(type)!, var_id, shapes);
     }
-    console.log('shapes: ', shapes);
     return shapes;
 }
 

@@ -758,11 +758,13 @@ export class ShapeEditor {
             api.shapeModifyVFlip(this.__page, this.__shape, !this.__shape.isFlippedVertical)
         });
     }
+
     public contextSettingOpacity(value: number) {
         const api = this.__repo.start("contextSettingOpacity", {});
         api.shapeModifyContextSettingsOpacity(this.__page, this.__shape, value);
         this.__repo.commit();
     }
+
     // resizingConstraint
     public setResizingConstraint(value: number) {
         this._repoWrap("setResizingConstraint", (api) => {
@@ -1675,23 +1677,23 @@ export class ShapeEditor {
      */
     removeBinds(type: OverrideType) {
         if (!is_part_of_symbol(this.__shape)) return;
-        const api = this.__repo.start("removeBinds", {});
         try {
-            const varid = this.__shape.varbinds?.get(type);
-            if (!varid) throw new Error('Invalid Override');
+            const api = this.__repo.start("removeBinds", {});
+            const var_id = this.__shape.varbinds?.get(type);
+            if (!var_id) throw new Error('Invalid Override');
             api.shapeUnbinVar(this.__page, this.__shape, type);
             const symbol = get_symbol_by_layer(this.__shape);
             if (!symbol) {
                 this.__repo.commit();
                 return;
             }
-            const layers = find_layers_by_varid(symbol, varid, type);
+            const layers = find_layers_by_varid(symbol, var_id, type);
             if (!layers.length) {
-                api.shapeRemoveVariable(this.__page, symbol, varid);
+                api.shapeRemoveVariable(this.__page, symbol, var_id);
             }
             this.__repo.commit();
         } catch (e) {
-            console.error(e);
+            console.error("error from removeBinds:", e);
             this.__repo.rollback();
         }
     }
