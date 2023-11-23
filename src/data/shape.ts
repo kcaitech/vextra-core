@@ -276,7 +276,12 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
     setResizingConstraint(value: number) {
         this.resizingConstraint = value;
     }
-
+    setContextSettingsOpacity(value: number) {
+        if (!this.style.contextSettings) {
+            this.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+        }
+        this.style.contextSettings.opacity = value;
+    }
     getBorderIndex(border: Border): number {
         return this.style.borders.findIndex(i => i === border);
     }
