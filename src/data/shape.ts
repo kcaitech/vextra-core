@@ -1,5 +1,5 @@
 import { Basic, BasicMap, ResourceMgr, Watchable } from "./basic";
-import { Style, Border } from "./style";
+import {Style, Border, ContextSettings, BlendMode} from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
