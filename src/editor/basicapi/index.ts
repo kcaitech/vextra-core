@@ -160,6 +160,9 @@ export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | unde
 export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: number) {
     shape.setResizingConstraint(resizingConstraint);
 }
+export function shapeModifyContextSettingOpacity(shape: Shape, contextSettingsOpacity: number) {
+    shape.setContextSettingsOpacity(contextSettingsOpacity);
+}
 export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
     shape.setRectRadius(lt, rt, rb, lb);
 }

@@ -1,30 +1,96 @@
 import {
     Cmd,
-    PageCmdInsert, PageCmdModify, PageCmdMove, PageCmdDelete,
-    ShapeArrayAttrMove, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
-    ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
-    TextCmdInsert, TextCmdRemove, TextCmdModify,
-    TableCmdInsert, TableCmdRemove, TableCmdModify, TableIndex
+    PageCmdDelete,
+    PageCmdInsert,
+    PageCmdModify,
+    PageCmdMove,
+    ShapeArrayAttrInsert,
+    ShapeArrayAttrModify,
+    ShapeArrayAttrMove,
+    ShapeArrayAttrRemove,
+    ShapeCmdInsert,
+    ShapeCmdModify,
+    ShapeCmdMove,
+    ShapeCmdRemove,
+    TableCmdInsert,
+    TableCmdModify,
+    TableCmdRemove,
+    TableIndex,
+    TableOpTarget,
+    TextCmdInsert,
+    TextCmdModify,
+    TextCmdRemove
 } from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
-import { Repository } from "../../data/transact";
-import { Page } from "../../data/page";
-import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText, exportShadow, exportShadowPosition } from "../../io/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, SHADOW_ID, SHADOW_ATTR_ID } from "./consts";
-import { GroupShape, Shape, PathShape, PathShape2, CurvePoint } from "../../data/shape";
-import { ContactShape } from "../../data/contact";
-import { exportShape, updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, Color, ContactForm, ContextSettings, Fill, MarkerType, Shadow } from "../../data/style";
-import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
-import { cmdmerge } from "./merger";
-import { RectShape, TableCell, TableCellType, TableShape } from "../../data/classes";
-import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, Point2D, ShadowPosition, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
-import { _travelTextPara } from "../../data/texttravel";
-import { uuid } from "../../basic/uuid";
-import { TableOpTarget } from "../../coop/data/classes";
-import { ContactRole } from "../../data/baseclasses";
+import {Repository} from "../../data/transact";
+import {Page} from "../../data/page";
+import {Document} from "../../data/document";
+import {
+    exportBorder,
+    exportBorderPosition,
+    exportBorderStyle,
+    exportColor,
+    exportContactForm,
+    exportContactRole,
+    exportCurvePoint,
+    exportFill,
+    exportPage,
+    exportPoint2D, exportShadow, exportShadowPosition,
+    exportTableCell,
+    exportText
+} from "../../io/baseexport";
+import {
+    BORDER_ATTR_ID,
+    BORDER_ID,
+    CONTACTS_ID,
+    FILLS_ATTR_ID,
+    FILLS_ID,
+    PAGE_ATTR_ID,
+    POINTS_ATTR_ID,
+    POINTS_ID, SHADOW_ATTR_ID, SHADOW_ID,
+    SHAPE_ATTR_ID,
+    TABLE_ATTR_ID,
+    TEXT_ATTR_ID
+} from "./consts";
+import {CurvePoint, GroupShape, PathShape, PathShape2, Shape} from "../../data/shape";
+import {ContactShape} from "../../data/contact";
+import {exportShape, updateShapesFrame} from "./utils";
+import {
+    BlendMode,
+    Border,
+    BorderPosition,
+    BorderStyle,
+    Color,
+    ContactForm,
+    ContextSettings,
+    Fill,
+    MarkerType, Shadow, ShadowPosition
+} from "../../data/style";
+import {
+    BulletNumbers,
+    SpanAttr,
+    SpanAttrSetter,
+    Text,
+    TextBehaviour,
+    TextHorAlign,
+    TextVerAlign
+} from "../../data/text";
+import {cmdmerge} from "./merger";
+import {RectShape, TableCell, TableCellType, TableShape} from "../../data/classes";
+import {CmdGroup} from "../../coop/data/cmdgroup";
+import {
+    BoolOp,
+    BulletNumbersBehavior,
+    BulletNumbersType,
+    FillType,
+    Point2D,
+    StrikethroughType,
+    TextTransformType,
+    UnderlineType
+} from "../../data/typesdefine";
+import {_travelTextPara} from "../../data/texttravel";
+import {uuid} from "../../basic/uuid";
+import {ContactRole} from "../../data/baseclasses";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -363,6 +429,17 @@ export class Api {
             shape.isFlippedVertical = vflip;
             this.needUpdateFrame.push({ page, shape });
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.vflip, vflip, save));
+        })
+    }
+    shapeModifyContextSettingsOpacity(page: Page, shape: Shape, contextSettingsOpacity: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            if (!shape.style.contextSettings) {
+                shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+            }
+            const save = shape.style.contextSettings.opacity;
+            shape.setContextSettingsOpacity(contextSettingsOpacity);
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.contextSettingsOpacity, contextSettingsOpacity, save))
         })
     }
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {

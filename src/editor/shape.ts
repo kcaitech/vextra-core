@@ -79,6 +79,11 @@ export class ShapeEditor {
         api.shapeModifyVFlip(this.__page, this.__shape, !this.__shape.isFlippedVertical)
         this.__repo.commit();
     }
+    public contextSettingOpacity(value: number) {
+        const api = this.__repo.start("contextSettingOpacity", {});
+        api.shapeModifyContextSettingsOpacity(this.__page, this.__shape, value);
+        this.__repo.commit();
+    }
     // resizingConstraint
     public setResizingConstraint(value: number) {
         const api = this.__repo.start("setResizingConstraint", {});
