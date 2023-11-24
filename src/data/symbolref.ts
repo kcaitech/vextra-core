@@ -99,6 +99,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     updater(notify: boolean = true): boolean { // 自己的override也要更新
         const symMgr = this.__symMgr;
         if (!symMgr) return false;
+        if (this.isVirtualShape) throw new Error("virtual shape can not be updated");
         const refId = this.refId;
         if (!refId) return false;
         if (this.__startLoad === refId) {
@@ -241,6 +242,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     }
 
     getRefId2(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+        if (this.isVirtualShape) return this.refId;
         if (!varsContainer) return this.refId;
         const _vars = findOverrideAndVar(this, OverrideType.SymbolID, varsContainer);
         if (!_vars) return this.refId;

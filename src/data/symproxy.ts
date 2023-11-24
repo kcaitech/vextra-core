@@ -728,6 +728,10 @@ class SymbolRefShapeHdl extends ShapeHdl {
         if (propStr === "varsContainer") {
             return this.getVarsContainer();
         }
+        if (propStr === "refId") {
+            const varsContainer = this.getVarsContainer();
+            return this.getRefId(varsContainer);
+        }
         return super.get(target, propertyKey, receiver);
     }
 
