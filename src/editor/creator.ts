@@ -56,13 +56,14 @@ import {
     BorderStyle,
     SymbolRefShape
 } from "../data/classes";
-import { BasicArray, BasicMap } from "../data/basic";
-import { Repository } from "../data/transact";
-import { Comment } from "../data/comment";
-import { ResourceMgr } from "../data/basic";
-import { TableShape } from "../data/table";
-export { newText, newText2 } from "../data/textutils";
-import { exportShapeFrame } from "../data/baseexport";
+import {BasicArray, BasicMap} from "../data/basic";
+import {Repository} from "../data/transact";
+import {Comment} from "../data/comment";
+import {ResourceMgr} from "../data/basic";
+import {TableShape} from "../data/table";
+
+export {newText, newText2} from "../data/textutils";
+import {exportShapeFrame} from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 import {mergeParaAttr, mergeSpanAttr} from "../data/textutils";
 import {ContactForm} from "../data/baseclasses";
@@ -126,7 +127,9 @@ export function newflatStyle(): Style {
     const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
     const shadows = new BasicArray<Shadow>();
-    return new Style(borders, fills, shadows);
+    const style = new Style(borders, fills, shadows);
+    style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+    return style;
 }
 
 export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Artboard {
@@ -351,9 +354,15 @@ export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): 
 
 export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnionShape {
     const style = newflatStyle();
-    const fill = new Fill(uuid(), false, types.FillType.SolidColor, new Color(1, 128, 128, 128));
-    style.fills.push(fill);
-    const union = new SymbolUnionShape(uuid(), name, types.ShapeType.SymbolUnion, frame, style, new BasicArray(), new BasicMap());
+    const union = new SymbolUnionShape(
+        uuid(),
+        name,
+        types.ShapeType.SymbolUnion,
+        frame,
+        style,
+        new BasicArray(),
+        new BasicMap()
+    );
     addCommonAttr(union);
     return union;
 }

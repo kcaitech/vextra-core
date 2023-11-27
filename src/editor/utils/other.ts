@@ -187,7 +187,7 @@ export function gen_special_value_for_state(symbol: SymbolShape, variable: Varia
     return `${type_name}${index}`;
 }
 
-export function make_union(api: Api, document: Document, page: Page, symbol: SymbolShape, state_name: string, attri_name: string) {
+export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name: string) {
     const p = symbol.parent;
     if (!p || (p instanceof SymbolUnionShape)) return false;
 
@@ -197,27 +197,35 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
     const box = symbol.boundingBox();
     // 定义第一个状态的frame
     const state_frame = new ShapeFrame(box.x - 20, box.y - 20, box.width + 40, box.height + 40);
-    // 新建并插入一个symbol对象，将作为第一个状态
-    let n_sym = newSymbolShapeUnion(symbol.name, state_frame);
+
+    let union = newSymbolShapeUnion(symbol.name, state_frame);
 
     const border_style = new BorderStyle(4, 4);
-    const boder = new Border(uuid(), true, types.FillType.SolidColor, new Color(1, 255, 153, 0), BorderPosition.Inner, 2, border_style);
-    n_sym.style.borders.push(boder);
+    const border = new Border(
+        uuid(),
+        true,
+        types.FillType.SolidColor,
+        new Color(1, 255, 153, 0),
+        BorderPosition.Inner,
+        2,
+        border_style
+    );
+    union.style.borders.push(border);
 
     const _var = new Variable(uuid(), VariableType.Status, attri_name, SymbolShape.Default_State); // default
-    n_sym.variables.set(_var.id, _var);
+    union.variables.set(_var.id, _var);
 
-    const insert_result = api.shapeInsert(page, p as GroupShape, n_sym, symIndex);
+    const insert_result = api.shapeInsert(page, p as GroupShape, union, symIndex);
     if (!insert_result) return false;
-    n_sym = insert_result as SymbolUnionShape;
-    api.shapeMove(page, p as GroupShape, symIndex + 1, n_sym, 0);
+    union = insert_result as SymbolUnionShape;
+    api.shapeMove(page, p as GroupShape, symIndex + 1, union, 0);
 
     // document.symbolsMgr.add(n_sym.id, n_sym as SymbolShape); // 不需要加入了
 
     api.shapeModifyX(page, symbol, 20);
     api.shapeModifyY(page, symbol, 20);
 
-    return symbol;
+    return union;
 }
 
 /**
