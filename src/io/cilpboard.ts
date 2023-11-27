@@ -1,4 +1,4 @@
-import {GroupShape, Shape, ShapeFrame, ShapeType, TextShape} from "../data/shape";
+import {GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape} from "../data/shape";
 import {
     exportArtboard,
     exportGroupShape,
@@ -94,7 +94,7 @@ export function import_shape(document: Document, source: types.Shape[]) {
             if (type === ShapeType.Symbol) {
                 if (!document.symbolsMgr.getSync(_s.id)) continue;
                 const f = new ShapeFrame(_s.frame.x, _s.frame.y, _s.frame.width, _s.frame.height);
-                if ((_s as any).isUnionSymbolShape) {
+                if ((_s instanceof SymbolUnionShape)) {
                     const dlt = (_s as any).childs[0];
                     if (!dlt) continue;
                     f.width = dlt.frame.width;

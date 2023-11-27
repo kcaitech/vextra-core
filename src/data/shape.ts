@@ -150,6 +150,10 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         return false;
     }
 
+    get isSymbolShape() {
+        return false;
+    }
+
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         return new Path();
     }
@@ -468,9 +472,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     static Default_State = "49751e86-9b2c-4d1b-81b0-36f19b5407d2"
 
     typeId = 'symbol-shape'
-    isUnionSymbolShape?: boolean // 子对象都为SymbolShape
     variables: BasicMap<string, Variable> // 怎么做关联
-    vartag?: BasicMap<string, string>
+    symtags?: BasicMap<string, string>
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
 
     constructor(
@@ -485,7 +488,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         super(
             id,
             name,
-            ShapeType.Symbol,
+            type,
             frame,
             style,
             childs
@@ -501,39 +504,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             return this.getVar(varid);
         }
         return super.getTarget(targetId);
-    }
-
-    getTagedSym(shape: Shape/* SymbolRefShape */, varsContainer: Shape[]/*(SymbolRefShape | SymbolShape)[] */) {
-
-        if (!this.isUnionSymbolShape) return [this];
-
-        const symbols: SymbolShape[] = this.childs as any as SymbolShape[];
-        const vc = varsContainer.concat(shape);
-
-        const curState = new Map<string, string>();
-        this.variables?.forEach((v) => {
-            if (v.type === VariableType.Status) {
-                const overrides = findOverride(v.id, OverrideType.Variable, vc as any);
-                const _v = overrides ? overrides[overrides.length - 1] : v;
-                curState.set(v.id, _v.value);
-            }
-        })
-
-        // 找到对应的shape
-        const matchshapes: SymbolShape[] = [];
-        symbols.forEach((s) => {
-            const vartag = s.vartag;
-            let match = true;
-            curState.forEach((v, k) => {
-                const tag = vartag?.get(k) ?? SymbolShape.Default_State;
-                if (match) match = v === tag;
-            });
-            if (match) {
-                matchshapes.push(s);
-            }
-        })
-
-        return matchshapes;
     }
 
     private _createVar4Override(type: OverrideType, value: any) {
@@ -688,8 +658,42 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     }
 
     setTag(k: string, v: string) {
-        if (!this.vartag) this.vartag = new BasicMap<string, string>();
-        this.vartag.set(k, v);
+        if (!this.symtags) this.symtags = new BasicMap<string, string>();
+        this.symtags.set(k, v);
+    }
+
+    get isSymbolUnionShape() {
+        return false;
+    }
+    get isSymbolShape() {
+        return true;
+    }
+}
+
+export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnionShape {
+    typeId = 'symbol-union-shape'
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        childs: BasicArray<Shape>,
+        variables: BasicMap<string, Variable>
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style,
+            childs,
+            variables
+        )
+    }
+
+    get isSymbolUnionShape() {
+        return true;
     }
 }
 

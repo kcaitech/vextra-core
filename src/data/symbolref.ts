@@ -20,8 +20,6 @@ function genRefId(refId: string, type: OverrideType) {
 }
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
-    // __data: SymbolShape | undefined // 不能缓存了，不同的override，不同的data!
-    // __subdata: SymbolShape | undefined; // union symbol shape
     __symMgr?: ResourceMgr<SymbolShape>
 
     // todo
@@ -79,23 +77,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return super.getTarget(targetId);
     }
 
-    switchRef(refId: string) {
-        // todo
-    }
     removeVirbindsEx(key: string) {
         if (!this.overrides) return false;
         return this.overrides.delete(key);
     }
 
-    __data: SymbolShape | undefined;
-    __subdata: SymbolShape | undefined;
+    symData: SymbolShape | undefined;
     private __startLoad: string | undefined;
-    getRootData() {
-        return this.__data;
-    }
-    getSubData() {
-        return this.__subdata;
-    }
+
     updater(notify: boolean = true): boolean { // 自己的override也要更新
         const symMgr = this.__symMgr;
         if (!symMgr) return false;
@@ -103,26 +92,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         const refId = this.refId;
         if (!refId) return false;
         if (this.__startLoad === refId) {
-            if (this.__data) { // 更新subdata
-                if (this.__data.isUnionSymbolShape) {
-                    const syms = this.__data.getTagedSym(this, []);
-                    const subdata = syms[0] || this.__data.childs[0];
-                    if (this.__subdata !== subdata) {
-                        if (this.__subdata) this.__subdata.unwatch(this.updater);
-                        this.__subdata = subdata;
-                        if (this.__subdata) this.__subdata.watch(this.updater);
-                        this.__childsIsDirty = true;
-                        if (notify) this.notify("childs");
-                        return true;
-                    }
-                }
-                else if (!this.__data.isUnionSymbolShape && this.__subdata) {
-                    this.__subdata.unwatch(this.updater);
-                    this.__subdata = undefined;
-                    this.__childsIsDirty = true;
-                    if (notify) this.notify("childs");
-                    return true;
-                }
+            if (this.symData) { // 更新subdata
+
                 // 也要更新下
                 this.__childsIsDirty = true;
                 if (notify) this.notify("childs");
@@ -133,20 +104,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
         this.__startLoad = refId;
         symMgr.get(refId).then((val) => {
-            if (this.__data) this.__data.unwatch(this.updater);
-            this.__data = val;
-            if (this.__data) this.__data.watch(this.updater);
-            // 处理status
-            if (val && val.isUnionSymbolShape) {
-                const syms = val.getTagedSym(this, []);
-                if (this.__subdata) this.__subdata.unwatch(this.updater);
-                this.__subdata = syms[0] || val.childs[0];
-                if (this.__subdata) this.__subdata.watch(this.updater);
-            }
-            else if (this.__subdata) {
-                this.__subdata.unwatch(this.updater);
-                this.__subdata = undefined;
-            }
+            if (this.symData) this.symData.unwatch(this.updater);
+            this.symData = val;
+            if (this.symData) this.symData.watch(this.updater);
+
             this.__childsIsDirty = true;
             // if (notify) this.notify();
             this.notify("childs");
@@ -156,11 +117,11 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     // private __startLoad: string | undefined;
     private getSymChilds(): Shape[] | undefined {
-        if (!this.__data) {
+        if (!this.symData) {
             if (!this.__startLoad) this.updater();
             return;
         }
-        return (this.__subdata || this.__data)?.childs || [];
+        return (this.symData)?.childs || [];
     }
 
     // for render
@@ -261,8 +222,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             this.__childs.forEach((c: any) => c.remove)
             this.__childs = undefined;
         }
-        this.__data?.unwatch(this.updater);
-        this.__subdata?.unwatch(this.updater);
+        this.symData?.unwatch(this.updater);
     }
 
     setFrameSize(w: number, h: number): void {
@@ -411,16 +371,16 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     }
 
     findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
-        if (this.__data) {
+        if (this.symData) {
 
-            const override = this.__data.getOverrid(varId, OverrideType.Variable);
+            const override = this.symData.getOverrid(varId, OverrideType.Variable);
             if (override) {
                 ret.push(override.v);
                 // scope??
                 varId = override.v.id;
             }
             else {
-                const _var = this.__data.getVar(varId);
+                const _var = this.symData.getVar(varId);
                 if (_var) {
                     ret.push(_var);
                 }
@@ -453,8 +413,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.variables.delete(key);
     }
     findOverride(refId: string, type: OverrideType): Variable[] | undefined {
-        if (this.__data) {
-            const override = this.__data.getOverrid(refId, type);
+        if (this.symData) {
+            const override = this.symData.getOverrid(refId, type);
             if (override) {
                 const ret = [override.v];
                 this.findVar(override.v.id, ret);

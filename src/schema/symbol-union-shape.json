@@ -1,0 +1,12 @@
+{
+    "description": "symbol union shape",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "allOf": [
+        {
+            "$ref": "./symbol-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

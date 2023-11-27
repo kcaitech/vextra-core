@@ -10,6 +10,7 @@
         "text",
         "symbol-ref",
         "symbol",
+        "symbol-union",
         "artboard-ref",
         "rectangle",
         "triangle",

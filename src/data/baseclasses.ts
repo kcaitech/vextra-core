@@ -1047,14 +1047,14 @@ export class TextAttr extends ParaAttr {
  */
 export class Page extends Shape {
     typeId = 'page'
-    childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolRefShape | TableShape | SymbolShape) >
+    childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolRefShape | TableShape | SymbolShape | SymbolUnionShape) >
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolRefShape | TableShape | SymbolShape) >
+        childs: BasicArray<(Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolRefShape | TableShape | SymbolShape | SymbolUnionShape) >
     ) {
         super(
             id,
@@ -1152,7 +1152,7 @@ export class ImageShape extends PathShape {
  */
 export class GroupShape extends Shape {
     typeId = 'group-shape'
-    childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >
+    childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >
     isBoolOpShape?: boolean
     fixedRadius?: number
     constructor(
@@ -1161,7 +1161,7 @@ export class GroupShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >
     ) {
         super(
             id,
@@ -1178,17 +1178,16 @@ export class GroupShape extends Shape {
  */
 export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
-    isUnionSymbolShape?: boolean
     overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
-    vartag?: BasicMap<string, string>
+    symtags?: BasicMap<string, string>
     constructor(
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >,
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >,
         variables: BasicMap<string, Variable>
     ) {
         super(
@@ -1203,6 +1202,31 @@ export class SymbolShape extends GroupShape {
     }
 }
 /**
+ * symbol group shape 
+ */
+export class SymbolUnionShape extends SymbolShape {
+    typeId = 'symbol-union-shape'
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >,
+        variables: BasicMap<string, Variable>
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style,
+            childs,
+            variables
+        )
+    }
+}
+/**
  * flatten shape 
  */
 export class FlattenShape extends GroupShape {
@@ -1213,7 +1237,7 @@ export class FlattenShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >
     ) {
         super(
             id,
@@ -1275,7 +1299,7 @@ export class Artboard extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape) >
     ) {
         super(
             id,

@@ -1098,7 +1098,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.ContactShape | impl.SymbolRefShape | impl.TableShape | impl.SymbolShape)>()
+            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.ContactShape | impl.SymbolRefShape | impl.TableShape | impl.SymbolShape | impl.SymbolUnionShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1143,6 +1143,9 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1378,7 +1381,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1399,6 +1402,9 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
                         return importTextShape(val as types.TextShape, ctx)
@@ -1477,7 +1483,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1498,6 +1504,9 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
                         return importTextShape(val as types.TextShape, ctx)
@@ -1567,7 +1576,6 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         });
         return ret
     })()
-    if (source.isUnionSymbolShape !== undefined) ret.isUnionSymbolShape = source.isUnionSymbolShape
     if (source.overrides !== undefined) ret.overrides = (() => {
         const ret = new BasicMap<string, string>()
         const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
@@ -1577,9 +1585,9 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         });
         return ret
     })()
-    if (source.vartag !== undefined) ret.vartag = (() => {
+    if (source.symtags !== undefined) ret.symtags = (() => {
         const ret = new BasicMap<string, string>()
-        const val = source.vartag as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象
         Object.keys(val).forEach((k) => {
             const v = val[k];
             ret.set(k, v)
@@ -1588,6 +1596,128 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     })()
     // inject code
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    return ret
+}
+/* symbol group shape */
+export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IImportContext): impl.SymbolUnionShape {
+    const ret: impl.SymbolUnionShape = new impl.SymbolUnionShape (
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
+                const r = (() => {
+                    const val = source.childs[i]
+                    if (val.typeId == 'group-shape') {
+                        return importGroupShape(val as types.GroupShape, ctx)
+                    }
+                    if (val.typeId == 'image-shape') {
+                        return importImageShape(val as types.ImageShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape') {
+                        return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'rect-shape') {
+                        return importRectShape(val as types.RectShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
+                    }
+                    if (val.typeId == 'text-shape') {
+                        return importTextShape(val as types.TextShape, ctx)
+                    }
+                    if (val.typeId == 'artboard') {
+                        return importArtboard(val as types.Artboard, ctx)
+                    }
+                    if (val.typeId == 'line-shape') {
+                        return importLineShape(val as types.LineShape, ctx)
+                    }
+                    if (val.typeId == 'oval-shape') {
+                        return importOvalShape(val as types.OvalShape, ctx)
+                    }
+                    if (val.typeId == 'table-shape') {
+                        return importTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'contact-shape') {
+                        return importContactShape(val as types.ContactShape, ctx)
+                    }
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
+                    }
+                    {
+                        throw new Error('unknow val: ' + val)
+                    }
+                })()
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        (() => {
+            const ret = new BasicMap<string, impl.Variable>()
+            const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+            Object.keys(val).forEach((k) => {
+                const v = val[k];
+                ret.set(k, importVariable(v, ctx))
+            });
+            return ret
+        })()
+    )
+    if (source.overrides !== undefined) ret.overrides = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.symtags !== undefined) ret.symtags = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     return ret
 }
 /* flatten shape */
@@ -1657,7 +1787,7 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1678,6 +1808,9 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
                         return importTextShape(val as types.TextShape, ctx)

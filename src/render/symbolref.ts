@@ -1,4 +1,4 @@
-import { Path, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
+import { Path, ShapeFrame, ShapeType, SymbolUnionShape, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { renderGroupChilds2, renderGroupChilds3 } from "./group";
 import { renderWithVars as fillR } from "./fill";
 import { renderWithVars as borderR } from "./border"
@@ -14,7 +14,7 @@ function renderSym(h: Function,
     transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): any {
 
-    if (sym.parent instanceof SymbolShape && sym.parent.isUnionSymbolShape) {
+    if (sym.parent instanceof SymbolUnionShape) {
         varsContainer = (varsContainer || []).concat(ref, sym.parent, sym);
     } else {
         varsContainer = (varsContainer || []).concat(ref, sym);

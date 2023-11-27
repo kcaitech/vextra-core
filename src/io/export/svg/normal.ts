@@ -1,4 +1,4 @@
-import { GroupShape, ImageShape, PathShape, RectShape, Shape, SymbolShape, TextShape } from "../../../data/shape";
+import { GroupShape, ImageShape, PathShape, RectShape, Shape, SymbolUnionShape, SymbolShape, TextShape } from "../../../data/shape";
 import { RenderTransform, renderArtboard as art } from "../../../render";
 import { renderGroup as group } from "../../../render";
 import { renderImage as image } from "../../../render";
@@ -53,7 +53,7 @@ comsMap.set(ShapeType.SymbolRef, (data: Shape, transform: RenderTransform | unde
     if (!sym0) return "";
 
     let sym1;
-    if (sym0 && sym0.isUnionSymbolShape) {
+    if (sym0 && sym0 instanceof SymbolUnionShape) {
         sym1 = sym0.getTagedSym(data, varsContainer || []);
     }
 

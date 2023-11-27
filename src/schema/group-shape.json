@@ -25,6 +25,9 @@
             "$ref": "./symbol-shape.json"
           },
           {
+            "$ref": "./symbol-union-shape.json"
+          },
+          {
             "$ref": "./text-shape.json"
           },
           {

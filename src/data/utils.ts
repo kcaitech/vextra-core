@@ -639,32 +639,17 @@ export function findOverrideAndVar(
     overType: OverrideType,
     varsContainer: (SymbolRefShape | SymbolShape)[]) {
 
-    // if (!(shape as any).__symbolproxy) throw new Error("");
     const varbinds = shape.varbinds;
     const varId = varbinds?.get(overType);
-    if (!varId) {
-        // find override
-        // id: xxx/xxx/xxx
-        const id = shape.id;
-
-        const _vars = findOverride(id, overType, varsContainer);
-        // if (_vars) {
-        //     (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
-        //     const _var = _vars[_vars.length - 1];
-        //     if (_var && _var.type === varType) {
-        //         return _var.value;
-        //     }
-        // }
-        return _vars;
-    } else {
+    if (varId) {
         const _vars: Variable[] = [];
         findVar(varId, _vars, varsContainer);
-        // watch vars
-        // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
-        // const _var = _vars[_vars.length - 1];
-        // if (_var && _var.type === varType) {
-        //     return _var.value;
-        // }
-        return _vars;
+        if (_vars && _vars.length > 0) return _vars;
     }
+
+    // find override
+    // id: xxx/xxx/xxx
+    const id = shape.id;
+    const _vars = findOverride(id, overType, varsContainer);
+    return _vars;
 }
