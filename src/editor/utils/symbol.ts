@@ -287,5 +287,7 @@ export function is_exist_invalid_shape2(selected: Shape[]) {
     return false;
 }
 
-
+export function is_symbol_or_union(shape: Shape) {
+    return shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolUnion;
+}
 

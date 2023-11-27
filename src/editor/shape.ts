@@ -37,7 +37,7 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-import { is_part_of_symbol, is_part_of_symbolref } from "./utils/symbol";
+import {is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union} from "./utils/symbol";
 import { newText, newText2 } from "./creator";
 
 function varParent(_var: Variable) {
@@ -367,7 +367,9 @@ export class ShapeEditor {
     makeVisibleVar(symbol: SymbolShape, name: string, dlt_value: boolean, shapes: Shape[]) {
         const api = this.__repo.start("makeVisibleVar", {});
         try {
-            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent instanceof SymbolUnionShape)) throw new Error('wrong role!');
+            if (!is_symbol_or_union(symbol)) {
+                throw new Error('wrong role!');
+            }
             const _var = new Variable(v4(), VariableType.Visible, name, dlt_value);
             api.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
@@ -389,7 +391,9 @@ export class ShapeEditor {
         const api = this.__repo.start("makeSymbolRefVar", {});
         try {
             if (!shapes.length) throw new Error('invalid data');
-            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent instanceof SymbolUnionShape)) throw new Error('wrong role!');
+            if (!is_symbol_or_union(symbol)) {
+                throw new Error('wrong role!');
+            }
             const _var = new Variable(v4(), VariableType.SymbolRef, name, shapes[0].refId);
             api.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
@@ -409,7 +413,9 @@ export class ShapeEditor {
     makeTextVar(symbol: SymbolShape, name: string, dlt: string, shapes: Shape[]) {
         const api = this.__repo.start("makeTextVar", {});
         try {
-            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent instanceof SymbolUnionShape)) throw new Error('wrong role!');
+            if (!is_symbol_or_union(symbol)) {
+                throw new Error('wrong role!');
+            }
             const first = shapes[0]?.text instanceof Text ? shapes[0]?.text : undefined;
             const text = newText2(first?.attr, first?.paras[0]?.attr, first?.paras[0]?.spans[0]);
             text.insertText(dlt, 0);
@@ -438,7 +444,9 @@ export class ShapeEditor {
         type[VariableType.Visible] = OverrideType.Visible;
         type[VariableType.SymbolRef] = OverrideType.SymbolID;
         try {
-            if (symbol.type !== ShapeType.Symbol || (symbol.parent instanceof SymbolUnionShape)) throw new Error('wrong role!');
+            if (!is_symbol_or_union(symbol)) {
+                throw new Error('wrong role!');
+            }
             for (let i = 0, len = new_layers.length; i < len; i++) {
                 const item = new_layers[i];
                 api.shapeBindVar(this.__page, item, type[variable.type], variable.id);
