@@ -636,7 +636,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
             if (this.symData) this.symData.unwatch(this.updater);
             this.symData = val;
             if (this.symData) this.symData.watch(this.updater);
-
+            this.__childs = undefined;
             this.__childsIsDirty = true;
             // if (notify) this.notify();
             this.notify("childs");
@@ -681,6 +681,8 @@ class SymbolRefShapeHdl extends ShapeHdl {
                     if (c) (c as any).remove;
                     _childs[i] = proxyShape(this.__root, origin, receiver as Shape, prefix + origin.id);
                 }
+                layoutChilds(this.__childs, this.__frame, childs[0].parent!.frame);
+                this.saveFrame();
             }
             return this.__childs;
         }
