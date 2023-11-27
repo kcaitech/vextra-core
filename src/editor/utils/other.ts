@@ -212,7 +212,7 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
     n_sym = insert_result as SymbolUnionShape;
     api.shapeMove(page, p as GroupShape, symIndex + 1, n_sym, 0);
 
-    document.symbolsMgr.add(n_sym.id, n_sym as SymbolShape);
+    // document.symbolsMgr.add(n_sym.id, n_sym as SymbolShape); // 不需要加入了
 
     api.shapeModifyX(page, symbol, 20);
     api.shapeModifyY(page, symbol, 20);
