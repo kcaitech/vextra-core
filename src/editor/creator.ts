@@ -13,7 +13,8 @@ import {
     SymbolShape,
     RectShape,
     Shape,
-    TextShape
+    TextShape,
+    SymbolUnionShape
 } from "../data/shape";
 import {ContactShape} from "../data/contact"
 import * as types from "../data/typesdefine"
@@ -345,17 +346,15 @@ export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): 
     const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicMap());
     if (style) compo.style = style;
     addCommonAttr(compo);
-    compo.isUnionSymbolShape = false;
     return compo;
 }
 
-export function newSymbolShapeUnion(default_sym: SymbolShape, frame: ShapeFrame): SymbolShape {
+export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnionShape {
     const style = newflatStyle();
     const fill = new Fill(uuid(), false, types.FillType.SolidColor, new Color(1, 128, 128, 128));
     style.fills.push(fill);
-    const union = new SymbolShape(default_sym.id, default_sym.name, types.ShapeType.Symbol, frame, style, new BasicArray(), new BasicMap());
+    const union = new SymbolUnionShape(uuid(), name, types.ShapeType.SymbolUnion, frame, style, new BasicArray(), new BasicMap());
     addCommonAttr(union);
-    default_sym.isUnionSymbolShape = true;
     return union;
 }
 

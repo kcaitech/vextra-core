@@ -6,6 +6,7 @@ import {
     Shape,
     ShapeFrame,
     SymbolShape,
+    SymbolUnionShape,
     Variable,
     VariableType
 } from "../data/shape";
@@ -445,7 +446,7 @@ export class PageEditor {
     makeStatus(symbol: SymbolShape, attri_name: string, dlt: string, isDefault: boolean) {
         const api = this.__repo.start("makeStatus", {});
         try {
-            if (!symbol.isUnionSymbolShape) {
+            if (!(symbol instanceof SymbolUnionShape)) {
                 const u = make_union(api, this.__document, this.__page, symbol, dlt, attri_name);
                 if (!u) throw new Error('make union failed!');
                 symbol = u;
@@ -467,7 +468,7 @@ export class PageEditor {
     makeVar(type: VariableType, symbol: SymbolShape, name: string, values: any) {
         const api = this.__repo.start("makeVar", {});
         try {
-            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent.isUnionSymbolShape)) throw new Error('wrong role!');
+            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent instanceof SymbolUnionShape)) throw new Error('wrong role!');
             const _var = new Variable(v4(), type, name, values);
             api.shapeAddVariable(this.__page, symbol, _var);
             this.__repo.commit();
@@ -483,7 +484,7 @@ export class PageEditor {
      * @union union
      */
     makeStateAt(union: SymbolShape, dlt: string, index?: number, hor_align?: number) {
-        if (!union.isUnionSymbolShape || !union.childs.length) return;
+        if (!(union instanceof SymbolUnionShape) || !union.childs.length) return;
         let idx = index === undefined ? union.childs.length - 1 : index;
         if (index !== undefined && (index > union.childs.length || index < 0)) idx = union.childs.length;
         const origin = union.childs[idx];
@@ -621,7 +622,7 @@ export class PageEditor {
             const tmpFrame = new ShapeFrame(x, y, width, height);
             const sym = shape.getSymbolMgr()?.getSync(shape.refId);
             if (!sym) continue;
-            let style: any = sym.isUnionSymbolShape ? shape.getSubData()?.style : shape.getRootData()?.style;
+            let style: any = shape.getRootData()?.style;
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document
@@ -1802,7 +1803,7 @@ export class PageEditor {
                     const parent: GroupShape | undefined = item.parent as GroupShape;
                     if (!parent) continue;
                     if (host.type === ShapeType.SymbolRef) continue;
-                    if ((host as SymbolShape).isUnionSymbolShape) continue;
+                    if ((host instanceof SymbolUnionShape)) continue;
                     if (is_part_of_symbol(host)) {
                         if (is_exist_invalid_shape2([item])) continue;
                     }
@@ -1827,7 +1828,7 @@ export class PageEditor {
                     const parent: GroupShape | undefined = item.parent as GroupShape;
                     if (!parent) continue;
                     if (host_parent.type === ShapeType.SymbolRef) continue;
-                    if ((host_parent as SymbolShape).isUnionSymbolShape) continue;
+                    if ((host_parent instanceof SymbolUnionShape)) continue;
                     if (is_part_of_symbol(host_parent)) {
                         if (is_exist_invalid_shape2([item])) continue;
                     }

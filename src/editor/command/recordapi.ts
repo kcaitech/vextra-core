@@ -232,16 +232,16 @@ export class Api {
         })
         if (shape) this.addCmd(ShapeCmdRemove.Make(page.id, parent.id, shape.id, index, JSON.stringify(exportShape(shape))));
     }
-    shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number) {
+    shapeMove(page: Page, fromParent: GroupShape, fromIdx: number, toParent: GroupShape, toIdx: number) {
         this.__trap(() => {
-            const shape = parent.childs.splice(index, 1)[0];
+            const shape = fromParent.childs.splice(fromIdx, 1)[0];
             if (shape) {
-                parent2.childs.splice(index2, 0, shape);
+                toParent.childs.splice(toIdx, 0, shape);
                 this.needUpdateFrame.push({ page, shape })
-                if (parent.id !== parent2.id && parent.childs.length > 0) {
-                    this.needUpdateFrame.push({ page, shape: parent.childs[0] })
+                if (fromParent.id !== toParent.id && fromParent.childs.length > 0) {
+                    this.needUpdateFrame.push({ page, shape: fromParent.childs[0] })
                 }
-                this.addCmd(ShapeCmdMove.Make(page.id, parent.id, shape.id, index, parent2.id, index2));
+                this.addCmd(ShapeCmdMove.Make(page.id, fromParent.id, shape.id, fromIdx, toParent.id, toIdx));
             }
         });
     }
@@ -541,12 +541,12 @@ export class Api {
     shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const save = shape.vartag?.get(varId);
+            const save = shape.symtags?.get(varId);
             const shapeId = genShapeId(shape);
             shapeId.push(varId);
-            if (!shape.vartag) shape.vartag = new BasicMap();
+            if (!shape.symtags) shape.symtags = new BasicMap();
             shape.setTag(varId, tag);
-            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.vartag, { varId, tag }, { varId, tag: save }));
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.symtags, { varId, tag }, { varId, tag: save }));
         })
     }
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
@@ -565,14 +565,7 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.symbolref, refId, save));
         })
     }
-    shapeModifyIsUnion(page: Page, shape: Shape, isUnionSymbolShape: boolean) {
-        checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const save = shape.isUnionSymbolShape;
-            shape.isUnionSymbolShape = isUnionSymbolShape;
-            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.isUnionSymbolShape, isUnionSymbolShape, save))
-        })
-    }
+
     shapeModifyLock(page: Page, shape: Shape, isLocked: boolean) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
