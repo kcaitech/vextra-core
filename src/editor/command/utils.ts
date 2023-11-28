@@ -1,12 +1,12 @@
-import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape, exportSymbolShape } from "../../data/baseexport";
+import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape, exportSymbolShape, exportSymbolUnionShape } from "../../data/baseexport";
 import { Matrix } from "../../basic/matrix";
 import { Artboard } from "../../data/artboard";
-import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolShape, TextShape } from "../../data/shape";
+import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolUnionShape, SymbolShape, TextShape } from "../../data/shape";
 import { TableCell, TableShape } from "../../data/table";
 import { ContactShape } from "../../data/contact";
 import { Page } from "../../data/page";
 import { SymbolRefShape } from "../../data/classes";
-import { IImportContext, importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape } from "../../data/baseimport";
+import { IImportContext, importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import { Document } from "../../data/document";
 
@@ -253,6 +253,9 @@ export function importShape(data: string, document: Document) {
     if (source.typeId == 'symbol-shape') {
         return importSymbolShape(source as types.SymbolShape, ctx);
     }
+    if (source.typeId == 'symbol-union-shape') {
+        return importSymbolUnionShape(source as types.SymbolUnionShape, ctx);
+    }
     throw new Error("unknow shape type: " + source.typeId)
 }
 
@@ -273,6 +276,7 @@ export function exportShape(shape: Shape): Object {
         case ShapeType.TableCell: return exportTableCell(shape as TableCell);
         case ShapeType.Contact: return exportContactShape(shape as ContactShape);
         case ShapeType.Symbol: return exportSymbolShape(shape as SymbolShape);
+        case ShapeType.SymbolUnion: return exportSymbolUnionShape(shape as SymbolUnionShape);
         default: throw new Error("unknow shape type: " + shape.type)
     }
 }

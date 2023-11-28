@@ -1,4 +1,4 @@
-import {OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType} from "../../data/shape";
+import {OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, SymbolUnionShape} from "../../data/shape";
 import {SymbolRefShape} from "../../data/symbolref";
 import {uuid} from "../../basic/uuid";
 import {Page} from "../../data/page";
@@ -33,7 +33,7 @@ export function is_part_of_symbol(shape: Shape) {
 }
 
 export function is_state(shape: Shape) {
-    return shape.type === ShapeType.Symbol && shape?.parent?.isUnionSymbolShape;
+    return shape.type === ShapeType.Symbol && (shape?.parent instanceof SymbolUnionShape);
 }
 
 function is_sym(shape: Shape) {
@@ -287,5 +287,7 @@ export function is_exist_invalid_shape2(selected: Shape[]) {
     return false;
 }
 
-
+export function is_symbol_or_union(shape: Shape) {
+    return shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolUnion;
+}
 

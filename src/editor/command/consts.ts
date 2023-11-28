@@ -35,7 +35,6 @@ export const SHAPE_ATTR_ID = {
     boolop: "boolop",
     isboolopshape: "isboolopshape",
     // issymbolshape: "issymbolshape",
-    isUnionSymbolShape: "isUnionSymbolShape",
     fixedRadius: "fixedRadius",
     startMarkerType: "startMarkerType",
     endMarkerType: "endMarkerType",
@@ -75,7 +74,7 @@ export const SHAPE_ATTR_ID = {
     // symbolref
     symbolref: "symbolref",
     // symbol
-    vartag: "vartag",
+    symtags: "symtags",
     // shape
     bindvar: "bindvar",
     overrides: "overrides"

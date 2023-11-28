@@ -30,7 +30,7 @@ export interface Api {
 const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
 export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame) {
-    if (shape.type === ShapeType.Artboard || shape.isUnionSymbolShape) return; // 容器不需要调整子对象
+    if (shape.type === ShapeType.Artboard || shape.type === ShapeType.SymbolUnion) return; // 容器不需要调整子对象
     const childs = shape.childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const c = childs[i];
@@ -181,15 +181,15 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
             const points = c.points;
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = points[i];
-                if (p.hasCurveFrom) {
-                    const curveFrom = matrix.computeCoord(p.curveFrom);
+                if (p.hasFrom) {
+                    const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
                     api.shapeModifyCurvFromPoint(page, c, i, curveFrom);
                 }
-                if (p.hasCurveTo) {
-                    const curveTo = matrix.computeCoord(p.curveTo);
+                if (p.hasTo) {
+                    const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
                     api.shapeModifyCurvToPoint(page, c, i, curveTo);
                 }
-                const point = matrix.computeCoord(p.point);
+                const point = matrix.computeCoord(p.x, p.y);
                 api.shapeModifyCurvPoint(page, c, i, point);
             }
 

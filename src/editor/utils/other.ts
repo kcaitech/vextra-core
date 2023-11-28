@@ -11,6 +11,7 @@ import {
     Shape,
     ShapeFrame,
     ShapeType,
+    SymbolUnionShape,
     SymbolRefShape,
     SymbolShape,
     TableCell,
@@ -23,7 +24,7 @@ import {
 } from "../../data/classes";
 import {Api} from "../command/recordapi";
 import {BasicMap} from "../../data/basic";
-import {newSymbolRefShape, newSymbolShape} from "../creator";
+import {newSymbolRefShape, newSymbolShape, newSymbolShapeUnion} from "../creator";
 import {uuid} from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
 import {translateTo} from "../frame";
@@ -91,7 +92,7 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
 }
 
 export function find_state_space(union: SymbolShape) {
-    if (!union.isUnionSymbolShape) return;
+    if (!(union instanceof SymbolUnionShape)) return;
     const childs = union.childs;
     if (!childs.length) return;
     let space_y = -1;
@@ -132,14 +133,14 @@ export function modify_frame_after_inset_state(page: Page, api: Api, union: Symb
  */
 export function gen_name_for_state(symbol: SymbolShape) {
     if (!symbol.parent) return false;
-    if (!symbol.parent.isUnionSymbolShape) return false;
+    if (!(symbol.parent instanceof SymbolUnionShape)) return false;
     if (!symbol.parent.variables) return false;
-    if (!symbol.vartag) return false;
+    if (!symbol.symtags) return false;
     const variables = symbol.parent.variables as BasicMap<string, Variable>;
     let name_slices: string[] = [];
     variables.forEach((v, k) => {
         if (v.type !== VariableType.Status) return;
-        const slice = symbol.vartag?.get(k) || v.value;
+        const slice = symbol.symtags?.get(k) || v.value;
         slice && name_slices.push(slice);
     })
     return name_slices.toString();
@@ -172,7 +173,7 @@ export function gen_special_value_for_state(symbol: SymbolShape, variable: Varia
     let index = 2, type_name = dlt, max = 2;
     const reg = new RegExp(`^${dlt}[0-9]*$`), number_set: Set<number> = new Set();
     for (let i = 0, len = bros.length; i < len; i++) {
-        const n = bros[i].vartag?.get(variable.id);
+        const n = bros[i].symtags?.get(variable.id);
         if (n && reg.test(n)) {
             const num = Number(n.split(dlt)[1]);
             number_set.add(num);
@@ -186,70 +187,45 @@ export function gen_special_value_for_state(symbol: SymbolShape, variable: Varia
     return `${type_name}${index}`;
 }
 
-export function make_union(api: Api, document: Document, page: Page, symbol: SymbolShape, state_name: string, attri_name: string) {
+export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name: string) {
     const p = symbol.parent;
-    if (!p || p.isUnionSymbolShape) return false;
-    // 定义第一个状态的frame
-    const state_frame = new ShapeFrame(20, 20, symbol.frame.width, symbol.frame.height);
-    // 新建并插入一个symbol对象，将作为第一个状态
-    let n_sym = newSymbolShape(state_name, state_frame);
-    const insert_result = api.shapeInsert(page, symbol, n_sym, 0);
-    if (!insert_result) return false;
-    n_sym = insert_result as SymbolShape;
-    document.symbolsMgr.add(n_sym.id, n_sym as SymbolShape);
-    const childs = symbol.childs;
-    for (let i = 1, len = childs.length; i < len; ++i) {
-        api.shapeMove(page, symbol, 1, n_sym, i - 1);
-    }
+    if (!p || (p instanceof SymbolUnionShape)) return false;
+
+    const symIndex = p.indexOfChild(symbol);
+    if (symIndex < 0) return false;
+
     const box = symbol.boundingBox();
+    // 定义第一个状态的frame
+    const state_frame = new ShapeFrame(box.x - 20, box.y - 20, box.width + 40, box.height + 40);
 
-    // 调整union对象的frame、style
-    if (symbol.rotation) {
-        api.shapeModifyRotate(page, n_sym, symbol.rotation);
-        api.shapeModifyRotate(page, symbol, 0);
-    }
-    if (symbol.isFlippedHorizontal) {
-        api.shapeModifyHFlip(page, n_sym, true);
-        api.shapeModifyHFlip(page, symbol, false);
-    }
-    if (symbol.isFlippedVertical) {
-        api.shapeModifyVFlip(page, n_sym, true);
-        api.shapeModifyVFlip(page, symbol, false);
-    }
-    api.shapeModifyX(page, symbol, box.x - 20);
-    api.shapeModifyY(page, symbol, box.y - 20);
-    api.shapeModifyWH(page, symbol, box.width + 40, box.height + 40);
-    api.shapeModifyIsUnion(page, symbol, true);
-    const origin_style = importStyle(exportStyle(symbol.style));
-    let fl = symbol.style.fills.length;
-    if (fl) {
-        api.deleteFills(page, symbol, 0, fl);
-        const _fills = origin_style.fills;
-        for (let i = _fills.length - 1; i > -1; i--) {
-            const f = _fills[i];
-            const _f = new Fill(uuid(), f.isEnabled, f.fillType, f.color);
-            api.addFillAt(page, n_sym, _f, 0)
-        }
-    }
-    let bl = symbol.style.borders.length;
-    if (bl) {
-        api.deleteBorders(page, symbol, 0, bl);
-        const _borders = origin_style.borders;
-        for (let i = _borders.length - 1; i > -1; i--) {
-            const b = _borders[i];
-            const _b = new Border(uuid(), b.isEnabled, b.fillType, b.color, b.position, b.thickness, b.borderStyle);
-            api.addBorderAt(page, n_sym, _b, 0);
-        }
-    }
+    let union = newSymbolShapeUnion(symbol.name, state_frame);
+
     const border_style = new BorderStyle(4, 4);
-    const boder = new Border(uuid(), true, types.FillType.SolidColor, new Color(1, 255, 153, 0), BorderPosition.Inner, 2, border_style);
-    api.addBorderAt(page, symbol, boder, 0);
+    const border = new Border(
+        uuid(),
+        true,
+        types.FillType.SolidColor,
+        new Color(1, 255, 153, 0),
+        BorderPosition.Inner,
+        2,
+        border_style
+    );
+    union.style.borders.push(border);
 
-    // 将产生union的第一个变量
     const _var = new Variable(uuid(), VariableType.Status, attri_name, SymbolShape.Default_State); // default
-    api.shapeAddVariable(page, symbol as SymbolShape, _var);
-    // api.shapeModifyVartag(page, n_sym, _var.id, state_name);
-    return symbol;
+    union.variables.set(_var.id, _var);
+
+    const insert_result = api.shapeInsert(page, p as GroupShape, union, symIndex);
+    if (!insert_result) return false;
+    union = insert_result as SymbolUnionShape;
+    api.shapeMove(page, p as GroupShape, symIndex + 1, union, 0);
+
+    // document.symbolsMgr.add(n_sym.id, n_sym as SymbolShape); // 不需要加入了
+
+    api.shapeModifyX(page, symbol, 20);
+    api.shapeModifyY(page, symbol, 20);
+
+    return union;
 }
 
 /**
@@ -257,7 +233,7 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
  */
 export function is_default_state(state: SymbolShape) {
     const parent = state.parent;
-    if (!parent || !parent.isUnionSymbolShape) return false;
+    if (!parent || !(parent instanceof SymbolUnionShape)) return false;
     const children = (parent as SymbolShape).childs;
     return children[0]?.id === state.id;
 }
@@ -267,13 +243,13 @@ export function is_default_state(state: SymbolShape) {
  * @param state
  */
 export function get_state_name(state: SymbolShape) {
-    if (!state.parent?.isUnionSymbolShape) return state.name;
+    if (!(state.parent instanceof SymbolUnionShape)) return state.name;
     const variables = (state.parent as SymbolShape).variables;
     if (!variables) return state.name;
     let name_slice: string[] = [];
     variables.forEach((v, k) => {
         if (v.type !== VariableType.Status) return;
-        const slice = state.vartag?.get(k) || v.value;
+        const slice = state.symtags?.get(k) || v.value;
         slice && name_slice.push(slice);
     })
     return name_slice.toString();
@@ -284,7 +260,7 @@ export function get_state_name(state: SymbolShape) {
  * @param shape
  */
 export function is_state(shape: Shape) {
-    return shape.type === ShapeType.Symbol && shape?.parent?.isUnionSymbolShape;
+    return shape.type === ShapeType.Symbol && (shape?.parent instanceof SymbolUnionShape);
 }
 
 function is_sym(shape: Shape) {
@@ -296,24 +272,23 @@ function is_sym(shape: Shape) {
  * @param shape
  */
 export function is_symbol_but_not_union(shape: Shape) {
-    return shape.type === ShapeType.Symbol && !(shape as SymbolShape).isUnionSymbolShape;
+    return shape.type === ShapeType.Symbol && !(shape instanceof SymbolUnionShape);
 }
 
 /**
  * @description 给一个变量的id(varid)，当前以组件(symbol)为范围查看有多少图层绑定了这个变量
  */
-export function find_layers_by_varid(symbol: SymbolShape, varid: string, type: OverrideType) {
+export function find_layers_by_varid(symbol: SymbolShape, var_id: string, type: OverrideType) {
     const shapes: Shape[] = [];
-    if (symbol.isUnionSymbolShape) { // 存在可变组件
-        const childs = symbol.childs;
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const group = childs[i];
-            get_x_type_option(symbol, group, get_vt_by_ot(type)!, varid, shapes);
+    if (symbol instanceof SymbolUnionShape) { // 存在可变组件
+        const children = symbol.childs;
+        for (let i = 0, len = children.length; i < len; i++) {
+            const group = children[i];
+            get_x_type_option(symbol, group, get_vt_by_ot(type)!, var_id, shapes);
         }
     } else { // 不存在可变组件
-        get_x_type_option(symbol, symbol, get_vt_by_ot(type)!, varid, shapes);
+        get_x_type_option(symbol, symbol, get_vt_by_ot(type)!, var_id, shapes);
     }
-    console.log('shapes: ', shapes);
     return shapes;
 }
 
@@ -417,7 +392,7 @@ export function adjust_selection_before_group(document: Document, page: Page, sh
             if (!parent) throw new Error('wrong data: invaild parent');
             const insert_index = parent.indexOfChild(shape);
             api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
-            if (shape.isUnionSymbolShape) continue;
+            if (shape instanceof SymbolUnionShape) continue;
             const {x, y, width, height} = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
@@ -439,7 +414,7 @@ function handler_childs(document: Document, page: Page, shapes: Shape[], api: Ap
             if (!parent) throw new Error('wrong data: invaild parent');
             const insert_index = parent.indexOfChild(shape);
             api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
-            if (shape.isUnionSymbolShape) continue;
+            if (shape instanceof SymbolUnionShape) continue;
             const {x, y, width, height} = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
@@ -471,5 +446,5 @@ export function modify_index(parent: GroupShape, s1: Shape, s2: Shape, index: nu
 }
 
 export function after_remove(parent: GroupShape) {
-    return (parent?.type === ShapeType.Group || parent?.isUnionSymbolShape) && !parent?.childs?.length;
+    return (parent?.type === ShapeType.Group) || (parent instanceof SymbolUnionShape) && !parent?.childs?.length;
 }

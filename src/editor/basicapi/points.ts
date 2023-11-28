@@ -9,7 +9,7 @@ export function repalcePoints(shape: PathShape, points: CurvePoint[]) {
   shape.points.splice(0, shape.points.length);
   for (let i = 0; i < points.length; i++) {
     const _p = points[i];
-    const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(_p.point.x, _p.point.y));
+    const p = new CurvePoint(v4(), _p.x, _p.y, CurveMode.Straight);
     shape.points.push(p);
   }
 }

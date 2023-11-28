@@ -1,13 +1,14 @@
 import { Cmd, CmdType, OpType, ShapeCmdModify } from "../../coop"
-import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape, TableCell } from "../../data/classes"
+import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape, TableCell, SymbolRefShape } from "../../data/classes"
 import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
 import { importColor, importText, importVariable } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
-import { IdOpSet } from "../../coop/data/basictypes";
 import { SymbolShape, Variable } from "../../data/shape";
 import { BasicMap } from "../../data/basic";
-import {shapeModifyNameFixed, shapeModifyContextSettingOpacity} from "../basicapi";
+import { IdOpSet } from "coop/data/basictypes";
+import { shapeModifyContextSettingOpacity, shapeModifyNameFixed } from "../basicapi";
+
 export type TextShapeLike = Shape & { text: Text }
 export type UpdateFrameArray = { shape: Shape, page: Page }[];
 export type Handler = (...args: any[]) => void;
@@ -484,22 +485,25 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 }
             },
             {
-                opId: SHAPE_ATTR_ID.isUnionSymbolShape,
+                opId: SHAPE_ATTR_ID.symbolref,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    (shape as SymbolShape).isUnionSymbolShape = value && JSON.parse(value);
+                    if (value) {
+                        if (!(shape instanceof SymbolRefShape)) throw new Error();
+                        shape.refId = value;
+                    }
                 }
             },
             {
-                opId: SHAPE_ATTR_ID.vartag,
+                opId: SHAPE_ATTR_ID.symtags,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
                         const _shape = shape as SymbolShape;
                         let { varId, tag } = JSON.parse(value);
                         if (tag == undefined) {
-                            if (_shape.vartag) _shape.vartag.delete(varId);
+                            if (_shape.symtags) _shape.symtags.delete(varId);
                         } else {
-                            if (!_shape.vartag) _shape.vartag = new BasicMap();
-                            _shape.vartag.set(varId, tag);
+                            if (!_shape.symtags) _shape.symtags = new BasicMap();
+                            _shape.symtags.set(varId, tag);
                         }
                     }
                 }

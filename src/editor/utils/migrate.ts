@@ -1,5 +1,5 @@
 import {SymbolRefShape} from "../../data/symbolref";
-import {GroupShape, Shape, ShapeType, SymbolShape} from "../../data/shape";
+import {GroupShape, Shape, ShapeType, SymbolUnionShape, SymbolShape} from "../../data/shape";
 import {is_symbol_but_not_union} from "./other";
 import {is_circular_ref2} from "./ref_check";
 import {Api} from "../command/recordapi";
@@ -29,7 +29,7 @@ export function unable_to_migrate(target: Shape, wander: Shape): number {
                 if (is_circular_ref2(tree, target.id)) return 3;
             }
         }
-        if ((target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wander)) return 1;
+        if ((target instanceof SymbolUnionShape) && !is_symbol_but_not_union(wander)) return 1;
         if (wander.type === ShapeType.Symbol) return 2;
     } else {
         if (target.isVirtualShape) return 4;
@@ -38,7 +38,7 @@ export function unable_to_migrate(target: Shape, wander: Shape): number {
 }
 
 export function after_migrate(page: Page, api: Api, origin: Shape) {
-    if (origin.type === ShapeType.Symbol && (origin as SymbolShape).isUnionSymbolShape && !origin.childs?.length) {
+    if (origin.type === ShapeType.Symbol && (origin instanceof SymbolUnionShape) && !origin.childs?.length) {
         const origin_parent = origin.parent;
         if (!origin_parent) return;
         const delete_index = (origin_parent as GroupShape).indexOfChild(origin);

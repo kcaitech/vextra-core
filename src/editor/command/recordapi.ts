@@ -64,7 +64,7 @@ import { uuid } from "../../basic/uuid";
 import { ContactRole, CurvePoint } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { BasicMap } from "../../data/basic";
-import {IImportContext} from "../../data/baseimport";
+import { IImportContext } from "../../data/baseimport";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -219,7 +219,7 @@ export class Api {
         this.needUpdateFrame.push({ page, shape });
         return shape;
     }
-    shapeDelete( page: Page, parent: GroupShape, index: number) {
+    shapeDelete(page: Page, parent: GroupShape, index: number) {
         let shape: Shape | undefined;
         this.__trap(() => {
             shape = parent.removeChildAt(index);
@@ -232,16 +232,16 @@ export class Api {
         })
         if (shape) this.addCmd(ShapeCmdRemove.Make(page.id, parent.id, shape.id, index, JSON.stringify(exportShape(shape))));
     }
-    shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number) {
+    shapeMove(page: Page, fromParent: GroupShape, fromIdx: number, toParent: GroupShape, toIdx: number) {
         this.__trap(() => {
-            const shape = parent.childs.splice(index, 1)[0];
+            const shape = fromParent.childs.splice(fromIdx, 1)[0];
             if (shape) {
-                parent2.childs.splice(index2, 0, shape);
+                toParent.childs.splice(toIdx, 0, shape);
                 this.needUpdateFrame.push({ page, shape })
-                if (parent.id !== parent2.id && parent.childs.length > 0) {
-                    this.needUpdateFrame.push({ page, shape: parent.childs[0] })
+                if (fromParent.id !== toParent.id && fromParent.childs.length > 0) {
+                    this.needUpdateFrame.push({ page, shape: fromParent.childs[0] })
                 }
-                this.addCmd(ShapeCmdMove.Make(page.id, parent.id, shape.id, index, parent2.id, index2));
+                this.addCmd(ShapeCmdMove.Make(page.id, fromParent.id, shape.id, fromIdx, toParent.id, toIdx));
             }
         });
     }
@@ -490,7 +490,7 @@ export class Api {
             const shapeId = genShapeId(shape);
             (shape as SymbolRefShape).removeVirbindsEx(key);
             shapeId.push(type);
-            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.overrides, {type, varId: undefined}, {  type,  varId: save  }));
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.overrides, { type, varId: undefined }, { type, varId: save }));
         })
     }
     shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
@@ -541,12 +541,12 @@ export class Api {
     shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const save = shape.vartag?.get(varId);
+            const save = shape.symtags?.get(varId);
             const shapeId = genShapeId(shape);
             shapeId.push(varId);
-            if (!shape.vartag) shape.vartag = new BasicMap();
+            if (!shape.symtags) shape.symtags = new BasicMap();
             shape.setTag(varId, tag);
-            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.vartag, { varId, tag }, { varId, tag: save }));
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.symtags, { varId, tag }, { varId, tag: save }));
         })
     }
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
@@ -565,14 +565,7 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.symbolref, refId, save));
         })
     }
-    shapeModifyIsUnion(page: Page, shape: Shape, isUnionSymbolShape: boolean) {
-        checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const save = shape.isUnionSymbolShape;
-            shape.isUnionSymbolShape = isUnionSymbolShape;
-            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.isUnionSymbolShape, isUnionSymbolShape, save))
-        })
-    }
+
     shapeModifyLock(page: Page, shape: Shape, isLocked: boolean) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
@@ -640,9 +633,9 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const p = shape.points[index];
-            const origin = exportPoint2D(p.point);
-            p.point.x = point.x;
-            p.point.y = point.y;
+            const origin: Point2D = { x: p.x, y: p.y }
+            p.x = point.x;
+            p.y = point.y;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, p.id, POINTS_ATTR_ID.point, exportPoint2D(point), origin))
         })
     }
@@ -650,9 +643,9 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const p = shape.points[index];
-            const origin = exportPoint2D(p.curveFrom);
-            p.curveFrom.x = point.x;
-            p.curveFrom.y = point.y;
+            const origin = { x: p.fromX, y: p.fromY }
+            p.fromX = point.x;
+            p.fromY = point.y;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, p.id, POINTS_ATTR_ID.from, exportPoint2D(point), origin))
         })
     }
@@ -660,9 +653,9 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const p = shape.points[index];
-            const origin = exportPoint2D(p.curveTo);
-            p.curveTo.x = point.x;
-            p.curveTo.y = point.y;
+            const origin = { x: p.toX, y: p.toY };
+            p.toX = point.x;
+            p.toY = point.y;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, p.id, POINTS_ATTR_ID.to, exportPoint2D(point), origin))
         })
     }
@@ -930,8 +923,8 @@ export class Api {
         const point = shape.points[index];
         if (!point) return;
         this.__trap(() => {
-            const save = point.curveMode;
-            point.curveMode = curveMode;
+            const save = point.mode;
+            point.mode = curveMode;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.curveMode, exportCurveMode(curveMode), exportCurveMode(save)));
         })
     }
@@ -940,8 +933,8 @@ export class Api {
         const point = shape.points[index];
         if (!point) return;
         this.__trap(() => {
-            const save = point.cornerRadius;
-            point.cornerRadius = cornerRadius;
+            const save = point.radius;
+            point.radius = cornerRadius;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.cornerRadius, cornerRadius, save));
         })
     }
@@ -1008,9 +1001,9 @@ export class Api {
         })
     }
     setShadowEnable(page: Page, shape: Shape, idx: number, isEnable: boolean) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.isEnabled;
                 shadow.isEnabled = isEnable;
@@ -1019,9 +1012,9 @@ export class Api {
         }
     }
     setShadowOffsetX(page: Page, shape: Shape, idx: number, offsetX: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.offsetX;
                 shadow.offsetX = offsetX;
@@ -1030,9 +1023,9 @@ export class Api {
         }
     }
     setShadowOffsetY(page: Page, shape: Shape, idx: number, offsetY: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.offsetY;
                 shadow.offsetY = offsetY;
@@ -1041,9 +1034,9 @@ export class Api {
         }
     }
     setShadowBlur(page: Page, shape: Shape, idx: number, blur: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.blurRadius;
                 shadow.blurRadius = blur;
@@ -1052,9 +1045,9 @@ export class Api {
         }
     }
     setShadowSpread(page: Page, shape: Shape, idx: number, spread: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.spread;
                 shadow.spread = spread;

@@ -1,7 +1,7 @@
 import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
-import {CurveMode, GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable} from "../../data/shape";
+import { CurveMode, GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 import { BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
@@ -487,26 +487,26 @@ export function textModifyParaIndent(shapetext: Text, indent: number | undefined
 
 export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
-    p.point.x = point.x;
-    p.point.y = point.y;
+    p.x = point.x;
+    p.y = point.y;
 }
 export function shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
-    p.curveFrom.x = point.x;
-    p.curveFrom.y = point.y;
+    p.fromX = point.x;
+    p.fromY = point.y;
 }
 export function shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
-    p.curveTo.x = point.x;
-    p.curveTo.y = point.y;
+    p.toX = point.x;
+    p.toY = point.y;
 }
 export function shapeModifyCurveMode(page: Page, shape: PathShape, index: number, curveMode: CurveMode) {
     const p = shape.points[index];
-    p.curveMode = curveMode;
+    p.mode = curveMode;
 }
 export function shapeModifyPointCornerRadius(page: Page, shape: PathShape, index: number, cornerRadius: number) {
     const p = shape.points[index];
-    p.cornerRadius = cornerRadius;
+    p.radius = cornerRadius;
 }
 
 export function shapeModifyVariable(page: Page, _var: Variable, value: any) {
@@ -529,6 +529,6 @@ export function shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape
     shape.addOverrid2(refId, attr, value);
 }
 export function shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
-    if (!shape.vartag) shape.vartag = new BasicMap();
+    if (!shape.symtags) shape.symtags = new BasicMap();
     shape.setTag(varId, tag);
 }
