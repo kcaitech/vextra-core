@@ -284,15 +284,9 @@ export class CMDExecuter {
             const border = importBorder(JSON.parse(cmd.data))
             const borders = shape instanceof Shape ? shape.style.borders : shape.value;
             api.addBorderAt(borders, border, (op as ArrayOpInsert).start);
-            if (op.type === OpType.ArrayInsert) {
-                const border = importBorder(JSON.parse(cmd.data))
-                api.addBorderAt(borders, border, (op as ArrayOpInsert).start);
-            }
         } else if (arrayAttr === SHADOW_ID) {
-            if (op.type === OpType.ArrayInsert) {
-                const shadow = importShadow(JSON.parse(cmd.data))
-                api.addShadow(shape.style, shadow, (op as ArrayOpInsert).start);
-            }
+            const shadow = importShadow(JSON.parse(cmd.data))
+            api.addShadow(shape.style, shadow, (op as ArrayOpInsert).start);
         }
         else if (arrayAttr === CONTACTS_ID) {
             const contact_role = importContactRole(JSON.parse(cmd.data));
@@ -321,13 +315,8 @@ export class CMDExecuter {
         else if (arrayAttr === BORDER_ID) {
             const borders = shape instanceof Shape ? shape.style.borders : shape.value;
             api.deleteBorderAt(borders, (op as ArrayOpRemove).start)
-            if (op.type === OpType.ArrayRemove) {
-                api.deleteBorderAt(shape.style, (op as ArrayOpRemove).start)
-            }
         } else if (arrayAttr === SHADOW_ID) {
-            if (op.type === OpType.ArrayRemove) {
-                api.deleteShadowAt(shape.style, (op as ArrayOpRemove).start)
-            }
+            api.deleteShadowAt(shape.style, (op as ArrayOpRemove).start)
         }
         else if (arrayAttr === CONTACTS_ID) {
             api.removeContactRoleAt(shape.style, (op as ArrayOpRemove).start)
