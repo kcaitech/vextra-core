@@ -1,11 +1,11 @@
-import {OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, SymbolUnionShape} from "../../data/shape";
-import {SymbolRefShape} from "../../data/symbolref";
-import {uuid} from "../../basic/uuid";
-import {Page} from "../../data/page";
-import {Api} from "../command/recordapi";
-import {BasicArray} from "../../data/basic";
-import {Border, Fill} from "../../data/style";
-import {importBorder, importFill} from "../../data/baseimport";
+import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, SymbolUnionShape } from "../../data/shape";
+import { SymbolRefShape } from "../../data/symbolref";
+import { uuid } from "../../basic/uuid";
+import { Page } from "../../data/page";
+import { Api } from "../command/recordapi";
+import { BasicArray } from "../../data/basic";
+import { Border, Fill } from "../../data/style";
+import { importBorder, importFill } from "../../data/baseimport";
 
 /**
  * @description 图层是否为组件实例的引用部分
@@ -242,8 +242,8 @@ export function shape4border(api: Api, page: Page, shape: Shape) {
     const _var = override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
         const fills = _var?.value ?? shape.style.borders;
         return new BasicArray(...(fills as Array<Border>).map((v) => {
-                return importBorder(v);
-            }
+            return importBorder(v);
+        }
         ))
     }, api, shape)
     return _var || shape;
@@ -256,11 +256,11 @@ export function shape4fill(api: Api, page: Page, shape: Shape) {
     const _var = override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
         const fills = _var?.value ?? shape.style.fills;
         return new BasicArray(...(fills as Array<Fill>).map((v) => {
-                const ret = importFill(v);
-                const imgmgr = v.getImageMgr();
-                if (imgmgr) ret.setImageMgr(imgmgr)
-                return ret;
-            }
+            const ret = importFill(v);
+            const imgmgr = v.getImageMgr();
+            if (imgmgr) ret.setImageMgr(imgmgr)
+            return ret;
+        }
         ))
     }, api, shape)
     return _var || shape;
@@ -291,3 +291,24 @@ export function is_symbol_or_union(shape: Shape) {
     return shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolUnion;
 }
 
+export function get_state_name(state: SymbolShape, dlt: string) {
+    if (!(state.parent instanceof SymbolUnionShape)) {
+        return state.name;
+    }
+    const variables = (state.parent as SymbolShape).variables;
+    if (!variables) {
+        return state.name;
+    }
+    let name_slice: string[] = [];
+    variables.forEach((v, k) => {
+        if (v.type !== VariableType.Status) {
+            return;
+        }
+        let slice = state.symtags?.get(k) || v.value;
+        if (slice === SymbolShape.Default_State) {
+            slice = dlt;
+        }
+        slice && name_slice.push(slice);
+    })
+    return name_slice.toString();
+}

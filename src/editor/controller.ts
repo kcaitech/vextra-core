@@ -46,8 +46,9 @@ import { ContactForm, ContactRole } from "../data/baseclasses";
 import { ContactShape } from "../data/contact";
 import { importCurvePoint } from "../data/baseimport";
 import { exportCurvePoint } from "../data/baseexport";
-import { get_state_name, is_state } from "./utils/other";
+import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
+import { get_state_name } from "./utils/symbol";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -133,7 +134,7 @@ export interface AsyncPathEditor {
 }
 
 export interface AsyncTransfer {
-    migrate: (targetParent: GroupShape, sortedShapes: Shape[]) => void;
+    migrate: (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => void;
     trans: (start: PageXY, end: PageXY) => void;
     stick: (dx: number, dy: number) => void;
     transByWheel: (dx: number, dy: number) => void;
@@ -573,17 +574,19 @@ export class Controller {
     public asyncTransfer(shapes: Shape[], page: Page): AsyncTransfer {
         const api = this.__repo.start("transfer", {});
         let status: Status = Status.Pending;
-        const migrate = (targetParent: GroupShape, sortedShapes: Shape[]) => {
+        const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             status = Status.Pending;
             let index = targetParent.childs.length;
             for (let i = 0, len = sortedShapes.length; i < len; i++) {
                 const shape = sortedShapes[i];
                 const error = unable_to_migrate(targetParent, shape);
-                if (error) console.log('migrate error:', error);
-                if (Boolean(error)) continue;
+                if (error) {
+                    console.log('migrate error:', error);
+                    continue;
+                }
                 const origin: GroupShape = shape.parent as GroupShape;
                 if (is_state(shape)) {
-                    const name = get_state_name(shape as any);
+                    const name = get_state_name(shape as any, dlt);
                     api.shapeModifyName(page, shape, `${origin.name}/${name}`);
                 }
                 const { x, y } = shape.frame2Root();

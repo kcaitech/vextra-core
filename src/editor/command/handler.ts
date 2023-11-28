@@ -290,28 +290,28 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.hflip,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const hflip = value && JSON.parse(value)
-                    api.shapeModifyHFlip(page, shape as Shape, hflip, needUpdateFrame)
+                    api.shapeModifyHFlip(page, shape as Shape, !!hflip, needUpdateFrame)
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.vflip,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const vflip = value && JSON.parse(value)
-                    api.shapeModifyVFlip(page, shape as Shape, vflip, needUpdateFrame)
+                    api.shapeModifyVFlip(page, shape as Shape, !!vflip, needUpdateFrame)
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.visible,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isVisible = value && JSON.parse(value)
-                    api.shapeModifyVisible(shape, isVisible ?? false);
+                    api.shapeModifyVisible(shape, !!isVisible);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.lock,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isLock = value && JSON.parse(value)
-                    api.shapeModifyLock(shape as Shape, isLock ?? false);
+                    api.shapeModifyLock(shape as Shape, !!isLock);
                 }
             },
             {
@@ -345,14 +345,14 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.constrainerProportions,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isLock = value && JSON.parse(value) || false;
-                    api.shapeModifyConstrainerProportions(shape as Shape, isLock);
+                    api.shapeModifyConstrainerProportions(shape as Shape, !!isLock);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.nameIsFixed,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isFixed = value && JSON.parse(value) || false;
-                    api.shapeModifyNameFixed(shape as Shape, isFixed);
+                    api.shapeModifyNameFixed(shape as Shape, !!isFixed);
                 }
             },
             {
@@ -382,7 +382,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.isboolopshape,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const isOpShape = value && JSON.parse(value);
-                    api.shapeModifyBoolOpShape(shape as GroupShape, isOpShape);
+                    api.shapeModifyBoolOpShape(shape as GroupShape, !!isOpShape);
                 }
             },
             // {
@@ -417,7 +417,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.isEdited,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const state = value && JSON.parse(value)
-                    api.shapeModifyEditedState(shape as GroupShape, state ?? false);
+                    api.shapeModifyEditedState(shape as GroupShape, !!state);
                 }
             },
             // {
