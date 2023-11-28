@@ -27,6 +27,7 @@ export const SHAPE_ATTR_ID = {
 
     visible: "visible",
     lock: "lock",
+    contextSettingsOpacity: "contextSettingsOpacity",
     resizingConstraint: "resizingConstraint",
     isClosed: "isClosed",
     radius: "radius", // rect radius

@@ -1,10 +1,25 @@
 import {
     Cmd,
-    PageCmdInsert, PageCmdModify, PageCmdMove, PageCmdDelete,
-    ShapeArrayAttrMove, ShapeArrayAttrInsert, ShapeArrayAttrRemove, ShapeArrayAttrModify,
-    ShapeCmdInsert, ShapeCmdRemove, ShapeCmdMove, ShapeCmdModify,
-    TextCmdInsert, TextCmdRemove, TextCmdModify,
-    TableCmdInsert, TableCmdRemove, TableCmdModify, TableIndex
+    PageCmdDelete,
+    PageCmdInsert,
+    PageCmdModify,
+    PageCmdMove,
+    ShapeArrayAttrInsert,
+    ShapeArrayAttrModify,
+    ShapeArrayAttrMove,
+    ShapeArrayAttrRemove,
+    ShapeCmdInsert,
+    ShapeCmdModify,
+    ShapeCmdMove,
+    ShapeCmdRemove,
+    TableCmdInsert,
+    TableCmdModify,
+    TableCmdRemove,
+    TableIndex,
+    TableOpTarget,
+    TextCmdInsert,
+    TextCmdModify,
+    TextCmdRemove
 } from "../../coop/data/classes";
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
@@ -46,7 +61,6 @@ import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { TableOpTarget } from "../../coop/data/classes";
 import { ContactRole, CurvePoint } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { BasicMap } from "../../data/basic";
@@ -583,6 +597,17 @@ export class Api {
             shape.isFlippedVertical = vflip;
             this.needUpdateFrame.push({ page, shape });
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.vflip, vflip, save));
+        })
+    }
+    shapeModifyContextSettingsOpacity(page: Page, shape: Shape, contextSettingsOpacity: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            if (!shape.style.contextSettings) {
+                shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+            }
+            const save = shape.style.contextSettings.opacity;
+            shape.setContextSettingsOpacity(contextSettingsOpacity);
+            this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.contextSettingsOpacity, contextSettingsOpacity, save))
         })
     }
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {

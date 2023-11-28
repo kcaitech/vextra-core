@@ -1,27 +1,28 @@
 import {
-    adjustLB2,
+    translateTo,
+    translate,
+    expandTo,
     adjustLT2,
-    adjustRB2,
     adjustRT2,
-    afterModifyGroupShapeWH,
+    adjustRB2,
+    adjustLB2,
+    erScaleByT,
+    erScaleByR,
     erScaleByB,
     erScaleByL,
-    erScaleByR,
-    erScaleByT,
-    expandTo,
-    pathEdit,
-    pathEditSide,
+    scaleByT,
+    scaleByR,
     scaleByB,
     scaleByL,
-    scaleByR,
-    scaleByT,
-    translate,
-    translateTo,
-    update_frame_by_points
+    pathEdit,
+    update_frame_by_points,
+    pathEditSide,
+    afterModifyGroupShapeWH
 } from "./frame";
-import {CurvePoint, GroupShape, PathShape, Point2D, Shape, ShapeFrame} from "../data/shape";
+import {Shape, GroupShape, PathShape, CurvePoint, Point2D} from "../data/shape";
 import {getFormatFromBase64} from "../basic/utils";
 import {ContactRoleType, CurveMode, ShapeType} from "../data/typesdefine";
+import {ShapeFrame} from "../data/shape";
 import {
     newArrowShape,
     newArtboard,
@@ -146,6 +147,11 @@ export interface AsyncContactEditor {
     modify_contact_to: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
     modify_sides: (index: number, dx: number, dy: number) => void;
     migrate: (targetParent: GroupShape) => void;
+    close: () => undefined;
+}
+
+export interface AsyncOpacityEditor {
+    execute: (contextSettingOpacity: number) => void;
     close: () => undefined;
 }
 
@@ -582,7 +588,7 @@ export class Controller {
                     api.shapeModifyName(page, shape, `${origin.name}/${name}`);
                 }
                 const {x, y} = shape.frame2Root();
-                api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
+                api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length)
                 translateTo(api, page, shape, x, y);
                 after_migrate(page, api, origin);
             }
@@ -673,7 +679,6 @@ export class Controller {
                 points[i] = p;
             }
             api.addPoints(page, shape as PathShape, points);
-            console.log('--pre--', shape.points);
         }
         const modify_contact_from = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {
             status = Status.Pending;
@@ -734,6 +739,29 @@ export class Controller {
             return undefined;
         }
         return {pre, modify_contact_from, modify_contact_to, modify_sides, migrate, close}
+    }
+
+    public asyncOpacityEditor(shapes: Shape[], page: Page): AsyncOpacityEditor {
+        const api = this.__repo.start("asyncOpacityEditor", {});
+        let status: Status = Status.Pending;
+        const execute = (contextSettingOpacity: number) => {
+            status = Status.Pending;
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
+            }
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return {execute, close}
     }
 }
 

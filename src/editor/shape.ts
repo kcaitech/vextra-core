@@ -37,8 +37,7 @@ import {
     is_default_state
 } from "./utils/other";
 import {is_part_of_symbol, is_part_of_symbolref} from "./utils/symbol";
-import {newText, newText2} from "./creator";
-
+import { newText, newText2 } from "../data/textutils";
 function varParent(_var: Variable) {
     let p = _var.parent;
     while (p && !(p instanceof Shape)) p = p.parent;
@@ -757,7 +756,11 @@ export class ShapeEditor {
             api.shapeModifyVFlip(this.__page, this.__shape, !this.__shape.isFlippedVertical)
         });
     }
-
+    public contextSettingOpacity(value: number) {
+        const api = this.__repo.start("contextSettingOpacity", {});
+        api.shapeModifyContextSettingsOpacity(this.__page, this.__shape, value);
+        this.__repo.commit();
+    }
     // resizingConstraint
     public setResizingConstraint(value: number) {
         this._repoWrap("setResizingConstraint", (api) => {
