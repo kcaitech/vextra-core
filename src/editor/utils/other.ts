@@ -238,22 +238,6 @@ export function is_default_state(state: SymbolShape) {
     return children[0]?.id === state.id;
 }
 
-/**
- * @description 获取当前可变组件state的动态名称
- * @param state
- */
-export function get_state_name(state: SymbolShape) {
-    if (!(state.parent instanceof SymbolUnionShape)) return state.name;
-    const variables = (state.parent as SymbolShape).variables;
-    if (!variables) return state.name;
-    let name_slice: string[] = [];
-    variables.forEach((v, k) => {
-        if (v.type !== VariableType.Status) return;
-        const slice = state.symtags?.get(k) || v.value;
-        slice && name_slice.push(slice);
-    })
-    return name_slice.toString();
-}
 
 /**
  * @description 是否为可变组件
