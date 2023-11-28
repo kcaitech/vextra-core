@@ -310,7 +310,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         return !!this.isVisible;
     }
 
-    onRemove() {
+    onRemoved() {
     }
 }
 
