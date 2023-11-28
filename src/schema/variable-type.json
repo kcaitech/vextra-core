@@ -1,0 +1,17 @@
+{
+    "description": "variable types",
+    "enum": [
+        "color",
+        "gradient",
+        "text",
+        "visible",
+        "lock",
+        "symbolRef",
+        "status",
+        "imageRef",
+        "fills",
+        "borders",
+        "shadows",
+        "style"
+    ]
+}

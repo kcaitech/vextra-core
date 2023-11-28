@@ -12,8 +12,10 @@ export * from "./data/consts"
 export * from "./io"
 export * from "./io/import"
 export * from "./io/export"
-export * from "./io/lzdata"
+export * from "./io/import/sketch/lzdata"
 export * from "./io/cilpboard"
+// export
+export * from "./io/export/svg"
 
 // editor
 export * from "./editor/command/cooprepo"
@@ -27,9 +29,11 @@ export * from "./editor/controller"
 
 export * from "./service/shapedirlist"
 export * from "./service/taskmgr"
+export * from "./service/symbollist"
 
 // coop
 export * from "./coop"
 
 // render
 export * from "./render"
+export * from "./renderStatic"

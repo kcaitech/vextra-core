@@ -10,34 +10,31 @@ const {
 
 const dir = {
     id: "1",
-    childs: [
+    naviChilds: [
         {
             id: "2",
-            childs: [
+            naviChilds: [
                 {
                     id: "3"
                 }
-            ],
-            childsVisible: true
+            ]
         },
         {
             id: "4",
-            childs: [
+            naviChilds: [
                 {
                     id: "5"
                 },
                 {
                     id: "6"
                 }
-            ],
-            childsVisible: true
+            ]
         }
-    ],
-    childsVisible: true
+    ]
 }
 
 test("", () => {
-    const tree = new FoldDirTree<{id: string, childs?: any[], childsVisible: boolean}>({
+    const tree = new FoldDirTree<{id: string, naviChilds?: any[]}>({
         data: dir,
     });
     isTrue(tree.length === 1)
@@ -68,7 +65,7 @@ test("", () => {
         isTrue(v.data.id == expectid[i])
     }
 
-    isTrue(tree.unfold(dir.childs[0]))
+    isTrue(tree.unfold(dir.naviChilds[0]))
     equal(tree.length, 4)
     equal(tree.at(0)?.data.id, "1")
     equal(tree.at(0)?.fold, false)
@@ -83,7 +80,7 @@ test("", () => {
         equal(v.data.id, expectid[i])
     }
 
-    isTrue(tree.fold(dir.childs[0]))
+    isTrue(tree.fold(dir.naviChilds[0]))
     isTrue(tree.length === 3)
     isTrue(tree.at(0)?.data.id === "1")
     isTrue(tree.at(0)?.fold === false)

@@ -1,0 +1,24 @@
+{
+    "description": "text",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
+        "paras": {
+            "type": "array",
+            "items": {
+                "$ref": "./para.json"
+            }
+        },
+        "attr": {
+            "$ref": "./text-attr.json"
+        }
+    },
+    "required": [
+        "typeId",
+        "paras"
+    ],
+    "additionalProperties": false
+}

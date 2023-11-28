@@ -1,38 +1,41 @@
-import {GroupShape, Shape, ShapeType, TextShape} from "../data/shape";
+import {GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape} from "../data/shape";
 import {
     exportArtboard,
-    exportRectShape,
-    exportOvalShape,
+    exportGroupShape,
     exportImageShape,
     exportLineShape,
-    exportTextShape,
+    exportOvalShape,
     exportPathShape,
-    exportGroupShape,
+    exportRectShape,
+    exportSymbolRefShape,
+    exportSymbolShape,
+    exportTableShape,
     exportText,
-    exportTableShape
-} from "./baseexport";
+    exportTextShape
+} from "../data/baseexport";
 import {
-    importRectShape,
-    importOvalShape,
-    importImageShape,
     IImportContext,
-    importLineShape,
-    importTextShape,
-    importPathShape,
-    importGroupShape,
-    importText,
     importArtboard,
-    importTableShape
-} from "./baseimport";
+    importGroupShape,
+    importImageShape,
+    importLineShape,
+    importOvalShape,
+    importPathShape,
+    importRectShape,
+    importSymbolRefShape,
+    importTableShape,
+    importText,
+    importTextShape
+} from "../data/baseimport";
 import * as types from "../data/typesdefine";
 import {v4} from "uuid";
 import {Document} from "../data/document";
-import {newTextShape, newTextShapeByText} from "../editor/creator";
+import {newSymbolRefShape, newTextShape, newTextShapeByText} from "../editor/creator";
 import {Api} from "../editor/command/recordapi";
-import {translate, translateTo} from "../editor/frame";
+import {translateTo} from "../editor/frame";
 import {Page} from "../data/page";
 
-function set_childs_id(shapes: Shape[]) {
+export function set_childs_id(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         const shape = shapes[i];
         if (!shape) continue;
@@ -65,6 +68,10 @@ export function export_shape(shapes: Shape[]) {
             content = exportGroupShape(shape as unknown as types.GroupShape);
         } else if (type === ShapeType.Table) {
             content = exportTableShape(shape as unknown as types.TableShape);
+        } else if (type === ShapeType.Symbol) {
+            content = exportSymbolShape(shape as unknown as types.SymbolShape);
+        } else if (type === ShapeType.SymbolRef) {
+            content = exportSymbolRefShape(shape as unknown as types.SymbolRefShape);
         }
         if (content) {
             content.style.contacts && (content.style.contacts = undefined);
@@ -77,31 +84,28 @@ export function export_shape(shapes: Shape[]) {
 // 从剪切板导入图形
 export function import_shape(document: Document, source: types.Shape[]) {
     const ctx: IImportContext = new class implements IImportContext {
-        document: Document = document
+        document: Document = document;
     };
-    // const ctx = new class implements IImportContext {
-    //     afterImport(obj: any): void {
-    //         if (obj instanceof ImageShape || obj instanceof Fill || obj instanceof TableCell) {
-    //             obj.setImageMgr(document.mediasMgr)
-    //         } else if (obj instanceof SymbolRefShape) {
-    //             obj.setSymbolMgr(document.symbolsMgr)
-    //             // } else if (obj instanceof ArtboardRef) {
-    //             //     obj.setArtboardMgr(document.artboardMgr)
-    //         } else if (obj instanceof Artboard) {
-    //             document.artboardMgr.add(obj.id, obj);
-    //         } else if (obj instanceof SymbolShape) {
-    //             document.symbolsMgr.add(obj.id, obj);
-    //         } else if (obj instanceof FlattenShape) {
-    //             obj.isBoolOpShape = true;
-    //         }
-    //     }
-    // }
     const result: Shape[] = [];
     try {
         for (let i = 0, len = source.length; i < len; i++) {
             const _s = source[i], type = _s.type;
-            _s.id = v4();
             let r: Shape | undefined = undefined;
+            if (type === ShapeType.Symbol) {
+                if (!document.symbolsMgr.getSync(_s.id)) continue;
+                const f = new ShapeFrame(_s.frame.x, _s.frame.y, _s.frame.width, _s.frame.height);
+                if ((_s instanceof SymbolUnionShape)) {
+                    const dlt = (_s as any).childs[0];
+                    if (!dlt) continue;
+                    f.width = dlt.frame.width;
+                    f.height = dlt.frame.height;
+                }
+                r = newSymbolRefShape(_s.name, f, _s.id, document.symbolsMgr);
+                r && result.push(r);
+                continue;
+            }
+
+            _s.id = v4();
             if (type === ShapeType.Rectangle) {
                 r = importRectShape(_s as types.RectShape);
             } else if (type === ShapeType.Oval) {
@@ -115,17 +119,20 @@ export function import_shape(document: Document, source: types.Shape[]) {
             } else if (type === ShapeType.Path) {
                 r = importPathShape(_s as types.PathShape);
             } else if (type === ShapeType.Artboard) {
-                const childs = (_s as GroupShape).childs;
-                childs && childs.length && set_childs_id(childs);
+                const children = (_s as GroupShape).childs;
+                children && children.length && set_childs_id(children);
                 r = importArtboard(_s as types.Artboard, ctx);
             } else if (type === ShapeType.Group) {
-                const childs = (_s as GroupShape).childs;
-                childs && childs.length && set_childs_id(childs);
+                const children = (_s as GroupShape).childs;
+                children && children.length && set_childs_id(children);
                 r = importGroupShape(_s as types.GroupShape, ctx);
             } else if (type === ShapeType.Table) {
-                const childs = (_s as GroupShape).childs;
-                childs && childs.length && set_childs_id(childs);
+                const children = (_s as GroupShape).childs;
+                children && children.length && set_childs_id(children);
                 r = importTableShape(_s as types.TableShape, ctx);
+            } else if (type === ShapeType.SymbolRef) {
+                if (!document.symbolsMgr.getSync((_s as any).refId)) continue;
+                r = importSymbolRefShape(_s as types.SymbolRefShape, ctx);
             }
             r && result.push(r);
         }
@@ -162,8 +169,7 @@ export function export_text(text: types.Text): types.Text {
 export function import_text(document: Document, text: types.Text, gen?: boolean): types.Text | TextShape {
     if (gen) {
         const name = text.paras[0].text || 'text';
-        const shape = newTextShapeByText(name, text);
-        return shape;
+        return newTextShapeByText(name, text);
     }
     return importText(text);
 }
@@ -188,7 +194,8 @@ export function modify_frame_after_insert(api: Api, page: Page, shapes: Shape[])
         translateTo(api, page, shape, shape.frame.x, shape.frame.y);
     }
 }
-export function XYsBounding(points: {x: number, y: number}[]) {
+
+export function XYsBounding(points: { x: number, y: number }[]) {
     const xs: number[] = [];
     const ys: number[] = [];
     for (let i = 0; i < points.length; i++) {
@@ -199,15 +206,21 @@ export function XYsBounding(points: {x: number, y: number}[]) {
     const bottom = Math.max(...ys);
     const left = Math.min(...xs);
     const right = Math.max(...xs);
-    return { top, bottom, left, right };
+    return {top, bottom, left, right};
 }
-export function get_frame(shapes: Shape[]): {x: number, y: number}[] {
+
+export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
     const points: { x: number, y: number }[] = [];
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
         const m = s.matrix2Root();
         const f = s.frame;
-        const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+        const ps: { x: number, y: number }[] = [
+            {x: 0, y: 0},
+            {x: f.width, y: 0},
+            {x: f.width, y: f.height},
+            {x: 0, y: f.height}
+        ];
         for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
     }
     const b = XYsBounding(points);

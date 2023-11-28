@@ -3,9 +3,9 @@
  * 可修改schema后在schema目录运行node script生成
  */
 
-import * as impl from "../data/classes"
-import * as types from "../data/typesdefine"
-import { BasicArray } from "../data/basic"
+import * as impl from "./classes"
+import * as types from "./typesdefine"
+import { BasicArray, BasicMap } from "./basic"
 
 
 export interface IImportContext {
@@ -13,6 +13,62 @@ export interface IImportContext {
 }
 /* winding rule */
 export function importWindingRule(source: types.WindingRule, ctx?: IImportContext): impl.WindingRule {
+    return source
+}
+/* color */
+export function importVariable(source: types.Variable, ctx?: IImportContext): impl.Variable {
+    const ret: impl.Variable = new impl.Variable (
+        source.id,
+        importVariableType(source.type, ctx),
+        source.name,
+        (() => {
+            const val = source.value
+            if (typeof val !== 'object') {
+                return val
+            }
+            if (val instanceof Array) {
+                const _val = val;
+                return (() => {
+                    const ret = new BasicArray<(impl.Border | impl.Fill)>()
+                    for (let i = 0, len = _val && _val.length; i < len; i++) {
+                        const r = (() => {
+                            const val = _val[i]
+                            if (val.typeId == 'border') {
+                                return importBorder(val as types.Border, ctx)
+                            }
+                            if (val.typeId == 'fill') {
+                                return importFill(val as types.Fill, ctx)
+                            }
+                            {
+                                throw new Error('unknow val: ' + val)
+                            }
+                        })()
+                        if (r) ret.push(r)
+                    }
+                    return ret
+                })()
+            }
+            if (val.typeId == 'color') {
+                return importColor(val as types.Color, ctx)
+            }
+            if (val.typeId == 'text') {
+                return importText(val as types.Text, ctx)
+            }
+            if (val.typeId == 'gradient') {
+                return importGradient(val as types.Gradient, ctx)
+            }
+            if (val.typeId == 'style') {
+                return importStyle(val as types.Style, ctx)
+            }
+            {
+                throw new Error('unknow val: ' + val)
+            }
+        })()
+    )
+    return ret
+}
+/* variable types */
+export function importVariableType(source: types.VariableType, ctx?: IImportContext): impl.VariableType {
     return source
 }
 /* user infomation */
@@ -119,6 +175,15 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
     })()
     if (source.startMarkerType !== undefined) ret.startMarkerType = importMarkerType(source.startMarkerType, ctx)
     if (source.endMarkerType !== undefined) ret.endMarkerType = importMarkerType(source.endMarkerType, ctx)
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     return ret
 }
 /* strikethrough types */
@@ -175,6 +240,15 @@ export function importShape(source: types.Shape, ctx?: IImportContext): impl.Sha
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     return ret
 }
 /* shape types */
@@ -274,25 +348,9 @@ export function importPadding(source: types.Padding, ctx?: IImportContext): impl
     if (source.bottom !== undefined) ret.bottom = source.bottom
     return ret
 }
-/* override list item */
-export function importOverrideItem(source: types.OverrideItem, ctx?: IImportContext): impl.OverrideItem {
-    const ret: impl.OverrideItem = new impl.OverrideItem (
-        source.id,
-        source.attr,
-        (() => {
-            const val = source.value
-            if (typeof val !== 'object') {
-                return val
-            }
-            if (val.typeId == 'style') {
-                return importStyle(val as types.Style, ctx)
-            }
-            {
-                throw new Error('unknow val: ' + val)
-            }
-        })()
-    )
-    return ret
+/* override types */
+export function importOverrideType(source: types.OverrideType, ctx?: IImportContext): impl.OverrideType {
+    return source
 }
 /* marker type */
 export function importMarkerType(source: types.MarkerType, ctx?: IImportContext): impl.MarkerType {
@@ -634,10 +692,23 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
 /* table shape */
 export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
+    // inject code
+    // 兼容旧数据
+    if ((source as any).childs) source.datas = (source as any).childs;
     const ret: impl.TableShape = new impl.TableShape (
         source.id,
         source.name,
@@ -646,9 +717,9 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         importStyle(source.style, ctx),
         (() => {
             const ret = new BasicArray<(undefined | impl.TableCell)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
+            for (let i = 0, len = source.datas && source.datas.length; i < len; i++) {
                 const r = (() => {
-                    const val = source.childs[i]
+                    const val = source.datas[i]
                     if (!val) {
                         return val ?? undefined
                     }
@@ -695,6 +766,15 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     if (source.textAttr !== undefined) ret.textAttr = importTextAttr(source.textAttr, ctx)
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
@@ -724,6 +804,15 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     if (source.cellType !== undefined) ret.cellType = importTableCellType(source.cellType, ctx)
     if (source.text !== undefined) ret.text = importText(source.text, ctx)
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
@@ -733,13 +822,29 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
 }
 /* symbol ref shape */
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
+    // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
+    if ((source as any).virbindsEx) {
+        source.overrides = (source as any).virbindsEx
+    }
     const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        source.refId
+        source.refId,
+        (() => {
+            const ret = new BasicMap<string, impl.Variable>()
+            const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+            Object.keys(val).forEach((k) => {
+                const v = val[k];
+                ret.set(k, importVariable(v, ctx))
+            });
+            return ret
+        })()
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
@@ -756,16 +861,29 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     if (source.overrides !== undefined) ret.overrides = (() => {
-        const ret = new BasicArray<impl.OverrideItem>()
-        for (let i = 0, len = source.overrides && source.overrides.length; i < len; i++) {
-            const r = importOverrideItem(source.overrides[i], ctx)
-            if (r) ret.push(r)
-        }
+        const ret = new BasicMap<string, string>()
+        const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
         return ret
     })()
     // inject code
-    if (ctx?.document) ret.setSymbolMgr(ctx.document.symbolsMgr);
+    if (ctx?.document) {
+        ret.setSymbolMgr(ctx.document.symbolsMgr);
+        ret.setImageMgr(ctx.document.mediasMgr);
+    }
     return ret
 }
 /* span attr */
@@ -819,6 +937,15 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
@@ -855,6 +982,15 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
@@ -892,6 +1028,15 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     return ret
 }
 /* span attr */
@@ -953,7 +1098,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.ContactShape | impl.SymbolShape | impl.SymbolRefShape | impl.TableShape)>()
+            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.ContactShape | impl.SymbolRefShape | impl.TableShape | impl.SymbolShape | impl.SymbolUnionShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -990,14 +1135,17 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
                     if (val.typeId == 'contact-shape') {
                         return importContactShape(val as types.ContactShape, ctx)
                     }
-                    if (val.typeId == 'symbol-shape') {
-                        return importSymbolShape(val as types.SymbolShape, ctx)
-                    }
                     if (val.typeId == 'symbol-ref-shape') {
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
                         return importTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1023,6 +1171,15 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     return ret
 }
 /* oval shape */
@@ -1060,6 +1217,15 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     return ret
 }
 /* line shape */
@@ -1096,6 +1262,15 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     return ret
 }
 /* image shape */
@@ -1184,6 +1359,15 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
     return ret
@@ -1197,18 +1381,12 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
                         return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'flatten-shape') {
-                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
                         return importImageShape(val as types.ImageShape, ctx)
@@ -1224,6 +1402,9 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
                         return importTextShape(val as types.TextShape, ctx)
@@ -1242,6 +1423,12 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                     }
                     if (val.typeId == 'contact-shape') {
                         return importContactShape(val as types.ContactShape, ctx)
+                    }
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1267,12 +1454,28 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
 /* symbol shape */
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
+    // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
+    if ((source as any).virbindsEx) {
+        source.overrides = (source as any).virbindsEx
+    }
     const ret: impl.SymbolShape = new impl.SymbolShape (
         source.id,
         source.name,
@@ -1280,18 +1483,12 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
                         return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'flatten-shape') {
-                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
                         return importImageShape(val as types.ImageShape, ctx)
@@ -1307,6 +1504,9 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
                         return importTextShape(val as types.TextShape, ctx)
@@ -1326,12 +1526,27 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                     if (val.typeId == 'contact-shape') {
                         return importContactShape(val as types.ContactShape, ctx)
                     }
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
+                    }
                     {
                         throw new Error('unknow val: ' + val)
                     }
                 })()
                 if (r) ret.push(r)
             }
+            return ret
+        })(),
+        (() => {
+            const ret = new BasicMap<string, impl.Variable>()
+            const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+            Object.keys(val).forEach((k) => {
+                const v = val[k];
+                ret.set(k, importVariable(v, ctx))
+            });
             return ret
         })()
     )
@@ -1352,8 +1567,157 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.overrides !== undefined) ret.overrides = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.symtags !== undefined) ret.symtags = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     // inject code
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    return ret
+}
+/* symbol group shape */
+export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IImportContext): impl.SymbolUnionShape {
+    const ret: impl.SymbolUnionShape = new impl.SymbolUnionShape (
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
+                const r = (() => {
+                    const val = source.childs[i]
+                    if (val.typeId == 'group-shape') {
+                        return importGroupShape(val as types.GroupShape, ctx)
+                    }
+                    if (val.typeId == 'image-shape') {
+                        return importImageShape(val as types.ImageShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape') {
+                        return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'rect-shape') {
+                        return importRectShape(val as types.RectShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
+                    }
+                    if (val.typeId == 'text-shape') {
+                        return importTextShape(val as types.TextShape, ctx)
+                    }
+                    if (val.typeId == 'artboard') {
+                        return importArtboard(val as types.Artboard, ctx)
+                    }
+                    if (val.typeId == 'line-shape') {
+                        return importLineShape(val as types.LineShape, ctx)
+                    }
+                    if (val.typeId == 'oval-shape') {
+                        return importOvalShape(val as types.OvalShape, ctx)
+                    }
+                    if (val.typeId == 'table-shape') {
+                        return importTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'contact-shape') {
+                        return importContactShape(val as types.ContactShape, ctx)
+                    }
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
+                    }
+                    {
+                        throw new Error('unknow val: ' + val)
+                    }
+                })()
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        (() => {
+            const ret = new BasicMap<string, impl.Variable>()
+            const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+            Object.keys(val).forEach((k) => {
+                const v = val[k];
+                ret.set(k, importVariable(v, ctx))
+            });
+            return ret
+        })()
+    )
+    if (source.overrides !== undefined) ret.overrides = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.overrides as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.symtags !== undefined) ret.symtags = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.symtags as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     return ret
 }
 /* flatten shape */
@@ -1361,6 +1725,7 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
     // inject code
     const ret = importGroupShape(source, ctx);
     ret.isBoolOpShape = true;
+    ret.type = types.ShapeType.Group;
     return ret;
 }
 /* contact shape */
@@ -1399,6 +1764,15 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     if (source.from !== undefined) ret.from = importContactForm(source.from, ctx)
     if (source.to !== undefined) ret.to = importContactForm(source.to, ctx)
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
@@ -1413,18 +1787,12 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.Shape | impl.FlattenShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
                         return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'shape') {
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'flatten-shape') {
-                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
                         return importImageShape(val as types.ImageShape, ctx)
@@ -1440,6 +1808,9 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
                         return importTextShape(val as types.TextShape, ctx)
@@ -1458,6 +1829,12 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                     }
                     if (val.typeId == 'contact-shape') {
                         return importContactShape(val as types.ContactShape, ctx)
+                    }
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     {
                         throw new Error('unknow val: ' + val)
@@ -1485,6 +1862,15 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
     if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
     if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
     if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
     // inject code
     if (ctx?.document) ctx.document.artboardMgr.add(ret.id, ret);
     return ret

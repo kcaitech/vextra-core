@@ -207,6 +207,7 @@ export class Text extends Basic implements classes.Text {
     typeId = 'text'
     paras: BasicArray<Para>
     attr?: TextAttr
+
     private __layout?: TextLayout;
     private __layoutWidth: number = 0;
     private __frameWidth: number = 0;
@@ -312,6 +313,10 @@ export class Text extends Basic implements classes.Text {
             throw new Error("index < 0");
         }
         return getSimpleText(this, index, count);
+    }
+    toString() {
+        const str = getSimpleText(this, 0, Number.MAX_VALUE);
+        return str.substring(0, str.length - 1); // 去掉最后回车符
     }
     getTextWithFormat(index: number, count: number): Text {
         if (index < 0) {
@@ -424,6 +429,24 @@ export class Text extends Basic implements classes.Text {
 
     reLayout() {
         this.__layout = undefined;
+    }
+
+    // 无缓存
+    getLayout2(width: number, height: number) {
+        if (this.__layout && this.__frameHeight === height && this.__frameWidth === width) {
+            return this.__layout;
+        }
+
+        const layoutWidth = ((b: TextBehaviour) => {
+            switch (b) {
+                case TextBehaviour.Flexible: return Number.MAX_VALUE;
+                case TextBehaviour.Fixed: return width;
+                case TextBehaviour.FixWidthAndHeight: return height;
+            }
+            // return Number.MAX_VALUE
+        })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+
+        return layoutText(this, layoutWidth, height);
     }
 
     getLayout() {

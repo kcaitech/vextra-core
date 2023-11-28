@@ -1,11 +1,14 @@
 import { v4 } from "uuid";
 import { Matrix } from "../basic/matrix";
-import { CurvePoint, PathShape, Point2D, Shape } from "./shape";
-import { ContactType, CurveMode } from "./typesdefine";
-import { Api } from "editor/command/recordapi";
+import { CurvePoint, PathShape, Point2D, Shape, SymbolShape, Variable } from "./shape";
+import { ContactType, CurveMode, OverrideType } from "./typesdefine";
+import { Api } from "../editor/command/recordapi";
 import { Page } from "./page";
-import { importCurvePoint } from "../io/baseimport";
-import { exportCurvePoint } from "../io/baseexport";
+import { importCurvePoint } from "./baseimport";
+import { exportCurvePoint } from "./baseexport";
+import { importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
+import * as types from "./typesdefine"
+import { SymbolRefShape } from "./classes";
 
 /**
  * @description root -> 图形自身上且单位为比例系数的矩阵
@@ -548,4 +551,105 @@ export function update_contact_points(api: Api, shape: Shape, page: Page) {
         _p[i] = p;
     }
     api.addPoints(page, shape as PathShape, _p);
+}
+
+export function copyShape(source: types.Shape) {
+    if (source.typeId == 'flatten-shape') {
+        return importFlattenShape(source as types.FlattenShape)
+    }
+    if (source.typeId == 'group-shape') {
+        return importGroupShape(source as types.GroupShape)
+    }
+    if (source.typeId == 'image-shape') {
+        return importImageShape(source as types.ImageShape)
+    }
+    if (source.typeId == 'path-shape') {
+        return importPathShape(source as types.PathShape)
+    }
+    if (source.typeId == 'path-shape2') {
+        return importPathShape2(source as types.PathShape2)
+    }
+    if (source.typeId == 'rect-shape') {
+        return importRectShape(source as types.RectShape)
+    }
+    if (source.typeId == 'symbol-ref-shape') {
+        return importSymbolRefShape(source as types.SymbolRefShape)
+    }
+    if (source.typeId == 'text-shape') {
+        return importTextShape(source as types.TextShape)
+    }
+    if (source.typeId == 'artboard') {
+        return importArtboard(source as types.Artboard)
+    }
+    if (source.typeId == 'line-shape') {
+        return importLineShape(source as types.LineShape)
+    }
+    if (source.typeId == 'oval-shape') {
+        return importOvalShape(source as types.OvalShape)
+    }
+    if (source.typeId == 'table-shape') {
+        return importTableShape(source as types.TableShape)
+    }
+    if (source.typeId == 'table-cell') {
+        return importTableCell(source as types.TableCell)
+    }
+    if (source.typeId == 'contact-shape') {
+        return importContactShape(source as types.ContactShape)
+    }
+    throw new Error("unknow shape type: " + source.typeId)
+}
+
+function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], i: number | undefined = undefined) {
+    i = i === undefined ? varsContainer.length - 1 : i;
+    for (; i >= 0; --i) {
+        const container = varsContainer[i];
+        const override = container.getOverrid(varId, OverrideType.Variable);
+        if (override) {
+            ret.push(override.v);
+            // scope??
+            varId = override.v.id;
+        }
+        else {
+            const _var = container.getVar(varId);
+            if (_var) {
+                ret.push(_var);
+            }
+        }
+        if (container instanceof SymbolRefShape) varId = container.id + '/' + varId;
+    }
+}
+
+export function findOverride(refId: string, type: OverrideType, varsContainer: (SymbolRefShape | SymbolShape)[]) {
+    for (let i = varsContainer.length - 1; i >= 0; --i) {
+        const container = varsContainer[i];
+        const override = container.getOverrid(refId, type);
+        if (override) {
+            const ret = [override.v];
+            refId = override.v.id;
+            if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
+            findVar(refId, ret, varsContainer, i - 1);
+            return ret;
+        }
+        if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
+    }
+}
+
+export function findOverrideAndVar(
+    shape: Shape, // proxyed
+    overType: OverrideType,
+    varsContainer: (SymbolRefShape | SymbolShape)[]) {
+
+    const varbinds = shape.varbinds;
+    const varId = varbinds?.get(overType);
+    if (varId) {
+        const _vars: Variable[] = [];
+        findVar(varId, _vars, varsContainer);
+        if (_vars && _vars.length > 0) return _vars;
+    }
+
+    // find override
+    // id: xxx/xxx/xxx
+    const id = shape.id;
+    const _vars = findOverride(id, overType, varsContainer);
+    return _vars;
 }

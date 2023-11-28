@@ -64,30 +64,58 @@ inject['Fill']['after'] = `\
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 `
 inject['TableShape'] = {};
+inject['TableShape']['before'] = `\
+    // inject code
+    // 兼容旧数据
+    if ((source as any).childs) source.datas = (source as any).childs;
+`
 inject['TableShape']['after'] = `\
     // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
 `
 inject['SymbolRefShape'] = {};
+inject['SymbolRefShape']['before'] = `\
+    // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
+    if ((source as any).virbindsEx) {
+        source.overrides = (source as any).virbindsEx
+    }
+`
 inject['SymbolRefShape']['after'] = `\
     // inject code
-    if (ctx?.document) ret.setSymbolMgr(ctx.document.symbolsMgr);
+    if (ctx?.document) {
+        ret.setSymbolMgr(ctx.document.symbolsMgr);
+        ret.setImageMgr(ctx.document.mediasMgr);
+    }
 `
 inject['Artboard'] = {};
 inject['Artboard']['after'] = `\
     // inject code
     if (ctx?.document) ctx.document.artboardMgr.add(ret.id, ret);
 `
-inject['SymbolShape'] = {};
-inject['SymbolShape']['after'] = `\
-    // inject code
-    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
-`
+
 inject['FlattenShape'] = {};
 inject['FlattenShape']['content'] = `\
     // inject code
     const ret = importGroupShape(source, ctx);
     ret.isBoolOpShape = true;
+    ret.type = types.ShapeType.Group;
     return ret;
 `
 
+inject['SymbolShape'] = {};
+inject['SymbolShape']['before'] = `\
+    // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
+    if ((source as any).virbindsEx) {
+        source.overrides = (source as any).virbindsEx
+    }
+`
+inject['SymbolShape']['after'] = `\
+    // inject code
+    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+`

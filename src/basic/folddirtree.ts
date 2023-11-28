@@ -2,8 +2,7 @@ import { DirTree, Iter, Node } from "./dirtree";
 
 export interface DirItem {
     id: string,
-    childs?: DirItem[],
-    childsVisible: boolean,
+    naviChilds?: DirItem[]
 }
 
 class NodeData<T extends DirItem> {
@@ -132,8 +131,8 @@ export class FoldDirTree<T extends DirItem> {
     }
 
     private __unfold(node: NodeType<T>, data: T): boolean {
-        const childs = node.__data.data.childs as T[] | undefined;
-        if (!childs || !node.__data.data.childsVisible) return false;
+        const childs = node.__data.data.naviChilds as T[] | undefined;
+        if (!childs) return false;
         const arr = childs.map((c) => new NodeData(c))
         if (this.__revertChilds) arr.reverse()
         const ret = this.__dirtree.insertArr(node, 0, arr);
@@ -215,12 +214,12 @@ export class FoldDirTree<T extends DirItem> {
     }
 
     updateChilds(data: T) {
-        if (!data.childs) return;
+        if (!data.naviChilds) return;
 
         const node = this.__id2node.get(data.id);
         if (!node || node.__data.fold) return; // 折叠的
 
-        const shapechilds = this.__revertChilds ? data.childs.slice(0).reverse() : data.childs; // reverse
+        const shapechilds = this.__revertChilds ? data.naviChilds.slice(0).reverse() : data.naviChilds; // reverse
         const childs = node.__childs || [];
 
         // compare

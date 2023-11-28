@@ -40,13 +40,16 @@
                         "$ref": "./contact-shape.json"
                     },
                     {
-                        "$ref": "./symbol-shape.json"
-                    },
-                    {
                         "$ref": "./symbol-ref-shape.json"
                     },
                     {
                         "$ref": "./table-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-union-shape.json"
                     }
                 ]
             }

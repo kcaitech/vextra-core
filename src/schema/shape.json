@@ -69,6 +69,15 @@
         },
         "shouldBreakMaskChain": {
             "type": "boolean"
+        },
+        "varbinds": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            }
         }
     },
     "required": [

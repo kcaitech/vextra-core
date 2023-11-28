@@ -60,6 +60,15 @@
         },
         "endMarkerType": {
             "$ref": "./marker-type.json"
+        },
+        "varbinds": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            }
         }
     },
     "required": [

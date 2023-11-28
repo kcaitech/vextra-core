@@ -96,7 +96,9 @@ export const Watchable = <T extends Constructor>(SuperClass: T) =>
             return this.__watcher.delete(watcher);
         }
         public notify(...args: any[]) {
-            this.__watcher.forEach(w => {
+            if (this.__watcher.size === 0) return;
+            // 在set的foreach内部修改set会导致无限循环
+            Array.from(this.__watcher).forEach(w => {
                 w(...args);
             });
         }
@@ -131,6 +133,15 @@ export class ResourceMgr<T> extends Watchable(Object) {
         super();
         // this.__loader = loader;
         this.__guard = guard;
+    }
+    get size() {
+        return this.__resource.size;
+    }
+    get keys() {
+        return Array.from(this.__resource.keys());
+    }
+    get resource() {
+        return Array.from(this.__resource.values());
     }
     async get(id: string): Promise<T | undefined> {
         let r = this.__resource.get(id)

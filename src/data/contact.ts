@@ -2,7 +2,7 @@ import { Style } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
-export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, OverrideItem, Ellipse, PathSegment } from "./baseclasses"
+export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment } from "./baseclasses"
 import { ShapeType, CurvePoint, ShapeFrame, Point2D } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";

@@ -1,0 +1,1 @@
+export { exportSvg } from "./normal";
