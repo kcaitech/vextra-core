@@ -1,5 +1,5 @@
 import { Basic, BasicMap, ResourceMgr, Watchable } from "./basic";
-import { Style, Border } from "./style";
+import { Style, Border, ContextSettings, BlendMode } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
@@ -17,9 +17,7 @@ import {
     ResizeType,
     PathSegment,
     OverrideType,
-    VariableType,
-    ContextSettings,
-    BlendMode
+    VariableType
 } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
@@ -28,66 +26,13 @@ import { parsePath } from "./pathparser";
 import { RECT_POINTS } from "./consts";
 import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
-import { findOverride } from "./utils";
-
 export { Variable } from "./variable";
 
-export interface VarWatcher {
-    __var_onwatch: Map<string, Variable[]>,
-    __has_var_notify: any,
-
-    _var_watcher(...args: any[]): void,
-
-    _watch_vars(slot: string, vars: Variable[]): void
-
-    _var_on_removed(): void;
-}
-
-export function makeVarWatcher(obj: any): VarWatcher {
-    obj.__var_onwatch = new Map<string, Variable[]>(); // 设置了watcher的变量
-    obj.__has_var_notify = undefined;
-    obj._var_watcher = (...args: any[]) => {
-        if (!obj.__has_var_notify) {
-            obj.__has_var_notify = setTimeout(() => {
-                if (obj.__has_var_notify) obj.notify("variable", ...args)
-                obj.__has_var_notify = undefined;
-            }, 0);
-        }
-    }
-
-    obj._watch_vars = (slot: string, vars: Variable[]) => {
-        const old = obj.__var_onwatch.get(slot);
-        if (!old) {
-            vars.forEach((v) => v.watch(obj._var_watcher));
-            obj.__var_onwatch.set(slot, vars);
-            return;
-        }
-        if (old.length > vars.length) {
-            for (let i = vars.length, len = old.length; i < len; ++i) {
-                const v = old[i];
-                v.unwatch(obj._var_watcher);
-            }
-        }
-        old.length = vars.length;
-        for (let i = 0, len = old.length; i < len; ++i) {
-            const o = old[i];
-            const v = vars[i];
-            if (o && o.id === v.id) continue;
-            if (o) o.unwatch(obj._var_watcher);
-            v.watch(obj._var_watcher);
-            old[i] = v;
-        }
-    }
-    obj._var_on_removed = () => {
-        obj.__var_onwatch.forEach((v: Variable[]) => {
-            v.forEach((v) => v.unwatch(obj._var_watcher));
-        })
-        obj.__var_onwatch.clear();
-        obj.__has_var_notify = undefined;
-    }
-    return obj;
-}
-
+// todo
+// 存在变量的地方：ref, symbol
+// 在ref里，由proxy处理（监听所有变量的容器（ref, symbol））
+// 在symbol，这是个普通shape, 绘制由绘制处理？（怎么处理的？监听所有的变量容器）
+//   试图层可以获取，但更新呢？监听所有的变量容器
 
 export class Shape extends Watchable(Basic) implements classes.Shape {
 
@@ -127,7 +72,6 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.type = type
         this.frame = frame
         this.style = style
-        makeVarWatcher(this);
     }
 
     /**
@@ -150,6 +94,34 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
     get isVirtualShape() {
         return false;
+    }
+
+    get isSymbolShape() {
+        return false;
+    }
+
+    /**
+     * 不包含自己（如symbolref, symbol）
+     */
+    get varsContainer(): SymbolShape[] {
+        if (this.isVirtualShape) {
+            // 不会走到这里
+            throw new Error('');
+        }
+        // this 有可能是ref symbol呢
+        const varsContainer = [];
+        let p: Shape | undefined = this.parent;
+        while (p) {
+            if (p instanceof SymbolShape) {
+                varsContainer.push(p);
+                if (p.parent instanceof SymbolShape) {
+                    varsContainer.push(p.parent);
+                }
+                break; // 不会再有的了
+            }
+            p = p.parent;
+        }
+        return varsContainer.reverse();
     }
 
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
@@ -313,10 +285,6 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         this.isVisible = isVisible;
     }
 
-    onRemoved() {
-        (this as any as VarWatcher)._var_on_removed();
-    }
-
     findVar(varId: string, ret: Variable[]) {
         this.parent?.findVar(varId, ret);
     }
@@ -335,12 +303,14 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         const _vars: Variable[] = [];
         this.findVar(visibleVar, _vars);
         // watch vars
-        this._watch_vars("visible", _vars);
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === VariableType.Visible) {
             return !!_var.value;
         }
         return !!this.isVisible;
+    }
+
+    onRemove() {
     }
 }
 
@@ -470,9 +440,8 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     static Default_State = "49751e86-9b2c-4d1b-81b0-36f19b5407d2"
 
     typeId = 'symbol-shape'
-    isUnionSymbolShape?: boolean // 子对象都为SymbolShape
     variables: BasicMap<string, Variable> // 怎么做关联
-    vartag?: BasicMap<string, string>
+    symtags?: BasicMap<string, string>
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
 
     constructor(
@@ -487,7 +456,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         super(
             id,
             name,
-            ShapeType.Symbol,
+            type,
             frame,
             style,
             childs
@@ -503,39 +472,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             return this.getVar(varid);
         }
         return super.getTarget(targetId);
-    }
-
-    getTagedSym(shape: Shape/* SymbolRefShape */, varsContainer: Shape[]/*(SymbolRefShape | SymbolShape)[] */) {
-
-        if (!this.isUnionSymbolShape) return [this];
-
-        const symbols: SymbolShape[] = this.childs as any as SymbolShape[];
-        const vc = varsContainer.concat(shape);
-
-        const curState = new Map<string, string>();
-        this.variables?.forEach((v) => {
-            if (v.type === VariableType.Status) {
-                const overrides = findOverride(v.id, OverrideType.Variable, vc as any);
-                const _v = overrides ? overrides[overrides.length - 1] : v;
-                curState.set(v.id, _v.value);
-            }
-        })
-
-        // 找到对应的shape
-        const matchshapes: SymbolShape[] = [];
-        symbols.forEach((s) => {
-            const vartag = s.vartag;
-            let match = true;
-            curState.forEach((v, k) => {
-                const tag = vartag?.get(k) ?? SymbolShape.Default_State;
-                if (match) match = v === tag;
-            });
-            if (match) {
-                matchshapes.push(s);
-            }
-        })
-
-        return matchshapes;
     }
 
     private _createVar4Override(type: OverrideType, value: any) {
@@ -690,8 +626,42 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     }
 
     setTag(k: string, v: string) {
-        if (!this.vartag) this.vartag = new BasicMap<string, string>();
-        this.vartag.set(k, v);
+        if (!this.symtags) this.symtags = new BasicMap<string, string>();
+        this.symtags.set(k, v);
+    }
+
+    get isSymbolUnionShape() {
+        return false;
+    }
+    get isSymbolShape() {
+        return true;
+    }
+}
+
+export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnionShape {
+    typeId = 'symbol-union-shape'
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        childs: BasicArray<Shape>,
+        variables: BasicMap<string, Variable>
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style,
+            childs,
+            variables
+        )
+    }
+
+    get isSymbolUnionShape() {
+        return true;
     }
 }
 
@@ -753,11 +723,11 @@ export class PathShape extends Shape implements classes.PathShape {
     }
 
     setRadius(radius: number): void {
-        this.points.forEach((p) => p.cornerRadius = radius);
+        this.points.forEach((p) => p.radius = radius);
     }
 
     getRadius(): number[] {
-        return this.points.map((p) => p.cornerRadius);
+        return this.points.map((p) => p.radius || 0);
     }
 }
 
@@ -804,12 +774,12 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     }
 
     setRadius(radius: number): void {
-        this.pathsegs.forEach((seg) => seg.points.forEach((p) => (p.cornerRadius = radius)));
+        this.pathsegs.forEach((seg) => seg.points.forEach((p) => (p.radius = radius)));
     }
 
     getRadius(): number[] {
         return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => {
-            radius.push(p.cornerRadius);
+            radius.push(p.radius || 0);
             return radius;
         }, radius), []);
     }
@@ -842,10 +812,10 @@ export class RectShape extends PathShape implements classes.RectShape {
     setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
         const ps = this.points;
         if (ps.length === 4) {
-            ps[0].cornerRadius = lt;
-            ps[1].cornerRadius = rt;
-            ps[2].cornerRadius = rb;
-            ps[3].cornerRadius = lb;
+            ps[0].radius = lt;
+            ps[1].radius = rt;
+            ps[2].radius = rb;
+            ps[3].radius = lb;
         }
     }
 
@@ -853,10 +823,10 @@ export class RectShape extends PathShape implements classes.RectShape {
         const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
         const ps = this.points;
         if (ps.length === 4) {
-            ret.lt = ps[0].cornerRadius;
-            ret.rt = ps[1].cornerRadius;
-            ret.rb = ps[2].cornerRadius;
-            ret.lb = ps[3].cornerRadius;
+            ret.lt = ps[0].radius || 0;
+            ret.rt = ps[1].radius || 0;
+            ret.rb = ps[2].radius || 0;
+            ret.lb = ps[3].radius || 0;
         }
         return ret;
     }
@@ -1043,7 +1013,6 @@ export class TextShape extends Shape implements classes.TextShape {
         const _vars: Variable[] = [];
         this.findVar(textVar, _vars);
         // watch vars
-        this._watch_vars("text", _vars);
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === VariableType.Text) {
             return _var.value as Text; // 这要是string?

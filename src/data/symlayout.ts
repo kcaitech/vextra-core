@@ -39,18 +39,18 @@ function shapeModifyVFlip(shape: Shape, vflip: boolean | undefined): void {
 }
 function shapeModifyCurvPoint(shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
-    p.point.x = point.x;
-    p.point.y = point.y;
+    p.x = point.x;
+    p.y = point.y;
 }
 function shapeModifyCurvFromPoint(shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
-    p.curveFrom.x = point.x;
-    p.curveFrom.y = point.y;
+    p.fromX = point.x;
+    p.fromY = point.y;
 }
 function shapeModifyCurvToPoint(shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
-    p.curveTo.x = point.x;
-    p.curveTo.y = point.y;
+    p.toX = point.x;
+    p.toY = point.y;
 }
 
 /**
@@ -211,15 +211,15 @@ export function layoutChilds(childs: Shape[], containerFrame: ShapeFrame, symbol
             const points = c.points;
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = points[i];
-                if (p.hasCurveFrom) {
-                    const curveFrom = matrix.computeCoord(p.curveFrom);
+                if (p.hasFrom) {
+                    const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
                     shapeModifyCurvFromPoint(c, i, curveFrom);
                 }
-                if (p.hasCurveTo) {
-                    const curveTo = matrix.computeCoord(p.curveTo);
+                if (p.hasTo) {
+                    const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
                     shapeModifyCurvToPoint(c, i, curveTo);
                 }
-                const point = matrix.computeCoord(p.point);
+                const point = matrix.computeCoord(p.x, p.y);
                 shapeModifyCurvPoint(c, i, point);
             }
 

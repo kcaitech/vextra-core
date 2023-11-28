@@ -166,6 +166,7 @@ export enum ShapeType {
     Text = 'text',
     SymbolRef = 'symbol-ref',
     Symbol = 'symbol',
+    SymbolUnion = 'symbol-union',
     ArtboardRef = 'artboard-ref',
     Rectangle = 'rectangle',
     Triangle = 'triangle',
@@ -370,13 +371,16 @@ export type DocumentMeta = {
 /* curve point */
 export type CurvePoint = {
     id: string
-    cornerRadius: number
-    curveFrom: Point2D
-    curveTo: Point2D
-    hasCurveFrom: boolean
-    hasCurveTo: boolean
-    curveMode: CurveMode
-    point: Point2D
+    radius?: number
+    fromX?: number
+    fromY?: number
+    toX?: number
+    toY?: number
+    hasFrom?: boolean
+    hasTo?: boolean
+    mode: CurveMode
+    x: number
+    y: number
 }
 /* curve mode */
 export enum CurveMode {
@@ -595,7 +599,7 @@ export type TextAttr = ParaAttr & {
 }
 /* page */
 export type Page = Shape & {
-    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolRefShape | TableShape | SymbolShape)[]
+    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolRefShape | TableShape | SymbolShape | SymbolUnionShape)[]
 }
 /* oval shape */
 export type OvalShape = PathShape & {
@@ -610,16 +614,18 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape)[]
+    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape)[]
     isBoolOpShape?: boolean
     fixedRadius?: number
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
-    isUnionSymbolShape?: boolean
     overrides?: Map<string, string>
     variables: Map<string, Variable>
-    vartag?: Map<string, string>
+    symtags?: Map<string, string>
+}
+/* symbol union shape */
+export type SymbolUnionShape = SymbolShape & {
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {

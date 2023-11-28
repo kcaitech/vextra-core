@@ -1,4 +1,4 @@
-import { Path, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
+import { Path, ShapeFrame, ShapeType, SymbolUnionShape, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { renderGroupChilds2, renderGroupChilds3 } from "./group";
 import { renderWithVars as fillR } from "./fill";
 import { renderWithVars as borderR } from "./border"
@@ -8,18 +8,19 @@ import { Matrix } from "../basic/matrix";
 
 function renderSym(h: Function,
     ref: SymbolRefShape,
+    refframe: ShapeFrame,
     sym: SymbolShape,
     comsMap: Map<ShapeType, any>,
     transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): any {
 
-    if (sym.parent instanceof SymbolShape && sym.parent.isUnionSymbolShape) {
+    if (sym.parent instanceof SymbolUnionShape) {
         varsContainer = (varsContainer || []).concat(ref, sym.parent, sym);
     } else {
         varsContainer = (varsContainer || []).concat(ref, sym);
     }
 
-    const refframe = ref.frame;
+    // const refframe = ref.frame;
     const symframe = sym.frame;
     const noTrans = isNoTransform(transform);
     if (noTrans && refframe.width === symframe.width && refframe.height === symframe.height) {
@@ -191,7 +192,7 @@ export function render(h: Function,
     // fill
     childs.push(...fillR(h, sym, frame, path, varsContainer2, consumedVars));
     // symbol
-    childs.push(...renderSym(h, shape, sym as SymbolShape, comsMap, transform, varsContainer));
+    childs.push(...renderSym(h, shape, frame, sym as SymbolShape, comsMap, undefined, varsContainer));
     // border
     childs.push(...borderR(h, sym, frame, path, varsContainer2, consumedVars));
 

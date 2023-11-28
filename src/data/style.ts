@@ -185,9 +185,6 @@ export class Style extends Basic implements classes.Style {
         fills.setTypeId("fills");
     }
 
-    private _watch_vars(slot: string, vars: Variable[]) {
-        (this.__parent as any)?._watch_vars(slot, vars);
-    }
     private findVar(varId: string, ret: Variable[]): boolean {
         return !!(this.__parent as any)?.findVar(varId, ret);
     }
@@ -199,8 +196,6 @@ export class Style extends Basic implements classes.Style {
 
         const _vars: Variable[] = [];
         this.findVar(fillsVar, _vars);
-        // watch vars
-        this._watch_vars("style.fills", _vars);
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === VariableType.Fills) {
             return _var.value;
@@ -215,8 +210,6 @@ export class Style extends Basic implements classes.Style {
 
         const _vars: Variable[] = [];
         this.findVar(bordersVar, _vars);
-        // watch vars
-        this._watch_vars("style.borders", _vars);
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === VariableType.Borders) {
             return _var.value;

@@ -7,13 +7,14 @@ export {
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
 import { CurvePoint, OverrideType, ShapeFrame, TextBehaviour, VariableType } from "./baseclasses"
-import { GroupShape, Shape, SymbolShape, TextShape, VarWatcher, Variable, makeVarWatcher } from "./shape";
+import { GroupShape, Shape, SymbolUnionShape, SymbolShape, TextShape, Variable } from "./shape";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 import { SymbolRefShape } from "./symbolref";
 import { __objidkey } from "../basic/objectid";
 import { importCurvePoint } from "./baseimport";
 import { layoutChilds } from "./symlayout";
 import { TextLayout } from "./textlayout";
+import { findOverrideAndVar } from "./utils";
 
 // 内核提供给界面的dataface, 仅用于界面获取对象信息
 // 绘制独立计算
@@ -32,28 +33,18 @@ function checkNotProxyed(val: Object) {
 }
 
 class HdlBase { // protect data
-    // __cache: Map<PropertyKey, any> = new Map();
     __parent: any;
 
     constructor(parent: any) {
-        makeVarWatcher(this);
         this.__parent = parent;
     }
 
     public notify(...args: any[]) {
     }
 
-    // map_get(key: any): any {
-    //     // BasicMap, proxy后再proxy
-    //     const get = Map.prototype.get.bind(this); // this应该被绑定到target!
-    //     const val = get(key);
-    //     if (typeof val === 'object') {
-    //         if (val instanceof Shape) throw new Error("");
-    //         checkNotProxyed(val);
-    //         return new Proxy(val, new HdlBase());
-    //     }
-    //     return val;
-    // }
+    onRemoved(target: Object) {
+
+    }
 
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
         // this.__cache.set(propertyKey, value);
@@ -148,39 +139,29 @@ class HdlBase { // protect data
         }
         return Reflect.has(target, propertyKey);
     }
-
-    onRemoved(target: object) {
-        (this as any as VarWatcher)._var_on_removed();
-    }
 }
 
 function _getOnVar(
     shape: Shape, // proxyed
-    hdl: HdlBase,
-    propertyKey: PropertyKey,
     overType: OverrideType,
     varType: VariableType): Variable | undefined {
 
     if (!(shape as any).__symbolproxy) throw new Error("");
     const varbinds = shape.varbinds;
     const varId = varbinds?.get(overType);
-    if (!varId) {
-        // find override
-        // id: xxx/xxx/xxx
-        const id = shape.id;
-        const _vars = shape.findOverride(id.substring(id.lastIndexOf('/') + 1), overType);
-        if (_vars) {
-            (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                return _var;
-            }
-        }
-    } else {
+    if (varId) {
         const _vars: Variable[] = [];
         shape.findVar(varId, _vars);
-        // watch vars
-        (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === varType) {
+            return _var;
+        }
+    }
+    // find override
+    // id: xxx/xxx/xxx
+    const id = shape.id;
+    const _vars = shape.findOverride(id.substring(id.lastIndexOf('/') + 1), overType);
+    if (_vars) {
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === varType) {
             return _var;
@@ -203,7 +184,6 @@ class StyleHdl extends HdlBase {
         if (propStr === 'fills') {
             const val = _getOnVar(
                 this.__parent,
-                this, propertyKey,
                 OverrideType.Fills,
                 VariableType.Fills);
             if (val) return val.value;
@@ -212,8 +192,6 @@ class StyleHdl extends HdlBase {
         if (propStr === 'borders') {
             const val = _getOnVar(
                 this.__parent,
-                this,
-                propertyKey,
                 OverrideType.Borders,
                 VariableType.Borders);
             if (val) return val.value;
@@ -440,8 +418,6 @@ class ShapeHdl extends HdlBase {
         if (propStr === "isVisible") {
             const val = _getOnVar(
                 receiver as Shape,
-                this,
-                propertyKey,
                 OverrideType.Visible,
                 VariableType.Visible);
             if (val) return val.value;
@@ -450,8 +426,6 @@ class ShapeHdl extends HdlBase {
         if (propStr === "isLocked") {
             const val = _getOnVar(
                 receiver as Shape,
-                this,
-                propertyKey,
                 OverrideType.Lock,
                 VariableType.Lock);
             if (val) return val.value;
@@ -577,13 +551,13 @@ class SymbolRefShapeHdl extends ShapeHdl {
         this.__saveHeight = this.__frame.height;
     }
 
-    getRefId() {
+    getRefId(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
         let refId = (this.__origin as SymbolRefShape).refId;
-        // 从parent开始查找
-        const _vars = this.__parent.findOverride(this.__originId, OverrideType.SymbolID);
+        if (!varsContainer) return refId;
+        const _vars = findOverrideAndVar(this.__origin, OverrideType.SymbolID, varsContainer);
         if (!_vars) return refId;
+
         // watch vars
-        (this as any as VarWatcher)._watch_vars("symbolRef", _vars);
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === VariableType.SymbolRef) {
             return _var.value;
@@ -596,49 +570,40 @@ class SymbolRefShapeHdl extends ShapeHdl {
         let p: Shape | undefined = this.__parent;
         while (p) {
             if (p instanceof SymbolRefShape) {
-                if (p.__subdata) varsContainer.push(p.__subdata);
-                if (p.__data) varsContainer.push(p.__data);
+                const symData = p.symData;
+                if (symData) varsContainer.push(symData);
+                if (symData?.parent instanceof SymbolUnionShape) varsContainer.push(symData.parent);
                 if (!((p as any).__symbolproxy)) {
                     varsContainer.push(p);
                     break;
                 }
                 varsContainer.push(p.__origin)
             }
+            else if (p instanceof SymbolShape) {
+                // 不可能是virtual
+                if (p.isVirtualShape) throw new Error();
+                varsContainer.push(p);
+                if (p.parent instanceof SymbolShape) {
+                    varsContainer.push(p.parent);
+                }
+                break;
+            }
             p = p.parent;
         }
         return varsContainer.reverse();
     }
 
-    private __data: SymbolShape | undefined;
-    private __subdata: SymbolShape | undefined;
+    private symData: SymbolShape | undefined;
     private __startLoad: string = "";
 
     updater(notify: boolean = true): boolean { // todo 有父级以上的override，也要更新
         const symMgr = (this.__origin as SymbolRefShape).getSymbolMgr();
         if (!symMgr) return false;
-        const refId = this.getRefId();
+        const varsContainer = this.getVarsContainer();
+        const refId = this.getRefId(varsContainer);
         if (this.__startLoad === refId) {
-            if (this.__data) { // 更新subdata
-                if (this.__data.isUnionSymbolShape) {
-                    // varscontainer
-                    const varsContainer = this.getVarsContainer();
-                    const syms = this.__data.getTagedSym(this.__origin, varsContainer); // 不对
-                    const subdata = syms[0] || this.__data.childs[0];
-                    if (this.__subdata !== subdata) {
-                        if (this.__subdata) this.__subdata.unwatch(this.updater);
-                        this.__subdata = subdata;
-                        if (this.__subdata) this.__subdata.watch(this.updater);
-                        this.__childsIsDirty = true;
-                        if (notify) this.notify("childs");
-                        return true;
-                    }
-                } else if (!this.__data.isUnionSymbolShape && this.__subdata) {
-                    this.__subdata.unwatch(this.updater);
-                    this.__subdata = undefined;
-                    this.__childsIsDirty = true;
-                    if (notify) this.notify("childs");
-                    return true;
-                }
+            if (this.symData) { // 更新subdata
+
                 // 也要更新下
                 this.__childsIsDirty = true;
                 if (notify) this.notify("childs");
@@ -649,19 +614,12 @@ class SymbolRefShapeHdl extends ShapeHdl {
 
         this.__startLoad = refId;
         symMgr.get(refId).then((val) => {
-            if (this.__data) this.__data.unwatch(this.updater);
-            this.__data = val;
-            if (this.__data) this.__data.watch(this.updater);
-            // 处理status
-            if (val && val.isUnionSymbolShape) {
-                const varsContainer = this.getVarsContainer();
-                const syms = val.getTagedSym(this.__origin, varsContainer);
-                if (this.__subdata) this.__subdata.unwatch(this.updater);
-                this.__subdata = syms[0] || val.childs[0];
-                if (this.__subdata) this.__subdata.watch(this.updater);
-            } else if (this.__subdata) {
-                this.__subdata.unwatch(this.updater);
-                this.__subdata = undefined;
+            if (this.symData) this.symData.unwatch(this.updater);
+            this.symData = val;
+            if (this.symData) this.symData.watch(this.updater);
+            if (this.__childs) {
+                this.__childs.forEach((c: any) => c.remove)
+                this.__childs = undefined;
             }
             this.__childsIsDirty = true;
             // if (notify) this.notify();
@@ -677,18 +635,18 @@ class SymbolRefShapeHdl extends ShapeHdl {
         const propStr = propertyKey.toString();
         if (propStr === 'virtualChilds' || propStr === 'naviChilds') {
             if (!this.__childs) {
-                const childs: Shape[] = (this.__subdata || this.__data)?.childs || [];
+                const childs: Shape[] = this.symData?.childs || [];
                 if (!childs || childs.length === 0) return;
                 const prefix = this.__id + '/';
                 this.__childs = childs.map((origin) => proxyShape(this.__root, origin, receiver as Shape, prefix + origin.id));
-                layoutChilds(this.__childs, this.__origin.frame, childs[0].parent!.frame);
+                layoutChilds(this.__childs, this.__frame, childs[0].parent!.frame);
                 this.saveFrame();
                 this.__childsIsDirty = false;
                 return this.__childs
             }
             if (this.__childsIsDirty) {
                 this.__childsIsDirty = false;
-                const childs: Shape[] = (this.__subdata || this.__data)?.childs || [];
+                const childs: Shape[] = this.symData?.childs || [];
                 const _childs = this.__childs;
                 if (_childs.length > childs.length) {
                     // 回收多余的
@@ -707,15 +665,14 @@ class SymbolRefShapeHdl extends ShapeHdl {
                     if (c) (c as any).remove;
                     _childs[i] = proxyShape(this.__root, origin, receiver as Shape, prefix + origin.id);
                 }
+                layoutChilds(this.__childs, this.__frame, childs[0].parent!.frame);
+                this.saveFrame();
             }
             return this.__childs;
         }
 
-        if (propStr === "__data") { // todo hack: 用于findVar
-            return this.__data;
-        }
-        if (propStr === "__subdata") { // todo hack
-            return this.__subdata;
+        if (propStr === "symData") { // todo hack
+            return this.symData;
         }
 
         if (propStr === "relayout") {
@@ -726,6 +683,10 @@ class SymbolRefShapeHdl extends ShapeHdl {
         }
         if (propStr === "varsContainer") {
             return this.getVarsContainer();
+        }
+        if (propStr === "refId") {
+            const varsContainer = this.getVarsContainer();
+            return this.getRefId(varsContainer);
         }
         return super.get(target, propertyKey, receiver);
     }
@@ -751,8 +712,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
             this.__childs.forEach((c: any) => c.remove)
             this.__childs = undefined;
         }
-        this.__data?.unwatch(this.updater);
-        this.__subdata?.unwatch(this.updater);
+        this.symData?.unwatch(this.updater);
     }
 
     private __relayouting: any;
@@ -760,10 +720,10 @@ class SymbolRefShapeHdl extends ShapeHdl {
     relayout() {
         if (this.__childs && !this.__relayouting) {
             this.__relayouting = setTimeout(() => {
-                const childs = (this.__subdata || this.__data)?.childs || [];
+                const childs = (this.symData)?.childs || [];
                 if (this.__childs && childs && childs.length > 0) {
                     this.__childs.forEach((c) => c.resetLayout);
-                    layoutChilds(this.__childs, this.__origin.frame, childs[0].parent!.frame);
+                    layoutChilds(this.__childs, this.__frame, childs[0].parent!.frame);
                     this.saveFrame();
 
                     this.__childs.forEach((c) => c.layoutChilds);
@@ -774,13 +734,6 @@ class SymbolRefShapeHdl extends ShapeHdl {
             }, 0);
         }
     }
-
-    // resetLayout(): void { // 需要优化
-    //     super.resetLayout();
-    //     if (this.__childs) {
-    //         this.__childs.forEach((c) => c.resetLayout);
-    //     }
-    // }
 
     layoutChilds() {
         if (this.__saveHeight !== this.__frame.height || this.__saveWidth !== this.__frame.width) {
@@ -838,8 +791,6 @@ class TextShapeHdl extends ShapeHdl {
 
         const val = _getOnVar(
             receiver as Shape,
-            this,
-            propertyKey,
             OverrideType.Text,
             VariableType.Text);
         if (val) return val.value;

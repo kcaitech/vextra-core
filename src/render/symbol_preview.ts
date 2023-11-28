@@ -1,4 +1,4 @@
-import { SymbolShape, ShapeType } from "../data/classes";
+import { SymbolShape, ShapeType, SymbolUnionShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
 import { isVisible } from "./basic";
@@ -10,7 +10,7 @@ function renderSym(h: Function,
 
     const p = sym.parent;
     const varsContainer = [];
-    if (p && p instanceof SymbolShape && p.isUnionSymbolShape) {
+    if (p && p instanceof SymbolUnionShape) {
         varsContainer.push(p);
     }
     varsContainer.push(sym);

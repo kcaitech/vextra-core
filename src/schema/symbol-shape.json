@@ -2,9 +2,6 @@
     "description": "symbol shape",
     "type": "object",
     "properties": {
-        "isUnionSymbolShape": {
-            "type": "boolean"
-        },
         "overrides": {
             "type": "map",
             "key": {
@@ -23,7 +20,7 @@
                 "$ref": "./variable.json"
             }
         },
-        "vartag": {
+        "symtags": {
             "type": "map",
             "key": {
                 "type": "string"
