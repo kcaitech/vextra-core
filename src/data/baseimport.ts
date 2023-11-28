@@ -505,16 +505,39 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
 }
 /* curve point */
 export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext): impl.CurvePoint {
+    // inject code
+    const _source = source as any;
+    if (_source.cornerRadius) _source.radius = _source.cornerRadius;
+    if (_source.hasCurveFrom) {
+        _source.hasFrom = true;
+        _source.fromX = _source.curveFrom.x;
+        _source.fromY = _source.curveFrom.y;
+    }
+    if (_source.hasCurveTo) {
+        _source.hasTo = true;
+        _source.toX = _source.curveTo.x;
+        _source.toY = _source.curveTo.y;
+    }
+    if (_source.point) {
+        _source.x = _source.point.x;
+        _source.y = _source.point.y;
+    }
+    if (_source.curveMode) {
+        _source.mode = _source.curveMode;
+    }
     const ret: impl.CurvePoint = new impl.CurvePoint (
         source.id,
-        source.cornerRadius,
-        importPoint2D(source.curveFrom, ctx),
-        importPoint2D(source.curveTo, ctx),
-        source.hasCurveFrom,
-        source.hasCurveTo,
-        importCurveMode(source.curveMode, ctx),
-        importPoint2D(source.point, ctx)
+        source.x,
+        source.y,
+        importCurveMode(source.mode, ctx)
     )
+    if (source.radius !== undefined) ret.radius = source.radius
+    if (source.fromX !== undefined) ret.fromX = source.fromX
+    if (source.fromY !== undefined) ret.fromY = source.fromY
+    if (source.toX !== undefined) ret.toX = source.toX
+    if (source.toY !== undefined) ret.toY = source.toY
+    if (source.hasFrom !== undefined) ret.hasFrom = source.hasFrom
+    if (source.hasTo !== undefined) ret.hasTo = source.hasTo
     return ret
 }
 /* curve mode */
@@ -1285,44 +1308,24 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         const id4 = "e857f541-4e7f-491b-96e6-2ca38f1d4c09"
         const p1: types.CurvePoint = {
             id: id1,
-            cornerRadius: 0,
-            curveFrom: { x: 0, y: 0 },
-            curveTo: { x: 0, y: 0 },
-            hasCurveFrom: false,
-            hasCurveTo: false,
-            curveMode: types.CurveMode.Straight,
-            point: { x: 0, y: 0 }
+            mode: types.CurveMode.Straight,
+            x: 0, y: 0
         }; // lt
         const p2: types.CurvePoint =
         {
             id: id2,
-            cornerRadius: 0,
-            curveFrom: { x: 0, y: 0 },
-            curveTo: { x: 0, y: 0 },
-            hasCurveFrom: false,
-            hasCurveTo: false,
-            curveMode: types.CurveMode.Straight,
-            point: { x: 1, y: 0 }
+            mode: types.CurveMode.Straight,
+            x: 1, y: 0
         }; // rt
         const p3: types.CurvePoint = {
             id: id3,
-            cornerRadius: 0,
-            curveFrom: { x: 0, y: 0 },
-            curveTo: { x: 0, y: 0 },
-            hasCurveFrom: false,
-            hasCurveTo: false,
-            curveMode: types.CurveMode.Straight,
-            point: { x: 1, y: 1 }
+            mode: types.CurveMode.Straight,
+            x: 1, y: 1
         }; // rb
         const p4: types.CurvePoint = {
             id: id4,
-            cornerRadius: 0,
-            curveFrom: { x: 0, y: 0 },
-            curveTo: { x: 0, y: 0 },
-            hasCurveFrom: false,
-            hasCurveTo: false,
-            curveMode: types.CurveMode.Straight,
-            point: { x: 0, y: 1 }
+            mode: types.CurveMode.Straight,
+            x: 0, y: 1
         }; // lb
         source.points.push(p1, p2, p3, p4);
     }
@@ -1598,7 +1601,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
     return ret
 }
-/* symbol group shape */
+/* symbol union shape */
 export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IImportContext): impl.SymbolUnionShape {
     const ret: impl.SymbolUnionShape = new impl.SymbolUnionShape (
         source.id,
