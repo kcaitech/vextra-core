@@ -10,10 +10,10 @@ import {
     Variable,
     VariableType
 } from "../data/shape";
-import {ShapeEditor} from "./shape";
+import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import {BoolOp, BorderPosition, ShadowPosition, ShapeType} from "../data/typesdefine";
-import {Page} from "../data/page";
+import { BoolOp, BorderPosition, ShadowPosition, ShapeType } from "../data/typesdefine";
+import { Page } from "../data/page";
 import {
     initFrame,
     newArrowShape,
@@ -27,11 +27,11 @@ import {
     newSymbolRefShape,
     newSymbolShape
 } from "./creator";
-import {Document} from "../data/document";
-import {expand, translate, translateTo} from "./frame";
-import {uuid} from "../basic/uuid";
-import {CoopRepository} from "./command/cooprepo";
-import {Api} from "./command/recordapi";
+import { Document } from "../data/document";
+import { expand, translate, translateTo } from "./frame";
+import { uuid } from "../basic/uuid";
+import { CoopRepository } from "./command/cooprepo";
+import { Api } from "./command/recordapi";
 import {
     Artboard,
     Border,
@@ -45,11 +45,11 @@ import {
     TableShape,
     Text
 } from "../data/classes";
-import {TextShapeEditor} from "./textshape";
-import {get_frame, modify_frame_after_insert, set_childs_id, transform_data} from "../io/cilpboard";
-import {deleteEmptyGroupShape, expandBounds, group, ungroup} from "./group";
-import {render2path} from "../render";
-import {Matrix} from "../basic/matrix";
+import { TextShapeEditor } from "./textshape";
+import { get_frame, modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
+import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
+import { render2path } from "../render";
+import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
@@ -58,11 +58,11 @@ import {
     importSymbolShape,
     importVariable
 } from "../data/baseimport";
-import {gPal} from "../basic/pal";
-import {findUsableBorderStyle, findUsableFillStyle} from "../render/boolgroup";
-import {BasicArray} from "../data/basic";
-import {TableEditor} from "./table";
-import {exportArtboard, exportShapeFrame, exportStyle, exportSymbolShape, exportVariable} from "../data/baseexport";
+import { gPal } from "../basic/pal";
+import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
+import { BasicArray } from "../data/basic";
+import { TableEditor } from "./table";
+import { exportArtboard, exportShapeFrame, exportStyle, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
     adjust_selection_before_group,
     after_remove,
@@ -75,7 +75,7 @@ import {
     modify_index,
     trans_after_make_symbol
 } from "./utils/other";
-import {v4} from "uuid";
+import { v4 } from "uuid";
 import {
     is_exist_invalid_shape, is_exist_invalid_shape2, is_part_of_symbol,
     is_part_of_symbolref,
@@ -83,8 +83,8 @@ import {
     shape4border,
     shape4fill
 } from "./utils/symbol";
-import {is_circular_ref2} from "./utils/ref_check";
-import {Shadow} from "../data/baseclasses";
+import { is_circular_ref2 } from "./utils/ref_check";
+import { Shadow } from "../data/baseclasses";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -630,11 +630,11 @@ export class PageEditor {
                 return_shapes.push(shape);
                 continue;
             }
-            const {x, y, width, height} = shape.frame;
+            const { x, y, width, height } = shape.frame;
             const tmpFrame = new ShapeFrame(x, y, width, height);
-            const sym = shape.getSymbolMgr()?.getSync(shape.refId);
+            const sym = shape.symData;
             if (!sym) continue;
-            let style: any = shape.getRootData()?.style;
+            let style: any = sym.style;
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
                 document: Document = _this.__document
@@ -664,14 +664,14 @@ export class PageEditor {
             }
 
             const newShape = importArtboard(symbolData, ctx);
-            actions.push({parent, self: newShape, insertIndex});
+            actions.push({ parent, self: newShape, insertIndex });
         }
         if (!actions.length) return shapes;
         const api = this.__repo.start("extractSymbol", {});
         try {
             const results: Shape[] = [];
             for (let i = 0, len = actions.length; i < len; i++) {
-                const {parent, self, insertIndex} = actions[i];
+                const { parent, self, insertIndex } = actions[i];
                 const ret = api.shapeInsert(this.__page, parent as GroupShape, self, insertIndex);
                 api.shapeDelete(this.__page, parent as GroupShape, insertIndex + 1);
                 results.push(ret);
@@ -723,10 +723,10 @@ export class PageEditor {
                 const m = p.matrix2Root();
                 const lt = m.computeCoord(box.x, box.y);
                 const rb = m.computeCoord(box.x + box.width, box.y + box.height);
-                return {x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y}
+                return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
             })
             const firstXY = boundsArr[0]
-            const bounds = {left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y};
+            const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
 
             boundsArr.reduce((pre, cur) => {
                 expandBounds(pre, cur.x, cur.y);
@@ -1004,7 +1004,7 @@ export class PageEditor {
             modify_frame_after_insert(api, this.__page, result);
             const frame = get_frame(result);
             this.__repo.commit();
-            return {shapes: result, frame};
+            return { shapes: result, frame };
         } catch (e) {
             console.log(e);
             this.__repo.rollback();
@@ -1023,7 +1023,7 @@ export class PageEditor {
             const result: Shape[] = [];
             for (let i = 0, len = actions.length; i < len; i++) {
                 const shape = shapes[i];
-                const {parent, index} = actions[i];
+                const { parent, index } = actions[i];
                 shape.id = uuid();
                 api.shapeInsert(this.__page, parent, shape, index);
                 result.push(parent.childs[index]);
@@ -1064,7 +1064,7 @@ export class PageEditor {
      * @returns
      */
     create2(page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame, ex_params: any) {
-        const {is_arrow, rotation, target_xy} = ex_params;
+        const { is_arrow, rotation, target_xy } = ex_params;
         let new_s: Shape | undefined;
         switch (type) {
             case ShapeType.Artboard:
@@ -1204,7 +1204,7 @@ export class PageEditor {
             const len = replacement.length;
             // 寻找replacement的左上角(lt_point)，该点将和src中每个图形的左上角重合
             const any_r_f = replacement[0].frame;
-            const lt_point = {x: any_r_f.x, y: any_r_f.y};
+            const lt_point = { x: any_r_f.x, y: any_r_f.y };
             for (let i = 1; i < len; i++) {
                 const frame = replacement[i].frame;
                 if (frame.x < lt_point.x) lt_point.x = frame.x;
@@ -1216,7 +1216,7 @@ export class PageEditor {
             for (let i = 0; i < len; i++) {
                 const r = replacement[i];
                 const rf = r.frame;
-                const dt = {x: rf.x - lt_point.x, y: rf.y - lt_point.y};
+                const dt = { x: rf.x - lt_point.x, y: rf.y - lt_point.y };
                 delta_xys.push(dt);
             }
             // 收集被替换上去的元素
@@ -1232,7 +1232,7 @@ export class PageEditor {
 
                 // 记录被替换掉的图形原先所在的位置
                 const fr = s.frame;
-                const save_frame = {x: fr.x, y: fr.y};
+                const save_frame = { x: fr.x, y: fr.y };
                 // 先删除将被替换的图形
                 const del_res = this.delete_inner(this.__page, s, api);
                 if (!del_res) throw new Error('delete failed');
@@ -1339,7 +1339,7 @@ export class PageEditor {
         const api = this.__repo.start('setShapesConstrainerProportions', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, value} = actions[i];
+                const { target, value } = actions[i];
                 api.shapeModifyConstrainerProportions(this.__page, target, value);
             }
             this.__repo.commit();
@@ -1352,7 +1352,7 @@ export class PageEditor {
         const api = this.__repo.start('setShapesFrame', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, widthExtend, heightExtend} = actions[i];
+                const { target, widthExtend, heightExtend } = actions[i];
                 expand(api, this.__page, target, widthExtend, heightExtend);
             }
             this.__repo.commit();
@@ -1389,7 +1389,7 @@ export class PageEditor {
         const api = this.__repo.start('shapesFlip', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, direction} = actions[i];
+                const { target, direction } = actions[i];
                 if (direction === 'horizontal') {
                     api.shapeModifyHFlip(this.__page, target, !target.isFlippedHorizontal);
                 } else if (direction === 'vertical') {
@@ -1406,7 +1406,7 @@ export class PageEditor {
         const api = this.__repo.start('setShapesFillColor', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, index, value} = actions[i];
+                const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 api.setFillColor(this.__page, s, index, value);
             }
@@ -1420,7 +1420,7 @@ export class PageEditor {
         const api = this.__repo.start('setShapesFillEnabled', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, index, value} = actions[i];
+                const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 api.setFillEnable(this.__page, s, index, value);
             }
@@ -1434,7 +1434,7 @@ export class PageEditor {
         const api = this.__repo.start('shapesAddFill', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, value} = actions[i];
+                const { target, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 const l = s instanceof Shape ? s.style.fills.length : s.value.length;
                 api.addFillAt(this.__page, s, value, l);
@@ -1449,7 +1449,7 @@ export class PageEditor {
         const api = this.__repo.start('shapesDeleteFill', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, index} = actions[i];
+                const { target, index } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 api.deleteFillAt(this.__page, s, index);
             }
@@ -1463,7 +1463,7 @@ export class PageEditor {
         const api = this.__repo.start('shapesFillsUnify', {}); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, value} = actions[i];
+                const { target, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 // 先清空再填入
                 api.deleteFills(this.__page, s, 0, target.style.fills.length); // 清空
@@ -1481,7 +1481,7 @@ export class PageEditor {
         const api = this.__repo.start('setShapesBorderColor', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, index, value} = actions[i];
+                const { target, index, value } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.setBorderColor(this.__page, s, index, value);
             }
@@ -1495,7 +1495,7 @@ export class PageEditor {
         const api = this.__repo.start('setShapesBorderEnabled', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, index, value} = actions[i];
+                const { target, index, value } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.setBorderEnable(this.__page, s, index, value);
             }
@@ -1509,7 +1509,7 @@ export class PageEditor {
         const api = this.__repo.start('shapesAddBorder', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, value} = actions[i];
+                const { target, value } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 const l = s instanceof Shape ? s.style.borders.length : s.value.length;
                 api.addBorderAt(this.__page, s, value, l);
@@ -1525,7 +1525,7 @@ export class PageEditor {
         const api = this.__repo.start('shapesDeleteBorder', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, index} = actions[i];
+                const { target, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.deleteBorderAt(this.__page, s, index);
             }
@@ -1539,7 +1539,7 @@ export class PageEditor {
         const api = this.__repo.start('shapesBordersUnify', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, value} = actions[i];
+                const { target, value } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.deleteBorders(this.__page, s, 0, target.style.borders.length);
                 api.addBorders(this.__page, s, value);
@@ -1554,7 +1554,7 @@ export class PageEditor {
         const api = this.__repo.start('setShapesBorderPosition', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, value, index} = actions[i];
+                const { target, value, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.setBorderPosition(this.__page, s, index, value);
             }
@@ -1568,7 +1568,7 @@ export class PageEditor {
         const api = this.__repo.start('setShapesBorderThickness', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, value, index} = actions[i];
+                const { target, value, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.setBorderThickness(this.__page, s, index, value);
             }
@@ -1582,7 +1582,7 @@ export class PageEditor {
         const api = this.__repo.start('setShapesBorderStyle', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const {target, value, index} = actions[i];
+                const { target, value, index } = actions[i];
                 const s = shape4border(api, this.__page, target);
                 api.setBorderStyle(this.__page, s, index, value);
             }
@@ -1597,7 +1597,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setShapesShadowOffsetY', {});
             for (let i = 0; i < actions.length; i++) {
-                const {target, value, index} = actions[i];
+                const { target, value, index } = actions[i];
                 api.setShadowOffsetY(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1610,7 +1610,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setShapesShadowOffsetX', {});
             for (let i = 0; i < actions.length; i++) {
-                const {target, value, index} = actions[i];
+                const { target, value, index } = actions[i];
                 api.setShadowOffsetX(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1623,7 +1623,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setShapesShadowSpread', {});
             for (let i = 0; i < actions.length; i++) {
-                const {target, value, index} = actions[i];
+                const { target, value, index } = actions[i];
                 api.setShadowSpread(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1636,7 +1636,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setShapesShadowBlurRadius', {});
             for (let i = 0; i < actions.length; i++) {
-                const {target, value, index} = actions[i];
+                const { target, value, index } = actions[i];
                 api.setShadowBlur(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1649,7 +1649,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setShapesShadowColor', {});
             for (let i = 0; i < actions.length; i++) {
-                const {target, index, value} = actions[i];
+                const { target, index, value } = actions[i];
                 api.setShadowColor(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1662,7 +1662,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setShapesShadowPosition', {});
             for (let i = 0; i < actions.length; i++) {
-                const {target, value, index} = actions[i];
+                const { target, value, index } = actions[i];
                 api.setShadowPosition(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1675,7 +1675,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setShapesShadowEnabled', {});
             for (let i = 0; i < actions.length; i++) {
-                const {target, index, value} = actions[i];
+                const { target, index, value } = actions[i];
                 api.setShadowEnable(this.__page, target, index, value);
             }
             this.__repo.commit();
@@ -1688,7 +1688,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('shapesDeleteShasow', {});
             for (let i = 0; i < actions.length; i++) {
-                const {target, index} = actions[i];
+                const { target, index } = actions[i];
                 api.deleteShadowAt(this.__page, target, index);
             }
             this.__repo.commit();
@@ -1701,7 +1701,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('shapesAddShadow', {});
             for (let i = 0; i < actions.length; i++) {
-                const {target, value} = actions[i];
+                const { target, value } = actions[i];
                 api.addShadow(this.__page, target, value, target.style.borders.length);
             }
             this.__repo.commit();
@@ -1714,7 +1714,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('shapesShadowsUnify', {});
             for (let i = 0; i < actions.length; i++) {
-                const {target, value} = actions[i];
+                const { target, value } = actions[i];
                 api.deleteShadows(this.__page, target, 0, target.style.shadows.length);
                 api.addShadows(this.__page, target, value);
             }
@@ -1831,7 +1831,7 @@ export class PageEditor {
                     }
                     const children = item.naviChilds || item.childs;
                     if (children?.length) {
-                        const tree = item instanceof SymbolRefShape ? item.getRootData() : item;
+                        const tree = item instanceof SymbolRefShape ? item.symData : item;
                         if (!tree) continue;
                         if (is_circular_ref2(tree, host.id)) continue;
                     }
@@ -1856,7 +1856,7 @@ export class PageEditor {
                     }
                     const children = item.naviChilds || item.childs;
                     if (children?.length) {
-                        const tree = item instanceof SymbolRefShape ? item.getRootData() : item;
+                        const tree = item instanceof SymbolRefShape ? item.symData : item;
                         if (!tree) continue;
                         if (is_circular_ref2(tree, host_parent.id)) continue;
                     }
@@ -1889,7 +1889,7 @@ export class PageEditor {
                 const s = shapes[i];
                 if (s.type !== ShapeType.Line) continue;
                 const o1 = s.matrix2Root().computeCoord2(0, 0);
-                const f = s.frame, r = getHorizontalRadians({x: 0, y: 0}, {x: f.width, y: f.height});
+                const f = s.frame, r = getHorizontalRadians({ x: 0, y: 0 }, { x: f.width, y: f.height });
                 api.shapeModifyWH(this.__page, s, v * Math.cos(r), v * Math.sin(r));
                 const o2 = s.matrix2Root().computeCoord2(0, 0);
                 translate(api, this.__page, s, o1.x - o2.x, o1.y - o2.y);
