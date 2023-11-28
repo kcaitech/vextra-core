@@ -7,7 +7,7 @@ export {
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
 import { CurvePoint, OverrideType, ShapeFrame, TextBehaviour, VariableType } from "./baseclasses"
-import { GroupShape, Shape, SymbolUnionShape, SymbolShape, TextShape, VarWatcher, Variable, makeVarWatcher } from "./shape";
+import { GroupShape, Shape, SymbolUnionShape, SymbolShape, TextShape, Variable } from "./shape";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 import { SymbolRefShape } from "./symbolref";
 import { __objidkey } from "../basic/objectid";
@@ -33,28 +33,18 @@ function checkNotProxyed(val: Object) {
 }
 
 class HdlBase { // protect data
-    // __cache: Map<PropertyKey, any> = new Map();
     __parent: any;
 
     constructor(parent: any) {
-        makeVarWatcher(this);
         this.__parent = parent;
     }
 
     public notify(...args: any[]) {
     }
 
-    // map_get(key: any): any {
-    //     // BasicMap, proxy后再proxy
-    //     const get = Map.prototype.get.bind(this); // this应该被绑定到target!
-    //     const val = get(key);
-    //     if (typeof val === 'object') {
-    //         if (val instanceof Shape) throw new Error("");
-    //         checkNotProxyed(val);
-    //         return new Proxy(val, new HdlBase());
-    //     }
-    //     return val;
-    // }
+    onRemoved(target: Object) {
+
+    }
 
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
         // this.__cache.set(propertyKey, value);
@@ -149,39 +139,29 @@ class HdlBase { // protect data
         }
         return Reflect.has(target, propertyKey);
     }
-
-    onRemoved(target: object) {
-        (this as any as VarWatcher)._var_on_removed();
-    }
 }
 
 function _getOnVar(
     shape: Shape, // proxyed
-    hdl: HdlBase,
-    propertyKey: PropertyKey,
     overType: OverrideType,
     varType: VariableType): Variable | undefined {
 
     if (!(shape as any).__symbolproxy) throw new Error("");
     const varbinds = shape.varbinds;
     const varId = varbinds?.get(overType);
-    if (!varId) {
-        // find override
-        // id: xxx/xxx/xxx
-        const id = shape.id;
-        const _vars = shape.findOverride(id.substring(id.lastIndexOf('/') + 1), overType);
-        if (_vars) {
-            (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                return _var;
-            }
-        }
-    } else {
+    if (varId) {
         const _vars: Variable[] = [];
         shape.findVar(varId, _vars);
-        // watch vars
-        (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === varType) {
+            return _var;
+        }
+    }
+    // find override
+    // id: xxx/xxx/xxx
+    const id = shape.id;
+    const _vars = shape.findOverride(id.substring(id.lastIndexOf('/') + 1), overType);
+    if (_vars) {
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === varType) {
             return _var;
@@ -204,7 +184,6 @@ class StyleHdl extends HdlBase {
         if (propStr === 'fills') {
             const val = _getOnVar(
                 this.__parent,
-                this, propertyKey,
                 OverrideType.Fills,
                 VariableType.Fills);
             if (val) return val.value;
@@ -213,8 +192,6 @@ class StyleHdl extends HdlBase {
         if (propStr === 'borders') {
             const val = _getOnVar(
                 this.__parent,
-                this,
-                propertyKey,
                 OverrideType.Borders,
                 VariableType.Borders);
             if (val) return val.value;
@@ -441,8 +418,6 @@ class ShapeHdl extends HdlBase {
         if (propStr === "isVisible") {
             const val = _getOnVar(
                 receiver as Shape,
-                this,
-                propertyKey,
                 OverrideType.Visible,
                 VariableType.Visible);
             if (val) return val.value;
@@ -451,8 +426,6 @@ class ShapeHdl extends HdlBase {
         if (propStr === "isLocked") {
             const val = _getOnVar(
                 receiver as Shape,
-                this,
-                propertyKey,
                 OverrideType.Lock,
                 VariableType.Lock);
             if (val) return val.value;
@@ -585,7 +558,6 @@ class SymbolRefShapeHdl extends ShapeHdl {
         if (!_vars) return refId;
 
         // watch vars
-        (this as any as VarWatcher)._watch_vars("symbolRef", _vars);
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === VariableType.SymbolRef) {
             return _var.value;
@@ -606,6 +578,15 @@ class SymbolRefShapeHdl extends ShapeHdl {
                     break;
                 }
                 varsContainer.push(p.__origin)
+            }
+            else if (p instanceof SymbolShape) {
+                // 不可能是virtual
+                if (p.isVirtualShape) throw new Error();
+                varsContainer.push(p);
+                if (p.parent instanceof SymbolShape) {
+                    varsContainer.push(p.parent);
+                }
+                break;
             }
             p = p.parent;
         }
@@ -636,7 +617,10 @@ class SymbolRefShapeHdl extends ShapeHdl {
             if (this.symData) this.symData.unwatch(this.updater);
             this.symData = val;
             if (this.symData) this.symData.watch(this.updater);
-            this.__childs = undefined;
+            if (this.__childs) {
+                this.__childs.forEach((c: any) => c.remove)
+                this.__childs = undefined;
+            }
             this.__childsIsDirty = true;
             // if (notify) this.notify();
             this.notify("childs");
@@ -751,13 +735,6 @@ class SymbolRefShapeHdl extends ShapeHdl {
         }
     }
 
-    // resetLayout(): void { // 需要优化
-    //     super.resetLayout();
-    //     if (this.__childs) {
-    //         this.__childs.forEach((c) => c.resetLayout);
-    //     }
-    // }
-
     layoutChilds() {
         if (this.__saveHeight !== this.__frame.height || this.__saveWidth !== this.__frame.width) {
             this.relayout();
@@ -814,8 +791,6 @@ class TextShapeHdl extends ShapeHdl {
 
         const val = _getOnVar(
             receiver as Shape,
-            this,
-            propertyKey,
             OverrideType.Text,
             VariableType.Text);
         if (val) return val.value;
