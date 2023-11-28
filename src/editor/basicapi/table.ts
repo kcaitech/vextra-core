@@ -2,18 +2,18 @@ import { Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
 import { Color, Page, StrikethroughType, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
 
-export function tableSetCellContentType(table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
-    const cell = table.getCellAt(rowIdx, colIdx, true);
-    cell!.setContentType(contentType);
+export function tableSetCellContentType(cell: TableCell, contentType: TableCellType | undefined) {
+    // const cell = table.getCellAt(rowIdx, colIdx, true);
+    cell.setContentType(contentType);
 }
 
-export function tableSetCellContentText(table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
-    const cell = table.getCellAt(rowIdx, colIdx, true);
+export function tableSetCellContentText(cell: TableCell, text: Text | undefined) {
+    // const cell = table.getCellAt(rowIdx, colIdx, true);
     cell!.setContentText(text);
 }
 
-export function tableSetCellContentImage(table: TableShape, rowIdx: number, colIdx: number, ref: string | undefined) {
-    const cell = table.getCellAt(rowIdx, colIdx, true);
+export function tableSetCellContentImage(cell: TableCell, ref: string | undefined) {
+    // const cell = table.getCellAt(rowIdx, colIdx, true);
     cell!.setContentImage(ref);
 }
 
@@ -55,8 +55,8 @@ export function tableRemoveCol(page: Page, table: TableShape, idx: number) {
     return ret;
 }
 
-export function tableModifyCellSpan(table: TableShape, rowIdx: number, colIdx: number, rowSpan: number | undefined, colSpan: number | undefined) {
-    const cell = table.getCellAt(rowIdx, colIdx, true);
+export function tableModifyCellSpan(cell: TableCell, rowSpan: number | undefined, colSpan: number | undefined) {
+    // const cell = table.getCellAt(rowIdx, colIdx, true);
     cell!.setCellSpan(rowSpan, colSpan);
 }
 

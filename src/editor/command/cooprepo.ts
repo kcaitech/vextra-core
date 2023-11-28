@@ -177,7 +177,6 @@ export class CoopRepository {
         this.__index++;
 
         this.__allcmds.push(cmd);
-
         this.__commitListener.forEach((l) => {
             l(cmd, false);
         })

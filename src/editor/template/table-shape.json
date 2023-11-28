@@ -14,10 +14,12 @@
         "typeId": "style",
         "borders": [
             {
+                "typeId": "border",
                 "id": "4f0e6459-9d3c-4e71-9f60-3f11b2db7d0e",
                 "isEnabled": true,
                 "fillType": "solid-color",
                 "color": {
+                    "typeId": "color",
                     "alpha": 0.5,
                     "red": 0,
                     "green": 0,
@@ -34,7 +36,7 @@
         "fills": [],
         "shadows": []
     },
-    "childs": [],
+    "datas": [],
     "rowHeights": [],
     "colWidths": []
 }

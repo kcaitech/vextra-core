@@ -14,14 +14,27 @@ export const SHAPE_ATTR_ID = {
     rotate: "rotate",
     constrainerProportions: "constrainerProportions",
     name: "name",
+
+    // addvar: "addvar",
+    // removevar: "removevar",
+    modifyvar1: "modifyvar",
+    modifyvarValue: "modifyvarValue",
+    modifyvarName: "modifyvarName",
+
+    // addoverride: "addoverride",
+    modifyoverride1: "modifyoverride",
+
+
     visible: "visible",
     lock: "lock",
     contextSettingsOpacity: "contextSettingsOpacity",
     resizingConstraint: "resizingConstraint",
+    isClosed: "isClosed",
     radius: "radius", // rect radius
     backgroundColor: "backgroundColor",
     boolop: "boolop",
     isboolopshape: "isboolopshape",
+    // issymbolshape: "issymbolshape",
     fixedRadius: "fixedRadius",
     startMarkerType: "startMarkerType",
     endMarkerType: "endMarkerType",
@@ -57,6 +70,14 @@ export const SHAPE_ATTR_ID = {
     cellContentText: "cellContentText",
     cellContentImage: "cellContentImage",
     cellSpan: "cellSpan",
+
+    // symbolref
+    symbolref: "symbolref",
+    // symbol
+    symtags: "symtags",
+    // shape
+    bindvar: "bindvar",
+    overrides: "overrides"
 }
 
 export const FILLS_ID = "fills"

@@ -3,8 +3,8 @@ import { Document } from "../data/document";
 import { PageListItem } from "../data/typesdefine";
 import { newPage } from "./creator";
 import { v4 as uuid } from "uuid";
-import { exportPage } from "../io/baseexport";
-import { importPage } from "../io/baseimport";
+import { exportPage } from "../data/baseexport";
+import { importPage } from "../data/baseimport";
 import { newDocument } from "./creator";
 import { CoopRepository } from "./command/cooprepo";
 import { Repository } from "../data/transact";
@@ -28,6 +28,7 @@ export class DocEditor {
         const api = this.__repo.start('deletepage', {});
         try {
             api.pageDelete(this.__document, index);
+
             this.__repo.commit();
         } catch (error) {
             console.log(error)

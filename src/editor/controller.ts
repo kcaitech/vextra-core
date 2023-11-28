@@ -1,27 +1,27 @@
 import {
-    translateTo,
-    translate,
-    expandTo,
-    adjustLT2,
-    adjustRT2,
-    adjustRB2,
     adjustLB2,
-    erScaleByT,
-    erScaleByR,
+    adjustLT2,
+    adjustRB2,
+    adjustRT2,
+    afterModifyGroupShapeWH,
     erScaleByB,
     erScaleByL,
-    scaleByT,
-    scaleByR,
+    erScaleByR,
+    erScaleByT,
+    expandTo,
+    pathEdit,
+    pathEditSide,
     scaleByB,
     scaleByL,
-    pathEdit,
-    update_frame_by_points,
-    pathEditSide
+    scaleByR,
+    scaleByT,
+    translate,
+    translateTo,
+    update_frame_by_points
 } from "./frame";
-import {Shape, GroupShape, PathShape, CurvePoint, Point2D} from "../data/shape";
-import {getFormatFromBase64} from "../basic/utils";
-import {ContactRoleType, CurveMode, ShapeType} from "../data/typesdefine";
-import {ShapeFrame} from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, Point2D, Shape, ShapeFrame } from "../data/shape";
+import { getFormatFromBase64 } from "../basic/utils";
+import { ContactRoleType, CurveMode, ShapeType } from "../data/typesdefine";
 import {
     newArrowShape,
     newArtboard,
@@ -33,20 +33,22 @@ import {
     newTable,
     newTextShape
 } from "./creator";
-import {Page} from "../data/page";
-import {CoopRepository} from "./command/cooprepo";
-import {v4} from "uuid";
-import {Document} from "../data/document";
-import {Api} from "./command/recordapi";
-import {Matrix} from "../basic/matrix";
-import {Artboard} from "../data/artboard";
-import {Color} from "../data/style";
-import {afterModifyGroupShapeWH} from "./frame";
-import {uuid} from "../basic/uuid";
-import {ContactForm, ContactRole} from "../data/baseclasses";
-import {ContactShape} from "../data/contact";
-import {importCurvePoint} from "../io/baseimport";
-import {exportCurvePoint} from "../io/baseexport";
+import { Page } from "../data/page";
+import { CoopRepository } from "./command/cooprepo";
+import { v4 } from "uuid";
+import { Document } from "../data/document";
+import { Api } from "./command/recordapi";
+import { Matrix } from "../basic/matrix";
+import { Artboard } from "../data/artboard";
+import { Color } from "../data/style";
+import { uuid } from "../basic/uuid";
+import { ContactForm, ContactRole } from "../data/baseclasses";
+import { ContactShape } from "../data/contact";
+import { importCurvePoint } from "../data/baseimport";
+import { exportCurvePoint } from "../data/baseexport";
+import { is_state } from "./utils/other";
+import { after_migrate, unable_to_migrate } from "./utils/migrate";
+import { get_state_name } from "./utils/symbol";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -132,7 +134,7 @@ export interface AsyncPathEditor {
 }
 
 export interface AsyncTransfer {
-    migrate: (targetParent: GroupShape) => void;
+    migrate: (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => void;
     trans: (start: PageXY, end: PageXY) => void;
     stick: (dx: number, dy: number) => void;
     transByWheel: (dx: number, dy: number) => void;
@@ -305,7 +307,7 @@ export class Controller {
             if (!newShape || !savepage) return;
             status = Status.Pending;
             const origin: GroupShape = newShape.parent as GroupShape;
-            const {x, y} = newShape.frame2Root();
+            const { x, y } = newShape.frame2Root();
             api.shapeMove(savepage, origin, origin.indexOfChild(newShape), targetParent, targetParent.childs.length);
             translateTo(api, savepage, newShape, x, y);
             this.__repo.transactCtx.fireNotify();
@@ -317,10 +319,10 @@ export class Controller {
             if (newShape.type === ShapeType.Line) {
                 adjustRB2(api, savepage, newShape, point.x, point.y);
             } else {
-                const {x: sx, y: sy} = anchor;
-                const {x: px, y: py} = point;
-                const x1 = {x: Math.min(sx, px), y: Math.min(sy, py)};
-                const x2 = {x: Math.max(sx, px), y: Math.max(sy, py)};
+                const { x: sx, y: sy } = anchor;
+                const { x: px, y: py } = point;
+                const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
+                const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
                 const height = x2.y - x1.y;
                 const width = x2.x - x1.x;
                 expandTo(api, savepage, newShape, width, height);
@@ -332,10 +334,10 @@ export class Controller {
         const setFrameByWheel = (point: PageXY) => {
             if (!newShape || !savepage) return;
             status = Status.Pending;
-            const {x: sx, y: sy} = anchor;
-            const {x: px, y: py} = point;
-            const x1 = {x: Math.min(sx, px), y: Math.min(sy, py)};
-            const x2 = {x: Math.max(sx, px), y: Math.max(sy, py)};
+            const { x: sx, y: sy } = anchor;
+            const { x: px, y: py } = point;
+            const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
+            const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
             const height = x2.y - x1.y;
             const width = x2.x - x1.x;
             expandTo(api, savepage, newShape, width, height);
@@ -470,7 +472,7 @@ export class Controller {
             }
             return undefined;
         }
-        return {executeRotate, executeScale, executeErScale, executeScaleDirectional, close};
+        return { executeRotate, executeScale, executeErScale, executeScaleDirectional, close };
     }
 
     // 多对象的异步编辑
@@ -523,7 +525,7 @@ export class Controller {
                 api.shapeModifyRotate(page, s, r + cr);
                 const sf_self = s.matrix2Parent().computeCoord2(0, 0);
                 // 比较集体旋转与自转的xy偏差
-                const delta = {x: sf_common.x - sf_self.x, y: sf_common.y - sf_self.y};
+                const delta = { x: sf_common.x - sf_self.x, y: sf_common.y - sf_self.y };
                 api.shapeModifyX(page, s, s.frame.x + delta.x);
                 api.shapeModifyY(page, s, s.frame.y + delta.y);
             }
@@ -534,7 +536,7 @@ export class Controller {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) this.__repo.commit();
             else this.__repo.rollback();
         }
-        return {executeScale, executeRotate, close};
+        return { executeScale, executeRotate, close };
     }
 
     public asyncLineEditor(shape: Shape): AsyncLineAction {
@@ -565,21 +567,32 @@ export class Controller {
             }
             return undefined;
         }
-        return {execute, close}
+        return { execute, close }
     }
 
     // 图形位置移动
     public asyncTransfer(shapes: Shape[], page: Page): AsyncTransfer {
         const api = this.__repo.start("transfer", {});
         let status: Status = Status.Pending;
-        const migrate = (targetParent: GroupShape) => {
+        const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             status = Status.Pending;
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shapes[i];
+            let index = targetParent.childs.length;
+            for (let i = 0, len = sortedShapes.length; i < len; i++) {
+                const shape = sortedShapes[i];
+                const error = unable_to_migrate(targetParent, shape);
+                if (error) {
+                    console.log('migrate error:', error);
+                    continue;
+                }
                 const origin: GroupShape = shape.parent as GroupShape;
-                const {x, y} = shape.frame2Root();
-                api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length)
+                if (is_state(shape)) {
+                    const name = get_state_name(shape as any, dlt);
+                    api.shapeModifyName(page, shape, `${origin.name}/${name}`);
+                }
+                const { x, y } = shape.frame2Root();
+                api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
                 translateTo(api, page, shape, x, y);
+                after_migrate(page, api, origin);
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -619,7 +632,7 @@ export class Controller {
             }
             return undefined;
         }
-        return {migrate, trans, stick, close, transByWheel}
+        return { migrate, trans, stick, close, transByWheel }
     }
 
     public asyncPathEditor(shape: Shape, page: Page): AsyncPathEditor {
@@ -649,7 +662,7 @@ export class Controller {
             }
             return undefined;
         }
-        return {addNode, execute, close}
+        return { addNode, execute, close }
     }
 
     public asyncContactEditor(shape: Shape, page: Page): AsyncContactEditor {
@@ -706,7 +719,7 @@ export class Controller {
         const migrate = (targetParent: GroupShape) => {
             status = Status.Pending;
             const origin: GroupShape = shape.parent as GroupShape;
-            const {x, y} = shape.frame2Root();
+            const { x, y } = shape.frame2Root();
             api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length);
             translateTo(api, page, shape, x, y);
             this.__repo.transactCtx.fireNotify();
@@ -727,7 +740,7 @@ export class Controller {
             }
             return undefined;
         }
-        return {pre, modify_contact_from, modify_contact_to, modify_sides, migrate, close}
+        return { pre, modify_contact_from, modify_contact_to, modify_sides, migrate, close }
     }
 
     public asyncOpacityEditor(shapes: Shape[], page: Page): AsyncOpacityEditor {
@@ -750,7 +763,7 @@ export class Controller {
             }
             return undefined;
         }
-        return {execute, close}
+        return { execute, close }
     }
 }
 
@@ -794,7 +807,7 @@ function adjust_group_rotate_frame(api: Api, page: Page, s: GroupShape, sx: numb
     const width = boundingBox.width * sx;
     const height = boundingBox.height * sy;
     api.shapeModifyWH(page, s, width, height);
-    afterModifyGroupShapeWH(api, page, s, sx, sy);
+    afterModifyGroupShapeWH(api, page, s, sx, sy, boundingBox);
 }
 
 function adjust_pathshape_rotate_frame(api: Api, page: Page, s: PathShape) {
@@ -835,8 +848,8 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
     if (!p) return;
     const m = s.matrix2Root();
     const lt = m.computeCoord2(0, 0);
-    const r_o_lt = {x: lt.x - origin1.x, y: lt.y - origin1.y};
-    const target_xy = {x: origin2.x + sx * r_o_lt.x, y: origin2.y + sy * r_o_lt.y};
+    const r_o_lt = { x: lt.x - origin1.x, y: lt.y - origin1.y };
+    const target_xy = { x: origin2.x + sx * r_o_lt.x, y: origin2.y + sy * r_o_lt.y };
     let np = new Matrix();
     const ex = pMap.get(p.id);
     if (ex) np = ex;
@@ -853,10 +866,12 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
         sy = -sy;
     }
+    const saveW = s.frame.width;
+    const saveH = s.frame.height;
     if (s.isFlippedHorizontal || s.isFlippedVertical) {
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
         const self = s.matrix2Parent().computeCoord2(0, 0);
-        const delta = {x: xy.x - self.x, y: xy.y - self.y};
+        const delta = { x: xy.x - self.x, y: xy.y - self.y };
         api.shapeModifyX(page, s, s.frame.x + delta.x);
         api.shapeModifyY(page, s, s.frame.y + delta.y);
     } else {
@@ -864,5 +879,5 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         api.shapeModifyY(page, s, xy.y);
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
     }
-    if (s instanceof GroupShape && s.type === ShapeType.Group) afterModifyGroupShapeWH(api, page, s, sx, sy);
+    if (s instanceof GroupShape && s.type === ShapeType.Group) afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH));
 }
