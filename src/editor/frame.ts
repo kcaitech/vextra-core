@@ -1063,6 +1063,44 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape) {
         }
     }
 }
+export function update_frame_by_points2(api: Api, page: Page, s: PathShape) {
+    const nf = s.boundingBox2();
+    const w = s.frame.width, h = s.frame.height;
+    const mp = s.matrix2Parent();
+    mp.preScale(w, h);
+    // 摆正 是否需要摆正呢
+    if (s.rotation) {
+        api.shapeModifyRotate(page, s, 0);
+    }
+    if (s.isFlippedHorizontal) {
+        api.shapeModifyHFlip(page, s, false);
+    }
+    if (s.isFlippedVertical) {
+        api.shapeModifyVFlip(page, s, false);
+    }
+    api.shapeModifyX(page, s, nf.x);
+    api.shapeModifyY(page, s, nf.y);
+    api.shapeModifyWH(page, s, nf.width, nf.height);
+    const mp2 = s.matrix2Parent();
+    mp2.preScale(nf.width, nf.height);
+    mp.multiAtLeft(mp2.inverse);
+    const points = s.points;
+    if (!points?.length) {
+        return false;
+    }
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = points[i];
+        if (!p) continue;
+        if (p.hasFrom && p.fromX !== undefined && p.fromY !== undefined) {
+            api.shapeModifyCurvFromPoint(page, s as PathShape, i, mp.computeCoord2(p.fromX, p.fromY));
+        }
+        if (p.hasTo && p.toX !== undefined && p.toY !== undefined) {
+            api.shapeModifyCurvToPoint(page, s as PathShape, i, mp.computeCoord2(p.toX, p.toY));
+        }
+        api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord2(p.x, p.y));
+    }
+    console.log('update frame');
+}
 function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
     const f = shape.frame;
     switch (type) {

@@ -17,7 +17,8 @@ import {
     scaleByT,
     translate,
     translateTo,
-    update_frame_by_points
+    update_frame_by_points,
+    update_frame_by_points2
 } from "./frame";
 import { CurvePoint, GroupShape, PathShape, Point2D, Shape, ShapeFrame } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
@@ -54,6 +55,13 @@ interface PageXY { // 页面坐标系的xy
     x: number
     y: number
 }
+
+interface XY {
+    x: number
+    y: number
+}
+
+type Side = 'from' | 'to'
 
 export interface ControllerOrigin { // 页面坐标系的xy
     x: number
@@ -152,6 +160,12 @@ export interface AsyncContactEditor {
 
 export interface AsyncOpacityEditor {
     execute: (contextSettingOpacity: number) => void;
+    close: () => undefined;
+}
+
+export interface AsyncPathHandle {
+    execute: (side: Side, from: XY, to: XY) => void;
+    abort: () => undefined;
     close: () => undefined;
 }
 
@@ -764,6 +778,35 @@ export class Controller {
             return undefined;
         }
         return { execute, close }
+    }
+
+    public asyncPathHandle(shape: PathShape, page: Page, index: number): AsyncPathHandle {
+        const curvePoint = shape.points[index];
+        const mode = curvePoint.mode;
+        const api = this.__repo.start("asyncPathHandle", {});
+        const execute = (side: Side, from: XY, to: XY) => {
+            if (mode === CurveMode.Mirrored || mode === CurveMode.Asymmetric) {
+                api.shapeModifyCurvFromPoint(page, shape, index, from);
+                api.shapeModifyCurvToPoint(page, shape, index, to);
+            } else if (mode === CurveMode.Disconnected) {
+                if (side === 'from') {
+                    api.shapeModifyCurvFromPoint(page, shape, index, from);
+                } else {
+                    api.shapeModifyCurvToPoint(page, shape, index, to);
+                }
+            }
+            this.__repo.transactCtx.fireNotify();
+        }
+        const abort = () => {
+            this.__repo.rollback();
+            return undefined;
+        }
+        const close = () => {
+            update_frame_by_points2(api, page, shape);
+            this.__repo.commit();
+            return undefined;
+        }
+        return { execute, abort, close };
     }
 }
 
