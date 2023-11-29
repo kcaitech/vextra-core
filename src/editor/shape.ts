@@ -39,6 +39,7 @@ import {
 } from "./utils/other";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
+import { _typing_modify } from "./utils/path";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -1013,7 +1014,9 @@ export class ShapeEditor {
         try {
             const api = this.__repo.start("modifyPointsCurveMode", {});
             for (let i = indexes.length - 1; i > -1; i--) {
-                api.modifyPointCurveMode(this.__page, this.__shape as PathShape, indexes[i], curve_mode);
+                const index = indexes[i];
+                _typing_modify(this.__shape as PathShape, this.__page, api, index, curve_mode);
+                api.modifyPointCurveMode(this.__page, this.__shape as PathShape, index, curve_mode);
             }
             this.__repo.commit();
             return true;

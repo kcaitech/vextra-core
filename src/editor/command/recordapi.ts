@@ -928,6 +928,26 @@ export class Api {
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.curveMode, exportCurveMode(curveMode), exportCurveMode(save)));
         })
     }
+    modifyPointHasFrom(page: Page, shape: PathShape, index: number, hasFrom: boolean) {
+        checkShapeAtPage(page, shape);
+        const point = shape.points[index];
+        if (!point) return;
+        this.__trap(() => {
+            const save = point.hasFrom;
+            point.hasFrom = hasFrom;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.hasFrom, hasFrom, save));
+        })
+    }
+    modifyPointHasTo(page: Page, shape: PathShape, index: number, hasTo: boolean) {
+        checkShapeAtPage(page, shape);
+        const point = shape.points[index];
+        if (!point) return;
+        this.__trap(() => {
+            const save = point.hasTo;
+            point.hasTo = hasTo;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.hasTo, hasTo, save));
+        })
+    }
     modifyPointCornerRadius(page: Page, shape: PathShape, index: number, cornerRadius: number) {
         checkShapeAtPage(page, shape);
         const point = shape.points[index];

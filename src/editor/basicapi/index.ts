@@ -508,7 +508,14 @@ export function shapeModifyPointCornerRadius(page: Page, shape: PathShape, index
     const p = shape.points[index];
     p.radius = cornerRadius;
 }
-
+export function shapeModifyHasFrom(page: Page, shape: PathShape, index: number, hasFrom: boolean) {
+    const p = shape.points[index];
+    p.hasFrom = hasFrom;
+}
+export function shapeModifyHasTo(page: Page, shape: PathShape, index: number, hasTo: boolean) {
+    const p = shape.points[index];
+    p.hasTo = hasTo;
+}
 export function shapeModifyVariable(page: Page, _var: Variable, value: any) {
     _var.value = value;
 }
