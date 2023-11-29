@@ -47,6 +47,9 @@
                     },
                     {
                         "$ref": "./contact-shape.json"
+                    },
+                    {
+                        "$ref": "./cutout-shape.json"
                     }
                 ]
             }

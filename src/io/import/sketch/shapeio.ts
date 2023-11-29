@@ -37,7 +37,7 @@ function importExportOptions(data: IJSON): ExportOptions {
             new BasicArray<ExportFormat>(),
             new BasicArray<string>(),
             0,
-            false)
+            false, false, false, false)
     }
     )(data['exportOptions']);
 }
@@ -128,9 +128,10 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun): Art
     }
     const childs = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
     const shape = new Artboard(id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs));
-    
+
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.exportOptions = exportOptions;
     return shape;
 }
 
@@ -156,6 +157,7 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun): G
     const shape = new GroupShape(id, name, ShapeType.Group, frame, style, new BasicArray<Shape>(...childs));
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.exportOptions = exportOptions;
     return shape;
 }
 
@@ -179,6 +181,7 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     shape.isBoolOpShape = true;
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.exportOptions = exportOptions;
     return shape;
 }
 
@@ -209,6 +212,7 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun): ImageS
     // shape.setImageMgr(env.mediaMgr);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.exportOptions = exportOptions;
     return shape;
 }
 
@@ -233,6 +237,7 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.exportOptions = exportOptions;
     return shape;
 }
 
@@ -255,6 +260,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun): Pa
     const shape = new PathShape(id, name, ShapeType.Path, frame, style, new BasicArray<CurvePoint>(...points), isClosed);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.exportOptions = exportOptions;
     return shape;
 }
 
@@ -279,6 +285,7 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun): Re
     const shape = new RectShape(id, name, ShapeType.Rectangle, frame, style, new BasicArray<CurvePoint>(...points), true);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.exportOptions = exportOptions;
     return shape;
 }
 
@@ -303,6 +310,7 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun): Te
     const shape = new TextShape(id, name, ShapeType.Text, frame, style, text);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
+    shape.exportOptions = exportOptions;
     return shape;
 }
 

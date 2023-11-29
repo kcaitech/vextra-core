@@ -648,3 +648,30 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         })
     }
 }
+
+export class CutoutShape extends PathShape implements classes.CutoutShape {
+    typeId = 'cutout-shape'
+    scalingStroke: boolean;
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        points: BasicArray<CurvePoint>,
+        isClosed: boolean,
+        scalingStroke: boolean
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style,
+            points,
+            isClosed
+        )
+        this.scalingStroke = scalingStroke;
+        this.isClosed = true;
+    }
+}

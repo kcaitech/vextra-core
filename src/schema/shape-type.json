@@ -20,7 +20,8 @@
         "line",
         "table",
         "table-cell",
-        "contact"
+        "contact",
+        "cutout"
     ],
     "default": "path"
 }

@@ -381,18 +381,22 @@ export function exportExportOptions(source: types.ExportOptions, ctx?: IExportCo
         })(),
         childOptions: source.childOptions,
         shouldTrim: source.shouldTrim,
+        trimTransparent: source.trimTransparent,
+        canvasBackground: source.canvasBackground,
+        unfold: source.unfold,
     }
     return ret
 }
 /* export format */
 export function exportExportFormat(source: types.ExportFormat, ctx?: IExportContext): types.ExportFormat {
     const ret = {
+        id: source.id,
         absoluteSize: source.absoluteSize,
-        fileFormat: source.fileFormat && exportExportFileFormat(source.fileFormat, ctx),
+        fileFormat: exportExportFileFormat(source.fileFormat, ctx),
         name: source.name,
-        namingScheme: source.namingScheme && exportExportFormatNameingScheme(source.namingScheme, ctx),
+        namingScheme: exportExportFormatNameingScheme(source.namingScheme, ctx),
         scale: source.scale,
-        visibleScaleType: source.visibleScaleType && exportExportVisibleScaleType(source.visibleScaleType, ctx),
+        visibleScaleType: exportExportVisibleScaleType(source.visibleScaleType, ctx),
     }
     return ret
 }
@@ -1024,6 +1028,9 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                     if (val.typeId == 'table-shape') {
                         return exportTableShape(val as types.TableShape, ctx)
                     }
+                    if (val.typeId == 'cutout-shape') {
+                        return exportCutoutShape(val as types.CutoutShape, ctx)
+                    }
                     {
                         throw new Error('unknow val: ' + val)
                     }
@@ -1224,6 +1231,9 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (val.typeId == 'contact-shape') {
                         return exportContactShape(val as types.ContactShape, ctx)
                     }
+                    if (val.typeId == 'cutout-shape') {
+                        return exportCutoutShape(val as types.CutoutShape, ctx)
+                    }
                     {
                         throw new Error('unknow val: ' + val)
                     }
@@ -1295,6 +1305,9 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         }
                         if (val.typeId == 'contact-shape') {
                             return exportContactShape(val as types.ContactShape, ctx)
+                        }
+                        if (val.typeId == 'cutout-shape') {
+                            return exportCutoutShape(val as types.CutoutShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
@@ -1385,6 +1398,9 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         if (val.typeId == 'contact-shape') {
                             return exportContactShape(val as types.ContactShape, ctx)
                         }
+                        if (val.typeId == 'cutout-shape') {
+                            return exportCutoutShape(val as types.CutoutShape, ctx)
+                        }
                         {
                             throw new Error('unknow val: ' + val)
                         }
@@ -1410,6 +1426,44 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
         clippingMaskMode: source.clippingMaskMode,
         hasClippingMask: source.hasClippingMask,
         shouldBreakMaskChain: source.shouldBreakMaskChain,
+    }
+    return ret
+}
+/* cutout shape */
+export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContext): types.CutoutShape {
+    const ret = {
+        typeId: source.typeId,
+        id: source.id,
+        name: source.name,
+        type: exportShapeType(source.type, ctx),
+        frame: exportShapeFrame(source.frame, ctx),
+        style: exportStyle(source.style, ctx),
+        points: (() => {
+                const ret = []
+                for (let i = 0, len = source.points.length; i < len; i++) {
+                    const r = exportCurvePoint(source.points[i], ctx)
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
+        isClosed: source.isClosed,
+        fixedRadius: source.fixedRadius,
+        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
+        isFixedToViewport: source.isFixedToViewport,
+        isFlippedHorizontal: source.isFlippedHorizontal,
+        isFlippedVertical: source.isFlippedVertical,
+        isLocked: source.isLocked,
+        isVisible: source.isVisible,
+        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
+        nameIsFixed: source.nameIsFixed,
+        resizingConstraint: source.resizingConstraint,
+        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
+        rotation: source.rotation,
+        constrainerProportions: source.constrainerProportions,
+        clippingMaskMode: source.clippingMaskMode,
+        hasClippingMask: source.hasClippingMask,
+        shouldBreakMaskChain: source.shouldBreakMaskChain,
+        scalingStroke: source.scalingStroke,
     }
     return ret
 }
@@ -1513,6 +1567,9 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         }
                         if (val.typeId == 'contact-shape') {
                             return exportContactShape(val as types.ContactShape, ctx)
+                        }
+                        if (val.typeId == 'cutout-shape') {
+                            return exportCutoutShape(val as types.CutoutShape, ctx)
                         }
                         {
                             throw new Error('unknow val: ' + val)
