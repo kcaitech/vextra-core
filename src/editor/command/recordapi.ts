@@ -10,8 +10,8 @@ import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText, exportShadow, exportShadowPosition } from "../../io/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, SHADOW_ID, SHADOW_ATTR_ID } from "./consts";
+import { exportBorder, exportBorderPosition, exportBorderStyle, exportColor, exportContactForm, exportContactRole, exportCurvePoint, exportFill, exportPage, exportPoint2D, exportTableCell, exportText, exportShadow, exportShadowPosition, exportExportFormat, exportExportFileFormat } from "../../io/baseexport";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, SHADOW_ID, SHADOW_ATTR_ID, CUTOUT_ID, CUTOUT_ATTR_ID } from "./consts";
 import { GroupShape, Shape, PathShape, PathShape2, CurvePoint } from "../../data/shape";
 import { ContactShape } from "../../data/contact";
 import { exportShape, updateShapesFrame } from "./utils";
@@ -20,11 +20,12 @@ import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAl
 import { cmdmerge } from "./merger";
 import { RectShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, FillType, Point2D, ShadowPosition, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, FillType, Point2D, ShadowPosition, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { TableOpTarget } from "../../coop/data/classes";
-import { ContactRole } from "../../data/baseclasses";
+import { ContactRole, ExportFormat, ExportOptions } from "../../data/baseclasses";
+import { BasicArray } from "../../data/basic";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -706,9 +707,9 @@ export class Api {
         })
     }
     setShadowEnable(page: Page, shape: Shape, idx: number, isEnable: boolean) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.isEnabled;
                 shadow.isEnabled = isEnable;
@@ -717,9 +718,9 @@ export class Api {
         }
     }
     setShadowOffsetX(page: Page, shape: Shape, idx: number, offsetX: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.offsetX;
                 shadow.offsetX = offsetX;
@@ -728,9 +729,9 @@ export class Api {
         }
     }
     setShadowOffsetY(page: Page, shape: Shape, idx: number, offsetY: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.offsetY;
                 shadow.offsetY = offsetY;
@@ -739,9 +740,9 @@ export class Api {
         }
     }
     setShadowBlur(page: Page, shape: Shape, idx: number, blur: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.blurRadius;
                 shadow.blurRadius = blur;
@@ -750,9 +751,9 @@ export class Api {
         }
     }
     setShadowSpread(page: Page, shape: Shape, idx: number, spread: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.spread;
                 shadow.spread = spread;
@@ -779,6 +780,93 @@ export class Api {
                 const save = shadow.position;
                 shadow.position = position;
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.position, exportShadowPosition(position), exportShadowPosition(save)));
+            })
+        }
+    }
+    // cutout
+    deleteExportFormatAt(page: Page, shape: Shape, idx: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            if (!shape.exportOptions) return;
+            const format = basicapi.deleteExportFormatAt(shape.exportOptions, idx);
+            if (format) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, idx, exportExportFormat(format)));
+        })
+    }
+    addExportFormat(page: Page, shape: Shape, format: ExportFormat, index: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            if (!shape.exportOptions) {
+                const formats = new BasicArray<ExportFormat>();
+                const includedChildIds = new BasicArray<string>();
+                shape.exportOptions = new ExportOptions(formats, includedChildIds, 0, false, false, false, false);
+            }
+            basicapi.addExportFormat(shape.exportOptions, format, index);
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, index, exportExportFormat(format)))
+        })
+    }
+    setExportFormatScale(page: Page, shape: Shape, idx: number, scale: number) {
+        checkShapeAtPage(page, shape);
+        const format = shape.exportOptions?.exportFormats[idx];
+        if (format) {
+            this.__trap(() => {
+                const save = format.scale;
+                format.scale = scale;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.scale, scale, save));
+            })
+        }
+    }
+    setExportFormatName(page: Page, shape: Shape, idx: number, name: string) {
+        checkShapeAtPage(page, shape);
+        const format = shape.exportOptions?.exportFormats[idx];
+        if (format) {
+            this.__trap(() => {
+                const save = format.name;
+                format.name = name;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.name, name, save));
+            })
+        }
+    }
+    setExportFormatFileFormat(page: Page, shape: Shape, idx: number, fileFormat: ExportFileFormat) {
+        checkShapeAtPage(page, shape);
+        const format = shape.exportOptions?.exportFormats[idx];
+        if (format) {
+            this.__trap(() => {
+                const save = format.fileFormat;
+                format.fileFormat = fileFormat;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.fileFormat, exportExportFileFormat(fileFormat), exportExportFileFormat(save)));
+            })
+        }
+    }
+    setExportTrimTransparent(page: Page, shape: Shape, trim: boolean) {
+        checkShapeAtPage(page, shape);
+        const options = shape.exportOptions;
+        if (options) {
+            this.__trap(() => {
+                const save = options.trimTransparent;
+                options.trimTransparent = trim;
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.trimTransparent, trim, save));
+            })
+        }
+    }
+    setExportCanvasBackground(page: Page, shape: Shape, background: boolean) {
+        checkShapeAtPage(page, shape);
+        const options = shape.exportOptions;
+        if (options) {
+            this.__trap(() => {
+                const save = options.canvasBackground;
+                options.canvasBackground = background;
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.canvasBackground, background, save));
+            })
+        }
+    }
+    setExportPreviewUnfold(page: Page, shape: Shape, unfold: boolean) {
+        checkShapeAtPage(page, shape);
+        const options = shape.exportOptions;
+        if (options) {
+            this.__trap(() => {
+                const save = options.unfold;
+                options.unfold = unfold;
+                this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.previewUnfold, unfold, save));
             })
         }
     }

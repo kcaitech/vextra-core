@@ -2,18 +2,18 @@ import { GroupShape, RectShape, Shape, ImageShape, PathShape, PathShape2 } from 
 import { Color, MarkerType } from "../data/style";
 import { expand, expandTo, pathEdit, translate, translateTo } from "./frame";
 import { Border, BorderPosition, BorderStyle, Fill, Shadow } from "../data/style";
-import { BoolOp, CurvePoint, Point2D, ShapeType } from "../data/baseclasses";
+import { BoolOp, CurvePoint, ExportFormat, Point2D, ShapeType } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { ContactForm, CurveMode, ShadowPosition } from "../data/typesdefine";
+import { ContactForm, CurveMode, ExportFileFormat, ShadowPosition } from "../data/typesdefine";
 import { Api } from "./command/recordapi";
 import { update_frame_by_points } from "./path";
 import { exportCurvePoint } from "../io/baseexport";
 import { importCurvePoint } from "../io/baseimport";
 import { v4 } from "uuid";
-import {  get_box_pagexy, get_nearest_border_point } from "../data/utils";
+import { get_box_pagexy, get_nearest_border_point } from "../data/utils";
 import { Matrix } from "../basic/matrix";
 import { ContactShape } from "../data/contact";
 
@@ -309,6 +309,63 @@ export class ShapeEditor {
             api.setShadowSpread(this.__page, this.__shape, idx, spread);
             this.__repo.commit();
         }
+    }
+    // export ops
+    public addExportFormat(formats: ExportFormat[]) {
+        for (let i = 0; i < formats.length; i++) {
+            const format = formats[i];
+            const api = this.__repo.start("addExportFormat", {});
+            const length = this.__shape.exportOptions ? this.__shape.exportOptions.exportFormats.length : 0;
+            api.addExportFormat(this.__page, this.__shape, format, length);
+            this.__repo.commit();
+        }
+    }
+    public deleteExportFormat(idx: number) {
+        const format = this.__shape.exportOptions?.exportFormats[idx];
+        if (format) {
+            const api = this.__repo.start("deleteExportFormat", {});
+            api.deleteExportFormatAt(this.__page, this.__shape, idx)
+            this.__repo.commit();
+        }
+    }
+    public setExportFormatScale(idx: number, scale: number) {
+        const format = this.__shape.exportOptions?.exportFormats[idx];
+        if (format) {
+            const api = this.__repo.start("setExportFormatScale", {});
+            api.setExportFormatScale(this.__page, this.__shape, idx, scale);
+            this.__repo.commit();
+        }
+    }
+    public setExportFormatName(idx: number, name: string) {
+        const format = this.__shape.exportOptions?.exportFormats[idx];
+        if (format) {
+            const api = this.__repo.start("setExportFormatName", {});
+            api.setExportFormatName(this.__page, this.__shape, idx, name);
+            this.__repo.commit();
+        }
+    }
+    public setExportFormatFileFormat(idx: number, fileFormat: ExportFileFormat) {
+        const format = this.__shape.exportOptions?.exportFormats[idx];
+        if (format) {
+            const api = this.__repo.start("setExportFormatFileFormat", {});
+            api.setExportFormatFileFormat(this.__page, this.__shape, idx, fileFormat);
+            this.__repo.commit();
+        }
+    }
+    public setExportTrimTransparent(trim: boolean) {
+        const api = this.__repo.start("setExportTrimTransparent", {});
+        api.setExportTrimTransparent(this.__page, this.__shape, trim);
+        this.__repo.commit();
+    }
+    public setExportCanvasBackground(background: boolean) {
+        const api = this.__repo.start("setExportTrimTransparent", {});
+        api.setExportCanvasBackground(this.__page, this.__shape, background);
+        this.__repo.commit();
+    }
+    public setExportPreviewUnfold(unfold: boolean) {
+        const api = this.__repo.start("setExportTrimTransparent", {});
+        api.setExportPreviewUnfold(this.__page, this.__shape, unfold);
+        this.__repo.commit();
     }
 
     // 容器自适应大小

@@ -56,6 +56,11 @@ export const SHAPE_ATTR_ID = {
     cellContentText: "cellContentText",
     cellContentImage: "cellContentImage",
     cellSpan: "cellSpan",
+
+    //export options
+    trimTransparent: "trimTransparent",
+    previewUnfold: "previewUnfold",
+    canvasBackground: "canvasBackground"
 }
 
 export const FILLS_ID = "fills"
@@ -123,3 +128,11 @@ export const TABLE_ATTR_ID = {
 }
 
 export const CONTACTS_ID = "contact"
+
+export const CUTOUT_ID = "cutout"
+
+export const CUTOUT_ATTR_ID = {
+    scale: "scale",
+    name: "name",
+    fileFormat: "fileFormat"
+}

@@ -11,6 +11,7 @@ export * from "./shadow";
 export * from "./table";
 export * from "./points";
 export * from "./contact";
+export * from "./cutout";
 
 
 type TextShapeLike = Shape & { text: Text }

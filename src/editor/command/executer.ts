@@ -54,7 +54,10 @@ import {
     importContactRole,
     importCurvePoint,
     importShadow,
-    importShadowPosition
+    importShadowPosition,
+    importCutoutShape,
+    importExportFormat,
+    importExportFileFormat
 } from "../../io/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -75,7 +78,7 @@ import {
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID, TABLE_ATTR_ID, SHADOW_ID, SHAPE_ATTR_ID, SHADOW_ATTR_ID, } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID, TABLE_ATTR_ID, SHADOW_ID, SHAPE_ATTR_ID, SHADOW_ATTR_ID, CUTOUT_ID, CUTOUT_ATTR_ID, } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
 import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
@@ -135,6 +138,9 @@ function importShape(data: string, document: Document) {
     }
     if (source.typeId == 'contact-shape') {
         return importContactShape(source as types.ContactShape, ctx)
+    }
+    if (source.typeId == 'cutout-shape') {
+        return importCutoutShape(source as types.CutoutShape, ctx)
     }
     throw new Error("unknow shape type: " + source.typeId)
 }
@@ -385,6 +391,13 @@ export class CMDExecuter {
                 api.addPointAt(shape as PathShape, point, (op as ArrayOpInsert).start);
             }
         }
+        else if (arrayAttr === CUTOUT_ID) {
+            if (op.type === OpType.ArrayInsert) {
+                if(!shape.exportOptions) return;
+                const format = importExportFormat(JSON.parse(cmd.data));
+                api.addExportFormat(shape.exportOptions, format, (op as ArrayOpInsert).start);
+            }
+        }
         else {
             console.error("not implemented ", arrayAttr)
         }
@@ -430,6 +443,12 @@ export class CMDExecuter {
         else if (arrayAttr === POINTS_ID) {
             if (op.type === OpType.ArrayRemove) {
                 api.deletePointAt(shape as PathShape, (op as ArrayOpRemove).start)
+            }
+        }
+        else if (arrayAttr === CUTOUT_ID) {
+            if (op.type === OpType.ArrayRemove) {
+                if(!shape.exportOptions) return;
+                api.deleteExportFormatAt(shape.exportOptions, (op as ArrayOpRemove).start)
             }
         }
         else {
@@ -580,6 +599,28 @@ export class CMDExecuter {
                 if (value) {
                     const color = importColor(JSON.parse(value))
                     api.setShadowColor(shape.style, shadowIdx, color);
+                }
+            } else {
+                console.error("not implemented ", op)
+            }
+        }
+        else if (arrayAttr === CUTOUT_ID) {
+            const cutoutId = cmd.arrayAttrId;
+            if(!shape.exportOptions) return;
+            const formatIdx = shape.exportOptions.exportFormats.findIndex((format) => format.id === cutoutId);
+            if (formatIdx < 0) return;
+            const opId = op.opId;
+            const value = cmd.value;
+            if (opId === CUTOUT_ATTR_ID.scale) {
+                const scale = value && JSON.parse(value);
+                api.setExportFormatScale(shape.exportOptions, formatIdx, scale ?? 1);
+            } else if (opId === CUTOUT_ATTR_ID.name) {
+                const name = value && JSON.parse(value);
+                api.setExportFormatName(shape.exportOptions, formatIdx, name ?? '');
+            } else if (opId === CUTOUT_ATTR_ID.fileFormat) {
+                if (value) {
+                    const fileFormat = importExportFileFormat(JSON.parse(value))
+                    api.setExportFormatFileFormat(shape.exportOptions, formatIdx, fileFormat);
                 }
             } else {
                 console.error("not implemented ", op)

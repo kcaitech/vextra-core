@@ -12,7 +12,8 @@ import {
     TextShape,
     ImageShape,
     PathShape2,
-    PathSegment
+    PathSegment,
+    CutoutShape
 } from "../data/shape";
 import {ContactShape} from "../data/contact"
 import * as types from "../data/typesdefine"
@@ -304,6 +305,22 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     shape.from = apex;
     shape.to = undefined;
     shape.fixedRadius = 12;
+    addCommonAttr(shape);
+    return shape;
+}
+
+export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
+    const borders = new BasicArray<Border>();
+    const fills = new BasicArray<Fill>();
+    const style = new Style(borders, fills, new BasicArray<Shadow>());
+    const curvePoint = new BasicArray<CurvePoint>();
+    const id = uuid();
+    const p1 = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0)); // lt
+    const p2 = new CurvePoint(uuid(), 0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.Straight, new Point2D(1, 0)); // rt
+    const p3 = new CurvePoint(uuid(), 0, new Point2D(1, 1), new Point2D(1, 1), false, false, CurveMode.Straight, new Point2D(1, 1)); // rb
+    const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
+    curvePoint.push(p1, p2, p3, p4);
+    const shape = new CutoutShape(id, name, types.ShapeType.Cutout, frame, style, curvePoint, true, true);
     addCommonAttr(shape);
     return shape;
 }
