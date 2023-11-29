@@ -43,7 +43,7 @@ export class Page extends GroupShape implements classes.Page {
         if (targetId.length > 0) {
             const shapeId = targetId[0] as string;
             const shape = this.getShape(shapeId);
-            if (!shape) throw new Error("shape not find");
+            if (!shape) return undefined;
             return shape.getTarget(targetId.slice(1));
         }
         return this;
