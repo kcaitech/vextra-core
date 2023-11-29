@@ -26,7 +26,7 @@ export function render(h: Function,
     comsMap: Map<ShapeType, any>,
     reflush?: number) {
 
-    if (!isVisible(shape, undefined, undefined)) return;
+    if (!isVisible(shape, undefined)) return;
 
 
     const rotate = (shape.rotation ?? 0);
@@ -42,9 +42,9 @@ export function render(h: Function,
     const path = path0.toString();
 
     // fill
-    childs.push(...fillR(h, shape, frame, path, undefined, undefined));
+    childs.push(...fillR(h, shape, frame, path, undefined));
     // border
-    childs.push(...borderR(h, shape, frame, path, undefined, undefined));
+    childs.push(...borderR(h, shape, frame, path, undefined));
 
     // symbol
     childs.push(...renderSym(h, shape, comsMap));

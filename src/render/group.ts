@@ -202,9 +202,8 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
 export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>,
                        transform: RenderTransform | undefined,
                        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-                       consumedVars: { slot: string, vars: Variable[] }[] | undefined,
                        reflush?: number): any {
-    if (!isVisible(shape, varsContainer, consumedVars)) return;
+    if (!isVisible(shape, varsContainer)) return;
 
     const {
         nodes,
@@ -220,12 +219,12 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     const childs: Array<any> = [];
 
     // fill
-    childs.push(...fillR(h, shape, frame, path, varsContainer, consumedVars));
+    childs.push(...fillR(h, shape, frame, path, varsContainer));
 
     // childs
     childs.push(...nodes);
     // border
-    childs.push(...borderR(h, shape, frame, path, varsContainer, consumedVars));
+    childs.push(...borderR(h, shape, frame, path, varsContainer));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
@@ -251,7 +250,7 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     const shadows = shape.style.shadows;
     const ex_props = Object.assign({}, props);
     const shape_id = shape.id.slice(0, 4);
-    const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars, comsMap);
+    const shadow = shadowR(h, shape_id, shape, path, varsContainer, comsMap);
     if (shadow.length) {
         delete props.style;
         delete props.transform;

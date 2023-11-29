@@ -89,8 +89,7 @@ export function render(h: Function, fills: Fill[], frame: ShapeFrame, path: stri
 }
 
 export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, path: string,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    consumedVars: { slot: string, vars: Variable[] }[] | undefined) {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     let fills = shape.style.fills;
     if (varsContainer) {
         const _vars = findOverrideAndVar(shape, OverrideType.Fills, varsContainer);
@@ -100,7 +99,6 @@ export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, pat
             if (_var && _var.type === VariableType.Fills) {
                 // return _var.value;
                 fills = _var.value;
-                if (consumedVars) consumedVars.push({ slot: OverrideType.Fills, vars: _vars })
             }
         }
     }

@@ -24,7 +24,7 @@ function renderSym(h: Function,
 export function render(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
 
     // todo
-    if (!isVisible(shape, undefined, undefined)) return;
+    if (!isVisible(shape, undefined)) return;
 
     const frame = shape.frame;
     const path0 = shape.getPath();
