@@ -38,7 +38,7 @@ export class CMDHandler {
         if (!page) return;
 
         const shape: Shape | Variable | undefined = page.getTarget(op.targetId);
-        if (!shape) throw new Error("not find target:" + op.targetId);
+        if (!shape) return;
 
         const _op = op as IdOpSet;
         const value = cmd.value;
