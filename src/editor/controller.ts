@@ -11,6 +11,7 @@ import {
     expandTo,
     pathEdit,
     pathEditSide,
+    pointsEdit,
     scaleByB,
     scaleByL,
     scaleByR,
@@ -138,6 +139,7 @@ export interface AsyncLineAction {
 export interface AsyncPathEditor {
     addNode: (index: number, raw: { x: number, y: number }) => void;
     execute: (index: number, end: PageXY) => void;
+    execute2: (indexes: number[], dx: number, dy: number) => void;
     close: () => undefined;
 }
 
@@ -312,7 +314,7 @@ export class Controller {
         const contact_to = (p: PageXY, to?: ContactForm) => {
             if (!newShape || !savepage) return;
             status = Status.Pending;
-            pathEdit(api, savepage, newShape, 1, p);
+            pathEdit(api, savepage, newShape as PathShape, 1, p);
             api.shapeModifyContactTo(savepage, newShape as ContactShape, to);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -649,9 +651,13 @@ export class Controller {
         return { migrate, trans, stick, close, transByWheel }
     }
 
-    public asyncPathEditor(shape: Shape, page: Page): AsyncPathEditor {
+    public asyncPathEditor(shape: PathShape, page: Page): AsyncPathEditor {
         const api = this.__repo.start("asyncPathEditor", {});
         let status: Status = Status.Pending;
+        const w = shape.frame.width, h = shape.frame.height;
+        let m = new Matrix(shape.matrix2Root());
+        m.preScale(w, h);
+        m = new Matrix(m.inverse); // root -> 1
         const addNode = (index: number, raw: { x: number, y: number }) => {
             status === Status.Pending
             const p = new CurvePoint(uuid(), raw.x, raw.y, CurveMode.Straight);
@@ -661,13 +667,19 @@ export class Controller {
         }
         const execute = (index: number, end: PageXY) => {
             status === Status.Pending
-            pathEdit(api, page, shape, index, end);
+            pathEdit(api, page, shape, index, end, m);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const execute2 = (indexes: number[], dx: number, dy: number) => {
+            status === Status.Pending
+            pointsEdit(api, page, shape, indexes, dx, dy);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const close = () => {
             status = Status.Pending;
-            update_frame_by_points(api, page, shape);
+            update_frame_by_points(api, page, shape as PathShape);
             status = Status.Fulfilled;
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
@@ -676,7 +688,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { addNode, execute, close }
+        return { addNode, execute, execute2, close }
     }
 
     public asyncContactEditor(shape: Shape, page: Page): AsyncContactEditor {
@@ -702,12 +714,12 @@ export class Controller {
                 if (!shape.from) {
                     api.shapeModifyContactFrom(page, shape as ContactShape, clear_target.apex);
                 }
-                pathEdit(api, page, shape, 0, clear_target.p);
+                pathEdit(api, page, shape as PathShape, 0, clear_target.p);
             } else {
                 if (shape.from) {
                     api.shapeModifyContactFrom(page, shape as ContactShape, undefined);
                 }
-                pathEdit(api, page, shape, 0, m_target);
+                pathEdit(api, page, shape as PathShape, 0, m_target);
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -720,12 +732,12 @@ export class Controller {
                 if (!shape.to) {
                     api.shapeModifyContactTo(page, shape as ContactShape, clear_target.apex);
                 }
-                pathEdit(api, page, shape, idx - 1, clear_target.p);
+                pathEdit(api, page, shape as PathShape, idx - 1, clear_target.p);
             } else {
                 if (shape.to) {
                     api.shapeModifyContactTo(page, shape as ContactShape, undefined);
                 }
-                pathEdit(api, page, shape, idx - 1, m_target);
+                pathEdit(api, page, shape as PathShape, idx - 1, m_target);
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;

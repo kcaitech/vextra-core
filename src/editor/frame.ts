@@ -959,39 +959,51 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
     api.shapeModifyY(page, s, f.y + delta.y);
     if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH));
 }
-// 路径编辑
 /**
- * @description 以点为操作目标编辑路径，当路径中某一点(编辑点)的编辑变化引起frame更新后，路径上的所有点都需要在新的frame重新定位，若没有引起frame更新，则只更新编辑点
+ * @description 以点为操作目标编辑路径
  * @param index 点的数组索引
  * @param end 点的目标🎯位置（root）
  */
-export function pathEdit(api: Api, page: Page, s: Shape, index: number, end: PageXY) {
-    let m = new Matrix(s.matrix2Root()), w = s.frame.width, h = s.frame.height;
-    m.preScale(w, h), m = new Matrix(m.inverse);  // 图形单位坐标系，0-1
+export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end: PageXY, matrix?: Matrix) {
+    const w = s.frame.width, h = s.frame.height;
+    let m = matrix ? matrix : new Matrix();
+    if (!matrix) {
+        m.multiAtLeft(s.matrix2Root());
+        m.preScale(w, h);
+        m = new Matrix(m.inverse);
+    }
     const p = s.points[index];
-    if (!p) return false;
-    const t = m.computeCoord3(end);
-    api.shapeModifyCurvPoint(page, s as PathShape, index, t);
-    if (t.x < 0 || t.x > 1 || t.y < 0 || t.y > 1) { // 满足该条件则引起frame更新，所有点在新的frame重新定位
-        const nf = get_box_by_points(s);
-        if (!nf) return false;
-        const mp = s.matrix2Parent();
-        mp.preScale(w, h);
-        if (s.rotation) api.shapeModifyRotate(page, s, 0); // 摆正 是否需要摆正呢
-        if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, false);
-        if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, false);
-        api.shapeModifyX(page, s, nf.x);
-        api.shapeModifyY(page, s, nf.y);
-        api.shapeModifyWH(page, s, nf.width, nf.height);
-        const mp2 = s.matrix2Parent();
-        mp2.preScale(nf.width, nf.height);
-        mp.multiAtLeft(mp2.inverse);
-        const points = s.points;
-        if (!points || !points.length) return false;
-        for (let i = 0, len = points.length; i < len; i++) {
-            const p = points[i];
-            if (!p) continue;
-            api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord3(p.point));
+    if (!p) {
+        return false;
+    }
+    const save = { x: p.x, y: p.y };
+    const _val = m.computeCoord3(end);
+    api.shapeModifyCurvPoint(page, s as PathShape, index, _val);
+    const delta = { x: _val.x - save.x, y: _val.y - save.y };
+    if (!delta.x && !delta.y) {
+        return;
+    }
+    if (p.hasFrom) {
+        api.shapeModifyCurvFromPoint(page, s as PathShape, index, { x: (p.fromX || 0) + delta.x, y: (p.fromY || 0) + delta.y });
+    }
+    if (p.hasTo) {
+        api.shapeModifyCurvToPoint(page, s as PathShape, index, { x: (p.toX || 0) + delta.x, y: (p.toY || 0) + delta.y });
+    }
+}
+export function pointsEdit(api: Api, page: Page, s: PathShape, indexes: number[], dx: number, dy: number) {
+    const points = s.points;
+    for (let i = 0, l = indexes.length; i < l; i++) {
+        const index = indexes[i];
+        const __p = points[index];
+        if (!__p) {
+            continue;
+        }
+        api.shapeModifyCurvPoint(page, s, index, { x: __p.x + dx, y: __p.y + dy });
+        if (__p.hasFrom) {
+            api.shapeModifyCurvFromPoint(page, s as PathShape, index, { x: (__p.fromX || 0) + dx, y: (__p.fromY || 0) + dy });
+        }
+        if (__p.hasTo) {
+            api.shapeModifyCurvToPoint(page, s as PathShape, index, { x: (__p.toX || 0) + dx, y: (__p.toY || 0) + dy });
         }
     }
 }
@@ -1010,65 +1022,51 @@ export function pathEditSide(api: Api, page: Page, s: Shape, index1: number, ind
     api.shapeModifyCurvPoint(page, s as PathShape, index1, p1);
     api.shapeModifyCurvPoint(page, s as PathShape, index2, p2);
 }
-function get_box_by_points(s: Shape) {
-    const point_raw = s.points;
-    if (!point_raw) return false;
-    const w = s.frame.width, h = s.frame.height, m = s.matrix2Parent();
-    m.preScale(w, h);
-    let x = 0, y = 0, right = 0, bottom = 0, width = w, height = h;
-    if (point_raw.length > 1 && point_raw[0].point) {
-        const p = m.computeCoord3(point_raw[0].point);
-        x = p.x, y = p.y, right = p.x, bottom = p.y;
-    } else return false;
-    for (let i = 1, len = point_raw.length || 0; i < len; i++) {
-        const point = point_raw[i].point;
-        if (!point) continue;
-        const p = m.computeCoord3(point);
-
-        if (p.x < x) x = p.x, width = right - x;
-        else if (p.x > right) right = p.x, width = right - x;
-
-        if (p.y < y) y = p.y, height = bottom - y;
-        else if (p.y > bottom) bottom = p.y, height = bottom - y;
+export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
+    const nf = s.boundingBox2();
+    const w = s.frame.width, h = s.frame.height;
+    const mp = s.matrix2Parent();
+    mp.preScale(w, h);
+    if (s.rotation) {
+        api.shapeModifyRotate(page, s, 0);
+    }  // 摆正 是否需要摆正呢
+    if (s.isFlippedHorizontal) {
+        api.shapeModifyHFlip(page, s, false);
     }
-    return { x, y, width, height };
-}
-export function update_frame_by_points(api: Api, page: Page, s: Shape) {
-    const nf = get_box_by_points(s);
-    if (nf) {
-        const w = s.frame.width, h = s.frame.height;
-        const mp = s.matrix2Parent();
-        mp.preScale(w, h);
-        if (s.rotation) api.shapeModifyRotate(page, s, 0);  // 摆正 是否需要摆正呢
-        if (s.isFlippedHorizontal) api.shapeModifyHFlip(page, s, false);
-        if (s.isFlippedVertical) api.shapeModifyVFlip(page, s, false);
-        api.shapeModifyX(page, s, nf.x);
-        api.shapeModifyY(page, s, nf.y);
-        api.shapeModifyWH(page, s, nf.width, nf.height);
-        const mp2 = s.matrix2Parent();
-        mp2.preScale(nf.width, nf.height);
-        mp.multiAtLeft(mp2.inverse);
-        const points = s.points;
-        if (!points || !points.length) return false;
-        for (let i = 0, len = points.length; i < len; i++) {
-            const p = points[i];
-            if (!p) continue;
-            if (p.hasCurveFrom) {
-                api.shapeModifyCurvFromPoint(page, s as PathShape, i, mp.computeCoord3(p.curveFrom));
-            }
-            if (p.hasCurveTo) {
-                api.shapeModifyCurvToPoint(page, s as PathShape, i, mp.computeCoord3(p.curveTo));
-            }
-            api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord3(p.point));
+    if (s.isFlippedVertical) {
+        api.shapeModifyVFlip(page, s, false);
+    }
+    api.shapeModifyX(page, s, nf.x);
+    api.shapeModifyY(page, s, nf.y);
+    api.shapeModifyWH(page, s, nf.width, nf.height);
+    const mp2 = s.matrix2Parent();
+    mp2.preScale(nf.width, nf.height);
+    mp.multiAtLeft(mp2.inverse);
+    const points = s.points;
+    if (!points || !points.length) {
+        return false;
+    }
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = points[i];
+        if (!p) {
+            continue;
         }
+        if (p.hasFrom) {
+            api.shapeModifyCurvFromPoint(page, s, i, mp.computeCoord2(p.fromX || 0, p.fromY || 0));
+        }
+        if (p.hasTo) {
+            api.shapeModifyCurvToPoint(page, s, i, mp.computeCoord2(p.toX || 0, p.toY || 0));
+        }
+        api.shapeModifyCurvPoint(page, s, i, mp.computeCoord2(p.x, p.y));
     }
+    console.log('update frame by "update_frame_by_points"');
+
 }
 export function update_frame_by_points2(api: Api, page: Page, s: PathShape) {
     const nf = s.boundingBox2();
     const w = s.frame.width, h = s.frame.height;
     const mp = s.matrix2Parent();
     mp.preScale(w, h);
-    // 摆正 是否需要摆正呢
     if (s.rotation) {
         api.shapeModifyRotate(page, s, 0);
     }
@@ -1099,15 +1097,5 @@ export function update_frame_by_points2(api: Api, page: Page, s: PathShape) {
         }
         api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord2(p.x, p.y));
     }
-    console.log('update frame');
-}
-function get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
-    const f = shape.frame;
-    switch (type) {
-        case ContactType.Top: return m2r.computeCoord2(f.width / 2, 0);
-        case ContactType.Right: return m2r.computeCoord2(f.width, f.height / 2);
-        case ContactType.Bottom: return m2r.computeCoord2(f.width / 2, f.height);
-        case ContactType.Left: return m2r.computeCoord2(0, f.height / 2);
-        default: return false
-    }
+    console.log('update frame by update_frame_by_points2');
 }
