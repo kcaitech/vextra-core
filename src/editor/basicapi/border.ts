@@ -1,50 +1,48 @@
-import { Color, Border, BorderPosition, Style, BorderStyle, MarkerType } from "../../data/style";
+import { Color, Border, BorderPosition, BorderStyle } from "../../data/style";
 // 边框
 export function setBorderColor(
-    style: Style,
-    idx: number,
+    border: Border,
     color: Color
 ) {
-    const border: Border = style.borders[idx];
+    // const border: Border = style.borders[idx];
     border.color = color;
 }
 export function setBorderEnable(
-    style: Style,
-    idx: number,
+    border: Border,
     isEnabled: boolean,
 ) {
-    const border: Border = style.borders[idx];
+    // const border: Border = style.borders[idx];
     border.isEnabled = isEnabled;
 }
-export function setBorderThickness(style: Style, idx: number, thickness: number) {
-    style.borders[idx].thickness = thickness;
+export function setBorderThickness(border: Border, thickness: number) {
+    border.thickness = thickness;
 }
-export function setBorderPosition(style: Style, idx: number, position: BorderPosition) {
-    style.borders[idx].position = position;
+export function setBorderPosition(border: Border, position: BorderPosition) {
+    border.position = position;
 }
-export function setBorderStyle(style: Style, idx: number, borderStyle: BorderStyle) {
-    style.borders[idx].borderStyle = borderStyle;
+export function setBorderStyle(border: Border, borderStyle: BorderStyle) {
+    border.borderStyle = borderStyle;
 }
 
-export function deleteBorderAt(style: Style, idx: number) {
-    return style.borders.splice(idx, 1)[0];
+export function deleteBorderAt(borders: Border[], idx: number) {
+    return borders.splice(idx, 1)[0];
 }
 /**
  * @param idx 开始删的位置
  * @param strength 删除的个数
  * @returns 被删除的元素
  */
-export function deleteBorders(style: Style, idx: number, strength: number) {
-    return style.borders.splice(idx, strength);
+export function deleteBorders(borders: Border[], idx: number, strength: number) {
+    return borders.splice(idx, strength);
 }
 
-export function addBorder(style: Style, border: Border) {
-    style.borders.push(border);
+export function addBorder(borders: Border[], border: Border) {
+    borders.push(border);
 }
-export function addBorderAt(style: Style, border: Border, index: number) {
-    style.borders.splice(index, 0, border);
+export function addBorderAt(borders: Border[], border: Border, index: number) {
+    borders.splice(index, 0, border);
 }
-export function moveBorder(style: Style, idx: number, idx2: number) {
-    const border = style.borders.splice(idx, 1)[0];
-    if (border) style.borders.splice(idx2, 0, border);
+export function moveBorder(borders: Border[], idx: number, idx2: number) {
+    const border = borders.splice(idx, 1)[0];
+    if (border) borders.splice(idx2, 0, border);
 }

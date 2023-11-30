@@ -1,25 +1,90 @@
-import { Shape, GroupShape, ShapeFrame, PathShape2, RectShape } from "../data/shape";
+import {
+    GroupShape,
+    OverrideType,
+    PathShape2,
+    RectShape,
+    Shape,
+    ShapeFrame,
+    SymbolShape,
+    SymbolUnionShape,
+    Variable,
+    VariableType
+} from "../data/shape";
 import { ShapeEditor } from "./shape";
+import * as types from "../data/typesdefine";
 import { BoolOp, BorderPosition, ShadowPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
-import { newArtboard, newSolidColorFill, newGroupShape, newLineShape, newOvalShape, newPathShape, newRectShape, newArrowShape } from "./creator";
+import {
+    initFrame,
+    newArrowShape,
+    newArtboard,
+    newGroupShape,
+    newLineShape,
+    newOvalShape,
+    newPathShape,
+    newRectShape,
+    newSolidColorFill,
+    newSymbolRefShape,
+    newSymbolShape
+} from "./creator";
 import { Document } from "../data/document";
-import { translateTo, translate, expand, adjustLT2 } from "./frame";
+import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
-import { Border, BorderStyle, Color, Fill, Artboard, Path, PathShape, Style, TableShape, Text } from "../data/classes";
+import {
+    Artboard,
+    Border,
+    BorderStyle,
+    Color,
+    Fill,
+    Path,
+    PathShape,
+    Style,
+    SymbolRefShape,
+    TableShape,
+    Text
+} from "../data/classes";
 import { TextShapeEditor } from "./textshape";
-import {get_frame, modify_frame_after_insert, transform_data} from "../io/cilpboard";
+import { get_frame, modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { render2path } from "../render";
 import { Matrix } from "../basic/matrix";
-import { IImportContext, importBorder, importStyle } from "../io/baseimport";
+import {
+    IImportContext,
+    importArtboard,
+    importBorder, importShapeFrame,
+    importStyle,
+    importSymbolShape,
+    importVariable
+} from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
-import { ContactShape, Shadow } from "../data/baseclasses";
+import { exportArtboard, exportShapeFrame, exportStyle, exportSymbolShape, exportVariable } from "../data/baseexport";
+import {
+    adjust_selection_before_group,
+    after_remove,
+    clear_binds_effect,
+    find_state_space,
+    get_symbol_by_layer,
+    init_state, is_symbol_but_not_union,
+    make_union,
+    modify_frame_after_inset_state,
+    modify_index,
+    trans_after_make_symbol
+} from "./utils/other";
+import { v4 } from "uuid";
+import {
+    is_exist_invalid_shape, is_exist_invalid_shape2, is_part_of_symbol,
+    is_part_of_symbolref,
+    modify_variable_with_api,
+    shape4border,
+    shape4fill
+} from "./utils/symbol";
+import { is_circular_ref2 } from "./utils/ref_check";
+import { Shadow } from "../data/baseclasses";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -27,19 +92,23 @@ export interface PositonAdjust { // 涉及属性：frame.x、frame.y
     transX: number
     transY: number
 }
+
 export interface ConstrainerProportionsAction { // constrainerProportions
     target: Shape
     value: boolean
 }
+
 export interface FrameAdjust { // frame.width、frame.height
     target: Shape
     widthExtend: number
     heightExtend: number
 }
+
 export interface RotateAdjust { // rotation
     target: Shape
     value: number
 }
+
 export interface FlipAction { // isFlippedHorizontal、isFlippedVertical
     target: Shape
     direction: 'horizontal' | 'vertical'
@@ -50,110 +119,134 @@ export interface FillColorAction { // fill.color
     index: number
     value: Color
 }
+
 export interface FillEnableAction { // fill.Enabled
     target: Shape
     index: number
     value: boolean
 }
+
 export interface FillAddAction { // style.fills
     target: Shape
     value: Fill
 }
+
 export interface FillDeleteAction { // style.fills
     target: Shape
     index: number
 }
+
 export interface FillsReplaceAction { // style.fills
     target: Shape
     value: Fill[]
 }
+
 export interface BorderColorAction { // border.color
     target: Shape
     index: number
     value: Color
 }
+
 export interface BorderEnableAction { // border.Enabled
     target: Shape
     index: number
     value: boolean
 }
+
 export interface BorderAddAction { // style.borders
     target: Shape
     value: Border
 }
+
 export interface BorderDeleteAction { // style.borders
     target: Shape
     index: number
 }
+
 export interface BordersReplaceAction { // style.borders
     target: Shape
     value: Border[]
 }
+
 export interface BorderPositionAction {
     target: Shape
     index: number
     value: BorderPosition
 }
+
 export interface BorderThicknessAction {
     target: Shape
     index: number
     value: number
 }
+
 export interface BorderStyleAction {
     target: Shape
     index: number
     value: BorderStyle
 }
+
 export interface ShadowReplaceAction {
     target: Shape;
     value: Shadow[];
 }
-export interface ShadowAddAction { 
+
+export interface ShadowAddAction {
     target: Shape
     value: Shadow
 }
+
 export interface ShadowDeleteAction {
     target: Shape
     index: number
 }
-export interface ShadowEnableAction { 
+
+export interface ShadowEnableAction {
     target: Shape
     index: number
     value: boolean
 }
+
 export interface ShadowPositionAction {
     target: Shape
     index: number
     value: ShadowPosition
 }
+
 export interface ShadowColorAction { // border.color
     target: Shape
     index: number
     value: Color
 }
+
 export interface ShadowBlurRadiusAction {
     target: Shape
     index: number
     value: number
 }
+
 export interface ShadowSpreadAction {
     target: Shape
     index: number
     value: number
 }
+
 export interface ShadowOffsetXAction {
     target: Shape
     index: number
     value: number
 }
+
 export interface ShadowOffsetYAction {
     target: Shape
     index: number
     value: number
 }
+
 function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
     return Math.atan2(B.y - A.y, B.x - A.x)
 }
+
 export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
     const deltaX = B.x - A.x;
     const deltaY = B.y - A.y;
@@ -166,11 +259,13 @@ export class PageEditor {
     private __repo: CoopRepository;
     private __page: Page;
     private __document: Document;
+
     constructor(repo: CoopRepository, page: Page, document: Document) {
         this.__repo = repo;
         this.__page = page;
         this.__document = document;
     }
+
     group(shapes: Shape[], groupname: string): false | GroupShape { // shapes中元素index越小层级越高，即在图形列表的位置最高
         if (shapes.length === 0) return false;
         if (shapes.find((v) => !v.parent)) return false;
@@ -188,8 +283,7 @@ export class PageEditor {
 
             this.__repo.commit();
             return gshape;
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e)
             this.__repo.rollback();
         }
@@ -197,6 +291,7 @@ export class PageEditor {
     }
 
     ungroup(shape: GroupShape): false | Shape[] {
+        if (shape.isVirtualShape) return false;
         if (!shape.parent) return false;
         const api = this.__repo.start("", {});
         try {
@@ -209,6 +304,7 @@ export class PageEditor {
         }
         return false;
     }
+
     /**
      * @description 创建一个包裹所有shapes容器
      * @param shapes
@@ -231,19 +327,20 @@ export class PageEditor {
 
             this.__repo.commit();
             return artboard;
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e)
             this.__repo.rollback();
         }
         return false;
     }
+
     /**
      * @description 解除容器
      * @param shape
      * @returns { false | Shape[] } 成功则返回被解除容器的所有子元素
      */
     dissolution_artboard(shape: Artboard): false | Shape[] {
+        if (shape.isVirtualShape) return false;
         if (!shape.parent) return false;
         const api = this.__repo.start("dissolution_artboard", {});
         try {
@@ -255,6 +352,23 @@ export class PageEditor {
             this.__repo.rollback();
         }
         return false;
+    }
+
+    modifyShapesContextSettingOpacity(shapes: Shape[], value: number) {
+        if (!shapes.length) return console.log('invalid data');
+        try {
+            const api = this.__repo.start("modifyShapesContextSettingOpacity", {});
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const item = shapes[i];
+                api.shapeModifyContextSettingsOpacity(this.__page, item, value);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+            return false;
+        }
     }
 
     boolgroup(shapes: Shape[], groupname: string, op: BoolOp): false | GroupShape {
@@ -285,17 +399,300 @@ export class PageEditor {
 
             this.__repo.commit();
             return gshape;
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e)
             this.__repo.rollback();
         }
         return false;
     }
 
+    /**
+     * 创建组件
+     * symbolref引用的symbol可能被其他人取消，那么symbolref应该能引用普通的对象！
+     */
+    makeSymbol(document: Document, shapes: Shape[], name?: string) {
+        if (shapes.length === 0) return;
+        const api = this.__repo.start("makeSymbol", {});
+        try {
+            const need_trans_data: Shape[] = [];
+            adjust_selection_before_group(document, this.__page, shapes, api, need_trans_data);
+            let sym: Shape;
+            const shape0 = shapes[0];
+            const frame = importShapeFrame((exportShapeFrame(shape0.frame)));
+            if (shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius) {
+                const style = importStyle(exportStyle(shape0.style));
+                const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
+                const index = (shape0.parent as GroupShape).indexOfChild(shape0);
+                sym = api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
+                const children = shape0.childs;
+                for (let i = 0, len = children.length; i < len; ++i) {
+                    api.shapeMove(this.__page, shape0, 0, symbolShape, i);
+                }
+                api.shapeDelete(this.__page, shape0.parent as GroupShape, index);
+            } else {
+                const symbolShape = newSymbolShape(name ?? shape0.name, frame);
+                const index = (shape0.parent as GroupShape).indexOfChild(shape0);
+                sym = group(this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
+            }
+            if (sym) {
+                document.symbolsMgr.add(sym.id, sym as SymbolShape);
+                if (need_trans_data.length) {
+                    trans_after_make_symbol(this.__page, sym as SymbolShape, need_trans_data, api);
+                }
+                this.__repo.commit();
+                return sym as any as SymbolShape;
+            } else {
+                throw new Error('failed')
+            }
+        } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 给一个组件symbol添加一个属性，如果该组件不是一个union集合，则先创建一个集合
+     * @param attri_name 第一个属性名称
+     * @param dlt 属性默认值
+     * @return symbol 集合union
+     */
+    makeStatus(symbol: SymbolShape, attri_name: string, dlt: string, isDefault: boolean) {
+        const api = this.__repo.start("makeStatus", {});
+        try {
+            if (!(symbol instanceof SymbolUnionShape)) {
+                const u = make_union(api, this.__page, symbol, attri_name);
+                if (!u) {
+                    throw new Error('make union failed!');
+                }
+                symbol = u;
+            } else {
+                const _var = new Variable(uuid(), VariableType.Status, attri_name, isDefault ? SymbolShape.Default_State : dlt);
+                api.shapeAddVariable(this.__page, symbol, _var);
+            }
+            this.__repo.commit();
+            return symbol;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 给组件创建变量
+     */
+    makeVar(type: VariableType, symbol: SymbolShape, name: string, values: any) {
+        const api = this.__repo.start("makeVar", {});
+        try {
+            if (symbol.type !== ShapeType.Symbol || (symbol.parent && symbol.parent instanceof SymbolUnionShape)) throw new Error('wrong role!');
+            const _var = new Variable(v4(), type, name, values);
+            api.shapeAddVariable(this.__page, symbol, _var);
+            this.__repo.commit();
+            return symbol;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 基于内部原有状态建立新状态
+     * @union union
+     */
+    makeStateAt(union: SymbolShape, dlt: string, index?: number, hor_align?: number) {
+        if (!(union instanceof SymbolUnionShape) || !union.childs.length) return;
+        let idx = index === undefined ? union.childs.length - 1 : index;
+        if (index !== undefined && (index > union.childs.length || index < 0)) idx = union.childs.length;
+        const origin = union.childs[idx];
+        if (!origin) return;
+        try {
+            const source = exportSymbolShape(origin as unknown as SymbolShape);
+            source.id = uuid();
+            set_childs_id(source.childs as Shape[]);
+            if (index === undefined) {
+                const space = find_state_space(union);
+                if (!space) throw new Error('failed');
+                source.frame.y = space.y + 20;
+            } else {
+                source.frame.x = hor_align || source.frame.x + 20;
+            }
+            const _this = this;
+            const ctx: IImportContext = new class implements IImportContext {
+                document: Document = _this.__document
+            };
+            const copy = importSymbolShape(source, ctx); // 需要设置ctx
+            const api = this.__repo.start("makeStateAt", {});
+            const new_state = api.shapeInsert(this.__page, union, copy, idx + 1);
+            modify_frame_after_inset_state(this.__page, api, union);
+            init_state(api, this.__page, new_state as SymbolShape, dlt);
+
+            if (new_state) {
+                this.__repo.commit();
+                return new_state as any as SymbolShape;
+            } else {
+                throw new Error('failed');
+            }
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    /**
+     * @description 从外部引入一个状态
+     * @symbol 外部组件
+     */
+    insertStateAt(union: SymbolShape, symbol: SymbolShape, index: number) {
+
+    }
+
+    /**
+     * @description 将引用的组件解引用(解绑)
+     * todo 考虑union symbol
+     */
+    extractSymbol(shapes: Shape[]) {
+        const actions: { parent: Shape, self: Shape, insertIndex: number }[] = []
+        const replaceId = (shape: types.Shape) => {
+            shape.id = uuid();
+            if ((shape as types.GroupShape).childs) {
+                (shape as types.GroupShape).childs.forEach((c) => replaceId(c));
+            }
+        }
+
+        const transferVars = (rootRef: SymbolRefShape, g: { childs: types.Shape[] }) => {
+            const overrides = rootRef.overrides;
+            const vars = rootRef.variables;
+            if (!overrides) return;
+            for (let i = 0, childs = g.childs; i < childs.length; ++i) {
+                const c = childs[i];
+                if ((c as any).childs) { // group
+                    transferVars(rootRef, c as any);
+                    return;
+                }
+                if (!(c.typeId === "symbol-ref-shape")) {
+                    continue;
+                }
+                let refId = c.id;
+                // 去掉头部rootref.id
+                refId = refId.substring(refId.indexOf('/') + 1);
+                if (refId.length === 0) throw new Error();
+
+                // 查找相关变量
+                overrides.forEach((v, k) => {
+                    if (!k.startsWith(refId)) return;
+
+                    const _v = vars.get(v);
+                    if (!_v) return;
+
+                    const _var = exportVariable(_v);
+                    _var.id = uuid();
+                    const override_id = k.substring(refId.length + 1);
+                    if (override_id.length === 0) throw new Error();
+
+                    const ref = c as types.SymbolRefShape;
+                    if ((ref.variables as any)[override_id]) {
+                        const origin_var = (ref.variables as any)[override_id] as types.Variable;
+                        origin_var.name = _var.name;
+                        origin_var.value = _var.value;
+                    } else if (ref.overrides && (ref.overrides as any)[override_id]) {
+                        const origin_ref = (ref.overrides as any)[override_id];
+                        const origin_var = (ref.variables as any)[origin_ref] as types.Variable;
+                        if (!origin_var) {
+                            (ref.variables as any)[_var.id] = _var;
+                            (ref.overrides as any)[override_id] = _var.id;
+                        } else {
+                            origin_var.name = _var.name;
+                            origin_var.value = _var.value;
+                        }
+                    } else {
+                        (ref.variables as any)[_var.id] = _var;
+                        if (!ref.overrides) (ref as any).overrides = {};
+                        (ref.overrides as any)[override_id] = _var.id;
+                    }
+                })
+            }
+        }
+
+        const return_shapes: Shape[] = [];
+        for (let i = 0, len = shapes.length; i < len; i++) {
+            const shape: SymbolRefShape = shapes[i] as SymbolRefShape;
+            if (shape.type !== ShapeType.SymbolRef) {
+                return_shapes.push(shape);
+                continue;
+            }
+            if (shape.isVirtualShape) { // 实例内引用组件
+                return_shapes.push(shape);
+                // todo 失去变量的情况下保持当前状态
+                continue;
+            }
+            const symmgr = shape.getSymbolMgr();
+            const symbol = symmgr?.getSync(shape.refId);
+            if (!symbol) {
+                return_shapes.push(shape);
+                continue;
+            }
+            const { x, y, width, height } = shape.frame;
+            const tmpFrame = new ShapeFrame(x, y, width, height);
+            const sym = shape.symData;
+            if (!sym) continue;
+            let style: any = sym.style;
+            const _this = this;
+            const ctx: IImportContext = new class implements IImportContext {
+                document: Document = _this.__document
+            };
+            if (style) {
+                style = importStyle(exportStyle(style), ctx);
+            }
+            const tmpArtboard: Artboard = newArtboard(shape.name, tmpFrame, style);
+            initFrame(tmpArtboard, shape.frame);
+            tmpArtboard.childs = shape.virtualChilds! as BasicArray<Shape>;
+            tmpArtboard.varbinds = shape.varbinds;
+            const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
+
+            // 遍历symbolData,如有symbolref,则查找根shape是否有对应override的变量,如有则存到symbolref内
+            transferVars(shape, symbolData);
+
+            replaceId(symbolData);
+            const parent = shape.parent;
+            if (!parent) {
+                return_shapes.push(shape);
+                continue;
+            }
+            const insertIndex = (parent as GroupShape).indexOfChild(shape);
+            if (insertIndex < 0) {
+                return_shapes.push(shape);
+                continue;
+            }
+
+            const newShape = importArtboard(symbolData, ctx);
+            actions.push({ parent, self: newShape, insertIndex });
+        }
+        if (!actions.length) return shapes;
+        const api = this.__repo.start("extractSymbol", {});
+        try {
+            const results: Shape[] = [];
+            for (let i = 0, len = actions.length; i < len; i++) {
+                const { parent, self, insertIndex } = actions[i];
+                const ret = api.shapeInsert(this.__page, parent as GroupShape, self, insertIndex);
+                api.shapeDelete(this.__page, parent as GroupShape, insertIndex + 1);
+                results.push(ret);
+            }
+            this.__repo.commit();
+            return [...return_shapes, ...results];
+        } catch (e) {
+            console.log(e)
+            this.__repo.rollback();
+        }
+    }
+
+    refSymbol(document: Document, name: string, frame: ShapeFrame, refId: string) {
+        return newSymbolRefShape(name, frame, refId, document.symbolsMgr);
+    }
+
     private cloneStyle(style: Style): Style {
         const _this = this;
-        const ctx: IImportContext = new class implements IImportContext { document: Document = _this.__document };
+        const ctx: IImportContext = new class implements IImportContext {
+            document: Document = _this.__document
+        };
         return importStyle(style, ctx);
     }
 
@@ -344,14 +741,13 @@ export class PageEditor {
             let pathstr = "";
             shapes.forEach((shape) => {
                 const shapem = shape.matrix2Root();
-                const shapepath = render2path(shape);
+                const shapepath = render2path(shape, undefined);
                 shapem.multiAtLeft(m);
                 shapepath.transform(shapem);
 
                 if (pathstr.length > 0) {
                     pathstr = gPal.boolop.union(pathstr, shapepath.toString())
-                }
-                else {
+                } else {
                     pathstr = shapepath.toString();
                 }
             })
@@ -384,7 +780,7 @@ export class PageEditor {
         const parent = shape.parent as GroupShape;
         if (!parent) return false;
 
-        const path = render2path(shape);
+        const path = render2path(shape, undefined);
 
         // copy fill and borders
         const copyStyle = findUsableFillStyle(shape);
@@ -417,7 +813,8 @@ export class PageEditor {
         }
         return false;
     }
-    private removeContactSides(api: Api, page: Page, shape: ContactShape) {
+
+    private removeContactSides(api: Api, page: Page, shape: types.ContactShape) {
         if (shape.from) {
             const fromShape = page.getShape(shape.from.shapeId);
             const contacts = fromShape?.style.contacts;
@@ -453,6 +850,7 @@ export class PageEditor {
             }
         }
     }
+
     private removeContact(api: Api, page: Page, shape: Shape) {
         const contacts = shape.style.contacts;
         if (contacts && contacts.length) {
@@ -464,18 +862,20 @@ export class PageEditor {
                 let idx = -1;
                 for (let j = 0, len = p.childs.length; j < len; j++) {
                     if (p.childs[j].id === shape.id) {
-                        idx = j; break;
+                        idx = j;
+                        break;
                     }
                 }
                 if (idx > -1) api.shapeDelete(page, p as GroupShape, idx);
             }
         }
     }
+
     private delete_inner(page: Page, shape: Shape, api: Api): boolean {
         const p = shape.parent as GroupShape;
         if (!p) return false;
         if (shape.type === ShapeType.Contact) { // 连接线删除之后需要删除两边的连接关系
-            this.removeContactSides(api, page, shape as unknown as ContactShape);
+            this.removeContactSides(api, page, shape as unknown as types.ContactShape);
         } else {
             this.removeContact(api, page, shape);
         }
@@ -485,6 +885,7 @@ export class PageEditor {
         }
         return true;
     }
+
     delete(shape: Shape): boolean {
         const page = shape.getPage() as Page;
         if (!page) return false;
@@ -492,14 +893,27 @@ export class PageEditor {
         if (!savep) return false;
         const api = this.__repo.start("delete", {});
         try {
+            if (is_part_of_symbolref(shape)) {
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
+                    return _var ? !_var.value : !shape.isVisible;
+                })) return true;
+                api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
+                return true;
+            }
+            const symbol = get_symbol_by_layer(shape);
+            if (symbol) {
+                clear_binds_effect(this.__page, shape, symbol, api);
+            }
             if (this.delete_inner(page, shape, api)) {
-                if (!savep.childs.length && savep.type === ShapeType.Group) {
+                if (after_remove(savep)) {
                     this.delete_inner(page, savep, api);
+                }
+                if (shape.type === ShapeType.Symbol) {
+                    this.__document.__correspondent.notify('update-symbol-list');
                 }
                 this.__repo.commit()
                 return true;
-            }
-            else {
+            } else {
                 this.__repo.rollback();
             }
         } catch (e) {
@@ -508,18 +922,32 @@ export class PageEditor {
         }
         return false;
     }
+
     // 批量删除
     delete_batch(shapes: Shape[]) {
         const api = this.__repo.start("deleteBatch", {});
+        let need_special_notify = false;
         for (let i = 0; i < shapes.length; i++) {
             try {
                 const shape = shapes[i];
+                if (is_part_of_symbolref(shape)) {
+                    if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
+                        return _var ? !_var.value : !shape.isVisible;
+                    })) continue;
+                    api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
+                    continue;
+                }
+                const symbol = get_symbol_by_layer(shape);
+                if (symbol) {
+                    clear_binds_effect(this.__page, shape, symbol, api);
+                }
+                if (shape.type === ShapeType.Symbol) need_special_notify = true;
                 const page = shape.getPage() as Page;
                 if (!page) return false;
                 const savep = shape.parent as GroupShape;
                 if (!savep) return false;
                 this.delete_inner(page, shape, api);
-                if (!savep.childs.length && savep.type === ShapeType.Group) {
+                if (after_remove(savep)) {
                     this.delete_inner(page, savep, api);
                 }
             } catch (error) {
@@ -527,9 +955,13 @@ export class PageEditor {
                 return false;
             }
         }
+        if (need_special_notify) {
+            this.__document.__correspondent.notify('update-symbol-list');
+        }
         this.__repo.commit();
         return true;
     }
+
     // 插入成功，返回插入的shape
     insert(parent: GroupShape, index: number, shape: Shape, adjusted = false): Shape | false {
         // adjust shape frame refer to parent
@@ -551,12 +983,13 @@ export class PageEditor {
             return false;
         }
     }
+
     /**
      * @description 同一容器下批量粘贴shape
      * @param shapes 未进入文档的shape
      * @param adjusted 是否提前调整过相对位置
      */
-    pasteShapes1(parent: GroupShape, shapes: Shape[]): {shapes: Shape[], frame: {x: number, y: number}[]} | false {
+    pasteShapes1(parent: GroupShape, shapes: Shape[]): { shapes: Shape[], frame: { x: number, y: number }[] } | false {
         const api = this.__repo.start("insertShapes1", {});
         try {
             const result: Shape[] = [];
@@ -571,13 +1004,14 @@ export class PageEditor {
             modify_frame_after_insert(api, this.__page, result);
             const frame = get_frame(result);
             this.__repo.commit();
-            return {shapes: result, frame};
+            return { shapes: result, frame };
         } catch (e) {
             console.log(e);
             this.__repo.rollback();
             return false;
         }
     }
+
     /**
      * @description 指定容器下粘贴shape
      * @param shapes 未进入文档的shape
@@ -602,16 +1036,23 @@ export class PageEditor {
             return false;
         }
     }
+
     // 创建一个shape
     create(type: ShapeType, name: string, frame: ShapeFrame): Shape {
         switch (type) {
-            case ShapeType.Artboard: return newArtboard(name, frame);
-            case ShapeType.Rectangle: return newRectShape(name, frame);
-            case ShapeType.Oval: return newOvalShape(name, frame);
-            case ShapeType.Line: return newLineShape(name, frame);
-            default: return newRectShape(name, frame);
+            case ShapeType.Artboard:
+                return newArtboard(name, frame);
+            case ShapeType.Rectangle:
+                return newRectShape(name, frame);
+            case ShapeType.Oval:
+                return newOvalShape(name, frame);
+            case ShapeType.Line:
+                return newLineShape(name, frame);
+            default:
+                return newRectShape(name, frame);
         }
     }
+
     /**
      * @description 参数可选的创建并插入图形
      * @param ex_params 包含某一些属性的特定参数
@@ -626,15 +1067,24 @@ export class PageEditor {
         const { is_arrow, rotation, target_xy } = ex_params;
         let new_s: Shape | undefined;
         switch (type) {
-            case ShapeType.Artboard: new_s = newArtboard(name, frame); break;
-            case ShapeType.Rectangle: new_s = newRectShape(name, frame); break;
-            case ShapeType.Oval: new_s = newOvalShape(name, frame); break;
-            case ShapeType.Line: new_s = is_arrow ? newArrowShape(name, frame) : newLineShape(name, frame); break;
-            default: new_s = newRectShape(name, frame);
+            case ShapeType.Artboard:
+                new_s = newArtboard(name, frame);
+                break;
+            case ShapeType.Rectangle:
+                new_s = newRectShape(name, frame);
+                break;
+            case ShapeType.Oval:
+                new_s = newOvalShape(name, frame);
+                break;
+            case ShapeType.Line:
+                new_s = is_arrow ? newArrowShape(name, frame) : newLineShape(name, frame);
+                break;
+            default:
+                new_s = newRectShape(name, frame);
         }
         if (!new_s) return false;
-        const api = this.__repo.start("create2", {});
         const m_p2r = parent.matrix2Root();
+        const api = this.__repo.start("create2", {});
         try {
             const index = parent.childs.length;
             const xy = m_p2r.computeCoord2(0, 0);
@@ -670,20 +1120,21 @@ export class PageEditor {
                 api.shapeMove(this.__page, parent, index, target, to)
                 this.__repo.commit();
                 return true;
-            }
-            catch (error) {
+            } catch (error) {
                 console.log(error)
                 this.__repo.rollback();
             }
         }
         return false;
     }
+
     /**
      * @description 提高图形shape的z-index层级
      * @param step 层级数，不传则提高到顶部
      * @returns { boolean }
      */
     uppper_layer(shape: Shape, step?: number) {
+        if (shape.isVirtualShape) return true; // 组件实例内部图形不可以移动图层
         const parent = shape.parent as GroupShape | undefined;
         if (!parent) return false;
         const index = parent.indexOfChild(shape);
@@ -708,12 +1159,14 @@ export class PageEditor {
             return false;
         }
     }
+
     /**
      * @description 调低图形shape的z-index层级
      * @param step 层级数，不传则降低到底部
      * @returns { boolean }
      */
     lower_layer(shape: Shape, step?: number) {
+        if (shape.isVirtualShape) return true; // 组件实例内部图形不可以移动图层
         const parent = shape.parent as GroupShape | undefined;
         if (!parent) return false;
         const index = parent.indexOfChild(shape);
@@ -737,6 +1190,7 @@ export class PageEditor {
             return false;
         }
     }
+
     /**
      * @description src中的每个图形都将被替换成replacement
      * @param document 当前文档
@@ -803,10 +1257,17 @@ export class PageEditor {
             return false;
         }
     }
+
     setName(name: string) {
         const api = this.__repo.start("setName", {});
-        api.pageModifyName(this.__document, this.__page.id, name);
-        this.__repo.commit();
+        try {
+            api.pageModifyName(this.__document, this.__page.id, name);
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+            return false;
+        }
     }
 
     /**
@@ -817,9 +1278,9 @@ export class PageEditor {
      */
     shapeListDrag(wanderer: Shape, host: Shape, offsetOverhalf: boolean) {
         if (!wanderer || !host) return;
+        const beforeXY = wanderer.frame2Root();
+        const api = this.__repo.start('shapeLayerMove', {});
         try {
-            const beforeXY = wanderer.frame2Root();
-            const api = this.__repo.start('shapeLayerMove', {});
             if (wanderer.id !== host.parent?.id) {
                 if (host.type === ShapeType.Artboard) {
                     if (offsetOverhalf) {
@@ -860,9 +1321,10 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     arrange(actions: PositonAdjust[]) {
+        const api = this.__repo.start('arrange', {});
         try {
-            const api = this.__repo.start('arrange', {});
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 translate(api, this.__page, action.target, action.transX, action.transY);
@@ -872,9 +1334,10 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesConstrainerProportions(actions: ConstrainerProportionsAction[]) {
+        const api = this.__repo.start('setShapesConstrainerProportions', {});
         try {
-            const api = this.__repo.start('setShapesConstrainerProportions', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.shapeModifyConstrainerProportions(this.__page, target, value);
@@ -884,9 +1347,10 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFrame(actions: FrameAdjust[]) {
+        const api = this.__repo.start('setShapesFrame', {});
         try {
-            const api = this.__repo.start('setShapesFrame', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, widthExtend, heightExtend } = actions[i];
                 expand(api, this.__page, target, widthExtend, heightExtend);
@@ -896,13 +1360,15 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesRotate(shapes: Shape[], v: number) {
+        const api = this.__repo.start('setShapesRotate', {});
         try {
-            const api = this.__repo.start('setShapesRotate', {});
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
                 if (s.type === ShapeType.Line) {
-                    const f = s.frame, m2p = s.matrix2Parent(), lt = m2p.computeCoord2(0, 0), rb = m2p.computeCoord2(f.width, f.height);
+                    const f = s.frame, m2p = s.matrix2Parent(), lt = m2p.computeCoord2(0, 0),
+                        rb = m2p.computeCoord2(f.width, f.height);
                     const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
                     let dr = v - real_r;
                     if (s.isFlippedHorizontal) dr = -dr;
@@ -918,9 +1384,10 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesFlip(actions: FlipAction[]) {
+        const api = this.__repo.start('shapesFlip', {});
         try {
-            const api = this.__repo.start('shapesFlip', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, direction } = actions[i];
                 if (direction === 'horizontal') {
@@ -934,62 +1401,73 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesFillColor(actions: FillColorAction[]) {
+        const api = this.__repo.start('setShapesFillColor', {});
         try {
-            const api = this.__repo.start('setShapesFillColor', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                api.setFillColor(this.__page, target, index, value);
+                const s = shape4fill(api, this.__page, target);
+                api.setFillColor(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     setShapesFillEnabled(actions: FillEnableAction[]) {
+        const api = this.__repo.start('setShapesFillEnabled', {});
         try {
-            const api = this.__repo.start('setShapesFillEnabled', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                api.setFillEnable(this.__page, target, index, value);
+                const s = shape4fill(api, this.__page, target);
+                api.setFillEnable(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     shapesAddFill(actions: FillAddAction[]) {
+        const api = this.__repo.start('shapesAddFill', {});
         try {
-            const api = this.__repo.start('shapesAddFill', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addFillAt(this.__page, target, value, target.style.fills.length);
+                const s = shape4fill(api, this.__page, target);
+                const l = s instanceof Shape ? s.style.fills.length : s.value.length;
+                api.addFillAt(this.__page, s, value, l);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     shapesDeleteFill(actions: FillDeleteAction[]) {
+        const api = this.__repo.start('shapesDeleteFill', {});
         try {
-            const api = this.__repo.start('shapesDeleteFill', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index } = actions[i];
-                api.deleteFillAt(this.__page, target, index);
+                const s = shape4fill(api, this.__page, target);
+                api.deleteFillAt(this.__page, s, index);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     shapesFillsUnify(actions: FillsReplaceAction[]) {
+        const api = this.__repo.start('shapesFillsUnify', {}); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
         try {
-            const api = this.__repo.start('shapesFillsUnify', {}); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
                 // 先清空再填入
-                api.deleteFills(this.__page, target, 0, target.style.fills.length); // 清空
-                api.addFills(this.__page, target, value); // 填入新的值
+                api.deleteFills(this.__page, s, 0, target.style.fills.length); // 清空
+                api.addFills(this.__page, s, value); // 填入新的值
             }
             this.__repo.commit();
         } catch (error) {
@@ -997,104 +1475,123 @@ export class PageEditor {
             // throw new Error(`${error}`);
         }
     }
+
     //boders
     setShapesBorderColor(actions: BorderColorAction[]) {
+        const api = this.__repo.start('setShapesBorderColor', {});
         try {
-            const api = this.__repo.start('setShapesBorderColor', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                api.setBorderColor(this.__page, target, index, value);
+                const s = shape4border(api, this.__page, target);
+                api.setBorderColor(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     setShapesBorderEnabled(actions: BorderEnableAction[]) {
+        const api = this.__repo.start('setShapesBorderEnabled', {});
         try {
-            const api = this.__repo.start('setShapesBorderEnabled', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                api.setBorderEnable(this.__page, target, index, value);
+                const s = shape4border(api, this.__page, target);
+                api.setBorderEnable(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     shapesAddBorder(actions: BorderAddAction[]) {
+        const api = this.__repo.start('shapesAddBorder', {});
         try {
-            const api = this.__repo.start('shapesAddBorder', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addBorderAt(this.__page, target, value, target.style.borders.length);
+                const s = shape4border(api, this.__page, target);
+                const l = s instanceof Shape ? s.style.borders.length : s.value.length;
+                api.addBorderAt(this.__page, s, value, l);
             }
             this.__repo.commit();
         } catch (error) {
+            console.log(error);
             this.__repo.rollback();
         }
     }
+
     shapesDeleteBorder(actions: BorderDeleteAction[]) {
+        const api = this.__repo.start('shapesDeleteBorder', {});
         try {
-            const api = this.__repo.start('shapesDeleteBorder', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, index } = actions[i];
-                api.deleteBorderAt(this.__page, target, index);
+                const s = shape4border(api, this.__page, target);
+                api.deleteBorderAt(this.__page, s, index);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     shapesBordersUnify(actions: BordersReplaceAction[]) {
+        const api = this.__repo.start('shapesBordersUnify', {});
         try {
-            const api = this.__repo.start('shapesBordersUnify', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.deleteBorders(this.__page, target, 0, target.style.borders.length);
-                api.addBorders(this.__page, target, value);
+                const s = shape4border(api, this.__page, target);
+                api.deleteBorders(this.__page, s, 0, target.style.borders.length);
+                api.addBorders(this.__page, s, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     setShapesBorderPosition(actions: BorderPositionAction[]) {
+        const api = this.__repo.start('setShapesBorderPosition', {});
         try {
-            const api = this.__repo.start('setShapesBorderPosition', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                api.setBorderPosition(this.__page, target, index, value);
+                const s = shape4border(api, this.__page, target);
+                api.setBorderPosition(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     setShapesBorderThickness(actions: BorderThicknessAction[]) {
+        const api = this.__repo.start('setShapesBorderThickness', {});
         try {
-            const api = this.__repo.start('setShapesBorderThickness', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                api.setBorderThickness(this.__page, target, index, value);
+                const s = shape4border(api, this.__page, target);
+                api.setBorderThickness(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     setShapesBorderStyle(actions: BorderStyleAction[]) {
+        const api = this.__repo.start('setShapesBorderStyle', {});
         try {
-            const api = this.__repo.start('setShapesBorderStyle', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                api.setBorderStyle(this.__page, target, index, value);
+                const s = shape4border(api, this.__page, target);
+                api.setBorderStyle(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
         }
     }
+
     // shadow
     setShapesShadowOffsetY(actions: ShadowOffsetYAction[]) {
         try {
@@ -1108,6 +1605,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesShadowOffsetX(actions: ShadowOffsetXAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowOffsetX', {});
@@ -1120,6 +1618,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesShadowSpread(actions: ShadowSpreadAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowSpread', {});
@@ -1132,6 +1631,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesShadowBlurRadius(actions: ShadowBlurRadiusAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowBlurRadius', {});
@@ -1144,6 +1644,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesShadowColor(actions: ShadowColorAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowColor', {});
@@ -1156,6 +1657,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesShadowPosition(actions: ShadowPositionAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowPosition', {});
@@ -1168,6 +1670,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesShadowEnabled(actions: ShadowEnableAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowEnabled', {});
@@ -1180,6 +1683,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesDeleteShasow(actions: ShadowDeleteAction[]) {
         try {
             const api = this.__repo.start('shapesDeleteShasow', {});
@@ -1192,6 +1696,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesAddShadow(actions: ShadowAddAction[]) {
         try {
             const api = this.__repo.start('shapesAddShadow', {});
@@ -1204,6 +1709,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     shapesShadowsUnify(actions: ShadowReplaceAction[]) {
         try {
             const api = this.__repo.start('shapesShadowsUnify', {});
@@ -1217,15 +1723,22 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     toggleShapesVisible(shapes: Shape[]) {
+        const api = this.__repo.start('setShapesVisible', {});
         try {
-            const api = this.__repo.start('setShapesVisible', {});
             for (let i = 0; i < shapes.length; i++) {
-                let shape: Shape | undefined = shapes[i];
-                if (shape.type === ShapeType.Group) {
-                    shape = this.__page.shapes.get(shape.id)
-                }
+                let shape: Shape = shapes[i];
                 if (!shape) continue;
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Visible, OverrideType.Visible, (_var) => {
+                    return _var ? !_var.value : !shape.isVisible;
+                })) {
+                    continue;
+                }
+                if (shape.type === ShapeType.Group) {
+                    shape = this.__page.shapes.get(shape.id)!;
+                    if (!shape) continue;
+                }
                 api.shapeModifyVisible(this.__page, shape, !shape.isVisible);
             }
             this.__repo.commit();
@@ -1233,11 +1746,17 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     toggleShapesLock(shapes: Shape[]) {
+        const api = this.__repo.start('setShapesLocked', {});
         try {
-            const api = this.__repo.start('setShapesLocked', {});
             for (let i = 0; i < shapes.length; i++) {
                 let shape: Shape | undefined = shapes[i];
+                if (modify_variable_with_api(api, this.__page, shape, VariableType.Lock, OverrideType.Lock, (_var) => {
+                    return _var ? !_var.value : !shape?.isLocked;
+                })) {
+                    continue;
+                }
                 if (shape.type === ShapeType.Group) {
                     shape = this.__page.shapes.get(shape.id)
                 }
@@ -1249,9 +1768,10 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setBackground(color: Color) {
+        const api = this.__repo.start('setBackground', {});
         try {
-            const api = this.__repo.start('setBackground', {});
             api.pageModifyBackground(this.__document, this.__page.id, color);
             this.__repo.commit();
         } catch (error) {
@@ -1259,9 +1779,10 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     setShapesRadius(shapes: Shape[], lt: number, rt: number, rb: number, lb: number) {
+        const api = this.__repo.start('setShapesRadius', {});
         try {
-            const api = this.__repo.start('setShapesRadius', {});
             for (let i = 0; i < shapes.length; i++) {
                 const s = shapes[i];
                 if (s instanceof RectShape) api.shapeModifyRadius(this.__page, s, lt, rt, rb, lb);
@@ -1271,9 +1792,99 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-    setLinesLength(shapes: Shape[], v: number) {
+
+    afterShapeListDrag(shapes: Shape[], host: Shape, position: 'upper' | 'inner' | 'lower') {
+        // 数据校验
+        if (host.type === ShapeType.SymbolRef && position === 'inner') return false;
+        if (is_part_of_symbolref(host)) return false;
+        const host_parent: GroupShape | undefined = host.parent as GroupShape;
+        if (!host_parent || host_parent.isVirtualShape) return false;
+        const pre: Shape[] = [];
+        for (let i = 0, l = shapes.length; i < l; i++) {
+            const item = shapes[i];
+            if (is_exist_invalid_shape([item])) continue;
+            let next = false;
+            let p: Shape | undefined = host;
+            while (p) {
+                if (p.id === item.id) {
+                    next = true;
+                    break;
+                }
+                p = p.parent;
+            }
+            if (next) continue;
+            pre.push(item);
+        }
+        if (!pre.length) return false;
+
+        const api = this.__repo.start('afterShapeListDrag', {});
         try {
-            const api = this.__repo.start('setLinesLength', {});
+            if (position === "inner") {
+                for (let i = 0, l = pre.length; i < l; i++) {
+                    const item = pre[i];
+                    const parent: GroupShape | undefined = item.parent as GroupShape;
+                    if (!parent) continue;
+                    if (host.type === ShapeType.SymbolRef) continue;
+                    if ((host instanceof SymbolUnionShape)) continue;
+                    if (is_part_of_symbol(host)) {
+                        if (is_exist_invalid_shape2([item])) continue;
+                    }
+                    const children = item.naviChilds || item.childs;
+                    if (children?.length) {
+                        const tree = item instanceof SymbolRefShape ? item.symData : item;
+                        if (!tree) continue;
+                        if (is_circular_ref2(tree, host.id)) continue;
+                    }
+                    const beforeXY = item.frame2Root();
+                    let last = (host as GroupShape).childs.length;
+                    if (parent.id === host.id) { // 同一父级
+                        last--;
+                    }
+                    api.shapeMove(this.__page, parent, parent.indexOfChild(item), host as GroupShape, last);
+                    translateTo(api, this.__page, item, beforeXY.x, beforeXY.y);
+                    if (after_remove(parent)) this.delete_inner(this.__page, parent, api);
+                }
+            } else {
+                for (let i = 0, l = pre.length; i < l; i++) {
+                    const item = pre[i];
+                    const parent: GroupShape | undefined = item.parent as GroupShape;
+                    if (!parent) continue;
+                    if (host_parent.type === ShapeType.SymbolRef) continue;
+                    if ((host_parent instanceof SymbolUnionShape)) continue;
+                    if (is_part_of_symbol(host_parent)) {
+                        if (is_exist_invalid_shape2([item])) continue;
+                    }
+                    const children = item.naviChilds || item.childs;
+                    if (children?.length) {
+                        const tree = item instanceof SymbolRefShape ? item.symData : item;
+                        if (!tree) continue;
+                        if (is_circular_ref2(tree, host_parent.id)) continue;
+                    }
+                    const beforeXY = item.frame2Root();
+                    let index = host_parent.indexOfChild(host);
+                    if (parent.id === host_parent.id) { // 同一父级
+                        index = modify_index((parent) as GroupShape, item, host, index);
+                    }
+                    if (position === "upper") {
+                        index++;
+                    }
+                    api.shapeMove(this.__page, parent, parent.indexOfChild(item), host_parent as GroupShape, index);
+                    translateTo(api, this.__page, item, beforeXY.x, beforeXY.y);
+                    if (after_remove(parent)) this.delete_inner(this.__page, parent, api);
+                }
+            }
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
+    setLinesLength(shapes: Shape[], v: number) {
+        const api = this.__repo.start('setLinesLength', {});
+        try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
                 if (s.type !== ShapeType.Line) continue;
@@ -1289,13 +1900,16 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+
     editor4Shape(shape: Shape): ShapeEditor {
-        return new ShapeEditor(shape, this.__page, this.__repo);
+        return new ShapeEditor(shape, this.__page, this.__repo, this.__document);
     }
+
     editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
-        return new TextShapeEditor(shape, this.__page, this.__repo);
+        return new TextShapeEditor(shape, this.__page, this.__repo, this.__document);
     }
+
     editor4Table(shape: TableShape): TableEditor {
-        return new TableEditor(shape, this.__page, this.__repo);
+        return new TableEditor(shape, this.__page, this.__repo, this.__document);
     }
 }

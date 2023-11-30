@@ -85,7 +85,6 @@ export function group(page: Page, shapes: Shape[], gshape: GroupShape, savep: Gr
     }
     return gshape;
 }
-
 export function ungroup(page: Page, shape: GroupShape, api: Api): Shape[] {
     const savep = shape.parent as GroupShape;
     let idx = savep.indexOfChild(shape);

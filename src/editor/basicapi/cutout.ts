@@ -1,8 +1,14 @@
-import { ExportFormat, ExportOptions } from "../../data/shape";
-import { ExportFileFormat } from "../../data/style";
+import { BasicArray } from "../../data/basic";
+import { ExportFormat, ExportOptions, Shape } from "../../data/shape";
+import { ExportFileFormat, ExportFormatNameingScheme } from "../../data/style";
 
-export function addExportFormat(options: ExportOptions, format: ExportFormat, index: number) {
-    options.exportFormats.splice(index, 0, format);
+export function addExportFormat(shape: Shape, format: ExportFormat, index: number) {
+    if (!shape.exportOptions) {
+        const formats = new BasicArray<ExportFormat>();
+        const includedChildIds = new BasicArray<string>();
+        shape.exportOptions = new ExportOptions(formats, includedChildIds, 0, false, false, false, false);
+    }
+    shape.exportOptions.exportFormats.splice(index, 0, format);
 }
 
 export function deleteExportFormatAt(options: ExportOptions, index: number) {
@@ -20,6 +26,10 @@ export function setExportFormatScale(options: ExportOptions, index: number, scal
 export function setExportFormatName(options: ExportOptions, index: number, name: string) {
     const format: ExportFormat = options.exportFormats[index];
     if (format) format.name = name;
+}
+export function setExportFormatPerfix(options: ExportOptions, index: number, Prefix: ExportFormatNameingScheme) {
+    const format: ExportFormat = options.exportFormats[index];
+    if (format) format.namingScheme = Prefix;
 }
 
 export function setExportFormatFileFormat(options: ExportOptions, index: number, fileFormat: ExportFileFormat) {

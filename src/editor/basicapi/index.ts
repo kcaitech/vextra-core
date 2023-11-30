@@ -1,9 +1,10 @@
 import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
-import { GroupShape, PathShape, PathShape2, RectShape, Shape } from "../../data/shape";
-import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
-import { BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, MarkerType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
+import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
+import { BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BasicMap } from "../../data/basic";
 
 export * from "./fill";
 export * from "./border";
@@ -90,6 +91,24 @@ export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, ne
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
     }
 }
+export function shapeModifyWideX(page: Page, shape: Shape, x: number) {
+    const frame = (shape as GroupShape).frame;
+    if (x !== frame.x) {
+        frame.x = x;
+    }
+}
+export function shapeModifyWideY(page: Page, shape: Shape, y: number) {
+    const frame = (shape as GroupShape).frame;
+    if (y !== frame.y) {
+        frame.y = y;
+    }
+}
+export function shapeModifyWideWH(page: Page, shape: Shape, w: number, h: number) {
+    const frame = shape.frame;
+    if (w !== frame.width || h !== frame.height) {
+        (shape as GroupShape).setWideFrameSize(w, h);
+    }
+}
 export function shapeModifyStartMarkerType(shape: Shape, mt: MarkerType) {
     const style = shape.style;
     if (mt !== style.startMarkerType) {
@@ -144,8 +163,9 @@ export function shapeModifyEditedState(shape: Shape, state: boolean) {
 export function shapeModifyName(shape: Shape, name: string) {
     shape.name = name;
 }
-export function shapeModifyVisible(shape: Shape, isVisible: boolean) {
-    shape.isVisible = isVisible;
+export function shapeModifyVisible(shape: Shape | Variable, isVisible: boolean) {
+    if (shape instanceof Shape) shape.setVisible(isVisible);
+    else shape.value = isVisible;
 }
 export function shapeModifyLock(shape: Shape, isLocked: boolean) {
     shape.isLocked = isLocked;
@@ -160,6 +180,9 @@ export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | unde
 }
 export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: number) {
     shape.setResizingConstraint(resizingConstraint);
+}
+export function shapeModifyContextSettingOpacity(shape: Shape, contextSettingsOpacity: number) {
+    shape.setContextSettingsOpacity(contextSettingsOpacity);
 }
 export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
     shape.setRectRadius(lt, rt, rb, lb);
@@ -238,8 +261,8 @@ export function shapeModifyTextFontSize(shapetext: Text, fontSize: number) {
     text.setDefaultFontSize(fontSize);
     return origin;
 }
-export function shapeModifyTextBehaviour(page: Page, shape: TextShapeLike, textBehaviour: TextBehaviour) {
-    const text = shape.text;
+export function shapeModifyTextBehaviour(page: Page, shapetext: Text, textBehaviour: TextBehaviour) {
+    const text = shapetext;
     if (textBehaviour === TextBehaviour.Flexible) {
         // default
         if (!text.attr || !text.attr.textBehaviour || text.attr.textBehaviour === TextBehaviour.Flexible) return TextBehaviour.Flexible;
@@ -477,4 +500,28 @@ export function shapeModifyCurvToPoint(page: Page, shape: PathShape, index: numb
     const p = shape.points[index];
     p.curveTo.x = point.x;
     p.curveTo.y = point.y;
+}
+
+export function shapeModifyVariable(page: Page, _var: Variable, value: any) {
+    _var.value = value;
+}
+export function shapeAddVariable(page: Page, shape: SymbolShape | SymbolRefShape, _var: Variable) {
+    shape.addVar(_var);
+}
+export function shapeRemoveVariable(page: Page, shape: SymbolShape | SymbolRefShape, key: string) {
+    shape.removeVar(key);
+}
+export function shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
+    if (!shape.varbinds) shape.varbinds = new BasicMap();
+    shape.varbinds.set(type, varId);
+}
+export function shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
+    shape.addOverrid2(refId, attr, value);
+}
+export function shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
+    shape.addOverrid2(refId, attr, value);
+}
+export function shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
+    if (!shape.symtags) shape.symtags = new BasicMap();
+    shape.setTag(varId, tag);
 }

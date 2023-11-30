@@ -17,6 +17,7 @@
         "shadows": []
     },
     "text": {
+        "typeId": "text",
         "paras": [
             {
                 "text": "\n",
@@ -26,6 +27,7 @@
                         "fontName": "PingFangSC-Regular",
                         "fontSize": 14,
                         "color": {
+                            "typeId": "color",
                             "alpha": 0.85,
                             "red": 0,
                             "green": 0,

@@ -14,13 +14,27 @@ export const SHAPE_ATTR_ID = {
     rotate: "rotate",
     constrainerProportions: "constrainerProportions",
     name: "name",
+
+    // addvar: "addvar",
+    // removevar: "removevar",
+    modifyvar1: "modifyvar",
+    modifyvarValue: "modifyvarValue",
+    modifyvarName: "modifyvarName",
+
+    // addoverride: "addoverride",
+    modifyoverride1: "modifyoverride",
+
+
     visible: "visible",
     lock: "lock",
+    contextSettingsOpacity: "contextSettingsOpacity",
     resizingConstraint: "resizingConstraint",
+    isClosed: "isClosed",
     radius: "radius", // rect radius
     backgroundColor: "backgroundColor",
     boolop: "boolop",
     isboolopshape: "isboolopshape",
+    // issymbolshape: "issymbolshape",
     fixedRadius: "fixedRadius",
     startMarkerType: "startMarkerType",
     endMarkerType: "endMarkerType",
@@ -60,7 +74,14 @@ export const SHAPE_ATTR_ID = {
     //export options
     trimTransparent: "trimTransparent",
     previewUnfold: "previewUnfold",
-    canvasBackground: "canvasBackground"
+    canvasBackground: "canvasBackground",
+    // symbolref
+    symbolref: "symbolref",
+    // symbol
+    symtags: "symtags",
+    // shape
+    bindvar: "bindvar",
+    overrides: "overrides"
 }
 
 export const FILLS_ID = "fills"
@@ -134,5 +155,6 @@ export const CUTOUT_ID = "cutout"
 export const CUTOUT_ATTR_ID = {
     scale: "scale",
     name: "name",
-    fileFormat: "fileFormat"
+    fileFormat: "fileFormat",
+    perfix: 'perfix'
 }

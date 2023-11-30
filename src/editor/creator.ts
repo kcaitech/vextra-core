@@ -1,57 +1,73 @@
-import {v4 as uuid} from "uuid";
-import {Page} from "../data/page";
-import {Artboard} from "../data/artboard";
-import {Document, PageListItem} from "../data/document";
+import { v4 as uuid } from "uuid";
+import { Page } from "../data/page";
+import { Artboard } from "../data/artboard";
+import { Document, PageListItem } from "../data/document";
 import {
     GroupShape,
-    RectShape,
-    PathShape,
-    OvalShape,
     LineShape,
+    OvalShape,
+    PathShape,
+    SymbolShape,
+    RectShape,
     Shape,
     TextShape,
     ImageShape,
     PathShape2,
     PathSegment,
-    CutoutShape
+    CutoutShape,
+    SymbolUnionShape
 } from "../data/shape";
-import {ContactShape} from "../data/contact"
+import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
+import { BlendMode } from "../data/typesdefine"
 import {
+    importArtboard,
     importGroupShape,
     importPage,
-    importArtboard,
-    importTextShape,
-    importText,
     importTableShape,
-    importTableCell
-} from "../io/baseimport";
+    importText,
+    importShapeFrame, importTextShape
+} from "../data/baseimport";
 import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import template_table_shape from "./template/table-shape.json"
-import template_table_cell from "./template/table-cell.json"
-import {
-    Point2D, CurvePoint,
-    Color, Border, Style, Fill, ShapeFrame, FillType, Ellipse, CurveMode, UserInfo, Path,
-    Text,
-    Shadow,
-    Para,
-    Span,
-    ParaAttr,
-    TextAttr,
-    BorderStyle
-} from "../data/classes";
-import {BasicArray} from "../data/basic";
-import {Repository} from "../data/transact";
-import {Comment} from "../data/comment";
-import {ResourceMgr} from "../data/basic";
-import {TableShape} from "../data/table";
-import {mergeParaAttr, mergeSpanAttr} from "../data/textutils";
-import {ContactForm} from "../data/baseclasses";
 
+import {
+    Border,
+    Color,
+    ContextSettings,
+    CurveMode,
+    CurvePoint,
+    Ellipse,
+    Fill,
+    FillType,
+    Para,
+    ParaAttr,
+    Path,
+    Point2D,
+    ShapeFrame,
+    Span,
+    Style,
+    Text,
+    TextAttr,
+    UserInfo,
+    Shadow,
+    BorderStyle,
+    SymbolRefShape
+} from "../data/classes";
+import { BasicArray, BasicMap } from "../data/basic";
+import { Repository } from "../data/transact";
+import { Comment } from "../data/comment";
+import { ResourceMgr } from "../data/basic";
+import { TableShape } from "../data/table";
+
+export { newText, newText2 } from "../data/textutils";
+import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
+import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
+import { ContactForm } from "../data/baseclasses";
 
 export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
@@ -82,8 +98,15 @@ export function newGroupShape(name: string, style?: Style): GroupShape {
     template_group_shape.name = name // i18n
     const group = importGroupShape(template_group_shape as types.GroupShape);
     if (style) group.style = style;
-    addCommonAttr(group)
+    addCommonAttr(group);
     return group;
+}
+
+/**
+ * @description 给未进入文档(guard之前)的图形设置frame
+ */
+export function initFrame(shape: Shape, frame: ShapeFrame) {
+    shape.frame = importShapeFrame(exportShapeFrame(frame));
 }
 
 export function newSolidColorFill(): Fill {
@@ -97,17 +120,31 @@ export function newStyle(): Style {
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
     style.fills.push(fill);
+    style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
     return style;
 }
 
-export function newArtboard(name: string, frame: ShapeFrame): Artboard {
+export function newflatStyle(): Style {
+    const borders = new BasicArray<Border>();
+    const fills = new BasicArray<Fill>();
+    const shadows = new BasicArray<Shadow>();
+    const style = new Style(borders, fills, shadows);
+    style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+    return style;
+}
+
+export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Artboard {
     template_artboard.id = uuid();
     template_artboard.name = name;
     template_artboard.frame = frame;
     const artboard = importArtboard(template_artboard as types.Artboard);
-    const fillColor = new Color(1, 255, 255, 255);
-    const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
-    artboard.style.fills.push(fill);
+    if (style) {
+        artboard.style = style;
+    } else {
+        const fillColor = new Color(1, 255, 255, 255);
+        const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
+        artboard.style.fills.push(fill);
+    }
     artboard.isVisible = true;
     artboard.isLocked = false;
     return artboard
@@ -194,23 +231,23 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     return shape;
 }
 
-export function newText(textAttr?: TextAttr): Text {
-    const text = new Text(new BasicArray());
-    const para = new Para('\n', new BasicArray());
-    para.attr = new ParaAttr();
-    para.attr.minimumLineHeight = 24;
-    text.paras.push(para);
-    const span = new Span(para.length);
-    span.fontName = "PingFangSC-Regular";
-    span.fontSize = 14;
-    span.color = new Color(0.85, 0, 0, 0);
-    para.spans.push(span);
-    if (textAttr) {
-        mergeParaAttr(para, textAttr);
-        mergeSpanAttr(span, textAttr);
-    }
-    return text;
-}
+// export function newText(textAttr?: TextAttr): Text {
+//     const text = new Text(new BasicArray());
+//     const para = new Para('\n', new BasicArray());
+//     para.attr = new ParaAttr();
+//     para.attr.minimumLineHeight = 24;
+//     text.paras.push(para);
+//     const span = new Span(para.length);
+//     span.fontName = "PingFangSC-Regular";
+//     span.fontSize = 14;
+//     span.color = new Color(0.85, 0, 0, 0);
+//     para.spans.push(span);
+//     if (textAttr) {
+//         mergeParaAttr(para, textAttr);
+//         mergeSpanAttr(span, textAttr);
+//     }
+//     return text;
+// }
 
 // 后续需要传入字体、字号、颜色信息
 export function newTextShape(name: string, frame?: ShapeFrame): TextShape {
@@ -323,4 +360,32 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     const shape = new CutoutShape(id, name, types.ShapeType.Cutout, frame, style, curvePoint, true, true);
     addCommonAttr(shape);
     return shape;
+}
+export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): SymbolShape {
+    const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicMap());
+    if (style) compo.style = style;
+    addCommonAttr(compo);
+    return compo;
+}
+
+export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnionShape {
+    const style = newflatStyle();
+    const union = new SymbolUnionShape(
+        uuid(),
+        name,
+        types.ShapeType.SymbolUnion,
+        frame,
+        style,
+        new BasicArray(),
+        new BasicMap()
+    );
+    addCommonAttr(union);
+    return union;
+}
+
+export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string, symbol_mgr: ResourceMgr<SymbolShape>): SymbolRefShape {
+    const ref = new SymbolRefShape(uuid(), name, types.ShapeType.SymbolRef, frame, newflatStyle(), refId, new BasicMap());
+    addCommonAttr(ref);
+    ref.setSymbolMgr(symbol_mgr);
+    return ref;
 }
