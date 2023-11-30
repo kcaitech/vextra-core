@@ -440,10 +440,12 @@ export class CMDExecuter {
                     api.shapeModifyCurveMode(page, shape, pointIdx, value as CurveMode);
                 }
             } else if (opId === POINTS_ATTR_ID.hasFrom) {
-                api.shapeModifyHasFrom(page, shape, pointIdx, !!value);
+                const v = value ? JSON.parse(value) : value;
+                api.shapeModifyHasFrom(page, shape, pointIdx, v);
             }
             else if (opId === POINTS_ATTR_ID.hasTo) {
-                api.shapeModifyHasTo(page, shape, pointIdx, !!value);
+                const v = value ? JSON.parse(value) : value;
+                api.shapeModifyHasTo(page, shape, pointIdx, v);
             }
             else if (opId === POINTS_ATTR_ID.cornerRadius) {
                 if (value) {
