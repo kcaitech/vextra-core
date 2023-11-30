@@ -10,11 +10,19 @@
 [uuid]/metas/[document-refs.json...] // 文档内引用的其它文档数据记录
 */
 
-import { Document } from "../data/document";
-import { } from "../data/baseclasses";
-import { Page } from "../data/classes";
+import {Document, LibType} from "../data/document";
+import {ShapeFrame, ShapeType} from "../data/baseclasses";
+import {Border, Fill, Page, Shadow, Style} from "../data/classes";
 import * as types from "../data/typesdefine"
-import { exportPage, IExportContext, exportDocumentMeta } from "./baseexport";
+import {exportDocumentMeta, exportPage, exportSymbolShape, IExportContext} from "../data/baseexport";
+import {BasicArray} from "../data/basic";
+
+export function newStyle(): Style {
+    const borders = new BasicArray<Border>();
+    const fills = new BasicArray<Fill>();
+    const shadows = new BasicArray<Shadow>();
+    return new Style(borders, fills, shadows);
+}
 
 export interface ExFromJson {
     document_meta: types.DocumentMeta,
@@ -33,33 +41,33 @@ class ExfContext implements IExportContext {
     // artboards = new Set<string>()
 
     medias = new Set<string>()
+    referenced = new Set<string>()
     // allartboards = new Set<string>();
     // allsymbols = new Set<string>();
 }
 
 export async function exportExForm(document: Document): Promise<ExFromJson> {
     const ctx = new ExfContext();
-
     // pages
     const pmgr = document.pagesMgr;
     const pages: types.Page[] = [];
     // const page_refartboards: string[][] = [];
     const document_syms: { pageId: string, symbols: string[] }[] = [];
-
+    const referenced_syms: { pageId: string, symbols: string[] }[] = [];
     for (let i = 0, len = document.pagesList.length; i < len; i++) {
         const meta = document.pagesList[i];
         const pagedata: Page | undefined = await pmgr.get(meta.id)
         if (!pagedata) continue;
-
         const page = exportPage(pagedata, ctx);
-        pages.push(page)
+        pages.push(page);
 
-        // const refsyms: string[] = [];
-        // ctx.symbols.forEach((value) => {
-        //     refsyms.push(value);
-        // });
+        // 已经导出的组件
+        document_syms.push({pageId: page.id, symbols: Array.from(ctx.symbols.values())});
         ctx.symbols.clear();
-        document_syms.push({ pageId: page.id, symbols: Array.from(ctx.symbols.values()) });
+
+        // 文档内所引用的所有组件
+        referenced_syms.push({pageId: page.id, symbols: Array.from(ctx.referenced.values())})
+        ctx.referenced.clear();
 
         // const refartboards: string[] = [];
         // ctx.artboards.forEach((value) => {
@@ -98,20 +106,48 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
     // exportedArtboards.clear()
 
     // // symbols
-    // const exportedSymbols = new Set<string>()
-    // const symbols: types.SymbolShape[] = [];
-    // const symsMgr = document.symbolsMgr;
-    // const f = async (refsyms: string[][]) => {
+    const exportedSymbols = new Set<string>();
+    const symbols: types.SymbolShape[] = [];
+    const symsMgr = document.symbolsMgr;
+    document_syms.map(i => i.symbols)
+        .flat(1)
+        .forEach(i => exportedSymbols.add(i));
+    const _record = new Set<string>();
+    // 文档内寻找被引用但是未导出的组件
+    const _referenced_symbols: any = [];
+    referenced_syms.map(i => i.symbols)
+        .flat(1)
+        .forEach((i) => {
+            if (exportedSymbols.has(i) || _record.has(i)) return;
+            const _rs = symsMgr.getSync(i);
+            if (!_rs) return;
+            _referenced_symbols.push(exportSymbolShape(_rs));
+            _record.add(i);
+        });
+
+    if (_referenced_symbols.length) {
+        const al = pages.find(i => i.id === LibType.Symbol);
+        if (al) {
+            al.childs.push(..._referenced_symbols);
+        } else {
+            const frame = new ShapeFrame(0, 0, 1000, 1000);
+            const lib: types.Page = exportPage(new Page(LibType.Symbol, 'symbol-lib', ShapeType.Page, frame, newStyle(), [] as any, true));
+            lib.childs.push(..._referenced_symbols)
+            pages.push(lib);
+        }
+    }
+
+    // const f = (refsyms: string[][]) => {
     //     for (let i = 0, len = refsyms.length; i < len; i++) {
     //         const arr = refsyms[i]
     //         for (let j = 0, jlen = arr.length; j < jlen; j++) {
     //             const refId = arr[j]
     //             if (exportedSymbols.has(refId)) continue;
     //             exportedSymbols.add(refId);
-
-    //             const symdata = await symsMgr.get(refId)
+    //
+    //             const symdata = symsMgr.getSync(refId)
     //             if (!symdata) continue
-
+    //
     //             const sym = exportSymbolShape(symdata, ctx);
     //             symbols.push(sym);
     //         }
@@ -127,7 +163,7 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
 
     // document meta
     const document_meta = exportDocumentMeta(document, ctx);
-
+    console.log('export metas:', {document_meta, pages, document_syms, media_names});
     return {
         document_meta,
         pages,

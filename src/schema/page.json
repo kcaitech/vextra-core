@@ -40,9 +40,6 @@
                         "$ref": "./contact-shape.json"
                     },
                     {
-                        "$ref": "./symbol-shape.json"
-                    },
-                    {
                         "$ref": "./symbol-ref-shape.json"
                     },
                     {
@@ -50,6 +47,12 @@
                     },
                     {
                         "$ref": "./cutout-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-union-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-shape.json"
                     }
                 ]
             }

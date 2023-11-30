@@ -1,0 +1,38 @@
+{
+    "description": "symbol ref shape",
+    "type": "object",
+    "properties": {
+        "refId": {
+            "type": "string",
+            "default": "$uuid"
+        },
+        "overrides": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            }
+        },
+        "variables": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "$ref": "./variable.json"
+            }
+        }
+    },
+    "required": [
+        "refId",
+        "variables"
+    ],
+    "allOf": [
+        {
+            "$ref": "./shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

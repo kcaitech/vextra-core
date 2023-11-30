@@ -1,12 +1,17 @@
 
 
-import { DefaultColor, isColorEqual } from "./basic";
-import { TextShape, Path, Color } from '../data/classes';
+import { DefaultColor, RenderTransform, findOverrideAndVar, fixFrameByConstrain, isColorEqual, isNoTransform, isVisible } from "./basic";
+import { TextShape, Path, Color, SymbolShape, SymbolRefShape, ShapeFrame, OverrideType, VariableType, Para, ParaAttr, Text, Span, Variable } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
-import { render as fillR } from "./fill";
-import { render as borderR } from "./border";
-import { innerShadowId, render as shadowR } from "./shadow";
+import { renderWithVars as fillR } from "./fill";
+import { renderWithVars as borderR } from "./border";
+import { BasicArray } from "../data/basic";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
+import { ResizingConstraints } from "../data/consts";
+import { Matrix } from "../basic/matrix";
+import { innerShadowId, renderWithVars as shadowR } from "./shadow";
+
 
 function toRGBA(color: Color): string {
     return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
@@ -22,9 +27,9 @@ function isBlankChar(charCode: number) {
     return false;
 }
 
-export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number): Path {
+export function renderText2Path(shapetext: Text, offsetX: number, offsetY: number): Path {
     const getTextPath = gPal.text.getTextPath;
-    const { yOffset, paras } = shape.getLayout();
+    const { yOffset, paras } = shapetext.getLayout();
     const pc = paras.length;
 
     const paths = new Path();
@@ -190,20 +195,180 @@ export function renderTextLayout(h: Function, textlayout: TextLayout) {
     return childs;
 }
 
-export function render(h: Function, shape: TextShape, reflush?: number) {
-    if (!shape.isVisible) return null;
+
+function createTextByString(stringValue: string, refShape: TextShape) {
+    const text = new Text(new BasicArray());
+    if (refShape.text.attr) {
+        mergeTextAttr(text, refShape.text.attr);
+    }
+    const para = new Para('\n', new BasicArray());
+    para.attr = new ParaAttr();
+    text.paras.push(para);
+    const span = new Span(para.length);
+    para.spans.push(span);
+    mergeParaAttr(para, refShape.text.paras[0]);
+    mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
+    text.insertText(stringValue, 0);
+    return text;
+}
+
+export function render(h: Function, shape: TextShape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+    reflush?: number) {
+
+    if (!isVisible(shape, varsContainer, consumedVars)) return;
+
+
+    const _frame = shape.frame;
+    let x = _frame.x;
+    let y = _frame.y;
+    let width = _frame.width;
+    let height = _frame.height;
+    let rotate = (shape.rotation ?? 0);
+    let hflip = !!shape.isFlippedHorizontal;
+    let vflip = !!shape.isFlippedVertical;
+    let frame = _frame;
+
+    const noUpperTrans = isNoTransform(transform);
+
+    let notTrans = noUpperTrans;
+    let path0: Path;
+    if (!notTrans && transform) {
+        x += transform.dx;
+        y += transform.dy;
+        rotate += transform.rotate;
+        hflip = transform.hflip ? !hflip : hflip;
+        vflip = transform.vflip ? !vflip : vflip;
+        const scaleX = transform.scaleX;
+        const scaleY = transform.scaleY;
+        const resizingConstraint = shape.resizingConstraint;
+        if (!rotate || resizingConstraint && (ResizingConstraints.hasWidth(resizingConstraint) || ResizingConstraints.hasHeight(resizingConstraint))) {
+
+            // const saveW = width;
+            // const saveH = height;
+            if (resizingConstraint && (ResizingConstraints.hasWidth(resizingConstraint) || ResizingConstraints.hasHeight(resizingConstraint))) {
+                const fixWidth = ResizingConstraints.hasWidth(resizingConstraint);
+                const fixHeight = ResizingConstraints.hasHeight(resizingConstraint);
+
+                if (fixWidth && fixHeight) {
+                    // 不需要缩放，但要调整位置
+                    x *= scaleX;
+                    y *= scaleY;
+                    // 居中
+                    x += (width * (scaleX - 1)) / 2;
+                    y += (height * (scaleY - 1)) / 2;
+                }
+
+                else if (rotate) {
+                    const m = new Matrix();
+                    m.rotate(rotate / 360 * 2 * Math.PI);
+                    m.scale(scaleX, scaleY);
+                    const _newscale = m.computeRef(1, 1);
+                    m.scale(1 / scaleX, 1 / scaleY);
+                    const newscale = m.inverseRef(_newscale.x, _newscale.y);
+                    x *= scaleX;
+                    y *= scaleY;
+
+                    if (fixWidth) {
+                        x += (width * (newscale.x - 1)) / 2;
+                        newscale.x = 1;
+                    }
+                    else {
+                        y += (height * (newscale.y - 1)) / 2;
+                        newscale.y = 1;
+                    }
+
+                    width *= newscale.x;
+                    height *= newscale.y;
+                }
+                else {
+                    const newscaleX = fixWidth ? 1 : scaleX;
+                    const newscaleY = fixHeight ? 1 : scaleY;
+                    x *= scaleX;
+                    y *= scaleY;
+                    if (fixWidth) x += (width * (scaleX - 1)) / 2;
+                    if (fixHeight) y += (height * (scaleY - 1)) / 2;
+                    width *= newscaleX;
+                    height *= newscaleY;
+                }
+            }
+            else {
+                x *= scaleX;
+                y *= scaleY;
+                width *= scaleX;
+                height *= scaleY;
+            }
+
+            frame = new ShapeFrame(x, y, width, height);
+            fixFrameByConstrain(shape, transform.parentFrame, frame);
+
+            path0 = shape.getPathOfFrame(frame);
+
+        }
+
+        else {
+
+            // todo
+            const m = new Matrix();
+            m.rotate(rotate / 360 * 2 * Math.PI);
+            m.scale(scaleX, scaleY);
+            const _newscale = m.computeRef(1, 1);
+            m.scale(1 / scaleX, 1 / scaleY);
+            const newscale = m.inverseRef(_newscale.x, _newscale.y);
+            x *= scaleX;
+            y *= scaleY;
+            width *= newscale.x;
+            height *= newscale.y;
+
+            frame = new ShapeFrame(x, y, width, height);
+            fixFrameByConstrain(shape, transform.parentFrame, frame);
+
+            path0 = shape.getPathOfFrame(frame);
+
+        }
+
+    }
+    else {
+        path0 = shape.getPath();
+        notTrans = shape.isNoTransform()
+    }
 
     const childs = []
-    const frame = shape.frame;
-    const path = shape.getPath().toString();
+    // const path0 = shape.getPathOfFrame(frame);
+    const path = path0.toString();
+
     // fill
-    childs.push(...fillR(h, shape.style.fills, frame, path));
+    childs.push(...fillR(h, shape, frame, path, varsContainer, consumedVars));
 
     // text
-    childs.push(...renderTextLayout(h, shape.getLayout()));
+    // todo
 
+    let text = shape.text;
+    // todo watch vars
+    if (varsContainer) {
+        const _vars = findOverrideAndVar(shape, OverrideType.Text, varsContainer);
+        if (_vars) {
+            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === VariableType.Text) {
+                // return _var.value;
+                if (typeof _var.value === 'string') {
+                    text = createTextByString(_var.value, shape);
+                }
+                else {
+                    text = _var.value;
+                }
+                if (noUpperTrans) text.updateSize(frame.width, frame.height);
+                if (consumedVars) consumedVars.push({ slot: OverrideType.Text, vars: _vars })
+            }
+        }
+    }
+
+    const layout = noUpperTrans ? text.getLayout() : text.getLayout2(frame.width, frame.height);
+    childs.push(...renderTextLayout(h, layout));
     // border
-    childs.push(...borderR(h, shape.style.borders, frame, path));
+    childs.push(...borderR(h, shape, frame, path, varsContainer, consumedVars));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
@@ -213,24 +378,23 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
         props.opacity = contextSettings.opacity;
     }
 
-    if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
+    if (notTrans) {
+        props.transform = `translate(${frame.x},${frame.y})`;
+    } else {
         const cx = frame.x + frame.width / 2;
         const cy = frame.y + frame.height / 2;
         const style: any = {}
         style.transform = "translate(" + cx + "px," + cy + "px) "
-        if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
-        if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
-        if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
+        if (hflip) style.transform += "rotateY(180deg) "
+        if (vflip) style.transform += "rotateX(180deg) "
+        if (rotate) style.transform += "rotate(" + rotate + "deg) "
         style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
         props.style = style;
-    }
-    else {
-        props.transform = `translate(${frame.x},${frame.y})`
     }
     const shadows = shape.style.shadows;
     const ex_props = Object.assign({}, props);
     const shape_id = shape.id.slice(0, 4);
-    const shadow = shadowR(h, shape_id, path, shape);
+    const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars);
     if (shadow.length) {
         delete props.style;
         delete props.transform;
@@ -246,7 +410,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
 //
 // for test text path
 export function render_(h: Function, shape: TextShape, reflush?: number) {
-    const path = renderText2Path(shape, 0, 0);
+    const path = renderText2Path(shape.text, 0, 0);
 
     const childs = [h('path', { d: path })]
 

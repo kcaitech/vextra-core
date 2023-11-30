@@ -1,0 +1,34 @@
+{
+    "description": "color",
+    "type": "object",
+    "properties": {
+        "typeId": {
+            "type": "string",
+            "default": "shape"
+        },
+        "alpha": {
+            "type": "integer",
+            "default": 0
+        },
+        "red": {
+            "type": "integer",
+            "default": 0
+        },
+        "green": {
+            "type": "integer",
+            "default": 0
+        },
+        "blue": {
+            "type": "integer",
+            "default": 0
+        }
+    },
+    "required": [
+        "typeId",
+        "alpha",
+        "red",
+        "green",
+        "blue"
+    ],
+    "additionalProperties": false
+}

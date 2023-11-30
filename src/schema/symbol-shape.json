@@ -1,0 +1,42 @@
+{
+    "description": "symbol shape",
+    "type": "object",
+    "properties": {
+        "overrides": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            }
+        },
+        "variables": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "$ref": "./variable.json"
+            }
+        },
+        "symtags": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [
+        "variables"
+    ],
+    "allOf": [
+        {
+            "$ref": "./group-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

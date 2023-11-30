@@ -1,11 +1,12 @@
-import { BoolOp, GroupShape, Path, Shape, Style, TextShape } from "../data/classes";
+import { BoolOp, GroupShape, Path, Shape, Style, SymbolRefShape, SymbolShape, TextShape, Variable } from "../data/classes";
 // import { difference, intersection, subtract, union } from "./boolop";
-import { render as fillR } from "./fill";
-import { render as borderR } from "./border"
+import { renderWithVars as fillR } from "./fill";
+import { renderWithVars as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
-import { innerShadowId, render as shadowR } from "./shadow";
+import { RenderTransform, isVisible } from "./basic";
+import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 
 // find first usable style
 export function findUsableFillStyle(shape: Shape): Style {
@@ -42,7 +43,7 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
     if (!shapeIsGroup || shape.childs.length === 0) {
-        const path = shape instanceof TextShape ? renderText2Path(shape, 0, 0) : shape.getPath(fixedRadius);
+        const path = shape instanceof TextShape ? renderText2Path(shape.text, 0, 0) : shape.getPath(fixedRadius);
         return path;
     }
 
@@ -98,25 +99,24 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
     return resultpath;
 }
 
-export function render(h: Function, shape: GroupShape, reflush?: number, consumed?: Array<Shape>): any {
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+export function render(h: Function, shape: GroupShape, transform: RenderTransform | undefined,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+    reflush?: number, consumed?: Array<Shape>): any {
+    if (!isVisible(shape, varsContainer, consumedVars)) return;
 
     const path = render2path(shape, consumed);
     const frame = shape.frame;
 
+    // const path0 = shape.getPath();
+    // if (matrix) path0.transform(matrix);
     const pathstr = path.toString();
     const childs = [];
 
     // fill
-    if (shape.style.fills.length > 0) {
-        childs.push(...fillR(h, shape.style.fills, frame, pathstr));
-    }
-
+    childs.push(...fillR(h, shape, frame, pathstr, varsContainer, consumedVars));
     // border
-    if (shape.style.borders.length > 0) {
-        childs.push(...borderR(h, shape.style.borders, frame, pathstr));
-    }
+    childs.push(...borderR(h, shape, frame, pathstr, varsContainer, consumedVars));
 
     // ----------------------------------------------------------
     // shadows todo
@@ -156,7 +156,7 @@ export function render(h: Function, shape: GroupShape, reflush?: number, consume
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, pathstr, shape);
+        const shadow = shadowR(h, shape_id, shape, pathstr, varsContainer, consumedVars);
         if (shadow.length) {
             delete props.style;
             delete props.transform;

@@ -1,8 +1,8 @@
 
 import { uuid } from "../../../basic/uuid";
 import { BasicArray, IDataGuard } from "../../../data/basic";
-import { Document, PageListItem } from "../../../data/document";
-import { LzData } from "../../lzdata";
+import {Document, PageListItem} from "../../../data/document";
+import { LzData } from "./lzdata";
 import { IJSON } from "./basic";
 import { DataLoader } from "./dataloader";
 
@@ -22,6 +22,7 @@ async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicA
 
     for (let i = 0, len = pageIds.length; i < len; i++) {
         const id = pageIds[i]
+        // if (id === LibType.Symbol) continue; // 组件库页面
         const name = metaMap.get(id) || 'Unknow'
         pageList.push(new PageListItem(id, name))
     }

@@ -1,0 +1,14 @@
+{
+    "description": "override types",
+    "enum": [
+        "text",
+        "image",
+        "fills",
+        "borders",
+        "shadows",
+        "visible",
+        "lock",
+        "variable",
+        "symbolID"
+    ]
+}

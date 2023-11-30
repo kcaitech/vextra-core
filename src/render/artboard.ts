@@ -1,13 +1,20 @@
-import { renderGroupChilds as gR } from "./group";
-import { render as borderR } from "./border";
-import { Artboard, ShapeType, Color } from '../data/classes';
-import { innerShadowId, render as shadowR } from "./shadow";
+import {renderGroupChilds as gR} from "./group";
+import {render as borderR} from "./border";
+import {Artboard, ShapeType, Color, SymbolShape, SymbolRefShape, Variable} from '../data/classes';
+import {isVisible, RenderTransform} from "./basic";
+import {innerShadowId, renderWithVars as shadowR} from "./shadow";
 
 const defaultColor = Color.DefaultColor;
+
 // artboard单独一个svg节点，需要设置overflow
-export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any>, reflush?: number) {
-    const isVisible = shape.isVisible ?? true;
-    if (!isVisible) return;
+export function render(h: Function,
+                       shape: Artboard,
+                       comsMap: Map<ShapeType, any>,
+                       transform: RenderTransform | undefined, // todo
+                       varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+                       consumedVars: { slot: string, vars: Variable[] }[] | undefined, // todo
+                       reflush?: number) {
+    if (!isVisible(shape, varsContainer, consumedVars)) return;
 
     const ab_props: any = {
         version: "1.1",
@@ -39,13 +46,13 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
             }))
         }
     }
-    childs.push(...gR(h, shape, comsMap)); // 后代元素放中间
+    childs.push(...gR(h, shape, comsMap, undefined, varsContainer)); // 后代元素放中间
     const b_len = shape.style.borders.length;
     const path = shape.getPath().toString();
     if (shape.isNoTransform()) {
         const shadows = shape.style.shadows;
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, path, shape);
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars, comsMap);
         if (b_len) {
             const props: any = {}
             if (reflush) props.reflush = reflush;
@@ -94,7 +101,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, path, shape);
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars, comsMap);
         if (b_len) {
             const path = shape.getPath().toString();
             if (shadow.length) {

@@ -1,8 +1,13 @@
-import { ShapeFrame, Style, Fill, FillType, Gradient } from "../data/classes";
+import { ShapeFrame, Fill, FillType, Gradient, Shape, SymbolRefShape, SymbolShape, Variable, OverrideType, VariableType } from "../data/classes";
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "../basic/objectid";
+import { findOverrideAndVar } from "./basic";
+
+function randomId() {
+    return Math.floor((Math.random() * 10000) + 1);
+}
 
 const handler: { [key: string]: (h: Function, frame: ShapeFrame, fill: Fill, path: string) => any } = {};
 handler[FillType.SolidColor] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
@@ -27,7 +32,7 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fil
     const gid = g_.id;
     const gStyle = g_.style;
     if (gStyle) {
-        const id = "clippath-fill-" + objectId(fill);
+        const id = "clippath-fill-" + objectId(fill) + randomId();
         const cp = clippathR(h, id, path);
         elArr.push(cp);
         elArr.push(h("foreignObject", {
@@ -53,10 +58,10 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fil
 }
 
 handler[FillType.Pattern] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
-    const id = "clippath-fill-" + objectId(fill);
+    const id = "clippath-fill-" + objectId(fill) + randomId();
     const cp = clippathR(h, id, path);
 
-    const url = fill.peekImage();
+    const url = fill.peekImage(true);
     const props: any = {}
     // const frame = shape.frame;
     props.width = frame.width;
@@ -81,4 +86,23 @@ export function render(h: Function, fills: Fill[], frame: ShapeFrame, path: stri
         elArr.push(handler[fillType](h, frame, fill, path));
     }
     return elArr;
+}
+
+export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, path: string,
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    consumedVars: { slot: string, vars: Variable[] }[] | undefined) {
+    let fills = shape.style.fills;
+    if (varsContainer) {
+        const _vars = findOverrideAndVar(shape, OverrideType.Fills, varsContainer);
+        if (_vars) {
+            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === VariableType.Fills) {
+                // return _var.value;
+                fills = _var.value;
+                if (consumedVars) consumedVars.push({ slot: OverrideType.Fills, vars: _vars })
+            }
+        }
+    }
+    return render(h, fills, frame, path);
 }

@@ -1,5 +1,5 @@
 import { Page } from "../data/page";
-import { IImportContext, importDocumentMeta, importDocumentSyms, importPage } from "./baseimport";
+import { IImportContext, importDocumentMeta, importDocumentSyms, importPage } from "../data/baseimport";
 import * as types from "../data/typesdefine"
 import { IDataGuard } from "../data/basic";
 import { Document, DocumentMeta, DocumentSyms } from "../data/document";

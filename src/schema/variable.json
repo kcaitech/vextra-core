@@ -1,0 +1,60 @@
+{
+    "description": "color",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "type": {
+            "$ref": "./variable-type.json"
+        },
+        "name": {
+            "type": "string"
+        },
+        "value": {
+            "oneOf": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "$ref": "./color.json"
+                },
+                {
+                    "$ref": "./text.json"
+                },
+                {
+                    "$ref": "./gradient.json"
+                },
+                {
+                    "$ref": "./style.json"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "oneOf": [
+                            {
+                                "$ref": "./border.json"
+                            },
+                            {
+                                "$ref": "./fill.json"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    },
+    "required": [
+        "id",
+        "type",
+        "name",
+        "value"
+    ],
+    "additionalProperties": false
+}

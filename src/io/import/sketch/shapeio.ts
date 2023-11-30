@@ -7,23 +7,22 @@ import {
     RectShape,
     Shape,
     ShapeFrame,
-    SymbolShape,
-    SymbolRefShape,
     TextShape,
-    ExportFormat
+    ExportFormat,
+    SymbolShape
 } from "../../../data/shape";
-import { BlendMode, Color, ContextSettings } from "../../../data/style";
+import { Color } from "../../../data/style";
 import { importXY, importStyle, importColor } from "./styleio";
 import { Page } from "../../../data/page";
 import { importText } from "./textio";
 import { Artboard } from "../../../data/artboard";
 import { Text } from "../../../data/text";
-import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D } from "../../../data/classes"
-import { BasicArray } from "../../../data/basic";
+import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D, SymbolRefShape } from "../../../data/classes"
+import { BasicArray, BasicMap } from "../../../data/basic";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
 import { Fill, FillType } from "../../../data/classes";
-import { importFill } from "../../../io/baseimport";
+import { ResizingConstraints } from "../../../data/consts";
 
 function uniqueId(ctx: LoadContext, id: string): string {
     // if (ctx.shapeIds.has(id)) id = uuid();
@@ -82,8 +81,8 @@ function importOverrides(shape: SymbolRefShape, data: IJSON[]) {
         const value = override['value'];
         const _idx = name.indexOf('_');
         const id = name.substring(0, _idx);
-        const attr = name.substring(_idx + 1);
-
+        let attr = name.substring(_idx + 1);
+        if (attr === 'stringValue') attr = 'text'
         shape.addOverrid(id, attr, value);
     }
 }
@@ -92,7 +91,10 @@ function importShapePropertys(shape: Shape, data: IJSON) {
     shape.isFlippedHorizontal = data['isFlippedHorizontal'];
     shape.isFlippedVertical = data['isFlippedVertical'];
     shape.rotation = -data['rotation'];
-    shape.resizingConstraint = data['resizingConstraint'];
+    const resizingConstraint = data['resizingConstraint'];
+    if (resizingConstraint) {
+        shape.resizingConstraint = (~resizingConstraint) & ResizingConstraints.Mask;
+    }
     shape.isVisible = data['isVisible'];
     shape.isLocked = data['isLocked'];
     shape.constrainerProportions = data.frame['constrainerProportions'];
@@ -146,8 +148,8 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun): G
     // const imageRef = image && image['_ref'];
     const style = importStyle(ctx, data['style']);
     // sketch groupshape不支持填充与边框
-    style.fills.length = 0;
-    style.borders.length = 0;
+    // style.fills.length = 0;
+    // style.borders.length = 0;
     if (data['sharedStyleID']) {
         // env.styleMgr.addShared(data['sharedStyleID'], style);
     }
@@ -331,7 +333,8 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun): Symbo
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
-    const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs));
+    const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicMap());
+
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
@@ -355,7 +358,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun): Sy
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    const shape = new SymbolRefShape(id, name, ShapeType.SymbolRef, frame, style, data['symbolID']);
+    const shape = new SymbolRefShape(id, name, ShapeType.SymbolRef, frame, style, data['symbolID'], new BasicMap());
 
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);

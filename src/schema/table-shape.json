@@ -2,7 +2,7 @@
     "description": "table shape",
     "type": "object",
     "properties": {
-        "childs": {
+        "datas": {
             "type": "array",
             "items": {
                 "oneOf": [
@@ -33,7 +33,7 @@
         }
     },
     "required": [
-        "childs",
+        "datas",
         "rowHeights",
         "colWidths"
     ],
