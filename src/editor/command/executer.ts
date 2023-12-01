@@ -495,8 +495,7 @@ export class CMDExecuter {
                 const scale = value && JSON.parse(value);
                 api.setExportFormatScale(shape.exportOptions, formatIdx, scale ?? 1);
             } else if (opId === CUTOUT_ATTR_ID.name) {
-                const name = value && JSON.parse(value);
-                api.setExportFormatName(shape.exportOptions, formatIdx, name ?? '');
+                api.setExportFormatName(shape.exportOptions, formatIdx, value ?? '');
             } else if (opId === CUTOUT_ATTR_ID.fileFormat) {
                 if (value) {
                     const fileFormat = importExportFileFormat(value as any)

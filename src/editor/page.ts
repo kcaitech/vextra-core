@@ -12,7 +12,7 @@ import {
 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { BoolOp, BorderPosition, ShadowPosition, ShapeType } from "../data/typesdefine";
+import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, ShadowPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     initFrame,
@@ -84,7 +84,7 @@ import {
     shape4fill
 } from "./utils/symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { Shadow } from "../data/baseclasses";
+import { ExportFormat, Shadow } from "../data/baseclasses";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -213,7 +213,7 @@ export interface ShadowPositionAction {
     value: ShadowPosition
 }
 
-export interface ShadowColorAction { // border.color
+export interface ShadowColorAction {
     target: Shape
     index: number
     value: Color
@@ -241,6 +241,42 @@ export interface ShadowOffsetYAction {
     target: Shape
     index: number
     value: number
+}
+
+export interface ExportFormatReplaceAction {
+    target: Shape;
+    value: ExportFormat[];
+}
+
+export interface ExportFormatAddAction {
+    target: Shape
+    value: ExportFormat
+}
+
+export interface ExportFormatDeleteAction {
+    target: Shape
+    index: number
+}
+
+export interface ExportFormatScaleAction {
+    target: Shape
+    index: number
+    value: number
+}
+export interface ExportFormatNameAction {
+    target: Shape
+    index: number
+    value: string
+}
+export interface ExportFormatPerfixAction {
+    target: Shape
+    index: number
+    value: ExportFormatNameingScheme
+}
+export interface ExportFormatFileFormatAction {
+    target: Shape
+    index: number
+    value: ExportFileFormat
 }
 
 function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
@@ -1717,6 +1753,95 @@ export class PageEditor {
                 const { target, value } = actions[i];
                 api.deleteShadows(this.__page, target, 0, target.style.shadows.length);
                 api.addShadows(this.__page, target, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    //export cutout
+    shapesExportFormatUnify(actions: ExportFormatReplaceAction[]) {
+        try {
+            const api = this.__repo.start('shapesExportFormatUnify', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                if(target.exportOptions) {
+                    api.deleteExportFormats(this.__page, target, 0, target.exportOptions.exportFormats.length);
+                }
+                api.addExportFormats(this.__page, target, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesAddExportFormat(actions: ExportFormatAddAction[]) {
+        try {
+            const api = this.__repo.start('shapesAddExportFormat', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, value } = actions[i];
+                api.addExportFormat(this.__page, target, value, target.style.borders.length);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    shapesDeleteExportFormat(actions: ExportFormatDeleteAction[]) {
+        try {
+            const api = this.__repo.start('shapesDeleteExportFormat', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index } = actions[i];
+                api.deleteExportFormatAt(this.__page, target, index);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesExportFormatScale(actions: ExportFormatScaleAction[]) {
+        try {
+            const api = this.__repo.start('setShapesExportFormatScale', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setExportFormatScale(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesExportFormatName(actions: ExportFormatNameAction[]) {
+        try {
+            const api = this.__repo.start('setShapesExportFormatName', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setExportFormatName(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesExportFormatPerfix(actions: ExportFormatPerfixAction[]) {
+        try {
+            const api = this.__repo.start('setShapesExportFormatPerfix', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setExportFormatPerfix(this.__page, target, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesExportFormatFileFormat(actions: ExportFormatFileFormatAction[]) {
+        try {
+            const api = this.__repo.start('setShapesExportFormatFileFormat', {});
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                api.setExportFormatFileFormat(this.__page, target, index, value);
             }
             this.__repo.commit();
         } catch (error) {

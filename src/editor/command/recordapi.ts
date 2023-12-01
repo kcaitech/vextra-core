@@ -1065,6 +1065,30 @@ export class Api {
             if (format) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, idx, exportExportFormat(format)));
         })
     }
+    deleteExportFormats(page: Page, shape: Shape, index: number, strength: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            if (!shape.exportOptions) return;
+            const formats = basicapi.deleteExportFormats(shape.exportOptions, index, strength);
+            if (formats && formats.length) {
+                for (let i = 0; i < formats.length; i++) {
+                    const format = formats[i];
+                    this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, index, exportExportFormat(format)));
+                }
+            }
+        })
+
+    }
+    addExportFormats(page: Page, shape: Shape, formats: ExportFormat[]) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            for (let i = 0; i < formats.length; i++) {
+                const format = formats[i];
+                basicapi.addExportFormat(shape, format, i);
+                this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, i, exportExportFormat(format)));
+            }
+        })
+    }
     addExportFormat(page: Page, shape: Shape, format: ExportFormat, index: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {

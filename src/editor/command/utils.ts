@@ -6,7 +6,7 @@ import { TableCell, TableShape } from "../../data/table";
 import { ContactShape } from "../../data/contact";
 import { Page } from "../../data/page";
 import { SymbolRefShape } from "../../data/classes";
-import { IImportContext, importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape } from "../../data/baseimport";
+import { IImportContext, importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape, importExportOptions, importCutoutShape } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import { Document } from "../../data/document";
 
@@ -255,6 +255,9 @@ export function importShape(data: string, document: Document) {
     }
     if (source.typeId == 'symbol-union-shape') {
         return importSymbolUnionShape(source as types.SymbolUnionShape, ctx);
+    }
+    if (source.typeId == 'cutout-shape') {
+        return importCutoutShape(source as types.CutoutShape, ctx);
     }
     throw new Error("unknow shape type: " + source.typeId)
 }
