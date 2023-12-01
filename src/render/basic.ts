@@ -56,14 +56,13 @@ export function isColorEqual(lhs: Color, rhs: Color): boolean {
 
 export const DefaultColor = Color.DefaultColor;
 
-export function isVisible(shape: Shape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, consumedVars: { slot: string, vars: Variable[] }[] | undefined) {
+export function isVisible(shape: Shape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     if (!varsContainer) return !!shape.isVisible;
 
     const _vars = findOverrideAndVar(shape, OverrideType.Visible, varsContainer);
     if (_vars && _vars.length > 0) {
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === VariableType.Visible) {
-            if (consumedVars) consumedVars.push({ slot: OverrideType.Visible, vars: _vars });
             return !!_var.value;
         }
     }

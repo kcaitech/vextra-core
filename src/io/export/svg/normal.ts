@@ -52,12 +52,7 @@ comsMap.set(ShapeType.SymbolRef, (data: Shape, transform: RenderTransform | unde
     const sym0 = symMgr.getSync(refId);
     if (!sym0) return "";
 
-    let sym1;
-    if (sym0 && sym0 instanceof SymbolUnionShape) {
-        sym1 = sym0.getTagedSym(data, varsContainer || []);
-    }
-
-    return symref(h, data as SymbolRefShape, sym1 || sym0, comsMap, transform, varsContainer, undefined);
+    return symref(h, data as SymbolRefShape, sym0, comsMap, transform, varsContainer, undefined);
 });
 comsMap.set(ShapeType.Symbol, (data: Shape, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {

@@ -101,9 +101,8 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
 
 export function render(h: Function, shape: GroupShape, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number, consumed?: Array<Shape>): any {
-    if (!isVisible(shape, varsContainer, consumedVars)) return;
+    if (!isVisible(shape, varsContainer)) return;
 
     const path = render2path(shape, consumed);
     const frame = shape.frame;
@@ -114,9 +113,9 @@ export function render(h: Function, shape: GroupShape, transform: RenderTransfor
     const childs = [];
 
     // fill
-    childs.push(...fillR(h, shape, frame, pathstr, varsContainer, consumedVars));
+    childs.push(...fillR(h, shape, frame, pathstr, varsContainer));
     // border
-    childs.push(...borderR(h, shape, frame, pathstr, varsContainer, consumedVars));
+    childs.push(...borderR(h, shape, frame, pathstr, varsContainer));
 
     // ----------------------------------------------------------
     // shadows todo
@@ -156,7 +155,7 @@ export function render(h: Function, shape: GroupShape, transform: RenderTransfor
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, shape, pathstr, varsContainer, consumedVars);
+        const shadow = shadowR(h, shape_id, shape, pathstr, varsContainer);
         if (shadow.length) {
             delete props.style;
             delete props.transform;
