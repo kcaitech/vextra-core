@@ -64,6 +64,7 @@ import { TableOpTarget } from "../../coop/data/classes";
 import { ContactRole, CurvePoint, ExportFormat, ExportOptions } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { BasicArray, BasicMap } from "../../data/basic";
+import { IImportContext } from "../../data/baseimport";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -632,9 +633,9 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const p = shape.points[index];
-            const origin = exportPoint2D(p.point);
-            p.point.x = point.x;
-            p.point.y = point.y;
+            const origin: Point2D = { x: p.x, y: p.y }
+            p.x = point.x;
+            p.y = point.y;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, p.id, POINTS_ATTR_ID.point, exportPoint2D(point), origin))
         })
     }
@@ -642,9 +643,9 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const p = shape.points[index];
-            const origin = exportPoint2D(p.curveFrom);
-            p.curveFrom.x = point.x;
-            p.curveFrom.y = point.y;
+            const origin = { x: p.fromX, y: p.fromY }
+            p.fromX = point.x;
+            p.fromY = point.y;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, p.id, POINTS_ATTR_ID.from, exportPoint2D(point), origin))
         })
     }
@@ -652,9 +653,9 @@ export class Api {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const p = shape.points[index];
-            const origin = exportPoint2D(p.curveTo);
-            p.curveTo.x = point.x;
-            p.curveTo.y = point.y;
+            const origin = { x: p.toX, y: p.toY };
+            p.toX = point.x;
+            p.toY = point.y;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, p.id, POINTS_ATTR_ID.to, exportPoint2D(point), origin))
         })
     }

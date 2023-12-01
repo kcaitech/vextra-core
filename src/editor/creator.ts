@@ -180,10 +180,10 @@ export function newRectShape(name: string, frame: ShapeFrame): RectShape {
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
-    const p1 = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0)); // lt
-    const p2 = new CurvePoint(uuid(), 0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.Straight, new Point2D(1, 0)); // rt
-    const p3 = new CurvePoint(uuid(), 0, new Point2D(1, 1), new Point2D(1, 1), false, false, CurveMode.Straight, new Point2D(1, 1)); // rb
-    const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
+    const p1 = new CurvePoint(uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint(uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint(uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint(uuid(), 0, 1, CurveMode.Straight); // lb
     curvePoint.push(p1, p2, p3, p4);
     const shape = new RectShape(id, name, types.ShapeType.Rectangle, frame, style, curvePoint, true);
     addCommonAttr(shape);
@@ -195,10 +195,39 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
     const curvePoint = new BasicArray<CurvePoint>();
     const id = uuid();
     const ellipse = new Ellipse(79.5, 76, 79, 75.5);
-    const p1 = new CurvePoint(uuid(), 0, new Point2D(0.7761423749, 1), new Point2D(0.2238576251, 1), true, true, CurveMode.Mirrored, new Point2D(0.5, 1));
-    const p2 = new CurvePoint(uuid(), 0, new Point2D(1, 0.2238576251), new Point2D(1, 0.7761423749), true, true, CurveMode.Mirrored, new Point2D(1, 0.5));
-    const p3 = new CurvePoint(uuid(), 0, new Point2D(0.2238576251, 0), new Point2D(0.7761423749, 0), true, true, CurveMode.Mirrored, new Point2D(0.5, 0));
-    const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 0.7761423749), new Point2D(0, 0.2238576251), true, true, CurveMode.Mirrored, new Point2D(0, 0.5));
+
+    const p1 = new CurvePoint(uuid(), 0.5, 1, CurveMode.Mirrored);
+    p1.hasFrom = true;
+    p1.hasTo = true;
+    p1.fromX = 0.7761423749;
+    p1.fromY = 1;
+    p1.toX = 0.2238576251;
+    p1.toY = 1;
+
+    const p2 = new CurvePoint(uuid(), 1, 0.5, CurveMode.Mirrored);
+    p2.hasFrom = true;
+    p2.hasTo = true;
+    p2.fromX = 1;
+    p2.fromY = 0.2238576251;
+    p2.toX = 1;
+    p2.toY = 0.7761423749;
+
+    const p3 = new CurvePoint(uuid(), 0.5, 0, CurveMode.Mirrored);
+    p3.hasFrom = true;
+    p3.hasTo = true;
+    p3.fromX = 0.2238576251;
+    p3.fromY = 0;
+    p3.toX = 0.7761423749;
+    p3.toY = 0;
+
+    const p4 = new CurvePoint(uuid(), 0, 0.5, CurveMode.Mirrored);
+    p4.hasFrom = true;
+    p4.hasTo = true;
+    p4.fromX = 0;
+    p4.fromY = 0.7761423749;
+    p4.toX = 0;
+    p4.toY = 0.2238576251;
+
     curvePoint.push(p1, p2, p3, p4);
     const shape = new OvalShape(id, name, types.ShapeType.Oval, frame, style, curvePoint, true, ellipse);
     addCommonAttr(shape);
@@ -207,8 +236,8 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
 
 export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const style = newStyle();
-    const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(0, 0));
-    const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
+    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.None);
+    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.None);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const id = uuid();
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
@@ -221,8 +250,8 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
 export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const style = newStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
-    const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(0, 0));
-    const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.None, new Point2D(1, 1));
+    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.None);
+    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.None);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
     style.borders.push(border);
@@ -282,10 +311,10 @@ export function newImageShape(name: string, frame: ShapeFrame, mediasMgr: Resour
     const id = uuid();
     const style = newStyle();
     const curvePoint = new BasicArray<CurvePoint>();
-    const p1 = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0)); // lt
-    const p2 = new CurvePoint(uuid(), 0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.Straight, new Point2D(1, 0)); // rt
-    const p3 = new CurvePoint(uuid(), 0, new Point2D(1, 1), new Point2D(1, 1), false, false, CurveMode.Straight, new Point2D(1, 1)); // rb
-    const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
+    const p1 = new CurvePoint(uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint(uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint(uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint(uuid(), 0, 1, CurveMode.Straight); // lb
     curvePoint.push(p1, p2, p3, p4);
     const img = new ImageShape(id, name, types.ShapeType.Image, frame, style, curvePoint, true, ref || '');
     img.setImageMgr(mediasMgr);
@@ -323,8 +352,8 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
 export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm): ContactShape {
     const style = newStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
-    const sPoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0));
-    const ePoint = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(1, 1));
+    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
+    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
     style.borders.push(border);
