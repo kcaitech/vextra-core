@@ -8,19 +8,34 @@ export type ComType = (data: Shape,
 
 export function h(com: ComType, attrs?: any): string;
 export function h(tag: string, attrs?: any, childs?: Array<string>): string;
+export function h(tag: string, childs?: Array<string>): string;
 export function h(...args: any[]): string {
+    let attrs = args[1];
+    let childs = args[2];
+    if (args.length === 3) {
+        //
+    }
+    else if (args.length === 2) {
+        if (Array.isArray(args[1])) {
+            attrs = undefined;
+            childs = args[1];
+        }
+    }
+    else {
+        throw new Error("args err!");
+    }
     if (typeof args[0] === 'function') {
         if (args.length > 2) {
             throw new Error("function args err!");
         }
         const com = args[0];
-        const attrs = args[1];
-        return com(attrs.data); // todo
+        // const attrs = args[1];
+        return com(attrs?.data); // todo
     }
     else if (typeof args[0] === 'string') {
         const tag = args[0];
-        const attrs = args[1];
-        const childs = args[2];
+        // const attrs = args[1];
+        // const childs = args[2];
         let ret = '<' + tag;
         if (attrs) for (let a in attrs) {
             const attr = attrs[a];
