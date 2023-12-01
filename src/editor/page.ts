@@ -250,7 +250,7 @@ export interface ExportFormatReplaceAction {
 
 export interface ExportFormatAddAction {
     target: Shape
-    value: ExportFormat
+    value: ExportFormat[]
 }
 
 export interface ExportFormatDeleteAction {
@@ -1781,7 +1781,11 @@ export class PageEditor {
             const api = this.__repo.start('shapesAddExportFormat', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addExportFormat(this.__page, target, value, target.style.borders.length);
+                for (let v = 0; v < value.length; v++) {
+                    const format = value[v];
+                    const length = target.exportOptions ? target.exportOptions.exportFormats.length : 0;
+                    api.addExportFormat(this.__page, target, format, length);
+                }
             }
             this.__repo.commit();
         } catch (error) {

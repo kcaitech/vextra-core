@@ -1134,7 +1134,7 @@ export class Api {
             })
         }
     }
-    
+
     setExportFormatPerfix(page: Page, shape: Shape, idx: number, perfix: ExportFormatNameingScheme) {
         checkShapeAtPage(page, shape);
         const format = shape.exportOptions?.exportFormats[idx];
