@@ -6,7 +6,7 @@ import { importColor, importText, importVariable } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import { SymbolShape, Variable } from "../../data/shape";
 import { BasicMap } from "../../data/basic";
-import { IdOpSet } from "coop/data/basictypes";
+import { IdOpSet } from "../../coop/data/basictypes";
 import { shapeModifyContextSettingOpacity, shapeModifyNameFixed } from "../basicapi";
 
 export type TextShapeLike = Shape & { text: Text }

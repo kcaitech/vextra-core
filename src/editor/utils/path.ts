@@ -95,8 +95,8 @@ export function init_curv(shape: PathShape, page: Page, api: Api, curve_point: C
         return;
     }
     const k = Math.atan2(next.x - previous.x, next.y - previous.y);
-    const dx = 0.3 * Math.sin(k);
-    const dy = 0.3 * Math.cos(k);
+    const dx = 0.35 * Math.sin(k);
+    const dy = 0.35 * Math.cos(k);
     const from = { x: curve_point.x + dx, y: curve_point.y + dy };
     const to = { x: curve_point.x - dx, y: curve_point.y - dy };
     api.shapeModifyCurvFromPoint(page, shape, index, from);
