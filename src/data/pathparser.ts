@@ -71,11 +71,11 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         path.push(["Z"]);
     }
 
-    const transformPoint = (point: Point2D): Point2D => {
-        return { x: offsetX + point.x * width, y: offsetY + point.y * height };
+    const transformPoint = (x: number, y: number): Point2D => {
+        return { x: offsetX + x * width, y: offsetY + y * height };
     }
 
-    const transformedPoints = points.map((p) => transformPoint(p.point));
+    const transformedPoints = points.map((p) => transformPoint(p.x, p.y));
 
     for (let i = 0; i < len - 1; i++) {
         _connectTwo(i, i + 1);
@@ -90,11 +90,11 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         if (!isClosed && (idx === 0 || idx === len - 1)) {
             return false;
         }
-        return curvePoint.curveMode === CurveMode.Straight && (curvePoint.cornerRadius > 0 || fixedRadius > 0);
+        return curvePoint.mode === CurveMode.Straight && ((curvePoint.radius || 0) > 0 || fixedRadius > 0);
     }
 
-    function pointEquals(p0: Point2D, p1: Point2D) {
-        return Math.abs(p0.x - p1.x) < float_accuracy && Math.abs(p0.y - p1.y) < float_accuracy;
+    function pointEquals(p0x: number, p0y: number, p1x: number, p1y: number) {
+        return Math.abs(p0x - p1x) < float_accuracy && Math.abs(p0y - p1y) < float_accuracy;
     }
 
     /**
@@ -115,10 +115,10 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         const nextIndex = idx === len - 1 ? 0 : idx + 1;
 
         const pre = points[preIndex];
-        if (pre.hasCurveFrom && !pointEquals(pre.point, pre.curveFrom)) return;
+        if (pre.hasFrom && !pointEquals(pre.x, pre.y, pre.fromX || 0, pre.fromY || 0)) return;
         const cur = points[idx];
         const next = points[nextIndex];
-        if (next.hasCurveTo && !pointEquals(next.point, next.curveTo)) return;
+        if (next.hasTo && !pointEquals(next.x, next.y, next.toX || 0, next.toY || 0)) return;
         // 拿到三个点
         const prePoint = transformedPoints[preIndex]; //pre.point; // A
         const curPoint = transformedPoints[idx]; //cur.point; // B
@@ -133,7 +133,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
             return;
         }
 
-        let radius = cur.cornerRadius || fixedRadius;
+        let radius = cur.radius || fixedRadius;
         // 计算相切的点距离 curPoint 的距离， 在 radian 为 90 deg 的时候和 radius 相等。
         const tangent = Math.tan(radian / 2);
         let dist = radius / tangent;
@@ -141,8 +141,8 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         // 校准 dist，用户设置的 cornerRadius 可能太大，而实际显示 cornerRadius 受到 AB BC 两边长度限制。
         // 如果 B C 端点设置了 cornerRadius，可用长度减半
         const minDist = Math.min(
-            pre.curveMode === CurveMode.Straight && (pre.cornerRadius || fixedRadius) > 0 ? lenAB / 2 : lenAB,
-            next.curveMode === CurveMode.Straight && (next.cornerRadius || fixedRadius) > 0 ? lenBC / 2 : lenBC
+            pre.mode === CurveMode.Straight && (pre.radius || fixedRadius) > 0 ? lenAB / 2 : lenAB,
+            next.mode === CurveMode.Straight && (next.radius || fixedRadius) > 0 ? lenBC / 2 : lenBC
         );
 
         if (dist > minDist) {
@@ -195,8 +195,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         } else {
             const fromCurvePoint = points[fromIdx];
             startPt = transformedPoints[fromIdx]
-            startHandle = fromCurvePoint.hasCurveFrom ? fromCurvePoint.curveFrom : undefined;
-            if (startHandle) startHandle = transformPoint(startHandle)
+            startHandle = fromCurvePoint.hasFrom ?  transformPoint(fromCurvePoint.fromX || 0, fromCurvePoint.fromY || 0) : undefined;
         }
 
         if (!hasBegin) {
@@ -211,8 +210,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         } else {
             const toCurvePoint = points[toIdx];
             endPt = transformedPoints[toIdx];
-            endHandle = toCurvePoint.hasCurveTo ? toCurvePoint.curveTo : undefined;
-            if (endHandle) endHandle = transformPoint(endHandle);
+            endHandle = toCurvePoint.hasTo ? transformPoint(toCurvePoint.toX || 0, toCurvePoint.toY || 0) : undefined;
         }
 
         // 根据有没有 handle 选择 cubic 或者 line 连接

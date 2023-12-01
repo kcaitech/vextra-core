@@ -567,32 +567,27 @@ export class DocumentMeta extends Basic {
 export class CurvePoint extends Basic {
     typeId = 'curve-point'
     id: string
-    cornerRadius: number
-    curveFrom: Point2D
-    curveTo: Point2D
-    hasCurveFrom: boolean
-    hasCurveTo: boolean
-    curveMode: CurveMode
-    point: Point2D
+    radius?: number
+    fromX?: number
+    fromY?: number
+    toX?: number
+    toY?: number
+    hasFrom?: boolean
+    hasTo?: boolean
+    mode: CurveMode
+    x: number
+    y: number
     constructor(
         id: string,
-        cornerRadius: number,
-        curveFrom: Point2D,
-        curveTo: Point2D,
-        hasCurveFrom: boolean,
-        hasCurveTo: boolean,
-        curveMode: CurveMode,
-        point: Point2D
+        x: number,
+        y: number,
+        mode: CurveMode
     ) {
         super()
         this.id = id
-        this.cornerRadius = cornerRadius
-        this.curveFrom = curveFrom
-        this.curveTo = curveTo
-        this.hasCurveFrom = hasCurveFrom
-        this.hasCurveTo = hasCurveTo
-        this.curveMode = curveMode
-        this.point = point
+        this.x = x
+        this.y = y
+        this.mode = mode
     }
 }
 /**

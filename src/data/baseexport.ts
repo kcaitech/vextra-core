@@ -517,13 +517,16 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
 export function exportCurvePoint(source: types.CurvePoint, ctx?: IExportContext): types.CurvePoint {
     const ret = {
         id: source.id,
-        cornerRadius: source.cornerRadius,
-        curveFrom: exportPoint2D(source.curveFrom, ctx),
-        curveTo: exportPoint2D(source.curveTo, ctx),
-        hasCurveFrom: source.hasCurveFrom,
-        hasCurveTo: source.hasCurveTo,
-        curveMode: exportCurveMode(source.curveMode, ctx),
-        point: exportPoint2D(source.point, ctx),
+        radius: source.radius,
+        fromX: source.fromX,
+        fromY: source.fromY,
+        toX: source.toX,
+        toY: source.toY,
+        hasFrom: source.hasFrom,
+        hasTo: source.hasTo,
+        mode: exportCurveMode(source.mode, ctx),
+        x: source.x,
+        y: source.y,
     }
     return ret
 }

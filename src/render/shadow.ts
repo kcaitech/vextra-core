@@ -249,7 +249,6 @@ const getFilterPropsValue = (shadow: Shadow, frame: ShapeFrame, f_props: any) =>
 
 export function renderWithVars(h: Function, id: string, shape: Shape, path: string,
                                varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-                               consumedVars: { slot: string, vars: Variable[] }[] | undefined,
                                compos_map?: Map<ShapeType, any>
 ) {
     let shadows = shape.style.shadows;
@@ -261,7 +260,6 @@ export function renderWithVars(h: Function, id: string, shape: Shape, path: stri
             if (_var && _var.type === VariableType.Shadows) {
                 // return _var.value;
                 shadows = _var.value;
-                if (consumedVars) consumedVars.push({slot: OverrideType.Shadows, vars: _vars})
             }
         }
     }
@@ -274,7 +272,6 @@ export function renderWithVars(h: Function, id: string, shape: Shape, path: stri
             if (_var && _var.type === VariableType.Borders) {
                 // return _var.value;
                 borders = _var.value;
-                if (consumedVars) consumedVars.push({slot: OverrideType.Borders, vars: _vars})
             }
         }
     }

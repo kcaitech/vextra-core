@@ -214,10 +214,9 @@ function createTextByString(stringValue: string, refShape: TextShape) {
 
 export function render(h: Function, shape: TextShape, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number) {
 
-    if (!isVisible(shape, varsContainer, consumedVars)) return;
+    if (!isVisible(shape, varsContainer)) return;
 
 
     const _frame = shape.frame;
@@ -339,7 +338,7 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     const path = path0.toString();
 
     // fill
-    childs.push(...fillR(h, shape, frame, path, varsContainer, consumedVars));
+    childs.push(...fillR(h, shape, frame, path, varsContainer));
 
     // text
     // todo
@@ -360,7 +359,6 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
                     text = _var.value;
                 }
                 if (noUpperTrans) text.updateSize(frame.width, frame.height);
-                if (consumedVars) consumedVars.push({ slot: OverrideType.Text, vars: _vars })
             }
         }
     }
@@ -368,7 +366,7 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     const layout = noUpperTrans ? text.getLayout() : text.getLayout2(frame.width, frame.height);
     childs.push(...renderTextLayout(h, layout));
     // border
-    childs.push(...borderR(h, shape, frame, path, varsContainer, consumedVars));
+    childs.push(...borderR(h, shape, frame, path, varsContainer));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
@@ -394,7 +392,7 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     const shadows = shape.style.shadows;
     const ex_props = Object.assign({}, props);
     const shape_id = shape.id.slice(0, 4);
-    const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars);
+    const shadow = shadowR(h, shape_id, shape, path, varsContainer);
     if (shadow.length) {
         delete props.style;
         delete props.transform;

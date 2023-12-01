@@ -5,10 +5,10 @@ import { RenderTransform, isVisible } from "./basic";
 
 export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
+    bubbleupdate?: () => void,
     reflush?: number): any {
 
-    if (!isVisible(shape, varsContainer, consumedVars)) return;
+    if (!isVisible(shape, varsContainer)) return;
 
     const frame = shape.frame;
 
@@ -27,7 +27,7 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
             const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
             if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                 const com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle);
-                const node = h(com, { data: cell, key: cell.id, frame: cellLayout.frame, transform, varsContainer });
+                const node = h(com, { data: cell, key: cell.id, frame: cellLayout.frame, transform, varsContainer, bubbleupdate });
                 nodes.push(node);
             }
         }

@@ -723,11 +723,11 @@ export class PathShape extends Shape implements classes.PathShape {
     }
 
     setRadius(radius: number): void {
-        this.points.forEach((p) => p.cornerRadius = radius);
+        this.points.forEach((p) => p.radius = radius);
     }
 
     getRadius(): number[] {
-        return this.points.map((p) => p.cornerRadius);
+        return this.points.map((p) => p.radius || 0);
     }
 }
 
@@ -774,12 +774,12 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     }
 
     setRadius(radius: number): void {
-        this.pathsegs.forEach((seg) => seg.points.forEach((p) => (p.cornerRadius = radius)));
+        this.pathsegs.forEach((seg) => seg.points.forEach((p) => (p.radius = radius)));
     }
 
     getRadius(): number[] {
         return this.pathsegs.reduce((radius: number[], seg) => seg.points.reduce((radius, p) => {
-            radius.push(p.cornerRadius);
+            radius.push(p.radius || 0);
             return radius;
         }, radius), []);
     }
@@ -812,10 +812,10 @@ export class RectShape extends PathShape implements classes.RectShape {
     setRectRadius(lt: number, rt: number, rb: number, lb: number): void {
         const ps = this.points;
         if (ps.length === 4) {
-            ps[0].cornerRadius = lt;
-            ps[1].cornerRadius = rt;
-            ps[2].cornerRadius = rb;
-            ps[3].cornerRadius = lb;
+            ps[0].radius = lt;
+            ps[1].radius = rt;
+            ps[2].radius = rb;
+            ps[3].radius = lb;
         }
     }
 
@@ -823,10 +823,10 @@ export class RectShape extends PathShape implements classes.RectShape {
         const ret = { lt: 0, rt: 0, rb: 0, lb: 0 };
         const ps = this.points;
         if (ps.length === 4) {
-            ret.lt = ps[0].cornerRadius;
-            ret.rt = ps[1].cornerRadius;
-            ret.rb = ps[2].cornerRadius;
-            ret.lb = ps[3].cornerRadius;
+            ret.lt = ps[0].radius || 0;
+            ret.rt = ps[1].radius || 0;
+            ret.rb = ps[2].radius || 0;
+            ret.lb = ps[3].radius || 0;
         }
         return ret;
     }

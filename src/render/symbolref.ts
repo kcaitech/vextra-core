@@ -12,13 +12,9 @@ function renderSym(h: Function,
     sym: SymbolShape,
     comsMap: Map<ShapeType, any>,
     transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): any {
+    varsContainer: (SymbolRefShape | SymbolShape)[]): any {
 
-    if (sym.parent instanceof SymbolUnionShape) {
-        varsContainer = (varsContainer || []).concat(ref, sym.parent, sym);
-    } else {
-        varsContainer = (varsContainer || []).concat(ref, sym);
-    }
+    varsContainer.push(sym);
 
     // const refframe = ref.frame;
     const symframe = sym.frame;
@@ -61,10 +57,9 @@ export function render(h: Function,
     comsMap: Map<ShapeType, any>,
     transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    consumedVars: { slot: string, vars: Variable[] }[] | undefined,
     reflush?: number) {
 
-    if (!isVisible(shape, varsContainer, consumedVars)) return;
+    if (!isVisible(shape, varsContainer)) return;
 
 
     // const sym = shape.peekSymbol(true);
@@ -189,12 +184,15 @@ export function render(h: Function,
     const path = path0.toString();
 
     const varsContainer2 = (varsContainer || []).concat(shape);
+    if (sym.parent instanceof SymbolUnionShape) {
+        varsContainer2.push(sym.parent);
+    }
     // fill
-    childs.push(...fillR(h, sym, frame, path, varsContainer2, consumedVars));
+    childs.push(...fillR(h, sym, frame, path, varsContainer2));
     // symbol
-    childs.push(...renderSym(h, shape, frame, sym as SymbolShape, comsMap, undefined, varsContainer));
+    childs.push(...renderSym(h, shape, frame, sym as SymbolShape, comsMap, undefined, varsContainer2));
     // border
-    childs.push(...borderR(h, sym, frame, path, varsContainer2, consumedVars));
+    childs.push(...borderR(h, sym, frame, path, varsContainer2));
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
