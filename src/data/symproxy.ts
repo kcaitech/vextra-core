@@ -296,11 +296,46 @@ class ShapeHdl extends HdlBase {
     }
 
     public notify(...args: any[]) {
-        if (this.__watcher.size === 0) return;
-        // 在set的foreach内部修改set会导致无限循环
-        Array.from(this.__watcher).forEach(w => {
-            w(...args);
-        });
+        if (this.__watcher.size === 0) {
+            // 在set的foreach内部修改set会导致无限循环
+            Array.from(this.__watcher).forEach(w => {
+                w(...args);
+            });
+        }
+        this.__parent?.bubblenotify(...args);
+    }
+
+    private get __bubblewatcher(): Set<((...args: any[]) => void)> {
+        let cache: Map<string, any> = (this.__origin as any).__symproxy_cache;
+        if (!cache) {
+            cache = new Map<string, any>();
+            (this.__origin as any).__symproxy_cache = cache;
+        }
+        const idx = this.__id + '/' + 'bubblewatcher';
+        let watcher: Set<((...args: any[]) => void)> = cache.get(idx);
+        if (!watcher) {
+            watcher = new Set<((...args: any[]) => void)>();
+            cache.set(idx, watcher);
+        }
+        return watcher;
+    }
+    public bubblewatch(watcher: ((...args: any[]) => void)): (() => void) {
+        this.__bubblewatcher.add(watcher);
+        return () => {
+            this.__bubblewatcher.delete(watcher);
+        };
+    }
+    public bubbleunwatch(watcher: ((...args: any[]) => void)): boolean {
+        return this.__bubblewatcher.delete(watcher);
+    }
+    public bubblenotify(...args: any[]) {
+        if (this.__bubblewatcher.size > 0) {
+            // 在set的foreach内部修改set会导致无限循环
+            Array.from(this.__bubblewatcher).forEach(w => {
+                w(...args);
+            });
+        }
+        this.__parent?.bubblenotify(...args);
     }
 
     resetLayout() {
@@ -439,6 +474,15 @@ class ShapeHdl extends HdlBase {
         }
         if (propStr === "notify") {
             return this.notify;
+        }
+        if (propStr === "bubblewatch") {
+            return this.bubblewatch;
+        }
+        if (propStr === "bubbleunwatch") {
+            return this.bubbleunwatch;
+        }
+        if (propStr === "bubblenotify") {
+            return this.bubblenotify;
         }
         if (propStr === "frame") {
             return this.__frame;

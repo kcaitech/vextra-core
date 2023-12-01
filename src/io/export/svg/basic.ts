@@ -23,7 +23,17 @@ export function h(...args: any[]): string {
         const childs = args[2];
         let ret = '<' + tag;
         if (attrs) for (let a in attrs) {
-            ret += ' ' + a + '="' + attrs[a] + '"';
+            const attr = attrs[a];
+            if (a === 'style') {
+                let style = ""
+                for (let b in attr) {
+                    style += b + ':' + attr[b] + ';';
+                }
+                ret += ' ' + a + '="' + style + '"';
+            }
+            else {
+                ret += ' ' + a + '="' + attr + '"';
+            }
         }
         ret += '>';
         if (childs) for (let i = 0, len = childs.length; i < len; i++) {
