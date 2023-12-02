@@ -1321,19 +1321,39 @@ export class PageEditor {
                 if (!gradient_container || !gradient_container.gradient) {
                     continue;
                 }
-                const gradient = gradient_container.gradient;
-                const ng = importGradient(exportGradient(gradient));
-                const { from, to } = ng;
-                const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
-                const m = new Matrix();
-                m.trans(-midpoint.x, -midpoint.y);
-                m.rotate(Math.PI / 2);
-                m.trans(midpoint.x, midpoint.y);
-                ng.to = m.computeCoord3(to) as any;
-                ng.from = m.computeCoord3(from) as any;
+                const gradient = importGradient(exportGradient(gradient_container.gradient));
+                const { from, to } = gradient;
+                if (gradient.gradientType === types.GradientType.Linear) {
+                    const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
+                    const m = new Matrix();
+                    m.trans(-midpoint.x, -midpoint.y);
+                    m.rotate(Math.PI / 2);
+                    m.trans(midpoint.x, midpoint.y);
+                    gradient.to = m.computeCoord3(to) as any;
+                    gradient.from = m.computeCoord3(from) as any;
+                } else if (gradient.gradientType === types.GradientType.Radial) {
+                    const m = new Matrix();
+                    m.trans(-from.x, -from.y);
+                    m.rotate(Math.PI / 2);
+                    m.trans(from.x, from.y);
+                    gradient.to = m.computeCoord3(to) as any;
+                } else if (gradient.gradientType === types.GradientType.Angular) {
+                    const stops = gradient.stops;
+                    for (let _i = 0, _l = stops.length; _i < _l; _i++) {
+                        const stop = stops[_i];
+                        stop.position = (stop.position + 0.25) % 1;
+                    }
+                    stops.sort((a, b) => {
+                        if (a.position > b.position) {
+                            return 1;
+                        } else {
+                            return -1;
+                        }
+                    })
+                }
                 // todo 旋转渐变
                 const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
-                f(this.__page, target, index, ng);
+                f(this.__page, target, index, gradient);
             }
             this.__repo.commit();
         } catch (error) {
