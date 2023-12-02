@@ -12,7 +12,7 @@ import {
 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { BoolOp, BorderPosition, ShadowPosition, ShapeType } from "../data/typesdefine";
+import { BoolOp, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     initFrame,
@@ -35,9 +35,7 @@ import { Api } from "./command/recordapi";
 import {
     Artboard,
     Border,
-    BorderStyle,
     Color,
-    Fill,
     Path,
     PathShape,
     Style,
@@ -55,8 +53,7 @@ import {
     importArtboard,
     importBorder, importShapeFrame,
     importStyle,
-    importSymbolShape,
-    importVariable
+    importSymbolShape
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
@@ -84,7 +81,6 @@ import {
     shape4fill
 } from "./utils/symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { Shadow } from "../data/baseclasses";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -92,157 +88,30 @@ export interface PositonAdjust { // 涉及属性：frame.x、frame.y
     transX: number
     transY: number
 }
-
-export interface ConstrainerProportionsAction { // constrainerProportions
-    target: Shape
-    value: boolean
-}
-
 export interface FrameAdjust { // frame.width、frame.height
     target: Shape
     widthExtend: number
     heightExtend: number
 }
 
-export interface RotateAdjust { // rotation
-    target: Shape
-    value: number
-}
-
-export interface FlipAction { // isFlippedHorizontal、isFlippedVertical
-    target: Shape
-    direction: 'horizontal' | 'vertical'
-}
-
-export interface FillColorAction { // fill.color
+export interface BatchAction { // targer、index、value
     target: Shape
     index: number
-    value: Color
+    value: any
 }
-
-export interface FillEnableAction { // fill.Enabled
+export interface BatchAction2 { // targer、value
     target: Shape
-    index: number
-    value: boolean
+    value: any
 }
-
-export interface FillAddAction { // style.fills
-    target: Shape
-    value: Fill
-}
-
-export interface FillDeleteAction { // style.fills
+export interface BatchAction3 { // targer、index
     target: Shape
     index: number
 }
-
-export interface FillsReplaceAction { // style.fills
-    target: Shape
-    value: Fill[]
-}
-
-export interface BorderColorAction { // border.color
+export interface BatchAction4 { // targer、value、type
     target: Shape
     index: number
-    value: Color
+    type: 'fills' | 'borders'
 }
-
-export interface BorderEnableAction { // border.Enabled
-    target: Shape
-    index: number
-    value: boolean
-}
-
-export interface BorderAddAction { // style.borders
-    target: Shape
-    value: Border
-}
-
-export interface BorderDeleteAction { // style.borders
-    target: Shape
-    index: number
-}
-
-export interface BordersReplaceAction { // style.borders
-    target: Shape
-    value: Border[]
-}
-
-export interface BorderPositionAction {
-    target: Shape
-    index: number
-    value: BorderPosition
-}
-
-export interface BorderThicknessAction {
-    target: Shape
-    index: number
-    value: number
-}
-
-export interface BorderStyleAction {
-    target: Shape
-    index: number
-    value: BorderStyle
-}
-
-export interface ShadowReplaceAction {
-    target: Shape;
-    value: Shadow[];
-}
-
-export interface ShadowAddAction {
-    target: Shape
-    value: Shadow
-}
-
-export interface ShadowDeleteAction {
-    target: Shape
-    index: number
-}
-
-export interface ShadowEnableAction {
-    target: Shape
-    index: number
-    value: boolean
-}
-
-export interface ShadowPositionAction {
-    target: Shape
-    index: number
-    value: ShadowPosition
-}
-
-export interface ShadowColorAction { // border.color
-    target: Shape
-    index: number
-    value: Color
-}
-
-export interface ShadowBlurRadiusAction {
-    target: Shape
-    index: number
-    value: number
-}
-
-export interface ShadowSpreadAction {
-    target: Shape
-    index: number
-    value: number
-}
-
-export interface ShadowOffsetXAction {
-    target: Shape
-    index: number
-    value: number
-}
-
-export interface ShadowOffsetYAction {
-    target: Shape
-    index: number
-    value: number
-}
-
 function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
     return Math.atan2(B.y - A.y, B.x - A.x)
 }
@@ -1335,7 +1204,7 @@ export class PageEditor {
         }
     }
 
-    setShapesConstrainerProportions(actions: ConstrainerProportionsAction[]) {
+    setShapesConstrainerProportions(actions: BatchAction2[]) {
         const api = this.__repo.start('setShapesConstrainerProportions', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1385,14 +1254,14 @@ export class PageEditor {
         }
     }
 
-    shapesFlip(actions: FlipAction[]) {
+    shapesFlip(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesFlip', {});
         try {
             for (let i = 0; i < actions.length; i++) {
-                const { target, direction } = actions[i];
-                if (direction === 'horizontal') {
+                const { target, value } = actions[i];
+                if (value === 'horizontal') {
                     api.shapeModifyHFlip(this.__page, target, !target.isFlippedHorizontal);
-                } else if (direction === 'vertical') {
+                } else if (value === 'vertical') {
                     api.shapeModifyVFlip(this.__page, target, !target.isFlippedVertical);
                 }
             }
@@ -1402,7 +1271,28 @@ export class PageEditor {
         }
     }
 
-    setShapesFillColor(actions: FillColorAction[]) {
+    // 渐变
+    reverseShapesGradient(actions: BatchAction4[]) {
+        try {
+            const api = this.__repo.start('reverseShapesGradient', {});
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type } = actions[i];
+                const arr = target.style[type];
+                if (!arr?.length) {
+                    continue;
+                }
+                const gradient_container = arr[index];
+                if (!gradient_container) {
+                    continue;
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    // 填充
+    setShapesFillColor(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillColor', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1416,7 +1306,7 @@ export class PageEditor {
         }
     }
 
-    setShapesFillEnabled(actions: FillEnableAction[]) {
+    setShapesFillEnabled(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillEnabled', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1430,7 +1320,7 @@ export class PageEditor {
         }
     }
 
-    shapesAddFill(actions: FillAddAction[]) {
+    shapesAddFill(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesAddFill', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1445,7 +1335,7 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteFill(actions: FillDeleteAction[]) {
+    shapesDeleteFill(actions: BatchAction3[]) {
         const api = this.__repo.start('shapesDeleteFill', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1459,7 +1349,7 @@ export class PageEditor {
         }
     }
 
-    shapesFillsUnify(actions: FillsReplaceAction[]) {
+    shapesFillsUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesFillsUnify', {}); // 统一多个shape的填充设置。eg:[red, red], [green], [blue, blue, blue] => [red, red], [red, red], [red, red];
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1477,7 +1367,7 @@ export class PageEditor {
     }
 
     //boders
-    setShapesBorderColor(actions: BorderColorAction[]) {
+    setShapesBorderColor(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderColor', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1491,7 +1381,7 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderEnabled(actions: BorderEnableAction[]) {
+    setShapesBorderEnabled(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderEnabled', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1505,7 +1395,7 @@ export class PageEditor {
         }
     }
 
-    shapesAddBorder(actions: BorderAddAction[]) {
+    shapesAddBorder(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesAddBorder', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1521,7 +1411,7 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteBorder(actions: BorderDeleteAction[]) {
+    shapesDeleteBorder(actions: BatchAction3[]) {
         const api = this.__repo.start('shapesDeleteBorder', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1535,7 +1425,7 @@ export class PageEditor {
         }
     }
 
-    shapesBordersUnify(actions: BordersReplaceAction[]) {
+    shapesBordersUnify(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesBordersUnify', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1550,7 +1440,7 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderPosition(actions: BorderPositionAction[]) {
+    setShapesBorderPosition(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderPosition', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1564,7 +1454,7 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderThickness(actions: BorderThicknessAction[]) {
+    setShapesBorderThickness(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderThickness', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1578,7 +1468,7 @@ export class PageEditor {
         }
     }
 
-    setShapesBorderStyle(actions: BorderStyleAction[]) {
+    setShapesBorderStyle(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesBorderStyle', {});
         try {
             for (let i = 0; i < actions.length; i++) {
@@ -1593,7 +1483,7 @@ export class PageEditor {
     }
 
     // shadow
-    setShapesShadowOffsetY(actions: ShadowOffsetYAction[]) {
+    setShapesShadowOffsetY(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowOffsetY', {});
             for (let i = 0; i < actions.length; i++) {
@@ -1606,7 +1496,7 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowOffsetX(actions: ShadowOffsetXAction[]) {
+    setShapesShadowOffsetX(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowOffsetX', {});
             for (let i = 0; i < actions.length; i++) {
@@ -1619,7 +1509,7 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowSpread(actions: ShadowSpreadAction[]) {
+    setShapesShadowSpread(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowSpread', {});
             for (let i = 0; i < actions.length; i++) {
@@ -1632,7 +1522,7 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowBlurRadius(actions: ShadowBlurRadiusAction[]) {
+    setShapesShadowBlurRadius(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowBlurRadius', {});
             for (let i = 0; i < actions.length; i++) {
@@ -1645,7 +1535,7 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowColor(actions: ShadowColorAction[]) {
+    setShapesShadowColor(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowColor', {});
             for (let i = 0; i < actions.length; i++) {
@@ -1658,7 +1548,7 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowPosition(actions: ShadowPositionAction[]) {
+    setShapesShadowPosition(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowPosition', {});
             for (let i = 0; i < actions.length; i++) {
@@ -1671,7 +1561,7 @@ export class PageEditor {
         }
     }
 
-    setShapesShadowEnabled(actions: ShadowEnableAction[]) {
+    setShapesShadowEnabled(actions: BatchAction[]) {
         try {
             const api = this.__repo.start('setShapesShadowEnabled', {});
             for (let i = 0; i < actions.length; i++) {
@@ -1684,7 +1574,7 @@ export class PageEditor {
         }
     }
 
-    shapesDeleteShasow(actions: ShadowDeleteAction[]) {
+    shapesDeleteShasow(actions: BatchAction3[]) {
         try {
             const api = this.__repo.start('shapesDeleteShasow', {});
             for (let i = 0; i < actions.length; i++) {
@@ -1697,7 +1587,7 @@ export class PageEditor {
         }
     }
 
-    shapesAddShadow(actions: ShadowAddAction[]) {
+    shapesAddShadow(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesAddShadow', {});
             for (let i = 0; i < actions.length; i++) {
@@ -1710,7 +1600,7 @@ export class PageEditor {
         }
     }
 
-    shapesShadowsUnify(actions: ShadowReplaceAction[]) {
+    shapesShadowsUnify(actions: BatchAction2[]) {
         try {
             const api = this.__repo.start('shapesShadowsUnify', {});
             for (let i = 0; i < actions.length; i++) {
