@@ -1308,6 +1308,39 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    rotateShapesGradient(actions: BatchAction4[]) {
+        try {
+            const api = this.__repo.start('rotateShapesGradient', {});
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type } = actions[i];
+                const arr = target.style[type];
+                if (!arr?.length) {
+                    continue;
+                }
+                const gradient_container = arr[index];
+                if (!gradient_container || !gradient_container.gradient) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const ng = importGradient(exportGradient(gradient));
+                const { from, to } = ng;
+                const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
+                const m = new Matrix();
+                m.trans(-midpoint.x, -midpoint.y);
+                m.rotate(Math.PI / 2);
+                m.trans(midpoint.x, midpoint.y);
+                ng.to = m.computeCoord3(to) as any;
+                ng.from = m.computeCoord3(from) as any;
+                // todo 旋转渐变
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                f(this.__page, target, index, ng);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('rotateShapesGradient:', error);
+            this.__repo.rollback();
+        }
+    }
     // 填充
     setShapesFillColor(actions: BatchAction[]) {
         const api = this.__repo.start('setShapesFillColor', {});
