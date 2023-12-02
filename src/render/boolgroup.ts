@@ -7,6 +7,7 @@ import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
 import { RenderTransform, isVisible } from "./basic";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
+import { ShapeFrame } from "data/typesdefine";
 
 // find first usable style
 export function findUsableFillStyle(shape: Shape): Style {
@@ -21,21 +22,42 @@ export function findUsableBorderStyle(shape: Shape): Style {
     return shape.style;
 }
 
-function opPath(bop: BoolOp, path0: IPalPath, path1: IPalPath) {
+function opPath(bop: BoolOp, path0: IPalPath, path1: IPalPath, isIntersect: boolean): IPalPath {
     switch (bop) {
         case BoolOp.Diff:
-            path0.difference(path1);
+            if (isIntersect) path0.difference(path1);
+            else path0.addPath(path1);
             break;
         case BoolOp.Intersect:
-            path0.intersection(path1);
+            if (isIntersect) {
+                path0.intersection(path1);
+            }
+            else {
+                return gPal.makePalPath("");
+            }
             break;
         case BoolOp.Subtract:
-            path0.subtract(path1);
+            if (isIntersect) path0.subtract(path1);
             break;
         case BoolOp.Union:
-            path0.union(path1);
+            if (!isIntersect) path0.addPath(path1)
+            else path0.union(path1);
             break;
     }
+    return path0;
+}
+
+function _is_intersect(frame0: ShapeFrame, frame1: ShapeFrame) {
+    return !(frame0.x > frame1.x + frame1.width ||
+        frame0.x + frame0.width < frame1.x ||
+        frame0.y > frame1.y + frame1.height ||
+        frame0.y + frame0.height < frame1.y);
+}
+function is_intersect(arr: ShapeFrame[], frame: ShapeFrame) {
+    for (let i = 0; i < arr.length; i++) {
+        if (_is_intersect(arr[i], frame)) return true;
+    }
+    return false;
 }
 
 export function render2path(shape: Shape): Path {
@@ -58,7 +80,8 @@ export function render2path(shape: Shape): Path {
         path0.transform(child0.matrix2Parent())
     }
 
-    const joinPath: IPalPath = gPal.makePalPath(path0.toString());
+    const joinFrames = [frame0];
+    let joinPath: IPalPath = gPal.makePalPath(path0.toString());
     for (let i = 1; i < cc; i++) {
         const child1 = shape.childs[i];
         const frame1 = child1.frame;
@@ -73,8 +96,13 @@ export function render2path(shape: Shape): Path {
         if (pathop === BoolOp.None) {
             joinPath.addPath(palpath1);
         } else {
-            opPath(pathop, joinPath, palpath1)
+            const path = opPath(pathop, joinPath, palpath1, is_intersect(joinFrames, frame1));
+            if (path !== joinPath) {
+                joinPath.delete();
+                joinPath = path;
+            }
         }
+        joinFrames.push(frame1);
         palpath1.delete();
     }
     const pathstr = joinPath.toSVGString();
@@ -159,10 +187,10 @@ export function render(h: Function, shape: GroupShape, transform: RenderTransfor
             delete props.style;
             delete props.transform;
             const inner_url = innerShadowId(shape_id, shadows);
-            if(shadows.length) props.filter = `${inner_url}`;
+            if (shadows.length) props.filter = `${inner_url}`;
             const body = h("g", props, childs);
             return h("g", ex_props, [...shadow, body]);
-        }else {
+        } else {
             return h("g", props, childs);
         }
     }
