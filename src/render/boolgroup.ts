@@ -1,5 +1,4 @@
-import { BoolOp, GroupShape, Path, Shape, Style, SymbolRefShape, SymbolShape, TextShape, Variable } from "../data/classes";
-// import { difference, intersection, subtract, union } from "./boolop";
+import { BoolOp, GroupShape, Path, Shape, ShapeFrame, Style, SymbolRefShape, SymbolShape, TextShape } from "../data/classes";
 import { renderWithVars as fillR } from "./fill";
 import { renderWithVars as borderR } from "./border"
 import { renderText2Path } from "./text";
@@ -7,7 +6,6 @@ import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
 import { RenderTransform, isVisible } from "./basic";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
-import { ShapeFrame } from "data/typesdefine";
 
 // find first usable style
 export function findUsableFillStyle(shape: Shape): Style {
@@ -60,6 +58,52 @@ function is_intersect(arr: ShapeFrame[], frame: ShapeFrame) {
     return false;
 }
 
+class FrameGrid {
+    _cellWidth: number;
+    _cellHeight: number;
+    _cellRowsCount: number;
+    _cellColsCount: number;
+    _rows: ShapeFrame[][][] = [];
+
+    constructor(cellWidth: number, cellHeight: number, cellRowsCount: number, cellColsCount: number) {
+        this._cellWidth = cellWidth;
+        this._cellHeight = cellHeight;
+        this._cellRowsCount = cellRowsCount;
+        this._cellColsCount = cellColsCount;
+    }
+
+    isIntersectAndSet(frame: ShapeFrame): boolean {
+        const xs = (frame.x);
+        const xe = (frame.x + frame.width);
+        const ys = (frame.y);
+        const ye = (frame.y + frame.height);
+
+        const is = Math.max(0, xs / this._cellWidth);
+        const ie = Math.max(1, xe / this._cellWidth);
+
+        let intersect = false;
+        for (let i = Math.floor(is); i < ie && i < this._cellColsCount; ++i) {
+            const js = Math.max(0, ys / this._cellHeight);
+            const je = Math.max(1, ye / this._cellHeight);
+            let row = this._rows[i];
+            if (!row) {
+                row = [];
+                this._rows[i] = row;
+            }
+            for (let j = Math.floor(js); j < je && j < this._cellRowsCount; ++j) {
+                let cell = row[j];
+                if (!intersect && cell) intersect = is_intersect(cell, frame);
+                if (!cell) {
+                    cell = [];
+                    row[j] = cell;
+                }
+                cell.push(frame);
+            }
+        }
+        return intersect;
+    }
+}
+
 export function render2path(shape: Shape): Path {
     const shapeIsGroup = shape instanceof GroupShape;
     let fixedRadius: number | undefined;
@@ -80,7 +124,13 @@ export function render2path(shape: Shape): Path {
         path0.transform(child0.matrix2Parent())
     }
 
-    const joinFrames = [frame0];
+    const pframe = shape.frame;
+    const gridSize = Math.ceil(Math.sqrt(cc));
+
+    const grid = new FrameGrid(pframe.width / gridSize, pframe.height / gridSize, gridSize, gridSize);
+
+    grid.isIntersectAndSet(frame0);
+
     let joinPath: IPalPath = gPal.makePalPath(path0.toString());
     for (let i = 1; i < cc; i++) {
         const child1 = shape.childs[i];
@@ -93,16 +143,17 @@ export function render2path(shape: Shape): Path {
         }
         const pathop = child1.boolOp ?? BoolOp.None;
         const palpath1 = gPal.makePalPath(path1.toString());
+
+        const intersect = grid.isIntersectAndSet(frame1);
         if (pathop === BoolOp.None) {
             joinPath.addPath(palpath1);
         } else {
-            const path = opPath(pathop, joinPath, palpath1, is_intersect(joinFrames, frame1));
+            const path = opPath(pathop, joinPath, palpath1, intersect);
             if (path !== joinPath) {
                 joinPath.delete();
                 joinPath = path;
             }
         }
-        joinFrames.push(frame1);
         palpath1.delete();
     }
     const pathstr = joinPath.toSVGString();
