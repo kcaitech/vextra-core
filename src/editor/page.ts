@@ -41,7 +41,8 @@ import {
     Style,
     SymbolRefShape,
     TableShape,
-    Text
+    Text,
+    Stop
 } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { get_frame, modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
@@ -51,7 +52,8 @@ import { Matrix } from "../basic/matrix";
 import {
     IImportContext,
     importArtboard,
-    importBorder, importShapeFrame,
+    importBorder, importGradient, importShapeFrame,
+    importStop,
     importStyle,
     importSymbolShape
 } from "../data/baseimport";
@@ -59,7 +61,7 @@ import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
 import { BasicArray } from "../data/basic";
 import { TableEditor } from "./table";
-import { exportArtboard, exportShapeFrame, exportStyle, exportSymbolShape, exportVariable } from "../data/baseexport";
+import { exportArtboard, exportGradient, exportShapeFrame, exportStop, exportStyle, exportSymbolShape, exportVariable } from "../data/baseexport";
 import {
     adjust_selection_before_group,
     after_remove,
@@ -1282,12 +1284,27 @@ export class PageEditor {
                     continue;
                 }
                 const gradient_container = arr[index];
-                if (!gradient_container) {
+                if (!gradient_container || !gradient_container.gradient) {
                     continue;
                 }
+                const gradient = gradient_container.gradient;
+                const stops = gradient.stops;
+                if (!stops?.length) {
+                    continue;
+                }
+                const new_stops: BasicArray<Stop> = new BasicArray<Stop>();
+                for (let _i = 0, _l = stops.length; _i < _l; _i++) {
+                    const _stop = stops[_i];
+                    new_stops.unshift(importStop(exportStop(new Stop(1 - _stop.position, _stop.color))));
+                }
+                const ng = importGradient(exportGradient(gradient));
+                ng.stops = new_stops;
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                f(this.__page, target, index, ng);
             }
             this.__repo.commit();
         } catch (error) {
+            console.log('reverseShapesGradient:', error);
             this.__repo.rollback();
         }
     }

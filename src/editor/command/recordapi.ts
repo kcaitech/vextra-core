@@ -34,6 +34,7 @@ import {
     exportContactRole, exportCurveMode,
     exportCurvePoint,
     exportFill,
+    exportGradient,
     exportPage,
     exportPoint2D, exportShadow, exportShadowPosition,
     exportTableCell,
@@ -58,7 +59,7 @@ import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAl
 import { cmdmerge } from "./merger";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition } from "../../data/typesdefine";
+import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, Gradient } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { ContactRole, CurvePoint } from "../../data/baseclasses";
@@ -807,7 +808,6 @@ export class Api {
             basicapi.setBorderColor(border, color);
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.color, exportColor(color), exportColor(save)));
         })
-
     }
     setBorderEnable(page: Page, shape: Shape | Variable, idx: number, isEnable: boolean) {
         checkShapeAtPage(page, shape);
@@ -1707,6 +1707,20 @@ export class Api {
             const origin = table.textAttr?.transform;
             basicapi.tableModifyTextTransform(table, transform);
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextTransform, transform, origin));
+        })
+    }
+    // 渐变
+    modifyFillGradient(page: Page, shape: Shape | Variable, idx: number, gradient: Gradient) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        if (!fills[idx]) {
+            return;
+        }
+        this.__trap(() => {
+            const fill = fills[idx];
+            const save = fill.gradient;
+            fill.gradient = gradient;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.gradient, exportGradient(gradient), exportGradient(save)));
         })
     }
 }
