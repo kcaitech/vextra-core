@@ -72,7 +72,15 @@ class FrameGrid {
         this._cellColsCount = cellColsCount;
     }
 
-    isIntersectAndSet(frame: ShapeFrame): boolean {
+    checkIntersectAndPush(frame: ShapeFrame): boolean {
+        return this._checkIntersectAndPush(frame, false);
+    }
+
+    push(frame: ShapeFrame) {
+        this._checkIntersectAndPush(frame, true);
+    }
+
+    private _checkIntersectAndPush(frame: ShapeFrame, preset: boolean): boolean {
         const xs = (frame.x);
         const xe = (frame.x + frame.width);
         const ys = (frame.y);
@@ -81,7 +89,6 @@ class FrameGrid {
         const is = Math.max(0, xs / this._cellWidth);
         const ie = Math.max(1, xe / this._cellWidth);
 
-        let intersect = false;
         for (let i = Math.floor(is); i < ie && i < this._cellColsCount; ++i) {
             const js = Math.max(0, ys / this._cellHeight);
             const je = Math.max(1, ye / this._cellHeight);
@@ -92,7 +99,7 @@ class FrameGrid {
             }
             for (let j = Math.floor(js); j < je && j < this._cellRowsCount; ++j) {
                 let cell = row[j];
-                if (!intersect && cell) intersect = is_intersect(cell, frame);
+                if (!preset && cell) preset = is_intersect(cell, frame);
                 if (!cell) {
                     cell = [];
                     row[j] = cell;
@@ -100,7 +107,7 @@ class FrameGrid {
                 cell.push(frame);
             }
         }
-        return intersect;
+        return preset;
     }
 }
 
@@ -129,7 +136,7 @@ export function render2path(shape: Shape): Path {
 
     const grid = new FrameGrid(pframe.width / gridSize, pframe.height / gridSize, gridSize, gridSize);
 
-    grid.isIntersectAndSet(frame0);
+    grid.push(frame0);
 
     let joinPath: IPalPath = gPal.makePalPath(path0.toString());
     for (let i = 1; i < cc; i++) {
@@ -144,10 +151,11 @@ export function render2path(shape: Shape): Path {
         const pathop = child1.boolOp ?? BoolOp.None;
         const palpath1 = gPal.makePalPath(path1.toString());
 
-        const intersect = grid.isIntersectAndSet(frame1);
         if (pathop === BoolOp.None) {
+            grid.push(frame1);
             joinPath.addPath(palpath1);
         } else {
+            const intersect = grid.checkIntersectAndPush(frame1);
             const path = opPath(pathop, joinPath, palpath1, intersect);
             if (path !== joinPath) {
                 joinPath.delete();
