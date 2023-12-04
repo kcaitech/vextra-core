@@ -703,11 +703,12 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
         if (seg.points.length <= 1) continue;
         const p0 = seg.points[0];
         const pe = seg.points[seg.points.length - 1];
-        if (Math.abs(pe.point.x - p0.point.x) < float_accuracy && Math.abs(pe.point.y - p0.point.y) < float_accuracy) {
+        if (Math.abs(pe.x - p0.x) < float_accuracy && Math.abs(pe.y - p0.y) < float_accuracy) {
             seg.isClosed = true;
-            if (pe.hasCurveTo) {
-                p0.hasCurveTo = true;
-                p0.curveTo = pe.curveTo;
+            if (pe.hasTo) {
+                p0.hasTo = true;
+                p0.toX = pe.toX;
+                p0.toY = pe.toY;
             }
 
             seg.points.splice(seg.points.length - 1, 1); // 删掉最后个重复的
@@ -728,16 +729,16 @@ function convertPath2CurvePoints(path: any[], width: number, height: number): {
 
     ret.forEach((seg) => {
         seg.points = seg.points.map((p) => {
-            if (p.hasCurveFrom) {
-                p.curveFrom.x /= width;
-                p.curveFrom.y /= height;
+            if (p.hasFrom) {
+                p.fromX = (p.fromX || 0) / width;
+                p.fromY = (p.fromY || 0) / height;
             }
-            if (p.hasCurveTo) {
-                p.curveTo.x /= width;
-                p.curveTo.y /= height;
+            if (p.hasTo) {
+                p.toX = (p.toX || 0) / width;
+                p.toY = (p.toY || 0) / height;
             }
-            p.point.x /= width;
-            p.point.y /= height;
+            p.x /= width;
+            p.y /= height;
             return p;
         })
     })
@@ -769,10 +770,10 @@ curvHandler['m'] = (ctx: CurvCtx, item: any[]) => {
 
 function curveHandleLine(seg: CurvSeg, x: number, y: number) {
     if (seg.points.length === 0) {
-        const point = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(seg.beginpoint.x, seg.beginpoint.y));
+        const point = new CurvePoint(uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Straight);
         seg.points.push(point);
     }
-    const point = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(x, y));
+    const point = new CurvePoint(uuid(), x, y, CurveMode.Straight);
     seg.points.push(point);
 }
 
@@ -796,15 +797,21 @@ curvHandler['l'] = (ctx: CurvCtx, item: any[]) => {
 function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2: number, x: number, y: number) {
     if (seg.points.length > 0) {
         const prePoint = seg.points[seg.points.length - 1];
-        prePoint.hasCurveFrom = true;
-        prePoint.curveFrom.x = x1;
-        prePoint.curveFrom.y = y1;
+        prePoint.hasFrom = true;
+        prePoint.fromX = x1;
+        prePoint.fromY = y1;
     }
     else {
-        const point = new CurvePoint(uuid(), 0, new Point2D(x1, y1), new Point2D(0, 0), true, false, CurveMode.Asymmetric, new Point2D(seg.beginpoint.x, seg.beginpoint.y));
+        const point = new CurvePoint(uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
+        point.hasFrom = true;
+        point.fromX = x1;
+        point.fromY = y1;
         seg.points.push(point);
     }
-    const point = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(x2, y2), false, true, CurveMode.Asymmetric, new Point2D(x, y));
+    const point = new CurvePoint(uuid(), x, y, CurveMode.Asymmetric);
+    point.hasTo = true;
+    point.toX = x2;
+    point.toY = y2;
     seg.points.push(point);
 }
 

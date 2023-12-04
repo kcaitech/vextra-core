@@ -66,7 +66,18 @@ function importPoints(data: IJSON): CurvePoint[] {
         const hasCurveFrom: boolean = d['hasCurveFrom'];
         const hasCurveTo: boolean = d['hasCurveTo'];
         const point: Point2D = importXY(d['point']);
-        return new CurvePoint(uuid(), cornerRadius, curveFrom, curveTo, hasCurveFrom, hasCurveTo, curveMode, point);
+        const p = new CurvePoint(uuid(), point.x, point.y, curveMode);
+        if (hasCurveFrom) {
+            p.hasFrom = true;
+            p.fromX = curveFrom.x;
+            p.fromY = curveFrom.y;
+        }
+        if (hasCurveTo) {
+            p.hasTo = true;
+            p.toX = curveTo.x;
+            p.toY = curveTo.y;
+        }
+        return p;
     });
 }
 
@@ -130,7 +141,7 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun): Art
     }
     const childs = (data['layers'] || []).map((d: IJSON) => f(ctx, d));
     const shape = new Artboard(id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs));
-    
+
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     return shape;
@@ -202,10 +213,10 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun): ImageS
     // const isClosed = data['isClosed'];
     // env.mediaMgr.addRef(imageRef);
     const curvePoint = new BasicArray<CurvePoint>();
-    const p1 = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(0, 0)); // lt
-    const p2 = new CurvePoint(uuid(), 0, new Point2D(1, 0), new Point2D(1, 0), false, false, CurveMode.Straight, new Point2D(1, 0)); // rt
-    const p3 = new CurvePoint(uuid(), 0, new Point2D(1, 1), new Point2D(1, 1), false, false, CurveMode.Straight, new Point2D(1, 1)); // rb
-    const p4 = new CurvePoint(uuid(), 0, new Point2D(0, 1), new Point2D(0, 1), false, false, CurveMode.Straight, new Point2D(0, 1)); // lb
+    const p1 = new CurvePoint(uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint(uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint(uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint(uuid(), 0, 1, CurveMode.Straight); // lb
     curvePoint.push(p1, p2, p3, p4);
     const shape = new ImageShape(id, name, ShapeType.Image, frame, style, curvePoint, true, imageRef);
     // shape.setImageMgr(env.mediaMgr);

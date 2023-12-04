@@ -12,9 +12,8 @@ export function render(h: Function,
                        comsMap: Map<ShapeType, any>,
                        transform: RenderTransform | undefined, // todo
                        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-                       consumedVars: { slot: string, vars: Variable[] }[] | undefined, // todo
                        reflush?: number) {
-    if (!isVisible(shape, varsContainer, consumedVars)) return;
+    if (!isVisible(shape, varsContainer)) return;
 
     const ab_props: any = {
         version: "1.1",
@@ -52,7 +51,7 @@ export function render(h: Function,
     if (shape.isNoTransform()) {
         const shadows = shape.style.shadows;
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars, comsMap);
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer, comsMap);
         if (b_len) {
             const props: any = {}
             if (reflush) props.reflush = reflush;
@@ -101,7 +100,7 @@ export function render(h: Function,
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, shape, path, varsContainer, consumedVars, comsMap);
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer, comsMap);
         if (b_len) {
             const path = shape.getPath().toString();
             if (shadow.length) {

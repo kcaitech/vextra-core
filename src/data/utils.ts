@@ -502,7 +502,7 @@ export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2
     const points: CurvePoint[] = [];
     for (let i = 0, len = path.length; i < len; i++) {
         const p = m3.computeCoord3(path[i]);
-        points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y)));
+        points.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
     }
     return points;
 }
@@ -513,22 +513,16 @@ export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2
 export function slice_invalid_point(points: CurvePoint[]) {
     let result_x = [points[0]]; // 线处理水平方向上的无效点
     for (let i = 1, len = points.length - 1; i < len; i++) {
-        let p1 = points[i - 1].point;
-        let p2 = points[i].point;
-        let p3 = points[i + 1].point;
-        if (p1 && p2 && p3) {
-            if (Math.abs(p3.y - p1.y) > 0.00001) result_x.push(points[i]);
-        }
+        const p1y = points[i - 1].y;
+        const p3y = points[i + 1].y;
+        if (Math.abs(p3y - p1y) > 0.00001) result_x.push(points[i]);
     }
     result_x.push(points[points.length - 1]); // 再处理垂直方向上的无效点
     let result_y = [result_x[0]];
     for (let i = 1, len = result_x.length - 1; i < len; i++) {
-        let p1 = result_x[i - 1].point;
-        let p2 = result_x[i].point;
-        let p3 = result_x[i + 1].point;
-        if (p1 && p2 && p3) {
-            if (Math.abs(p3.x - p1.x) > 0.00001) result_y.push(result_x[i]);
-        }
+        let p1x = result_x[i - 1].x;
+        let p3x = result_x[i + 1].x;
+        if (Math.abs(p3x - p1x) > 0.00001) result_y.push(result_x[i]);
     }
     result_y.push(result_x[result_x.length - 1]);
     return result_y;

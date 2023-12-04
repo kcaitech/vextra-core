@@ -8,40 +8,45 @@
             "maxLength": 36,
             "default": "$uuid"
         },
-        "cornerRadius": {
+        "radius": {
             "type": "number",
             "default": 0
         },
-        "curveFrom": {
-            "$ref": "./point-2d.json"
+        "fromX": {
+            "type": "number"
         },
-        "curveTo": {
-            "$ref": "./point-2d.json"
+        "fromY": {
+            "type": "number"
         },
-        "hasCurveFrom": {
+        "toX": {
+            "type": "number"
+        },
+        "toY": {
+            "type": "number"
+        },
+        "hasFrom": {
             "type": "boolean",
             "default": false
         },
-        "hasCurveTo": {
+        "hasTo": {
             "type": "boolean",
             "default": false
         },
-        "curveMode": {
+        "mode": {
             "$ref": "./curve-mode.json"
         },
-        "point": {
-            "$ref": "./point-2d.json"
+        "x": {
+            "type": "number"
+        },
+        "y": {
+            "type": "number"
         }
     },
     "required": [
         "id",
-        "cornerRadius",
-        "curveFrom",
-        "curveTo",
-        "hasCurveFrom",
-        "hasCurveTo",
-        "curveMode",
-        "point"
+        "x",
+        "y",
+        "mode"
     ],
     "additionalProperties": false
 }
