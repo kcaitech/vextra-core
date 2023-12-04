@@ -1351,7 +1351,7 @@ export class PageEditor {
     setShapesFrame(actions: FrameAdjust[]) {
         const api = this.__repo.start('setShapesFrame', {});
         try {
-            for (let i = 0; i < actions.length; i++) {
+            for (let i = 0; i < actions.length; i++) { 
                 const { target, widthExtend, heightExtend } = actions[i];
                 expand(api, this.__page, target, widthExtend, heightExtend);
             }

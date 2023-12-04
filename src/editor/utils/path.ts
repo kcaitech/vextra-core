@@ -86,7 +86,6 @@ export function __round_curve_point(shape: PathShape, index: number) {
         next_index
     }
 }
-
 export function init_curv(shape: PathShape, page: Page, api: Api, curve_point: CurvePoint, index: number) {
     const round = __round_curve_point(shape, index);
     const { previous, next } = round;
@@ -154,4 +153,114 @@ export function _typing_modify(shape: PathShape, page: Page, api: Api, index: nu
             align_from(shape, page, api, point, index);
         }
     }
+}
+export function cubic_bezier_angle(P0: XY, P1: XY, P2: XY, P3: XY, t = 0.5) {
+    const a = -3 * (1 - t) ** 2;
+    const b1 = 3 * (1 - t) ** 2;
+    const b2 = 6 * (1 - t) * t;
+    const c1 = 3 * (2 * t - 2 * t ** 2);
+    const c2 = 6 * (1 - t) * t;
+    const d = 3 * t ** 2
+    const derivativeX = a * P0.x +
+        (b1 - b2) * P1.x +
+        (c1 - c2) * P2.x +
+        d * P3.x;
+    const derivativeY = a * P0.x +
+        (b1 - b2) * P1.y +
+        (c1 - c2) * P2.y +
+        d * P3.y;
+    return Math.atan2(derivativeY, derivativeX);
+}
+export function split_cubic_bezier(p0: XY, p1: XY, p2: XY, p3: XY) {
+    const p01 = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+    const p12 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    const p23 = { x: (p2.x + p3.x) / 2, y: (p2.y + p3.y) / 2 };
+    const p012 = { x: (p01.x + p12.x) / 2, y: (p01.y + p12.y) / 2 };
+    const p123 = { x: (p12.x + p23.x) / 2, y: (p12.y + p23.y) / 2 };
+    const p0123 = { x: (p012.x + p123.x) / 2, y: (p012.y + p123.y) / 2 };
+    return [
+        [p0, p01, p012, p0123],
+        [p0123, p123, p23, p3]
+    ];
+}
+function is_curve(p: CurvePoint, n: CurvePoint) {
+    return p.hasFrom || n.hasTo;
+}
+function get_curve(p: CurvePoint, n: CurvePoint) {
+    const start = { x: p.x, y: p.y };
+    const from = { x: 0, y: 0 };
+    const to = { x: 0, y: 0 };
+    const end = { x: n.x, y: n.y };
+    if (p.hasFrom) {
+        from.x = p.fromX || 0;
+        from.y = p.fromY || 0;
+    } else {
+        from.x = p.x;
+        from.y = p.y;
+    }
+    if (n.hasTo) {
+        to.x = n.toX || 0;
+        to.y = n.toY || 0;
+    } else {
+        to.x = n.x;
+        to.y = n.y;
+    }
+    return { start, from, to, end };
+}
+function get_node_xy_by_round(p: CurvePoint, n: CurvePoint) {
+    if (is_curve(p, n)) {
+        const { start, from, to, end } = get_curve(p, n);
+        return bezierCurvePoint(0.5, start, from, to, end);
+    } else {
+        return {
+            x: (p.x + n.x) / 2,
+            y: (p.y + n.y) / 2
+        }
+    }
+}
+function modify_previous_from_by_slice(page: Page, api: Api, path_shape: PathShape, slice: XY[], previous: CurvePoint, index: number) {
+    if (previous.mode === CurveMode.Straight) {
+        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Disconnected);
+    } else if (previous.mode === CurveMode.Mirrored) {
+        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric);
+    }
+    if (!previous.hasFrom) {
+        api.modifyPointHasFrom(page, path_shape, index, true);
+    }
+    api.shapeModifyCurvFromPoint(page, path_shape, index, slice[1]);
+}
+function modify_next_to_by_slice(page: Page, api: Api, path_shape: PathShape, slice: XY[], next: CurvePoint, index: number) {
+    if (next.mode === CurveMode.Straight) {
+        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Disconnected);
+    } else if (next.mode === CurveMode.Mirrored) {
+        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric);
+    }
+    if (!next.hasTo) {
+        api.modifyPointHasTo(page, path_shape, index, true);
+    }
+    api.shapeModifyCurvToPoint(page, path_shape, index, slice[2]);
+}
+function modify_current_handle_slices(page: Page, api: Api, path_shape: PathShape, slices: XY[][], index: number) {
+    api.modifyPointHasTo(page, path_shape, index, true);
+    api.modifyPointHasFrom(page, path_shape, index, true);
+    api.shapeModifyCurvToPoint(page, path_shape, index, slices[0][2]);
+    api.shapeModifyCurvFromPoint(page, path_shape, index, slices[1][1]);
+}
+export function after_insert_point(page: Page, api: Api, path_shape: PathShape, index: number) {
+    const { previous, next, previous_index, next_index } = __round_curve_point(path_shape, index);
+
+    const xy = get_node_xy_by_round(previous, next);
+    api.shapeModifyCurvPoint(page, path_shape, index, xy);
+
+    if (!is_curve(previous, next)) {
+        return;
+    }
+
+    api.modifyPointCurveMode(page, path_shape, index, CurveMode.Asymmetric);
+    const { start, from, to, end } = get_curve(previous, next);
+    const slices = split_cubic_bezier(start, from, to, end);
+
+    modify_previous_from_by_slice(page, api, path_shape, slices[0], previous, previous_index);
+    modify_next_to_by_slice(page, api, path_shape, slices[1], next, next_index);
+    modify_current_handle_slices(page, api, path_shape, slices, index);
 }

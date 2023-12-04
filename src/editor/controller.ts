@@ -51,6 +51,7 @@ import { exportCurvePoint } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name } from "./utils/symbol";
+import { after_insert_point } from "./utils/path";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -137,7 +138,7 @@ export interface AsyncLineAction {
 }
 
 export interface AsyncPathEditor {
-    addNode: (index: number, raw: { x: number, y: number }) => void;
+    addNode: (index: number) => void;
     execute: (index: number, end: PageXY) => void;
     execute2: (indexes: number[], dx: number, dy: number) => void;
     close: () => undefined;
@@ -658,10 +659,11 @@ export class Controller {
         let m = new Matrix(shape.matrix2Root());
         m.preScale(w, h);
         m = new Matrix(m.inverse); // root -> 1
-        const addNode = (index: number, raw: { x: number, y: number }) => {
+        const addNode = (index: number) => {
             status === Status.Pending
-            const p = new CurvePoint(uuid(), raw.x, raw.y, CurveMode.Straight);
+            const p = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
             api.addPointAt(page, shape as PathShape, index, p);
+            after_insert_point(page, api, shape, index);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
