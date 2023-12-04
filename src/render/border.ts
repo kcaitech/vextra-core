@@ -287,8 +287,7 @@ export function render(h: Function, borders: Border[], frame: ShapeFrame, path: 
 }
 
 export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, path: string,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    consumedVars: { slot: string, vars: Variable[] }[] | undefined) {
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     let borders = shape.style.borders;
     if (varsContainer) {
         const _vars = findOverrideAndVar(shape, OverrideType.Borders, varsContainer);
@@ -298,7 +297,6 @@ export function renderWithVars(h: Function, shape: Shape, frame: ShapeFrame, pat
             if (_var && _var.type === VariableType.Borders) {
                 // return _var.value;
                 borders = _var.value;
-                if (consumedVars) consumedVars.push({ slot: OverrideType.Borders, vars: _vars })
             }
         }
     }

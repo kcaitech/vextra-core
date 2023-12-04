@@ -6,7 +6,7 @@ import { RenderTransform } from "./basic";
 
 export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: string, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
-    consumedVars: { slot: string, vars: Variable[] }[] | undefined, reflush?: number): any {
+    reflush?: number): any {
     // const isVisible = shape.isVisible ?? true;
     // if (!isVisible) return;
 

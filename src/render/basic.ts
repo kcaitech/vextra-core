@@ -56,14 +56,13 @@ export function isColorEqual(lhs: Color, rhs: Color): boolean {
 
 export const DefaultColor = Color.DefaultColor;
 
-export function isVisible(shape: Shape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, consumedVars: { slot: string, vars: Variable[] }[] | undefined) {
+export function isVisible(shape: Shape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     if (!varsContainer) return !!shape.isVisible;
 
     const _vars = findOverrideAndVar(shape, OverrideType.Visible, varsContainer);
     if (_vars && _vars.length > 0) {
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === VariableType.Visible) {
-            if (consumedVars) consumedVars.push({ slot: OverrideType.Visible, vars: _vars });
             return !!_var.value;
         }
     }
@@ -207,10 +206,23 @@ export function transformPoints(points: CurvePoint[], matrix: Matrix) {
     const ret: CurvePoint[] = [];
     for (let i = 0, len = points.length; i < len; i++) {
         const p = points[i];
-        const curveFrom: Point2D = p.hasCurveFrom ? matrix.computeCoord(p.curveFrom) as Point2D : p.curveFrom;
-        const curveTo: Point2D = p.hasCurveTo ? matrix.computeCoord(p.curveTo) as Point2D : p.curveTo;
-        const point: Point2D = matrix.computeCoord(p.point) as Point2D;
-        ret.push(new CurvePoint("", p.cornerRadius, curveFrom, curveTo, p.hasCurveFrom, p.hasCurveTo, p.curveMode, point))
+        const point: Point2D = matrix.computeCoord(p.x, p.y) as Point2D;
+        const transp = new CurvePoint("", point.x, point.y, p.mode);
+
+        if (p.hasFrom) {
+            transp.hasFrom = true;
+            const fromp = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
+            transp.fromX = fromp.x;
+            transp.fromY = fromp.y;
+        }
+        if (p.hasTo) {
+            transp.hasTo = true;
+            const top = matrix.computeCoord(p.toX || 0, p.toY || 0);
+            transp.toX = top.x;
+            transp.toY = top.y;
+        }
+
+        ret.push(transp);
     }
     return ret;
 }

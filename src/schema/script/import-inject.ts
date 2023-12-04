@@ -11,44 +11,24 @@ inject['ImageShape']['before'] = `\
         const id4 = "e857f541-4e7f-491b-96e6-2ca38f1d4c09"
         const p1: types.CurvePoint = {
             id: id1,
-            cornerRadius: 0,
-            curveFrom: { x: 0, y: 0 },
-            curveTo: { x: 0, y: 0 },
-            hasCurveFrom: false,
-            hasCurveTo: false,
-            curveMode: types.CurveMode.Straight,
-            point: { x: 0, y: 0 }
+            mode: types.CurveMode.Straight,
+            x: 0, y: 0
         }; // lt
         const p2: types.CurvePoint =
         {
             id: id2,
-            cornerRadius: 0,
-            curveFrom: { x: 0, y: 0 },
-            curveTo: { x: 0, y: 0 },
-            hasCurveFrom: false,
-            hasCurveTo: false,
-            curveMode: types.CurveMode.Straight,
-            point: { x: 1, y: 0 }
+            mode: types.CurveMode.Straight,
+            x: 1, y: 0
         }; // rt
         const p3: types.CurvePoint = {
             id: id3,
-            cornerRadius: 0,
-            curveFrom: { x: 0, y: 0 },
-            curveTo: { x: 0, y: 0 },
-            hasCurveFrom: false,
-            hasCurveTo: false,
-            curveMode: types.CurveMode.Straight,
-            point: { x: 1, y: 1 }
+            mode: types.CurveMode.Straight,
+            x: 1, y: 1
         }; // rb
         const p4: types.CurvePoint = {
             id: id4,
-            cornerRadius: 0,
-            curveFrom: { x: 0, y: 0 },
-            curveTo: { x: 0, y: 0 },
-            hasCurveFrom: false,
-            hasCurveTo: false,
-            curveMode: types.CurveMode.Straight,
-            point: { x: 0, y: 1 }
+            mode: types.CurveMode.Straight,
+            x: 0, y: 1
         }; // lb
         source.points.push(p1, p2, p3, p4);
     }
@@ -118,4 +98,28 @@ inject['SymbolShape']['before'] = `\
 inject['SymbolShape']['after'] = `\
     // inject code
     if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+`
+
+inject['CurvePoint'] = {};
+inject['CurvePoint']['before'] = `\
+    // inject code
+    const _source = source as any;
+    if (_source.cornerRadius) _source.radius = _source.cornerRadius;
+    if (_source.hasCurveFrom) {
+        _source.hasFrom = true;
+        _source.fromX = _source.curveFrom.x;
+        _source.fromY = _source.curveFrom.y;
+    }
+    if (_source.hasCurveTo) {
+        _source.hasTo = true;
+        _source.toX = _source.curveTo.x;
+        _source.toY = _source.curveTo.y;
+    }
+    if (_source.point) {
+        _source.x = _source.point.x;
+        _source.y = _source.point.y;
+    }
+    if (_source.curveMode) {
+        _source.mode = _source.curveMode;
+    }
 `

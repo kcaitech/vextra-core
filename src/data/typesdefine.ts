@@ -376,13 +376,16 @@ export type DocumentMeta = {
 /* curve point */
 export type CurvePoint = {
     id: string
-    cornerRadius: number
-    curveFrom: Point2D
-    curveTo: Point2D
-    hasCurveFrom: boolean
-    hasCurveTo: boolean
-    curveMode: CurveMode
-    point: Point2D
+    radius?: number
+    fromX?: number
+    fromY?: number
+    toX?: number
+    toY?: number
+    hasFrom?: boolean
+    hasTo?: boolean
+    mode: CurveMode
+    x: number
+    y: number
 }
 /* curve mode */
 export enum CurveMode {

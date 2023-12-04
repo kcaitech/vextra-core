@@ -129,13 +129,13 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     if (p) {
                         p = self_matrix.computeCoord3(p);
                         start_point = p;
-                        const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        const fp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
                         points[0] = fp; // points的第一个点替换为开始点p
                     }
                     let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType); // 获取第一个外围点
                     if (border_p) {
                         border_p = self_matrix.computeCoord3(border_p); // 在没有编辑的状态下，外围点需要作为一个活点加入到渲染点中。
-                        points.splice(1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
+                        points.splice(1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
                         s1 = border_p;
                     }
                 }
@@ -153,13 +153,13 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     if (p) {
                         p = self_matrix.computeCoord3(p);
                         end_point = p;
-                        const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        const lp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
                         points[points.length - 1] = lp; // points的最后一个点替换为终点p
                     }
                     let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType); // 获取第二个外围点
                     if (border_p) {
                         border_p = self_matrix.computeCoord3(border_p);
-                        points.splice(points.length - 1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
+                        points.splice(points.length - 1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
                         s2 = border_p;
                     }
                 }
@@ -172,14 +172,14 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             if (s2) result.splice(result.length - 2, 1);
             { // 在第一个点后面再寻找一个新的活点
                 const flex_point1 = start_point!;
-                const flex_point2 = result[1]?.point;
+                const flex_point2 = result[1] ? {x: result[1].x, y: result[1].y} : undefined;
                 if (flex_point1 && flex_point2) {
                     const _d = d(flex_point1, s1 as PageXY);
                     let p: undefined | CurvePoint;
                     if (_d === 'hor') {
-                        p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point2.x, flex_point1.y));
+                        p = new CurvePoint(v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
                     } else if (_d === 'ver') {
-                        p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point1.x, flex_point2.y));
+                        p = new CurvePoint(v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
                     }
                     if (p) result.splice(1, 1, p);
                 }
@@ -187,14 +187,14 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             {
                 const len = result.length;
                 const flex_point1 = end_point!;
-                const flex_point2 = result[len - 2]?.point;
+                const flex_point2 = result[len - 2] ? {x: result[len - 2].x, y: result[len - 2].y} : undefined;
                 if (flex_point1 && flex_point2) {
                     const _d = d(flex_point1, s2 as PageXY);
                     if (_d === 'hor') {
-                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point2.x, flex_point1.y));
+                        const p = new CurvePoint(v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
                         result.splice(len - 2, 1, p);
                     } else if (_d === 'ver') {
-                        const p = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(flex_point1.x, flex_point2.y));
+                        const p = new CurvePoint(v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
                         result.splice(len - 2, 1, p);
                     }
                 }
@@ -210,7 +210,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         if (fromShape && !toShape) {
             const p = points.pop();
             if (p && s1) {
-                points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.point.x, s1.y)), p);
+                points.push(new CurvePoint(v4(), p.x, s1.y, CurveMode.Straight), p);
             }
         }
         if (!fromShape && toShape) { }
@@ -238,13 +238,13 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
                     if (p) {
                         p = self_matrix.computeCoord3(p);
-                        const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        const fp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
                         points[0] = fp;
                     }
                     let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType);
                     if (border_p) {
                         border_p = self_matrix.computeCoord3(border_p);
-                        points.splice(1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
+                        points.splice(1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
                         s1 = border_p;
                     }
                 }
@@ -261,14 +261,14 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
                     if (p) {
                         p = self_matrix.computeCoord3(p);
-                        const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        const lp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
                         points[points.length - 1] = lp;
                     }
                     let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
                     if (border_p) {
                         border_p = self_matrix.computeCoord3(border_p);
                         const t = points.pop();
-                        if (t) points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)), t);
+                        if (t) points.push(new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight), t);
                         s2 = border_p;
                     }
                 }
@@ -286,7 +286,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             const points: CurvePoint[] = [];
             for (let i = 0, len = path.length; i < len; i++) {
                 const p = self_matrix.computeCoord3(path[i]);
-                points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y)));
+                points.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
             }
             return points;
         }
@@ -311,13 +311,13 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
                     if (p) {
                         p = self_matrix.computeCoord3(p);
-                        const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        const fp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
                         points[0] = fp;
                     }
                     let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType);
                     if (border_p) {
                         border_p = self_matrix.computeCoord3(border_p);
-                        points.splice(1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
+                        points.splice(1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
                         s1 = border_p;
                     }
                 }
@@ -334,14 +334,14 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
                     if (p) {
                         p = self_matrix.computeCoord3(p);
-                        const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        const lp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
                         points[points.length - 1] = lp;
                     }
                     let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
                     if (border_p) {
                         border_p = self_matrix.computeCoord3(border_p);
                         const t = points.pop();
-                        if (t) points.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)), t);
+                        if (t) points.push(new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight), t);
                         s2 = border_p;
                     }
                 }
@@ -363,15 +363,15 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             const points3: CurvePoint[] = [];
             for (let i = 0, len = path1.length; i < len; i++) {
                 const p = self_matrix.computeCoord3(path1[i]);
-                points1.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y)));
+                points1.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
             }
             for (let i = 0, len = path2.length; i < len; i++) {
                 const p = self_matrix.computeCoord3(path2[i]);
-                points2.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y)));
+                points2.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
             }
             for (let i = 0, len = path3.length; i < len; i++) {
                 const p = self_matrix.computeCoord3(path3[i]);
-                points3.push(new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y)));
+                points3.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
             }
             return { points1, points2, points3 };
         }
@@ -397,13 +397,13 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     if (p) {
                         p = self_matrix.computeCoord3(p);
                         start_point = p;
-                        const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        const fp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
                         points[0] = fp;
                     }
                     let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType);
                     if (border_p) {
                         border_p = self_matrix.computeCoord3(border_p);
-                        points.splice(1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
+                        points.splice(1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
                     }
                 }
             }
@@ -419,13 +419,13 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     if (p) {
                         p = self_matrix.computeCoord3(p);
                         end_point = p;
-                        const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        const lp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
                         points[points.length - 1] = lp;
                     }
                     let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
                     if (border_p) {
                         border_p = self_matrix.computeCoord3(border_p);
-                        points.splice(points.length - 1, 0, new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(border_p.x, border_p.y)));
+                        points.splice(points.length - 1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
                     }
                 }
             }
@@ -450,7 +450,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix);
                     if (p) {
                         p = self_matrix.computeCoord3(p);
-                        const fp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        const fp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
                         points[0] = fp; // 替换
                     }
                 }
@@ -466,7 +466,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
                     let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
                     if (p) {
                         p = self_matrix.computeCoord3(p);
-                        const lp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+                        const lp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
                         points[points.length - 1] = lp;
                     }
                 }
