@@ -3,7 +3,7 @@ import {Page} from "./page";
 import {Artboard} from "./artboard";
 import {BasicArray, IDataGuard, ResourceMgr, Watchable} from "./basic";
 import {Border, Fill, Style} from "./style";
-import {Shape, SymbolShape} from "./shape";
+import {Shape, SymbolShape, TextShape} from "./shape";
 import {uuid} from "../basic/uuid";
 
 export {DocumentMeta, PageListItem, DocumentSyms} from "./baseclasses";
@@ -115,5 +115,18 @@ export class Document extends Watchable(DocumentMeta) {
 
     getPageIndexById(id: string): number {
         return this.pagesList.findIndex(p => p.id === id);
+    }
+
+    async getText(): Promise<string> {
+        let result = "";
+        for (const _page of this.pagesList) {
+            const page = await this.__pages.get(_page.id);
+            if (!page) continue;
+            for (const shape of page.childs) {
+                if (!(shape instanceof TextShape)) continue;
+                result += shape.text.toString();
+            }
+        }
+        return result;
     }
 }
