@@ -37,7 +37,7 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-import {is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union} from "./utils/symbol";
+import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
 
 function varParent(_var: Variable) {
@@ -1284,8 +1284,8 @@ export class ShapeEditor {
             const m2 = new Matrix(m1.inverse);
 
             p = m2.computeCoord3(p);
-            const cp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
-            const cp2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+            const cp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
+            const cp2 = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
             result.splice(1, 0, cp, cp2);
         }
         if (index === len - 2) { // 编辑的线为最后一根线；
@@ -1306,8 +1306,8 @@ export class ShapeEditor {
             const m2 = new Matrix(m1.inverse);
 
             p = m2.computeCoord3(p);
-            const cp = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
-            const cp2 = new CurvePoint(v4(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(p.x, p.y));
+            const cp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
+            const cp2 = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
             result.splice(len - 1, 0, cp, cp2)
         }
         return result;

@@ -640,7 +640,7 @@ export class Controller {
         let status: Status = Status.Pending;
         const addNode = (index: number, raw: { x: number, y: number }) => {
             status === Status.Pending
-            const p = new CurvePoint(uuid(), 0, new Point2D(0, 0), new Point2D(0, 0), false, false, CurveMode.Straight, new Point2D(raw.x, raw.y));
+            const p = new CurvePoint(uuid(), raw.x, raw.y, CurveMode.Straight);
             api.addPointAt(page, shape as PathShape, index, p);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -827,15 +827,15 @@ function adjust_pathshape_rotate_frame(api: Api, page: Page, s: PathShape) {
     const points = s.points;
     for (let i = 0, len = points.length; i < len; i++) {
         const p = points[i];
-        if (p.hasCurveFrom) {
-            const curveFrom = matrix.computeCoord(p.curveFrom);
+        if (p.hasFrom) {
+            const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
             api.shapeModifyCurvFromPoint(page, s, i, curveFrom);
         }
-        if (p.hasCurveTo) {
-            const curveTo = matrix.computeCoord(p.curveTo);
+        if (p.hasTo) {
+            const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
             api.shapeModifyCurvToPoint(page, s, i, curveTo);
         }
-        const point = matrix.computeCoord(p.point);
+        const point = matrix.computeCoord(p.x, p.y);
         api.shapeModifyCurvPoint(page, s, i, point);
     }
 }

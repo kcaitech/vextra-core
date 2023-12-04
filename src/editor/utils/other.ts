@@ -430,5 +430,5 @@ export function modify_index(parent: GroupShape, s1: Shape, s2: Shape, index: nu
 }
 
 export function after_remove(parent: GroupShape) {
-    return (parent?.type === ShapeType.Group) || (parent instanceof SymbolUnionShape) && !parent?.childs?.length;
+    return ((parent?.type === ShapeType.Group) || (parent instanceof SymbolUnionShape)) && !parent?.childs?.length;
 }
