@@ -64,7 +64,7 @@ import { TableOpTarget } from "../../coop/data/classes";
 import { ContactRole, CurvePoint } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { BasicMap } from "../../data/basic";
-import {IImportContext} from "../../data/baseimport";
+import { IImportContext } from "../../data/baseimport";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -219,7 +219,7 @@ export class Api {
         this.needUpdateFrame.push({ page, shape });
         return shape;
     }
-    shapeDelete( page: Page, parent: GroupShape, index: number) {
+    shapeDelete(page: Page, parent: GroupShape, index: number) {
         let shape: Shape | undefined;
         this.__trap(() => {
             shape = parent.removeChildAt(index);
@@ -490,7 +490,7 @@ export class Api {
             const shapeId = genShapeId(shape);
             (shape as SymbolRefShape).removeVirbindsEx(key);
             shapeId.push(type);
-            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.overrides, {type, varId: undefined}, {  type,  varId: save  }));
+            this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.overrides, { type, varId: undefined }, { type, varId: save }));
         })
     }
     shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
@@ -593,6 +593,9 @@ export class Api {
         })
     }
     shapeModifyContextSettingsOpacity(page: Page, shape: Shape, contextSettingsOpacity: number) {
+        if (shape.isVirtualShape) {
+            return;
+        }
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             if (!shape.style.contextSettings) {
@@ -981,9 +984,9 @@ export class Api {
         })
     }
     setShadowEnable(page: Page, shape: Shape, idx: number, isEnable: boolean) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.isEnabled;
                 shadow.isEnabled = isEnable;
@@ -992,9 +995,9 @@ export class Api {
         }
     }
     setShadowOffsetX(page: Page, shape: Shape, idx: number, offsetX: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.offsetX;
                 shadow.offsetX = offsetX;
@@ -1003,9 +1006,9 @@ export class Api {
         }
     }
     setShadowOffsetY(page: Page, shape: Shape, idx: number, offsetY: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.offsetY;
                 shadow.offsetY = offsetY;
@@ -1014,9 +1017,9 @@ export class Api {
         }
     }
     setShadowBlur(page: Page, shape: Shape, idx: number, blur: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.blurRadius;
                 shadow.blurRadius = blur;
@@ -1025,9 +1028,9 @@ export class Api {
         }
     }
     setShadowSpread(page: Page, shape: Shape, idx: number, spread: number) {
-        checkShapeAtPage(page,shape);
+        checkShapeAtPage(page, shape);
         const shadow = shape.style.shadows[idx];
-        if(shadow) {
+        if (shadow) {
             this.__trap(() => {
                 const save = shadow.spread;
                 shadow.spread = spread;
