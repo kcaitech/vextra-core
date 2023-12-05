@@ -181,15 +181,15 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
             const points = c.points;
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = points[i];
-                if (p.hasCurveFrom) {
-                    const curveFrom = matrix.computeCoord(p.curveFrom);
+                if (p.hasFrom) {
+                    const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
                     api.shapeModifyCurvFromPoint(page, c, i, curveFrom);
                 }
-                if (p.hasCurveTo) {
-                    const curveTo = matrix.computeCoord(p.curveTo);
+                if (p.hasTo) {
+                    const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
                     api.shapeModifyCurvToPoint(page, c, i, curveTo);
                 }
-                const point = matrix.computeCoord(p.point);
+                const point = matrix.computeCoord(p.x, p.y);
                 api.shapeModifyCurvPoint(page, c, i, point);
             }
 

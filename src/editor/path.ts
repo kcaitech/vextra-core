@@ -9,14 +9,14 @@ function get_box_by_points(s: Shape, points: CurvePoint[]) {
     const w = s.frame.width, h = s.frame.height, m = s.matrix2Parent();
     m.preScale(w, h);
     let x = 0, y = 0, right = 0, bottom = 0, width = w, height = h;
-    if (point_raw.length > 1 && point_raw[0].point) {
-        const p = m.computeCoord3(point_raw[0].point);
+    if (point_raw.length > 1) {
+        const p = m.computeCoord(point_raw[0].x, point_raw[0].y);
         x = p.x, y = p.y, right = p.x, bottom = p.y;
     } else return false;
     for (let i = 1, len = point_raw.length || 0; i < len; i++) {
-        const point = point_raw[i].point;
-        if (!point) continue;
-        const p = m.computeCoord3(point);
+        // const point = point_raw[i].point;
+        // if (!point) continue;
+        const p = m.computeCoord(point_raw[i].x, point_raw[i].y);
 
         if (p.x < x) x = p.x, width = right - x;
         else if (p.x > right) right = p.x, width = right - x;

@@ -741,7 +741,7 @@ export class PageEditor {
             let pathstr = "";
             shapes.forEach((shape) => {
                 const shapem = shape.matrix2Root();
-                const shapepath = render2path(shape, undefined);
+                const shapepath = render2path(shape);
                 shapem.multiAtLeft(m);
                 shapepath.transform(shapem);
 
@@ -780,7 +780,7 @@ export class PageEditor {
         const parent = shape.parent as GroupShape;
         if (!parent) return false;
 
-        const path = render2path(shape, undefined);
+        const path = render2path(shape);
 
         // copy fill and borders
         const copyStyle = findUsableFillStyle(shape);
