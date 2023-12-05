@@ -51,7 +51,7 @@ import { exportCurvePoint } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name } from "./utils/symbol";
-import { after_insert_point } from "./utils/path";
+import { __pre_curve, after_insert_point } from "./utils/path";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -167,6 +167,7 @@ export interface AsyncOpacityEditor {
 }
 
 export interface AsyncPathHandle {
+    pre: (index: number) => void;
     execute: (side: Side, from: XY, to: XY) => void;
     abort: () => undefined;
     close: () => undefined;
@@ -796,8 +797,13 @@ export class Controller {
 
     public asyncPathHandle(shape: PathShape, page: Page, index: number): AsyncPathHandle {
         const curvePoint = shape.points[index];
-        const mode = curvePoint.mode;
+        let mode = curvePoint.mode;
         const api = this.__repo.start("asyncPathHandle", {});
+        const pre = (index: number) => {
+            __pre_curve(page, api, shape, index);
+            mode = CurveMode.Mirrored;
+            this.__repo.transactCtx.fireNotify();
+        }
         const execute = (side: Side, from: XY, to: XY) => {
             if (mode === CurveMode.Mirrored || mode === CurveMode.Asymmetric) {
                 api.shapeModifyCurvFromPoint(page, shape, index, from);
@@ -820,7 +826,7 @@ export class Controller {
             this.__repo.commit();
             return undefined;
         }
-        return { execute, abort, close };
+        return { pre, execute, abort, close };
     }
 }
 

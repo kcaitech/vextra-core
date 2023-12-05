@@ -86,7 +86,7 @@ export function __round_curve_point(shape: PathShape, index: number) {
         next_index
     }
 }
-export function init_curv(shape: PathShape, page: Page, api: Api, curve_point: CurvePoint, index: number) {
+export function init_curv(shape: PathShape, page: Page, api: Api, curve_point: CurvePoint, index: number, init = 0.35) {
     const round = __round_curve_point(shape, index);
     const { previous, next } = round;
     if (new Set([previous.id, next.id, curve_point.id]).size !== 3) {
@@ -94,8 +94,8 @@ export function init_curv(shape: PathShape, page: Page, api: Api, curve_point: C
         return;
     }
     const k = Math.atan2(next.x - previous.x, next.y - previous.y);
-    const dx = 0.35 * Math.sin(k);
-    const dy = 0.35 * Math.cos(k);
+    const dx = init * Math.sin(k);
+    const dy = init * Math.cos(k);
     const from = { x: curve_point.x + dx, y: curve_point.y + dy };
     const to = { x: curve_point.x - dx, y: curve_point.y - dy };
     api.shapeModifyCurvFromPoint(page, shape, index, from);
@@ -259,4 +259,15 @@ export function after_insert_point(page: Page, api: Api, path_shape: PathShape, 
     modify_previous_from_by_slice(page, api, path_shape, slices[0], previous, previous_index);
     modify_next_to_by_slice(page, api, path_shape, slices[1], next, next_index);
     modify_current_handle_slices(page, api, path_shape, slices, index);
+}
+
+export function __pre_curve(page: Page, api: Api, path_shape: PathShape, index: number) {
+    const point = path_shape.points[index];
+    if (!point) {
+        return;
+    }
+    if (point.mode !== CurveMode.Mirrored) {
+        api.modifyPointCurveMode(page, path_shape, index, CurveMode.Mirrored);
+    }
+    init_curv(path_shape, page, api, point, index, 0.01);
 }
