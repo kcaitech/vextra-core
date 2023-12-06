@@ -23,8 +23,8 @@ class SpecialActionCorrespondent extends Watchable(Object) {
 function getTextFromGroupShape(shape: GroupShape): string {
     let result = "";
     for (const child of shape.childs) {
-        if (child instanceof SymbolRefShape && !!child.symData) {
-            result += getTextFromGroupShape(child.symData);
+        if (child instanceof SymbolRefShape) {
+            if (!!child.symData) result += getTextFromGroupShape(child.symData);
         } else if (child instanceof GroupShape) {
             result += getTextFromGroupShape(child);
         } else if (child instanceof TableShape) {
