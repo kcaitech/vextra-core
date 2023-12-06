@@ -6,6 +6,9 @@
 
 export { RenderTransform } from "./basic"
 
+export { render as renderFills } from "./fill";
+export { render as renderBorders } from "./border";
+
 export { render as renderArrow } from "./arrow";
 export { render as renderArtboard } from "./artboard";
 export { render as renderGroup } from "./group";
