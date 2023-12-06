@@ -802,9 +802,6 @@ export class ShapeEditor {
             console.log('!(this.__shape instanceof PathShape)');
             return false;
         }
-        if (!this.__shape.isClosed) {
-            return false;
-        }
         try {
             const api = this.__repo.start("sortPathShapePoints", {});
             _clip(this.__page, api, this.__shape as PathShape, index);

@@ -296,12 +296,6 @@ function _sort_after_clip(path_shape: PathShape, index: number) {
     result.push(...points.slice(0, index + 1));
     return result;
 }
-export function _clip_apex(page: Page, api: Api, path_shape: PathShape, index: number) {
-    if (index === 0) {
-        
-    }
-
-}
 export function _clip(page: Page, api: Api, path_shape: PathShape, index: number) {
     if (path_shape.isClosed) {
         api.setCloseStatus(page, path_shape, false);
@@ -309,5 +303,14 @@ export function _clip(page: Page, api: Api, path_shape: PathShape, index: number
         replace_path_shape_points(page, path_shape, api, points);
         return;
     }
-    
+    const points = path_shape.points;
+    if (index === 0) {
+        api.deletePoint(page, path_shape, index);
+        return;
+    }
+    if (index === points.length - 2) {
+        api.deletePoint(page, path_shape, points.length - 1);
+        return;
+    }
+
 }
