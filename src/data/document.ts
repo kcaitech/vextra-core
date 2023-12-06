@@ -20,7 +20,8 @@ class SpecialActionCorrespondent extends Watchable(Object) {
     }
 }
 
-function getTextFromGroupShape(shape: GroupShape): string {
+function getTextFromGroupShape(shape: GroupShape | undefined): string {
+    if (!shape) return "";
     let result = "";
     for (const child of shape.childs) {
         if (child instanceof SymbolRefShape) {
@@ -137,11 +138,7 @@ export class Document extends Watchable(DocumentMeta) {
 
     async getText(): Promise<string> {
         let result = "";
-        for (const _page of this.pagesList) {
-            const page = await this.__pages.get(_page.id);
-            if (!page) continue;
-            result += getTextFromGroupShape(page);
-        }
+        for (const page of this.pagesList) result += getTextFromGroupShape(await this.__pages.get(page.id));
         return result;
     }
 }
