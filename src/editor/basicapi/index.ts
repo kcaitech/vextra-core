@@ -192,6 +192,9 @@ export function shapeModifyFixedRadius(shape: GroupShape | PathShape | PathShape
 export function shapeModifyBoolOp(shape: Shape, op: BoolOp | undefined) {
     shape.boolOp = op;
 }
+export function shapeModifyPathShapeClosedStatus(shape: PathShape, is: boolean) {
+    shape.isClosed = is;
+}
 export function shapeModifyBoolOpShape(shape: GroupShape, isOpShape: boolean | undefined) {
     if (isOpShape) shape.isBoolOpShape = true;
     else shape.isBoolOpShape = undefined;

@@ -1,7 +1,10 @@
 import { Api } from "../../editor/command/recordapi";
-import { CurveMode, CurvePoint } from "../../data/typesdefine";
-import { PathShape } from "../../data/shape";
+import { CurveMode } from "../../data/typesdefine";
+import { CurvePoint, PathShape } from "../../data/shape";
 import { Page } from "../../data/page";
+import { importCurvePoint } from "../../data/baseimport";
+import { exportCurvePoint } from "../../data/baseexport";
+import { v4 } from "uuid";
 
 interface XY {
     x: number
@@ -270,4 +273,41 @@ export function __pre_curve(page: Page, api: Api, path_shape: PathShape, index: 
         api.modifyPointCurveMode(page, path_shape, index, CurveMode.Mirrored);
     }
     init_curv(path_shape, page, api, point, index, 0.01);
+}
+export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {
+    const len = points.length;
+    api.deletePoints(page, shape as PathShape, 0, len);
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = importCurvePoint(exportCurvePoint(points[i]));
+        p.id = v4();
+        points[i] = p;
+    }
+    api.addPoints(page, shape as PathShape, points);
+}
+function _sort_after_clip(path_shape: PathShape, index: number) {
+    const points = path_shape.points;
+    if (index === points.length - 1) {
+        return points.map(i => i);
+    }
+    const result: CurvePoint[] = [];
+    for (let i = index + 1, l = points.length; i < l; i++) {
+        result.push(points[i]);
+    }
+    result.push(...points.slice(0, index + 1));
+    return result;
+}
+export function _clip_apex(page: Page, api: Api, path_shape: PathShape, index: number) {
+    if (index === 0) {
+        
+    }
+
+}
+export function _clip(page: Page, api: Api, path_shape: PathShape, index: number) {
+    if (path_shape.isClosed) {
+        api.setCloseStatus(page, path_shape, false);
+        const points = _sort_after_clip(path_shape, index);
+        replace_path_shape_points(page, path_shape, api, points);
+        return;
+    }
+    
 }

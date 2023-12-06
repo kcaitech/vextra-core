@@ -39,7 +39,7 @@ import {
 } from "./utils/other";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
-import { _typing_modify } from "./utils/path";
+import { _clip, _typing_modify, replace_path_shape_points } from "./utils/path";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -772,9 +772,13 @@ export class ShapeEditor {
         });
     }
     public contextSettingOpacity(value: number) {
-        const api = this.__repo.start("contextSettingOpacity", {});
-        api.shapeModifyContextSettingsOpacity(this.__page, this.__shape, value);
-        this.__repo.commit();
+        try {
+            const api = this.__repo.start("contextSettingOpacity", {});
+            api.shapeModifyContextSettingsOpacity(this.__page, this.__shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
     }
     // resizingConstraint
     public setResizingConstraint(value: number) {
@@ -789,6 +793,28 @@ export class ShapeEditor {
             deg = deg % 360;
             api.shapeModifyRotate(this.__page, this.__shape, deg)
         });
+    }
+    /**
+     * @description 路径裁剪
+     */
+    public clipPathShape(index: number) {
+        if (!(this.__shape instanceof PathShape)) {
+            console.log('!(this.__shape instanceof PathShape)');
+            return false;
+        }
+        if (!this.__shape.isClosed) {
+            return false;
+        }
+        try {
+            const api = this.__repo.start("sortPathShapePoints", {});
+            _clip(this.__page, api, this.__shape as PathShape, index);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log('sortPathShapePoints:', error);
+            this.__repo.rollback();
+            return false;
+        }
     }
 
     // radius
@@ -1353,14 +1379,7 @@ export class ShapeEditor {
         if (this.__shape.type !== ShapeType.Contact) return false;
         const points = this.get_points_for_init(index, this.__shape.getPoints());
         this._repoWrap("init_points", (api) => {
-            const len = this.__shape.points.length;
-            api.deletePoints(this.__page, this.__shape as PathShape, 0, len);
-            for (let i = 0, len = points.length; i < len; i++) {
-                const p = importCurvePoint(exportCurvePoint(points[i]));
-                p.id = v4();
-                points[i] = p;
-            }
-            api.addPoints(this.__page, this.__shape as PathShape, points);
+            replace_path_shape_points(this.__page, this.__shape as PathShape, api, points);
         });
     }
 

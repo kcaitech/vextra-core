@@ -4,7 +4,7 @@ import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
 import { importColor, importText, importVariable } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
-import { SymbolShape, Variable } from "../../data/shape";
+import { PathShape, SymbolShape, Variable } from "../../data/shape";
 import { BasicMap } from "../../data/basic";
 import { IdOpSet } from "../../coop/data/basictypes";
 import { shapeModifyContextSettingOpacity, shapeModifyNameFixed } from "../basicapi";
@@ -418,6 +418,13 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const state = value && JSON.parse(value)
                     api.shapeModifyEditedState(shape as GroupShape, !!state);
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.isClosed,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    const state = value && JSON.parse(value)
+                    api.shapeModifyPathShapeClosedStatus(shape as PathShape, !!state);
                 }
             },
             // {
