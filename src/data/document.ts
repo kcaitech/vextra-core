@@ -1,10 +1,11 @@
-import {DocumentMeta, PageListItem, ShapeFrame, ShapeType} from "./baseclasses";
+import {DocumentMeta, PageListItem} from "./baseclasses";
 import {Page} from "./page";
 import {Artboard} from "./artboard";
 import {BasicArray, IDataGuard, ResourceMgr, Watchable} from "./basic";
-import {Border, Fill, Style} from "./style";
-import {Shape, SymbolShape, TextShape} from "./shape";
-import {uuid} from "../basic/uuid";
+import {Style} from "./style";
+import {GroupShape, SymbolShape, TextShape} from "./shape";
+import {TableCell, TableShape} from "./table";
+import {SymbolRefShape} from "./symbolref";
 
 export {DocumentMeta, PageListItem, DocumentSyms} from "./baseclasses";
 
@@ -17,6 +18,23 @@ class SpecialActionCorrespondent extends Watchable(Object) {
     constructor() {
         super();
     }
+}
+
+function getTextFromGroupShape(shape: GroupShape): string {
+    let result = "";
+    for (const child of shape.childs) {
+        if (child instanceof SymbolRefShape && !!child.symData) {
+            result += getTextFromGroupShape(child.symData);
+        } else if (child instanceof GroupShape) {
+            result += getTextFromGroupShape(child);
+        } else if (child instanceof TableShape) {
+            result += (child.datas.filter(cell => !!cell) as BasicArray<(TableCell)>)
+                .reduce((previousValue, currentValue) => previousValue + currentValue.text?.toString() ?? "", "");
+        } else if (child instanceof TextShape) {
+            result += child.text.toString();
+        }
+    }
+    return result;
 }
 
 export class Document extends Watchable(DocumentMeta) {
@@ -122,10 +140,7 @@ export class Document extends Watchable(DocumentMeta) {
         for (const _page of this.pagesList) {
             const page = await this.__pages.get(_page.id);
             if (!page) continue;
-            for (const shape of page.childs) {
-                if (!(shape instanceof TextShape)) continue;
-                result += shape.text.toString();
-            }
+            result += getTextFromGroupShape(page);
         }
         return result;
     }

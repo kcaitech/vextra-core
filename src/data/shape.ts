@@ -26,6 +26,8 @@ import { parsePath } from "./pathparser";
 import { RECT_POINTS } from "./consts";
 import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
+import {TableShape} from "./table";
+import {SymbolRefShape} from "./symbolref";
 export { Variable } from "./variable";
 
 // todo
@@ -342,7 +344,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
 export class GroupShape extends Shape implements classes.GroupShape {
     typeId = 'group-shape';
-    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape)>
+    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape | TableShape | SymbolRefShape)>
     wideframe: ShapeFrame
     isBoolOpShape?: boolean
     fixedRadius?: number
