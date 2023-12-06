@@ -245,50 +245,15 @@ export class ShapeEditor {
      * @description 重置实例属性
      */
     resetSymbolRefVariable() {
-        const varsContainer = (this.__shape as SymbolRefShape).varsContainer;
-        if (varsContainer) { // 实例内部实例
-            const _self_id = this.__shape.id.slice(this.__shape.id.lastIndexOf('/') + 1);
-            const _id = this.__shape.id.slice(0, this.__shape.id.indexOf('/'));
-            const root_ref_shape = this.__page.getShape(_id);
-            if (!root_ref_shape) return;
-            const variables = (root_ref_shape as SymbolRefShape).variables;
-            const overrides = (root_ref_shape as SymbolRefShape).overrides;
-            if (!variables || !overrides) return;
-            const need_clear_vars: string[] = [];
-            const need_clear_ex: { key: string, variable: Variable }[] = [];
-            overrides.forEach((v, k) => {
-                if (k.indexOf(_self_id) < 0) return;
-                const var_real = variables.get(v);
-                if (!var_real || var_real.type === VariableType.Status) return;
-                need_clear_ex.push({ key: k, variable: var_real });
-                need_clear_vars.push(v);
-            })
-            if (!need_clear_ex.length) return;
-            try {
-                const api = this.__repo.start('resetSymbolRefVariable', {});
-                for (let i = 0, l = need_clear_vars.length; i < l; i++) {
-                    const item = need_clear_vars[i];
-                    api.shapeRemoveVariable(this.__page, root_ref_shape as SymbolRefShape, item);
-                }
-                for (let i = 0, l = need_clear_ex.length; i < l; i++) {
-                    const { key, variable } = need_clear_ex[i];
-                    api.shapeRemoveVirbindsEx(this.__page, root_ref_shape as SymbolRefShape, key, variable.id, variable.type);
-                }
-                this.__repo.commit();
-                return true;
-            } catch (e) {
-                console.log(e);
-                this.__repo.rollback();
-                return false;
-            }
-        }
         const variables = (this.__shape as SymbolRefShape).variables;
         const overrides = (this.__shape as SymbolRefShape).overrides;
-
         const symData = (this.__shape as SymbolRefShape).symData;
         const symParent = symData?.parent;
         const root_data = (symParent instanceof SymbolUnionShape ? symParent : symData);
-        if (!variables || !overrides || !root_data) return false;
+        if (!variables || !overrides || !root_data) {
+            console.log('!variables || !overrides || !root_data');
+            return false;
+        }
         const root_variables = root_data.variables;
         try {
             const api = this.__repo.start('resetSymbolRefVariable', {});

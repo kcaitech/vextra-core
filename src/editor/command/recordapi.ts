@@ -593,6 +593,9 @@ export class Api {
         })
     }
     shapeModifyContextSettingsOpacity(page: Page, shape: Shape, contextSettingsOpacity: number) {
+        if (shape.isVirtualShape) {
+            return;
+        }
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             if (!shape.style.contextSettings) {
