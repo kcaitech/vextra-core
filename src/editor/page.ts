@@ -1766,7 +1766,7 @@ export class PageEditor {
             const api = this.__repo.start('shapesExportFormatUnify', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                if(target.exportOptions) {
+                if (target.exportOptions) {
                     api.deleteExportFormats(this.__page, target, 0, target.exportOptions.exportFormats.length);
                 }
                 api.addExportFormats(this.__page, target, value);
@@ -1792,6 +1792,19 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    pageAddExportFormat(formats: ExportFormat[]) {
+        try {
+            const api = this.__repo.start('pageAddExportFormat', {});
+            for (let i = 0; i < formats.length; i++) {
+                const format = formats[i];
+                const length = this.__page.exportOptions ? this.__page.exportOptions.exportFormats.length : 0;
+                api.addPageExportFormat(this.__page, format, length);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
     shapesDeleteExportFormat(actions: ExportFormatDeleteAction[]) {
         try {
             const api = this.__repo.start('shapesDeleteExportFormat', {});
@@ -1800,6 +1813,18 @@ export class PageEditor {
                 api.deleteExportFormatAt(this.__page, target, index);
             }
             this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    pageDeleteExportFormat(idx: number) {
+        try {
+            const format = this.__page.exportOptions?.exportFormats[idx];
+            if (format) {
+                const api = this.__repo.start('pageDeleteExportFormat', {});
+                api.deletePageExportFormatAt(this.__page, idx);
+                this.__repo.commit();
+            }
         } catch (error) {
             this.__repo.rollback();
         }

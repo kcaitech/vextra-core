@@ -1066,6 +1066,13 @@ export class Api {
             if (format) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, idx, exportExportFormat(format)));
         })
     }
+    deletePageExportFormatAt(page: Page, idx: number) {
+        this.__trap(() => {
+            if (!page.exportOptions) return;
+            const format = basicapi.deletePageExportFormatAt(page.exportOptions, idx);
+            if (format) this.addCmd(ShapeArrayAttrRemove.Make(page.id, Array(page.id), CUTOUT_ID, format.id, idx, exportExportFormat(format)));
+        })
+    }
     deleteExportFormats(page: Page, shape: Shape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
@@ -1100,6 +1107,17 @@ export class Api {
             }
             basicapi.addExportFormat(shape, format, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, index, exportExportFormat(format)))
+        })
+    }
+    addPageExportFormat(page: Page, format: ExportFormat, index: number) {
+        this.__trap(() => {
+            if (!page.exportOptions) {
+                const formats = new BasicArray<ExportFormat>();
+                const includedChildIds = new BasicArray<string>();
+                page.exportOptions = new ExportOptions(formats, includedChildIds, 0, false, false, false, false);
+            }
+            basicapi.addPageExportFormat(page, format, index);
+            this.addCmd(ShapeArrayAttrInsert.Make(page.id, Array(page.id), CUTOUT_ID, format.id, index, exportExportFormat(format)))
         })
     }
     setExportFormatScale(page: Page, shape: Shape, idx: number, scale: number) {
