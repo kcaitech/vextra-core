@@ -1001,8 +1001,10 @@ export function pathEditSide(api: Api, page: Page, s: Shape, index1: number, ind
     const m_in = new Matrix(m.inverse);  // 图形单位坐标系，0-1
     let p1 = s.points[index1];
     let p2 = s.points[index2];
-    if (!p1 || !p2) return false;
-    p1 = m.computeCoord3(p1.point), p2 = m.computeCoord3(p2.point);
+    if (!p1 || !p2) {
+        return false;
+    }
+    p1 = m.computeCoord2(p1.x, p1.y), p2 = m.computeCoord2(p2.x, p2.y);
     if (dx) p1.x = p1.x + dx, p2.x = p2.x + dx;
     if (dy) p1.y = p1.y + dy, p2.y = p2.y + dy;
     p1 = m_in.computeCoord3(p1);
@@ -1016,12 +1018,12 @@ function get_box_by_points(s: Shape) {
     const w = s.frame.width, h = s.frame.height, m = s.matrix2Parent();
     m.preScale(w, h);
     let x = 0, y = 0, right = 0, bottom = 0, width = w, height = h;
-    if (point_raw.length > 1 && point_raw[0].point) {
-        const p = m.computeCoord3(point_raw[0].point);
+    if (point_raw.length > 1 && point_raw[0]) {
+        const p = m.computeCoord3(point_raw[0]);
         x = p.x, y = p.y, right = p.x, bottom = p.y;
     } else return false;
     for (let i = 1, len = point_raw.length || 0; i < len; i++) {
-        const point = point_raw[i].point;
+        const point = point_raw[i];
         if (!point) continue;
         const p = m.computeCoord3(point);
 
