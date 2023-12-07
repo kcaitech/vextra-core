@@ -39,7 +39,7 @@ import {
 } from "./utils/other";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
-import { _clip, _typing_modify, replace_path_shape_points } from "./utils/path";
+import { _clip, _typing_modify, replace_path_shape_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 
 function varParent(_var: Variable) {
@@ -1008,7 +1008,10 @@ export class ShapeEditor {
     }
 
     public modifyPointsCurveMode(indexes: number[], curve_mode: CurveMode) {
-        if (!indexes.length) return false;
+        if (!indexes.length) {
+            console.log('!indexes.length');
+            return false;
+        }
         try {
             const api = this.__repo.start("modifyPointsCurveMode", {});
             for (let i = indexes.length - 1; i > -1; i--) {
@@ -1016,6 +1019,7 @@ export class ShapeEditor {
                 _typing_modify(this.__shape as PathShape, this.__page, api, index, curve_mode);
                 api.modifyPointCurveMode(this.__page, this.__shape as PathShape, index, curve_mode);
             }
+            update_path_shape_frame(api, this.__page, [this.__shape as PathShape]);
             this.__repo.commit();
             return true;
         } catch (e) {
@@ -1025,7 +1029,10 @@ export class ShapeEditor {
         }
     }
     public modifyPointsCornerRadius(indexes: number[], cornerRadius: number) {
-        if (!indexes.length) return false;
+        if (!indexes.length) {
+            console.log('!indexes.length');
+            return false;
+        }
         try {
             const api = this.__repo.start("modifyPointsCornerRadius", {});
             for (let i = indexes.length - 1; i > -1; i--) {

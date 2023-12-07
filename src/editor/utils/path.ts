@@ -10,12 +10,11 @@ import { BasicArray } from "../../data/basic";
 import { Matrix } from "../../basic/matrix";
 import { group } from "../../editor/group";
 import { addCommonAttr, newGroupShape } from "../../editor/creator";
+import { update_frame_by_points } from "../../editor/frame";
 interface XY {
     x: number
     y: number
 }
-
-
 /**
  * @description 计算三次贝塞尔曲线上的点
  * @param t 0~1
@@ -31,7 +30,6 @@ export function bezierCurvePoint(t: number, p0: XY, p1: XY, p2: XY, p3: XY): XY 
         y: Math.pow(1 - t, 3) * p0.y + 3 * Math.pow(1 - t, 2) * t * p1.y + 3 * (1 - t) * Math.pow(t, 2) * p2.y + Math.pow(t, 3) * p3.y
     };
 }
-
 /**
  *  @description 计算三次贝塞尔曲线的包围盒
  *  @param p0 起点
@@ -56,7 +54,6 @@ export function bezierCurveBoundingBox(p0: XY, p1: XY, p2: XY, p3: XY, numPoints
 
     return [[minX, minY], [maxX, maxY]];
 }
-
 export function __anther_side_xy(curve_point: CurvePoint, handle_site: XY, current_side: 'from' | 'to') {
     const is_from = current_side === 'from';
     const _a_xy = { x: 0, y: 0 };
@@ -81,7 +78,6 @@ export function __anther_side_xy(curve_point: CurvePoint, handle_site: XY, curre
     _a_xy.y = is_from ? curve_point.toY || 0 : curve_point.fromY || 0;
     return _a_xy;
 }
-
 export function __round_curve_point(shape: PathShape, index: number) {
     const points = shape.points;
     const previous_index = index === 0 ? points.length - 1 : index - 1;
@@ -267,7 +263,6 @@ export function after_insert_point(page: Page, api: Api, path_shape: PathShape, 
     modify_next_to_by_slice(page, api, path_shape, slices[1], next, next_index);
     modify_current_handle_slices(page, api, path_shape, slices, index);
 }
-
 export function __pre_curve(page: Page, api: Api, path_shape: PathShape, index: number) {
     const point = path_shape.points[index];
     if (!point) {
@@ -475,11 +470,14 @@ export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, in
     update_points_xy(page, part1, apart.path1, api);
     update_points_xy(page, part2, apart.path2, api);
 
-    // 7.把生成的path组合
+    // 7.更新frame
+    update_path_shape_frame(api, page, [part1, part2]);
+
+    // 8.把生成的path组合
     const g = assemble(page, [part1, part2], path_shape, api);
     data.ex = g;
 
-    // 8.删除原先图形 done
+    // 9.删除原先图形 done
     delele_origin(page, path_shape, api);
 
     return data;
@@ -506,4 +504,10 @@ export function _clip(page: Page, api: Api, path_shape: PathShape, index: number
     }
     data = apart_path_shape(page, api, path_shape, index);
     return data;
+}
+export function update_path_shape_frame(api: Api, page: Page, shapes: PathShape[]) {
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const shape = shapes[i];
+        update_frame_by_points(api, page, shape);
+    }
 }

@@ -1061,8 +1061,7 @@ export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
         }
         api.shapeModifyCurvPoint(page, s, i, mp.computeCoord2(p.x, p.y));
     }
-    console.log('update frame by "update_frame_by_points"');
-
+    console.log(s.name, 'update frame by "update_frame_by_points"');
 }
 export function update_frame_by_points2(api: Api, page: Page, s: PathShape) {
     const nf = s.boundingBox2();
