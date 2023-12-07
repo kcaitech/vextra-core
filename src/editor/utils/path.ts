@@ -1,11 +1,15 @@
 import { Api } from "../../editor/command/recordapi";
-import { CurveMode } from "../../data/typesdefine";
-import { CurvePoint, PathShape } from "../../data/shape";
+import { CurveMode, ShapeType } from "../../data/typesdefine";
+import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../../data/shape";
 import { Page } from "../../data/page";
-import { importCurvePoint } from "../../data/baseimport";
-import { exportCurvePoint } from "../../data/baseexport";
+import { importCurvePoint, importStyle } from "../../data/baseimport";
+import { exportCurvePoint, exportStyle } from "../../data/baseexport";
 import { v4 } from "uuid";
-
+import { uuid } from "../../basic/uuid";
+import { BasicArray } from "../../data/basic";
+import { Matrix } from "../../basic/matrix";
+import { group } from "../../editor/group";
+import { addCommonAttr, newGroupShape } from "../../editor/creator";
 interface XY {
     x: number
     y: number
@@ -296,21 +300,202 @@ function _sort_after_clip(path_shape: PathShape, index: number) {
     result.push(...points.slice(0, index + 1));
     return result;
 }
+function after_clip(page: Page, api: Api, path_shape: PathShape): number {
+    if (path_shape.points.length < 2) {
+        const parent = path_shape.parent;
+        if (!parent) {
+            console.log('!parent');
+            return 0;
+        }
+        const index = (parent as GroupShape).indexOfChild(path_shape);
+        if (index < 0) {
+            console.log('index < 0');
+            return 0;
+        }
+        api.shapeDelete(page, parent as GroupShape, index);
+        return 1;
+    }
+    return 0;
+}
+function points_mapping_to_parent(points: CurvePoint[], path_shape: PathShape) {
+    const f = path_shape.frame;
+    const m = path_shape.matrix2Parent();
+    m.preScale(f.width, f.height);
+    for (let i = 0, l = points.length; i < l; i++) {
+        const _p = points[i];
+        const xy = m.computeCoord2(_p.x, _p.y);
+        points[i].x = xy.x;
+        points[i].y = xy.y;
+    }
+}
+function _apart_points(points: CurvePoint[], index: number) {
+    const _idx = index + 1;
+    const path1: CurvePoint[] = points.slice(0, _idx);
+    const path2: CurvePoint[] = points.slice(_idx);
+    return { path1, path2 }
+}
+function get_frame_by_points(points: CurvePoint[]) {
+    const frame = new ShapeFrame(0, 0, 0, 0);
+    if (points.length < 2) {
+        console.log('points.length < 2');
+        return frame;
+    }
+    const first = points[0];
+    frame.x = first.x;
+    frame.y = first.y;
+    let right = frame.x;
+    let bottom = frame.y;
+    for (let i = 1, l = points.length; i < l; i++) {
+        const p = points[i];
+        if (!p) {
+            console.log('get_frame_by_points: !p');
+            break;
+        }
+        if (p.x < frame.x) {
+            frame.x = p.x;
+        }
+        if (p.y < frame.y) {
+            frame.y = p.y;
+        }
+        if (p.x > right) {
+            right = p.x;
+        }
+        if (p.y > bottom) {
+            bottom = p.y;
+        }
+    }
+    frame.width = right - frame.x;
+    frame.height = bottom - frame.y;
+    return frame;
+}
+function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame) {
+    const __style = importStyle(exportStyle(origin.style));
+    const __points = new BasicArray<CurvePoint>();
+    const name = uuid().slice(0, 5);
+    // const __ps = new PathShape(uuid(), '路径', ShapeType.Path, frame, __style, __points, false);
+    const __ps = new PathShape(uuid(), name, ShapeType.Path, frame, __style, __points, false);
+    addCommonAttr(__ps)
+    return __ps;
+}
+function insert_part_to_doc(page: Page, origin: PathShape, part: PathShape, api: Api) {
+    const parent: GroupShape = origin.parent as GroupShape;
+    if (!parent) {
+        console.log('!parent');
+        return;
+    }
+    const index = parent.indexOfChild(origin);
+    return api.shapeInsert(page, parent, part, index);
+}
+function update_points_xy(page: Page, part: PathShape, points: CurvePoint[], api: Api) {
+    const __m = part.matrix2Parent();
+    __m.preScale(part.frame.width, part.frame.height);
+    const m = new Matrix(__m.inverse);
+    points.forEach(p => {
+        const _p = m.computeCoord2(p.x, p.y);
+        p.x = _p.x;
+        p.y = _p.y;
+    })
+    api.addPoints(page, part, points);
+}
+function assemble(page: Page, parts: PathShape[], origin: PathShape, api: Api) {
+    const parent = origin.parent as GroupShape;
+    if (!parent) {
+        console.log('assemble: !parent');
+        return;
+    }
+    const index = parent.indexOfChild(origin);
+    if (index < 0) {
+        console.log('assemble: index < 0');
+        return;
+    }
+    const gshape = newGroupShape('图形');
+    return group(page, parts, gshape, parent, index, api);
+}
+function delele_origin(page: Page, origin: PathShape, api: Api) {
+    const parent = origin.parent as GroupShape;
+    if (!parent) {
+        console.log('delele_origin: !parent');
+        return;
+    }
+    const index = parent.indexOfChild(origin);
+    if (index < 0) {
+        console.log('delele_origin: index < 0');
+        return;
+    }
+    api.shapeDelete(page, parent, index);
+}
+export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, index: number) {
+    console.log('将要拆分图形');
+    const data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
+
+    if (path_shape.isClosed) {
+        console.log('path_shape.isClosed');
+        data.code = -1;
+        return data;
+    }
+    const points = path_shape.points.map(i => importCurvePoint(exportCurvePoint(i)));
+
+    if (index === 0 || index === points.length - 2) {
+        console.log('index === 0 || index === points.length - 2');
+        data.code = -1;
+        return data;
+    }
+    // 1.把点映射到原先图形的父亲坐标系上
+    points_mapping_to_parent(points, path_shape);
+    // 2.根据裁剪位置拆分点
+    const apart = _apart_points(points, index);
+
+    // 3.根据各部分点计算各部分的frame
+    const frame1 = get_frame_by_points(apart.path1);
+    const frame2 = get_frame_by_points(apart.path2);
+
+    // 4.根据计算的frame，按照原有图形的样式来生成两个path对象
+    const __part1 = create_path_shape_by_frame(path_shape, frame1);
+    const __part2 = create_path_shape_by_frame(path_shape, frame2);
+
+    // 5.把生成的path对象加入文档
+    const part1 = insert_part_to_doc(page, path_shape, __part1, api) as PathShape;
+    const part2 = insert_part_to_doc(page, path_shape, __part2, api) as PathShape;
+
+    if (!part1 || !part2) {
+        console.log('!part1 || !part2');
+        data.code = -1;
+        return data;
+    }
+
+    // 6.把1中生成的点映射到生成的path对象上
+    update_points_xy(page, part1, apart.path1, api);
+    update_points_xy(page, part2, apart.path2, api);
+
+    // 7.把生成的path组合
+    const g = assemble(page, [part1, part2], path_shape, api);
+    data.ex = g;
+
+    // 8.删除原先图形 done
+    delele_origin(page, path_shape, api);
+
+    return data;
+}
 export function _clip(page: Page, api: Api, path_shape: PathShape, index: number) {
+    let data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
     if (path_shape.isClosed) {
         api.setCloseStatus(page, path_shape, false);
         const points = _sort_after_clip(path_shape, index);
         replace_path_shape_points(page, path_shape, api, points);
-        return;
+        data.code = -1;
+        return data;
     }
     const points = path_shape.points;
     if (index === 0) {
         api.deletePoint(page, path_shape, index);
-        return;
+        data.code = after_clip(page, api, path_shape);
+        return data;
     }
     if (index === points.length - 2) {
         api.deletePoint(page, path_shape, points.length - 1);
-        return;
+        data.code = after_clip(page, api, path_shape);
+        return data;
     }
-
+    data = apart_path_shape(page, api, path_shape, index);
+    return data;
 }
