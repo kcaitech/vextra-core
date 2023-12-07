@@ -1013,8 +1013,10 @@ export function pathEditSide(api: Api, page: Page, s: Shape, index1: number, ind
     const m_in = new Matrix(m.inverse);  // 图形单位坐标系，0-1
     let p1 = s.points[index1];
     let p2 = s.points[index2];
-    if (!p1 || !p2) return false;
-    p1 = m.computeCoord3(p1.point), p2 = m.computeCoord3(p2.point);
+    if (!p1 || !p2) {
+        return false;
+    }
+    p1 = m.computeCoord2(p1.x, p1.y), p2 = m.computeCoord2(p2.x, p2.y);
     if (dx) p1.x = p1.x + dx, p2.x = p2.x + dx;
     if (dy) p1.y = p1.y + dy, p2.y = p2.y + dy;
     p1 = m_in.computeCoord3(p1);
