@@ -2,7 +2,6 @@ import {
     BulletNumbers,
     BulletNumbersBehavior,
     BulletNumbersType,
-    Color,
     StrikethroughType,
     TextBehaviour,
     TextHorAlign,
@@ -35,6 +34,8 @@ import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 import { _travelTextPara } from "./texttravel";
 import { Padding } from "./baseclasses";
+
+import { Color } from "./color";
 
 /*
  文本框属性
