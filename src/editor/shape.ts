@@ -962,6 +962,12 @@ export class ShapeEditor {
     }
 
     // points
+    public setPathClosedStatus(val: boolean) {
+        this._repoWrap("setPathClosedStatus", (api) => {
+            api.setCloseStatus(this.__page, this.__shape as PathShape, val);
+        });
+    }
+
     public addPointAt(point: CurvePoint, idx: number) {
         this._repoWrap("addPointAt", (api) => {
             api.addPointAt(this.__page, this.__shape as PathShape, idx, point);
