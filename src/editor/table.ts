@@ -4,11 +4,11 @@ import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
-import { Border, Color, Fill } from "../data/style";
+import { Border, Fill } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
 import { Api } from "./command/recordapi";
 import { importBorder, importFill } from "../data/baseimport";
-import { Document } from "../data/classes";
+import { Document, Color } from "../data/classes";
 import { newText } from "../data/textutils";
 
 const MinCellSize = TableShape.MinCellSize;

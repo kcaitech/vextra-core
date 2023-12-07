@@ -1,5 +1,6 @@
 import { uuid } from "../../basic/uuid";
-import { Color, Fill, Style } from "../../data/style";
+import { Fill } from "../../data/style";
+import { Color } from "../../data/color";
 
 // 填充
 

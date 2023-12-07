@@ -42,7 +42,6 @@ import { Document } from "../data/document";
 import { Api } from "./command/recordapi";
 import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
-import { Color } from "../data/style";
 import { uuid } from "../basic/uuid";
 import { ContactForm, ContactRole } from "../data/baseclasses";
 import { ContactShape } from "../data/contact";
@@ -52,6 +51,7 @@ import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name } from "./utils/symbol";
 import { __pre_curve, after_insert_point } from "./utils/path";
+import { Color } from "../data/color";
 
 interface PageXY { // 页面坐标系的xy
     x: number

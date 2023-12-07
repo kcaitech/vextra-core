@@ -1,11 +1,10 @@
-import { Color } from "../../data/style";
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { CurveMode, GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
 import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
 import { BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
-
+import { Color } from "../../data/classes";
 export * from "./fill";
 export * from "./border";
 export * from "./shadow";
