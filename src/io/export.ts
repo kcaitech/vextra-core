@@ -163,7 +163,6 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
 
     // document meta
     const document_meta = exportDocumentMeta(document, ctx);
-    console.log('export metas:', {document_meta, pages, document_syms, media_names});
     return {
         document_meta,
         pages,

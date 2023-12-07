@@ -1,5 +1,4 @@
-import { BoolOp, GroupShape, Path, Shape, Style, SymbolRefShape, SymbolShape, TextShape, Variable } from "../data/classes";
-// import { difference, intersection, subtract, union } from "./boolop";
+import { BoolOp, GroupShape, Path, Shape, ShapeFrame, Style, SymbolRefShape, SymbolShape, TextShape } from "../data/classes";
 import { renderWithVars as fillR } from "./fill";
 import { renderWithVars as borderR } from "./border"
 import { renderText2Path } from "./text";
@@ -21,24 +20,98 @@ export function findUsableBorderStyle(shape: Shape): Style {
     return shape.style;
 }
 
-function opPath(bop: BoolOp, path0: IPalPath, path1: IPalPath) {
+function opPath(bop: BoolOp, path0: IPalPath, path1: IPalPath, isIntersect: boolean): IPalPath {
     switch (bop) {
         case BoolOp.Diff:
-            path0.difference(path1);
+            if (isIntersect) path0.difference(path1);
+            else path0.addPath(path1);
             break;
         case BoolOp.Intersect:
-            path0.intersection(path1);
+            if (isIntersect) {
+                path0.intersection(path1);
+            }
+            else {
+                return gPal.makePalPath("");
+            }
             break;
         case BoolOp.Subtract:
-            path0.subtract(path1);
+            if (isIntersect) path0.subtract(path1);
             break;
         case BoolOp.Union:
-            path0.union(path1);
+            if (!isIntersect) path0.addPath(path1)
+            else path0.union(path1);
             break;
+    }
+    return path0;
+}
+
+function _is_intersect(frame0: ShapeFrame, frame1: ShapeFrame) {
+    return !(frame0.x > frame1.x + frame1.width ||
+        frame0.x + frame0.width < frame1.x ||
+        frame0.y > frame1.y + frame1.height ||
+        frame0.y + frame0.height < frame1.y);
+}
+function is_intersect(arr: ShapeFrame[], frame: ShapeFrame) {
+    for (let i = 0; i < arr.length; i++) {
+        if (_is_intersect(arr[i], frame)) return true;
+    }
+    return false;
+}
+
+class FrameGrid {
+    _cellWidth: number;
+    _cellHeight: number;
+    _cellRowsCount: number;
+    _cellColsCount: number;
+    _rows: ShapeFrame[][][] = [];
+
+    constructor(cellWidth: number, cellHeight: number, cellRowsCount: number, cellColsCount: number) {
+        this._cellWidth = cellWidth;
+        this._cellHeight = cellHeight;
+        this._cellRowsCount = cellRowsCount;
+        this._cellColsCount = cellColsCount;
+    }
+
+    checkIntersectAndPush(frame: ShapeFrame): boolean {
+        return this._checkIntersectAndPush(frame, false);
+    }
+
+    push(frame: ShapeFrame) {
+        this._checkIntersectAndPush(frame, true);
+    }
+
+    private _checkIntersectAndPush(frame: ShapeFrame, preset: boolean): boolean {
+        const xs = (frame.x);
+        const xe = (frame.x + frame.width);
+        const ys = (frame.y);
+        const ye = (frame.y + frame.height);
+
+        const is = Math.max(0, xs / this._cellWidth);
+        const ie = Math.max(1, xe / this._cellWidth);
+
+        for (let i = Math.floor(is); i < ie && i < this._cellColsCount; ++i) {
+            const js = Math.max(0, ys / this._cellHeight);
+            const je = Math.max(1, ye / this._cellHeight);
+            let row = this._rows[i];
+            if (!row) {
+                row = [];
+                this._rows[i] = row;
+            }
+            for (let j = Math.floor(js); j < je && j < this._cellRowsCount; ++j) {
+                let cell = row[j];
+                if (!preset && cell) preset = is_intersect(cell, frame);
+                if (!cell) {
+                    cell = [];
+                    row[j] = cell;
+                }
+                cell.push(frame);
+            }
+        }
+        return preset;
     }
 }
 
-export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
+export function render2path(shape: Shape): Path {
     const shapeIsGroup = shape instanceof GroupShape;
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
@@ -50,19 +123,26 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
     const cc = shape.childs.length;
     const child0 = shape.childs[0];
     const frame0 = child0.frame;
-    const path0 = render2path(child0, consumed);
-    consumed?.push(child0);
+    const path0 = render2path(child0);
+
     if (child0.isNoTransform()) {
         path0.translate(frame0.x, frame0.y);
     } else {
         path0.transform(child0.matrix2Parent())
     }
 
-    const joinPath: IPalPath = gPal.makePalPath(path0.toString());
+    const pframe = shape.frame;
+    const gridSize = Math.ceil(Math.sqrt(cc));
+
+    const grid = new FrameGrid(pframe.width / gridSize, pframe.height / gridSize, gridSize, gridSize);
+
+    grid.push(frame0);
+
+    let joinPath: IPalPath = gPal.makePalPath(path0.toString());
     for (let i = 1; i < cc; i++) {
         const child1 = shape.childs[i];
         const frame1 = child1.frame;
-        const path1 = render2path(child1, consumed);
+        const path1 = render2path(child1);
         if (child1.isNoTransform()) {
             path1.translate(frame1.x, frame1.y);
         } else {
@@ -70,13 +150,19 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
         }
         const pathop = child1.boolOp ?? BoolOp.None;
         const palpath1 = gPal.makePalPath(path1.toString());
+
         if (pathop === BoolOp.None) {
+            grid.push(frame1);
             joinPath.addPath(palpath1);
         } else {
-            opPath(pathop, joinPath, palpath1)
+            const intersect = grid.checkIntersectAndPush(frame1);
+            const path = opPath(pathop, joinPath, palpath1, intersect);
+            if (path !== joinPath) {
+                joinPath.delete();
+                joinPath = path;
+            }
         }
         palpath1.delete();
-        if (consumed) consumed.push(child1);
     }
     const pathstr = joinPath.toSVGString();
     joinPath.delete();
@@ -101,10 +187,10 @@ export function render2path(shape: Shape, consumed?: Array<Shape>): Path {
 
 export function render(h: Function, shape: GroupShape, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-    reflush?: number, consumed?: Array<Shape>): any {
+    reflush?: number): any {
     if (!isVisible(shape, varsContainer)) return;
 
-    const path = render2path(shape, consumed);
+    const path = render2path(shape);
     const frame = shape.frame;
 
     // const path0 = shape.getPath();
@@ -160,10 +246,10 @@ export function render(h: Function, shape: GroupShape, transform: RenderTransfor
             delete props.style;
             delete props.transform;
             const inner_url = innerShadowId(shape_id, shadows);
-            if(shadows.length) props.filter = `${inner_url}`;
+            if (shadows.length) props.filter = `${inner_url}`;
             const body = h("g", props, childs);
             return h("g", ex_props, [...shadow, body]);
-        }else {
+        } else {
             return h("g", props, childs);
         }
     }

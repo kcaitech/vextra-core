@@ -1,6 +1,7 @@
 import { GroupShape, ImageShape, PathShape, RectShape, Shape, SymbolUnionShape, SymbolShape, TextShape } from "../../../data/shape";
 import { RenderTransform, renderArtboard as art } from "../../../render";
 import { renderGroup as group } from "../../../render";
+import { renderBoolOpShape as boolgroup } from "../../../render";
 import { renderImage as image } from "../../../render";
 import { renderPathShape as path } from "../../../render";
 import { renderPathShape as rect } from "../../../render";
@@ -19,6 +20,7 @@ comsMap.set(ShapeType.Artboard, (data: Shape, transform: RenderTransform | undef
 });
 comsMap.set(ShapeType.Group, (data: Shape, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    if ((data as GroupShape).isBoolOpShape) return boolgroup(h, data as GroupShape, transform, varsContainer);
     return group(h, data as GroupShape, comsMap, transform, varsContainer, undefined);
 });
 
@@ -58,6 +60,13 @@ comsMap.set(ShapeType.Symbol, (data: Shape, transform: RenderTransform | undefin
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return sym(h, data as SymbolShape, comsMap);
 });
+
+export function exportInnerSvg(shape: Shape): string {
+    const com = comsMap.get(shape.type);
+    if (!com) throw new Error("export svg, unknow shape type : " + shape.type)
+    const content = h(com, { data: shape });
+    return content;
+}
 
 export function exportSvg(shape: Shape): string {
 
