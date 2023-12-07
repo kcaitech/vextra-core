@@ -52,7 +52,7 @@ import {
     VariableType
 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, Color, ContextSettings, Fill, MarkerType, Style, Shadow } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, ContextSettings, Fill, MarkerType, Style, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
@@ -64,8 +64,7 @@ import { TableOpTarget } from "../../coop/data/classes";
 import { ContactRole, CurvePoint } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { BasicMap } from "../../data/basic";
-import { IImportContext } from "../../data/baseimport";
-
+import { Color } from "../../data/classes";
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
 

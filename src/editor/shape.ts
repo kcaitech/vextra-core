@@ -11,7 +11,7 @@ import {
     VariableType,
     SymbolUnionShape
 } from "../data/shape";
-import { Border, BorderPosition, BorderStyle, Color, Fill, MarkerType, Shadow } from "../data/style";
+import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../data/style";
 import { expand, expandTo, translate, pathEdit, translateTo } from "./frame";
 import { BoolOp, CurvePoint, Point2D } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
@@ -39,6 +39,7 @@ import {
 } from "./utils/other";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
+import { Color } from "../data/color";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
