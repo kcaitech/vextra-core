@@ -425,14 +425,19 @@ function delele_origin(page: Page, origin: PathShape, api: Api) {
     api.shapeDelete(page, parent, index);
 }
 export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, index: number) {
-    console.log('将要拆分图形');
+    // 将要拆分图形
+
+    // 拆分结果
     const data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
 
+    // 闭合路径不存在拆分
     if (path_shape.isClosed) {
         console.log('path_shape.isClosed');
         data.code = -1;
         return data;
     }
+
+    // 拷贝points数据
     const points = path_shape.points.map(i => importCurvePoint(exportCurvePoint(i)));
 
     if (index === 0 || index === points.length - 2) {
@@ -440,6 +445,9 @@ export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, in
         data.code = -1;
         return data;
     }
+
+    // 数据验证、验证完成，开始拆分
+
     // 1.把点映射到原先图形的父亲坐标系上
     points_mapping_to_parent(points, path_shape);
     // 2.根据裁剪位置拆分点
