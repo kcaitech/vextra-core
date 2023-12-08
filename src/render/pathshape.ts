@@ -187,10 +187,10 @@ export function render(h: Function, shape: PathShape, transform: RenderTransform
         return h('path', props);
     } else {
         const shadows = shape.style.shadows;
-        const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
         const shadow = shadowR(h, shape_id, shape, path, varsContainer);
         if (shadow.length) {
+            const ex_props = Object.assign({}, props);
             delete props.style;
             delete props.transform;
             const inner_url = innerShadowId(shape_id, shadows);
