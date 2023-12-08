@@ -978,7 +978,11 @@ export class ShapeEditor {
      * @param indexes 需要转化成有序索引
      */
     public removePoints(indexes: number[]) {
-        if (!(this.__shape instanceof PathShape)) return false;
+        let result = -1;
+        if (!(this.__shape instanceof PathShape)) {
+            console.log('!(this.__shape instanceof PathShape)');
+            return result;
+        }
         indexes = indexes.sort((a, b) => {
             if (a > b) {
                 return 1;
@@ -986,23 +990,28 @@ export class ShapeEditor {
                 return -1;
             }
         });
-        if (!indexes.length) return false;
+        if (!indexes.length) {
+            console.log('!indexes.length');
+            return result;
+        }
         try {
             const api = this.__repo.start("deleteShape", {});
             for (let i = indexes.length - 1; i > -1; i--) {
                 api.deletePoint(this.__page, this.__shape as PathShape, indexes[i]);
             }
             const p = this.__shape.parent as GroupShape;
-            if (!this.__shape.points.length && p) {
+            result = 1;
+            if (this.__shape.points.length < 2 && p) {
                 const index = p.indexOfChild(this.__shape);
                 api.shapeDelete(this.__page, p, index)
+                result = 0;
             }
             this.__repo.commit();
-            return true;
+            return result;
         } catch (e) {
             console.log("removePoints:", e);
             this.__repo.rollback();
-            return false;
+            return 0;
         }
     }
 
