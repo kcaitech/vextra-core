@@ -70,6 +70,28 @@ export function isVisible(shape: Shape, varsContainer: (SymbolRefShape | SymbolS
     return !!shape.isVisible;
 }
 
+function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
+    return (
+        lsh.x !== rsh.x ||
+        lsh.y !== rsh.y ||
+        lsh.width !== rsh.width ||
+        lsh.height !== rsh.height
+    );
+}
+
+export function isDiffRenderTransform(lhs: RenderTransform, rhs: RenderTransform) {
+    return (
+        lhs.dx !== rhs.dx ||
+        lhs.dy !== rhs.dy ||
+        lhs.scaleX !== rhs.scaleX ||
+        lhs.scaleY !== rhs.scaleY ||
+        lhs.rotate !== rhs.rotate ||
+        lhs.scaleX !== rhs.scaleX ||
+        lhs.scaleY !== rhs.scaleY ||
+        isDiffShapeFrame(lhs.parentFrame, rhs.parentFrame)
+    )
+}
+
 export interface RenderTransform {
     // 为保持位置及形状不变，提前设置给子对象的参数
     dx: number

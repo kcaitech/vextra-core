@@ -1,4 +1,4 @@
-import {GroupShape, Path, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, Variable} from "../data/classes";
+import {GroupShape, Path, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape} from "../data/classes";
 import {renderWithVars as fillR} from "./fill";
 import {renderWithVars as borderR} from "./border";
 import {RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent} from "./basic";
@@ -248,10 +248,10 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
         props.style = style;
     }
     const shadows = shape.style.shadows;
-    const ex_props = Object.assign({}, props);
     const shape_id = shape.id.slice(0, 4);
     const shadow = shadowR(h, shape_id, shape, path, varsContainer, comsMap);
     if (shadow.length) {
+        const ex_props = Object.assign({}, props);
         delete props.style;
         delete props.transform;
         const inner_url = innerShadowId(shape_id, shadows);
