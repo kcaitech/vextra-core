@@ -6,7 +6,6 @@
 
 export { RenderTransform } from "./basic"
 
-export { render as renderArrow } from "./arrow";
 export { render as renderArtboard } from "./artboard";
 export { render as renderGroup } from "./group";
 export { render as renderImage } from "./image";
