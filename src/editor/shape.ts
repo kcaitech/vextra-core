@@ -12,7 +12,7 @@ import {
     SymbolUnionShape
 } from "../data/shape";
 import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../data/style";
-import { expand, expandTo, translate, pathEdit, translateTo } from "./frame";
+import { expand, expandTo, translate, pathEdit, translateTo, update_frame_by_points } from "./frame";
 import { BoolOp, CurvePoint, Point2D } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
@@ -20,7 +20,6 @@ import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { ContactForm, CurveMode, OverrideType, ShadowPosition } from "../data/typesdefine";
 import { Api } from "./command/recordapi";
-import { modify_points_xy, update_frame_by_points } from "./path";
 import { exportCurvePoint } from "../data/baseexport";
 import { importBorder, importCurvePoint, importFill } from "../data/baseimport";
 import { v4 } from "uuid";
@@ -39,7 +38,7 @@ import {
 } from "./utils/other";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
-import { _clip, _typing_modify, replace_path_shape_points, update_path_shape_frame } from "./utils/path";
+import { _clip, _typing_modify, modify_points_xy, replace_path_shape_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 
 function varParent(_var: Variable) {
@@ -1364,7 +1363,7 @@ export class ShapeEditor {
 
     public modify_frame_by_points() {
         this._repoWrap("modify_frame_by_points", (api) => {
-            update_frame_by_points(api, this.__page, this.__shape);
+            update_frame_by_points(api, this.__page, this.__shape as PathShape);
         });
     }
 
@@ -1381,7 +1380,7 @@ export class ShapeEditor {
                 points[i] = p;
             }
             api.addPoints(this.__page, this.__shape as PathShape, points);
-            update_frame_by_points(api, this.__page, this.__shape);
+            update_frame_by_points(api, this.__page, this.__shape as PathShape);
         });
     }
 

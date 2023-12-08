@@ -511,3 +511,25 @@ export function update_path_shape_frame(api: Api, page: Page, shapes: PathShape[
         update_frame_by_points(api, page, shape);
     }
 }
+export function init_points(api: Api, page: Page, s: Shape, points: CurvePoint[]) {
+    api.deletePoints(page, s as PathShape, 0, s.points.length);
+    api.addPoints(page, s as PathShape, points);
+}
+
+export function modify_points_xy(api: Api, page: Page, s: PathShape, actions: {
+    index: number,
+    x: number,
+    y: number
+}[]) {
+    let m = new Matrix();
+    const f = s.frame;
+    m.preScale(f.width, f.height);
+    m.multiAtLeft(s.matrix2Parent());
+    m = new Matrix(m.inverse);
+    for (let i = 0, l = actions.length; i < l; i++) {
+        const action = actions[i];
+        const new_xy = m.computeCoord2(action.x, action.y);
+        api.shapeModifyCurvPoint(page, s, action.index, new_xy);
+    }
+    update_frame_by_points(api, page, s);
+}
