@@ -233,13 +233,13 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
 
 export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const style = newStyle();
-    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.None);
-    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.None);
+    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
+    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const id = uuid();
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
     style.borders.push(border);
-    const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, curvePoint, true);
+    const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, curvePoint, false);
     addCommonAttr(shape);
     return shape;
 }
@@ -247,12 +247,12 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
 export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const style = newStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
-    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.None);
-    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.None);
+    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
+    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
     style.borders.push(border);
-    const shape = new LineShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, true);
+    const shape = new LineShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, false);
     addCommonAttr(shape);
     return shape;
 }
