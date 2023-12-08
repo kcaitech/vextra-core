@@ -60,3 +60,27 @@ export function setExportCanvasBackground(options: ExportOptions, background: bo
 export function setExportPreviewUnfold(options: ExportOptions, unfold: boolean) {
     options.unfold = unfold;
 }
+
+// page cutout
+export function setPageExportPreviewUnfold(options: ExportOptions, unfold: boolean) {
+    options.unfold = unfold;
+}
+
+export function setPageExportFormatScale(options: ExportOptions, index: number, scale: number) {
+    const format: ExportFormat = options.exportFormats[index];
+    if (format) format.scale = scale;
+}
+
+export function setPageExportFormatName(options: ExportOptions, index: number, name: string) {
+    const format: ExportFormat = options.exportFormats[index];
+    if (format) format.name = name;
+}
+export function setPageExportFormatPerfix(options: ExportOptions, index: number, Prefix: ExportFormatNameingScheme) {
+    const format: ExportFormat = options.exportFormats[index];
+    if (format) format.namingScheme = Prefix;
+}
+
+export function setPageExportFormatFileFormat(options: ExportOptions, index: number, fileFormat: ExportFileFormat) {
+    const format: ExportFormat = options.exportFormats[index];
+    if (format) format.fileFormat = fileFormat;
+}

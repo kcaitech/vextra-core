@@ -1,6 +1,7 @@
 export const PAGE_ATTR_ID = {
     name: "name",
-    background: "background"
+    background: "background",
+    previewUnfold: "previewUnfold"
 }
 
 export const SHAPE_ATTR_ID = {

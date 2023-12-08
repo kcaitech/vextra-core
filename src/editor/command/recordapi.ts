@@ -1131,6 +1131,16 @@ export class Api {
             })
         }
     }
+    setPageExportFormatScale(page: Page, idx: number, scale: number) {
+        const format = page.exportOptions?.exportFormats[idx];
+        if (format) {
+            this.__trap(() => {
+                const save = format.scale;
+                format.scale = scale;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, Array(page.id), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.scale, scale, save));
+            })
+        }
+    }
     setExportFormatName(page: Page, shape: Shape, idx: number, name: string) {
         checkShapeAtPage(page, shape);
         const format = shape.exportOptions?.exportFormats[idx];
@@ -1139,6 +1149,16 @@ export class Api {
                 const save = format.name;
                 format.name = name;
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.name, name, save));
+            })
+        }
+    }
+    setPageExportFormatName(page: Page, idx: number, name: string) {
+        const format = page.exportOptions?.exportFormats[idx];
+        if (format) {
+            this.__trap(() => {
+                const save = format.name;
+                format.name = name;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, Array(page.id), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.name, name, save));
             })
         }
     }
@@ -1153,7 +1173,16 @@ export class Api {
             })
         }
     }
-
+    setPageExportFormatFileFormat(page: Page, idx: number, fileFormat: ExportFileFormat) {
+        const format = page.exportOptions?.exportFormats[idx];
+        if (format) {
+            this.__trap(() => {
+                const save = format.fileFormat;
+                format.fileFormat = fileFormat;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, Array(page.id), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.fileFormat, exportExportFileFormat(fileFormat), exportExportFileFormat(save)));
+            })
+        }
+    }
     setExportFormatPerfix(page: Page, shape: Shape, idx: number, perfix: ExportFormatNameingScheme) {
         checkShapeAtPage(page, shape);
         const format = shape.exportOptions?.exportFormats[idx];
@@ -1162,6 +1191,16 @@ export class Api {
                 const save = format.namingScheme;
                 format.namingScheme = perfix;
                 this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.perfix, exportExportFormatNameingScheme(perfix), exportExportFormatNameingScheme(save)));
+            })
+        }
+    }
+    setPageExportFormatPerfix(page: Page, idx: number, perfix: ExportFormatNameingScheme) {
+        const format = page.exportOptions?.exportFormats[idx];
+        if (format) {
+            this.__trap(() => {
+                const save = format.namingScheme;
+                format.namingScheme = perfix;
+                this.addCmd(ShapeArrayAttrModify.Make(page.id, Array(page.id), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.perfix, exportExportFormatNameingScheme(perfix), exportExportFormatNameingScheme(save)));
             })
         }
     }
@@ -1197,6 +1236,21 @@ export class Api {
                 this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.previewUnfold, unfold, save));
             })
         }
+    }
+    setPageExportPreviewUnfold(document: Document, pageId: string, unfold: boolean) {
+        const item = document.pagesMgr.getSync(pageId);
+        if (!item) return;
+        const s_unfold = item.exportOptions!.unfold || false;
+        const save = this.repo.transactCtx.settrap;
+        this.repo.transactCtx.settrap = false;
+        try {
+            item.exportOptions!.unfold = unfold;
+        } finally {
+            this.repo.transactCtx.settrap = save;
+        }
+        console.log(pageId,'pageId');
+        
+        this.addCmd(PageCmdModify.Make(document.id, pageId, PAGE_ATTR_ID.previewUnfold, JSON.stringify(unfold), JSON.stringify(s_unfold)));
     }
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {

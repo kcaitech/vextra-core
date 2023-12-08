@@ -1805,6 +1805,15 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    setPageExportPreviewUnfold(unfold: boolean) {
+        try {
+            const api = this.__repo.start('setPageExportPreviewUnfold', {});
+            api.setPageExportPreviewUnfold(this.__document, this.__page.id, unfold);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
     shapesDeleteExportFormat(actions: ExportFormatDeleteAction[]) {
         try {
             const api = this.__repo.start('shapesDeleteExportFormat', {});
@@ -1841,6 +1850,15 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    setPageExportFormatScale(idx: number, scale: number) {
+        try {
+            const api = this.__repo.start('setPageExportFormatScale', {});
+            api.setPageExportFormatScale(this.__page, idx, scale);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
     setShapesExportFormatName(actions: ExportFormatNameAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatName', {});
@@ -1848,6 +1866,15 @@ export class PageEditor {
                 const { target, index, value } = actions[i];
                 api.setExportFormatName(this.__page, target, index, value);
             }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setPageExportFormatName(idx: number, name: string) {
+        try {
+            const api = this.__repo.start('setPageExportFormatName', {});
+            api.setPageExportFormatName(this.__page, idx, name);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -1865,6 +1892,15 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    setPageExportFormatPerfix(idx: number, name: ExportFormatNameingScheme) {
+        try {
+            const api = this.__repo.start('setPageExportFormatPerfix', {});
+            api.setPageExportFormatPerfix(this.__page, idx, name);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
     setShapesExportFormatFileFormat(actions: ExportFormatFileFormatAction[]) {
         try {
             const api = this.__repo.start('setShapesExportFormatFileFormat', {});
@@ -1872,6 +1908,15 @@ export class PageEditor {
                 const { target, index, value } = actions[i];
                 api.setExportFormatFileFormat(this.__page, target, index, value);
             }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setPageExportFormatFileFormat(idx: number, name: ExportFileFormat) {
+        try {
+            const api = this.__repo.start('setPageExportFormatFileFormat', {});
+            api.setPageExportFormatFileFormat(this.__page, idx, name);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();

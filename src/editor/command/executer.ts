@@ -211,6 +211,12 @@ export class CMDExecuter {
             const opId = (op as IdOpSet).opId;
             if (opId === PAGE_ATTR_ID.name) {
                 if (cmd.value) api.pageModifyName(this.__document, pageId, cmd.value);
+            } else if (opId === PAGE_ATTR_ID.previewUnfold) {
+                const page = this.__document.pagesMgr.getSync(pageId)
+                if (!page) throw new Error(`page not find: (index)${opId} (cmdPageId)${op.targetId[0]}`);
+                const options = page.exportOptions!
+                const unfold = cmd.value && JSON.parse(cmd.value) || false;
+                api.setPageExportPreviewUnfold(options, JSON.parse(unfold));
             }
         }
     }
@@ -284,7 +290,7 @@ export class CMDExecuter {
         const op = cmd.ops[0]
         if (op.type !== OpType.ArrayInsert) return;
         const shapeId = op.targetId;
-        const shape = page.getTarget(shapeId);
+        const shape = (shapeId[0] === page.id) ? page : page.getTarget(shapeId);
         if (!shape) throw new Error(`shape not find: ${shapeId}`);
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
@@ -318,7 +324,7 @@ export class CMDExecuter {
         if (!page) return;
         const op = cmd.ops[0]
         if (op.type !== OpType.ArrayRemove) return;
-        const shape = page.getTarget(op.targetId);
+        const shape = (op.targetId[0] === page.id) ? page : page.getTarget(op.targetId);
         if (!shape) throw new Error("not find target:" + op.targetId);
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
@@ -355,7 +361,7 @@ export class CMDExecuter {
         if (_op.type !== OpType.IdSet) {
             return;
         }
-        const shape = page.getTarget(_op.targetId);
+        const shape = (_op.targetId[0] === page.id) ? page : page.getTarget(_op.targetId);
         if (!shape) throw new Error("not find target:" + _op.targetId);
 
         // if (!(shape instanceof Shape)) {
