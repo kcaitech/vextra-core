@@ -367,7 +367,6 @@ function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame) {
     const __style = importStyle(exportStyle(origin.style));
     const __points = new BasicArray<CurvePoint>();
     const name = uuid().slice(0, 5);
-    // const __ps = new PathShape(uuid(), '路径', ShapeType.Path, frame, __style, __points, false);
     const __ps = new PathShape(uuid(), name, ShapeType.Path, frame, __style, __points, false);
     addCommonAttr(__ps)
     return __ps;
