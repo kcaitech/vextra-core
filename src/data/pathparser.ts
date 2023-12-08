@@ -10,6 +10,64 @@ type CornerCalcInfo = {
     nextHandle: Point2D;
 };
 
+// 计算两点之间的距离
+function distance(p1: Point2D, p2: Point2D) {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+// 计算三次贝塞尔曲线上某一点到起始点的长度
+function bezierLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: number) {
+    const dx = 3 * (p1.x - p0.x);
+    const dy = 3 * (p1.y - p0.y);
+    const cx = 3 * (p2.x - p1.x) - dx;
+    const cy = 3 * (p2.y - p1.y) - dy;
+    const bx = p3.x - p0.x - dx - cx;
+    const by = p3.y - p0.y - dy - cy;
+
+    const x = t * (dx + t * (cx + t * bx));
+    const y = t * (dy + t * (cy + t * by));
+
+    return Math.sqrt(x * x + y * y);
+}
+
+// 通过二分法求解参数t
+function findTForLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, targetLength: number, epsilon = 1e-5) {
+    let t0 = 0;
+    let t1 = 1;
+    let t = 0.5;
+
+    while (t0 <= t1) {
+        const currentLength = bezierLength(p0, p1, p2, p3, t);
+
+        if (Math.abs(currentLength - targetLength) < epsilon) {
+            return t;
+        }
+
+        if (currentLength < targetLength) {
+            t0 = t;
+            t += (t1 - t) * 0.5;
+        } else {
+            t1 = t;
+            t -= (t - t0) * 0.5;
+        }
+    }
+
+    return null; // 如果未找到合适的参数t，返回null
+}
+
+// 示例用法
+const p0 = { x: 0, y: 0 };
+const p1 = { x: 50, y: 100 };
+const p2 = { x: 150, y: 100 };
+const p3 = { x: 200, y: 0 };
+
+const targetLength = 100;
+
+const t = findTForLength(p0, p1, p2, p3, targetLength);
+
+
 function distanceTo(p0: Point2D, p1: Point2D) {
     return Math.hypot(p0.x - p1.x, p0.y - p1.y);
 }
@@ -90,7 +148,8 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         if (!isClosed && (idx === 0 || idx === len - 1)) {
             return false;
         }
-        return curvePoint.mode === CurveMode.Straight && ((curvePoint.radius || 0) > 0 || fixedRadius > 0);
+        // return curvePoint.mode === CurveMode.Straight && ((curvePoint.radius || 0) > 0 || fixedRadius > 0);
+        return ((curvePoint.radius || 0) > 0 || fixedRadius > 0);
     }
 
     function pointEquals(p0x: number, p0y: number, p1x: number, p1y: number) {
@@ -115,10 +174,10 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         const nextIndex = idx === len - 1 ? 0 : idx + 1;
 
         const pre = points[preIndex];
-        if (pre.hasFrom && !pointEquals(pre.x, pre.y, pre.fromX || 0, pre.fromY || 0)) return;
+        // if (pre.hasFrom && !pointEquals(pre.x, pre.y, pre.fromX || 0, pre.fromY || 0)) return;
         const cur = points[idx];
         const next = points[nextIndex];
-        if (next.hasTo && !pointEquals(next.x, next.y, next.toX || 0, next.toY || 0)) return;
+        // if (next.hasTo && !pointEquals(next.x, next.y, next.toX || 0, next.toY || 0)) return;
         // 拿到三个点
         const prePoint = transformedPoints[preIndex]; //pre.point; // A
         const curPoint = transformedPoints[idx]; //cur.point; // B
@@ -141,8 +200,10 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         // 校准 dist，用户设置的 cornerRadius 可能太大，而实际显示 cornerRadius 受到 AB BC 两边长度限制。
         // 如果 B C 端点设置了 cornerRadius，可用长度减半
         const minDist = Math.min(
-            pre.mode === CurveMode.Straight && (pre.radius || fixedRadius) > 0 ? lenAB / 2 : lenAB,
-            next.mode === CurveMode.Straight && (next.radius || fixedRadius) > 0 ? lenBC / 2 : lenBC
+            // pre.mode === CurveMode.Straight && (pre.radius || fixedRadius) > 0 ? lenAB / 2 : lenAB,
+            // next.mode === CurveMode.Straight && (next.radius || fixedRadius) > 0 ? lenBC / 2 : lenBC
+            (pre.radius || fixedRadius) > 0 ? lenAB / 2 : lenAB,
+            (next.radius || fixedRadius) > 0 ? lenBC / 2 : lenBC
         );
 
         if (dist > minDist) {
@@ -195,7 +256,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         } else {
             const fromCurvePoint = points[fromIdx];
             startPt = transformedPoints[fromIdx]
-            startHandle = fromCurvePoint.hasFrom ?  transformPoint(fromCurvePoint.fromX || 0, fromCurvePoint.fromY || 0) : undefined;
+            startHandle = fromCurvePoint.hasFrom ? transformPoint(fromCurvePoint.fromX || 0, fromCurvePoint.fromY || 0) : undefined;
         }
 
         if (!hasBegin) {
@@ -233,6 +294,6 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
             bezierCurveTo(preHandle.x, preHandle.y, nextHandle.x, nextHandle.y, nextTangent.x, nextTangent.y);
         }
     }
-
+    console.log('--path--:', path);
     return path;
 }
