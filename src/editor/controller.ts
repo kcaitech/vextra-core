@@ -119,7 +119,7 @@ export interface AsyncBaseAction {
     executeRotate: (deg: number) => void;
     executeScale: (type: CtrlElementType, end: PageXY) => void;
     executeErScale: (type: CtrlElementType, scale: number) => void;
-    executeScaleDirectional: (type: CtrlElementType, end: PageXY) => void;
+    executeForLine: (index: number, end: PageXY) => void;
     close: () => undefined;
 }
 
@@ -437,6 +437,7 @@ export class Controller {
     public asyncRectEditor(shape: Shape, page: Page): AsyncBaseAction {
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
+        let need_update_frame = false;
         const executeRotate = (deg: number) => {
             status = Status.Pending;
             const newDeg = (shape.rotation || 0) + (deg || 0);
@@ -480,9 +481,17 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
-        const executeScaleDirectional = (type: CtrlElementType, end: PageXY) => {
+        const executeForLine = (index: number, end: PageXY) => {
+            status = Status.Pending;
+            need_update_frame = true;
+            pathEdit(api, page, shape as PathShape, index, end);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
         }
         const close = () => {
+            if (need_update_frame) {
+                update_frame_by_points(api, page, shape as PathShape);
+            }
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
@@ -490,7 +499,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { executeRotate, executeScale, executeErScale, executeScaleDirectional, close };
+        return { executeRotate, executeScale, executeErScale, executeForLine, close };
     }
 
     // 多对象的异步编辑
@@ -555,37 +564,6 @@ export class Controller {
             else this.__repo.rollback();
         }
         return { executeScale, executeRotate, close };
-    }
-
-    public asyncLineEditor(shape: Shape): AsyncLineAction {
-        const api = this.__repo.start("action", {});
-        const page = shape.getPage() as Page;
-        let status: Status = Status.Pending;
-        const execute = (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => {
-            status = Status.Pending;
-            if (shape.isLocked) return;
-            if (actionType === 'rotate') {
-                const newDeg = (shape.rotation || 0) + deg;
-                api.shapeModifyRotate(page, shape, newDeg);
-            } else {
-                if (type === CtrlElementType.LineStart) {
-                    adjustLT2(api, page, shape, end.x, end.y);
-                } else if (type === CtrlElementType.LineEnd) {
-                    adjustRB2(api, page, shape, end.x, end.y);
-                }
-            }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
-        }
-        const close = () => {
-            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
-                this.__repo.commit();
-            } else {
-                this.__repo.rollback();
-            }
-            return undefined;
-        }
-        return { execute, close }
     }
 
     // 图形位置移动
