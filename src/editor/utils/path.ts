@@ -186,6 +186,31 @@ export function split_cubic_bezier(p0: XY, p1: XY, p2: XY, p3: XY) {
         [p0123, p123, p23, p3]
     ];
 }
+function splitCubicBezierAtT(p0: XY, p1: XY, p2: XY, p3: XY, t: number) {
+    // Calculate midpoints
+    const p01 = interpolate(p0, p1, t);
+    const p12 = interpolate(p1, p2, t);
+    const p23 = interpolate(p2, p3, t);
+
+    // Calculate new midpoints
+    const p012 = interpolate(p01, p12, t);
+    const p123 = interpolate(p12, p23, t);
+
+    // Calculate final midpoint
+    const p0123 = interpolate(p012, p123, t);
+
+    return [
+        [p0, p01, p012, p0123],
+        [p0123, p123, p23, p3]
+    ];
+}
+
+function interpolate(p1: XY, p2: XY, t: number) {
+    return {
+        x: p1.x + (p2.x - p1.x) * t,
+        y: p1.y + (p2.y - p1.y) * t
+    }
+}
 function is_curve(p: CurvePoint, n: CurvePoint) {
     return p.hasFrom || n.hasTo;
 }
