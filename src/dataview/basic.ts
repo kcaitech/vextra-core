@@ -377,7 +377,7 @@ export class DataView extends Watchable {
         if (this.m_varsContainer) {
             this.m_varsContainer.forEach((c) => c.unwatch(this._datawatcher));
         }
-        this.m_children.forEach((c) => c.destory());
+        this.removeChilds(0, Number.MAX_VALUE).forEach((c) => c.destory());
         // --this.m_ctx.instanceCount;
         // remove first?
         this.onDestory();
