@@ -10,13 +10,6 @@ type CornerCalcInfo = {
     nextHandle: Point2D;
 };
 
-// 计算两点之间的距离
-function distance(p1: Point2D, p2: Point2D) {
-    const dx = p2.x - p1.x;
-    const dy = p2.y - p1.y;
-    return Math.sqrt(dx * dx + dy * dy);
-}
-
 // 计算三次贝塞尔曲线上某一点到起始点的长度
 function bezierLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, t: number) {
     const dx = 3 * (p1.x - p0.x);
@@ -56,16 +49,6 @@ function findTForLength(p0: Point2D, p1: Point2D, p2: Point2D, p3: Point2D, targ
 
     return null; // 如果未找到合适的参数t，返回null
 }
-
-// 示例用法
-const p0 = { x: 0, y: 0 };
-const p1 = { x: 50, y: 100 };
-const p2 = { x: 150, y: 100 };
-const p3 = { x: 200, y: 0 };
-
-const targetLength = 100;
-
-const t = findTForLength(p0, p1, p2, p3, targetLength);
 
 
 function distanceTo(p0: Point2D, p1: Point2D) {
@@ -251,7 +234,6 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
         // 获取起始点信息
         if (_isCornerRadius(fromIdx) && (cornerInfo = _getCornerInfo(fromIdx))) {
             const { nextTangent } = cornerInfo;
-
             startPt = nextTangent;
         } else {
             const fromCurvePoint = points[fromIdx];
@@ -294,6 +276,6 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
             bezierCurveTo(preHandle.x, preHandle.y, nextHandle.x, nextHandle.y, nextTangent.x, nextTangent.y);
         }
     }
-    console.log('--path--:', path);
     return path;
 }
+
