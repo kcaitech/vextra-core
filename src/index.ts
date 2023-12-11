@@ -8,6 +8,9 @@ export * from "./data/classes"
 export * from "./data/transact"
 export * from "./data/consts"
 
+// data view
+export * from "./dataview"
+
 // io
 export * from "./io"
 export * from "./io/import"

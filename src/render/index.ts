@@ -4,7 +4,7 @@
 //     await pathopinit();
 // }
 
-export { RenderTransform, isDiffRenderTransform } from "./basic"
+export { RenderTransform } from "./basic"
 
 export { render as renderFills } from "./fill";
 export { render as renderBorders } from "./border";
