@@ -34,6 +34,7 @@ export function render(h: Function,
     const frame = shape.frame;
     ab_props.width = frame.width, ab_props.height = frame.height;
     ab_props.viewBox = `0 0 ${frame.width} ${frame.height}`;
+    // 
     // background 背景色垫底
     const fills = shape.style.fills;
     if (fills && fills.length) {
@@ -45,13 +46,15 @@ export function render(h: Function,
             }))
         }
     }
+
     childs.push(...gR(h, shape, comsMap, undefined, varsContainer)); // 后代元素放中间
-    const b_len = shape.style.borders.length;
+
     const path = shape.getPath().toString();
     if (shape.isNoTransform()) {
         const shadows = shape.style.shadows;
         const shape_id = shape.id.slice(0, 4);
         const shadow = shadowR(h, shape_id, shape, path, varsContainer, comsMap);
+        const b_len = shape.style.borders.length;
         if (b_len) {
             const props: any = {}
             if (reflush) props.reflush = reflush;
@@ -97,13 +100,16 @@ export function render(h: Function,
         props.style = style;
         if (reflush) props.reflush = reflush;
         ab_props.x = 0, ab_props.y = 0;
+
+        // shadow
         const shadows = shape.style.shadows;
-        const ex_props = Object.assign({}, props);
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, shape, path, varsContainer, comsMap);
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer, comsMap); // todo 
+        const b_len = shape.style.borders.length;
         if (b_len) {
             const path = shape.getPath().toString();
             if (shadow.length) {
+                const ex_props = Object.assign({}, props);
                 delete props.style;
                 delete props.transform;
                 const inner_url = innerShadowId(shape_id, shadows);
@@ -115,6 +121,7 @@ export function render(h: Function,
             }
         } else {
             if (shadow.length) {
+                const ex_props = Object.assign({}, props);
                 delete props.style;
                 delete props.transform;
                 const inner_url = innerShadowId(shape_id, shadows);

@@ -28,8 +28,9 @@ export class ArtboradView extends GroupShapeView {
     //     return this.m_el?.outerHTML || "";
     // }
 
-    protected renderProps(): { [key: string]: string } {
-        const ab_props: { [key: string]: string } = {
+    protected renderProps(): { [key: string]: string | number } {
+        const shape = this.m_data;
+        const props: { [key: string]: string | number } = {
             version: "1.1",
             xmlns: "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
@@ -37,10 +38,22 @@ export class ArtboradView extends GroupShapeView {
             preserveAspectRatio: "xMinYMin meet",
             overflow: "hidden"
         }
-        return ab_props;
+        const contextSettings = shape.style.contextSettings;
+        if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+            props.opacity = contextSettings.opacity;
+        }
+
+        const frame = shape.frame;
+        props.width = frame.width;
+        props.height = frame.height;
+        props.x = frame.x;
+        props.y = frame.y;
+        props.viewBox = `0 0 ${frame.width} ${frame.height}`;
+
+        return props;
     }
 
-    render(): { tag: string; attr: { [key: string]: string; }; childs: (ShapeView | EL)[]; } | undefined {
+    render(): { tag: string; attr: { [key: string]: string | number; }; childs: (ShapeView | EL)[]; } | undefined {
         const r = super.render();
         if (r) {
             r.tag = "svg";

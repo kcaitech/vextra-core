@@ -131,9 +131,70 @@ export class DViewCtx {
     // 缩放监听
 
     // 先更新数据再绘制
-    datachangeset: Map<string, DataView> = new Map();
+    protected datachangeset: Map<string, DataView> = new Map();
     // 要由上往下更新
-    dirtyset: Map<string, DataView> = new Map();
+    protected dirtyset: Map<string, DataView> = new Map();
+
+    setUpdate(v: DataView) {
+        this.datachangeset.set(v.id(), v);
+        this._continueLoop();
+    }
+    setDirty(v: DataView) {
+        this.dirtyset.set(v.id(), v);
+        this._continueLoop();
+    }
+
+    removeUpdate(vid: string) {
+        return this.datachangeset.delete(vid);
+    }
+    removeDirty(vid: string) {
+        return this.dirtyset.delete(vid);
+    }
+
+    /**
+     * return: if continue
+     */
+    protected aloop(): boolean {
+        // update
+        // render
+
+        // return (this.datachangeset.size > 0 || this.dirtyset.size > 0);
+        return false;
+    }
+
+    private _continueLoop() {
+        if (this.__looping && !this.__toId) this._startLoop();
+    }
+
+    private _startLoop() {
+        const run = () => {
+            if (!this.__looping) return;
+            if (this.aloop()) {
+                this.__toId = setTimeout(run, 0);
+            }
+            else {
+                this.__toId = undefined;
+            }
+        }
+        this.__toId = setTimeout(run, 0);
+    }
+
+    private __looping: boolean = false;
+    private __toId: any;
+    loop() {
+        if (this.__looping) return;
+        this.__looping = true;
+        this._startLoop();
+    }
+
+    stopLoop() {
+        if (!this.__looping) return;
+        this.__looping = false;
+        if (this.__toId) {
+            clearTimeout(this.__toId);
+            this.__toId = undefined;
+        }
+    }
 }
 
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
@@ -197,7 +258,7 @@ export class DataView extends Watchable {
     }
 
     private _datawatcher(...args: any[]) {
-        this.m_ctx.datachangeset.set(this.id(), this);
+        this.m_ctx.setUpdate(this);
         this.onDataChange(...args);
         super.notify(...args);
     }
@@ -249,7 +310,7 @@ export class DataView extends Watchable {
     }
 
     // 
-    render(): { tag: string, attr: { [key: string]: string }, childs: (DataView | EL)[] } | undefined {
+    render(): { tag: string, attr: { [key: string]: string | number }, childs: (DataView | EL)[] } | undefined {
         throw new Error('not implement');
     }
 
@@ -366,8 +427,8 @@ export class DataView extends Watchable {
         if (this.m_parent) throw new Error("parent is not null");
         if (this.m_isdistroyed) throw new Error("already distroyed");
         const tid = this.id();
-        this.m_ctx.datachangeset.delete(tid);
-        this.m_ctx.dirtyset.delete(tid);
+        this.m_ctx.removeUpdate(tid);
+        this.m_ctx.removeDirty(tid);
 
         // if (this.m_el) {
         //     this.m_el.remove();

@@ -216,7 +216,7 @@ export class ShapeView extends DataView {
         if (args.includes('borders')) this.m_borders = undefined;
     }
 
-    private _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
+    protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
         if (!this.m_varsContainer) return;
         const _vars = findOverrideAndVar(this.m_data, ot, this.m_varsContainer);
         if (!_vars) return;
@@ -316,7 +316,7 @@ export class ShapeView extends DataView {
 
         if (props.data.id !== this.m_data.id) throw new Error('id not match');
         let tid = this.id();
-        this.m_ctx.datachangeset.delete(tid); // remove from changeset
+        this.m_ctx.removeUpdate(tid); // remove from changeset
 
         // check
         const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
@@ -327,8 +327,6 @@ export class ShapeView extends DataView {
             return;
         }
 
-        this.m_ctx.dirtyset.set(tid, this);
-
         if (diffTransform) {
             // update transform
             this.m_transx = props.transx;
@@ -338,12 +336,12 @@ export class ShapeView extends DataView {
             this.m_varsContainer = props.varsContainer;
             const _id = this.id();
             if (_id !== tid) {
-                this.m_ctx.dirtyset.delete(tid);
+                this.m_ctx.removeDirty(tid);
                 tid = _id;
             }
         }
         // add to dirty
-        this.m_ctx.dirtyset.set(tid, this);
+        this.m_ctx.setDirty(this);
 
         const shape = this.m_data;
         const transform = props.transx;
@@ -525,7 +523,7 @@ export class ShapeView extends DataView {
         return this.m_borders;
     }
 
-    protected renderProps(): { [key: string]: string } {
+    protected renderProps(): { [key: string]: string | number } {
         const shape = this.m_data;
         const frame = this.getFrame();
         // const path = this.getPath(); // cache
@@ -551,17 +549,18 @@ export class ShapeView extends DataView {
         }
         return props;
     }
+
     renderChilds(): ShapeView[] {
         // throw new Error("not implemented");
         return [];
     }
 
-    private m_save_render: { tag: string, attr: { [key: string]: string }, childs: (ShapeView | EL)[] } | undefined;
+    private m_save_render: { tag: string, attr: { [key: string]: string | number }, childs: (ShapeView | EL)[] } | undefined;
 
-    render(): { tag: string, attr: { [key: string]: string }, childs: (ShapeView | EL)[] } | undefined {
+    render(): { tag: string, attr: { [key: string]: string | number }, childs: (ShapeView | EL)[] } | undefined {
 
         const tid = this.id();
-        const isDirty = this.m_ctx.dirtyset.delete(tid);
+        const isDirty = this.m_ctx.removeDirty(tid);
         if (!isDirty) {
             return this.m_save_render;
         }
