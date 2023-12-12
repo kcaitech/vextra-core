@@ -1,7 +1,5 @@
-import { DataView } from "./basic";
 import { EL } from "./el";
 import { GroupShapeView } from "./groupshape";
-import { ShapeView } from "./shape";
 
 export class ArtboradView extends GroupShapeView {
 
@@ -28,9 +26,9 @@ export class ArtboradView extends GroupShapeView {
     //     return this.m_el?.outerHTML || "";
     // }
 
-    protected renderProps(): { [key: string]: string | number } {
+    protected renderProps(): { [key: string]: string } {
         const shape = this.m_data;
-        const props: { [key: string]: string | number } = {
+        const props: any = {
             version: "1.1",
             xmlns: "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
@@ -53,10 +51,10 @@ export class ArtboradView extends GroupShapeView {
         return props;
     }
 
-    render(): { tag: string; attr: { [key: string]: string | number; }; childs: (ShapeView | EL)[]; } | undefined {
+    render(): number {
         const r = super.render();
         if (r) {
-            r.tag = "svg";
+            this.tag = "svg";
         }
         return r;
     }

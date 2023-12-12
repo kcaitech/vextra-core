@@ -1,9 +1,11 @@
 import { GroupShape, Shape, ShapeFrame, ShapeType } from "../data/classes";
 import { ShapeView } from "./shape";
 import { matrix2parent } from "./shape";
-import { DataView, VarsContainer } from "./basic";
 import { RenderTransform } from "../render";
 import { Matrix } from "../basic/matrix";
+import { EL } from "./el";
+import { DataView } from "./view";
+import { VarsContainer } from "./viewctx";
 
 export class GroupShapeView extends ShapeView {
 
@@ -19,7 +21,7 @@ export class GroupShapeView extends ShapeView {
             const comsMap = this.m_ctx.comsMap;
             const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
             const props = { data: c };
-            const ins = new Com(this.m_ctx, props);
+            const ins = new Com(this.m_ctx, props) as DataView;
             ins.update(props, true);
             this.addChild(ins);
         });
@@ -31,11 +33,9 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
-    renderChilds(): ShapeView[] {
-        const childs = this.m_children as ShapeView[];
-        // const ret: VDom[] = [];
-        childs.forEach((c) => c.render())
-        // return ret;
+    renderChilds(): EL[] {
+        const childs = this.m_children;
+        childs.forEach((c) =>  c.render())
         return childs;
     }
 
@@ -45,7 +45,7 @@ export class GroupShapeView extends ShapeView {
         if (!cdom) {
             const comsMap = this.m_ctx.comsMap;
             const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
-            cdom = new Com(this.m_ctx, props);
+            cdom = new Com(this.m_ctx, props) as DataView;
             cdom.update(props, true);
             this.addChild(cdom, idx);
             return;

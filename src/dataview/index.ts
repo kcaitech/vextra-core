@@ -13,3 +13,5 @@ export * from "./tablecell";
 export * from "./textshape";
 export * from "./page"
 export * from "./el"
+export * from "./view"
+export * from "./viewctx"

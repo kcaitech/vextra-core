@@ -1,9 +1,11 @@
 import { RenderTransform, renderBorders, renderFills } from "../render";
 import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path } from "../data/classes";
-import { PropsType, DataView, findOverrideAndVar } from "./basic";
-import { EL, elh, recycleELArr } from "./el";
+import { findOverrideAndVar } from "./basic";
+import { EL, elh } from "./el";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
+import { DataView } from "./view"
+import { PropsType } from "./viewctx";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -280,11 +282,11 @@ export class ShapeView extends DataView {
             _frame.height = frame.height;
             this.m_path = undefined; // need update
             if (this.m_borders) {
-                recycleELArr(this.m_borders);
+                // recycleELArr(this.m_borders);
                 this.m_borders = undefined;
             }
             if (this.m_fills) {
-                recycleELArr(this.m_fills);
+                // recycleELArr(this.m_fills);
                 this.m_fills = undefined;
             }
         }
@@ -295,11 +297,11 @@ export class ShapeView extends DataView {
             this.m_fixedRadius = radius;
             this.m_path = undefined; // need update
             if (this.m_borders) {
-                recycleELArr(this.m_borders);
+                // recycleELArr(this.m_borders);
                 this.m_borders = undefined;
             }
             if (this.m_fills) {
-                recycleELArr(this.m_fills);
+                // recycleELArr(this.m_fills);
                 this.m_fills = undefined;
             }
         }
@@ -523,7 +525,7 @@ export class ShapeView extends DataView {
         return this.m_borders;
     }
 
-    protected renderProps(): { [key: string]: string | number } {
+    protected renderProps(): { [key: string]: string } {
         const shape = this.m_data;
         const frame = this.getFrame();
         // const path = this.getPath(); // cache
@@ -550,24 +552,26 @@ export class ShapeView extends DataView {
         return props;
     }
 
-    renderChilds(): ShapeView[] {
+    renderChilds(): EL[] {
         // throw new Error("not implemented");
         return [];
     }
 
-    private m_save_render: { tag: string, attr: { [key: string]: string | number }, childs: (ShapeView | EL)[] } | undefined;
+    // private m_save_render: EL | undefined;
 
-    render(): { tag: string, attr: { [key: string]: string | number }, childs: (ShapeView | EL)[] } | undefined {
+    protected m_render_version: number = 0;
+
+    render(): number {
 
         const tid = this.id();
         const isDirty = this.m_ctx.removeDirty(tid);
         if (!isDirty) {
-            return this.m_save_render;
+            return this.m_render_version;
         }
 
         if (!this.isVisible()) {
-            this.m_save_render = undefined;
-            return;
+            this.reset("");
+            return ++this.m_render_version;
         }
 
         // fill
@@ -596,7 +600,7 @@ export class ShapeView extends DataView {
         //     return h("g", props, childs);
         // }
 
-        this.m_save_render = { tag: "g", attr: props, childs: (fills as (ShapeView | EL)[]).concat(childs, borders) }
-        return this.m_save_render;
+        this.reset("g", props, [...fills, ...childs, ...borders]);
+        return ++this.m_render_version;
     }
 }

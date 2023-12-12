@@ -11,6 +11,7 @@ const _el_instance: EL[] = [];
 export class EL {
     // el?: HTMLElement | SVGElement;
     // _id: number;
+    // kid? : string; // 关键节点,回收整棵树时到些打住
     tag: string;
     attr: { [key: string]: string };
     childs: EL[];
@@ -29,29 +30,41 @@ export class EL {
     //     return this._id;
     // }
 
-    private reset(tag: string, attr?: { [key: string]: string }, childs?: EL | EL[]) {
+    public reset(tag: string, attr?: { [key: string]: string }, childs?: EL | EL[]) {
         // this._id = id;
         this.tag = tag;
         this.attr = attr || {};
         this.childs = childs ? (Array.isArray(childs) ? childs : [childs]) : [];
     }
 
-    private constructor(tag: string, attr?: { [key: string]: string }, childs?: EL | EL[]) {
+    constructor(tag: string, attr?: { [key: string]: string }, childs?: EL | EL[]) {
         // this._id = id;
         this.tag = tag;
         this.attr = attr || {};
         this.childs = childs ? (Array.isArray(childs) ? childs : [childs]) : [];
     }
 
-    recycle() {
-        this.childs.length = 0;
-        _el_instance.push(this);
+    get isViewNode() {
+        return false;
+    }
+
+    recycle(recycleFun: (el: EL) => void) {
+        // 不能回收,有缓存复用
+        // for (let i = 0, len = this.childs.length; i < len; i++) {
+        //     const c = this.childs[i];
+        //     if (!c.kid) {
+        //         c.recycle(recycleFun);
+        //     }
+        // }
+        // recycleFun(this);
+        // this.childs.length = 0;
+        // _el_instance.push(this);
     }
 }
 
-export function recycleELArr(arr: EL[]) {
+export function recycleELArr(arr: EL[], recycleFun: (el: EL) => void) {
     arr.forEach(el => {
-        el.recycle();
+        el.recycle(recycleFun);
     });
 }
 
