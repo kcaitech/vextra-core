@@ -17,14 +17,15 @@ export class GroupShapeView extends ShapeView {
         super.onCreate();
         // build childs
         const childs = this.getDataChilds();
-        childs.forEach((c) => {
+        const childsView: DataView[] = childs.map((c) => {
             const comsMap = this.m_ctx.comsMap;
             const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
             const props = { data: c };
             const ins = new Com(this.m_ctx, props) as DataView;
             ins.update(props, true);
-            this.addChild(ins);
-        });
+            return ins;
+        })
+        if (childsView.length > 0) this.addChilds(childsView);
     }
 
     onDataChange(...args: any[]): void {
@@ -33,7 +34,8 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
-    renderChilds(): EL[] {
+    // childs
+    renderContents(): EL[] {
         const childs = this.m_children;
         childs.forEach((c) =>  c.render())
         return childs;

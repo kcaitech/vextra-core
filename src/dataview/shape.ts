@@ -552,7 +552,7 @@ export class ShapeView extends DataView {
         return props;
     }
 
-    renderChilds(): EL[] {
+    renderContents(): EL[] {
         // throw new Error("not implemented");
         return [];
     }
@@ -577,7 +577,7 @@ export class ShapeView extends DataView {
         // fill
         const fills = this.renderFills() || []; // cache
         // childs
-        const childs = this.renderChilds(); // VDomArray
+        const childs = this.renderContents(); // VDomArray
         // border
         const borders = this.renderBorders() || []; // ELArray
 
