@@ -983,6 +983,8 @@ export class ShapeEditor {
             console.log('!(this.__shape instanceof PathShape)');
             return result;
         }
+
+        // 排序 
         indexes = indexes.sort((a, b) => {
             if (a > b) {
                 return 1;
@@ -990,10 +992,12 @@ export class ShapeEditor {
                 return -1;
             }
         });
+
         if (!indexes.length) {
             console.log('!indexes.length');
             return result;
         }
+        
         try {
             const api = this.__repo.start("deleteShape", {});
             for (let i = indexes.length - 1; i > -1; i--) {
