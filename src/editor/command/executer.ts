@@ -291,7 +291,10 @@ export class CMDExecuter {
         if (op.type !== OpType.ArrayInsert) return;
         const shapeId = op.targetId;
         const shape = (shapeId[0] === page.id) ? page : page.getTarget(shapeId);
-        if (!shape) throw new Error(`shape not find: ${shapeId}`);
+        if (!shape) {
+            console.log("shape not find", shapeId)
+            return;
+        }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             const fill = importFill(JSON.parse(cmd.data))
@@ -325,7 +328,10 @@ export class CMDExecuter {
         const op = cmd.ops[0]
         if (op.type !== OpType.ArrayRemove) return;
         const shape = (op.targetId[0] === page.id) ? page : page.getTarget(op.targetId);
-        if (!shape) throw new Error("not find target:" + op.targetId);
+        if (!shape) {
+            console.log("shape not find", op.targetId)
+            return;
+        }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             const fills = shape instanceof Shape ? shape.style.fills : shape.value;
@@ -362,11 +368,13 @@ export class CMDExecuter {
             return;
         }
         const shape = (_op.targetId[0] === page.id) ? page : page.getTarget(_op.targetId);
-        if (!shape) throw new Error("not find target:" + _op.targetId);
-
         // if (!(shape instanceof Shape)) {
         //     throw new Error();
         // }
+        if (!shape) {
+            console.log("shape not find", _op.targetId)
+            return;
+        }
 
         const op = _op as IdOpSet;
         const arrayAttr = cmd.arrayAttr;
@@ -526,7 +534,10 @@ export class CMDExecuter {
         const op0 = cmd.ops[0]
         const op1 = cmd.ops[1]
         const shape = (op0.targetId[0] === page.id) ? page : page.getTarget(op0.targetId);
-        if (!shape) throw new Error("not find target:" + op0.targetId);
+        if (!shape) {
+            console.log("shape not find", op0.targetId)
+            return;
+        }
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
             if (op0 && op1 && op0.type === OpType.ArrayRemove && op1.type === OpType.ArrayInsert) {

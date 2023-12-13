@@ -37,7 +37,10 @@ export class CMDHandler {
         const page = document.pagesMgr.getSync(pageId)
         if (!page) return;
         const shape = (op.targetId[0] === page.id) ? page : page.getTarget(op.targetId);
-        if (!shape) throw new Error("not find target:" + op.targetId);
+        if (!shape) {
+            console.log("shape not find", op.targetId)
+            return;
+        }
 
         const _op = op as IdOpSet;
         const value = cmd.value;
