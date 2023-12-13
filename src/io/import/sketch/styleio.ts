@@ -3,7 +3,6 @@ import {
     Border,
     BorderOptions,
     BorderStyle,
-    Color,
     ContextSettings,
     Fill,
     Gradient,
@@ -11,7 +10,7 @@ import {
     Stop,
     Style
 } from "../../../data/style";
-import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "../../../data/classes"
+import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D, Color } from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
 import { uuid } from "../../../basic/uuid";
 import { IJSON, LoadContext } from "./basic";
