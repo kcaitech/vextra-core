@@ -525,7 +525,7 @@ export class CMDExecuter {
         if (!page) return;
         const op0 = cmd.ops[0]
         const op1 = cmd.ops[1]
-        const shape = page.getTarget(op0.targetId);
+        const shape = (op0.targetId[0] === page.id) ? page : page.getTarget(op0.targetId);
         if (!shape) throw new Error("not find target:" + op0.targetId);
         const arrayAttr = cmd.arrayAttr;
         if (arrayAttr === FILLS_ID) {
