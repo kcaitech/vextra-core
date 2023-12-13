@@ -1,5 +1,6 @@
-import { EL } from "./el";
+import { elh } from "./el";
 import { GroupShapeView } from "./groupshape";
+import { renderFills } from "../render";
 
 export class ArtboradView extends GroupShapeView {
 
@@ -25,6 +26,13 @@ export class ArtboradView extends GroupShapeView {
     // toSVGString(): string {
     //     return this.m_el?.outerHTML || "";
     // }
+
+    protected renderFills() {
+        if (!this.m_fills) {
+            this.m_fills = renderFills(elh, this.getFills(), this.getFrame(), this.getPath());
+        }
+        return this.m_fills;
+    }
 
     protected renderProps(): { [key: string]: string } {
         const shape = this.m_data;

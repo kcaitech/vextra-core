@@ -14,6 +14,8 @@ export interface PropsType {
 
 interface DataView {
     id(): string;
+    update(props?: PropsType, force?: boolean): void;
+    render(): number;
 }
 
 export interface ComType {
@@ -52,42 +54,50 @@ export class DViewCtx {
     protected aloop(): boolean {
         // update
         // render
+        // todo
+        this.datachangeset.forEach((v, k) => {
+            v.update();
+        });
 
-        // return (this.datachangeset.size > 0 || this.dirtyset.size > 0);
-        return false;
+        this.dirtyset.forEach((v, k) => {
+            v.render();
+        });
+
+        if (this.datachangeset.size || this.dirtyset.size) {
+            console.log("loop not empty ", this.datachangeset.size, this.dirtyset.size);
+        }
+
+        return (this.datachangeset.size > 0 || this.dirtyset.size > 0);
     }
 
     private _continueLoop() {
-        if (this.__looping && !this.__toId) this._startLoop();
+        if (this.__looping && !this.__inframe && this.requestAnimationFrame) this._startLoop(this.requestAnimationFrame);
     }
 
-    private _startLoop() {
+    private _startLoop(requestAnimationFrame: (run: () => void) => void) {
         const run = () => {
+            this.__inframe = false;
             if (!this.__looping) return;
             if (this.aloop()) {
-                this.__toId = setTimeout(run, 0);
-            }
-            else {
-                this.__toId = undefined;
+                requestAnimationFrame(run);
+                this.__inframe = true;
             }
         }
-        this.__toId = setTimeout(run, 0);
+        requestAnimationFrame(run);
+        this.__inframe = true;
     }
 
     private __looping: boolean = false;
-    private __toId: any;
-    loop() {
+    private __inframe: boolean = false;
+    private requestAnimationFrame?: (run: () => void) => void;
+    loop(requestAnimationFrame: (run: () => void) => void) {
+        this.requestAnimationFrame = requestAnimationFrame;
         if (this.__looping) return;
         this.__looping = true;
-        this._startLoop();
+        this._startLoop(requestAnimationFrame);
     }
 
     stopLoop() {
-        if (!this.__looping) return;
         this.__looping = false;
-        if (this.__toId) {
-            clearTimeout(this.__toId);
-            this.__toId = undefined;
-        }
     }
 }

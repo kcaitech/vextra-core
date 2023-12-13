@@ -30,14 +30,46 @@ export class GroupShapeView extends ShapeView {
 
     onDataChange(...args: any[]): void {
         if (args.includes('childs')) {
-            // relayout??
+
+            // update children
+            const reuse = new Map<string, DataView>();
+            this.m_children.forEach((c) => {
+                reuse.set(c.m_data.id, c);
+            });
+
+            const childs = this.getDataChilds();
+            for (let i = 0; i < childs.length; i++) {
+                const c = childs[i];
+                const cdom = reuse.get(c.id);
+                if (cdom) {
+                    reuse.delete(c.id);
+                    this.moveChild(cdom, i);
+                } else {
+                    const comsMap = this.m_ctx.comsMap;
+                    const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
+                    const props = { data: c };
+                    const ins = new Com(this.m_ctx, props) as DataView;
+                    ins.update(props, true);
+
+                    this.addChild(ins, i);
+                }
+            }
+
+            if (this.m_children.length > childs.length) {
+                const count = this.m_children.length - childs.length;
+                this.removeChilds(childs.length, count);
+            }
         }
+    }
+
+    protected renderFills(): EL[] {
+        return []; // group无fill
     }
 
     // childs
     renderContents(): EL[] {
         const childs = this.m_children;
-        childs.forEach((c) =>  c.render())
+        childs.forEach((c) => c.render())
         return childs;
     }
 

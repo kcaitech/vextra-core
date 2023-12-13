@@ -39,6 +39,9 @@ export class DataView extends Watchable(EL) {
     get isViewNode() {
         return true;
     }
+    get nodeCount() {
+        return this.m_nodeCount;
+    }
 
     private _datawatcher(...args: any[]) {
         this.m_ctx.setUpdate(this);
@@ -89,7 +92,8 @@ export class DataView extends Watchable(EL) {
     //     if (this.m_el && this.m_el.parentNode) this.m_el.remove();
     // }
 
-    update(props: PropsType, force?: boolean) {
+    update(props?: PropsType, force?: boolean) {
+        throw new Error('not implemented');
     }
 
     // 
