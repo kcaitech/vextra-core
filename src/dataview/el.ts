@@ -8,12 +8,14 @@ const _el_instance: EL[] = [];
 //     _el_instance.push(el);
 // }
 
+export type ELAttr = { [key: string]: string | { [key: string]: string } };
+
 export class EL {
     // el?: HTMLElement | SVGElement;
     // _id: number;
     // kid? : string; // 关键节点,回收整棵树时到些打住
     tag: string;
-    attr: { [key: string]: string | { [key: string]: string } };
+    attr: ELAttr;
     childs: string | EL[];
 
     static make(tag: string, attr?: { [key: string]: string }, childs?: string | EL | EL[]): EL {
@@ -30,14 +32,14 @@ export class EL {
     //     return this._id;
     // }
 
-    public reset(tag: string, attr?: { [key: string]: string }, childs?: string | EL | EL[]) {
+    public reset(tag: string, attr?: ELAttr, childs?: string | EL | EL[]) {
         // this._id = id;
         this.tag = tag;
         this.attr = attr || {};
         this.childs = childs ? (Array.isArray(childs) ? childs : (typeof childs === 'string' ? childs : [childs])) : [];
     }
 
-    constructor(tag: string, attr?: { [key: string]: string }, childs?: string | EL | EL[]) {
+    constructor(tag: string, attr?: ELAttr, childs?: string | EL | EL[]) {
         // this._id = id;
         this.tag = tag;
         this.attr = attr || {};

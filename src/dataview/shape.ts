@@ -200,7 +200,8 @@ export class ShapeView extends DataView {
 
     m_fills?: EL[];
     m_borders?: EL[];
-    m_path?: string;
+    m_path?: Path;
+    m_pathstr?: string;
 
     m_frame?: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
     m_hflip?: boolean;
@@ -213,7 +214,10 @@ export class ShapeView extends DataView {
     }
 
     onDataChange(...args: any[]): void {
-        if (args.includes('points')) this.m_path = undefined;
+        if (args.includes('points') || (this.m_fixedRadius || 0) !== (this.m_data.fixedRadius || 0)) {
+            this.m_path = undefined;
+            this.m_pathstr = undefined;
+        }
         if (args.includes('fills')) this.m_fills = undefined;
         if (args.includes('borders')) this.m_borders = undefined;
     }
@@ -228,7 +232,12 @@ export class ShapeView extends DataView {
         }
     }
 
-    getFrame() {
+    matrix2Parent(): Matrix {
+        const frame = this.getFrame();
+        return matrix2parent(frame.x, frame.y, frame.width, frame.height, this.m_rotate || 0, !!this.m_hflip, !!this.m_vflip);
+    }
+
+    getFrame(): ShapeFrame {
         return this.m_frame!;
     }
 
@@ -252,8 +261,13 @@ export class ShapeView extends DataView {
     }
 
     getPath() {
+        if (this.m_pathstr) return this.m_pathstr;
+        this.m_pathstr = this.getPath2().toString(); // todo fixedRadius
+        return this.m_pathstr;
+    }
+    getPath2() {
         if (this.m_path) return this.m_path;
-        this.m_path = this.m_data.getPathOfFrame(this.getFrame(), this.m_fixedRadius).toString(); // todo fixedRadius
+        this.m_path = this.m_data.getPathOfFrame(this.getFrame(), this.m_fixedRadius); // todo fixedRadius
         return this.m_path;
     }
 
@@ -280,7 +294,8 @@ export class ShapeView extends DataView {
             _frame.y = frame.y;
             _frame.width = frame.width;
             _frame.height = frame.height;
-            this.m_path = undefined; // need update
+            this.m_pathstr = undefined; // need update
+            this.m_path = undefined;
             if (this.m_borders) {
                 // recycleELArr(this.m_borders);
                 this.m_borders = undefined;
@@ -295,7 +310,8 @@ export class ShapeView extends DataView {
         this.m_rotate = rotate;
         if ((this.m_fixedRadius || 0) !== (radius || 0)) {
             this.m_fixedRadius = radius;
-            this.m_path = undefined; // need update
+            this.m_pathstr = undefined; // need update
+            this.m_path = undefined;
             if (this.m_borders) {
                 // recycleELArr(this.m_borders);
                 this.m_borders = undefined;

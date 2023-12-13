@@ -20,6 +20,6 @@ export class PathShapeView extends ShapeView {
 
         const points = transformPoints(shape.points, m); // 新的points
         const frame = this.getFrame();
-        this.m_path = new Path(parsePath(points, shape.isClosed, 0, 0, frame.width, frame.height, shape.fixedRadius)).toString()
+        this.m_pathstr = new Path(parsePath(points, shape.isClosed, 0, 0, frame.width, frame.height, shape.fixedRadius)).toString()
     }
 }
