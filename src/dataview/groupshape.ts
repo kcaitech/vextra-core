@@ -199,13 +199,14 @@ export class GroupShapeView extends ShapeView {
 
     m_save_isboolgroup: boolean | undefined;
 
-    updateChildren(): void {
+    protected updateChildren(): void {
         // update children
         const reuse = new Map<string, DataView>();
         this.m_children.forEach((c) => {
             reuse.set(c.m_data.id, c);
         });
 
+        const comsMap = this.m_ctx.comsMap;
         const childs = this.getDataChilds();
         for (let i = 0; i < childs.length; i++) {
             const c = childs[i];
@@ -214,9 +215,8 @@ export class GroupShapeView extends ShapeView {
                 reuse.delete(c.id);
                 this.moveChild(cdom, i);
             } else {
-                const comsMap = this.m_ctx.comsMap;
                 const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
-                const props = { data: c };
+                const props = { data: c, transx: this.m_transx, varsContainer: this.m_varsContainer };
                 const ins = new Com(this.m_ctx, props) as DataView;
                 ins.onCreate();
 
@@ -267,7 +267,7 @@ export class GroupShapeView extends ShapeView {
     }
 
     // childs
-    renderContents(): EL[] {
+    protected renderContents(): EL[] {
         if ((this.m_data as GroupShape).isBoolOpShape) {
             // const d = this.getBoolPath();
             // const props: any = {};

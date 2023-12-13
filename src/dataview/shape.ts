@@ -569,7 +569,7 @@ export class ShapeView extends DataView {
         return props;
     }
 
-    renderContents(): EL[] {
+    protected renderContents(): EL[] {
         // throw new Error("not implemented");
         return [];
     }

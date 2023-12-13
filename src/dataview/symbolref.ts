@@ -91,6 +91,7 @@ export class SymbolRefView extends GroupShapeView {
         this.m_children.forEach((c) => {
             reuse.set(c.m_data.id, c);
         });
+        const comsMap = this.m_ctx.comsMap;
         const childs = this.getDataChilds();
         for (let i = 0; i < childs.length; i++) {
             const c = childs[i];
@@ -101,7 +102,6 @@ export class SymbolRefView extends GroupShapeView {
                 const props = { data: c, transx, varsContainer };
                 cdom.update(props);
             } else {
-                const comsMap = this.m_ctx.comsMap;
                 const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
                 const props = { data: c, transx, varsContainer };
                 const ins = new Com(this.m_ctx, props) as DataView;
