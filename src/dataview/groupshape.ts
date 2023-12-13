@@ -189,9 +189,9 @@ export class GroupShapeView extends ShapeView {
         const childsView: DataView[] = childs.map((c) => {
             const comsMap = this.m_ctx.comsMap;
             const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
-            const props = { data: c };
+            const props = { data: c, transx: this.m_transx, varsContainer: this.m_varsContainer };
             const ins = new Com(this.m_ctx, props) as DataView;
-            ins.update(props, true);
+            ins.onCreate();
             return ins;
         })
         if (childsView.length > 0) this.addChilds(childsView);
@@ -199,37 +199,41 @@ export class GroupShapeView extends ShapeView {
 
     m_save_isboolgroup: boolean | undefined;
 
+    updateChildren(): void {
+        // update children
+        const reuse = new Map<string, DataView>();
+        this.m_children.forEach((c) => {
+            reuse.set(c.m_data.id, c);
+        });
+
+        const childs = this.getDataChilds();
+        for (let i = 0; i < childs.length; i++) {
+            const c = childs[i];
+            const cdom = reuse.get(c.id);
+            if (cdom) {
+                reuse.delete(c.id);
+                this.moveChild(cdom, i);
+            } else {
+                const comsMap = this.m_ctx.comsMap;
+                const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
+                const props = { data: c };
+                const ins = new Com(this.m_ctx, props) as DataView;
+                ins.onCreate();
+
+                this.addChild(ins, i);
+            }
+        }
+
+        if (this.m_children.length > childs.length) {
+            const count = this.m_children.length - childs.length;
+            this.removeChilds(childs.length, count);
+        }
+    }
+
     onDataChange(...args: any[]): void {
         if (args.includes('childs')) {
 
-            // update children
-            const reuse = new Map<string, DataView>();
-            this.m_children.forEach((c) => {
-                reuse.set(c.m_data.id, c);
-            });
-
-            const childs = this.getDataChilds();
-            for (let i = 0; i < childs.length; i++) {
-                const c = childs[i];
-                const cdom = reuse.get(c.id);
-                if (cdom) {
-                    reuse.delete(c.id);
-                    this.moveChild(cdom, i);
-                } else {
-                    const comsMap = this.m_ctx.comsMap;
-                    const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
-                    const props = { data: c };
-                    const ins = new Com(this.m_ctx, props) as DataView;
-                    ins.update(props, true);
-
-                    this.addChild(ins, i);
-                }
-            }
-
-            if (this.m_children.length > childs.length) {
-                const count = this.m_children.length - childs.length;
-                this.removeChilds(childs.length, count);
-            }
+            this.updateChildren();
         }
         else if ((this.m_save_isboolgroup) !== (this.m_data as GroupShape).isBoolOpShape) {
             this.m_path = undefined;
@@ -287,7 +291,7 @@ export class GroupShapeView extends ShapeView {
             const comsMap = this.m_ctx.comsMap;
             const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
             cdom = new Com(this.m_ctx, props) as DataView;
-            cdom.update(props, true);
+            cdom.onCreate();
             this.addChild(cdom, idx);
             return;
         }

@@ -31,8 +31,11 @@ export class DataView extends Watchable(EL) {
             this.m_varsContainer.forEach((c) => c.watch(this._datawatcher));
         }
 
+        this.m_transx = props.transx;
+        this.m_varsContainer = props.varsContainer;
+
         // build childs
-        this.onCreate();
+        // this.onCreate();
         // this.update(props, true);
     }
 
@@ -45,6 +48,7 @@ export class DataView extends Watchable(EL) {
 
     private _datawatcher(...args: any[]) {
         this.m_ctx.setUpdate(this);
+        this.m_ctx.setDirty(this);
         this.onDataChange(...args);
         super.notify(...args);
     }
@@ -92,7 +96,7 @@ export class DataView extends Watchable(EL) {
     //     if (this.m_el && this.m_el.parentNode) this.m_el.remove();
     // }
 
-    update(props?: PropsType, force?: boolean) {
+    update(props: PropsType, force?: boolean) {
         throw new Error('not implemented');
     }
 

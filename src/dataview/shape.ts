@@ -211,6 +211,8 @@ export class ShapeView extends DataView {
 
     onCreate(): void {
         // this.m_frame = new ShapeFrame(0, 0, 0, 0);
+        // force update
+        this.update({ data: this.m_data, varsContainer: this.m_varsContainer, transx: this.m_transx }, true);
     }
 
     onDataChange(...args: any[]): void {
@@ -330,42 +332,42 @@ export class ShapeView extends DataView {
 
     }
 
-    update(props?: PropsType, force?: boolean) {
+    update(props: PropsType, force?: boolean) {
         // todo props没更新时是否要update
         // 在frame、flip、rotate修改时需要update
         const tid = this.id();
         this.m_ctx.removeUpdate(tid); // remove from changeset
 
-        if (props) {
-            if (props.data.id !== this.m_data.id) throw new Error('id not match');
-            // check
-            const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
-            const diffVars = isDiffVarsContainer(props.varsContainer, this.m_varsContainer);
-            if (!force &&
-                !diffTransform &&
-                !diffVars) {
-                return;
-            }
-    
-            if (diffTransform) {
-                // update transform
-                this.m_transx = props.transx;
-            }
-            if (diffVars) {
-                // update varscontainer
-                this.m_varsContainer = props.varsContainer;
-                const _id = this.id();
-                if (_id !== tid) {
-                    this.m_ctx.removeDirty(tid);
-                    // tid = _id;
-                }
+        // if (props) {
+        if (props.data.id !== this.m_data.id) throw new Error('id not match');
+        // check
+        const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
+        const diffVars = isDiffVarsContainer(props.varsContainer, this.m_varsContainer);
+        if (!force &&
+            !diffTransform &&
+            !diffVars) {
+            return;
+        }
+
+        if (diffTransform) {
+            // update transform
+            this.m_transx = props.transx;
+        }
+        if (diffVars) {
+            // update varscontainer
+            this.m_varsContainer = props.varsContainer;
+            const _id = this.id();
+            if (_id !== tid) {
+                this.m_ctx.removeDirty(tid);
+                // tid = _id;
             }
         }
+        // }
         // add to dirty
         this.m_ctx.setDirty(this);
 
         const shape = this.m_data;
-        const transform = props?.transx || this.m_transx;
+        const transform = props.transx;
 
         const _frame = shape.frame;
         let x = _frame.x;
@@ -384,7 +386,7 @@ export class ShapeView extends DataView {
 
             // update frame, hflip, vflip, rotate
             this.updateRenderArgs(frame, hflip, vflip, rotate);
-
+            // todo 需要继续update childs
             return;
         }
 

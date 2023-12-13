@@ -55,9 +55,9 @@ export class DViewCtx {
         // update
         // render
         // todo
-        this.datachangeset.forEach((v, k) => {
-            v.update();
-        });
+        // this.datachangeset.forEach((v, k) => {
+        //     v.update();
+        // });
 
         this.dirtyset.forEach((v, k) => {
             v.render();
@@ -67,7 +67,8 @@ export class DViewCtx {
             console.log("loop not empty ", this.datachangeset.size, this.dirtyset.size);
         }
 
-        return (this.datachangeset.size > 0 || this.dirtyset.size > 0);
+        // return (this.datachangeset.size > 0 || this.dirtyset.size > 0);
+        return false;
     }
 
     private _continueLoop() {
