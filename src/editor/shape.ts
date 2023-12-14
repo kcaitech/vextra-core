@@ -12,8 +12,8 @@ import {
     SymbolUnionShape
 } from "../data/shape";
 import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../data/style";
-import { expand, expandTo, translate, pathEdit, translateTo, update_frame_by_points } from "./frame";
-import { BoolOp, CurvePoint, Point2D } from "../data/baseclasses";
+import { expand, expandTo, translate, translateTo } from "./frame";
+import { BoolOp, CurvePoint } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
@@ -38,7 +38,7 @@ import {
 } from "./utils/other";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
-import { _clip, _typing_modify, modify_points_xy, replace_path_shape_points, update_path_shape_frame } from "./utils/path";
+import { _clip, _typing_modify, modify_points_xy, replace_path_shape_points, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 
 function varParent(_var: Variable) {
@@ -997,7 +997,7 @@ export class ShapeEditor {
             console.log('!indexes.length');
             return result;
         }
-        
+
         try {
             const api = this.__repo.start("deleteShape", {});
             for (let i = indexes.length - 1; i > -1; i--) {

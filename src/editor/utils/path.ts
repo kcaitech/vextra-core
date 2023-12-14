@@ -10,13 +10,186 @@ import { BasicArray } from "../../data/basic";
 import { Matrix } from "../../basic/matrix";
 import { group } from "../../editor/group";
 import { addCommonAttr, newGroupShape } from "../../editor/creator";
-import { update_frame_by_points } from "../../editor/frame";
 interface XY {
     x: number
     y: number
 }
-const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
+const minimum_WH = 1; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
+/**
+ * @description 以点为操作目标编辑路径
+ * @param index 点的数组索引
+ * @param end 点的目标🎯位置（root）
+ */
+export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end: XY, matrix?: Matrix) {
+    const w = s.frame.width, h = s.frame.height;
+    let m = matrix ? matrix : new Matrix();
+    if (!matrix) {
+        m.multiAtLeft(s.matrix2Root());
+        m.preScale(w, h);
+        m = new Matrix(m.inverse);
+    }
+    const p = s.points[index];
+    if (!p) {
+        return false;
+    }
+    const save = { x: p.x, y: p.y };
+    const _val = m.computeCoord3(end);
+    api.shapeModifyCurvPoint(page, s as PathShape, index, _val);
+    const delta = { x: _val.x - save.x, y: _val.y - save.y };
+    if (!delta.x && !delta.y) {
+        return;
+    }
+    if (p.hasFrom) {
+        api.shapeModifyCurvFromPoint(page, s as PathShape, index, { x: (p.fromX || 0) + delta.x, y: (p.fromY || 0) + delta.y });
+    }
+    if (p.hasTo) {
+        api.shapeModifyCurvToPoint(page, s as PathShape, index, { x: (p.toX || 0) + delta.x, y: (p.toY || 0) + delta.y });
+    }
+}
+
+/**
+ * @description 多点编辑
+ */
+export function pointsEdit(api: Api, page: Page, s: PathShape, indexes: number[], dx: number, dy: number) {
+    const points = s.points;
+    for (let i = 0, l = indexes.length; i < l; i++) {
+        const index = indexes[i];
+        const __p = points[index];
+        if (!__p) {
+            continue;
+        }
+        api.shapeModifyCurvPoint(page, s, index, { x: __p.x + dx, y: __p.y + dy });
+        if (__p.hasFrom) {
+            api.shapeModifyCurvFromPoint(page, s as PathShape, index, { x: (__p.fromX || 0) + dx, y: (__p.fromY || 0) + dy });
+        }
+        if (__p.hasTo) {
+            api.shapeModifyCurvToPoint(page, s as PathShape, index, { x: (__p.toX || 0) + dx, y: (__p.toY || 0) + dy });
+        }
+    }
+}
+
+/**
+ * @description 连接线编辑
+ */
+export function contact_edit(api: Api, page: Page, s: Shape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
+    const m = new Matrix(s.matrix2Root());
+    const w = s.frame.width, h = s.frame.height;
+
+    m.preScale(w, h);
+
+    const m_in = new Matrix(m.inverse);  // 图形单位坐标系，0-1
+    let p1 = s.points[index1];
+    let p2 = s.points[index2];
+
+    if (!p1 || !p2) {
+        return false;
+    }
+
+    p1 = m.computeCoord2(p1.x, p1.y), p2 = m.computeCoord2(p2.x, p2.y);
+
+    if (dx) {
+        p1.x = p1.x + dx, p2.x = p2.x + dx;
+    }
+    if (dy) {
+        p1.y = p1.y + dy, p2.y = p2.y + dy;
+    }
+
+    p1 = m_in.computeCoord3(p1);
+    p2 = m_in.computeCoord3(p2);
+
+    api.shapeModifyCurvPoint(page, s as PathShape, index1, p1);
+    api.shapeModifyCurvPoint(page, s as PathShape, index2, p2);
+}
+export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
+    const nf = s.boundingBox2();
+    const w = s.frame.width, h = s.frame.height;
+
+    const mp = s.matrix2Parent();
+    mp.preScale(w, h);
+
+    if (s.rotation) {
+        api.shapeModifyRotate(page, s, 0);
+    }
+    if (s.isFlippedHorizontal) {
+        api.shapeModifyHFlip(page, s, false);
+    }
+    if (s.isFlippedVertical) {
+        api.shapeModifyVFlip(page, s, false);
+    }
+
+    api.shapeModifyX(page, s, nf.x);
+    api.shapeModifyY(page, s, nf.y);
+    api.shapeModifyWH(page, s, Math.max(nf.width, minimum_WH), Math.max(nf.height, minimum_WH));
+
+    const f = s.frame;
+
+    const mp2 = s.matrix2Parent();
+    mp2.preScale(f.width, f.height);
+    mp.multiAtLeft(mp2.inverse);
+
+    const points = s.points;
+    
+    if (!points || !points.length) {
+        return false;
+    }
+
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = points[i];
+        if (!p) {
+            continue;
+        }
+
+        if (p.hasFrom) {
+            api.shapeModifyCurvFromPoint(page, s, i, mp.computeCoord2(p.fromX || 0, p.fromY || 0));
+        }
+
+        if (p.hasTo) {
+            api.shapeModifyCurvToPoint(page, s, i, mp.computeCoord2(p.toX || 0, p.toY || 0));
+        }
+
+        api.shapeModifyCurvPoint(page, s, i, mp.computeCoord2(p.x, p.y));
+    }
+
+    console.log(s.name, 'update frame by "update_frame_by_points"');
+}
+export function update_frame_by_points2(api: Api, page: Page, s: PathShape) {
+    const nf = s.boundingBox2();
+    const w = s.frame.width, h = s.frame.height;
+    const mp = s.matrix2Parent();
+    mp.preScale(w, h);
+    if (s.rotation) {
+        api.shapeModifyRotate(page, s, 0);
+    }
+    if (s.isFlippedHorizontal) {
+        api.shapeModifyHFlip(page, s, false);
+    }
+    if (s.isFlippedVertical) {
+        api.shapeModifyVFlip(page, s, false);
+    }
+    api.shapeModifyX(page, s, nf.x);
+    api.shapeModifyY(page, s, nf.y);
+    api.shapeModifyWH(page, s, nf.width, nf.height);
+    const mp2 = s.matrix2Parent();
+    mp2.preScale(nf.width, nf.height);
+    mp.multiAtLeft(mp2.inverse);
+    const points = s.points;
+    if (!points?.length) {
+        return false;
+    }
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = points[i];
+        if (!p) continue;
+        if (p.hasFrom && p.fromX !== undefined && p.fromY !== undefined) {
+            api.shapeModifyCurvFromPoint(page, s as PathShape, i, mp.computeCoord2(p.fromX, p.fromY));
+        }
+        if (p.hasTo && p.toX !== undefined && p.toY !== undefined) {
+            api.shapeModifyCurvToPoint(page, s as PathShape, i, mp.computeCoord2(p.toX, p.toY));
+        }
+        api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord2(p.x, p.y));
+    }
+    console.log('update frame by update_frame_by_points2');
+}
 /**
  * @description 计算三次贝塞尔曲线上的点
  * @param t 0~1
@@ -187,31 +360,6 @@ export function split_cubic_bezier(p0: XY, p1: XY, p2: XY, p3: XY) {
         [p0, p01, p012, p0123],
         [p0123, p123, p23, p3]
     ];
-}
-function splitCubicBezierAtT(p0: XY, p1: XY, p2: XY, p3: XY, t: number) {
-    // Calculate midpoints
-    const p01 = interpolate(p0, p1, t);
-    const p12 = interpolate(p1, p2, t);
-    const p23 = interpolate(p2, p3, t);
-
-    // Calculate new midpoints
-    const p012 = interpolate(p01, p12, t);
-    const p123 = interpolate(p12, p23, t);
-
-    // Calculate final midpoint
-    const p0123 = interpolate(p012, p123, t);
-
-    return [
-        [p0, p01, p012, p0123],
-        [p0123, p123, p23, p3]
-    ];
-}
-
-function interpolate(p1: XY, p2: XY, t: number) {
-    return {
-        x: p1.x + (p2.x - p1.x) * t,
-        y: p1.y + (p2.y - p1.y) * t
-    }
 }
 function is_curve(p: CurvePoint, n: CurvePoint) {
     return p.hasFrom || n.hasTo;
@@ -541,7 +689,6 @@ export function init_points(api: Api, page: Page, s: Shape, points: CurvePoint[]
     api.deletePoints(page, s as PathShape, 0, s.points.length);
     api.addPoints(page, s as PathShape, points);
 }
-
 export function modify_points_xy(api: Api, page: Page, s: PathShape, actions: {
     index: number,
     x: number,

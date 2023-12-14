@@ -9,19 +9,14 @@ import {
     erScaleByR,
     erScaleByT,
     expandTo,
-    pathEdit,
-    pathEditSide,
-    pointsEdit,
     scaleByB,
     scaleByL,
     scaleByR,
     scaleByT,
     translate,
     translateTo,
-    update_frame_by_points,
-    update_frame_by_points2
 } from "./frame";
-import { CurvePoint, GroupShape, PathShape, Point2D, Shape, ShapeFrame } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ContactRoleType, CurveMode, ShapeType } from "../data/typesdefine";
 import {
@@ -50,7 +45,7 @@ import { exportCurvePoint } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name } from "./utils/symbol";
-import { __pre_curve, after_insert_point } from "./utils/path";
+import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, update_frame_by_points2 } from "./utils/path";
 import { Color } from "../data/color";
 
 interface PageXY { // 页面坐标系的xy
@@ -735,7 +730,7 @@ export class Controller {
         const modify_sides = (index: number, dx: number, dy: number) => {
             if (shape.type !== ShapeType.Contact) return;
             status = Status.Pending;
-            pathEditSide(api, page, shape, index, index + 1, dx, dy);
+            contact_edit(api, page, shape, index, index + 1, dx, dy);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
