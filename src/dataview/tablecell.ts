@@ -1,5 +1,5 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Path, TableCellType, Text, VariableType } from "../data/classes";
+import { OverrideType, Path, ShapeFrame, TableCellType, Text, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
@@ -9,9 +9,20 @@ export class TableCellView extends ShapeView {
 
     private m_imgPH: string;
 
-    constructor(ctx: DViewCtx, props: PropsType, imgPH: string) {
+    constructor(ctx: DViewCtx, props: PropsType & { frame?: ShapeFrame }, imgPH: string) {
         super(ctx, props);
         this.m_imgPH = imgPH;
+
+        const frame = props.frame!;
+        this.m_frame.x = frame.x;
+        this.m_frame.y = frame.y;
+        this.m_frame.width = frame.width;
+        this.m_frame.height = frame.height;
+    }
+
+    update(props: PropsType, force?: boolean | undefined): void {
+        // super.update(props, force);
+        this.m_ctx.setDirty(this);
     }
 
     getText(): Text {
@@ -25,6 +36,10 @@ export class TableCellView extends ShapeView {
             this.m_textpath = renderText2Path(text, 0, 0)
         }
         return this.m_textpath;
+    }
+
+    isVisible(): boolean {
+        return true;
     }
 
     private m_layout?: TextLayout;
@@ -49,7 +64,7 @@ export class TableCellView extends ShapeView {
         if (cellType === TableCellType.None) {
             return [];
         }
-        const frame = this.getFrame();
+        const frame = this.frame;
         if (cellType === TableCellType.Image) {
             const url = shape.peekImage(true);
             const img = elh("image", {

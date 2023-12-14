@@ -33,7 +33,7 @@ export class TextShapeView extends ShapeView {
 
     renderContents(): EL[] {
         const text = this.getText();
-        const frame = this.getFrame();
+        const frame = this.frame;
         if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
         return renderTextLayout(elh, this.m_layout);
     }

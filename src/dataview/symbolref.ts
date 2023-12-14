@@ -63,7 +63,7 @@ export class SymbolRefView extends GroupShapeView {
         varsContainer.push(this.m_sym);
 
         let transx: RenderTransform | undefined;
-        const refframe = this.getFrame();
+        const refframe = this.frame;
         const symframe = this.m_sym.frame;
         const noTrans = isNoTransform(this.m_transx);
         if (noTrans && refframe.width === symframe.width && refframe.height === symframe.height) {

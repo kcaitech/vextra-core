@@ -203,7 +203,7 @@ export class ShapeView extends DataView {
     m_path?: Path;
     m_pathstr?: string;
 
-    m_frame?: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
+    m_frame: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
     m_hflip?: boolean;
     m_vflip?: boolean;
     m_rotate?: number;
@@ -235,12 +235,12 @@ export class ShapeView extends DataView {
     }
 
     matrix2Parent(): Matrix {
-        const frame = this.getFrame();
+        const frame = this.frame;
         return matrix2parent(frame.x, frame.y, frame.width, frame.height, this.m_rotate || 0, !!this.m_hflip, !!this.m_vflip);
     }
 
-    getFrame(): ShapeFrame {
-        return this.m_frame!;
+    get frame(): ShapeFrame {
+        return this.m_frame;
     }
 
     isNoTransform() {
@@ -262,14 +262,14 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.shadows;
     }
 
-    getPath() {
+    getPathStr() {
         if (this.m_pathstr) return this.m_pathstr;
-        this.m_pathstr = this.getPath2().toString(); // todo fixedRadius
+        this.m_pathstr = this.getPath().toString(); // todo fixedRadius
         return this.m_pathstr;
     }
-    getPath2() {
+    getPath() {
         if (this.m_path) return this.m_path;
-        this.m_path = this.m_data.getPathOfFrame(this.getFrame(), this.m_fixedRadius); // todo fixedRadius
+        this.m_path = this.m_data.getPathOfFrame(this.frame, this.m_fixedRadius); // todo fixedRadius
         return this.m_path;
     }
 
@@ -290,7 +290,7 @@ export class ShapeView extends DataView {
 
     // =================== update ========================
     updateRenderArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number) {
-        const _frame = this.getFrame();
+        const _frame = this.frame;
         if (isDiffShapeFrame(_frame, frame)) {
             _frame.x = frame.x;
             _frame.y = frame.y;
@@ -335,7 +335,7 @@ export class ShapeView extends DataView {
     update(props: PropsType, force?: boolean) {
         // todo props没更新时是否要update
         // 在frame、flip、rotate修改时需要update
-        const tid = this.id();
+        const tid = this.id;
         this.m_ctx.removeUpdate(tid); // remove from changeset
 
         // if (props) {
@@ -356,7 +356,7 @@ export class ShapeView extends DataView {
         if (diffVars) {
             // update varscontainer
             this.m_varsContainer = props.varsContainer;
-            const _id = this.id();
+            const _id = this.id;
             if (_id !== tid) {
                 this.m_ctx.removeDirty(tid);
                 // tid = _id;
@@ -530,21 +530,21 @@ export class ShapeView extends DataView {
 
     protected renderFills() {
         if (!this.m_fills) {
-            this.m_fills = renderFills(elh, this.getFills(), this.getFrame(), this.getPath());
+            this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
         }
         return this.m_fills;
     }
 
     protected renderBorders() {
         if (!this.m_borders) {
-            this.m_borders = renderBorders(elh, this.getBorders(), this.getFrame(), this.getPath());
+            this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
         }
         return this.m_borders;
     }
 
     protected renderProps(): { [key: string]: string } {
         const shape = this.m_data;
-        const frame = this.getFrame();
+        const frame = this.frame;
         // const path = this.getPath(); // cache
         const props: any = {}
 
@@ -580,7 +580,7 @@ export class ShapeView extends DataView {
 
     render(): number {
 
-        const tid = this.id();
+        const tid = this.id;
         const isDirty = this.m_ctx.removeDirty(tid);
         if (!isDirty) {
             return this.m_render_version;

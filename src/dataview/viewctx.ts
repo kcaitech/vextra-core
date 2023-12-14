@@ -13,7 +13,7 @@ export interface PropsType {
 }
 
 interface DataView {
-    id(): string;
+    id: string;
     update(props?: PropsType, force?: boolean): void;
     render(): number;
 }
@@ -33,11 +33,11 @@ export class DViewCtx {
     protected dirtyset: Map<string, DataView> = new Map();
 
     setUpdate(v: DataView) {
-        this.datachangeset.set(v.id(), v);
+        this.datachangeset.set(v.id, v);
         this._continueLoop();
     }
     setDirty(v: DataView) {
-        this.dirtyset.set(v.id(), v);
+        this.dirtyset.set(v.id, v);
         this._continueLoop();
     }
 

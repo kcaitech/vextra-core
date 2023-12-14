@@ -39,7 +39,7 @@ export class TableView extends GroupShapeView {
                     } else {
                         // const comsMap = this.m_ctx.comsMap;
                         const Com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle)!;
-                        const props = { data: cell,  transx: this.m_transx, varsContainer: this.m_varsContainer };
+                        const props = { data: cell,  transx: this.m_transx, varsContainer: this.m_varsContainer, frame: cellLayout.frame };
                         const ins = new Com(this.m_ctx, props) as DataView;
                         ins.onCreate();
                         this.addChild(ins, idx);
@@ -56,7 +56,7 @@ export class TableView extends GroupShapeView {
 
         const cell_border_nodes = [];
 
-        const nodes = renderBorders(elh, this.getBorders(), this.getFrame(), this.getPath());
+        const nodes = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
 
         for (let i = 0, len = layout.grid.rowCount; i < len; ++i) {
             for (let j = 0, len = layout.grid.colCount; j < len; ++j) {

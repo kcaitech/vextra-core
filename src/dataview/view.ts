@@ -69,9 +69,13 @@ export class DataView extends Watchable(EL) {
         return this.m_data;
     }
 
-    id() {
+    get id() {
         if (this.m_varsContainer) return genid(this.m_data, this.m_varsContainer);
         return this.m_data.id;
+    }
+
+    get naviChilds() {
+        return this.m_children;
     }
 
     // 1. 新创建，则正常创建，append
@@ -217,7 +221,7 @@ export class DataView extends Watchable(EL) {
     destory() {
         if (this.m_parent) throw new Error("parent is not null");
         if (this.m_isdistroyed) throw new Error("already distroyed");
-        const tid = this.id();
+        const tid = this.id;
         this.m_ctx.removeUpdate(tid);
         this.m_ctx.removeDirty(tid);
 

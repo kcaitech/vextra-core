@@ -106,13 +106,13 @@ function render2path(shape: ShapeView): Path {
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.m_fixedRadius;
     if (!shapeIsGroup || shape.m_children.length === 0) {
-        const path = shape instanceof TextShapeView ? shape.getTextPath() : shape.getPath2();
+        const path = shape instanceof TextShapeView ? shape.getTextPath() : shape.getPath();
         return path;
     }
 
     const cc = shape.m_children.length;
     const child0 = shape.m_children[0] as ShapeView;
-    const frame0 = child0.getFrame();
+    const frame0 = child0.frame;
     const path0 = render2path(child0);
 
     if (child0.isNoTransform()) {
@@ -121,7 +121,7 @@ function render2path(shape: ShapeView): Path {
         path0.transform(child0.matrix2Parent())
     }
 
-    const pframe = shape.getFrame();
+    const pframe = shape.frame;
     const gridSize = Math.ceil(Math.sqrt(cc));
 
     const grid = new FrameGrid(pframe.width / gridSize, pframe.height / gridSize, gridSize, gridSize);
@@ -131,7 +131,7 @@ function render2path(shape: ShapeView): Path {
     let joinPath: IPalPath = gPal.makePalPath(path0.toString());
     for (let i = 1; i < cc; i++) {
         const child1 = shape.m_children[i] as ShapeView;
-        const frame1 = child1.getFrame();
+        const frame1 = child1.frame;
         const path1 = render2path(child1);
         if (child1.isNoTransform()) {
             path1.translate(frame1.x, frame1.y);
@@ -160,7 +160,7 @@ function render2path(shape: ShapeView): Path {
     let resultpath: Path | undefined;
     // radius
     if (fixedRadius && fixedRadius > 0) {
-        const frame = shape.getFrame();
+        const frame = shape.frame;
         const path = new Path(pathstr);
         const segs = path.toCurvePoints(frame.width, frame.height);
         const ps: any[] = [];
@@ -257,9 +257,9 @@ export class GroupShapeView extends ShapeView {
     //     this.m_boolpathstr = this.getBoolPath2().toString();
     //     return this.m_boolpathstr;
     // }
-    getPath2() {
+    getPath() {
         if (!(this.m_data as GroupShape).isBoolOpShape) {
-            return super.getPath2();
+            return super.getPath();
         }
         if (this.m_path) return this.m_path;
         this.m_path = render2path(this);
@@ -310,7 +310,7 @@ export class GroupShapeView extends ShapeView {
                 dy: 0,
                 scaleX,
                 scaleY,
-                parentFrame: this.getFrame(),
+                parentFrame: this.frame,
                 vflip: false,
                 hflip: false,
                 rotate: 0
@@ -346,7 +346,7 @@ export class GroupShapeView extends ShapeView {
                 dy,
                 scaleX,
                 scaleY,
-                parentFrame: this.getFrame(),
+                parentFrame: this.frame,
                 vflip,
                 hflip,
                 rotate
