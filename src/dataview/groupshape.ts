@@ -5,7 +5,7 @@ import { RenderTransform } from "../render";
 import { Matrix } from "../basic/matrix";
 import { EL } from "./el";
 import { DataView } from "./view";
-import { VarsContainer } from "./viewctx";
+import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { IPalPath, gPal } from "../basic/pal";
 import { TextShapeView } from "./textshape";
 
@@ -178,23 +178,21 @@ function render2path(shape: ShapeView): Path {
 
 export class GroupShapeView extends ShapeView {
 
-    getDataChilds(): Shape[] {
-        return (this.m_data as GroupShape).childs;
-    }
-
-    onCreate(): void {
-        super.onCreate();
-        // build childs
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
         const childs = this.getDataChilds();
         const childsView: DataView[] = childs.map((c) => {
             const comsMap = this.m_ctx.comsMap;
             const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
             const props = { data: c, transx: this.m_transx, varsContainer: this.m_varsContainer, isVritual: this.m_isVirtual };
             const ins = new Com(this.m_ctx, props) as DataView;
-            ins.onCreate();
             return ins;
         })
         if (childsView.length > 0) this.addChilds(childsView);
+    }
+
+    getDataChilds(): Shape[] {
+        return (this.m_data as GroupShape).childs;
     }
 
     m_save_isboolgroup: boolean | undefined;
@@ -218,8 +216,6 @@ export class GroupShapeView extends ShapeView {
                 const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
                 const props = { data: c, transx: this.m_transx, varsContainer: this.m_varsContainer, isVirtual: this.m_isVirtual };
                 const ins = new Com(this.m_ctx, props) as DataView;
-                ins.onCreate();
-
                 this.addChild(ins, i);
             }
         }
@@ -231,8 +227,8 @@ export class GroupShapeView extends ShapeView {
     }
 
     onDataChange(...args: any[]): void {
+        super.onDataChange(...args);
         if (args.includes('childs')) {
-
             this.updateChildren();
         }
         else if ((this.m_save_isboolgroup) !== (this.m_data as GroupShape).isBoolOpShape) {
@@ -250,13 +246,6 @@ export class GroupShapeView extends ShapeView {
         return []; // group无fill
     }
 
-    // m_boolpath?: Path;
-    // m_boolpathstr?: string;
-    // getBoolPath() {
-    //     if (this.m_boolpathstr) return this.m_boolpathstr;
-    //     this.m_boolpathstr = this.getBoolPath2().toString();
-    //     return this.m_boolpathstr;
-    // }
     getPath() {
         if (!(this.m_data as GroupShape).isBoolOpShape) {
             return super.getPath();
@@ -269,14 +258,6 @@ export class GroupShapeView extends ShapeView {
     // childs
     protected renderContents(): EL[] {
         if ((this.m_data as GroupShape).isBoolOpShape) {
-            // const d = this.getBoolPath();
-            // const props: any = {};
-            // props["fill-opacity"] = 1;
-            // props.d = d;
-            // props.fill = 'none';
-            // props.stroke = 'none';
-            // props["stroke-width"] = 0;
-            // return [elh('path', props)];
             return [];
         }
         const childs = this.m_children;
@@ -284,22 +265,21 @@ export class GroupShapeView extends ShapeView {
         return childs;
     }
 
-    private updateChild(child: Shape, idx: number, transx: RenderTransform, varsContainer: VarsContainer, resue: Map<string, DataView>) {
+    private layoutChild(child: Shape, idx: number, transx: RenderTransform, varsContainer: VarsContainer, resue: Map<string, DataView>) {
         let cdom: DataView | undefined = resue.get(child.id);
-        const props = { data: child, transx, varsContainer };
+        const props = { data: child, transx, varsContainer, isVirtual: this.m_isVirtual };
         if (!cdom) {
             const comsMap = this.m_ctx.comsMap;
             const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
             cdom = new Com(this.m_ctx, props) as DataView;
-            cdom.onCreate();
             this.addChild(cdom, idx);
             return;
         }
         this.moveChild(cdom, idx);
-        cdom.update(props);
+        cdom.layout(props);
     }
 
-    updateRectangle(scaleX: number, scaleY: number): void {
+    layoutOnRectShape(scaleX: number, scaleY: number): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
@@ -316,13 +296,13 @@ export class GroupShapeView extends ShapeView {
                 rotate: 0
             }
             // update childs
-            this.updateChild(cc, i, transform, this.m_varsContainer!, resue);
+            this.layoutChild(cc, i, transform, this.m_varsContainer!, resue);
         }
         // 删除多余的
         this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
     }
 
-    updateDiamond(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
+    layoutOnDiamondShape(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
@@ -352,7 +332,7 @@ export class GroupShapeView extends ShapeView {
                 rotate
             }
             // update childs
-            this.updateChild(cc, i, transform, this.m_varsContainer!, resue);
+            this.layoutChild(cc, i, transform, this.m_varsContainer!, resue);
         }
         // 删除多余的
         this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));

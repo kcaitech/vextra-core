@@ -24,7 +24,7 @@ export class TextShapeView extends ShapeView {
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
-        if (args.includes('text')) {
+        if (args.includes('text')) { // todo 文本要支持局部重排
             this.m_layout = undefined;
             this.m_textpath = undefined;
         }

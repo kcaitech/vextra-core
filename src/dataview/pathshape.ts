@@ -6,11 +6,11 @@ import { Matrix } from "../basic/matrix";
 
 export class PathShapeView extends ShapeView {
 
-    updateRectangle(scaleX: number, scaleY: number): void {
+    layoutOnRectShape(scaleX: number, scaleY: number): void {
 
     }
 
-    updateDiamond(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
+    layoutOnDiamondShape(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
         const shape = this.m_data;
         m.preScale(shape.frame.width, shape.frame.height); // points投影到parent坐标系的矩阵
 

@@ -8,16 +8,13 @@ import { EL } from "./el";
 export class DataView extends Watchable(EL) {
     m_ctx: DViewCtx;
     m_data: Shape;
-    // m_el?: HTMLElement | SVGElement; // bind
     m_children: DataView[] = [];
     m_parent: DataView | undefined;
     m_transx?: RenderTransform;
     m_varsContainer?: (SymbolRefShape | SymbolShape)[];
     m_isVirtual?: boolean;
 
-    // m_isdirty: boolean = false;
     m_isdistroyed: boolean = false;
-
     m_nodeCount: number = 1;
 
     constructor(ctx: DViewCtx, props: PropsType) {
@@ -35,9 +32,8 @@ export class DataView extends Watchable(EL) {
         this.m_transx = props.transx;
         this.m_varsContainer = props.varsContainer;
         this.m_isVirtual = props.isVirtual;
-        // build childs
-        // this.onCreate();
-        // this.update(props, true);
+
+        this.m_ctx.setDirty(this);
     }
 
     // mock shape
@@ -74,14 +70,10 @@ export class DataView extends Watchable(EL) {
     }
 
     private _datawatcher(...args: any[]) {
-        this.m_ctx.setUpdate(this);
+        this.m_ctx.setReLayout(this);
         this.m_ctx.setDirty(this);
         this.onDataChange(...args);
         super.notify(...args);
-    }
-
-    onCreate() {
-
     }
 
     onDestory() {
@@ -114,7 +106,7 @@ export class DataView extends Watchable(EL) {
     //     if (this.m_el && this.m_el.parentNode) this.m_el.remove();
     // }
 
-    update(props: PropsType, force?: boolean) {
+    layout(props?: PropsType) {
         throw new Error('not implemented');
     }
 
@@ -236,7 +228,7 @@ export class DataView extends Watchable(EL) {
         if (this.m_parent) throw new Error("parent is not null");
         if (this.m_isdistroyed) throw new Error("already distroyed");
         const tid = this.id;
-        this.m_ctx.removeUpdate(tid);
+        this.m_ctx.removeReLayout(tid);
         this.m_ctx.removeDirty(tid);
 
         // if (this.m_el) {

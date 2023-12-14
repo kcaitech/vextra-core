@@ -1,11 +1,35 @@
-import { OverrideType, Shape, SymbolRefShape, SymbolShape, SymbolUnionShape, VariableType } from "../data/classes";
-import { GroupShapeView } from "./groupshape";
+import { OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, VariableType } from "../data/classes";
+import { ShapeView, matrix2parent } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView } from "./view";
 import { isNoTransform } from "./shape";
 import { RenderTransform } from "../render";
+import { Matrix } from "../basic/matrix";
+import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
+import { EL } from "./el";
 
-export class SymbolRefView extends GroupShapeView {
+export class SymbolRefView extends ShapeView {
+
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
+        const data = this.m_data as SymbolRefShape
+        const symMgr = data.getSymbolMgr();
+        const refId = this.getRefId();
+        this.m_refId = refId;
+        symMgr?.get(refId).then((sym) => {
+            if (this.m_refId === refId) {
+                this.m_sym = sym;
+                // need update
+                // todo
+                // this.update({ data: this.m_data, transx: this.m_transx, varsContainer: this.m_varsContainer }, true);
+
+                this.updateChildren();
+                this.m_ctx.setDirty(this);
+            }
+        }).catch((err) => {
+            console.error(err);
+        })
+    }
 
     getDataChilds(): Shape[] {
         return this.m_sym ? this.m_sym.childs : [];
@@ -46,6 +70,17 @@ export class SymbolRefView extends GroupShapeView {
     //         }
     //     })
     // }
+
+    protected renderContents(): EL[] {
+        const childs = this.m_children;
+        childs.forEach((c) => c.render())
+        return childs;
+    }
+
+    onDataChange(...args: any[]): void {
+        super.onDataChange(...args);
+        this.updateChildren();
+    }
 
     updateChildren(): void {
 
@@ -100,13 +135,11 @@ export class SymbolRefView extends GroupShapeView {
                 reuse.delete(c.id);
                 this.moveChild(cdom, i);
                 const props = { data: c, transx, varsContainer };
-                cdom.update(props);
+                cdom.layout(props);
             } else {
                 const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
                 const props = { data: c, transx, varsContainer, isVirtual: true };
                 const ins = new Com(this.m_ctx, props) as DataView;
-                ins.onCreate();
-
                 this.addChild(ins, i);
             }
         }
@@ -117,28 +150,92 @@ export class SymbolRefView extends GroupShapeView {
         }
     }
 
-    onCreate(): void {
-        super.onCreate();
-        // build childs
-        // todo
 
-        const data = this.m_data as SymbolRefShape
-        const symMgr = data.getSymbolMgr();
-        const refId = this.getRefId();
-        this.m_refId = refId;
-        symMgr?.get(refId).then((sym) => {
-            if (this.m_refId === refId) {
-                this.m_sym = sym;
-                // need update
-                // todo
-                // this.update({ data: this.m_data, transx: this.m_transx, varsContainer: this.m_varsContainer }, true);
+    // todo
+    // private updateChild(child: Shape, idx: number, transx: RenderTransform, varsContainer: VarsContainer, resue: Map<string, DataView>) {
+    //     let cdom: DataView | undefined = resue.get(child.id);
+    //     const props = { data: child, transx, varsContainer, isVirtual: true };
+    //     if (!cdom) {
+    //         const comsMap = this.m_ctx.comsMap;
+    //         const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
+    //         cdom = new Com(this.m_ctx, props) as DataView;
+    //         this.addChild(cdom, idx);
+    //         return;
+    //     }
+    //     this.moveChild(cdom, idx);
+    //     cdom.update(props);
+    // }
 
-                this.updateChildren();
-                this.m_ctx.setDirty(this);
-            }
-        }).catch((err) => {
-            console.error(err);
-        })
-    }
+    // updateRectangle(scaleX: number, scaleY: number): void {
+    //     if (!this.m_sym) throw new Error("no symbol");
+    //     const varsContainer = this.m_varsContainer?.slice(0) || [];
+    //     if (this.m_sym.parent instanceof SymbolUnionShape) {
+    //         varsContainer.push(this.m_sym.parent);
+    //     }
+    //     varsContainer.push(this.m_sym);
 
+    //     const childs = this.getDataChilds();
+    //     const resue: Map<string, DataView> = new Map();
+    //     this.m_children.forEach((c) => resue.set(c.data.id, c));
+    //     for (let i = 0, len = childs.length; i < len; i++) {
+    //         const cc = childs[i]
+    //         const transform = {
+    //             dx: 0,
+    //             dy: 0,
+    //             scaleX,
+    //             scaleY,
+    //             parentFrame: this.frame,
+    //             vflip: false,
+    //             hflip: false,
+    //             rotate: 0
+    //         }
+    //         // update childs
+    //         this.updateChild(cc, i, transform, varsContainer, resue);
+    //     }
+    //     // 删除多余的
+    //     this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+    // }
+
+    // updateDiamond(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
+    //     if (!this.m_sym) throw new Error("no symbol");
+    //     const varsContainer = this.m_varsContainer?.slice(0) || [];
+    //     if (this.m_sym.parent instanceof SymbolUnionShape) {
+    //         varsContainer.push(this.m_sym.parent);
+    //     }
+    //     varsContainer.push(this.m_sym);
+
+    //     const childs = this.getDataChilds();
+    //     const resue: Map<string, DataView> = new Map();
+    //     this.m_children.forEach((c) => resue.set(c.data.id, c));
+    //     for (let i = 0, len = childs.length; i < len; i++) { //摆正： 将旋转、翻转放入到子对象
+    //         const cc = childs[i]
+    //         const m1 = cc.matrix2Parent();
+    //         m1.multiAtLeft(m);
+    //         const target = m1.computeCoord(0, 0);
+    //         const c_rotate = rotate + (cc.rotation || 0);
+    //         const c_hflip = hflip ? !cc.isFlippedHorizontal : !!cc.isFlippedHorizontal;
+    //         const c_vflip = vflip ? !cc.isFlippedVertical : !!cc.isFlippedVertical;
+    //         const c_frame = cc.frame;
+    //         // cc matrix2Parent
+    //         const m2 = matrix2parent(c_frame.x, c_frame.y, c_frame.width, c_frame.height, c_rotate, c_hflip, c_vflip);
+    //         m2.trans(bbox.x, bbox.y); // todo 使用parentFrame.x y会与rect对不齐，待研究
+    //         const cur = m2.computeCoord(0, 0);
+    //         const dx = target.x - cur.x;
+    //         const dy = target.y - cur.y;
+    //         const transform = {
+    //             dx,
+    //             dy,
+    //             scaleX,
+    //             scaleY,
+    //             parentFrame: this.frame,
+    //             vflip,
+    //             hflip,
+    //             rotate
+    //         }
+    //         // update childs
+    //         this.updateChild(cc, i, transform, varsContainer, resue);
+    //     }
+    //     // 删除多余的
+    //     this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+    // }
 }

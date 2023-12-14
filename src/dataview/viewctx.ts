@@ -15,8 +15,9 @@ export interface PropsType {
 
 interface DataView {
     id: string;
-    update(props?: PropsType, force?: boolean): void;
+    layout(props?: PropsType): void;
     render(): number;
+    parent?: DataView;
 }
 
 export interface ViewType {
@@ -29,12 +30,12 @@ export class DViewCtx {
     // 缩放监听
 
     // 先更新数据再绘制
-    protected datachangeset: Map<string, DataView> = new Map();
+    protected relayoutset: Map<string, DataView> = new Map();
     // 要由上往下更新
     protected dirtyset: Map<string, DataView> = new Map();
 
-    setUpdate(v: DataView) {
-        this.datachangeset.set(v.id, v);
+    setReLayout(v: DataView) {
+        this.relayoutset.set(v.id, v);
         this._continueLoop();
     }
     setDirty(v: DataView) {
@@ -42,8 +43,8 @@ export class DViewCtx {
         this._continueLoop();
     }
 
-    removeUpdate(vid: string) {
-        return this.datachangeset.delete(vid);
+    removeReLayout(vid: string) {
+        return this.relayoutset.delete(vid);
     }
     removeDirty(vid: string) {
         return this.dirtyset.delete(vid);
@@ -55,17 +56,44 @@ export class DViewCtx {
     protected aloop(): boolean {
         // update
         // render
-        // todo
-        // this.datachangeset.forEach((v, k) => {
-        //     v.update();
-        // });
+        // 先按层级排序，由高向下更新
+        const update: { data: DataView, level: number }[] = [];
+        const level = (v: DataView) => {
+            let l = 0;
+            let p = v.parent;
+            while (p) {
+                l++;
+                p = p.parent;
+            }
+            return l;
+        }
 
+        this.relayoutset.forEach((v, k) => {
+            update.push({
+                data: v,
+                level: level(v)
+            });
+        });
+
+        // 小的在前
+        update.sort((a, b) => {
+            return a.level - b.level;
+        });
+
+        for (let i = 0; i < update.length; i++) {
+            const d = update[i].data;
+            if (this.relayoutset.has(d.id)) { // 再次判断，可能已经更新过了
+                d.layout();
+            }
+        }
+
+        // 渲染
         this.dirtyset.forEach((v, k) => {
             v.render();
         });
 
-        if (this.datachangeset.size || this.dirtyset.size) {
-            console.log("loop not empty ", this.datachangeset.size, this.dirtyset.size);
+        if (this.relayoutset.size || this.dirtyset.size) {
+            console.log("loop not empty ", this.relayoutset.size, this.dirtyset.size);
         }
 
         // return (this.datachangeset.size > 0 || this.dirtyset.size > 0);
@@ -92,6 +120,7 @@ export class DViewCtx {
     private __looping: boolean = false;
     private __inframe: boolean = false;
     private requestAnimationFrame?: (run: () => void) => void;
+
     loop(requestAnimationFrame: (run: () => void) => void) {
         this.requestAnimationFrame = requestAnimationFrame;
         if (this.__looping) return;

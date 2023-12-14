@@ -12,12 +12,6 @@ export class ArtboradView extends GroupShapeView {
 
     // }
 
-    // onCreate(): void {
-    //     super.onCreate();
-    //     this._bubblewatcher = this._bubblewatcher.bind(this);
-    //     this.m_data.bubblewatch(this._bubblewatcher);
-    // }
-
     // onDestory(): void {
     //     super.onDestory();
     //     this.m_data.unbubblewatch(this._bubblewatcher);

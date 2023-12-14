@@ -20,7 +20,7 @@ export class TableCellView extends ShapeView {
         this.m_frame.height = frame.height;
     }
 
-    update(props: PropsType, force?: boolean | undefined): void {
+    layout(props: PropsType, force?: boolean | undefined): void {
         // super.update(props, force);
         this.m_ctx.setDirty(this);
     }
@@ -47,7 +47,7 @@ export class TableCellView extends ShapeView {
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
-        if (args.includes('text')) {
+        if (args.includes('text')) { // todo 文本要支持局部重排
             this.m_layout = undefined;
             this.m_textpath = undefined;
         }

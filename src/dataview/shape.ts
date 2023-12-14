@@ -5,7 +5,7 @@ import { EL, elh } from "./el";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
-import { PropsType } from "./viewctx";
+import { DViewCtx, PropsType } from "./viewctx";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -197,17 +197,18 @@ export function transformPoints(points: CurvePoint[], matrix: Matrix) {
 }
 
 export class ShapeView extends DataView {
-
-    m_fills?: EL[];
-    m_borders?: EL[];
-    m_path?: Path;
-    m_pathstr?: string;
-
-    m_frame: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
+    // layout & render args
+    m_frame: ShapeFrame;
     m_hflip?: boolean;
     m_vflip?: boolean;
     m_rotate?: number;
     m_fixedRadius?: number;
+
+    // cache
+    // m_fills?: EL[]; // 不缓存,可回收
+    // m_borders?: EL[];
+    m_path?: Path;
+    m_pathstr?: string;
 
     get parent(): ShapeView | undefined {
         return this.m_parent as ShapeView;
@@ -219,10 +220,17 @@ export class ShapeView extends DataView {
         return this.m_children as ShapeView[];
     }
 
-    onCreate(): void {
-        // this.m_frame = new ShapeFrame(0, 0, 0, 0);
-        // force update
-        this.update({ data: this.m_data, varsContainer: this.m_varsContainer, transx: this.m_transx }, true);
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
+        const shape = props.data;
+        const frame = shape.frame;
+        this.m_frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+        this.m_hflip = shape.isFlippedHorizontal;
+        this.m_vflip = shape.isFlippedVertical;
+        this.m_rotate = shape.rotation;
+        this.m_fixedRadius = shape.fixedRadius; // rectangle
+
+        this._layout();
     }
 
     onDataChange(...args: any[]): void {
@@ -232,6 +240,7 @@ export class ShapeView extends DataView {
         }
         if (args.includes('fills')) this.m_fills = undefined;
         if (args.includes('borders')) this.m_borders = undefined;
+        // this.updateRenderArgs(this.data.frame, this.data.isFlippedHorizontal, this.data.isFlippedVertical, this.data.rotation, this.data.fixedRadius)
     }
 
     protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
@@ -299,7 +308,7 @@ export class ShapeView extends DataView {
     }
 
     // =================== update ========================
-    updateRenderArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number) {
+    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number) {
         const _frame = this.frame;
         if (isDiffShapeFrame(_frame, frame)) {
             _frame.x = frame.x;
@@ -335,49 +344,15 @@ export class ShapeView extends DataView {
         }
     }
 
-    updateRectangle(scaleX: number, scaleY: number) {
-
-    }
-    updateDiamond(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix) {
-
+    protected layoutOnRectShape(scaleX: number, scaleY: number) {
     }
 
-    update(props: PropsType, force?: boolean) {
-        // todo props没更新时是否要update
-        // 在frame、flip、rotate修改时需要update
-        const tid = this.id;
-        this.m_ctx.removeUpdate(tid); // remove from changeset
+    protected layoutOnDiamondShape(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix) {
+    }
 
-        // if (props) {
-        if (props.data.id !== this.m_data.id) throw new Error('id not match');
-        // check
-        const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
-        const diffVars = isDiffVarsContainer(props.varsContainer, this.m_varsContainer);
-        if (!force &&
-            !diffTransform &&
-            !diffVars) {
-            return;
-        }
-
-        if (diffTransform) {
-            // update transform
-            this.m_transx = props.transx;
-        }
-        if (diffVars) {
-            // update varscontainer
-            this.m_varsContainer = props.varsContainer;
-            const _id = this.id;
-            if (_id !== tid) {
-                this.m_ctx.removeDirty(tid);
-                // tid = _id;
-            }
-        }
-        // }
-        // add to dirty
-        this.m_ctx.setDirty(this);
-
+    protected _layout() {
         const shape = this.m_data;
-        const transform = props.transx;
+        const transform = this.m_transx;
 
         const _frame = shape.frame;
         let x = _frame.x;
@@ -395,7 +370,7 @@ export class ShapeView extends DataView {
         if (!transform || notTrans) {
 
             // update frame, hflip, vflip, rotate
-            this.updateRenderArgs(frame, hflip, vflip, rotate);
+            this.updateLayoutArgs(frame, hflip, vflip, rotate);
             // todo 需要继续update childs
             return;
         }
@@ -474,8 +449,8 @@ export class ShapeView extends DataView {
             const cscaleY = parentFrame.height / saveH;
 
             // update frame, hflip, vflip, rotate
-            this.updateRenderArgs(parentFrame, hflip, vflip, rotate);
-            this.updateRectangle(cscaleX, cscaleY);
+            this.updateLayoutArgs(parentFrame, hflip, vflip, rotate);
+            this.layoutOnRectShape(cscaleX, cscaleY);
 
             return;
         }
@@ -493,45 +468,50 @@ export class ShapeView extends DataView {
         const cscaleX = parentFrame.width / bbox.width;
         const cscaleY = parentFrame.height / bbox.height;
 
-        // const resue: Map<string, VDom> = new Map();
-        // this.m_children.forEach((c) => resue.set(c.data().id, c));
-        // nodes = [];
-        // for (let i = 0, len = shape.childs.length; i < len; i++) { //摆正： 将旋转、翻转放入到子对象
-        //     const cc = shape.childs[i]
-        //     const m1 = cc.matrix2Parent();
-        //     m1.multiAtLeft(m);
-        //     const target = m1.computeCoord(0, 0);
-        //     const c_rotate = rotate + (cc.rotation || 0);
-        //     const c_hflip = hflip ? !cc.isFlippedHorizontal : !!cc.isFlippedHorizontal;
-        //     const c_vflip = vflip ? !cc.isFlippedVertical : !!cc.isFlippedVertical;
-        //     const c_frame = cc.frame;
-        //     // cc matrix2Parent
-        //     const m2 = matrix2parent(c_frame.x, c_frame.y, c_frame.width, c_frame.height, c_rotate, c_hflip, c_vflip);
-        //     m2.trans(bbox.x, bbox.y); // todo 使用parentFrame.x y会与rect对不齐，待研究
-        //     const cur = m2.computeCoord(0, 0);
-        //     const dx = target.x - cur.x;
-        //     const dy = target.y - cur.y;
-        //     const transform = {
-        //         dx,
-        //         dy,
-        //         scaleX: cscaleX,
-        //         scaleY: cscaleY,
-        //         parentFrame: parentFrame,
-        //         vflip,
-        //         hflip,
-        //         rotate
-        //     }
-        //     // update childs
-        //     this.updateChild(cc, i, transform, varsContainer!, resue);
-        // }
-        // // 删除多余的
-        // this.removeChilds(shape.childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
-
         // update frame, rotate, hflip...
-        this.updateRenderArgs(parentFrame, undefined, undefined, undefined);
+        this.updateLayoutArgs(parentFrame, undefined, undefined, undefined);
 
-        this.updateDiamond(cscaleX, cscaleY, rotate, vflip, hflip, bbox, m);
+        this.layoutOnDiamondShape(cscaleX, cscaleY, rotate, vflip, hflip, bbox, m);
 
+    }
+
+    // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
+    // 更新childs, 及向下更新数据变更了的child(在datachangeset)
+    // 父级向下更新时带props, 自身更新不带
+    layout(props?: PropsType) {
+        // todo props没更新时是否要update
+        // 在frame、flip、rotate修改时需要update
+        const tid = this.id;
+        this.m_ctx.removeReLayout(tid); // remove from changeset
+
+        if (props) {
+            // 
+            if (props.data.id !== this.m_data.id) throw new Error('id not match');
+            // check
+            const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
+            const diffVars = isDiffVarsContainer(props.varsContainer, this.m_varsContainer);
+            if (!diffTransform &&
+                !diffVars) {
+                return;
+            }
+    
+            if (diffTransform) {
+                // update transform
+                this.m_transx = props.transx;
+            }
+            if (diffVars) {
+                // update varscontainer
+                this.m_varsContainer = props.varsContainer;
+                const _id = this.id;
+                if (_id !== tid) {
+                    this.m_ctx.removeDirty(tid);
+                    // tid = _id;
+                }
+            }
+        }
+
+        this.m_ctx.setDirty(this);
+        this._layout();
         this.notify("update");
     }
 
