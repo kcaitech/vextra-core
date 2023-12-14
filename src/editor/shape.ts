@@ -762,7 +762,7 @@ export class ShapeEditor {
     /**
      * @description 路径裁剪
      */
-    public clipPathShape(index: number): { code: number, ex: Shape | undefined } {
+    public clipPathShape(index: number, slice_name: string): { code: number, ex: Shape | undefined } {
         const data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
         if (!(this.__shape instanceof PathShape)) {
             console.log('!(this.__shape instanceof PathShape)');
@@ -771,7 +771,7 @@ export class ShapeEditor {
         }
         try {
             const api = this.__repo.start("sortPathShapePoints", {});
-            const code = _clip(this.__page, api, this.__shape as PathShape, index);
+            const code = _clip(this.__page, api, this.__shape as PathShape, index, slice_name);
             this.__repo.commit();
             return code;
         } catch (error) {

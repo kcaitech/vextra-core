@@ -85,6 +85,7 @@ import {
 } from "./utils/symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { ExportFormat, Shadow } from "../data/baseclasses";
+import { get_rotate_for_straight, is_straight } from "./utils/path";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1387,7 +1388,7 @@ export class PageEditor {
     setShapesFrame(actions: FrameAdjust[]) {
         const api = this.__repo.start('setShapesFrame', {});
         try {
-            for (let i = 0; i < actions.length; i++) { 
+            for (let i = 0; i < actions.length; i++) {
                 const { target, widthExtend, heightExtend } = actions[i];
                 expand(api, this.__page, target, widthExtend, heightExtend);
             }
@@ -1402,14 +1403,10 @@ export class PageEditor {
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
-                if (s.type === ShapeType.Line) {
-                    const f = s.frame, m2p = s.matrix2Parent(), lt = m2p.computeCoord2(0, 0),
-                        rb = m2p.computeCoord2(f.width, f.height);
-                    const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
-                    let dr = v - real_r;
-                    if (s.isFlippedHorizontal) dr = -dr;
-                    if (s.isFlippedVertical) dr = -dr;
-                    api.shapeModifyRotate(this.__page, s, (s.rotation || 0) + dr);
+                
+                if (is_straight(s)) {
+                    const r = get_rotate_for_straight(s as PathShape, v);
+                    api.shapeModifyRotate(this.__page, s, r);
                 } else {
                     api.shapeModifyRotate(this.__page, s, v);
                 }

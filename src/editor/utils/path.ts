@@ -10,6 +10,7 @@ import { BasicArray } from "../../data/basic";
 import { Matrix } from "../../basic/matrix";
 import { group } from "../../editor/group";
 import { addCommonAttr, newGroupShape } from "../../editor/creator";
+import { getHorizontalAngle } from "../../editor/page";
 interface XY {
     x: number
     y: number
@@ -129,7 +130,7 @@ export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
     mp.multiAtLeft(mp2.inverse);
 
     const points = s.points;
-    
+
     if (!points || !points.length) {
         return false;
     }
@@ -538,11 +539,10 @@ function get_frame_by_points(points: CurvePoint[]) {
     frame.height = Math.max(minimum_WH, bottom - frame.y);
     return frame;
 }
-function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame) {
+function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame, slice_name: string) {
     const __style = importStyle(exportStyle(origin.style));
     const __points = new BasicArray<CurvePoint>();
-    const name = uuid().slice(0, 5);
-    const __ps = new PathShape(uuid(), name, ShapeType.Path, frame, __style, __points, false);
+    const __ps = new PathShape(uuid(), slice_name, ShapeType.Path, frame, __style, __points, false);
     addCommonAttr(__ps)
     return __ps;
 }
@@ -593,7 +593,7 @@ function delele_origin(page: Page, origin: PathShape, api: Api) {
     }
     api.shapeDelete(page, parent, index);
 }
-export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, index: number) {
+export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
     // 将要拆分图形
 
     // 拆分结果
@@ -627,8 +627,8 @@ export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, in
     const frame2 = get_frame_by_points(apart.path2);
 
     // 4.根据计算的frame，按照原有图形的样式来生成两个path对象
-    const __part1 = create_path_shape_by_frame(path_shape, frame1);
-    const __part2 = create_path_shape_by_frame(path_shape, frame2);
+    const __part1 = create_path_shape_by_frame(path_shape, frame1, slice_name);
+    const __part2 = create_path_shape_by_frame(path_shape, frame2, slice_name);
 
     // 5.把生成的path对象加入文档
     const part1 = insert_part_to_doc(page, path_shape, __part1, api) as PathShape;
@@ -656,7 +656,7 @@ export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, in
 
     return data;
 }
-export function _clip(page: Page, api: Api, path_shape: PathShape, index: number) {
+export function _clip(page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
     let data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
     if (path_shape.isClosed) {
         api.setCloseStatus(page, path_shape, false);
@@ -676,7 +676,7 @@ export function _clip(page: Page, api: Api, path_shape: PathShape, index: number
         data.code = after_clip(page, api, path_shape);
         return data;
     }
-    data = apart_path_shape(page, api, path_shape, index);
+    data = apart_path_shape(page, api, path_shape, index, slice_name);
     return data;
 }
 export function update_path_shape_frame(api: Api, page: Page, shapes: PathShape[]) {
@@ -705,4 +705,43 @@ export function modify_points_xy(api: Api, page: Page, s: PathShape, actions: {
         api.shapeModifyCurvPoint(page, s, action.index, new_xy);
     }
     update_frame_by_points(api, page, s);
+}
+export function is_straight(shape: Shape) {
+    if (!(shape instanceof PathShape)) {
+        return false;
+    }
+    if (shape.type === ShapeType.Contact) {
+        return false;
+    }
+    const points = shape.points;
+    if (points.length !== 2) {
+        return false;
+    }
+    return !points[0].hasFrom && !points[1].hasTo;
+}
+export function get_rotate_for_straight(shape: PathShape, v: number) {
+    const points = (shape as PathShape).points;
+
+    const f = shape.frame, m = shape.matrix2Root();
+    m.preScale(f.width, f.height);
+    const p1 = points[0];
+    const p2 = points[1];
+
+    if (!p1 || !p2) {
+        return 0;
+    }
+
+    const lt = m.computeCoord2(p1.x, p1.y);
+    const rb = m.computeCoord2(p2.x, p2.y);
+    const real_r = Number(getHorizontalAngle(lt, rb).toFixed(2));
+
+    let dr = v - real_r;
+    if (shape.isFlippedHorizontal) {
+        dr = -dr;
+    }
+    if (shape.isFlippedVertical) {
+        dr = -dr;
+    }
+
+    return (shape.rotation || 0) + dr;
 }
