@@ -1000,16 +1000,27 @@ export class ShapeEditor {
 
         try {
             const api = this.__repo.start("deleteShape", {});
+
             for (let i = indexes.length - 1; i > -1; i--) {
                 api.deletePoint(this.__page, this.__shape as PathShape, indexes[i]);
             }
+
             const p = this.__shape.parent as GroupShape;
+
             result = 1;
+
+            if (this.__shape.points.length === 2) {
+                api.setCloseStatus(this.__page, this.__shape, false);
+            }
+
             if (this.__shape.points.length < 2 && p) {
                 const index = p.indexOfChild(this.__shape);
                 api.shapeDelete(this.__page, p, index)
                 result = 0;
+            } else {
+                update_path_shape_frame(api, this.__page, [this.__shape as PathShape]);
             }
+
             this.__repo.commit();
             return result;
         } catch (e) {
