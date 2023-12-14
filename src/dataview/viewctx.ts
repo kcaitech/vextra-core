@@ -10,6 +10,7 @@ export interface PropsType {
     data: Shape;
     transx?: RenderTransform;
     varsContainer?: VarsContainer;
+    isVirtual?: boolean;
 }
 
 interface DataView {
@@ -18,12 +19,12 @@ interface DataView {
     render(): number;
 }
 
-export interface ComType {
+export interface ViewType {
     new(ctx: DViewCtx, props: PropsType): DataView;
 }
 
 export class DViewCtx {
-    comsMap: Map<ShapeType, ComType> = new Map();
+    comsMap: Map<ShapeType, ViewType> = new Map();
     // 选区
     // 缩放监听
 

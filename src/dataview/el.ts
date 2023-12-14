@@ -14,9 +14,9 @@ export class EL {
     // el?: HTMLElement | SVGElement;
     // _id: number;
     // kid? : string; // 关键节点,回收整棵树时到些打住
-    tag: string;
-    attr: ELAttr;
-    childs: string | EL[];
+    eltag: string;
+    elattr: ELAttr;
+    elchilds: string | EL[];
 
     static make(tag: string, attr?: { [key: string]: string }, childs?: string | EL | EL[]): EL {
         let el = _el_instance.pop();
@@ -34,16 +34,16 @@ export class EL {
 
     public reset(tag: string, attr?: ELAttr, childs?: string | EL | EL[]) {
         // this._id = id;
-        this.tag = tag;
-        this.attr = attr || {};
-        this.childs = childs ? (Array.isArray(childs) ? childs : (typeof childs === 'string' ? childs : [childs])) : [];
+        this.eltag = tag;
+        this.elattr = attr || {};
+        this.elchilds = childs ? (Array.isArray(childs) ? childs : (typeof childs === 'string' ? childs : [childs])) : [];
     }
 
     constructor(tag: string, attr?: ELAttr, childs?: string | EL | EL[]) {
         // this._id = id;
-        this.tag = tag;
-        this.attr = attr || {};
-        this.childs = childs ? (Array.isArray(childs) ? childs : (typeof childs === 'string' ? childs : [childs])) : [];
+        this.eltag = tag;
+        this.elattr = attr || {};
+        this.elchilds = childs ? (Array.isArray(childs) ? childs : (typeof childs === 'string' ? childs : [childs])) : [];
     }
 
     get isViewNode() {

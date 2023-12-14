@@ -103,7 +103,7 @@ export class SymbolRefView extends GroupShapeView {
                 cdom.update(props);
             } else {
                 const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
-                const props = { data: c, transx, varsContainer };
+                const props = { data: c, transx, varsContainer, isVirtual: true };
                 const ins = new Com(this.m_ctx, props) as DataView;
                 ins.onCreate();
 

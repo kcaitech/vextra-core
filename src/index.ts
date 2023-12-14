@@ -31,6 +31,7 @@ export * from "./editor/table"
 export * from "./editor/controller"
 
 export * from "./service/shapedirlist"
+export * from "./service/shapedirlist2"
 export * from "./service/taskmgr"
 export * from "./service/symbollist"
 

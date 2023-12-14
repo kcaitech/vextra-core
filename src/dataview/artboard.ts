@@ -62,7 +62,7 @@ export class ArtboradView extends GroupShapeView {
     render(): number {
         const r = super.render();
         if (r) {
-            this.tag = "svg";
+            this.eltag = "svg";
         }
         return r;
     }

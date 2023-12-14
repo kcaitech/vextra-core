@@ -209,6 +209,16 @@ export class ShapeView extends DataView {
     m_rotate?: number;
     m_fixedRadius?: number;
 
+    get parent(): ShapeView | undefined {
+        return this.m_parent as ShapeView;
+    }
+    get childs(): ShapeView[] {
+        return this.m_children as ShapeView[];
+    }
+    get naviChilds(): ShapeView[] {
+        return this.m_children as ShapeView[];
+    }
+
     onCreate(): void {
         // this.m_frame = new ShapeFrame(0, 0, 0, 0);
         // force update

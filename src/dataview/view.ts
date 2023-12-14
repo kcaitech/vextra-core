@@ -13,6 +13,7 @@ export class DataView extends Watchable(EL) {
     m_parent: DataView | undefined;
     m_transx?: RenderTransform;
     m_varsContainer?: (SymbolRefShape | SymbolShape)[];
+    m_isVirtual?: boolean;
 
     // m_isdirty: boolean = false;
     m_isdistroyed: boolean = false;
@@ -33,17 +34,43 @@ export class DataView extends Watchable(EL) {
 
         this.m_transx = props.transx;
         this.m_varsContainer = props.varsContainer;
-
+        this.m_isVirtual = props.isVirtual;
         // build childs
         // this.onCreate();
         // this.update(props, true);
     }
 
+    // mock shape
     get isViewNode() {
         return true;
     }
     get nodeCount() {
         return this.m_nodeCount;
+    }
+    get data() {
+        return this.m_data;
+    }
+    get id() {
+        if (this.m_varsContainer) return genid(this.m_data, this.m_varsContainer);
+        return this.m_data.id;
+    }
+    get parent() {
+        return this.m_parent;
+    }
+    get childs() {
+        return this.m_children;
+    }
+    get naviChilds() {
+        return this.m_children;
+    }
+    get type() {
+        return this.m_data.type;
+    }
+    get name() {
+        return this.m_data.name;
+    }
+    get isVirtualShape() {
+        return this.m_isVirtual;
     }
 
     private _datawatcher(...args: any[]) {
@@ -63,19 +90,6 @@ export class DataView extends Watchable(EL) {
 
     onDataChange(...args: any[]) {
 
-    }
-
-    data() {
-        return this.m_data;
-    }
-
-    get id() {
-        if (this.m_varsContainer) return genid(this.m_data, this.m_varsContainer);
-        return this.m_data.id;
-    }
-
-    get naviChilds() {
-        return this.m_children;
     }
 
     // 1. 新创建，则正常创建，append

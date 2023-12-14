@@ -189,7 +189,7 @@ export class GroupShapeView extends ShapeView {
         const childsView: DataView[] = childs.map((c) => {
             const comsMap = this.m_ctx.comsMap;
             const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
-            const props = { data: c, transx: this.m_transx, varsContainer: this.m_varsContainer };
+            const props = { data: c, transx: this.m_transx, varsContainer: this.m_varsContainer, isVritual: this.m_isVirtual };
             const ins = new Com(this.m_ctx, props) as DataView;
             ins.onCreate();
             return ins;
@@ -216,7 +216,7 @@ export class GroupShapeView extends ShapeView {
                 this.moveChild(cdom, i);
             } else {
                 const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
-                const props = { data: c, transx: this.m_transx, varsContainer: this.m_varsContainer };
+                const props = { data: c, transx: this.m_transx, varsContainer: this.m_varsContainer, isVirtual: this.m_isVirtual };
                 const ins = new Com(this.m_ctx, props) as DataView;
                 ins.onCreate();
 
@@ -302,7 +302,7 @@ export class GroupShapeView extends ShapeView {
     updateRectangle(scaleX: number, scaleY: number): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
-        this.m_children.forEach((c) => resue.set(c.data().id, c));
+        this.m_children.forEach((c) => resue.set(c.data.id, c));
         for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i]
             const transform = {
@@ -325,7 +325,7 @@ export class GroupShapeView extends ShapeView {
     updateDiamond(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
-        this.m_children.forEach((c) => resue.set(c.data().id, c));
+        this.m_children.forEach((c) => resue.set(c.data.id, c));
         for (let i = 0, len = childs.length; i < len; i++) { //摆正： 将旋转、翻转放入到子对象
             const cc = childs[i]
             const m1 = cc.matrix2Parent();

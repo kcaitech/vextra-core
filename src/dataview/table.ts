@@ -39,7 +39,7 @@ export class TableView extends GroupShapeView {
                     } else {
                         // const comsMap = this.m_ctx.comsMap;
                         const Com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle)!;
-                        const props = { data: cell,  transx: this.m_transx, varsContainer: this.m_varsContainer, frame: cellLayout.frame };
+                        const props = { data: cell,  transx: this.m_transx, varsContainer: this.m_varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual };
                         const ins = new Com(this.m_ctx, props) as DataView;
                         ins.onCreate();
                         this.addChild(ins, idx);
