@@ -26,8 +26,8 @@ import { parsePath } from "./pathparser";
 import { RECT_POINTS } from "./consts";
 import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
-import {TableShape} from "./table";
-import {SymbolRefShape} from "./symbolref";
+import { TableShape } from "./table";
+import { SymbolRefShape } from "./symbolref";
 export { Variable } from "./variable";
 
 // todo
@@ -1093,6 +1093,6 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
             isClosed
         )
         this.scalingStroke = scalingStroke;
-        this.isClosed = true;
+        this.isClosed = isClosed;
     }
 }
