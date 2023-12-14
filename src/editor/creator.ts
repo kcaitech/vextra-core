@@ -383,8 +383,9 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     const p2 = new CurvePoint(uuid(), 1, 0, CurveMode.Straight); // rt
     const p3 = new CurvePoint(uuid(), 1, 1, CurveMode.Straight); // rb
     const p4 = new CurvePoint(uuid(), 0, 1, CurveMode.Straight); // lb
-    curvePoint.push(p1, p2, p3, p4);
-    const shape = new CutoutShape(id, name, types.ShapeType.Cutout, frame, style, curvePoint, true, true);
+    const p5 = new CurvePoint(uuid(), 0, 0.00001, CurveMode.Straight); // lt
+    curvePoint.push(p1, p2, p3, p4, p5);
+    const shape = new CutoutShape(id, name, types.ShapeType.Cutout, frame, style, curvePoint, false, true);
     addCommonAttr(shape);
     return shape;
 }
