@@ -1,6 +1,6 @@
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
-import { GroupShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { Text } from "../data/text";
 import { ContactType, Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
@@ -968,7 +968,7 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
 export function pathEdit(api: Api, page: Page, s: Shape, index: number, end: PageXY) {
     let m = new Matrix(s.matrix2Root()), w = s.frame.width, h = s.frame.height;
     m.preScale(w, h), m = new Matrix(m.inverse);  // 图形单位坐标系，0-1
-    const p = s.points[index];
+    const p: CurvePoint = s.points[index];
     if (!p) return false;
     const t = m.computeCoord3(end);
     api.shapeModifyCurvPoint(page, s as PathShape, index, t);
@@ -986,12 +986,12 @@ export function pathEdit(api: Api, page: Page, s: Shape, index: number, end: Pag
         const mp2 = s.matrix2Parent();
         mp2.preScale(nf.width, nf.height);
         mp.multiAtLeft(mp2.inverse);
-        const points = s.points;
+        const points = (s as PathShape).points;
         if (!points || !points.length) return false;
         for (let i = 0, len = points.length; i < len; i++) {
             const p = points[i];
             if (!p) continue;
-            api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord3(p.point));
+            api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord2(p.x, p.y));
         }
     }
 }
@@ -1050,18 +1050,18 @@ export function update_frame_by_points(api: Api, page: Page, s: Shape) {
         const mp2 = s.matrix2Parent();
         mp2.preScale(nf.width, nf.height);
         mp.multiAtLeft(mp2.inverse);
-        const points = s.points;
+        const points = (s as PathShape).points;
         if (!points || !points.length) return false;
         for (let i = 0, len = points.length; i < len; i++) {
             const p = points[i];
             if (!p) continue;
-            if (p.hasCurveFrom) {
-                api.shapeModifyCurvFromPoint(page, s as PathShape, i, mp.computeCoord3(p.curveFrom));
+            if (p.hasFrom) {
+                api.shapeModifyCurvFromPoint(page, s as PathShape, i, mp.computeCoord2(p.fromX || 0, p.fromY || 0));
             }
-            if (p.hasCurveTo) {
-                api.shapeModifyCurvToPoint(page, s as PathShape, i, mp.computeCoord3(p.curveTo));
+            if (p.hasTo) {
+                api.shapeModifyCurvToPoint(page, s as PathShape, i, mp.computeCoord2(p.toX || 0, p.toY || 0));
             }
-            api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord3(p.point));
+            api.shapeModifyCurvPoint(page, s as PathShape, i, mp.computeCoord2(p.x, p.y));
         }
     }
 }
