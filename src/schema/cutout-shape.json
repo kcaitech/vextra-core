@@ -1,0 +1,18 @@
+{
+    "description": "cutout shape",
+    "type": "object",
+    "properties": {
+        "scalingStroke": {
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "scalingStroke"
+    ],
+    "allOf": [
+        {
+            "$ref": "./path-shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

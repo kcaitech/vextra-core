@@ -177,6 +177,7 @@ export enum ShapeType {
     Table = 'table',
     TableCell = 'table-cell',
     Contact = 'contact',
+    Cutout = 'cutout',
     OverrideShape = 'override-shape',
 }
 /* shape frame
@@ -324,15 +325,19 @@ export type ExportOptions = {
     includedChildIds: string[]
     childOptions: number
     shouldTrim: boolean
+    trimTransparent: boolean
+    canvasBackground: boolean
+    unfold: boolean
 }
 /* export format */
 export type ExportFormat = {
-    absoluteSize?: number
-    fileFormat?: ExportFileFormat
-    name?: string
-    namingScheme?: ExportFormatNameingScheme
-    scale?: number
-    visibleScaleType?: ExportVisibleScaleType
+    id: string
+    absoluteSize: number
+    fileFormat: ExportFileFormat
+    name: string
+    namingScheme: ExportFormatNameingScheme
+    scale: number
+    visibleScaleType: ExportVisibleScaleType
 }
 /* export format nameing scheme */
 export enum ExportFormatNameingScheme {
@@ -599,7 +604,7 @@ export type TextAttr = ParaAttr & {
 }
 /* page */
 export type Page = Shape & {
-    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolRefShape | TableShape | SymbolShape | SymbolUnionShape)[]
+    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolRefShape | TableShape | CutoutShape | SymbolUnionShape | SymbolShape)[]
 }
 /* oval shape */
 export type OvalShape = PathShape & {
@@ -614,7 +619,7 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape)[]
+    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape)[]
     isBoolOpShape?: boolean
     fixedRadius?: number
 }
@@ -629,6 +634,10 @@ export type SymbolUnionShape = SymbolShape & {
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {
+}
+/* cutout shape */
+export type CutoutShape = PathShape & {
+    scalingStroke: boolean
 }
 /* contact shape */
 export type ContactShape = Shape & {

@@ -50,6 +50,9 @@
           },
           {
             "$ref": "./flatten-shape.json"
+          },
+          {
+            "$ref": "./cutout-shape.json"
           }
         ]
       }
