@@ -178,6 +178,8 @@ function render2path(shape: ShapeView): Path {
 
 export class GroupShapeView extends ShapeView {
 
+    m_isboolgroup: boolean | undefined;
+
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         const childs = this.getDataChilds();
@@ -189,13 +191,12 @@ export class GroupShapeView extends ShapeView {
             return ins;
         })
         if (childsView.length > 0) this.addChilds(childsView);
+        this.m_isboolgroup = props.data.isBoolOpShape;
     }
 
     getDataChilds(): Shape[] {
         return (this.m_data as GroupShape).childs;
     }
-
-    m_save_isboolgroup: boolean | undefined;
 
     protected updateChildren(): void {
         // update children
@@ -226,14 +227,18 @@ export class GroupShapeView extends ShapeView {
         }
     }
 
+    m_need_updatechilds: boolean = false;
+
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         if (args.includes('childs')) {
-            this.updateChildren();
+            // this.updateChildren();
+            this.m_need_updatechilds = true;
         }
-        else if ((this.m_save_isboolgroup) !== (this.m_data as GroupShape).isBoolOpShape) {
+        else if ((this.m_isboolgroup) !== (this.m_data as GroupShape).isBoolOpShape) {
             this.m_path = undefined;
-            this.m_save_isboolgroup = (this.m_data as GroupShape).isBoolOpShape;
+            this.m_pathstr = undefined;
+            this.m_isboolgroup = (this.m_data as GroupShape).isBoolOpShape;
         }
 
         // todo boolgroup
@@ -277,6 +282,19 @@ export class GroupShapeView extends ShapeView {
         }
         this.moveChild(cdom, idx);
         cdom.layout(props);
+    }
+
+    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number | undefined): void {
+        super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
+        // todo
+        if (this.m_need_updatechilds) {
+            this.updateChildren();
+            this.m_need_updatechilds = false;
+        }
+    }
+
+    protected layoutOnNormal(): void {
+
     }
 
     layoutOnRectShape(scaleX: number, scaleY: number): void {

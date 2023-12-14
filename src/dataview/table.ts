@@ -16,6 +16,11 @@ export class TableView extends GroupShapeView {
         return [];
     }
 
+    onDataChange(...args: any[]): void {
+        super.onDataChange(...args);
+        if (args.includes('cells')) this.m_need_updatechilds = true;
+    }
+
     protected updateChildren(): void {
 
         const reuse = new Map<string, DataView>();
@@ -47,6 +52,9 @@ export class TableView extends GroupShapeView {
                     ++idx;
                 }
             }
+        }
+        if (this.m_children.length > idx) {
+            this.removeChilds(idx, this.m_children.length - idx);
         }
     }
 

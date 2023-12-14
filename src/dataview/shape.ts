@@ -205,8 +205,8 @@ export class ShapeView extends DataView {
     m_fixedRadius?: number;
 
     // cache
-    // m_fills?: EL[]; // 不缓存,可回收
-    // m_borders?: EL[];
+    m_fills?: EL[]; // 不缓存,可回收
+    m_borders?: EL[];
     m_path?: Path;
     m_pathstr?: string;
 
@@ -344,6 +344,9 @@ export class ShapeView extends DataView {
         }
     }
 
+    protected layoutOnNormal() {
+    }
+
     protected layoutOnRectShape(scaleX: number, scaleY: number) {
     }
 
@@ -368,10 +371,10 @@ export class ShapeView extends DataView {
 
         // let nodes: Array<any>;
         if (!transform || notTrans) {
-
             // update frame, hflip, vflip, rotate
             this.updateLayoutArgs(frame, hflip, vflip, rotate);
             // todo 需要继续update childs
+            this.layoutOnNormal();
             return;
         }
 
@@ -482,7 +485,7 @@ export class ShapeView extends DataView {
         // todo props没更新时是否要update
         // 在frame、flip、rotate修改时需要update
         const tid = this.id;
-        this.m_ctx.removeReLayout(tid); // remove from changeset
+        const needLayout = this.m_ctx.removeReLayout(tid); // remove from changeset
 
         if (props) {
             // 
@@ -490,11 +493,12 @@ export class ShapeView extends DataView {
             // check
             const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
             const diffVars = isDiffVarsContainer(props.varsContainer, this.m_varsContainer);
-            if (!diffTransform &&
+            if (!needLayout &&
+                !diffTransform &&
                 !diffVars) {
                 return;
             }
-    
+
             if (diffTransform) {
                 // update transform
                 this.m_transx = props.transx;
