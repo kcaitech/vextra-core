@@ -1029,25 +1029,30 @@ export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
     const w = s.frame.width, h = s.frame.height;
     const mp = s.matrix2Parent();
     mp.preScale(w, h);
+
     if (s.rotation) {
         api.shapeModifyRotate(page, s, 0);
-    }  // 摆正 是否需要摆正呢
+    }
     if (s.isFlippedHorizontal) {
         api.shapeModifyHFlip(page, s, false);
     }
     if (s.isFlippedVertical) {
         api.shapeModifyVFlip(page, s, false);
     }
+
     api.shapeModifyX(page, s, nf.x);
     api.shapeModifyY(page, s, nf.y);
-    api.shapeModifyWH(page, s, nf.width, nf.height);
+    api.shapeModifyWH(page, s, Math.max(nf.width, minimum_WH), Math.max(nf.height, minimum_WH));
+    
     const mp2 = s.matrix2Parent();
     mp2.preScale(nf.width, nf.height);
     mp.multiAtLeft(mp2.inverse);
     const points = s.points;
+
     if (!points || !points.length) {
         return false;
     }
+
     for (let i = 0, len = points.length; i < len; i++) {
         const p = points[i];
         if (!p) {
@@ -1061,6 +1066,7 @@ export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
         }
         api.shapeModifyCurvPoint(page, s, i, mp.computeCoord2(p.x, p.y));
     }
+
     console.log(s.name, 'update frame by "update_frame_by_points"');
 }
 export function update_frame_by_points2(api: Api, page: Page, s: PathShape) {

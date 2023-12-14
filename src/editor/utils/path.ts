@@ -15,6 +15,8 @@ interface XY {
     x: number
     y: number
 }
+const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
+
 /**
  * @description 计算三次贝塞尔曲线上的点
  * @param t 0~1
@@ -384,8 +386,8 @@ function get_frame_by_points(points: CurvePoint[]) {
             bottom = p.y;
         }
     }
-    frame.width = right - frame.x;
-    frame.height = bottom - frame.y;
+    frame.width = Math.max(minimum_WH, right - frame.x);
+    frame.height = Math.max(minimum_WH, bottom - frame.y);
     return frame;
 }
 function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame) {
