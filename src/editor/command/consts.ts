@@ -1,6 +1,7 @@
 export const PAGE_ATTR_ID = {
     name: "name",
-    background: "background"
+    background: "background",
+    previewUnfold: "previewUnfold"
 }
 
 export const SHAPE_ATTR_ID = {
@@ -71,6 +72,10 @@ export const SHAPE_ATTR_ID = {
     cellContentImage: "cellContentImage",
     cellSpan: "cellSpan",
 
+    //export options
+    trimTransparent: "trimTransparent",
+    previewUnfold: "previewUnfold",
+    canvasBackground: "canvasBackground",
     // symbolref
     symbolref: "symbolref",
     // symbol
@@ -149,3 +154,12 @@ export const TABLE_ATTR_ID = {
 }
 
 export const CONTACTS_ID = "contact"
+
+export const CUTOUT_ID = "cutout"
+
+export const CUTOUT_ATTR_ID = {
+    scale: "scale",
+    name: "name",
+    fileFormat: "fileFormat",
+    perfix: 'perfix'
+}

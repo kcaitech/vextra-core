@@ -18,7 +18,10 @@
         "includedChildIds": [],
         "childOptions": 0,
         "shouldTrim": false,
-        "exportFormats": []
+        "exportFormats": [],
+        "trimTransparent": false,
+        "canvasBackground": false,
+        "unfold": false
     },
     "frame": {
         "height": 800,

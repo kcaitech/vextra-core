@@ -40,7 +40,12 @@ import {
     importCurvePoint,
     importVariable,
     importShadow,
-    importShadowPosition, importCurveMode
+    importShadowPosition,
+    importCurveMode,
+    importCutoutShape,
+    importExportFormat,
+    importExportFileFormat,
+    importExportFormatNameingScheme
 } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -59,18 +64,20 @@ import {
     TableShape,
     Variable,
     Fill,
-    Border
+    Border,
+    ExportFormat,
+    Shadow,
+    CurveMode
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID, TABLE_ATTR_ID, SHADOW_ID, SHAPE_ATTR_ID, SHADOW_ATTR_ID, } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID, TABLE_ATTR_ID, SHADOW_ID, SHAPE_ATTR_ID, SHADOW_ATTR_ID, CUTOUT_ID, CUTOUT_ATTR_ID, } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
 import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
 import { importShape, updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { CMDHandler } from "./handler";
-import { CurveMode, Shadow } from "../../data/typesdefine";
 import { shapeModifyCurveMode } from "../basicapi";
 
 export class CMDExecuter {
@@ -207,6 +214,12 @@ export class CMDExecuter {
             const opId = (op as IdOpSet).opId;
             if (opId === PAGE_ATTR_ID.name) {
                 if (cmd.value) api.pageModifyName(this.__document, pageId, cmd.value);
+            } else if (opId === PAGE_ATTR_ID.previewUnfold) {
+                const page = this.__document.pagesMgr.getSync(pageId)
+                if (!page) throw new Error(`page not find: (index)${opId} (cmdPageId)${op.targetId[0]}`);
+                const options = page.exportOptions!
+                const unfold = cmd.value && JSON.parse(cmd.value) || false;
+                api.setPageExportPreviewUnfold(options, JSON.parse(unfold));
             }
         }
     }
@@ -280,7 +293,7 @@ export class CMDExecuter {
         const op = cmd.ops[0]
         if (op.type !== OpType.ArrayInsert) return;
         const shapeId = op.targetId;
-        const shape = page.getTarget(shapeId);
+        const shape = (shapeId[0] === page.id) ? page : page.getTarget(shapeId);
         if (!shape) {
             console.log("shape not find", shapeId)
             return;
@@ -304,6 +317,9 @@ export class CMDExecuter {
         } else if (arrayAttr === POINTS_ID) {
             const point = importCurvePoint(JSON.parse(cmd.data));
             api.addPointAt(shape as PathShape, point, (op as ArrayOpInsert).start);
+        } else if (arrayAttr === CUTOUT_ID) {
+            const format = importExportFormat(JSON.parse(cmd.data));
+            api.addExportFormat(shape as Shape, format, (op as ArrayOpInsert).start);
         } else {
             console.error("not implemented ", arrayAttr)
         }
@@ -314,7 +330,7 @@ export class CMDExecuter {
         if (!page) return;
         const op = cmd.ops[0]
         if (op.type !== OpType.ArrayRemove) return;
-        const shape = page.getTarget(op.targetId);
+        const shape = (op.targetId[0] === page.id) ? page : page.getTarget(op.targetId);
         if (!shape) {
             console.log("shape not find", op.targetId)
             return;
@@ -336,6 +352,12 @@ export class CMDExecuter {
         else if (arrayAttr === POINTS_ID) {
             api.deletePointAt(shape as PathShape, (op as ArrayOpRemove).start)
         }
+        else if (arrayAttr === CUTOUT_ID) {
+            if (op.type === OpType.ArrayRemove) {
+                if (!shape.exportOptions) return;
+                api.deleteExportFormatAt(shape.exportOptions, (op as ArrayOpRemove).start)
+            }
+        }
         else {
             console.error("not implemented ", arrayAttr)
         }
@@ -348,7 +370,10 @@ export class CMDExecuter {
         if (_op.type !== OpType.IdSet) {
             return;
         }
-        const shape = page.getTarget(_op.targetId);
+        const shape = (_op.targetId[0] === page.id) ? page : page.getTarget(_op.targetId);
+        // if (!(shape instanceof Shape)) {
+        //     throw new Error();
+        // }
         if (!shape) {
             console.log("shape not find", _op.targetId)
             return;
@@ -494,6 +519,31 @@ export class CMDExecuter {
             } else {
                 console.error("not implemented ", op)
             }
+        } else if (arrayAttr === CUTOUT_ID) {
+            const cutoutId = cmd.arrayAttrId;
+            if (!shape.exportOptions) return;
+            const formatIdx = shape.exportOptions.exportFormats.findIndex((format: ExportFormat) => format.id === cutoutId);
+            if (formatIdx < 0) return;
+            const opId = op.opId;
+            const value = cmd.value;
+            if (opId === CUTOUT_ATTR_ID.scale) {
+                const scale = value && JSON.parse(value);
+                api.setExportFormatScale(shape.exportOptions, formatIdx, scale ?? 1);
+            } else if (opId === CUTOUT_ATTR_ID.name) {
+                api.setExportFormatName(shape.exportOptions, formatIdx, value ?? '');
+            } else if (opId === CUTOUT_ATTR_ID.fileFormat) {
+                if (value) {
+                    const fileFormat = importExportFileFormat(value as any)
+                    api.setExportFormatFileFormat(shape.exportOptions, formatIdx, fileFormat);
+                }
+            } else if (opId === CUTOUT_ATTR_ID.perfix) {
+                if (value) {
+                    const perfix = importExportFormatNameingScheme(value as any)
+                    api.setExportFormatPerfix(shape.exportOptions, formatIdx, perfix);
+                }
+            } else {
+                console.error("not implemented ", op)
+            }
         } else {
             console.error("not implemented ", arrayAttr)
         }
@@ -504,7 +554,7 @@ export class CMDExecuter {
         if (!page) return;
         const op0 = cmd.ops[0]
         const op1 = cmd.ops[1]
-        const shape = page.getTarget(op0.targetId);
+        const shape = (op0.targetId[0] === page.id) ? page : page.getTarget(op0.targetId);
         if (!shape) {
             console.log("shape not find", op0.targetId)
             return;

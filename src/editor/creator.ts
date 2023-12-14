@@ -4,16 +4,17 @@ import { Artboard } from "../data/artboard";
 import { Document, PageListItem } from "../data/document";
 import {
     GroupShape,
-    ImageShape,
     LineShape,
     OvalShape,
-    PathSegment,
     PathShape,
-    PathShape2,
     SymbolShape,
     RectShape,
     Shape,
     TextShape,
+    ImageShape,
+    PathShape2,
+    PathSegment,
+    CutoutShape,
     SymbolUnionShape
 } from "../data/shape";
 import { ContactShape } from "../data/contact"
@@ -372,6 +373,21 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     return shape;
 }
 
+export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
+    const borders = new BasicArray<Border>();
+    const fills = new BasicArray<Fill>();
+    const style = new Style(borders, fills, new BasicArray<Shadow>());
+    const curvePoint = new BasicArray<CurvePoint>();
+    const id = uuid();
+    const p1 = new CurvePoint(uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint(uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint(uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint(uuid(), 0, 1, CurveMode.Straight); // lb
+    curvePoint.push(p1, p2, p3, p4);
+    const shape = new CutoutShape(id, name, types.ShapeType.Cutout, frame, style, curvePoint, true, true);
+    addCommonAttr(shape);
+    return shape;
+}
 export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): SymbolShape {
     const compo = new SymbolShape(uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicMap());
     if (style) compo.style = style;

@@ -36,8 +36,7 @@ export class CMDHandler {
         if ((op.type !== OpType.IdSet)) return;
         const page = document.pagesMgr.getSync(pageId)
         if (!page) return;
-
-        const shape: Shape | Variable | undefined = page.getTarget(op.targetId);
+        const shape = (op.targetId[0] === page.id) ? page : page.getTarget(op.targetId);
         if (!shape) {
             console.log("shape not find", op.targetId)
             return;
@@ -547,7 +546,34 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                         }
                     }
                 }
-            }
+            },
+            {
+                opId: SHAPE_ATTR_ID.trimTransparent,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        const trim = value && JSON.parse(value);
+                        api.setExportTrimTransparent(shape.exportOptions, trim);
+                    }
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.canvasBackground,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        const background = value && JSON.parse(value);
+                        api.setExportCanvasBackground(shape.exportOptions, background);
+                    }
+                }
+            },
+            {
+                opId: SHAPE_ATTR_ID.previewUnfold,
+                handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
+                    if (value) {
+                        const unfold = value && JSON.parse(value);
+                        api.setExportPreviewUnfold(shape.exportOptions, unfold);
+                    }
+                }
+            },
         ]
     }
 ]

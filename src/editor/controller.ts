@@ -19,17 +19,8 @@ import {
 import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ContactRoleType, CurveMode, ShapeType } from "../data/typesdefine";
-import {
-    newArrowShape,
-    newArtboard,
-    newContact,
-    newImageShape,
-    newLineShape,
-    newOvalShape,
-    newRectShape,
-    newTable,
-    newTextShape
-} from "./creator";
+import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape } from "./creator";
+
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { v4 } from "uuid";
@@ -108,6 +99,7 @@ export interface AsyncCreator {
     contact_to: (p: PageXY, to?: ContactForm) => void;
     migrate: (targetParent: GroupShape) => void;
     close: () => undefined;
+    init_cutout: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame) => Shape | undefined;
 }
 
 export interface AsyncBaseAction {
@@ -412,20 +404,21 @@ export class Controller {
             }
             return undefined;
         }
-        return {
-            init,
-            init_media,
-            init_text,
-            init_arrow,
-            init_contact,
-            setFrame,
-            setFrameByWheel,
-            collect,
-            init_table,
-            contact_to,
-            migrate,
-            close
+        const init_cutout = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame): Shape | undefined => {
+            savepage = page;
+            status = Status.Pending;
+            const shape = newCutoutShape(name, frame);
+            const xy = parent.frame2Root();
+            shape.frame.x -= xy.x;
+            shape.frame.y -= xy.y;
+            api.shapeInsert(page, parent, shape, parent.childs.length);
+            newShape = parent.childs.at(-1);
+            newShape && api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+            return newShape
         }
+        return { init, init_media, init_text, init_arrow, init_contact, setFrame, setFrameByWheel, collect, init_table, contact_to, migrate, close, init_cutout }
     }
 
     // 单个图形异步编辑
