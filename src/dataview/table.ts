@@ -58,7 +58,7 @@ export class TableView extends GroupShapeView {
             }
         }
         if (this.m_children.length > idx) {
-            this.removeChilds(idx, this.m_children.length - idx);
+            this.removeChilds(idx, this.m_children.length - idx).forEach((c) => c.destory());
         }
     }
 

@@ -1,4 +1,4 @@
-import { ShapeFrame } from "../data/classes";
+import { ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
 import { Path } from "../data/path";
 import { parsePath } from "../data/pathparser";
 import { ShapeView, matrix2parent, transformPoints } from "./shape";
@@ -6,7 +6,7 @@ import { Matrix } from "../basic/matrix";
 
 export class PathShapeView extends ShapeView {
 
-    layoutOnDiamondShape(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
+    layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
         const shape = this.m_data;
         m.preScale(shape.frame.width, shape.frame.height); // points投影到parent坐标系的矩阵
 

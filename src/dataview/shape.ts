@@ -230,7 +230,7 @@ export class ShapeView extends DataView {
         this.m_rotate = shape.rotation;
         this.m_fixedRadius = shape.fixedRadius; // rectangle
 
-        this._layout();
+        this._layout(this.m_data, this.m_transx, this.m_varsContainer);
     }
 
     onDataChange(...args: any[]): void {
@@ -344,22 +344,22 @@ export class ShapeView extends DataView {
         }
     }
 
-    protected layoutOnNormal() {
+    protected layoutOnNormal(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     }
 
-    protected layoutOnRectShape(scaleX: number, scaleY: number) {
+    protected layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeFrame, scaleX: number, scaleY: number) {
     }
 
-    protected layoutOnDiamondShape(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix) {
+    protected layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix) {
     }
 
     protected isNoSupportDiamondScale(): boolean {
         return false;
     }
 
-    protected _layout() {
-        const shape = this.m_data;
-        const transform = this.m_transx;
+    protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+        // const shape = this.m_data;
+        // const transform = this.m_transx;
 
         const _frame = shape.frame;
         let x = _frame.x;
@@ -378,7 +378,7 @@ export class ShapeView extends DataView {
             // update frame, hflip, vflip, rotate
             this.updateLayoutArgs(frame, hflip, vflip, rotate);
             // todo 需要继续update childs
-            this.layoutOnNormal();
+            this.layoutOnNormal(varsContainer);
             return;
         }
 
@@ -449,7 +449,7 @@ export class ShapeView extends DataView {
 
             // update frame, hflip, vflip, rotate
             this.updateLayoutArgs(parentFrame, hflip, vflip, rotate);
-            this.layoutOnRectShape(cscaleX, cscaleY);
+            this.layoutOnRectShape(varsContainer, parentFrame, cscaleX, cscaleY);
 
             return;
         }
@@ -471,7 +471,7 @@ export class ShapeView extends DataView {
             fixFrameByConstrain(shape, transform.parentFrame, frame);
 
             this.updateLayoutArgs(frame, hflip, vflip, rotate);
-            this.layoutOnRectShape(scaleX, scaleY);
+            this.layoutOnRectShape(varsContainer, frame, scaleX, scaleY);
             return;
         }
 
@@ -491,7 +491,7 @@ export class ShapeView extends DataView {
         // update frame, rotate, hflip...
         this.updateLayoutArgs(parentFrame, undefined, undefined, undefined);
 
-        this.layoutOnDiamondShape(cscaleX, cscaleY, rotate, vflip, hflip, bbox, m);
+        this.layoutOnDiamondShape(varsContainer, cscaleX, cscaleY, rotate, vflip, hflip, bbox, m);
 
     }
 
@@ -532,8 +532,8 @@ export class ShapeView extends DataView {
         }
 
         this.m_ctx.setDirty(this);
-        this._layout();
-        this.notify("update");
+        this._layout(this.m_data, this.m_transx, this.m_varsContainer);
+        this.notify("layout");
     }
 
     // ================== render ===========================
