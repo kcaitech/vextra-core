@@ -27,9 +27,10 @@ export class SymbolRefView extends ShapeView {
         })
     }
 
-    // protected isNoSupportDiamondScale(): boolean {
-    //     return true;
-    // }
+    protected isNoSupportDiamondScale(): boolean {
+        return true;
+    }
+
     getDataChilds(): Shape[] {
         return this.m_sym ? this.m_sym.childs : [];
     }
@@ -138,17 +139,30 @@ export class SymbolRefView extends ShapeView {
         const symframe = this.m_sym.frame;
         const noTrans = isNoTransform(this.m_transx);
         if (noTrans && refframe.width === symframe.width && refframe.height === symframe.height) {
-            this._layout(this.m_data, undefined, varsContainer);
+            this._layout(this.m_data, undefined, varsContainer); // 普通更新
+            this.notify("layout");
+            return;
         }
-        else if (!noTrans) {
+        // 先更新自己, 再更新子对象
+        if (!noTrans) {
+            // todo: 临时hack
+            const saveLayoutNormal = this.layoutOnNormal;
+            const saveLayoutOnRectShape = this.layoutOnRectShape;
+            this.layoutOnNormal = () => {};
+            this.layoutOnRectShape = () => {};
             this._layout(this.m_data, this.m_transx, varsContainer);
+            this.layoutOnNormal = saveLayoutNormal;
+            this.layoutOnRectShape = saveLayoutOnRectShape;
         }
         else { // 第一个
-            { // 先更新自己
-                const shape = this.m_data;
-                this.updateLayoutArgs(shape.frame, shape.isFlippedHorizontal, shape.isFlippedVertical, shape.rotation, shape.fixedRadius);
-            }
+            const shape = this.m_data;
+            this.updateLayoutArgs(shape.frame, shape.isFlippedHorizontal, shape.isFlippedVertical, shape.rotation, shape.fixedRadius);
+        }
+        // 
+        // todo
+        {
 
+            const refframe = this.m_frame;
             const scaleX = refframe.width / symframe.width;
             const scaleY = refframe.height / symframe.height;
 
@@ -193,18 +207,13 @@ export class SymbolRefView extends ShapeView {
             }
             const parentFrame = new ShapeFrame(x, y, width, height);
 
-            // const parentFrame = new ShapeFrame(x, y, width, height);
             fixFrameByConstrain(shape, refframe, parentFrame);
 
             const cscaleX = parentFrame.width / saveW;
             const cscaleY = parentFrame.height / saveH;
-
-            // update frame, hflip, vflip, rotate
-            // this.updateLayoutArgs(parentFrame, hflip, vflip, rotate);
             this.layoutOnRectShape(varsContainer, parentFrame, cscaleX, cscaleY);
         }
 
-        // this._layout(this.m_data, this.m_transx, varsContainer);
         this.notify("layout");
     }
 
@@ -245,38 +254,6 @@ export class SymbolRefView extends ShapeView {
     }
 
     layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
-        const childs = this.getDataChilds();
-        const resue: Map<string, DataView> = new Map();
-        this.m_children.forEach((c) => resue.set(c.data.id, c));
-        for (let i = 0, len = childs.length; i < len; i++) { //摆正： 将旋转、翻转放入到子对象
-            const cc = childs[i]
-            const m1 = cc.matrix2Parent();
-            m1.multiAtLeft(m);
-            const target = m1.computeCoord(0, 0);
-            const c_rotate = rotate + (cc.rotation || 0);
-            const c_hflip = hflip ? !cc.isFlippedHorizontal : !!cc.isFlippedHorizontal;
-            const c_vflip = vflip ? !cc.isFlippedVertical : !!cc.isFlippedVertical;
-            const c_frame = cc.frame;
-            // cc matrix2Parent
-            const m2 = matrix2parent(c_frame.x, c_frame.y, c_frame.width, c_frame.height, c_rotate, c_hflip, c_vflip);
-            m2.trans(bbox.x, bbox.y); // todo 使用parentFrame.x y会与rect对不齐，待研究
-            const cur = m2.computeCoord(0, 0);
-            const dx = target.x - cur.x;
-            const dy = target.y - cur.y;
-            const transform = {
-                dx,
-                dy,
-                scaleX,
-                scaleY,
-                parentFrame: this.frame,
-                vflip,
-                hflip,
-                rotate
-            }
-            // update childs
-            this.layoutChild(cc, i, transform, varsContainer!, resue);
-        }
-        // 删除多余的
-        this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+        throw new Error("Method not implemented.");
     }
 }
