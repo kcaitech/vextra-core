@@ -1,11 +1,10 @@
-import { OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, VariableType } from "../data/classes";
-import { ShapeView, matrix2parent } from "./shape";
+import { OverrideType, Shape, SymbolRefShape, SymbolShape, SymbolUnionShape, VariableType } from "../data/classes";
+import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView } from "./view";
 import { isNoTransform } from "./shape";
 import { RenderTransform } from "../render";
-import { Matrix } from "../basic/matrix";
-import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
+import { DViewCtx, PropsType } from "./viewctx";
 import { EL } from "./el";
 
 export class SymbolRefView extends ShapeView {
@@ -91,7 +90,7 @@ export class SymbolRefView extends ShapeView {
 
         // update children
 
-        const varsContainer = this.m_varsContainer?.slice(0) || [];
+        const varsContainer = (this.m_varsContainer || []).concat(this.m_data as SymbolRefShape);
         if (this.m_sym.parent instanceof SymbolUnionShape) {
             varsContainer.push(this.m_sym.parent);
         }

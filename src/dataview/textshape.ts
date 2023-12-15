@@ -6,6 +6,11 @@ import { renderText2Path, renderTextLayout } from "../render/text";
 
 export class TextShapeView extends ShapeView {
 
+
+    protected isNoSupportDiamondScale(): boolean {
+        return true;
+    }
+
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
         return v ? v.value : this.m_data.text;

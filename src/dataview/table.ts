@@ -12,6 +12,10 @@ export class TableView extends GroupShapeView {
         this.updateChildren();
     }
 
+    protected isNoSupportDiamondScale(): boolean {
+        return true;
+    }
+
     getDataChilds(): Shape[] {
         return [];
     }

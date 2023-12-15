@@ -12,6 +12,10 @@ export class ImageShapeView extends ShapeView {
         this.m_imgPH = imgPH;
     }
 
+    protected isNoSupportDiamondScale(): boolean {
+        return true;
+    }
+
     renderContents(): EL[] {
         const shape = this.m_data;
         const path = this.getPathStr();

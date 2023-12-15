@@ -54,6 +54,9 @@ export class DViewCtx {
      * return: if continue
      */
     protected aloop(): boolean {
+
+        // todo 优先更新选中对象
+
         // update
         // render
         // 先按层级排序，由高向下更新
@@ -96,8 +99,8 @@ export class DViewCtx {
             console.log("loop not empty ", this.relayoutset.size, this.dirtyset.size);
         }
 
-        // return (this.datachangeset.size > 0 || this.dirtyset.size > 0);
-        return false;
+        return (this.relayoutset.size > 0 || this.dirtyset.size > 0);
+        // return false;
     }
 
     private _continueLoop() {

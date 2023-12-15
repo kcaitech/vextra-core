@@ -353,6 +353,10 @@ export class ShapeView extends DataView {
     protected layoutOnDiamondShape(scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix) {
     }
 
+    protected isNoSupportDiamondScale(): boolean {
+        return false;
+    }
+
     protected _layout() {
         const shape = this.m_data;
         const transform = this.m_transx;
@@ -388,20 +392,12 @@ export class ShapeView extends DataView {
         const scaleY = transform.scaleY;
 
         const resizingConstraint = shape.resizingConstraint;
-        if (!rotate ||
-            resizingConstraint &&
-            (ResizingConstraints.hasWidth(resizingConstraint) ||
-                ResizingConstraints.hasHeight(resizingConstraint))) {
-
+        const fixWidth = resizingConstraint && ResizingConstraints.hasWidth(resizingConstraint);
+        const fixHeight = resizingConstraint && ResizingConstraints.hasHeight(resizingConstraint);
+        if (!rotate || fixWidth || fixHeight) {
             const saveW = width;
             const saveH = height;
-            if (resizingConstraint &&
-                (ResizingConstraints.hasWidth(resizingConstraint) ||
-                    ResizingConstraints.hasHeight(resizingConstraint))) {
-
-                const fixWidth = ResizingConstraints.hasWidth(resizingConstraint);
-                const fixHeight = ResizingConstraints.hasHeight(resizingConstraint);
-
+            if (fixWidth || fixHeight) {
                 if (fixWidth && fixHeight) {
                     // 不需要缩放，但要调整位置
                     x *= scaleX;
@@ -455,6 +451,27 @@ export class ShapeView extends DataView {
             this.updateLayoutArgs(parentFrame, hflip, vflip, rotate);
             this.layoutOnRectShape(cscaleX, cscaleY);
 
+            return;
+        }
+
+        if (this.isNoSupportDiamondScale()) {
+
+            const m = new Matrix();
+            m.rotate(rotate / 360 * 2 * Math.PI);
+            m.scale(scaleX, scaleY);
+            const _newscale = m.computeRef(1, 1);
+            m.scale(1 / scaleX, 1 / scaleY);
+            const newscale = m.inverseRef(_newscale.x, _newscale.y);
+            x *= scaleX;
+            y *= scaleY;
+            width *= newscale.x;
+            height *= newscale.y;
+
+            const frame = new ShapeFrame(x, y, width, height);
+            fixFrameByConstrain(shape, transform.parentFrame, frame);
+
+            this.updateLayoutArgs(frame, hflip, vflip, rotate);
+            this.layoutOnRectShape(scaleX, scaleY);
             return;
         }
 
