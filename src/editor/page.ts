@@ -85,7 +85,7 @@ import {
 } from "./utils/symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
 import { ExportFormat, Shadow } from "../data/baseclasses";
-import { get_rotate_for_straight, is_straight } from "./utils/path";
+import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -1090,6 +1090,65 @@ export class PageEditor {
         }
     }
 
+    shapesModifyPointRadius(shapes: Shape[], indexes: number[], val: number) {
+        try {
+            const api = this.__repo.start("shapesModifyPointRadius", {});
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                if (!(shape instanceof PathShape)) {
+                    continue;
+                }
+                const points = shape.points;
+                for (let _i = 0, l = indexes.length; _i < l; _i++) {
+                    const index = indexes[_i];
+                    const point = points[index];
+                    if (!point) {
+                        continue;
+                    }
+                    api.modifyPointCornerRadius(this.__page, shape, index, val);
+                }
+                this.__repo.commit();
+            }
+        } catch (error) {
+            console.log('shapesModifyPointRadius', error);
+            this.__repo.rollback();
+        }
+
+    }
+
+    shapesModifyFixedRadius(shapes: Shape[], val: number) {
+        try {
+            const api = this.__repo.start("shapesModifyFixedRadius", {});
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                if (!(shape instanceof PathShape)) {
+                    continue;
+                }
+
+                const is_rect = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image]
+                    .includes(shape.type) && shape.isClosed;
+                const points = shape.points;
+                if (is_rect) {
+                    for (let i = 0, l = points.length; i < l; i++) {
+                        api.modifyPointCornerRadius(this.__page, shape, i, val);
+                    }
+                } else {
+                    for (let i = 0, l = points.length; i < l; i++) {
+                        api.modifyPointCornerRadius(this.__page, shape, i, 0);
+                    }
+                    
+                    api.shapeModifyFixedRadius(this.__page, shape, val);
+                }
+                update_frame_by_points(api, this.__page, shape);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('shapesModifyFixedRadius', error);
+            this.__repo.rollback();
+        }
+
+    }
+
     /**
      * @description 参数可选的创建并插入图形
      * @param ex_params 包含某一些属性的特定参数
@@ -1403,7 +1462,7 @@ export class PageEditor {
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
-                
+
                 if (is_straight(s)) {
                     const r = get_rotate_for_straight(s as PathShape, v);
                     api.shapeModifyRotate(this.__page, s, r);
