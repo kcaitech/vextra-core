@@ -26,6 +26,8 @@ import { parsePath } from "./pathparser";
 import { RECT_POINTS } from "./consts";
 import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
+import {TableShape} from "./table";
+import {SymbolRefShape} from "./symbolref";
 export { Variable } from "./variable";
 
 // todo
@@ -342,7 +344,7 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
 
 export class GroupShape extends Shape implements classes.GroupShape {
     typeId = 'group-shape';
-    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape)>
+    childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape | TableShape | SymbolRefShape)>
     wideframe: ShapeFrame
     isBoolOpShape?: boolean
     fixedRadius?: number
@@ -1045,5 +1047,31 @@ export class TextShape extends Shape implements classes.TextShape {
             return _var.value as Text; // 这要是string?
         }
         return this.text;
+    }
+}
+export class CutoutShape extends PathShape implements classes.CutoutShape {
+    typeId = 'cutout-shape'
+    scalingStroke: boolean;
+    constructor(
+        id: string,
+        name: string,
+        type: ShapeType,
+        frame: ShapeFrame,
+        style: Style,
+        points: BasicArray<CurvePoint>,
+        isClosed: boolean,
+        scalingStroke: boolean
+    ) {
+        super(
+            id,
+            name,
+            type,
+            frame,
+            style,
+            points,
+            isClosed
+        )
+        this.scalingStroke = scalingStroke;
+        this.isClosed = true;
     }
 }

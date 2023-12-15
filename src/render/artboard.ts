@@ -1,18 +1,19 @@
-import {renderGroupChilds as gR} from "./group";
-import {render as borderR} from "./border";
-import {Artboard, ShapeType, Color, SymbolShape, SymbolRefShape, Variable} from '../data/classes';
-import {isVisible, RenderTransform} from "./basic";
-import {innerShadowId, renderWithVars as shadowR} from "./shadow";
+import { renderGroupChilds as gR } from "./group";
+import { render as borderR } from "./border";
+import { Artboard, ShapeType, SymbolShape, SymbolRefShape, Variable } from '../data/classes';
+import { isVisible, RenderTransform } from "./basic";
+import { innerShadowId, renderWithVars as shadowR } from "./shadow";
+import { Color } from "../data/color";
 
 const defaultColor = Color.DefaultColor;
 
 // artboard单独一个svg节点，需要设置overflow
 export function render(h: Function,
-                       shape: Artboard,
-                       comsMap: Map<ShapeType, any>,
-                       transform: RenderTransform | undefined, // todo
-                       varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
-                       reflush?: number) {
+    shape: Artboard,
+    comsMap: Map<ShapeType, any>,
+    transform: RenderTransform | undefined, // todo
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
+    reflush?: number) {
     if (!isVisible(shape, varsContainer)) return;
 
     const ab_props: any = {

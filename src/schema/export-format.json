@@ -1,0 +1,40 @@
+{
+    "description": "export format",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 36,
+            "default": "$uuid"
+        },
+        "absoluteSize": {
+            "type": "number"
+        },
+        "fileFormat": {
+            "$ref": "./export-file-format.json"
+        },
+        "name": {
+            "type": "string"
+        },
+        "namingScheme": {
+            "$ref": "./export-format-nameing-scheme.json"
+        },
+        "scale": {
+            "type": "number"
+        },
+        "visibleScaleType": {
+            "$ref": "./export-visible-scale-type.json"
+        }
+    },
+    "required": [
+        "id",
+        "absoluteSize",
+        "fileFormat",
+        "name",
+        "namingScheme",
+        "scale",
+        "visibleScaleType"
+    ],
+    "additionalProperties": false
+}

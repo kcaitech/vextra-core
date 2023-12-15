@@ -1,9 +1,8 @@
 import { BasicArray } from "./basic";
-import { Color } from "./classes";
 import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, StrikethroughType, TextTransformType, TextAttr, TextHorAlign, SpanAttrSetter } from "./text";
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
-
+import { Color } from "./color";
 export function getSimpleText(shapetext: Text, index: number, length: number): string {
     let text = '';
     _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {

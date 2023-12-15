@@ -21,6 +21,7 @@
         "table",
         "table-cell",
         "contact",
+        "cutout",
         "override-shape"
     ],
     "default": "path"
