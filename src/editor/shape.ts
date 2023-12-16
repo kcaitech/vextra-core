@@ -353,13 +353,13 @@ export class ShapeEditor {
     /**
      * @description 给组件创建一个实例切换变量
      */
-    makeSymbolRefVar(symbol: SymbolShape, name: string, shapes: Shape[]) {
+    makeSymbolRefVar(symbol: SymbolShape, name: string, shapes: SymbolRefShape[]) {
+        if (!shapes.length) throw new Error('invalid data');
+        if (!is_symbol_or_union(symbol)) {
+            throw new Error('wrong role!');
+        }
         const api = this.__repo.start("makeSymbolRefVar", {});
         try {
-            if (!shapes.length) throw new Error('invalid data');
-            if (!is_symbol_or_union(symbol)) {
-                throw new Error('wrong role!');
-            }
             const _var = new Variable(v4(), VariableType.SymbolRef, name, shapes[0].refId);
             api.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
@@ -376,12 +376,12 @@ export class ShapeEditor {
     /**
      * @description 给组件创建一个文本变量
      */
-    makeTextVar(symbol: SymbolShape, name: string, dlt: string, shapes: Shape[]) {
+    makeTextVar(symbol: SymbolShape, name: string, dlt: string, shapes: (Shape & { text?: Text })[]) {
+        if (!is_symbol_or_union(symbol)) {
+            throw new Error('wrong role!');
+        }
         const api = this.__repo.start("makeTextVar", {});
         try {
-            if (!is_symbol_or_union(symbol)) {
-                throw new Error('wrong role!');
-            }
             const first = shapes[0]?.text instanceof Text ? shapes[0]?.text : undefined;
             const text = newText2(first?.attr, first?.paras[0]?.attr, first?.paras[0]?.spans[0]);
             text.insertText(dlt, 0);
@@ -1262,7 +1262,7 @@ export class ShapeEditor {
             for (let i = 0, len = contacts.length; i < len; i++) {
                 const shape = page.getShape(contacts[i].shapeId);
                 if (!shape) continue;
-                const p = shape.parent;
+                const p = shape.parent as GroupShape;
                 if (!p) continue;
                 let idx = -1;
                 for (let j = 0, len = p.childs.length; j < len; j++) {
@@ -1288,7 +1288,7 @@ export class ShapeEditor {
     public modify_edit_state(state: boolean) {
         if (this.__shape.type !== ShapeType.Contact) return false;
         this._repoWrap("modify_edit_state", (api) => {
-            api.contactModifyEditState(this.__page, this.__shape, state);
+            api.contactModifyEditState(this.__page, this.__shape as ContactShape, state);
         });
     }
 
@@ -1298,8 +1298,9 @@ export class ShapeEditor {
     private get_points_for_init(index: number, points: CurvePoint[]) {
         let len = points.length;
         let result = [...points];
+        const shape = this.__shape as ContactShape;
         if (index === 0) { // 如果编辑的线为第一根线；
-            const from = this.__shape.from;
+            const from = shape.from;
             if (!from) return result;
             const fromShape = this.__page.getShape((from as ContactForm).shapeId);
             if (!fromShape) return result;
@@ -1321,7 +1322,7 @@ export class ShapeEditor {
         }
         if (index === len - 2) { // 编辑的线为最后一根线；
             len = result.length; // 更新一下长度，因为部分场景下，编辑的线会同时为第一根线和最后一根线，若是第一根线的话，原数据已经更改，需要在下次更改数据前并判定为最后一根线后去更新result长度。
-            const to = this.__shape.to;
+            const to = shape.to;
             if (!to) return result;
             const toShape = this.__page.getShape((to as ContactForm).shapeId);
             if (!toShape) return result;
@@ -1350,9 +1351,10 @@ export class ShapeEditor {
      */
     public pre_modify_side(index: number) {
         if (this.__shape.type !== ShapeType.Contact) return false;
-        const points = this.get_points_for_init(index, this.__shape.getPoints());
+        const shape = this.__shape as ContactShape;
+        const points = this.get_points_for_init(index, shape.getPoints());
         this._repoWrap("init_points", (api) => {
-            const len = this.__shape.points.length;
+            const len = shape.points.length;
             api.deletePoints(this.__page, this.__shape as PathShape, 0, len);
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = importCurvePoint(exportCurvePoint(points[i]));
@@ -1371,10 +1373,11 @@ export class ShapeEditor {
 
     public reset_contact_path() {
         if (this.__shape.type !== ShapeType.Contact) return false;
+        const shape = this.__shape as ContactShape;
         this._repoWrap("reset_contact_path", (api) => {
-            api.contactModifyEditState(this.__page, this.__shape, false);
-            const points = this.get_points_for_init(1, this.__shape.getPoints());
-            const len = this.__shape.points.length;
+            api.contactModifyEditState(this.__page, shape, false);
+            const points = this.get_points_for_init(1, shape.getPoints());
+            const len = shape.points.length;
             api.deletePoints(this.__page, this.__shape as PathShape, 0, len);
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = importCurvePoint(exportCurvePoint(points[i]));

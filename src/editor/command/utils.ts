@@ -31,7 +31,7 @@ export function setFrame(page: Page, shape: Shape, x: number, y: number, w: numb
 const float_accuracy = 1e-7;
 
 function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
-    const p: Shape | undefined = shape.parent;
+    const p: GroupShape | undefined = shape.parent as GroupShape;
     if (!p || (p instanceof Artboard || p instanceof SymbolRefShape || p instanceof SymbolShape)) return false;
 
     const cf = shape.boundingBox();

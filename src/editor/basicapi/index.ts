@@ -1,8 +1,8 @@
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
-import { ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/classes";
-import { BoolOp, BulletNumbersBehavior, BulletNumbersType, ContactForm, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { ContactShape, ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign, ContactForm } from "../../data/classes";
+import { BoolOp, BulletNumbersBehavior, BulletNumbersType, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
 import { Color } from "../../data/classes";
 export * from "./fill";
@@ -150,13 +150,13 @@ export function shapeModifyConstrainerProportions(shape: Shape, prop: boolean) {
 export function shapeModifyNameFixed(shape: Shape, isFixed: boolean) {
     shape.nameIsFixed = isFixed;
 }
-export function shapeModifyContactTo(shape: Shape, to: ContactForm | undefined) {
+export function shapeModifyContactTo(shape: ContactShape, to: ContactForm | undefined) {
     shape.to = to;
 }
-export function shapeModifyContactFrom(shape: Shape, from: ContactForm | undefined) {
+export function shapeModifyContactFrom(shape: ContactShape, from: ContactForm | undefined) {
     shape.from = from;
 }
-export function shapeModifyEditedState(shape: Shape, state: boolean) {
+export function shapeModifyEditedState(shape: ContactShape, state: boolean) {
     shape.isEdited = state;
 }
 export function shapeModifyName(shape: Shape, name: string) {

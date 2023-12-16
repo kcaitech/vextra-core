@@ -27,7 +27,7 @@ function get_box_by_points(s: Shape, points: CurvePoint[]) {
     return { x, y, width, height };
 }
 
-export function init_points(api: Api, page: Page, s: Shape, points: CurvePoint[]) {
+export function init_points(api: Api, page: Page, s: PathShape, points: CurvePoint[]) {
     api.deletePoints(page, s as PathShape, 0, s.points.length);
     api.addPoints(page, s as PathShape, points);
 }

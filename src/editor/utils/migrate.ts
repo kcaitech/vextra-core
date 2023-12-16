@@ -26,7 +26,7 @@ export function unable_to_migrate(target: Shape, wander: Shape): number {
     if (is_part_of_symbol(target)) {
         if (is_exist_invalid_shape2([wander])) return 5;
         if (target.type === ShapeType.Symbol) {
-            const children = wander.naviChilds || wander.childs;
+            const children = wander.naviChilds || (wander as GroupShape).childs;
             if (children?.length) {
                 const tree = wander instanceof SymbolRefShape ? wander.symData : wander;
                 if (!tree) {

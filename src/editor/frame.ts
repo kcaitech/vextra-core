@@ -965,7 +965,7 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
  * @param index 点的数组索引
  * @param end 点的目标🎯位置（root）
  */
-export function pathEdit(api: Api, page: Page, s: Shape, index: number, end: PageXY) {
+export function pathEdit(api: Api, page: Page, s: PathShape, index: number, end: PageXY) {
     let m = new Matrix(s.matrix2Root()), w = s.frame.width, h = s.frame.height;
     m.preScale(w, h), m = new Matrix(m.inverse);  // 图形单位坐标系，0-1
     const p: CurvePoint = s.points[index];
@@ -995,12 +995,12 @@ export function pathEdit(api: Api, page: Page, s: Shape, index: number, end: Pag
         }
     }
 }
-export function pathEditSide(api: Api, page: Page, s: Shape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
+export function pathEditSide(api: Api, page: Page, s: PathShape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
     const m = new Matrix(s.matrix2Root()), w = s.frame.width, h = s.frame.height;
     m.preScale(w, h);
     const m_in = new Matrix(m.inverse);  // 图形单位坐标系，0-1
-    let p1 = s.points[index1];
-    let p2 = s.points[index2];
+    let p1: {x: number, y: number} = s.points[index1];
+    let p2: {x: number, y: number} = s.points[index2];
     if (!p1 || !p2) {
         return false;
     }
@@ -1012,7 +1012,7 @@ export function pathEditSide(api: Api, page: Page, s: Shape, index1: number, ind
     api.shapeModifyCurvPoint(page, s as PathShape, index1, p1);
     api.shapeModifyCurvPoint(page, s as PathShape, index2, p2);
 }
-function get_box_by_points(s: Shape) {
+function get_box_by_points(s: PathShape) {
     const point_raw = s.points;
     if (!point_raw) return false;
     const w = s.frame.width, h = s.frame.height, m = s.matrix2Parent();
@@ -1035,7 +1035,7 @@ function get_box_by_points(s: Shape) {
     }
     return { x, y, width, height };
 }
-export function update_frame_by_points(api: Api, page: Page, s: Shape) {
+export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
     const nf = get_box_by_points(s);
     if (nf) {
         const w = s.frame.width, h = s.frame.height;

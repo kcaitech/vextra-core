@@ -1,5 +1,5 @@
 import { Cmd, CmdType, OpType, ShapeCmdModify } from "../../coop"
-import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape, TableCell, SymbolRefShape } from "../../data/classes"
+import { Document, GroupShape, Page, RectShape, Shape, Text, TextTransformType, TableShape, TableCell, SymbolRefShape, ContactShape } from "../../data/classes"
 import { SHAPE_ATTR_ID } from "./consts";
 import * as api from "../basicapi"
 import { importColor, importText, importVariable } from "../../data/baseimport";
@@ -405,21 +405,21 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.contactFrom,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const from = value && JSON.parse(value);
-                    api.shapeModifyContactFrom(shape as GroupShape, from);
+                    api.shapeModifyContactFrom(shape as ContactShape, from);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.contactTo,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const to = value && JSON.parse(value);
-                    api.shapeModifyContactTo(shape as GroupShape, to);
+                    api.shapeModifyContactTo(shape as ContactShape, to);
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.isEdited,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     const state = value && JSON.parse(value)
-                    api.shapeModifyEditedState(shape as GroupShape, !!state);
+                    api.shapeModifyEditedState(shape as ContactShape, !!state);
                 }
             },
             // {
@@ -439,12 +439,13 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.modifyoverride1,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
+                        const _shape = shape as SymbolRefShape | SymbolShape;
                         const overrid = JSON.parse(value);
                         if (overrid.value == undefined) {
-                            shape.removeOverrid2(overrid.refId, overrid.attr)
+                            _shape.removeOverrid2(overrid.refId, overrid.attr)
                         }
                         else {
-                            shape.addOverrid2(overrid.refId, overrid.attr, overrid.value);
+                            _shape.addOverrid2(overrid.refId, overrid.attr, overrid.value);
                         }
                     }
                 }
@@ -453,16 +454,17 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.modifyvar1,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
+                        const _shape = shape as SymbolRefShape | SymbolShape;
                         const _var = importVariable(JSON.parse(value));
                         // if (!_var.value) {
                         //     console.log(_var)
                         //     throw new Error();
                         // }
                         if (_var.value == undefined) {
-                            shape.deleteVar(_var.id);
+                            _shape.deleteVar(_var.id);
                         }
                         else {
-                            shape.addVar(_var);
+                            _shape.addVar(_var);
                         }
                     }
                 }
@@ -529,13 +531,14 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.overrides,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
+                        const _shape = shape as SymbolRefShape;
                         let { type, varId } = JSON.parse(value);
                         if (varId == undefined) {
-                            if (shape.overrides) shape.overrides.delete(type);
+                            if (_shape.overrides) _shape.overrides.delete(type);
                         }
                         else {
-                            if (!shape.overrides) shape.overrides = new BasicMap();
-                            shape.overrides.set(type, varId);
+                            if (!_shape.overrides) _shape.overrides = new BasicMap();
+                            _shape.overrides.set(type, varId);
                         }
                     }
                 }

@@ -57,11 +57,11 @@ import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAl
 import { cmdmerge } from "./merger";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, ContactForm, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme } from "../../data/typesdefine";
+import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { TableOpTarget } from "../../coop/data/classes";
-import { ContactRole, CurvePoint, ExportFormat, ExportOptions } from "../../data/baseclasses";
+import { ContactRole, CurvePoint, ExportFormat, ExportOptions, ContactForm } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { BasicMap, BasicArray } from "../../data/basic";
 import { Color } from "../../data/classes";
@@ -387,7 +387,7 @@ export class Api {
             this.addCmd(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.contactTo, t, save))
         })
     }
-    contactModifyEditState(page: Page, shape: Shape, state: boolean) {
+    contactModifyEditState(page: Page, shape: ContactShape, state: boolean) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
             const save = shape.isEdited;

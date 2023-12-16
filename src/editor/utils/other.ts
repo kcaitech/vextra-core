@@ -168,8 +168,8 @@ export function init_state(api: Api, page: Page, symbol: SymbolShape, dlt: strin
 
 export function gen_special_value_for_state(symbol: SymbolShape, variable: Variable, dlt: string) {
     if (!symbol.parent) return false;
-    if (!symbol.parent.variables) return false;
-    const bros: SymbolShape[] = symbol.parent.childs as unknown as SymbolShape[];
+    if (!(symbol.parent as SymbolShape).variables) return false;
+    const bros: SymbolShape[] = (symbol.parent as SymbolShape).childs as unknown as SymbolShape[];
     let index = 2, type_name = dlt, max = 2;
     const reg = new RegExp(`^${dlt}[0-9]*$`), number_set: Set<number> = new Set();
     for (let i = 0, len = bros.length; i < len; i++) {
@@ -191,7 +191,7 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name
     const p = symbol.parent;
     if (!p || (p instanceof SymbolUnionShape)) return false;
 
-    const symIndex = p.indexOfChild(symbol);
+    const symIndex = (p as SymbolUnionShape).indexOfChild(symbol);
     if (symIndex < 0) return false;
 
     const box = symbol.boundingBox();
@@ -288,7 +288,7 @@ export function get_symbol_by_layer(layer: Shape): SymbolShape | undefined {
 }
 
 function de_check(item: Shape) {
-    return !item.childs?.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
+    return !(item as any).childs?.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
 }
 
 function is_bind_x_type_var(symbol: SymbolShape, shape: Shape, type: OverrideType, vari: string, container: Shape[]) {
@@ -319,13 +319,13 @@ function get_vt_by_ot(ot: OverrideType) {
 }
 
 function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, variId: string, container: Shape[]) {
-    const childs = group.childs;
+    const childs = (group as GroupShape).childs;
     if (!childs?.length) return;
     if (type === VariableType.Visible) {
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
             is_bind_x_type_var(symbol as SymbolShape, item, OverrideType.Visible, variId, container);
-            if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
+            if ((item as GroupShape).childs && (item as GroupShape).childs.length && item.type !== ShapeType.Table) {
                 get_x_type_option(symbol, item, type, variId, container)
             }
         }
@@ -335,7 +335,7 @@ function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, vari
             const item = childs[i];
             if (item.type === get_target_type_by_vt(type)) {
                 is_bind_x_type_var(symbol as SymbolShape, item, get_ot_by_vt(type)!, variId, container)
-            } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
+            } else if ((item as GroupShape).childs && (item as GroupShape).childs.length && item.type !== ShapeType.Table) {
                 get_x_type_option(symbol, item, type, variId, container)
             }
         }
@@ -383,7 +383,7 @@ export function adjust_selection_before_group(document: Document, page: Page, sh
             shapes[i] = api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;
             continue;
         }
-        const childs = shape.childs;
+        const childs = (shape as GroupShape).childs;
         if (shape.type === ShapeType.Table || !childs?.length) continue;
         handler_childs(document, page, (shape as GroupShape).childs, api, need_trans_data);
     }
@@ -405,7 +405,7 @@ function handler_childs(document: Document, page: Page, shapes: Shape[], api: Ap
             api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;
             continue;
         }
-        const childs = shape.childs;
+        const childs = (shape as GroupShape).childs;
         if (shape.type === ShapeType.Table || !childs?.length) continue;
         handler_childs(document, page, (shape as GroupShape).childs, api, need_trans_data);
     }
