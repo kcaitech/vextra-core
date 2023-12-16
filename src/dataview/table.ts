@@ -1,11 +1,11 @@
-import { renderBorders } from "../render";
-import { Shape, ShapeType, TableCell, TableShape } from "../data/classes";
+import { RenderTransform, renderBorders } from "../render";
+import { Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, TableCell, TableShape } from "../data/classes";
 import { EL, elh } from "./el";
-import { GroupShapeView } from "./groupshape";
+import { ShapeView } from "./shape";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 
-export class TableView extends GroupShapeView {
+export class TableView extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
@@ -20,9 +20,19 @@ export class TableView extends GroupShapeView {
         return [];
     }
 
+    private m_need_updatechilds: boolean = false;
+
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         if (args.includes('cells')) this.m_need_updatechilds = true;
+    }
+
+    protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+        super._layout(shape, transform, varsContainer);
+        if (this.m_need_updatechilds) {
+            this.m_need_updatechilds = false;
+            this.updateChildren();
+        }
     }
 
     protected updateChildren(): void {
@@ -49,7 +59,7 @@ export class TableView extends GroupShapeView {
                     } else {
                         // const comsMap = this.m_ctx.comsMap;
                         const Com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle)!;
-                        const props = { data: cell,  transx: this.m_transx, varsContainer: this.m_varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual };
+                        const props = { data: cell, transx: this.m_transx, varsContainer: this.m_varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual };
                         const ins = new Com(this.m_ctx, props) as DataView;
                         this.addChild(ins, idx);
                     }

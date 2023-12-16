@@ -1,5 +1,5 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Path, ShapeFrame, TableCellType, Text, VariableType } from "../data/classes";
+import { OverrideType, Path, ShapeFrame, TableCell, TableCellType, Text, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
@@ -28,7 +28,7 @@ export class TableCellView extends ShapeView {
 
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
-        return v ? v.value : this.m_data.text;
+        return v ? v.value : (this.m_data as TableCell).text;
     }
 
     getTextPath() {
@@ -60,7 +60,7 @@ export class TableCellView extends ShapeView {
     }
 
     renderContents(): EL[] {
-        const shape = this.m_data;
+        const shape = this.m_data as TableCell;
         const cellType = shape.cellType ?? TableCellType.None;
         if (cellType === TableCellType.None) {
             return [];

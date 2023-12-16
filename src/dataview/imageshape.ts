@@ -3,6 +3,7 @@ import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import {render as clippathR} from "../render/clippath"
 import { DViewCtx, PropsType } from "./viewctx";
+import { ImageShape } from "../data/shape";
 export class ImageShapeView extends ShapeView {
 
     private m_imgPH: string;
@@ -17,7 +18,7 @@ export class ImageShapeView extends ShapeView {
     }
 
     renderContents(): EL[] {
-        const shape = this.m_data;
+        const shape = this.m_data as ImageShape;
         const path = this.getPathStr();
         const frame = this.frame;
         const id = "clippath-image-" + objectId(shape);

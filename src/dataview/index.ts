@@ -5,6 +5,7 @@ export * from "./groupshape";
 export * from "./imageshape";
 export * from "./line";
 export * from "./pathshape";
+export * from "./pathshape2";
 export * from "./shape";
 export * from "./symbol";
 export * from "./symbolref";

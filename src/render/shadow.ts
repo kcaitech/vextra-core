@@ -1,6 +1,6 @@
 import {OverrideType, Shadow, ShadowPosition, ShapeType, VariableType} from "../data/baseclasses";
 import {Border, Style} from "data/style";
-import {GroupShape, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable} from "../data/classes";
+import {GroupShape, Shape, ShapeFrame, SymbolRefShape, SymbolShape, TextShape, Variable} from "../data/classes";
 import {render as borderR} from "./border";
 import {render as renderB} from "./line_borders";
 import {renderTextLayout} from "./text";
@@ -166,7 +166,7 @@ function shadowType(h: Function, shape: Shape, i: number, id: string, pathstr: s
     } else if (shape.type === ShapeType.Line) {
         border = renderB(h, shape.style, borders, pathstr!, shape);
     } else if (shape.type === ShapeType.Text) {
-        border = border.concat(renderTextLayout(h, shape.getLayout()));
+        border = border.concat(renderTextLayout(h, (shape as TextShape).getLayout()));
         const p = h('g', g_props, border);
         return {filter, p}
     } else if (shape.type === ShapeType.Group && comsMap) {

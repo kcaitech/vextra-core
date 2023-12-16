@@ -7,7 +7,7 @@ export {
     ShapeFrame, Ellipse, PathSegment, OverrideType, Variable, VariableType
 } from "./baseclasses"
 import { CurvePoint, OverrideType, ShapeFrame, TextBehaviour, VariableType } from "./baseclasses"
-import { GroupShape, Shape, SymbolUnionShape, SymbolShape, TextShape, Variable } from "./shape";
+import { GroupShape, Shape, SymbolUnionShape, SymbolShape, TextShape, Variable, PathShape } from "./shape";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "./textutils";
 import { SymbolRefShape } from "./symbolref";
 import { __objidkey } from "../basic/objectid";
@@ -349,7 +349,7 @@ class ShapeHdl extends HdlBase {
         this.__hflip = !!this.__origin.isFlippedHorizontal;
         this.__rotate = this.__origin.rotation || 0;
 
-        const points = this.__origin.points;
+        const points = (this.__origin as PathShape).points;
         if (points) {
             const _points: CurvePoint[] = [];
             points.forEach((p: CurvePoint) => {
@@ -362,7 +362,7 @@ class ShapeHdl extends HdlBase {
     }
 
     fireRelayout() {
-        this.__parent.relayout();
+        (this.__parent as any).relayout();
     }
 
     // cache
@@ -389,7 +389,7 @@ class ShapeHdl extends HdlBase {
         this.__origin = origin;
         this.__parent = parent;
 
-        if (!(parent instanceof SymbolRefShape) && !parent.__symbolproxy) throw new Error("");
+        if (!(parent instanceof SymbolRefShape) && !(parent as any).__symbolproxy) throw new Error("");
 
         this.origin_watcher = this.origin_watcher.bind(this);
         this.root_watcher = this.root_watcher.bind(this);
@@ -501,7 +501,7 @@ class ShapeHdl extends HdlBase {
         }
         if (propStr === "relayout") {
             return () => {
-                this.__parent.relayout();
+                (this.__parent as SymbolRefShape).relayout();
             }
         }
         if (propStr === "resetLayout") {
@@ -549,7 +549,7 @@ class GroupShapeHdl extends ShapeHdl {
             return this.__childs;
         }
         if (propStr === "layoutChilds") {
-            if (this.__childs) this.__childs.forEach((c) => c.layoutChilds);
+            if (this.__childs) this.__childs.forEach((c) => (c as any).layoutChilds);
             return;
         }
         return super.get(target, propertyKey, receiver);
@@ -572,7 +572,7 @@ class GroupShapeHdl extends ShapeHdl {
     resetLayout(): void {
         super.resetLayout();
         if (this.__childs) {
-            this.__childs.forEach((c) => c.resetLayout);
+            this.__childs.forEach((c) => (c as any).resetLayout);
         }
     }
 }
@@ -621,7 +621,7 @@ class SymbolRefShapeHdl extends ShapeHdl {
                     varsContainer.push(p);
                     break;
                 }
-                varsContainer.push(p.__origin)
+                varsContainer.push((p as any).__origin)
             }
             else if (p instanceof SymbolShape) {
                 // 不可能是virtual
@@ -766,11 +766,11 @@ class SymbolRefShapeHdl extends ShapeHdl {
             this.__relayouting = setTimeout(() => {
                 const childs = (this.symData)?.childs || [];
                 if (this.__childs && childs && childs.length > 0) {
-                    this.__childs.forEach((c) => c.resetLayout);
+                    this.__childs.forEach((c) => (c as any).resetLayout);
                     layoutChilds(this.__childs, this.__frame, childs[0].parent!.frame);
                     this.saveFrame();
 
-                    this.__childs.forEach((c) => c.layoutChilds);
+                    this.__childs.forEach((c) => (c as any).layoutChilds);
 
                     this.notify();
                 }

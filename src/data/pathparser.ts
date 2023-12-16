@@ -47,7 +47,7 @@ function add(p: Point2D, pt: Point2D) {
  * curveMode 4, disconnected, control point 位置随意
  * curveMode 3, 也是对称，长度可以不一样
  */
-export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: number, offsetY: number, width: number, height: number, fixedRadius: number = 0): any[] {
+export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: number, offsetY: number, width: number, height: number, fixedRadius: number = 0): (string | number)[][] {
     let hasBegin = false;
 
 
@@ -56,7 +56,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
 
     const cacheCornerCalcInfo: { [k: number]: CornerCalcInfo } = {};
 
-    const path: any[] = []
+    const path: (string | number)[][] = []
 
     const bezierCurveTo = (x1: number, y1: number, x2: number, y2: number, tx: number, ty: number) => {
         path.push(["C", x1, y1, x2, y2, tx, ty]);

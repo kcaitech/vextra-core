@@ -102,9 +102,9 @@ export const Watchable = <T extends Constructor>(SuperClass: T) =>
                 w(...args);
             });
         }
-        onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
-            this.__parent && this.__parent.onRollback(from);
-        }
+        // onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
+        //     this.__parent && this.__parent.onRollback(from);
+        // }
     }
 
 export interface ISave4Restore {

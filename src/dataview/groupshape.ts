@@ -192,41 +192,67 @@ export class GroupShapeView extends ShapeView {
         //     return ins;
         // })
         // if (childsView.length > 0) this.addChilds(childsView);
-        this.m_isboolgroup = props.data.isBoolOpShape;
+        this.m_isboolgroup = (props.data as GroupShape).isBoolOpShape;
+    }
+
+    onAddShapeData(shape: Shape): ShapeView {
+        const shapeview = this.m_children.find((c) => {
+            if (c.m_data.id === shape.id) {
+                return true;
+            }
+        });
+        if (shapeview) shapeview;
+
+        const childs = this.getDataChilds();
+        const idx = childs.indexOf(shape);
+
+        if (idx < 0) {
+            throw new Error('shape not found');
+        }
+
+        const props = { data: shape, varsContainer: this.m_varsContainer, isVirtual: this.m_isVirtual };
+
+        const comsMap = this.m_ctx.comsMap;
+        const Com = comsMap.get(shape.type) || comsMap.get(ShapeType.Rectangle)!;
+        const dom = new Com(this.m_ctx, props) as DataView;
+        this.addChild(dom, idx);
+
+        this.m_ctx.setReLayout(dom);
+        return dom as ShapeView;
     }
 
     getDataChilds(): Shape[] {
         return (this.m_data as GroupShape).childs;
     }
 
-    protected updateChildren(): void {
-        // update children
-        const reuse = new Map<string, DataView>();
-        this.m_children.forEach((c) => {
-            reuse.set(c.m_data.id, c);
-        });
+    // protected updateChildren(): void {
+    //     // update children
+    //     const reuse = new Map<string, DataView>();
+    //     this.m_children.forEach((c) => {
+    //         reuse.set(c.m_data.id, c);
+    //     });
 
-        const comsMap = this.m_ctx.comsMap;
-        const childs = this.getDataChilds();
-        for (let i = 0; i < childs.length; i++) {
-            const c = childs[i];
-            const cdom = reuse.get(c.id);
-            if (cdom) {
-                reuse.delete(c.id);
-                this.moveChild(cdom, i);
-            } else {
-                const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
-                const props = { data: c, varsContainer: this.m_varsContainer, isVirtual: this.m_isVirtual };
-                const ins = new Com(this.m_ctx, props) as DataView;
-                this.addChild(ins, i);
-            }
-        }
+    //     const comsMap = this.m_ctx.comsMap;
+    //     const childs = this.getDataChilds();
+    //     for (let i = 0; i < childs.length; i++) {
+    //         const c = childs[i];
+    //         const cdom = reuse.get(c.id);
+    //         if (cdom) {
+    //             reuse.delete(c.id);
+    //             this.moveChild(cdom, i);
+    //         } else {
+    //             const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
+    //             const props = { data: c, varsContainer: this.m_varsContainer, isVirtual: this.m_isVirtual };
+    //             const ins = new Com(this.m_ctx, props) as DataView;
+    //             this.addChild(ins, i);
+    //         }
+    //     }
 
-        if (this.m_children.length > childs.length) {
-            const count = this.m_children.length - childs.length;
-            this.removeChilds(childs.length, count).forEach((c) => c.onDestory());
-        }
-    }
+    //     if (this.m_children.length > childs.length) {
+    //         const count = this.m_children.length - childs.length;
+    //         this.removeChilds(childs.length, count).forEach((c) => c.onDestory());
+    //     }
+    // }
 
     m_need_updatechilds: boolean = false;
 
@@ -289,7 +315,7 @@ export class GroupShapeView extends ShapeView {
         super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
         // todo
         if (this.m_need_updatechilds) {
-            this.updateChildren();
+            // this.updateChildren();
             this.m_need_updatechilds = false;
         }
     }

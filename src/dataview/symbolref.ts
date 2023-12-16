@@ -37,7 +37,7 @@ export class SymbolRefView extends ShapeView {
 
     getRefId(): string {
         const v = this._findOV(OverrideType.SymbolID, VariableType.SymbolRef);
-        return v ? v.value : this.m_data.refId;
+        return v ? v.value : (this.m_data as SymbolRefShape).refId;
     }
 
     private m_refId: string | undefined;
@@ -70,12 +70,6 @@ export class SymbolRefView extends ShapeView {
     //         }
     //     })
     // }
-
-    protected renderContents(): EL[] {
-        const childs = this.m_children;
-        childs.forEach((c) => c.render())
-        return childs;
-    }
 
     private layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>) {
         let cdom: DataView | undefined = resue.get(child.id);
@@ -156,7 +150,7 @@ export class SymbolRefView extends ShapeView {
         }
         else { // 第一个
             const shape = this.m_data;
-            this.updateLayoutArgs(shape.frame, shape.isFlippedHorizontal, shape.isFlippedVertical, shape.rotation, shape.fixedRadius);
+            this.updateLayoutArgs(shape.frame, shape.isFlippedHorizontal, shape.isFlippedVertical, shape.rotation, (shape as any).fixedRadius);
         }
         // 
         // todo

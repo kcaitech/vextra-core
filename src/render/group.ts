@@ -22,7 +22,7 @@ export function renderGroupChilds2(h: Function, childs: Array<Shape>, comsMap: M
     return nodes;
 }
 
-export function renderGroupChilds3(h: Function, shape: Shape, childs: Array<Shape>, comsMap: Map<ShapeType, any>,
+export function renderGroupChilds3(h: Function, shape: GroupShape, childs: Array<Shape>, comsMap: Map<ShapeType, any>,
                                    transform: RenderTransform | undefined,
                                    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
     // const nodes: Array<any> = [];

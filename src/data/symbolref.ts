@@ -167,9 +167,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             this.__relayouting = setTimeout(() => {
                 const childs = this.getSymChilds();
                 if (this.__childs && childs && childs.length > 0) {
-                    this.__childs.forEach((c) => c.resetLayout);
+                    this.__childs.forEach((c) => (c as any).resetLayout);
                     layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
-                    this.__childs.forEach((c) => c.layoutChilds);
+                    this.__childs.forEach((c) => (c as any).layoutChilds);
                     this.notify();
                 }
                 this.__relayouting = undefined;
@@ -352,8 +352,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     }
 
     deleteOverride(overrideId: string) {
-        if (this.varbindsEx) {
-            this.varbindsEx.delete(overrideId);
+        if ((this as any).varbindsEx) {
+            (this as any).varbindsEx.delete(overrideId);
         }
     }
     addVar(v: Variable) {
@@ -399,7 +399,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         // 考虑scope
         // varId要叠加上refid
         if (this.isVirtualShape) {
-            varId = this.originId + '/' + varId;
+            varId = (this as any).originId + '/' + varId;
         }
         else {
             varId = this.id + '/' + varId;
@@ -427,7 +427,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             // this.id
             refId = override.v.id;
             if (this.isVirtualShape) {
-                refId = this.originId + '/' + refId;
+                refId = (this as any).originId + '/' + refId;
             }
             else {
                 refId = this.id + '/' + refId;
@@ -435,7 +435,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             super.findVar(refId, ret);
             return ret;
         }
-        const thisId = this.isVirtualShape ? this.originId : this.id;
+        const thisId = this.isVirtualShape ? (this as any).originId : this.id;
         if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
 
         return super.findOverride(refId, type);

@@ -5,7 +5,74 @@ import { RenderTransform } from "../render";
 import { genid } from "./basic";
 import { EL } from "./el";
 
-export class DataView extends Watchable(EL) {
+// EventEmitter
+
+// interface IKeyAny {
+//     [key: string]: any
+// }
+
+class EventEL extends EL {
+    private _events: { [key: string]: Function[] } = {};
+    private _onceEvents: { [key: string]: Function[] } = {};
+    private _emitLevel: number = 0;
+    private _removes: Function[] = [];
+    on(name: string, cb: Function) {
+        (this._events[name] || (this._events[name] = [])).push(cb);
+        const rm = () => this._events[name] && this._events[name].splice(this._events[name].indexOf(cb) >>> 0, 1);
+        return {
+            remove: () => {
+                if (this._emitLevel === 0) rm();
+                else this._removes.push(rm);
+            }
+        };
+    }
+    once(name: string, cb: Function) {
+        (this._onceEvents[name] || (this._onceEvents[name] = [])).push(cb);
+        const rm = () => this._onceEvents[name] && this._onceEvents[name].splice(this._onceEvents[name].indexOf(cb) >>> 0, 1);
+        return {
+            remove: () => {
+                if (this._emitLevel === 0) rm();
+                else this._removes.push(rm);
+            } 
+        };
+    }
+    emit(name: string, ...args: any[]) {
+        this._emitLevel++;
+        try {
+            (this._events[name] || []).forEach((fn: Function) => fn(...args));
+            (this._onceEvents[name] || []).forEach((fn: Function) => fn(...args));
+            delete this._onceEvents[name];
+        } finally {
+            this._emitLevel--;
+        }
+        if (this._emitLevel === 0) {
+            this._removes.forEach((fn: Function) => fn());
+            this._removes.length = 0;
+        }
+    }
+
+    // watcher, 使用Watchable 包装, 语法检查无效了
+    public __watcher: Set<((...args: any[]) => void)> = new Set();
+    public watch(watcher: ((...args: any[]) => void)): (() => void) {
+        this.__watcher.add(watcher);
+        return () => {
+            this.__watcher.delete(watcher);
+        };
+    }
+    public unwatch(watcher: ((...args: any[]) => void)): boolean {
+        return this.__watcher.delete(watcher);
+    }
+    public notify(...args: any[]) {
+        if (this.__watcher.size === 0) return;
+        // 在set的foreach内部修改set会导致无限循环
+        Array.from(this.__watcher).forEach(w => {
+            w(...args);
+        });
+    }
+}
+
+
+export class DataView extends EventEL {
     m_ctx: DViewCtx;
     m_data: Shape;
     m_children: DataView[] = [];
@@ -73,7 +140,7 @@ export class DataView extends Watchable(EL) {
         this.m_ctx.setReLayout(this);
         this.m_ctx.setDirty(this);
         this.onDataChange(...args);
-        super.notify(...args);
+        this.notify(...args);
     }
 
     onDestory() {

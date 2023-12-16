@@ -228,13 +228,13 @@ export class ShapeView extends DataView {
         this.m_hflip = shape.isFlippedHorizontal;
         this.m_vflip = shape.isFlippedVertical;
         this.m_rotate = shape.rotation;
-        this.m_fixedRadius = shape.fixedRadius; // rectangle
+        this.m_fixedRadius = (shape as any).fixedRadius; // rectangle
 
         this._layout(this.m_data, this.m_transx, this.m_varsContainer);
     }
 
     onDataChange(...args: any[]): void {
-        if (args.includes('points') || (this.m_fixedRadius || 0) !== (this.m_data.fixedRadius || 0)) {
+        if (args.includes('points') || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)) {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
@@ -534,6 +534,7 @@ export class ShapeView extends DataView {
         this.m_ctx.setDirty(this);
         this._layout(this.m_data, this.m_transx, this.m_varsContainer);
         this.notify("layout");
+        this.emit("layout");
     }
 
     // ================== render ===========================
@@ -581,8 +582,9 @@ export class ShapeView extends DataView {
     }
 
     protected renderContents(): EL[] {
-        // throw new Error("not implemented");
-        return [];
+        const childs = this.m_children;
+        childs.forEach((c) => c.render())
+        return childs;
     }
 
     // private m_save_render: EL | undefined;

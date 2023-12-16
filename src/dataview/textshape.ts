@@ -1,5 +1,5 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Path, Text, VariableType } from "../data/classes";
+import { OverrideType, Path, Text, TextShape, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
@@ -13,7 +13,7 @@ export class TextShapeView extends ShapeView {
 
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
-        return v ? v.value : this.m_data.text;
+        return v ? v.value : (this.m_data as TextShape).text;
     }
 
     getTextPath() {
