@@ -35,6 +35,7 @@ export class TableView extends ShapeView {
         }
     }
 
+    // todo table支持组件，直接override shape? 或者至少要datas & rowHeights & colWidths
     protected updateChildren(): void {
 
         const reuse = new Map<string, DataView>();

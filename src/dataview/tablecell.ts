@@ -78,9 +78,16 @@ export class TableCellView extends ShapeView {
             });
             return [img];
         } else if (cellType === TableCellType.Text) {
-            const text = this.getText();
-            if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
-            return renderTextLayout(elh, this.m_layout);
+            if (this.m_isVirtual) {
+                const text = this.getText();
+                if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
+                return renderTextLayout(elh, this.m_layout);
+            }
+            else {
+                // todo: 临时方案，后续应该把data里的layout数据去掉
+                const layout = shape.getLayout();
+                return renderTextLayout(elh, layout!);
+            }
         }
         return [];
     }
