@@ -24,4 +24,12 @@ export class PageView extends GroupShapeView {
         prop.height = height;
         return prop;
     }
+
+    render(): number {
+        const r = super.render();
+        if (r) {
+            this.eltag = "svg";
+        }
+        return r;
+    }
 }

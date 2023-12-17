@@ -1,6 +1,5 @@
 import { __objidkey } from '../basic/objectid';
-import { IDataGuard } from './basic';
-import { Watchable } from './basic';
+import { IDataGuard, WatchableObject } from './basic';
 
 class ProxyHandler {
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
@@ -37,7 +36,7 @@ class ProxyHandler {
 
 export const isProxy = (obj: any): boolean => obj && obj["__isProxy"];
 
-export class DataGuard extends Watchable(Object) implements IDataGuard {
+export class DataGuard extends WatchableObject implements IDataGuard {
     private __ph: ProxyHandler;
     constructor() {
         super();

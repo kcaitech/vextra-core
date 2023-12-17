@@ -1,6 +1,6 @@
 import { objectId, __objidkey } from '../basic/objectid';
-import { Basic, castNotifiable, castRollbackable, IDataGuard, ISave4Restore, isDataBasicType, Notifiable } from './basic';
-import { Watchable } from './basic';
+import { Basic, castNotifiable, castRollbackable, IDataGuard, ISave4Restore, isDataBasicType, Notifiable, WatchableObject } from './basic';
+
 // map 对象record
 interface MapRec {
     isContentExist: boolean // 元素是否在map对象身上
@@ -406,7 +406,7 @@ class Transact extends Array<Rec> {
 // deletedshapes, 用于undo及op操作
 // 远程操作不需要记录transact, 但需要proxy. 有远程操作后, 之前的transact也不能直接undo了
 
-export class Repository extends Watchable(Object) implements IDataGuard {
+export class Repository extends WatchableObject implements IDataGuard {
     private __context: TContext;
     private __ph: ProxyHandler;
     private __trans: Transact[] = [];

@@ -1,4 +1,3 @@
-import { Watchable } from "../data/basic";
 import { DViewCtx, PropsType } from "./viewctx";
 import { Shape, SymbolRefShape, SymbolShape } from "../data/classes";
 import { RenderTransform } from "../render";
