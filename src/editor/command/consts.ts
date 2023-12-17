@@ -142,6 +142,10 @@ export const POINTS_ATTR_ID = {
     from: "from",
     to: "to",
     point: "point",
+    curveMode: 'curveMode',
+    cornerRadius: 'cornerRadius',
+    hasFrom: 'hasFrom',
+    hasTo: 'hasTo'
 }
 
 export const TABLE_ATTR_ID = {

@@ -33,7 +33,6 @@ import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
 import template_table_shape from "./template/table-shape.json"
-
 import {
     Border,
     Color,
@@ -51,7 +50,6 @@ import {
     Span,
     Style,
     Text,
-    TextAttr,
     UserInfo,
     Shadow,
     BorderStyle,
@@ -235,27 +233,27 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
 }
 
 export function newLineShape(name: string, frame: ShapeFrame): LineShape {
-    const style = newStyle();
-    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.None);
-    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.None);
+    const style = newflatStyle();
+    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
+    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const id = uuid();
-    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
     style.borders.push(border);
-    const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, curvePoint, true);
+    const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, curvePoint, false);
     addCommonAttr(shape);
     return shape;
 }
 
 export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
-    const style = newStyle();
+    const style = newflatStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
-    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.None);
-    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.None);
+    const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
+    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
     style.borders.push(border);
-    const shape = new LineShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, true);
+    const shape = new LineShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, false);
     addCommonAttr(shape);
     return shape;
 }
@@ -385,8 +383,9 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     const p2 = new CurvePoint(uuid(), 1, 0, CurveMode.Straight); // rt
     const p3 = new CurvePoint(uuid(), 1, 1, CurveMode.Straight); // rb
     const p4 = new CurvePoint(uuid(), 0, 1, CurveMode.Straight); // lb
-    curvePoint.push(p1, p2, p3, p4);
-    const shape = new CutoutShape(id, name, types.ShapeType.Cutout, frame, style, curvePoint, true, true);
+    const p5 = new CurvePoint(uuid(), 0, 0.00001, CurveMode.Straight); // lt
+    curvePoint.push(p1, p2, p3, p4, p5);
+    const shape = new CutoutShape(id, name, types.ShapeType.Cutout, frame, style, curvePoint, false, true);
     addCommonAttr(shape);
     return shape;
 }

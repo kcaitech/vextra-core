@@ -12,15 +12,14 @@ import {
     SymbolUnionShape
 } from "../data/shape";
 import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../data/style";
-import { expand, expandTo, translate, pathEdit, translateTo } from "./frame";
-import { BoolOp, CurvePoint, Point2D, ExportFormat } from "../data/baseclasses";
+import { expand, expandTo, translate, translateTo } from "./frame";
+import { BoolOp, CurvePoint, ExportFormat } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { ContactForm, CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme } from "../data/typesdefine";
 import { Api } from "./command/recordapi";
-import { modify_points_xy, update_frame_by_points } from "./path";
 import { exportCurvePoint } from "../data/baseexport";
 import { importBorder, importCurvePoint, importFill } from "../data/baseimport";
 import { v4 } from "uuid";
@@ -39,6 +38,7 @@ import {
 } from "./utils/other";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
+import { _clip, _typing_modify, modify_points_xy, replace_path_shape_points, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 
 function varParent(_var: Variable) {
@@ -736,13 +736,15 @@ export class ShapeEditor {
             api.shapeModifyVFlip(this.__page, this.__shape, !this.__shape.isFlippedVertical)
         });
     }
-
     public contextSettingOpacity(value: number) {
-        const api = this.__repo.start("contextSettingOpacity", {});
-        api.shapeModifyContextSettingsOpacity(this.__page, this.__shape, value);
-        this.__repo.commit();
+        try {
+            const api = this.__repo.start("contextSettingOpacity", {});
+            api.shapeModifyContextSettingsOpacity(this.__page, this.__shape, value);
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
     }
-
     // resizingConstraint
     public setResizingConstraint(value: number) {
         this._repoWrap("setResizingConstraint", (api) => {
@@ -756,6 +758,28 @@ export class ShapeEditor {
             deg = deg % 360;
             api.shapeModifyRotate(this.__page, this.__shape, deg)
         });
+    }
+    /**
+     * @description 路径裁剪
+     */
+    public clipPathShape(index: number, slice_name: string): { code: number, ex: Shape | undefined } {
+        const data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
+        if (!(this.__shape instanceof PathShape)) {
+            console.log('!(this.__shape instanceof PathShape)');
+            data.code = -1;
+            return data;
+        }
+        try {
+            const api = this.__repo.start("sortPathShapePoints", {});
+            const code = _clip(this.__page, api, this.__shape as PathShape, index, slice_name);
+            this.__repo.commit();
+            return code;
+        } catch (error) {
+            console.log('sortPathShapePoints:', error);
+            this.__repo.rollback();
+            data.code = -1;
+            return data;
+        }
     }
 
     // radius
@@ -937,6 +961,12 @@ export class ShapeEditor {
     }
 
     // points
+    public setPathClosedStatus(val: boolean) {
+        this._repoWrap("setPathClosedStatus", (api) => {
+            api.setCloseStatus(this.__page, this.__shape as PathShape, val);
+        });
+    }
+
     public addPointAt(point: CurvePoint, idx: number) {
         this._repoWrap("addPointAt", (api) => {
             api.addPointAt(this.__page, this.__shape as PathShape, idx, point);
@@ -948,7 +978,13 @@ export class ShapeEditor {
      * @param indexes 需要转化成有序索引
      */
     public removePoints(indexes: number[]) {
-        if (!(this.__shape instanceof PathShape)) return false;
+        let result = -1;
+        if (!(this.__shape instanceof PathShape)) {
+            console.log('!(this.__shape instanceof PathShape)');
+            return result;
+        }
+
+        // 排序 
         indexes = indexes.sort((a, b) => {
             if (a > b) {
                 return 1;
@@ -956,21 +992,79 @@ export class ShapeEditor {
                 return -1;
             }
         });
-        if (!indexes.length) return false;
+
+        if (!indexes.length) {
+            console.log('!indexes.length');
+            return result;
+        }
+
         try {
             const api = this.__repo.start("deleteShape", {});
+
             for (let i = indexes.length - 1; i > -1; i--) {
                 api.deletePoint(this.__page, this.__shape as PathShape, indexes[i]);
             }
+
             const p = this.__shape.parent as GroupShape;
-            if (!this.__shape.points.length && p) {
+
+            result = 1;
+
+            if (this.__shape.points.length === 2) {
+                api.setCloseStatus(this.__page, this.__shape, false);
+            }
+
+            if (this.__shape.points.length < 2 && p) {
                 const index = p.indexOfChild(this.__shape);
                 api.shapeDelete(this.__page, p, index)
+                result = 0;
+            } else {
+                update_path_shape_frame(api, this.__page, [this.__shape as PathShape]);
+            }
+
+            this.__repo.commit();
+            return result;
+        } catch (e) {
+            console.log("removePoints:", e);
+            this.__repo.rollback();
+            return 0;
+        }
+    }
+
+    public modifyPointsCurveMode(indexes: number[], curve_mode: CurveMode) {
+        if (!indexes.length) {
+            console.log('!indexes.length');
+            return false;
+        }
+        try {
+            const api = this.__repo.start("modifyPointsCurveMode", {});
+            for (let i = indexes.length - 1; i > -1; i--) {
+                const index = indexes[i];
+                _typing_modify(this.__shape as PathShape, this.__page, api, index, curve_mode);
+                api.modifyPointCurveMode(this.__page, this.__shape as PathShape, index, curve_mode);
+            }
+            update_path_shape_frame(api, this.__page, [this.__shape as PathShape]);
+            this.__repo.commit();
+            return true;
+        } catch (e) {
+            console.log("modifyPointsCurveMode:", e);
+            this.__repo.rollback();
+            return false;
+        }
+    }
+    public modifyPointsCornerRadius(indexes: number[], cornerRadius: number) {
+        if (!indexes.length) {
+            console.log('!indexes.length');
+            return false;
+        }
+        try {
+            const api = this.__repo.start("modifyPointsCornerRadius", {});
+            for (let i = indexes.length - 1; i > -1; i--) {
+                api.modifyPointCornerRadius(this.__page, this.__shape as PathShape, indexes[i], cornerRadius);
             }
             this.__repo.commit();
             return true;
         } catch (e) {
-            console.log("removePoints:", e);
+            console.log("modifyPointsCornerRadius:", e);
             this.__repo.rollback();
             return false;
         }
@@ -1354,20 +1448,13 @@ export class ShapeEditor {
         const shape = this.__shape as ContactShape;
         const points = this.get_points_for_init(index, shape.getPoints());
         this._repoWrap("init_points", (api) => {
-            const len = shape.points.length;
-            api.deletePoints(this.__page, this.__shape as PathShape, 0, len);
-            for (let i = 0, len = points.length; i < len; i++) {
-                const p = importCurvePoint(exportCurvePoint(points[i]));
-                p.id = v4();
-                points[i] = p;
-            }
-            api.addPoints(this.__page, this.__shape as PathShape, points);
+            replace_path_shape_points(this.__page, this.__shape as PathShape, api, points);
         });
     }
 
     public modify_frame_by_points() {
         this._repoWrap("modify_frame_by_points", (api) => {
-            update_frame_by_points(api, this.__page, this.__shape);
+            update_frame_by_points(api, this.__page, this.__shape as PathShape);
         });
     }
 
@@ -1385,7 +1472,7 @@ export class ShapeEditor {
                 points[i] = p;
             }
             api.addPoints(this.__page, this.__shape as PathShape, points);
-            update_frame_by_points(api, this.__page, this.__shape);
+            update_frame_by_points(api, this.__page, this.__shape as PathShape);
         });
     }
 

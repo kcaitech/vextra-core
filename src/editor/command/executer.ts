@@ -41,6 +41,7 @@ import {
     importVariable,
     importShadow,
     importShadowPosition,
+    importCurveMode,
     importCutoutShape,
     importExportFormat,
     importExportFileFormat,
@@ -66,7 +67,8 @@ import {
     Border,
     ExportFormat,
     Shadow,
-    TextShape
+    TextShape,
+    CurveMode
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -77,6 +79,7 @@ import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert
 import { importShape, updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { CMDHandler } from "./handler";
+import { shapeModifyCurveMode } from "../basicapi";
 
 export class CMDExecuter {
     private __document: Document;
@@ -462,7 +465,25 @@ export class CMDExecuter {
                     const p = importPoint2D(JSON.parse(value));
                     api.shapeModifyCurvToPoint(page, shape, pointIdx, p);
                 }
-            } else {
+            }
+            else if (opId === POINTS_ATTR_ID.curveMode) {
+                if (value) {
+                    api.shapeModifyCurveMode(page, shape, pointIdx, value as CurveMode);
+                }
+            } else if (opId === POINTS_ATTR_ID.hasFrom) {
+                const v = value ? JSON.parse(value) : value;
+                api.shapeModifyHasFrom(page, shape, pointIdx, v);
+            }
+            else if (opId === POINTS_ATTR_ID.hasTo) {
+                const v = value ? JSON.parse(value) : value;
+                api.shapeModifyHasTo(page, shape, pointIdx, v);
+            }
+            else if (opId === POINTS_ATTR_ID.cornerRadius) {
+                if (value) {
+                    api.shapeModifyPointCornerRadius(page, shape, pointIdx, Number(value));
+                }
+            }
+            else {
                 console.error("not implemented ", op)
             }
         } else if (arrayAttr === SHADOW_ID) {

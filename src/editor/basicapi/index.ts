@@ -2,7 +2,7 @@ import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
 import { ContactShape, ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign, ContactForm } from "../../data/classes";
-import { BoolOp, BulletNumbersBehavior, BulletNumbersType, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { BoolOp, BulletNumbersBehavior, BulletNumbersType, CurveMode, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
 import { Color } from "../../data/classes";
 export * from "./fill";
@@ -191,6 +191,9 @@ export function shapeModifyFixedRadius(shape: GroupShape | PathShape | PathShape
 }
 export function shapeModifyBoolOp(shape: Shape, op: BoolOp | undefined) {
     shape.boolOp = op;
+}
+export function shapeModifyPathShapeClosedStatus(shape: PathShape, is: boolean) {
+    shape.isClosed = is;
 }
 export function shapeModifyBoolOpShape(shape: GroupShape, isOpShape: boolean | undefined) {
     if (isOpShape) shape.isBoolOpShape = true;
@@ -500,7 +503,22 @@ export function shapeModifyCurvToPoint(page: Page, shape: PathShape, index: numb
     p.toX = point.x;
     p.toY = point.y;
 }
-
+export function shapeModifyCurveMode(page: Page, shape: PathShape, index: number, curveMode: CurveMode) {
+    const p = shape.points[index];
+    p.mode = curveMode;
+}
+export function shapeModifyPointCornerRadius(page: Page, shape: PathShape, index: number, cornerRadius: number) {
+    const p = shape.points[index];
+    p.radius = cornerRadius;
+}
+export function shapeModifyHasFrom(page: Page, shape: PathShape, index: number, hasFrom: boolean) {
+    const p = shape.points[index];
+    p.hasFrom = hasFrom;
+}
+export function shapeModifyHasTo(page: Page, shape: PathShape, index: number, hasTo: boolean) {
+    const p = shape.points[index];
+    p.hasTo = hasTo;
+}
 export function shapeModifyVariable(page: Page, _var: Variable, value: any) {
     _var.value = value;
 }

@@ -9,17 +9,14 @@ import {
     erScaleByR,
     erScaleByT,
     expandTo,
-    pathEdit,
-    pathEditSide,
     scaleByB,
     scaleByL,
     scaleByR,
     scaleByT,
     translate,
     translateTo,
-    update_frame_by_points
 } from "./frame";
-import { CurvePoint, GroupShape, PathShape, Point2D, Shape, ShapeFrame } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ContactRoleType, CurveMode, ShapeType } from "../data/typesdefine";
 import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape } from "./creator";
@@ -39,12 +36,20 @@ import { exportCurvePoint } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name } from "./utils/symbol";
+import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, update_frame_by_points2 } from "./utils/path";
 import { Color } from "../data/color";
 
 interface PageXY { // 页面坐标系的xy
     x: number
     y: number
 }
+
+interface XY {
+    x: number
+    y: number
+}
+
+type Side = 'from' | 'to'
 
 export interface ControllerOrigin { // 页面坐标系的xy
     x: number
@@ -101,7 +106,7 @@ export interface AsyncBaseAction {
     executeRotate: (deg: number) => void;
     executeScale: (type: CtrlElementType, end: PageXY) => void;
     executeErScale: (type: CtrlElementType, scale: number) => void;
-    executeScaleDirectional: (type: CtrlElementType, end: PageXY) => void;
+    executeForLine: (index: number, end: PageXY) => void;
     close: () => undefined;
 }
 
@@ -120,8 +125,9 @@ export interface AsyncLineAction {
 }
 
 export interface AsyncPathEditor {
-    addNode: (index: number, raw: { x: number, y: number }) => void;
+    addNode: (index: number) => void;
     execute: (index: number, end: PageXY) => void;
+    execute2: (indexes: number[], dx: number, dy: number) => void;
     close: () => undefined;
 }
 
@@ -144,6 +150,13 @@ export interface AsyncContactEditor {
 
 export interface AsyncOpacityEditor {
     execute: (contextSettingOpacity: number) => void;
+    close: () => undefined;
+}
+
+export interface AsyncPathHandle {
+    pre: (index: number) => void;
+    execute: (side: Side, from: XY, to: XY) => void;
+    abort: () => undefined;
     close: () => undefined;
 }
 
@@ -290,7 +303,7 @@ export class Controller {
         const contact_to = (p: PageXY, to?: ContactForm) => {
             if (!newShape || !savepage) return;
             status = Status.Pending;
-            pathEdit(api, savepage, newShape as ContactShape, 1, p);
+            pathEdit(api, savepage, newShape as PathShape, 1, p);
             api.shapeModifyContactTo(savepage, newShape as ContactShape, to);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -412,6 +425,7 @@ export class Controller {
     public asyncRectEditor(shape: Shape, page: Page): AsyncBaseAction {
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
+        let need_update_frame = false;
         const executeRotate = (deg: number) => {
             status = Status.Pending;
             const newDeg = (shape.rotation || 0) + (deg || 0);
@@ -455,9 +469,17 @@ export class Controller {
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
-        const executeScaleDirectional = (type: CtrlElementType, end: PageXY) => {
+        const executeForLine = (index: number, end: PageXY) => {
+            status = Status.Pending;
+            need_update_frame = true;
+            pathEdit(api, page, shape as PathShape, index, end);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
         }
         const close = () => {
+            if (need_update_frame) {
+                update_frame_by_points(api, page, shape as PathShape);
+            }
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
@@ -465,7 +487,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { executeRotate, executeScale, executeErScale, executeScaleDirectional, close };
+        return { executeRotate, executeScale, executeErScale, executeForLine, close };
     }
 
     // 多对象的异步编辑
@@ -530,37 +552,6 @@ export class Controller {
             else this.__repo.rollback();
         }
         return { executeScale, executeRotate, close };
-    }
-
-    public asyncLineEditor(shape: Shape): AsyncLineAction {
-        const api = this.__repo.start("action", {});
-        const page = shape.getPage() as Page;
-        let status: Status = Status.Pending;
-        const execute = (type: CtrlElementType, end: PageXY, deg: number, actionType?: 'rotate' | 'scale') => {
-            status = Status.Pending;
-            if (shape.isLocked) return;
-            if (actionType === 'rotate') {
-                const newDeg = (shape.rotation || 0) + deg;
-                api.shapeModifyRotate(page, shape, newDeg);
-            } else {
-                if (type === CtrlElementType.LineStart) {
-                    adjustLT2(api, page, shape, end.x, end.y);
-                } else if (type === CtrlElementType.LineEnd) {
-                    adjustRB2(api, page, shape, end.x, end.y);
-                }
-            }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
-        }
-        const close = () => {
-            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
-                this.__repo.commit();
-            } else {
-                this.__repo.rollback();
-            }
-            return undefined;
-        }
-        return { execute, close }
     }
 
     // 图形位置移动
@@ -631,22 +622,33 @@ export class Controller {
     public asyncPathEditor(shape: PathShape, page: Page): AsyncPathEditor {
         const api = this.__repo.start("asyncPathEditor", {});
         let status: Status = Status.Pending;
-        const addNode = (index: number, raw: { x: number, y: number }) => {
+        const w = shape.frame.width, h = shape.frame.height;
+        let m = new Matrix(shape.matrix2Root());
+        m.preScale(w, h);
+        m = new Matrix(m.inverse); // root -> 1
+        const addNode = (index: number) => {
             status === Status.Pending
-            const p = new CurvePoint(uuid(), raw.x, raw.y, CurveMode.Straight);
+            const p = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
             api.addPointAt(page, shape as PathShape, index, p);
+            after_insert_point(page, api, shape, index);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const execute = (index: number, end: PageXY) => {
             status === Status.Pending
-            pathEdit(api, page, shape, index, end);
+            pathEdit(api, page, shape, index, end, m);
+            this.__repo.transactCtx.fireNotify();
+            status = Status.Fulfilled;
+        }
+        const execute2 = (indexes: number[], dx: number, dy: number) => {
+            status === Status.Pending
+            pointsEdit(api, page, shape, indexes, dx, dy);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
         const close = () => {
             status = Status.Pending;
-            update_frame_by_points(api, page, shape);
+            update_frame_by_points(api, page, shape as PathShape);
             status = Status.Fulfilled;
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
@@ -655,7 +657,7 @@ export class Controller {
             }
             return undefined;
         }
-        return { addNode, execute, close }
+        return { addNode, execute, execute2, close }
     }
 
     public asyncContactEditor(shape: ContactShape, page: Page): AsyncContactEditor {
@@ -682,12 +684,12 @@ export class Controller {
                 if (!shape.from) {
                     api.shapeModifyContactFrom(page, shape as ContactShape, clear_target.apex);
                 }
-                pathEdit(api, page, shape, 0, clear_target.p);
+                pathEdit(api, page, shape as PathShape, 0, clear_target.p);
             } else {
                 if (shape.from) {
                     api.shapeModifyContactFrom(page, shape as ContactShape, undefined);
                 }
-                pathEdit(api, page, shape, 0, m_target);
+                pathEdit(api, page, shape as PathShape, 0, m_target);
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -700,12 +702,12 @@ export class Controller {
                 if (!shape.to) {
                     api.shapeModifyContactTo(page, shape as ContactShape, clear_target.apex);
                 }
-                pathEdit(api, page, shape, idx - 1, clear_target.p);
+                pathEdit(api, page, shape as PathShape, idx - 1, clear_target.p);
             } else {
                 if (shape.to) {
                     api.shapeModifyContactTo(page, shape as ContactShape, undefined);
                 }
-                pathEdit(api, page, shape, idx - 1, m_target);
+                pathEdit(api, page, shape as PathShape, idx - 1, m_target);
             }
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
@@ -722,7 +724,7 @@ export class Controller {
         const modify_sides = (index: number, dx: number, dy: number) => {
             if (shape.type !== ShapeType.Contact) return;
             status = Status.Pending;
-            pathEditSide(api, page, shape, index, index + 1, dx, dy);
+            contact_edit(api, page, shape, index, index + 1, dx, dy);
             this.__repo.transactCtx.fireNotify();
             status = Status.Fulfilled;
         }
@@ -758,6 +760,40 @@ export class Controller {
             return undefined;
         }
         return { execute, close }
+    }
+
+    public asyncPathHandle(shape: PathShape, page: Page, index: number): AsyncPathHandle {
+        const curvePoint = shape.points[index];
+        let mode = curvePoint.mode;
+        const api = this.__repo.start("asyncPathHandle", {});
+        const pre = (index: number) => {
+            __pre_curve(page, api, shape, index);
+            mode = CurveMode.Mirrored;
+            this.__repo.transactCtx.fireNotify();
+        }
+        const execute = (side: Side, from: XY, to: XY) => {
+            if (mode === CurveMode.Mirrored || mode === CurveMode.Asymmetric) {
+                api.shapeModifyCurvFromPoint(page, shape, index, from);
+                api.shapeModifyCurvToPoint(page, shape, index, to);
+            } else if (mode === CurveMode.Disconnected) {
+                if (side === 'from') {
+                    api.shapeModifyCurvFromPoint(page, shape, index, from);
+                } else {
+                    api.shapeModifyCurvToPoint(page, shape, index, to);
+                }
+            }
+            this.__repo.transactCtx.fireNotify();
+        }
+        const abort = () => {
+            this.__repo.rollback();
+            return undefined;
+        }
+        const close = () => {
+            update_frame_by_points2(api, page, shape);
+            this.__repo.commit();
+            return undefined;
+        }
+        return { pre, execute, abort, close };
     }
 }
 

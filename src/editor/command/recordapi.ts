@@ -16,6 +16,7 @@ import {
     TableCmdModify,
     TableCmdRemove,
     TableIndex,
+    TableOpTarget,
     TextCmdInsert,
     TextCmdModify,
     TextCmdRemove
@@ -30,7 +31,7 @@ import {
     exportBorderStyle,
     exportColor,
     exportContactForm,
-    exportContactRole,
+    exportContactRole, exportCurveMode,
     exportCurvePoint,
     exportFill,
     exportPage,
@@ -49,7 +50,7 @@ import {
     TextShape,
     Variable,
     SymbolShape,
-    VariableType
+    VariableType, CurveMode
 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, ContextSettings, Fill, MarkerType, Style, Shadow } from "../../data/style";
@@ -60,8 +61,7 @@ import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { TableOpTarget } from "../../coop/data/classes";
-import { ContactRole, CurvePoint, ExportFormat, ExportOptions, ContactForm } from "../../data/baseclasses";
+import { ContactForm, ContactRole, CurvePoint, ExportFormat, ExportOptions } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { BasicMap, BasicArray } from "../../data/basic";
 import { Color } from "../../data/classes";
@@ -918,6 +918,46 @@ export class Api {
                 basicapi.addPointAt(shape, point, i);
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), POINTS_ID, point.id, i, exportCurvePoint(point)));
             }
+        })
+    }
+    modifyPointCurveMode(page: Page, shape: PathShape, index: number, curveMode: CurveMode) {
+        checkShapeAtPage(page, shape);
+        const point = shape.points[index];
+        if (!point) return;
+        this.__trap(() => {
+            const save = point.mode;
+            point.mode = curveMode;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.curveMode, exportCurveMode(curveMode), exportCurveMode(save)));
+        })
+    }
+    modifyPointHasFrom(page: Page, shape: PathShape, index: number, hasFrom: boolean) {
+        checkShapeAtPage(page, shape);
+        const point = shape.points[index];
+        if (!point) return;
+        this.__trap(() => {
+            const save = point.hasFrom;
+            point.hasFrom = hasFrom;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.hasFrom, hasFrom, save));
+        })
+    }
+    modifyPointHasTo(page: Page, shape: PathShape, index: number, hasTo: boolean) {
+        checkShapeAtPage(page, shape);
+        const point = shape.points[index];
+        if (!point) return;
+        this.__trap(() => {
+            const save = point.hasTo;
+            point.hasTo = hasTo;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.hasTo, hasTo, save));
+        })
+    }
+    modifyPointCornerRadius(page: Page, shape: PathShape, index: number, cornerRadius: number) {
+        checkShapeAtPage(page, shape);
+        const point = shape.points[index];
+        if (!point) return;
+        this.__trap(() => {
+            const save = point.radius;
+            point.radius = cornerRadius;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.cornerRadius, cornerRadius, save));
         })
     }
     setCloseStatus(page: Page, shape: PathShape, isClosed: boolean) {

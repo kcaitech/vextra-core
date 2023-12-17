@@ -1,4 +1,4 @@
-import { Page } from "data/page";
+import { Page } from "../../data/page";
 import { BasicArray } from "../../data/basic";
 import { ExportFormat, ExportOptions, Shape } from "../../data/shape";
 import { ExportFileFormat, ExportFormatNameingScheme } from "../../data/style";

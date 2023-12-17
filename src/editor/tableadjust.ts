@@ -1,5 +1,5 @@
 
-import { Page } from "data/page";
+import { Page } from "../data/page";
 import { TableShape } from "../data/table";
 import { Api } from "./command/recordapi";
 
