@@ -990,7 +990,7 @@ export class Api {
         this.__trap(() => {
             for (let i = 0; i < shadows.length; i++) {
                 const shadow = shadows[i];
-                basicapi.addShadow(shape.style, shadow, i);
+                basicapi.addShadow(shape.style.shadows, shadow, i);
                 this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, i, exportShadow(shadow)));
             }
         })
@@ -998,14 +998,14 @@ export class Api {
     addShadow(page: Page, shape: Shape, shadow: Shadow, index: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            basicapi.addShadow(shape.style, shadow, index);
+            basicapi.addShadow(shape.style.shadows, shadow, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, index, exportShadow(shadow)))
         })
     }
     deleteShadows(page: Page, shape: Shape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const shadows = basicapi.deleteShadows(shape.style, index, strength);
+            const shadows = basicapi.deleteShadows(shape.style.shadows, index, strength);
             if (shadows && shadows.length) {
                 for (let i = 0; i < shadows.length; i++) {
                     const shadow = shadows[i];
@@ -1018,7 +1018,7 @@ export class Api {
     deleteShadowAt(page: Page, shape: Shape, idx: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const shadow = basicapi.deleteShadowAt(shape.style, idx);
+            const shadow = basicapi.deleteShadowAt(shape.style.shadows, idx);
             if (shadow) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, idx, exportShadow(shadow)));
         })
     }
@@ -1478,10 +1478,10 @@ export class Api {
         })
 
         for (let i = 0, len = removeIndexs.length; i < len; i++) {
-            const del = basicapi.deleteText(shape.text, removeIndexs[i] - i, 1);
+            const del = basicapi.deleteText(_text, removeIndexs[i] - i, 1);
             if (del && del.length > 0) this.addCmd(TextCmdRemove.Make(page.id, genShapeId(shape), removeIndexs[i] - i, del.length, { type: "complex", text: exportText(del), length: del.length }))
         }
-        if (removeIndexs.length > 0) shape.text.reLayout();
+        if (removeIndexs.length > 0) _text.reLayout();
     }
 
     private _textModifySetBulletNumbers(page: Page, shape: TextShapeLike | Variable, type: BulletNumbersType, index: number, len: number) {
@@ -1601,7 +1601,7 @@ export class Api {
             index = alignRange.index;
             len = alignRange.len;
 
-            const ret = basicapi.textModifyMinLineHeight(shape.text, minLineheight, index, len);
+            const ret = basicapi.textModifyMinLineHeight(_text, minLineheight, index, len);
             ret.forEach((m) => {
                 if (minLineheight !== m.minimumLineHeight) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.textMinLineheight, minLineheight, m.minimumLineHeight));
                 index += m.length;
@@ -1617,7 +1617,7 @@ export class Api {
             index = alignRange.index;
             len = alignRange.len;
 
-            const ret = basicapi.textModifyMaxLineHeight(shape.text, maxLineheight, index, len);
+            const ret = basicapi.textModifyMaxLineHeight(_text, maxLineheight, index, len);
             ret.forEach((m) => {
                 if (maxLineheight !== m.maximumLineHeight) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.textMaxLineheight, maxLineheight, m.maximumLineHeight));
                 index += m.length;

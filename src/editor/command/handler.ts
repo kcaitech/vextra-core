@@ -523,6 +523,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
                 opId: SHAPE_ATTR_ID.bindvar,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
                     if (value) {
+                        if (!(shape instanceof Shape)) throw new Error("variable can't bind variable");
                         let { type, varId } = JSON.parse(value);
                         if (varId == undefined) {
                             if (shape.varbinds) shape.varbinds.delete(type);
@@ -553,7 +554,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.trimTransparent,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    if (value) {
+                    if (value && shape instanceof Shape && shape.exportOptions) {
                         const trim = value && JSON.parse(value);
                         api.setExportTrimTransparent(shape.exportOptions, trim);
                     }
@@ -562,7 +563,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.canvasBackground,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    if (value) {
+                    if (value && shape instanceof Shape && shape.exportOptions) {
                         const background = value && JSON.parse(value);
                         api.setExportCanvasBackground(shape.exportOptions, background);
                     }
@@ -571,7 +572,7 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.previewUnfold,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    if (value) {
+                    if (value && shape instanceof Shape && shape.exportOptions) {
                         const unfold = value && JSON.parse(value);
                         api.setExportPreviewUnfold(shape.exportOptions, unfold);
                     }
