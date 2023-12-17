@@ -438,10 +438,8 @@ function expandBounds(ctx: BoundsCtx, x: number, y: number) {
         ctx.bounds.minX = ctx.bounds.maxX = ctx.prepoint.x;
         ctx.bounds.minY = ctx.bounds.maxY = ctx.prepoint.y;
     }
-    else {
-        expandXBounds(ctx.bounds, x);
-        expandYBounds(ctx.bounds, y);
-    }
+    expandXBounds(ctx.bounds, x);
+    expandYBounds(ctx.bounds, y);
 }
 
 boundsHandler['M'] = (ctx: BoundsCtx, item: any[]) => {

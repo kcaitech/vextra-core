@@ -12,16 +12,12 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         stroke: '',
         'stroke-width': thickness
     }
-    // if (mark_id) {
-    //     body_props['mask'] = `url(#${mark_id})`;
-    // }
     const { length, gap } = border.borderStyle;
     if (length || gap) body_props['stroke-dasharray'] = `${length}, ${gap}`;
     const fillType = border.fillType;
     if (fillType === FillType.SolidColor) {
         const color = border.color;
-        const opacity = style.contextSettings?.opacity || 1;
-        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
     }
     const g_cs: any[] = [h('path', body_props)];
     if (endMarkerType !== MarkerType.Line || startMarkerType !== MarkerType.Line) {

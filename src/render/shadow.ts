@@ -1,5 +1,5 @@
 import {OverrideType, Shadow, ShadowPosition, ShapeType, VariableType} from "../data/baseclasses";
-import {Border, Style} from "data/style";
+import {Border, Style} from "../data/style";
 import {GroupShape, Shape, ShapeFrame, SymbolRefShape, SymbolShape, TextShape, Variable} from "../data/classes";
 import {render as borderR} from "./border";
 import {render as renderB} from "./line_borders";
