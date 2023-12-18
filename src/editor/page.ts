@@ -1136,7 +1136,7 @@ export class PageEditor {
                     for (let i = 0, l = points.length; i < l; i++) {
                         api.modifyPointCornerRadius(this.__page, shape, i, 0);
                     }
-                    
+
                     api.shapeModifyFixedRadius(this.__page, shape, val);
                 }
                 update_frame_by_points(api, this.__page, shape);
@@ -2047,17 +2047,27 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-
+    /**
+     * @description 图层拖动调整
+     */
     afterShapeListDrag(shapes: Shape[], host: Shape, position: 'upper' | 'inner' | 'lower') {
-        // 数据校验
-        if (host.type === ShapeType.SymbolRef && position === 'inner') return false;
-        if (is_part_of_symbolref(host)) return false;
+        // 整体数据校验
+        if (host.type === ShapeType.SymbolRef && position === 'inner') {
+            return false;
+        }
+        if (is_part_of_symbolref(host)) {
+            return false;
+        }
         const host_parent: GroupShape | undefined = host.parent as GroupShape;
-        if (!host_parent || host_parent.isVirtualShape) return false;
+        if (!host_parent || host_parent.isVirtualShape) {
+            return false;
+        }
         const pre: Shape[] = [];
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
-            if (is_exist_invalid_shape([item])) continue;
+            if (is_exist_invalid_shape([item])) {
+                continue;
+            }
             let next = false;
             let p: Shape | undefined = host;
             while (p) {
@@ -2067,10 +2077,14 @@ export class PageEditor {
                 }
                 p = p.parent;
             }
-            if (next) continue;
+            if (next) {
+                continue;
+            }
             pre.push(item);
         }
-        if (!pre.length) return false;
+        if (!pre.length) {
+            return false;
+        }
 
         const api = this.__repo.start('afterShapeListDrag', {});
         try {
@@ -2078,54 +2092,98 @@ export class PageEditor {
                 for (let i = 0, l = pre.length; i < l; i++) {
                     const item = pre[i];
                     const parent: GroupShape | undefined = item.parent as GroupShape;
-                    if (!parent) continue;
-                    if (host.type === ShapeType.SymbolRef) continue;
-                    if ((host instanceof SymbolUnionShape)) continue;
-                    if (is_part_of_symbol(host)) {
-                        if (is_exist_invalid_shape2([item])) continue;
+                    if (!parent
+                        || host.type === ShapeType.SymbolRef
+                        || (host instanceof SymbolUnionShape)) {
+                        continue;
                     }
+
+                    if (is_part_of_symbol(host) && is_exist_invalid_shape2([item])) {
+                        continue;
+                    }
+
                     const children = item.naviChilds || item.childs;
                     if (children?.length) {
                         const tree = item instanceof SymbolRefShape ? item.symData : item;
-                        if (!tree) continue;
-                        if (is_circular_ref2(tree, host.id)) continue;
+                        if (!tree) {
+                            continue;
+                        }
+                        if (is_circular_ref2(tree, host.id)) {
+                            continue;
+                        }
                     }
+
                     const beforeXY = item.frame2Root();
+
                     let last = (host as GroupShape).childs.length;
                     if (parent.id === host.id) { // 同一父级
                         last--;
                     }
+
                     api.shapeMove(this.__page, parent, parent.indexOfChild(item), host as GroupShape, last);
+
                     translateTo(api, this.__page, item, beforeXY.x, beforeXY.y);
-                    if (after_remove(parent)) this.delete_inner(this.__page, parent, api);
+
+                    if (after_remove(parent)) {
+                        this.delete_inner(this.__page, parent, api);
+                    }
                 }
             } else {
+                console.log('pre list:', pre.map(i => i.name).toString());
+                let previous_index: number = -1;
+
                 for (let i = 0, l = pre.length; i < l; i++) {
                     const item = pre[i];
                     const parent: GroupShape | undefined = item.parent as GroupShape;
-                    if (!parent) continue;
-                    if (host_parent.type === ShapeType.SymbolRef) continue;
-                    if ((host_parent instanceof SymbolUnionShape)) continue;
-                    if (is_part_of_symbol(host_parent)) {
-                        if (is_exist_invalid_shape2([item])) continue;
+
+                    if (!parent
+                        || host_parent.type === ShapeType.SymbolRef
+                        || (host_parent instanceof SymbolUnionShape)
+                    ) {
+                        continue;
                     }
+
+                    if (is_part_of_symbol(host_parent) && is_exist_invalid_shape2([item])) {
+                        continue;
+                    }
+
                     const children = item.naviChilds || item.childs;
                     if (children?.length) {
                         const tree = item instanceof SymbolRefShape ? item.symData : item;
-                        if (!tree) continue;
-                        if (is_circular_ref2(tree, host_parent.id)) continue;
+                        if (!tree || is_circular_ref2(tree, host_parent.id)) {
+                            continue;
+                        }
                     }
                     const beforeXY = item.frame2Root();
-                    let index = host_parent.indexOfChild(host);
-                    if (parent.id === host_parent.id) { // 同一父级
-                        index = modify_index((parent) as GroupShape, item, host, index);
+
+                    let index = 0;
+
+                    if (previous_index > 0) {
+                        index = previous_index + 1;
+                    } else {
+                        index = host_parent.indexOfChild(host);
+
+                        if (parent.id === host_parent.id) { // 同一父级
+                            index = modify_index((parent) as GroupShape, item, host, index);
+                        }
+
+                        if (position === "upper") {
+                            index++;
+                        }
                     }
-                    if (position === "upper") {
-                        index++;
+
+                    api.shapeMove(this.__page, parent, parent.indexOfChild(item), host_parent, index);
+
+                    const _temp_index = host_parent.indexOfChild(item);
+                    if (_temp_index >= 0) {
+                        previous_index = _temp_index;
                     }
-                    api.shapeMove(this.__page, parent, parent.indexOfChild(item), host_parent as GroupShape, index);
+
                     translateTo(api, this.__page, item, beforeXY.x, beforeXY.y);
-                    if (after_remove(parent)) this.delete_inner(this.__page, parent, api);
+
+                    if (after_remove(parent)) {
+                        this.delete_inner(this.__page, parent, api);
+                    }
                 }
             }
             this.__repo.commit();
