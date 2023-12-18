@@ -804,7 +804,7 @@ function createTextByString(stringValue: string, refShape: TextShapeLike) {
 
 type TextShapeLike = Shape & { text: Text }
 
-const DefaultFontSize = Text.DefaultFontSize;
+// const DefaultFontSize = Text.DefaultFontSize;
 
 export function fixTextShapeFrameByLayout(text: Text, frame: ShapeFrame) {
     const textBehaviour = text.attr?.textBehaviour ?? TextBehaviour.Flexible;
@@ -813,13 +813,13 @@ export function fixTextShapeFrameByLayout(text: Text, frame: ShapeFrame) {
             break;
         case TextBehaviour.Fixed: {
             const layout = text.getLayout();
-            const fontsize = text.attr?.fontSize ?? DefaultFontSize;
+            const fontsize = text.attr?.fontSize ?? Text.DefaultFontSize;
             frame.height = Math.max(fontsize, layout.contentHeight);
             break;
         }
         case TextBehaviour.Flexible: {
             const layout = text.getLayout();
-            const fontsize = text.attr?.fontSize ?? DefaultFontSize;
+            const fontsize = text.attr?.fontSize ?? Text.DefaultFontSize;
             frame.width = Math.max(fontsize, layout.contentWidth);
             frame.height = Math.max(fontsize, layout.contentHeight);
             break;
