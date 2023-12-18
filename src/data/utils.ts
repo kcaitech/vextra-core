@@ -8,7 +8,7 @@ import { importCurvePoint } from "./baseimport";
 import { exportCurvePoint } from "./baseexport";
 import { importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
 import * as types from "./typesdefine"
-import { SymbolRefShape } from "./classes";
+import { ContactShape, SymbolRefShape } from "./classes";
 
 /**
  * @description root -> 图形自身上且单位为比例系数的矩阵
@@ -535,7 +535,7 @@ export function d(a: PageXY, b: XY): 'ver' | 'hor' | false {
     if (Math.abs(a.y - b.y) < 0.00001) return 'hor';
     return false;
 }
-export function update_contact_points(api: Api, shape: Shape, page: Page) {
+export function update_contact_points(api: Api, shape: ContactShape, page: Page) {
     const _p = shape.getPoints();
     const len = shape.points.length;
     api.deletePoints(page, shape as PathShape, 0, len);

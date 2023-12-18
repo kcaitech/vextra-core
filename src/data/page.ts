@@ -1,10 +1,10 @@
 import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape, SymbolShape, Variable } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
-import { BasicArray, Watchable } from "./basic";
+import { BasicArray, WatchableObject } from "./basic";
 import { Artboard } from "./artboard";
 import { SymbolRefShape, TableCell } from "./classes";
-class PageCollectNotify extends Watchable(Object) {
+class PageCollectNotify extends WatchableObject {
     constructor() {
         super();
     }

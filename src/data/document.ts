@@ -1,30 +1,31 @@
-import {DocumentMeta, PageListItem} from "./baseclasses";
-import {Page} from "./page";
-import {Artboard} from "./artboard";
-import {BasicArray, IDataGuard, ResourceMgr, Watchable} from "./basic";
-import {Style} from "./style";
-import {GroupShape, SymbolShape, TextShape} from "./shape";
-import {TableCell, TableShape} from "./table";
-import {SymbolRefShape} from "./symbolref";
+import { DocumentMeta, PageListItem } from "./baseclasses";
+import { Page } from "./page";
+import { Artboard } from "./artboard";
+import { BasicArray, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
+import { Style } from "./style";
+import { GroupShape, SymbolShape, TextShape } from "./shape";
+import { TableCell, TableShape } from "./table";
+import { SymbolRefShape } from "./symbolref";
 
-export {DocumentMeta, PageListItem, DocumentSyms} from "./baseclasses";
+export { DocumentMeta, PageListItem, DocumentSyms } from "./baseclasses";
 
 export enum LibType {
     Symbol = 'symbol-lib',
     Media = 'media-lib'
 }
 
-class SpecialActionCorrespondent extends Watchable(Object) {
+class SpecialActionCorrespondent extends WatchableObject {
     constructor() {
         super();
     }
 }
 
-function getTextFromGroupShape(shape: GroupShape): string {
+function getTextFromGroupShape(shape: GroupShape | undefined): string {
+    if (!shape) return "";
     let result = "";
     for (const child of shape.childs) {
-        if (child instanceof SymbolRefShape && !!child.symData) {
-            result += getTextFromGroupShape(child.symData);
+        if (child instanceof SymbolRefShape) {
+            if (!!child.symData) result += getTextFromGroupShape(child.symData);
         } else if (child instanceof GroupShape) {
             result += getTextFromGroupShape(child);
         } else if (child instanceof TableShape) {
@@ -37,7 +38,27 @@ function getTextFromGroupShape(shape: GroupShape): string {
     return result;
 }
 
-export class Document extends Watchable(DocumentMeta) {
+export class Document extends (DocumentMeta) {
+
+    // watchable
+    public __watcher: Set<((...args: any[]) => void)> = new Set();
+    public watch(watcher: ((...args: any[]) => void)): (() => void) {
+        this.__watcher.add(watcher);
+        return () => {
+            this.__watcher.delete(watcher);
+        };
+    }
+    public unwatch(watcher: ((...args: any[]) => void)): boolean {
+        return this.__watcher.delete(watcher);
+    }
+    public notify(...args: any[]) {
+        if (this.__watcher.size === 0) return;
+        // 在set的foreach内部修改set会导致无限循环
+        Array.from(this.__watcher).forEach(w => {
+            w(...args);
+        });
+    }
+
     private __pages: ResourceMgr<Page>;
     private __artboards: ResourceMgr<Artboard>;
     private __symbols: ResourceMgr<SymbolShape>
@@ -137,11 +158,7 @@ export class Document extends Watchable(DocumentMeta) {
 
     async getText(): Promise<string> {
         let result = "";
-        for (const _page of this.pagesList) {
-            const page = await this.__pages.get(_page.id);
-            if (!page) continue;
-            result += getTextFromGroupShape(page);
-        }
+        for (const page of this.pagesList) result += getTextFromGroupShape(await this.__pages.get(page.id));
         return result;
     }
 }

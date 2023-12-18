@@ -1,4 +1,4 @@
-import { Basic, BasicMap, ResourceMgr, Watchable } from "./basic";
+import { Basic, BasicMap, ResourceMgr } from "./basic";
 import { Style, Border, ContextSettings, BlendMode } from "./style";
 import { Text } from "./text";
 import * as classes from "./baseclasses"
@@ -36,8 +36,30 @@ export { Variable } from "./variable";
 // 在symbol，这是个普通shape, 绘制由绘制处理？（怎么处理的？监听所有的变量容器）
 //   试图层可以获取，但更新呢？监听所有的变量容器
 
-export class Shape extends Watchable(Basic) implements classes.Shape {
+export class Shape extends Basic implements classes.Shape {
 
+    // watchable, 使用Watchable会导致语法检查失效
+    public __watcher: Set<((...args: any[]) => void)> = new Set();
+    public watch(watcher: ((...args: any[]) => void)): (() => void) {
+        this.__watcher.add(watcher);
+        return () => {
+            this.__watcher.delete(watcher);
+        };
+    }
+    public unwatch(watcher: ((...args: any[]) => void)): boolean {
+        return this.__watcher.delete(watcher);
+    }
+    public notify(...args: any[]) {
+        if (this.__watcher.size > 0) {
+            // 在set的foreach内部修改set会导致无限循环
+            Array.from(this.__watcher).forEach(w => {
+                w(...args);
+            });
+        }
+        this.parent?.bubblenotify(...args);
+    }
+
+    // shape
     typeId = 'shape'
     id: string
     type: ShapeType
@@ -83,11 +105,10 @@ export class Shape extends Watchable(Basic) implements classes.Shape {
         return [this.id];
     }
 
-    public notify(...args: any[]): void;
-    public notify(...args: any[]): void {
-        super.notify(...args);
-        this.parent?.bubblenotify(...args);
-    }
+    // public notify(...args: any[]): void {
+    //     super.notify(...args);
+    //     this.parent?.bubblenotify(...args);
+    // }
 
     private __bubblewatcher: Set<((...args: any[]) => void)> = new Set();
     public bubblewatch(watcher: ((...args: any[]) => void)): (() => void) {
@@ -739,6 +760,7 @@ export class PathShape extends Shape implements classes.PathShape {
         )
         this.points = points;
         this.isClosed = isClosed;
+        points.setTypeId("points");
     }
     setClosedState(state: boolean) {
         this.isClosed = state;

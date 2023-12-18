@@ -8,6 +8,9 @@ export * from "./data/classes"
 export * from "./data/transact"
 export * from "./data/consts"
 
+// data view
+export * from "./dataview"
+
 // io
 export * from "./io"
 export * from "./io/import"
@@ -28,6 +31,7 @@ export * from "./editor/table"
 export * from "./editor/controller"
 
 export * from "./service/shapedirlist"
+export * from "./service/shapedirlist2"
 export * from "./service/taskmgr"
 export * from "./service/symbollist"
 

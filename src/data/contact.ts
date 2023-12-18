@@ -8,7 +8,7 @@ import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { ContactForm, ContactType, CurveMode } from "./typesdefine";
+import { ContactForm, ContactType, CurveMode } from "./baseclasses";
 import { v4 } from "uuid";
 import { d, gen_baisc_params, gen_matrix1, gen_path, gen_raw, slice_invalid_point } from "./utils";
 import { PathShape, Shape } from "./shape";
@@ -18,9 +18,11 @@ interface PageXY {
 }
 export class ContactShape extends PathShape implements classes.ContactShape {
     typeId = 'contact-shape'
-    isEdited: boolean;
-    text: Text;
-    mark: boolean;
+    from?: ContactForm
+    to?: ContactForm
+    isEdited: boolean
+    mark: boolean
+    text: Text
     constructor(
         id: string,
         name: string,

@@ -3,7 +3,7 @@ import { Shape } from "../../../data/shape";
 import { SymbolRefShape, SymbolShape } from "../../../data/classes";
 
 export type ComType = (data: Shape,
-    transform: RenderTransform | undefined,
+    transx: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => string;
 
 export function h(com: ComType, attrs?: any): string;
@@ -30,7 +30,7 @@ export function h(...args: any[]): string {
         }
         const com = args[0];
         // const attrs = args[1];
-        return com(attrs?.data); // todo
+        return com(attrs?.data, attrs?.transx, attrs?.varsContainer);
     }
     else if (typeof args[0] === 'string') {
         const tag = args[0];

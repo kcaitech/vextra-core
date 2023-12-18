@@ -47,10 +47,10 @@ comsMap.set(ShapeType.Text, (data: Shape, transform: RenderTransform | undefined
 
 comsMap.set(ShapeType.SymbolRef, (data: Shape, transform: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
-
-    const symMgr = data.getSymbolMgr();
+    const shape = data as SymbolRefShape;
+    const symMgr = shape.getSymbolMgr();
     if (!symMgr) return "";
-    const refId = data.getRefId2(varsContainer);
+    const refId = shape.getRefId2(varsContainer);
     const sym0 = symMgr.getSync(refId);
     if (!sym0) return "";
 

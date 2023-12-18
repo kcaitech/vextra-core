@@ -934,7 +934,7 @@ export class Path {
     private m_segs: any[];
     private __bounds?: Bounds;
 
-    constructor(path?: any[] | string) {
+    constructor(path?: (string | number)[][] | string) {
         if (typeof path === 'string') this.m_segs = parsePathString(path);
         else if (path) this.m_segs = path;
         else this.m_segs = [];

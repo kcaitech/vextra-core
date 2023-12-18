@@ -37,7 +37,7 @@ import {Page} from "../data/page";
 
 export function set_childs_id(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
-        const shape = shapes[i];
+        const shape = shapes[i] as GroupShape;
         if (!shape) continue;
         shape.id = v4();
         if (shape.childs && shape.childs.length) set_childs_id(shape.childs);
