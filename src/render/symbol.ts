@@ -3,7 +3,7 @@ import { renderGroupChilds2 } from "./group";
 import { renderWithVars as fillR } from "./fill";
 import { renderWithVars as borderR } from "./border"
 import { isVisible } from "./basic";
-
+import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 function renderSym(h: Function,
     sym: SymbolShape,
     comsMap: Map<ShapeType, any>): any {
@@ -80,6 +80,19 @@ export function render(h: Function,
         return h('path', props);
     }
     else {
-        return h("g", props, childs);
+        const shadows = shape.style.shadows;
+        const ex_props = Object.assign({}, props);
+        const shape_id = shape.id.slice(0, 4);
+        const shadow = shadowR(h, shape_id, shape, path);
+        if (shadow.length) {
+            delete props.style;
+            delete props.transform;
+            const inner_url = innerShadowId(shape_id, shadows);
+            if (shadows.length) props.filter = `url(#pd_outer-${shape_id}) ${inner_url}`;
+            const body = h("g", props, childs);
+            return h("g", ex_props, [...shadow, body]);
+        } else {
+            return h("g", props, childs);
+        }
     }
 }
