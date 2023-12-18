@@ -2129,7 +2129,6 @@ export class PageEditor {
                     }
                 }
             } else {
-                console.log('pre list:', pre.map(i => i.name).toString());
                 let previous_index: number = -1;
 
                 for (let i = 0, l = pre.length; i < l; i++) {
