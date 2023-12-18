@@ -386,13 +386,13 @@ export class Controller {
                 }
                 if (newShape.type === ShapeType.Contact) {
                     if ((newShape as ContactShape).from) {
-                        const shape1 = savepage?.getShape((newShape as ContactShape).from.shapeId);
+                        const shape1 = savepage?.getShape((newShape as ContactShape).from!.shapeId);
                         if (shape1) {
                             api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.From, newShape.id), shape1.style.contacts?.length || 0);
                         }
                     }
                     if ((newShape as ContactShape).to) {
-                        const shape1 = savepage?.getShape((newShape as ContactShape).to.shapeId);
+                        const shape1 = savepage?.getShape((newShape as ContactShape).to!.shapeId);
                         if (shape1) {
                             api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.To, newShape.id), shape1.style.contacts?.length || 0);
                         }
@@ -660,7 +660,7 @@ export class Controller {
         return { addNode, execute, execute2, close }
     }
 
-    public asyncContactEditor(shape: Shape, page: Page): AsyncContactEditor {
+    public asyncContactEditor(shape: ContactShape, page: Page): AsyncContactEditor {
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
         const pre = () => {
@@ -669,7 +669,8 @@ export class Controller {
             api.contactModifyEditState(page, shape, false);
 
             const p = shape.getPoints();
-            const points = [p[0], p.pop()];
+            if (p.length === 0) throw new Error();
+            const points = [p[0], p.pop()!];
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = importCurvePoint(exportCurvePoint(points[i]));
                 p.id = v4();

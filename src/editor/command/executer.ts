@@ -67,6 +67,7 @@ import {
     Border,
     ExportFormat,
     Shadow,
+    TextShape,
     CurveMode
 } from "../../data/classes";
 
@@ -257,7 +258,7 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(pageId);
         if (!page) return;
         if (page && op.type === OpType.ShapeRemove) {
-            const parent = page.getTarget(parentId);
+            const parent = page.getTarget(parentId) as GroupShape;
             if (!parent) throw new Error(`parent not find: ${parentId}`);
             const _op = op as ShapeOpRemove;
             const shape = parent.childs[_op.index];
@@ -276,7 +277,7 @@ export class CMDExecuter {
             const _op = op as ShapeOpMove;
             const parentId = _op.targetId;
             const parentId2 = _op.targetId2;
-            const parent = page.getTarget(parentId);
+            const parent = page.getTarget(parentId) as GroupShape;
             if (!parent) throw new Error(`parent not find: ${parentId}`);
             const parent2 = page.getTarget(parentId2);
             if (!parent2) throw new Error(`parent2 not find: ${parentId2}`);
@@ -309,9 +310,11 @@ export class CMDExecuter {
             api.addBorderAt(borders, border, (op as ArrayOpInsert).start);
         } else if (arrayAttr === SHADOW_ID) {
             const shadow = importShadow(JSON.parse(cmd.data))
-            api.addShadow(shape.style, shadow, (op as ArrayOpInsert).start);
+            const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+            api.addShadow(shadows, shadow, (op as ArrayOpInsert).start);
         }
         else if (arrayAttr === CONTACTS_ID) {
+            if (!(shape instanceof Shape)) throw new Error('shape is not a shape');
             const contact_role = importContactRole(JSON.parse(cmd.data));
             api.addContactShape(shape.style, contact_role);
         } else if (arrayAttr === POINTS_ID) {
@@ -344,9 +347,11 @@ export class CMDExecuter {
             const borders = shape instanceof Shape ? shape.style.borders : shape.value;
             api.deleteBorderAt(borders, (op as ArrayOpRemove).start)
         } else if (arrayAttr === SHADOW_ID) {
-            api.deleteShadowAt(shape.style, (op as ArrayOpRemove).start)
+            const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+            api.deleteShadowAt(shadows, (op as ArrayOpRemove).start)
         }
         else if (arrayAttr === CONTACTS_ID) {
+            if (!(shape instanceof Shape)) throw new Error('shape is not a shape');
             api.removeContactRoleAt(shape.style, (op as ArrayOpRemove).start)
         }
         else if (arrayAttr === POINTS_ID) {
@@ -354,6 +359,7 @@ export class CMDExecuter {
         }
         else if (arrayAttr === CUTOUT_ID) {
             if (op.type === OpType.ArrayRemove) {
+                if (!(shape instanceof Shape)) throw new Error('shape is not a shape');
                 if (!shape.exportOptions) return;
                 api.deleteExportFormatAt(shape.exportOptions, (op as ArrayOpRemove).start)
             }
@@ -487,40 +493,42 @@ export class CMDExecuter {
             }
         } else if (arrayAttr === SHADOW_ID) {
             const shadowId = cmd.arrayAttrId;
-            const shadowIdx = shape.style.shadows.findIndex((shadow: Shadow) => shadow.id === shadowId);
+            const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+            const shadowIdx = shadows.findIndex((shadow: Shadow) => shadow.id === shadowId);
             if (shadowIdx < 0) return;
             const opId = op.opId;
             const value = cmd.value;
             if (opId === SHADOW_ATTR_ID.position) {
                 if (value) {
                     const position = importShadowPosition(value as any);
-                    api.setShadowPosition(shape.style, shadowIdx, position);
+                    api.setShadowPosition(shadows, shadowIdx, position);
                 }
             } else if (opId === SHADOW_ATTR_ID.enable) {
                 const enable = value && JSON.parse(value);
-                api.setShadowEnable(shape.style, shadowIdx, enable ?? false);
+                api.setShadowEnable(shadows, shadowIdx, enable ?? false);
             } else if (opId === SHADOW_ATTR_ID.offsetX) {
                 const offsetX = value && JSON.parse(value);
-                api.setShadowOffsetX(shape.style, shadowIdx, offsetX ?? 0);
+                api.setShadowOffsetX(shadows, shadowIdx, offsetX ?? 0);
             } else if (opId === SHADOW_ATTR_ID.offsetY) {
                 const offsetY = value && JSON.parse(value);
-                api.setShadowOffsetY(shape.style, shadowIdx, offsetY ?? 0);
+                api.setShadowOffsetY(shadows, shadowIdx, offsetY ?? 0);
             } else if (opId === SHADOW_ATTR_ID.blurRadius) {
                 const blurRadius = value && JSON.parse(value);
-                api.setShadowBlur(shape.style, shadowIdx, blurRadius ?? 0);
+                api.setShadowBlur(shadows, shadowIdx, blurRadius ?? 0);
             } else if (opId === SHADOW_ATTR_ID.spread) {
                 const spread = value && JSON.parse(value);
-                api.setShadowSpread(shape.style, shadowIdx, spread ?? 0);
+                api.setShadowSpread(shadows, shadowIdx, spread ?? 0);
             } else if (opId === SHADOW_ATTR_ID.color) {
                 if (value) {
                     const color = importColor(JSON.parse(value))
-                    api.setShadowColor(shape.style, shadowIdx, color);
+                    api.setShadowColor(shadows, shadowIdx, color);
                 }
             } else {
                 console.error("not implemented ", op)
             }
         } else if (arrayAttr === CUTOUT_ID) {
             const cutoutId = cmd.arrayAttrId;
+            if (!(shape instanceof Shape)) throw new Error("shape is not Shape");
             if (!shape.exportOptions) return;
             const formatIdx = shape.exportOptions.exportFormats.findIndex((format: ExportFormat) => format.id === cutoutId);
             if (formatIdx < 0) return;
@@ -654,7 +662,7 @@ export class CMDExecuter {
         if (!page) return;
         const _op = cmd.ops[0]
         if (_op.type !== OpType.ArrayInsert) return;
-        const shape = page.getTarget(_op.targetId);
+        const shape = page.getTarget(_op.targetId) as TextShape | Variable;
 
         const op = _op as ArrayOpInsert;
         const text = cmd.parseText();
@@ -679,7 +687,7 @@ export class CMDExecuter {
         if (!page) return;
         const _op = cmd.ops[0]
         if (_op.type !== OpType.ArrayRemove) return;
-        const shape = page.getTarget(_op.targetId);
+        const shape = page.getTarget(_op.targetId) as TextShape | Variable;
 
         const op = _op as ArrayOpRemove;
         const shapetext = (shape instanceof Shape) ? shape.text : shape?.value;
@@ -696,7 +704,7 @@ export class CMDExecuter {
         if (_op.type !== OpType.ArrayAttr) {
             return;
         }
-        const shape = page.getTarget(_op.targetId);
+        const shape = page.getTarget(_op.targetId) as TextShape | Variable;
 
         const op = _op as ArrayOpAttr;
         const attrId = cmd.attrId

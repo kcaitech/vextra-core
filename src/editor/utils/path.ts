@@ -73,15 +73,15 @@ export function pointsEdit(api: Api, page: Page, s: PathShape, indexes: number[]
 /**
  * @description 连接线编辑
  */
-export function contact_edit(api: Api, page: Page, s: Shape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
+export function contact_edit(api: Api, page: Page, s: PathShape, index1: number, index2: number, dx: number, dy: number) { // 以边为操作目标编辑路径
     const m = new Matrix(s.matrix2Root());
     const w = s.frame.width, h = s.frame.height;
 
     m.preScale(w, h);
 
     const m_in = new Matrix(m.inverse);  // 图形单位坐标系，0-1
-    let p1 = s.points[index1];
-    let p2 = s.points[index2];
+    let p1: { x: number, y: number } = s.points[index1];
+    let p2: { x: number, y: number } = s.points[index2];
 
     if (!p1 || !p2) {
         return false;
@@ -685,7 +685,7 @@ export function update_path_shape_frame(api: Api, page: Page, shapes: PathShape[
         update_frame_by_points(api, page, shape);
     }
 }
-export function init_points(api: Api, page: Page, s: Shape, points: CurvePoint[]) {
+export function init_points(api: Api, page: Page, s: PathShape, points: CurvePoint[]) {
     api.deletePoints(page, s as PathShape, 0, s.points.length);
     api.addPoints(page, s as PathShape, points);
 }

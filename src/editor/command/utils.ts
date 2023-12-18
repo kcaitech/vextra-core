@@ -31,8 +31,8 @@ export function setFrame(page: Page, shape: Shape, x: number, y: number, w: numb
 const float_accuracy = 1e-7;
 
 function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
-    const p: Shape | undefined = shape.parent;
-    if (!p || (p instanceof Artboard || p instanceof SymbolRefShape || p instanceof SymbolShape)) return false;
+    const p: GroupShape | undefined = shape.parent as GroupShape;
+    if (!p || (p.type === ShapeType.Artboard || p.type === ShapeType.SymbolRef || p.type === ShapeType.Symbol || p.type === ShapeType.SymbolUnion)) return false;
 
     const cf = shape.boundingBox();
     let xychanged = false;

@@ -1,4 +1,4 @@
-import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, SymbolUnionShape } from "../../data/shape";
+import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, SymbolUnionShape, GroupShape } from "../../data/shape";
 import { SymbolRefShape } from "../../data/symbolref";
 import { uuid } from "../../basic/uuid";
 import { Page } from "../../data/page";
@@ -271,7 +271,7 @@ export function is_exist_invalid_shape(selected: Shape[]) {
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
         if ([ShapeType.Contact, ShapeType.Table].includes(item.type)) return true;
-        if (item.childs?.length) result = is_exist_invalid_shape(item.childs);
+        if ((item as GroupShape).childs?.length) result = is_exist_invalid_shape((item as GroupShape).childs);
         if (result) return true;
     }
     return false;
@@ -281,7 +281,7 @@ export function is_exist_invalid_shape2(selected: Shape[]) {
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
         if ([ShapeType.Contact, ShapeType.Table, ShapeType.Symbol].includes(item.type)) return true;
-        if (item.childs?.length) result = is_exist_invalid_shape(item.childs);
+        if ((item as GroupShape).childs?.length) result = is_exist_invalid_shape((item as GroupShape).childs);
         if (result) return true;
     }
     return false;

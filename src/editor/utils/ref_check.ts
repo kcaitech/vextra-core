@@ -1,4 +1,5 @@
-import {Shape} from "../../data/shape";
+import { SymbolRefShape } from "../../data/symbolref";
+import {Shape, GroupShape} from "../../data/shape";
 import {ShapeType} from "../../data/typesdefine";
 
 /**
@@ -23,16 +24,16 @@ export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
  */
 function get_topology_map(shape: Shape) {
     const deps: { shape: string, ref: string }[] = [];
-    const childs = shape.type === ShapeType.SymbolRef ? shape.naviChilds : shape.childs;
+    const childs = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape as GroupShape).childs;
     if (!childs?.length) return [];
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         const is_ref = item.type === ShapeType.SymbolRef
-        const c_childs = is_ref ? item.naviChilds : item.childs;
+        const c_childs = is_ref ? item.naviChilds : (item as GroupShape).childs;
         if (c_childs?.length || is_ref) {
             deps.push({
-                shape: shape.type === ShapeType.SymbolRef ? shape.refId : shape.id,
-                ref: is_ref ? item.refId : item.id
+                shape: shape.type === ShapeType.SymbolRef ? (shape as SymbolRefShape).refId : shape.id,
+                ref: is_ref ? (item as SymbolRefShape).refId : item.id
             });
         }
         if (!c_childs?.length) continue;

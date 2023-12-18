@@ -894,7 +894,7 @@ export class PageEditor {
             for (let i = 0, len = contacts.length; i < len; i++) {
                 const shape = page.getShape(contacts[i].shapeId);
                 if (!shape) continue;
-                const p = shape.parent;
+                const p = shape.parent as GroupShape;
                 if (!p) continue;
                 let idx = -1;
                 for (let j = 0, len = p.childs.length; j < len; j++) {
@@ -2102,7 +2102,7 @@ export class PageEditor {
                         continue;
                     }
 
-                    const children = item.naviChilds || item.childs;
+                    const children = item.naviChilds || (item as any).childs;
                     if (children?.length) {
                         const tree = item instanceof SymbolRefShape ? item.symData : item;
                         if (!tree) {
@@ -2147,7 +2147,7 @@ export class PageEditor {
                         continue;
                     }
 
-                    const children = item.naviChilds || item.childs;
+                    const children = item.naviChilds || (item as any).childs;
                     if (children?.length) {
                         const tree = item instanceof SymbolRefShape ? item.symData : item;
                         if (!tree || is_circular_ref2(tree, host_parent.id)) {

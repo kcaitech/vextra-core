@@ -64,8 +64,8 @@ export class DocEditor {
     move(page: PageListItem, to: number): boolean {
         const api = this.__repo.start('pagemove', {});
         try {
-            const pagesmgr = this.__document.pagesMgr;
-            const idx = pagesmgr.getPageIndexById(page.id);
+            // const pagesmgr = this.__document.pagesMgr;
+            const idx = this.__document.getPageIndexById(page.id);
             const descend = idx >= to ? to : to + 1;
             if (to !== idx) {
                 api.pageMove(this.__document, page.id, idx, descend)
