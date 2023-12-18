@@ -32,7 +32,7 @@ const float_accuracy = 1e-7;
 
 function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
     const p: GroupShape | undefined = shape.parent as GroupShape;
-    if (!p || (p instanceof Artboard || p instanceof SymbolRefShape || p instanceof SymbolShape)) return false;
+    if (!p || (p.type === ShapeType.Artboard || p.type === ShapeType.SymbolRef || p.type === ShapeType.Symbol || p.type === ShapeType.SymbolUnion)) return false;
 
     const cf = shape.boundingBox();
     let xychanged = false;

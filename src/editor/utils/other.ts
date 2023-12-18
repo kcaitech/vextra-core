@@ -37,7 +37,7 @@ interface _Api {
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
 }
 
-const DefaultFontSize = Text.DefaultFontSize;
+// const DefaultFontSize = Text.DefaultFontSize;
 
 export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShape) {
     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
@@ -46,13 +46,13 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
             break;
         case TextBehaviour.Fixed: {
             const layout = shape.text.getLayout();
-            const fontsize = shape.text.attr?.fontSize ?? DefaultFontSize;
+            const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             api.shapeModifyWH(page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
             break;
         }
         case TextBehaviour.Flexible: {
             const layout = shape.text.getLayout();
-            const fontsize = shape.text.attr?.fontSize ?? DefaultFontSize;
+            const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             api.shapeModifyWH(page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             break;
         }
