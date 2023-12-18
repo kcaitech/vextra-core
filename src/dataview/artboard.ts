@@ -22,10 +22,11 @@ export class ArtboradView extends GroupShapeView {
     // }
 
     protected renderFills() {
-        if (!this.m_fills) {
-            this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
-        }
-        return this.m_fills;
+        // if (!this.m_fills) {
+        //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+        // }
+        // return this.m_fills;
+        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } {

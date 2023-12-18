@@ -205,8 +205,8 @@ export class ShapeView extends DataView {
     m_fixedRadius?: number;
 
     // cache
-    m_fills?: EL[]; // 不缓存,可回收
-    m_borders?: EL[];
+    // m_fills?: EL[]; // 不缓存,可回收
+    // m_borders?: EL[];
     m_path?: Path;
     m_pathstr?: string;
 
@@ -238,8 +238,8 @@ export class ShapeView extends DataView {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
-        if (args.includes('fills')) this.m_fills = undefined;
-        if (args.includes('borders')) this.m_borders = undefined;
+        // if (args.includes('fills')) this.m_fills = undefined;
+        // if (args.includes('borders')) this.m_borders = undefined;
         // this.updateRenderArgs(this.data.frame, this.data.isFlippedHorizontal, this.data.isFlippedVertical, this.data.rotation, this.data.fixedRadius)
     }
 
@@ -317,14 +317,14 @@ export class ShapeView extends DataView {
             _frame.height = frame.height;
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            if (this.m_borders) {
-                // recycleELArr(this.m_borders);
-                this.m_borders = undefined;
-            }
-            if (this.m_fills) {
-                // recycleELArr(this.m_fills);
-                this.m_fills = undefined;
-            }
+            // if (this.m_borders) {
+            //     // recycleELArr(this.m_borders);
+            //     this.m_borders = undefined;
+            // }
+            // if (this.m_fills) {
+            //     // recycleELArr(this.m_fills);
+            //     this.m_fills = undefined;
+            // }
         }
         this.m_hflip = hflip;
         this.m_vflip = vflip;
@@ -333,14 +333,14 @@ export class ShapeView extends DataView {
             this.m_fixedRadius = radius;
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            if (this.m_borders) {
-                // recycleELArr(this.m_borders);
-                this.m_borders = undefined;
-            }
-            if (this.m_fills) {
-                // recycleELArr(this.m_fills);
-                this.m_fills = undefined;
-            }
+            // if (this.m_borders) {
+            //     // recycleELArr(this.m_borders);
+            //     this.m_borders = undefined;
+            // }
+            // if (this.m_fills) {
+            //     // recycleELArr(this.m_fills);
+            //     this.m_fills = undefined;
+            // }
         }
     }
 
@@ -502,7 +502,7 @@ export class ShapeView extends DataView {
         // todo props没更新时是否要update
         // 在frame、flip、rotate修改时需要update
         const tid = this.id;
-        const needLayout = this.m_ctx.removeReLayout(tid); // remove from changeset
+        const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
 
         if (props) {
             // 
@@ -522,12 +522,12 @@ export class ShapeView extends DataView {
             }
             if (diffVars) {
                 // update varscontainer
+                this.m_ctx.removeDirty(this);
                 this.m_varsContainer = props.varsContainer;
                 const _id = this.id;
-                if (_id !== tid) {
-                    this.m_ctx.removeDirty(tid);
-                    // tid = _id;
-                }
+                // if (_id !== tid) {
+                //     // tid = _id;
+                // }
             }
         }
 
@@ -541,17 +541,19 @@ export class ShapeView extends DataView {
 
 
     protected renderFills() {
-        if (!this.m_fills) {
-            this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
-        }
-        return this.m_fills;
+        // if (!this.m_fills) {
+        //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+        // }
+        // return this.m_fills;
+        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
     }
 
     protected renderBorders() {
-        if (!this.m_borders) {
-            this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
-        }
-        return this.m_borders;
+        // if (!this.m_borders) {
+        //     this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
+        // }
+        // return this.m_borders;
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } {
@@ -594,7 +596,7 @@ export class ShapeView extends DataView {
     render(): number {
 
         const tid = this.id;
-        const isDirty = this.m_ctx.removeDirty(tid);
+        const isDirty = this.m_ctx.removeDirty(this);
         if (!isDirty) {
             return this.m_render_version;
         }

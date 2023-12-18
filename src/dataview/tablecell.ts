@@ -22,7 +22,7 @@ export class TableCellView extends ShapeView {
 
     layout(props: PropsType, force?: boolean | undefined): void {
         // super.update(props, force);
-        this.m_ctx.removeReLayout(this.id);
+        this.m_ctx.removeReLayout(this);
         // this.m_ctx.setDirty(this);
     }
 

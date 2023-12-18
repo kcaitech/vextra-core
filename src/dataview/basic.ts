@@ -100,7 +100,7 @@ export function genid(shape: Shape,
 }
 
 export function findOverrideAndVar(
-    shape: Shape, // proxyed
+    shape: Shape, // not proxyed
     overType: OverrideType,
     varsContainer: (SymbolRefShape | SymbolShape)[]) {
 
@@ -114,7 +114,7 @@ export function findOverrideAndVar(
 
     // find override
     // id: xxx/xxx/xxx
-    const id = genid(shape, varsContainer);
+    const id = shape.id; // genid(shape, varsContainer);
     const _vars = findOverride(id, overType, varsContainer);
     return _vars;
 }

@@ -46,10 +46,20 @@ export class DViewCtx {
         this._continueLoop();
     }
 
-    removeReLayout(vid: string) {
+    removeReLayout(v: DataView) {
+        const vid = v.id;
+        const ov = this.relayoutset.get(vid);
+        if (ov !== v) {
+            return false;
+        }
         return this.relayoutset.delete(vid);
     }
-    removeDirty(vid: string) {
+    removeDirty(v: DataView) {
+        const vid = v.id;
+        const ov = this.dirtyset.get(vid);
+        if (ov !== v) {
+            return false;
+        }
         return this.dirtyset.delete(vid);
     }
 
