@@ -1,4 +1,3 @@
-import { Matrix } from "../basic/matrix";
 import { Shape } from "../data/classes";
 import { render as renderB } from "./contact_borders";
 
@@ -27,7 +26,7 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
     //         childs.push(h('rect', { x: p.x - 5, y: p.y - 5, width: 10, height: 10, fill: 'green', rx: 5, ry: 5, 'fill-opacity': 0.6 }));
     //     }
     // }
-    
+
     // const res = shape.getTemp2();
     // if (res) {
     //     const { points1, points2, points3 } = res;
