@@ -1,6 +1,6 @@
 import { OverrideType, Shadow, ShadowPosition, ShapeType, VariableType } from "../data/baseclasses";
 import { Border, Style } from "../data/style";
-import { GroupShape, Shape, ShapeFrame, SymbolRefShape, SymbolShape,TextShape, Variable } from "../data/classes";
+import { GroupShape, Shape, ShapeFrame, SymbolRefShape, SymbolShape, TextShape, Variable } from "../data/classes";
 import { render as borderR } from "./border";
 import { render as renderB } from "./line_borders";
 import { renderTextLayout } from "./text";
@@ -119,7 +119,7 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, style: Style, frame: Sh
     return h('filter', filter_props, h_node);
 }
 
-function shadowType_(h: Function, shape: Shape, id: string): any {
+function shadowShape(h: Function, shape: Shape, id: string): any {
     const shadows = shape.style.shadows.filter(s => s.position === ShadowPosition.Outer);
     const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
     if (shadows.length === 0) return undefined;
@@ -167,10 +167,10 @@ function shadowType_(h: Function, shape: Shape, id: string): any {
         }
     }
     const filter_props: any = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
-    filter_props.width = Math.max(...f_props.props_w);
-    filter_props.height = Math.max(...f_props.props_h);
-    filter_props.x = Math.min(...f_props.props_x);
-    filter_props.y = Math.min(...f_props.props_y);
+    filter_props.width = Math.max(...f_props.props_w) + Math.max(...f_props.props_w);
+    filter_props.height = Math.max(...f_props.props_h) + Math.max(...f_props.props_h);
+    filter_props.x = Math.min(...f_props.props_x) + Math.min(...f_props.props_x);
+    filter_props.y = Math.min(...f_props.props_y) + Math.min(...f_props.props_y);
     const fe_flood = {
         'flood-opacity': `0`,
         result: `BackgroundImageFix`
@@ -212,7 +212,7 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
         }
     }
     if (shape.type !== ShapeType.Rectangle && shape.type !== ShapeType.Artboard && shape.type !== ShapeType.Oval) {
-        const filter = shadowType_(h, shape, id);
+        const filter = shadowShape(h, shape, id);
         if (filter) {
             elArr.push(filter);
         }
