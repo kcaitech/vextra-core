@@ -397,7 +397,7 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
         delete props.style;
         delete props.transform;
         const inner_url = innerShadowId(shape_id, shadows);
-        if(shadows.length) props.filter = `${inner_url}`;
+        if(shadows.length) props.filter = `url(#pd_outer-${shape_id}) ${inner_url}`;
         const body = h("g", props, childs);
         return h("g", ex_props, [...shadow, body]);
     } else {
