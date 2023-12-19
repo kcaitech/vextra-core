@@ -188,6 +188,11 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
             index: 0,
             x: 0
         }
+
+        if (bntype === BNType.Number && index === 0) {
+            graph.x = 0.2 * charWidth;
+            graph.cw = graph.cw - graph.x;
+        }
     }
     else {
         throw new Error("unknow bullet numbers type: " + bulletNumbers.type); // unknow
