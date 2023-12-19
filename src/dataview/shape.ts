@@ -1,5 +1,5 @@
 import { RenderTransform, renderBorders, renderFills } from "../render";
-import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path } from "../data/classes";
+import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
 import { ResizingConstraints } from "../data/consts";
@@ -228,7 +228,7 @@ export class ShapeView extends DataView {
         this.m_hflip = shape.isFlippedHorizontal;
         this.m_vflip = shape.isFlippedVertical;
         this.m_rotate = shape.rotation;
-        this.m_fixedRadius = (shape as any).fixedRadius; // rectangle
+        this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
 
         this._layout(this.m_data, this.m_transx, this.m_varsContainer);
     }
@@ -308,7 +308,7 @@ export class ShapeView extends DataView {
     }
 
     // =================== update ========================
-    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number) {
+    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined) {
         const _frame = this.frame;
         if (isDiffShapeFrame(_frame, frame)) {
             _frame.x = frame.x;
@@ -376,7 +376,7 @@ export class ShapeView extends DataView {
         // let nodes: Array<any>;
         if (!transform || notTrans) {
             // update frame, hflip, vflip, rotate
-            this.updateLayoutArgs(frame, hflip, vflip, rotate);
+            this.updateLayoutArgs(frame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
             // todo 需要继续update childs
             this.layoutOnNormal(varsContainer);
             return;
@@ -448,7 +448,7 @@ export class ShapeView extends DataView {
             const cscaleY = parentFrame.height / saveH;
 
             // update frame, hflip, vflip, rotate
-            this.updateLayoutArgs(parentFrame, hflip, vflip, rotate);
+            this.updateLayoutArgs(parentFrame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
             this.layoutOnRectShape(varsContainer, parentFrame, cscaleX, cscaleY);
 
             return;
@@ -470,7 +470,7 @@ export class ShapeView extends DataView {
             const frame = new ShapeFrame(x, y, width, height);
             fixFrameByConstrain(shape, transform.parentFrame, frame);
 
-            this.updateLayoutArgs(frame, hflip, vflip, rotate);
+            this.updateLayoutArgs(frame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
             this.layoutOnRectShape(varsContainer, frame, scaleX, scaleY);
             return;
         }
@@ -489,7 +489,7 @@ export class ShapeView extends DataView {
         const cscaleY = parentFrame.height / bbox.height;
 
         // update frame, rotate, hflip...
-        this.updateLayoutArgs(parentFrame, undefined, undefined, undefined);
+        this.updateLayoutArgs(parentFrame, undefined, undefined, undefined, (shape as PathShape).fixedRadius);
 
         this.layoutOnDiamondShape(varsContainer, cscaleX, cscaleY, rotate, vflip, hflip, bbox, m);
 
