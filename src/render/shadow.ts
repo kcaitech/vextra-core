@@ -1,10 +1,7 @@
 import { OverrideType, Shadow, ShadowPosition, ShapeType, VariableType } from "../data/baseclasses";
-import { Border, Style } from "../data/style";
-import { GroupShape, Shape, ShapeFrame, SymbolRefShape, SymbolShape, TextShape, Variable } from "../data/classes";
+import { Style } from "../data/style";
+import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
 import { render as borderR } from "./border";
-import { render as renderB } from "./line_borders";
-import { renderTextLayout } from "./text";
-import { renderGroupChilds } from "./group";
 import { findOverrideAndVar } from "../data/utils";
 
 const shadowOri: {
@@ -252,8 +249,7 @@ const getFilterPropsValue = (shadow: Shadow, frame: ShapeFrame, f_props: any) =>
 }
 
 export function renderWithVars(h: Function, id: string, shape: Shape, path: string,
-    varsContainer?: (SymbolRefShape | SymbolShape)[] | undefined,
-    compos_map?: Map<ShapeType, any>
+    varsContainer?: (SymbolRefShape | SymbolShape)[] | undefined
 ) {
     let shadows = shape.style.shadows;
     if (varsContainer) {
