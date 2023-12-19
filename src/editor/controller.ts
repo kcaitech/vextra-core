@@ -584,7 +584,6 @@ export class Controller {
         const trans = (start: PageXY, end: PageXY) => {
             status = Status.Pending;
             for (let i = 0; i < shapes.length; i++) {
-                if (shapes[i].isLocked) continue; // 🔒住不让动
                 translate(api, page, shapes[i], end.x - start.x, end.y - start.y);
             }
             this.__repo.transactCtx.fireNotify();
@@ -593,7 +592,6 @@ export class Controller {
         const stick = (dx: number, dy: number) => {
             status = Status.Pending;
             for (let i = 0; i < shapes.length; i++) {
-                if (shapes[i].isLocked) continue; // 🔒住不让动
                 translate(api, page, shapes[i], dx, dy);
             }
             this.__repo.transactCtx.fireNotify();
@@ -602,7 +600,6 @@ export class Controller {
         const transByWheel = (dx: number, dy: number) => {
             status = Status.Pending;
             for (let i = 0; i < shapes.length; i++) {
-                if (shapes[i].isLocked) continue; // 🔒住不让动
                 translate(api, page, shapes[i], dx, dy);
             }
             this.__repo.transactCtx.fireNotify();
