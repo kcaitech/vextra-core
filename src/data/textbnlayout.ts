@@ -37,6 +37,24 @@ const shiarr = ["X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"]; // 10-9
 const baiarr = ["C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"]; // 100-900
 const qianarr = ["M", "MM", "MMM"]; // 1000 - 3000
 const luomaData = [gearr, shiarr, baiarr, qianarr];
+
+
+// const luomaLetters = ['I', 'V', 'X', 'L', 'C', 'D', 'M'];
+const luomaLetterWidth: { [key: string]: number } = {};
+luomaLetterWidth['I'] = 0.25;
+luomaLetterWidth['V'] = 1;
+luomaLetterWidth['X'] = 1;
+luomaLetterWidth['L'] = 1;
+luomaLetterWidth['C'] = 1;
+luomaLetterWidth['D'] = 1;
+luomaLetterWidth['M'] = 1;
+luomaLetterWidth['.'] = 0.75;
+function measureLuomaTextWidth(text: string): number {
+    return text.split('').reduce((sum, letter) => {
+        return sum + (luomaLetterWidth[letter] || 1);
+    }, 0);
+}
+
 /**
  * 
  * @param num 从1 开始 到 3999
@@ -66,6 +84,22 @@ const disordedChars = ['•', '◦', '▪'];
 export function getDisordedChars(indent: number): string {
     const char = disordedChars[indent % disordedChars.length] // 有需要可以换成图形
     return char;
+}
+
+enum BNType {
+    Number = 0,
+    Letter = 1,
+    Roman = 2,
+}
+
+export function getOrderedType(indent: number): BNType {
+    // 1ai
+    switch (indent % 3) {
+        case 0: return BNType.Number;
+        case 1: return BNType.Letter;
+        case 2: return BNType.Roman;
+    }
+    throw new Error('getOrderedType error');
 }
 
 export function getOrderedChars(indent: number, index: number): string {
@@ -125,6 +159,7 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
                 break;
             }
         }
+        const bntype = getOrderedType(indent);
         text = getOrderedChars(indent, index);
 
         const transformType = span.transform;
@@ -135,12 +170,14 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
             let text2 = '';
             for (let i = 0, len = text.length; i < len; i++) {
                 const char = transformText(text.charAt(i), false, transformType);
-                cw += charWidth;
                 text2 += char;
             }
             text = text2;
-        } else {
-            cw = charWidth * text.length;
+        }
+        cw = charWidth * text.length;
+        if (bntype === BNType.Roman) {
+            const count = Math.ceil(measureLuomaTextWidth(text));
+            cw = Math.max(2, count) * charWidth; // 至少2个字符宽度
         }
 
         graph = {
