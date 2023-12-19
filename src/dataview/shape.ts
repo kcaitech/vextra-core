@@ -626,6 +626,8 @@ export class ShapeView extends DataView {
             const ex_props = Object.assign({}, props);
             delete props.style;
             delete props.transform;
+            delete props.opacity;
+
             const inner_url = innerShadowId(filterId, this.getShadows());
             props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
             const body = elh("g", props, [...fills, ...childs, ...borders]);
