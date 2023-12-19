@@ -1,5 +1,6 @@
 // bullet numbers layout
 
+import { gPal } from "../basic/pal";
 import { BulletNumbers, BulletNumbersBehavior, BulletNumbersType, Para, Span, TextTransformType } from "./classes";
 import { BulletNumbersLayout, IGraphy } from "./textlayout";
 import { transformText } from "./textlayouttransform";
@@ -40,18 +41,20 @@ const luomaData = [gearr, shiarr, baiarr, qianarr];
 
 
 // const luomaLetters = ['I', 'V', 'X', 'L', 'C', 'D', 'M'];
-const luomaLetterWidth: { [key: string]: number } = {};
-luomaLetterWidth['I'] = 0.25;
-luomaLetterWidth['V'] = 1;
-luomaLetterWidth['X'] = 1;
-luomaLetterWidth['L'] = 1;
-luomaLetterWidth['C'] = 1;
-luomaLetterWidth['D'] = 1;
-luomaLetterWidth['M'] = 1;
-luomaLetterWidth['.'] = 0.75;
-function measureLuomaTextWidth(text: string): number {
+// const luomaLetterWidth: { [key: string]: number } = {};
+// luomaLetterWidth['I'] = 0.15;
+// luomaLetterWidth['V'] = 1.05;
+// luomaLetterWidth['X'] = 1;
+// luomaLetterWidth['L'] = 1.05;
+// luomaLetterWidth['C'] = 1.15;
+// luomaLetterWidth['D'] = 1;
+// luomaLetterWidth['M'] = 1;
+// luomaLetterWidth['.'] = 0.75;
+function measureLuomaTextWidth(text: string, font: string): number {
+    const measure = gPal.text.textMeasure;
     return text.split('').reduce((sum, letter) => {
-        return sum + (luomaLetterWidth[letter] || 1);
+        const m = measure(letter.charCodeAt(0), font);
+        return sum + (m?.width?? 0);
     }, 0);
 }
 
@@ -176,7 +179,9 @@ export function layoutBulletNumber(para: Para, span: Span, bulletNumbers: Bullet
         }
         cw = charWidth * text.length;
         if (bntype === BNType.Roman) {
-            const count = Math.ceil(measureLuomaTextWidth(text));
+            const fontSize = span.fontSize || 10;
+            const font = "normal " + fontSize + "px " + span.fontName;
+            const count = Math.ceil(measureLuomaTextWidth(text, font) / charWidth);
             cw = Math.max(2, count) * charWidth; // 至少2个字符宽度
         }
 
