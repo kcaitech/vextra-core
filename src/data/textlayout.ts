@@ -353,8 +353,8 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
 
         const m = measure(char.charCodeAt(0), font);
         const cw = m?.width ?? 0;
-        const ch = span.fontSize ?? 0;
-
+        const fontSize = span.fontSize ?? 0;
+        const ch = typeof fontSize !== 'number' ? Number.parseFloat(fontSize) : fontSize; // fix bug: 数据中存在字符串类型的fontsize时，后续出错
 
         if (cw + curX <= endX) { // cw + curX + charSpace <= endX,兼容sketch
             if (!graphArray) {

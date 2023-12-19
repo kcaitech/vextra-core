@@ -80,6 +80,12 @@ function importGradient(data: IJSON): Gradient {
 }
 
 export function importStyle(ctx: LoadContext, data: IJSON): Style {
+
+    if (!data) { // 存在数据没有style
+        const style: Style = new Style(new BasicArray<Border>(), new BasicArray<Fill>(), new BasicArray<Shadow>());
+        return style;
+    }
+
     // const gradients = env.gradients;
     const miterLimit: number = data['miterLimit'];
 
