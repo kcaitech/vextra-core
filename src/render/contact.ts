@@ -95,7 +95,10 @@ export function render(h: Function, shape: Shape, path: string, reflush?: number
         childs.push(...renderB(h, shape.style, path, shape));
         return h('g', props, childs);
     } else {
-        props.stroke = '#808080', props['stroke-width'] = 2, props.d = path;
+        props.stroke = '#808080';
+        props['stroke-width'] = 2;
+        props.d = path;
+        props.fill = "none"
         return h('path', props);
     }
 }

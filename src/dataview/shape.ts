@@ -540,7 +540,7 @@ export class ShapeView extends DataView {
     // ================== render ===========================
 
 
-    protected renderFills() {
+    protected renderFills(): EL[] {
         // if (!this.m_fills) {
         //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
         // }
@@ -548,7 +548,7 @@ export class ShapeView extends DataView {
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
     }
 
-    protected renderBorders() {
+    protected renderBorders(): EL[] {
         // if (!this.m_borders) {
         //     this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
         // }
