@@ -186,10 +186,10 @@ function shadowShape(h: Function, shape: Shape, id: string): any {
     return filter;
 }
 
-export function render(h: Function, id: string, shadows: Shadow[], path: string, shape: Shape) {
+export function render(h: Function, id: string, shadows: Shadow[], path: string, shape: Shape, frame: ShapeFrame) {
     const elArr = [];
     const style = shape.style;
-    const frame = shape.frame;
+    // const frame = shape.frame;
     const inner_f = [];
     const filters = [];
     const paths = [];
@@ -275,5 +275,5 @@ export function renderWithVars(h: Function, id: string, shape: Shape, path: stri
             }
         }
     }
-    return render(h, id, shadows, path, shape);
+    return render(h, id, shadows, path, shape, shape.frame);
 }

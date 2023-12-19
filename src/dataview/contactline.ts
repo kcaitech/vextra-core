@@ -27,6 +27,7 @@ export class ContactLineView extends ShapeView {
     }
 
     private wathcer_sides(t: any) {
+        // todo 可以再精细点
         this.updateApex();
         this.m_path = undefined;
         this.m_pathstr = undefined;

@@ -1,4 +1,4 @@
-import { RenderTransform, renderBorders, renderFills } from "../render";
+import { RenderTransform, innerShadowId, renderBorders, renderFills, renderShadows } from "../render";
 import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
@@ -556,6 +556,10 @@ export class ShapeView extends DataView {
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
     }
 
+    protected renderShadows(filterId: string): EL[] {
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.m_data, this.frame);
+    }
+
     protected renderProps(): { [key: string]: string } {
         const shape = this.m_data;
         const frame = this.frame;
@@ -615,24 +619,21 @@ export class ShapeView extends DataView {
 
         const props = this.renderProps();
 
+        const filterId = this.m_data.id.slice(0, 4);
+        const shadows = this.renderShadows(filterId);
 
-        // shadows todo
-        // const shadows = this.getShadows();
-        // const shape_id = shape.id.slice(0, 4);
-        // const shadow = renderShadows(elh, shape_id, shadows, this.getBorders(), path, shape, this.m_varsContainer, comsMap); // todo!
-        // if (shadow.length) {
-        //     const ex_props = Object.assign({}, props);
-        //     delete props.style;
-        //     delete props.transform;
-        //     const inner_url = innerShadowId(shape_id, shadows);
-        //     if (shadows.length) props.filter = `${inner_url}`;
-        //     const body = h("g", props, childs);
-        //     return h("g", ex_props, [...shadow, body]);
-        // } else {
-        //     return h("g", props, childs);
-        // }
-
-        this.reset("g", props, [...fills, ...childs, ...borders]);
+        if (shadows.length > 0) { // 阴影
+            const ex_props = Object.assign({}, props);
+            delete props.style;
+            delete props.transform;
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            const body = elh("g", props, [...fills, ...childs, ...borders]);
+            this.reset("g", ex_props, [...shadows, body])
+        }
+        else {
+            this.reset("g", props, [...fills, ...childs, ...borders]);
+        }
         return ++this.m_render_version;
     }
 }
