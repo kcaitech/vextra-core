@@ -339,18 +339,27 @@ export class TextShapeEditor extends ShapeEditor {
         this.__composingAttr = attr;
         const api = this.__repo.start("composingInput", {});
         const shape = this.shape4edit(api);
-        if (del > 0) api.deleteText(this.__page, shape, index, del);
+        try {
+            if (del > 0) api.deleteText(this.__page, shape, index, del);
+        } catch(e) {
+            console.error(e);
+        }
     }
     public composingInputUpdate(text: string): boolean {
         this.__repo.rollback("composingInput");
         const api = this.__repo.start("composingInput", {});
-        const shape = this.shape4edit(api);
-        if (this.__composingDel > 0) api.deleteText(this.__page, shape, this.__composingIndex, this.__composingDel);
-        if (text.length > 0) api.insertSimpleText(this.__page, shape, this.__composingIndex, text, this.__composingAttr);
-        else (shape instanceof Shape ? shape.text : shape.value as Text).composingInputUpdate(this.__composingIndex);
-        this.fixFrameByLayout(api);
-        this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
-        return true;
+        try {
+            const shape = this.shape4edit(api);
+            if (this.__composingDel > 0) api.deleteText(this.__page, shape, this.__composingIndex, this.__composingDel);
+            if (text.length > 0) api.insertSimpleText(this.__page, shape, this.__composingIndex, text, this.__composingAttr);
+            else (shape instanceof Shape ? shape.text : shape.value as Text).composingInputUpdate(this.__composingIndex);
+            this.fixFrameByLayout(api);
+            this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
+            return true;
+        } catch(e) {
+            console.error(e);
+            return false;
+        }
     }
     public composingInputEnd(text: string): boolean {
         this.__repo.rollback("composingInput");

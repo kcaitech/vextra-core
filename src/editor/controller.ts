@@ -129,6 +129,7 @@ export interface AsyncPathEditor {
     execute: (index: number, end: PageXY) => void;
     execute2: (indexes: number[], dx: number, dy: number) => void;
     close: () => undefined;
+    abort: () => void;
 }
 
 export interface AsyncTransfer {
@@ -137,6 +138,7 @@ export interface AsyncTransfer {
     stick: (dx: number, dy: number) => void;
     transByWheel: (dx: number, dy: number) => void;
     close: () => undefined;
+    abort: () => void;
 }
 
 export interface AsyncContactEditor {
@@ -162,7 +164,8 @@ export interface AsyncPathHandle {
 
 export enum Status {
     Pending = 'pending',
-    Fulfilled = 'fulfilled'
+    Fulfilled = 'fulfilled',
+    Exception = 'exception'
 }
 
 // 处理异步编辑
@@ -203,31 +206,41 @@ export class Controller {
         let newShape: Shape | undefined;
         let savepage: Page | undefined;
         const init = (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame): Shape | undefined => {
-            savepage = page;
-            status = Status.Pending;
-            const shape = this.create(type, name, frame);
-            const xy = parent.frame2Root();
-            shape.frame.x -= xy.x;
-            shape.frame.y -= xy.y;
-            api.shapeInsert(page, parent, shape, parent.childs.length);
-            newShape = parent.childs.at(-1);
-            if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
-            return newShape
+            try {
+                savepage = page;
+                status = Status.Pending;
+                const shape = this.create(type, name, frame);
+                const xy = parent.frame2Root();
+                shape.frame.x -= xy.x;
+                shape.frame.y -= xy.y;
+                api.shapeInsert(page, parent, shape, parent.childs.length);
+                newShape = parent.childs.at(-1);
+                if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+                return newShape
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const init_arrow = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame): Shape | undefined => {
-            savepage = page;
-            status = Status.Pending;
-            const shape = newArrowShape(name, frame);
-            const xy = parent.frame2Root();
-            shape.frame.x -= xy.x;
-            shape.frame.y -= xy.y;
-            api.shapeInsert(page, parent, shape, parent.childs.length);
-            newShape = parent.childs.at(-1);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
-            return newShape
+            try {
+                savepage = page;
+                status = Status.Pending;
+                const shape = newArrowShape(name, frame);
+                const xy = parent.frame2Root();
+                shape.frame.x -= xy.x;
+                shape.frame.y -= xy.y;
+                api.shapeInsert(page, parent, shape, parent.childs.length);
+                newShape = parent.childs.at(-1);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+                return newShape
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const init_media = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, media: {
             buff: Uint8Array,
@@ -235,95 +248,146 @@ export class Controller {
         }): Shape | undefined => {
             status = Status.Pending;
             if (this.__document) { // media文件处理
-                savepage = page;
-                const format = getFormatFromBase64(media.base64);
-                const ref = `${v4()}.${format}`;
-                this.__document.mediasMgr.add(ref, media);
-                const shape = newImageShape(name, frame, this.__document.mediasMgr, ref);
-                const xy = parent.frame2Root();
-                shape.frame.x -= xy.x;
-                shape.frame.y -= xy.y;
-                api.shapeInsert(page, parent, shape, parent.childs.length)
-                newShape = parent.childs.at(-1);
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-                return newShape
+                try {
+                    savepage = page;
+                    const format = getFormatFromBase64(media.base64);
+                    const ref = `${v4()}.${format}`;
+                    this.__document.mediasMgr.add(ref, media);
+                    const shape = newImageShape(name, frame, this.__document.mediasMgr, ref);
+                    const xy = parent.frame2Root();
+                    shape.frame.x -= xy.x;
+                    shape.frame.y -= xy.y;
+                    api.shapeInsert(page, parent, shape, parent.childs.length)
+                    newShape = parent.childs.at(-1);
+                    this.__repo.transactCtx.fireNotify();
+                    status = Status.Fulfilled;
+                    return newShape
+                } catch(e) {
+                    console.error(e);
+                    status = Status.Exception;
+                }
             }
         }
         const init_table = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, row: number, col: number): Shape | undefined => {
-            savepage = page;
-            status = Status.Pending;
-            const shape = newTable(name, frame, row, col, this.__document.mediasMgr);
-            const xy = parent.frame2Root();
-            shape.frame.x -= xy.x;
-            shape.frame.y -= xy.y;
-            api.shapeInsert(page, parent, shape, parent.childs.length);
-            newShape = parent.childs.at(-1);
-            if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
-            return newShape
+            try {
+                savepage = page;
+                status = Status.Pending;
+                const shape = newTable(name, frame, row, col, this.__document.mediasMgr);
+                const xy = parent.frame2Root();
+                shape.frame.x -= xy.x;
+                shape.frame.y -= xy.y;
+                api.shapeInsert(page, parent, shape, parent.childs.length);
+                newShape = parent.childs.at(-1);
+                if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+                return newShape
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const init_text = (page: Page, parent: GroupShape, frame: ShapeFrame, content: string): Shape | undefined => {
             status = Status.Pending;
             if (this.__document) {
-                let name = content;
-                if (content.length > 19) {
-                    name = name.slice(0, 19) + '...';
+                try {
+                    let name = content;
+                    if (content.length > 19) {
+                        name = name.slice(0, 19) + '...';
+                    }
+                    const shape = newTextShape(name);
+                    shape.text.insertText(content, 0);
+                    const xy = parent.frame2Root();
+                    shape.frame.x = frame.x - xy.x;
+                    shape.frame.y = frame.y - xy.y;
+                    const layout = shape.getLayout();
+                    shape.frame.width = layout.contentWidth;
+                    shape.frame.height = layout.contentHeight;
+    
+                    api.shapeInsert(page, parent, shape, parent.childs.length)
+                    newShape = parent.childs.at(-1);
+                    this.__repo.transactCtx.fireNotify();
+                    status = Status.Fulfilled;
+                    return newShape
+                } catch(e) {
+                    console.error(e);
+                    status = Status.Exception;
                 }
-                const shape = newTextShape(name);
-                shape.text.insertText(content, 0);
+            }
+        }
+        const init_contact = (page: Page, parent: GroupShape, frame: ShapeFrame, name: string, apex?: ContactForm): Shape | undefined => {
+            try {
+                savepage = page;
+                status = Status.Pending;
+                const shape = newContact(name, frame, apex);
                 const xy = parent.frame2Root();
-                shape.frame.x = frame.x - xy.x;
-                shape.frame.y = frame.y - xy.y;
-                const layout = shape.getLayout();
-                shape.frame.width = layout.contentWidth;
-                shape.frame.height = layout.contentHeight;
-
-                api.shapeInsert(page, parent, shape, parent.childs.length)
+                shape.frame.x -= xy.x;
+                shape.frame.y -= xy.y;
+                api.shapeInsert(page, parent, shape, parent.childs.length);
                 newShape = parent.childs.at(-1);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-        }
-        const init_contact = (page: Page, parent: GroupShape, frame: ShapeFrame, name: string, apex?: ContactForm): Shape | undefined => {
-            savepage = page;
-            status = Status.Pending;
-            const shape = newContact(name, frame, apex);
-            const xy = parent.frame2Root();
-            shape.frame.x -= xy.x;
-            shape.frame.y -= xy.y;
-            api.shapeInsert(page, parent, shape, parent.childs.length);
-            newShape = parent.childs.at(-1);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
-            return newShape
         }
         const contact_to = (p: PageXY, to?: ContactForm) => {
             if (!newShape || !savepage) return;
-            status = Status.Pending;
-            pathEdit(api, savepage, newShape as PathShape, 1, p);
-            api.shapeModifyContactTo(savepage, newShape as ContactShape, to);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
+            try {
+                status = Status.Pending;
+                pathEdit(api, savepage, newShape as PathShape, 1, p);
+                api.shapeModifyContactTo(savepage, newShape as ContactShape, to);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const migrate = (targetParent: GroupShape) => {
             if (!newShape || !savepage) return;
-            status = Status.Pending;
-            const origin: GroupShape = newShape.parent as GroupShape;
-            const { x, y } = newShape.frame2Root();
-            api.shapeMove(savepage, origin, origin.indexOfChild(newShape), targetParent, targetParent.childs.length);
-            translateTo(api, savepage, newShape, x, y);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
+            try {
+                status = Status.Pending;
+                const origin: GroupShape = newShape.parent as GroupShape;
+                const { x, y } = newShape.frame2Root();
+                api.shapeMove(savepage, origin, origin.indexOfChild(newShape), targetParent, targetParent.childs.length);
+                translateTo(api, savepage, newShape, x, y);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const setFrame = (point: PageXY) => {
             if (!newShape || !savepage) return;
             status = Status.Pending;
-            if (newShape.type === ShapeType.Line) {
-                adjustRB2(api, savepage, newShape, point.x, point.y);
-            } else {
+            try {
+                if (newShape.type === ShapeType.Line) {
+                    adjustRB2(api, savepage, newShape, point.x, point.y);
+                } else {
+                    const { x: sx, y: sy } = anchor;
+                    const { x: px, y: py } = point;
+                    const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
+                    const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
+                    const height = x2.y - x1.y;
+                    const width = x2.x - x1.x;
+                    expandTo(api, savepage, newShape, width, height);
+                    translateTo(api, savepage, newShape, x1.x, x1.y);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const setFrameByWheel = (point: PageXY) => {
+            if (!newShape || !savepage) return;
+            try {
+                status = Status.Pending;
                 const { x: sx, y: sy } = anchor;
                 const { x: px, y: py } = point;
                 const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
@@ -332,91 +396,96 @@ export class Controller {
                 const width = x2.x - x1.x;
                 expandTo(api, savepage, newShape, width, height);
                 translateTo(api, savepage, newShape, x1.x, x1.y);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
-        }
-        const setFrameByWheel = (point: PageXY) => {
-            if (!newShape || !savepage) return;
-            status = Status.Pending;
-            const { x: sx, y: sy } = anchor;
-            const { x: px, y: py } = point;
-            const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
-            const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
-            const height = x2.y - x1.y;
-            const width = x2.x - x1.x;
-            expandTo(api, savepage, newShape, width, height);
-            translateTo(api, savepage, newShape, x1.x, x1.y);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const collect = (page: Page, shapes: Shape[], target: Artboard) => { // 容器收束
             status = Status.Pending;
-            if (shapes.length) {
-                for (let i = 0; i < shapes.length; i++) {
-                    const s = shapes[i];
-                    const p = s.parent as GroupShape;
-                    const idx = p.indexOfChild(s);
-                    api.shapeMove(page, p, idx, target, 0);
-                    if (p.childs.length <= 0) {
-                        deleteEmptyGroupShape(page, s, api);
+            try {
+                if (shapes.length) {
+                    for (let i = 0; i < shapes.length; i++) {
+                        const s = shapes[i];
+                        const p = s.parent as GroupShape;
+                        const idx = p.indexOfChild(s);
+                        api.shapeMove(page, p, idx, target, 0);
+                        if (p.childs.length <= 0) {
+                            deleteEmptyGroupShape(page, s, api);
+                        }
+                    }
+                    const realXY = shapes.map((s) => s.frame2Root());
+                    const t_xy = target.frame;
+                    const savep = shapes[0].parent as GroupShape;
+                    const m = new Matrix(savep.matrix2Root().inverse);
+                    for (let i = 0; i < shapes.length; i++) {
+                        const c = shapes[i];
+                        const r = realXY[i]
+                        const target = m.computeCoord(r.x, r.y);
+                        const cur = c.matrix2Parent().computeCoord(0, 0);
+                        api.shapeModifyX(page, c, c.frame.x + target.x - cur.x - t_xy.x);
+                        api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - t_xy.y);
                     }
                 }
-                const realXY = shapes.map((s) => s.frame2Root());
-                const t_xy = target.frame;
-                const savep = shapes[0].parent as GroupShape;
-                const m = new Matrix(savep.matrix2Root().inverse);
-                for (let i = 0; i < shapes.length; i++) {
-                    const c = shapes[i];
-                    const r = realXY[i]
-                    const target = m.computeCoord(r.x, r.y);
-                    const cur = c.matrix2Parent().computeCoord(0, 0);
-                    api.shapeModifyX(page, c, c.frame.x + target.x - cur.x - t_xy.x);
-                    api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - t_xy.y);
-                }
+                api.setFillColor(page, target, 0, new Color(1, 255, 255, 255));
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            api.setFillColor(page, target, 0, new Color(1, 255, 255, 255));
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const close = () => {
             if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
-                if (newShape.type === ShapeType.Artboard) {
-                    api.setFillColor(savepage!, newShape, 0, new Color(1, 255, 255, 255));
-                }
-                if (newShape.type === ShapeType.Contact) {
-                    if ((newShape as ContactShape).from) {
-                        const shape1 = savepage?.getShape((newShape as ContactShape).from!.shapeId);
-                        if (shape1) {
-                            api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.From, newShape.id), shape1.style.contacts?.length || 0);
+                try {
+                    if (newShape.type === ShapeType.Artboard) {
+                        api.setFillColor(savepage!, newShape, 0, new Color(1, 255, 255, 255));
+                    }
+                    if (newShape.type === ShapeType.Contact) {
+                        if ((newShape as ContactShape).from) {
+                            const shape1 = savepage?.getShape((newShape as ContactShape).from!.shapeId);
+                            if (shape1) {
+                                api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.From, newShape.id), shape1.style.contacts?.length || 0);
+                            }
+                        }
+                        if ((newShape as ContactShape).to) {
+                            const shape1 = savepage?.getShape((newShape as ContactShape).to!.shapeId);
+                            if (shape1) {
+                                api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.To, newShape.id), shape1.style.contacts?.length || 0);
+                            }
                         }
                     }
-                    if ((newShape as ContactShape).to) {
-                        const shape1 = savepage?.getShape((newShape as ContactShape).to!.shapeId);
-                        if (shape1) {
-                            api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.To, newShape.id), shape1.style.contacts?.length || 0);
-                        }
-                    }
+                    this.__repo.commit();
                 }
-                this.__repo.commit();
+                catch(e) {
+                    console.error(e);
+                    this.__repo.rollback();
+                }
             } else {
                 this.__repo.rollback();
             }
             return undefined;
         }
         const init_cutout = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame): Shape | undefined => {
-            savepage = page;
-            status = Status.Pending;
-            const shape = newCutoutShape(name, frame);
-            const xy = parent.frame2Root();
-            shape.frame.x -= xy.x;
-            shape.frame.y -= xy.y;
-            api.shapeInsert(page, parent, shape, parent.childs.length);
-            newShape = parent.childs.at(-1);
-            newShape && api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
-            return newShape
+            try {
+                savepage = page;
+                status = Status.Pending;
+                const shape = newCutoutShape(name, frame);
+                const xy = parent.frame2Root();
+                shape.frame.x -= xy.x;
+                shape.frame.y -= xy.y;
+                api.shapeInsert(page, parent, shape, parent.childs.length);
+                newShape = parent.childs.at(-1);
+                newShape && api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+                return newShape
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         return { init, init_media, init_text, init_arrow, init_contact, setFrame, setFrameByWheel, collect, init_table, contact_to, migrate, close, init_cutout }
     }
@@ -428,57 +497,82 @@ export class Controller {
         let need_update_frame = false;
         const executeRotate = (deg: number) => {
             status = Status.Pending;
-            const newDeg = (shape.rotation || 0) + (deg || 0);
-            api.shapeModifyRotate(page, shape, newDeg);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
+            try {
+                const newDeg = (shape.rotation || 0) + (deg || 0);
+                api.shapeModifyRotate(page, shape, newDeg);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const executeScale = (type: CtrlElementType, end: PageXY) => {
             status = Status.Pending;
-            if (type === CtrlElementType.RectLT) {
-                adjustLT2(api, page, shape, end.x, end.y);
-            } else if (type === CtrlElementType.RectRT) {
-                adjustRT2(api, page, shape, end.x, end.y);
-            } else if (type === CtrlElementType.RectRB) {
-                adjustRB2(api, page, shape, end.x, end.y);
-            } else if (type === CtrlElementType.RectLB) {
-                adjustLB2(api, page, shape, end.x, end.y);
-            } else if (type === CtrlElementType.RectTop) {
-                scaleByT(api, page, shape, end);
-            } else if (type === CtrlElementType.RectRight) {
-                scaleByR(api, page, shape, end);
-            } else if (type === CtrlElementType.RectBottom) {
-                scaleByB(api, page, shape, end);
-            } else if (type === CtrlElementType.RectLeft) {
-                scaleByL(api, page, shape, end);
+            try {
+                if (type === CtrlElementType.RectLT) {
+                    adjustLT2(api, page, shape, end.x, end.y);
+                } else if (type === CtrlElementType.RectRT) {
+                    adjustRT2(api, page, shape, end.x, end.y);
+                } else if (type === CtrlElementType.RectRB) {
+                    adjustRB2(api, page, shape, end.x, end.y);
+                } else if (type === CtrlElementType.RectLB) {
+                    adjustLB2(api, page, shape, end.x, end.y);
+                } else if (type === CtrlElementType.RectTop) {
+                    scaleByT(api, page, shape, end);
+                } else if (type === CtrlElementType.RectRight) {
+                    scaleByR(api, page, shape, end);
+                } else if (type === CtrlElementType.RectBottom) {
+                    scaleByB(api, page, shape, end);
+                } else if (type === CtrlElementType.RectLeft) {
+                    scaleByL(api, page, shape, end);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const executeErScale = (type: CtrlElementType, scale: number) => {
             status = Status.Pending;
-            if (type === CtrlElementType.RectTop) {
-                erScaleByT(api, page, shape, scale);
-            } else if (type === CtrlElementType.RectRight) {
-                erScaleByR(api, page, shape, scale);
-            } else if (type === CtrlElementType.RectBottom) {
-                erScaleByB(api, page, shape, scale);
-            } else if (type === CtrlElementType.RectLeft) {
-                erScaleByL(api, page, shape, scale);
+            try {
+                if (type === CtrlElementType.RectTop) {
+                    erScaleByT(api, page, shape, scale);
+                } else if (type === CtrlElementType.RectRight) {
+                    erScaleByR(api, page, shape, scale);
+                } else if (type === CtrlElementType.RectBottom) {
+                    erScaleByB(api, page, shape, scale);
+                } else if (type === CtrlElementType.RectLeft) {
+                    erScaleByL(api, page, shape, scale);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const executeForLine = (index: number, end: PageXY) => {
             status = Status.Pending;
-            need_update_frame = true;
-            pathEdit(api, page, shape as PathShape, index, end);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
+            try {
+                need_update_frame = true;
+                pathEdit(api, page, shape as PathShape, index, end);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const close = () => {
-            if (need_update_frame) {
-                update_frame_by_points(api, page, shape as PathShape);
+            try {
+                if (need_update_frame) {
+                    update_frame_by_points(api, page, shape as PathShape);
+                }
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
@@ -497,55 +591,65 @@ export class Controller {
         const pMap: Map<string, Matrix> = new Map();
         const executeScale = (origin1: PageXY, origin2: PageXY, sx: number, sy: number) => {
             status = Status.Pending;
-            for (let i = 0; i < shapes.length; i++) {
-                const s = shapes[i];
-                const p = s.parent;
-                if (!p) continue;
-                if (!s.rotation) set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
-                else if (s instanceof GroupShape && s.type === ShapeType.Group) adjust_group_rotate_frame(api, page, s, sx, sy);
-                else if (s instanceof PathShape) {
-                    adjust_pathshape_rotate_frame(api, page, s);
-                    set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
+            try {
+                for (let i = 0; i < shapes.length; i++) {
+                    const s = shapes[i];
+                    const p = s.parent;
+                    if (!p) continue;
+                    if (!s.rotation) set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
+                    else if (s instanceof GroupShape && s.type === ShapeType.Group) adjust_group_rotate_frame(api, page, s, sx, sy);
+                    else if (s instanceof PathShape) {
+                        adjust_pathshape_rotate_frame(api, page, s);
+                        set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
+                    }
                 }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const executeRotate = (deg: number, m: Matrix) => {
-            status = Status.Pending;
-            for (let i = 0; i < shapes.length; i++) {
-                const s = shapes[i];
-                if (s.type === ShapeType.Contact) continue;
-                const sp = s.parent;
-                if (!sp) continue;
-                // 计算左上角的目标位置
-                const m2r = s.matrix2Root();
-                m2r.multiAtLeft(m);
-                const target_xy = m2r.computeCoord2(0, 0); // 目标位置（root）
-                // 计算集体旋转后的xy
-                let np = new Matrix();
-                const ex = pMap.get(sp.id);
-                if (ex) np = ex;
-                else {
-                    np = new Matrix(sp.matrix2Root().inverse);
-                    pMap.set(sp.id, np);
+            try {
+                status = Status.Pending;
+                for (let i = 0; i < shapes.length; i++) {
+                    const s = shapes[i];
+                    if (s.type === ShapeType.Contact) continue;
+                    const sp = s.parent;
+                    if (!sp) continue;
+                    // 计算左上角的目标位置
+                    const m2r = s.matrix2Root();
+                    m2r.multiAtLeft(m);
+                    const target_xy = m2r.computeCoord2(0, 0); // 目标位置（root）
+                    // 计算集体旋转后的xy
+                    let np = new Matrix();
+                    const ex = pMap.get(sp.id);
+                    if (ex) np = ex;
+                    else {
+                        np = new Matrix(sp.matrix2Root().inverse);
+                        pMap.set(sp.id, np);
+                    }
+                    const sf_common = np.computeCoord3(target_xy);
+                    // 计算自转后的xy
+                    const r = s.rotation || 0;
+    
+                    let cr = deg;
+                    if (s.isFlippedHorizontal) cr = -cr;
+                    if (s.isFlippedVertical) cr = -cr;
+                    api.shapeModifyRotate(page, s, r + cr);
+                    const sf_self = s.matrix2Parent().computeCoord2(0, 0);
+                    // 比较集体旋转与自转的xy偏差
+                    const delta = { x: sf_common.x - sf_self.x, y: sf_common.y - sf_self.y };
+                    api.shapeModifyX(page, s, s.frame.x + delta.x);
+                    api.shapeModifyY(page, s, s.frame.y + delta.y);
                 }
-                const sf_common = np.computeCoord3(target_xy);
-                // 计算自转后的xy
-                const r = s.rotation || 0;
-
-                let cr = deg;
-                if (s.isFlippedHorizontal) cr = -cr;
-                if (s.isFlippedVertical) cr = -cr;
-                api.shapeModifyRotate(page, s, r + cr);
-                const sf_self = s.matrix2Parent().computeCoord2(0, 0);
-                // 比较集体旋转与自转的xy偏差
-                const delta = { x: sf_common.x - sf_self.x, y: sf_common.y - sf_self.y };
-                api.shapeModifyX(page, s, s.frame.x + delta.x);
-                api.shapeModifyY(page, s, s.frame.y + delta.y);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) this.__repo.commit();
@@ -559,51 +663,71 @@ export class Controller {
         const api = this.__repo.start("transfer", {});
         let status: Status = Status.Pending;
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
-            status = Status.Pending;
-            let index = targetParent.childs.length;
-            for (let i = 0, len = sortedShapes.length; i < len; i++) {
-                const shape = sortedShapes[i];
-                const error = unable_to_migrate(targetParent, shape);
-                if (error) {
-                    console.log('migrate error:', error);
-                    continue;
+            try {
+                status = Status.Pending;
+                let index = targetParent.childs.length;
+                for (let i = 0, len = sortedShapes.length; i < len; i++) {
+                    const shape = sortedShapes[i];
+                    const error = unable_to_migrate(targetParent, shape);
+                    if (error) {
+                        console.log('migrate error:', error);
+                        continue;
+                    }
+                    const origin: GroupShape = shape.parent as GroupShape;
+                    if (is_state(shape)) {
+                        const name = get_state_name(shape as any, dlt);
+                        api.shapeModifyName(page, shape, `${origin.name}/${name}`);
+                    }
+                    const { x, y } = shape.frame2Root();
+                    api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
+                    translateTo(api, page, shape, x, y);
+                    after_migrate(page, api, origin);
                 }
-                const origin: GroupShape = shape.parent as GroupShape;
-                if (is_state(shape)) {
-                    const name = get_state_name(shape as any, dlt);
-                    api.shapeModifyName(page, shape, `${origin.name}/${name}`);
-                }
-                const { x, y } = shape.frame2Root();
-                api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
-                translateTo(api, page, shape, x, y);
-                after_migrate(page, api, origin);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const trans = (start: PageXY, end: PageXY) => {
             status = Status.Pending;
-            for (let i = 0; i < shapes.length; i++) {
-                translate(api, page, shapes[i], end.x - start.x, end.y - start.y);
+            try {
+                for (let i = 0; i < shapes.length; i++) {
+                    translate(api, page, shapes[i], end.x - start.x, end.y - start.y);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const stick = (dx: number, dy: number) => {
             status = Status.Pending;
-            for (let i = 0; i < shapes.length; i++) {
-                translate(api, page, shapes[i], dx, dy);
+            try {
+                for (let i = 0; i < shapes.length; i++) {
+                    translate(api, page, shapes[i], dx, dy);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const transByWheel = (dx: number, dy: number) => {
             status = Status.Pending;
-            for (let i = 0; i < shapes.length; i++) {
-                translate(api, page, shapes[i], dx, dy);
+            try {
+                for (let i = 0; i < shapes.length; i++) {
+                    translate(api, page, shapes[i], dx, dy);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
@@ -613,7 +737,10 @@ export class Controller {
             }
             return undefined;
         }
-        return { migrate, trans, stick, close, transByWheel }
+        const abort = () => {
+            this.__repo.rollback();
+        }
+        return { migrate, trans, stick, close, transByWheel, abort }
     }
 
     public asyncPathEditor(shape: PathShape, page: Page): AsyncPathEditor {
@@ -625,28 +752,48 @@ export class Controller {
         m = new Matrix(m.inverse); // root -> 1
         const addNode = (index: number) => {
             status === Status.Pending
-            const p = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
-            api.addPointAt(page, shape as PathShape, index, p);
-            after_insert_point(page, api, shape, index);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
+            try {
+                const p = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
+                api.addPointAt(page, shape as PathShape, index, p);
+                after_insert_point(page, api, shape, index);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const execute = (index: number, end: PageXY) => {
             status === Status.Pending
-            pathEdit(api, page, shape, index, end, m);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
+            try {
+                pathEdit(api, page, shape, index, end, m);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const execute2 = (indexes: number[], dx: number, dy: number) => {
             status === Status.Pending
-            pointsEdit(api, page, shape, indexes, dx, dy);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
+            try {
+                pointsEdit(api, page, shape, indexes, dx, dy);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const close = () => {
             status = Status.Pending;
-            update_frame_by_points(api, page, shape as PathShape);
-            status = Status.Fulfilled;
+            try {
+                update_frame_by_points(api, page, shape as PathShape);
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
@@ -654,76 +801,104 @@ export class Controller {
             }
             return undefined;
         }
-        return { addNode, execute, execute2, close }
+        const abort = () => {
+            this.__repo.rollback();
+        }
+        return { addNode, execute, execute2, close, abort }
     }
 
     public asyncContactEditor(shape: ContactShape, page: Page): AsyncContactEditor {
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
         const pre = () => {
-            const len = shape.points.length;
-            api.deletePoints(page, shape as PathShape, 0, len);
-            api.contactModifyEditState(page, shape, false);
-
-            const p = shape.getPoints();
-            if (p.length === 0) throw new Error();
-            const points = [p[0], p.pop()!];
-            for (let i = 0, len = points.length; i < len; i++) {
-                const p = importCurvePoint(exportCurvePoint(points[i]));
-                p.id = v4();
-                points[i] = p;
+            try {
+                const len = shape.points.length;
+                api.deletePoints(page, shape as PathShape, 0, len);
+                api.contactModifyEditState(page, shape, false);
+    
+                const p = shape.getPoints();
+                if (p.length === 0) throw new Error();
+                const points = [p[0], p.pop()!];
+                for (let i = 0, len = points.length; i < len; i++) {
+                    const p = importCurvePoint(exportCurvePoint(points[i]));
+                    p.id = v4();
+                    points[i] = p;
+                }
+                api.addPoints(page, shape as PathShape, points);
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            api.addPoints(page, shape as PathShape, points);
         }
         const modify_contact_from = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {
             status = Status.Pending;
-            if (clear_target) {
-                if (!shape.from) {
-                    api.shapeModifyContactFrom(page, shape as ContactShape, clear_target.apex);
+            try {
+                if (clear_target) {
+                    if (!shape.from) {
+                        api.shapeModifyContactFrom(page, shape as ContactShape, clear_target.apex);
+                    }
+                    pathEdit(api, page, shape as PathShape, 0, clear_target.p);
+                } else {
+                    if (shape.from) {
+                        api.shapeModifyContactFrom(page, shape as ContactShape, undefined);
+                    }
+                    pathEdit(api, page, shape as PathShape, 0, m_target);
                 }
-                pathEdit(api, page, shape as PathShape, 0, clear_target.p);
-            } else {
-                if (shape.from) {
-                    api.shapeModifyContactFrom(page, shape as ContactShape, undefined);
-                }
-                pathEdit(api, page, shape as PathShape, 0, m_target);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const modify_contact_to = (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => {
             status = Status.Pending;
-            const idx = shape.points?.length;
-            if (!idx) return false;
-            if (clear_target) {
-                if (!shape.to) {
-                    api.shapeModifyContactTo(page, shape as ContactShape, clear_target.apex);
+            try {
+                const idx = shape.points?.length;
+                if (!idx) return false;
+                if (clear_target) {
+                    if (!shape.to) {
+                        api.shapeModifyContactTo(page, shape as ContactShape, clear_target.apex);
+                    }
+                    pathEdit(api, page, shape as PathShape, idx - 1, clear_target.p);
+                } else {
+                    if (shape.to) {
+                        api.shapeModifyContactTo(page, shape as ContactShape, undefined);
+                    }
+                    pathEdit(api, page, shape as PathShape, idx - 1, m_target);
                 }
-                pathEdit(api, page, shape as PathShape, idx - 1, clear_target.p);
-            } else {
-                if (shape.to) {
-                    api.shapeModifyContactTo(page, shape as ContactShape, undefined);
-                }
-                pathEdit(api, page, shape as PathShape, idx - 1, m_target);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const migrate = (targetParent: GroupShape) => {
             status = Status.Pending;
-            const origin: GroupShape = shape.parent as GroupShape;
-            const { x, y } = shape.frame2Root();
-            api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length);
-            translateTo(api, page, shape, x, y);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
+            try {
+                const origin: GroupShape = shape.parent as GroupShape;
+                const { x, y } = shape.frame2Root();
+                api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, targetParent.childs.length);
+                translateTo(api, page, shape, x, y);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const modify_sides = (index: number, dx: number, dy: number) => {
             if (shape.type !== ShapeType.Contact) return;
-            status = Status.Pending;
-            contact_edit(api, page, shape, index, index + 1, dx, dy);
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
+            try {
+                status = Status.Pending;
+                contact_edit(api, page, shape, index, index + 1, dx, dy);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
@@ -741,12 +916,17 @@ export class Controller {
         let status: Status = Status.Pending;
         const execute = (contextSettingOpacity: number) => {
             status = Status.Pending;
-            for (let i = 0, l = shapes.length; i < l; i++) {
-                const shape = shapes[i];
-                api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
+            try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const shape = shapes[i];
+                    api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
-            status = Status.Fulfilled;
         }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
@@ -762,32 +942,53 @@ export class Controller {
     public asyncPathHandle(shape: PathShape, page: Page, index: number): AsyncPathHandle {
         const curvePoint = shape.points[index];
         let mode = curvePoint.mode;
+        let status: Status = Status.Pending;
         const api = this.__repo.start("asyncPathHandle", {});
         const pre = (index: number) => {
-            __pre_curve(page, api, shape, index);
-            mode = CurveMode.Mirrored;
-            this.__repo.transactCtx.fireNotify();
+            try {
+                __pre_curve(page, api, shape, index);
+                mode = CurveMode.Mirrored;
+                this.__repo.transactCtx.fireNotify();
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
         }
         const execute = (side: Side, from: XY, to: XY) => {
-            if (mode === CurveMode.Mirrored || mode === CurveMode.Asymmetric) {
-                api.shapeModifyCurvFromPoint(page, shape, index, from);
-                api.shapeModifyCurvToPoint(page, shape, index, to);
-            } else if (mode === CurveMode.Disconnected) {
-                if (side === 'from') {
+            try {
+                if (mode === CurveMode.Mirrored || mode === CurveMode.Asymmetric) {
                     api.shapeModifyCurvFromPoint(page, shape, index, from);
-                } else {
                     api.shapeModifyCurvToPoint(page, shape, index, to);
+                } else if (mode === CurveMode.Disconnected) {
+                    if (side === 'from') {
+                        api.shapeModifyCurvFromPoint(page, shape, index, from);
+                    } else {
+                        api.shapeModifyCurvToPoint(page, shape, index, to);
+                    }
                 }
+                this.__repo.transactCtx.fireNotify();
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
             }
-            this.__repo.transactCtx.fireNotify();
         }
         const abort = () => {
             this.__repo.rollback();
             return undefined;
         }
         const close = () => {
-            update_frame_by_points2(api, page, shape);
-            this.__repo.commit();
+            try {
+                update_frame_by_points2(api, page, shape);
+            } catch(e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+            if (status !== Status.Exception) {
+                this.__repo.commit();
+            }
+            else {
+                this.__repo.rollback();
+            }
             return undefined;
         }
         return { pre, execute, abort, close };

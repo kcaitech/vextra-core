@@ -1087,16 +1087,26 @@ export class ShapeEditor {
     // shadow
     public addShadow(shadow: Shadow) {
         const api = this.__repo.start("addShadow", {});
-        api.addShadow(this.__page, this.__shape, shadow, this.__shape.style.shadows.length);
-        this.__repo.commit();
+        try {
+            api.addShadow(this.__page, this.__shape, shadow, this.__shape.style.shadows.length);
+            this.__repo.commit();
+        } catch(e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
     }
 
     public deleteShadow(idx: number) {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
             const api = this.__repo.start("deleteShadow", {});
-            api.deleteShadowAt(this.__page, this.__shape, idx)
-            this.__repo.commit();
+            try {
+                api.deleteShadowAt(this.__page, this.__shape, idx)
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
 
@@ -1104,8 +1114,13 @@ export class ShapeEditor {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
             const api = this.__repo.start("setShadowPosition", {});
-            api.setShadowPosition(this.__page, this.__shape, idx, position);
-            this.__repo.commit();
+            try {
+                api.setShadowPosition(this.__page, this.__shape, idx, position);
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
 
@@ -1113,8 +1128,13 @@ export class ShapeEditor {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
             const api = this.__repo.start("setShadowEnable", {});
-            api.setShadowEnable(this.__page, this.__shape, idx, isEnabled);
-            this.__repo.commit();
+            try {
+                api.setShadowEnable(this.__page, this.__shape, idx, isEnabled);
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
 
@@ -1131,8 +1151,13 @@ export class ShapeEditor {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
             const api = this.__repo.start("setShadowOffsetX", {});
-            api.setShadowOffsetX(this.__page, this.__shape, idx, offserX);
-            this.__repo.commit();
+            try {
+                api.setShadowOffsetX(this.__page, this.__shape, idx, offserX);
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
 
@@ -1140,8 +1165,13 @@ export class ShapeEditor {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
             const api = this.__repo.start("setShadowOffsetY", {});
-            api.setShadowOffsetY(this.__page, this.__shape, idx, offsetY);
-            this.__repo.commit();
+            try {
+                api.setShadowOffsetY(this.__page, this.__shape, idx, offsetY);
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
 
@@ -1158,74 +1188,124 @@ export class ShapeEditor {
         const shadow = this.__shape.style.shadows[idx];
         if (shadow) {
             const api = this.__repo.start("setShadowSpread", {});
-            api.setShadowSpread(this.__page, this.__shape, idx, spread);
-            this.__repo.commit();
+            try {
+                api.setShadowSpread(this.__page, this.__shape, idx, spread);
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
     // export ops
     public addExportFormat(formats: ExportFormat[]) {
-        for (let i = 0; i < formats.length; i++) {
-            const format = formats[i];
-            const api = this.__repo.start("addExportFormat", {});
-            const length = this.__shape.exportOptions ? this.__shape.exportOptions.exportFormats.length : 0;
-            api.addExportFormat(this.__page, this.__shape, format, length);
+        const api = this.__repo.start("addExportFormat", {});
+        try {
+            for (let i = 0; i < formats.length; i++) {
+                const format = formats[i];
+                const length = this.__shape.exportOptions ? this.__shape.exportOptions.exportFormats.length : 0;
+                api.addExportFormat(this.__page, this.__shape, format, length);
+            }
             this.__repo.commit();
+        } catch(e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
     public deleteExportFormat(idx: number) {
         const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("deleteExportFormat", {});
-            api.deleteExportFormatAt(this.__page, this.__shape, idx)
-            this.__repo.commit();
+            try {
+                api.deleteExportFormatAt(this.__page, this.__shape, idx)
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
     public setExportFormatScale(idx: number, scale: number) {
         const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatScale", {});
-            api.setExportFormatScale(this.__page, this.__shape, idx, scale);
-            this.__repo.commit();
+            try {
+                api.setExportFormatScale(this.__page, this.__shape, idx, scale);
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
     public setExportFormatName(idx: number, name: string) {
         const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatName", {});
-            api.setExportFormatName(this.__page, this.__shape, idx, name);
-            this.__repo.commit();
+            try {
+                api.setExportFormatName(this.__page, this.__shape, idx, name);
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
     public setExportFormatFileFormat(idx: number, fileFormat: ExportFileFormat) {
         const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatFileFormat", {});
-            api.setExportFormatFileFormat(this.__page, this.__shape, idx, fileFormat);
-            this.__repo.commit();
+            try {
+                api.setExportFormatFileFormat(this.__page, this.__shape, idx, fileFormat);
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
     public setExportFormatPerfix(idx: number, perfix: ExportFormatNameingScheme) {
         const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatPerfix", {});
-            api.setExportFormatPerfix(this.__page, this.__shape, idx, perfix);
-            this.__repo.commit();
+            try {
+                api.setExportFormatPerfix(this.__page, this.__shape, idx, perfix);
+                this.__repo.commit();
+            } catch(e) {
+                console.error(e);
+                this.__repo.rollback();
+            }
         }
     }
     public setExportTrimTransparent(trim: boolean) {
         const api = this.__repo.start("setExportTrimTransparent", {});
-        api.setExportTrimTransparent(this.__page, this.__shape, trim);
-        this.__repo.commit();
+        try {
+            api.setExportTrimTransparent(this.__page, this.__shape, trim);
+            this.__repo.commit();
+        } catch(e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
     }
     public setExportCanvasBackground(background: boolean) {
         const api = this.__repo.start("setExportTrimTransparent", {});
-        api.setExportCanvasBackground(this.__page, this.__shape, background);
-        this.__repo.commit();
+        try {
+            api.setExportCanvasBackground(this.__page, this.__shape, background);
+            this.__repo.commit();
+        } catch(e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
     }
     public setExportPreviewUnfold(unfold: boolean) {
         const api = this.__repo.start("setExportTrimTransparent", {});
-        api.setExportPreviewUnfold(this.__page, this.__shape, unfold);
-        this.__repo.commit();
+        try {
+            api.setExportPreviewUnfold(this.__page, this.__shape, unfold);
+            this.__repo.commit();
+        } catch(e) {
+            console.error(e);
+            this.__repo.rollback();
+        }
     }
 
     // 容器自适应大小
