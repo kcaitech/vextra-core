@@ -249,13 +249,13 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     }
     const shadows = shape.style.shadows;
     const shape_id = shape.id.slice(0, 4);
-    const shadow = shadowR(h, shape_id, shape, path, varsContainer, comsMap);
+    const shadow = shadowR(h, shape_id, shape, path, varsContainer);
     if (shadow.length) {
         const ex_props = Object.assign({}, props);
         delete props.style;
         delete props.transform;
         const inner_url = innerShadowId(shape_id, shadows);
-        if (shadows.length) props.filter = `${inner_url}`;
+        if (shadows.length) props.filter = `url(#pd_outer-${shape_id}) ${inner_url}`;
         const body = h("g", props, childs);
         return h("g", ex_props, [...shadow, body]);
     } else {

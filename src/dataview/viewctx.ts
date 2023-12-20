@@ -25,6 +25,9 @@ export interface ViewType {
 }
 
 export class DViewCtx {
+
+    static FRAME_TIME = 40; // 25帧
+
     comsMap: Map<ShapeType, ViewType> = new Map();
     // 选区
     // 缩放监听
@@ -43,19 +46,69 @@ export class DViewCtx {
         this._continueLoop();
     }
 
-    removeReLayout(vid: string) {
+    removeReLayout(v: DataView) {
+        const vid = v.id;
+        const ov = this.relayoutset.get(vid);
+        if (ov !== v) {
+            return false;
+        }
         return this.relayoutset.delete(vid);
     }
-    removeDirty(vid: string) {
+    removeDirty(v: DataView) {
+        const vid = v.id;
+        const ov = this.dirtyset.get(vid);
+        if (ov !== v) {
+            return false;
+        }
         return this.dirtyset.delete(vid);
     }
 
+    protected focusshape: Shape | undefined;
+
+    protected onIdle(): boolean {
+        return false;
+    }
+    // todo idle
+    // todo selection
+    // protected idlecallbacks: Array<() => boolean> = [];
+    // onIdle(cb: () => boolean) {
+    //     this.idlecallbacks.push(cb);
+    // }
     /**
      * return: if continue
      */
     protected aloop(): boolean {
 
-        // todo 优先更新选中对象
+        const hasUpdate = this.relayoutset.size > 0 || this.dirtyset.size > 0;
+        const startTime = Date.now();
+
+        // 优先更新选中对象
+        if (this.focusshape) {
+
+            const focusdepends: string[] = [];
+            let p: Shape | undefined = this.focusshape;
+            while (p) {
+                focusdepends.push(p.id);
+                p = p.parent;
+            }
+
+            // 由高向下更新
+            for (let i = focusdepends.length - 1; i >= 0; i--) {
+                const d = this.relayoutset.get(focusdepends[i]);
+                if (d) d.layout();
+            }
+
+            for (let i = focusdepends.length - 1; i >= 0; i--) {
+                const d = this.dirtyset.get(focusdepends[i]);
+                if (d) d.render();
+            }
+
+            // check time
+            const expendsTime = Date.now() - startTime;
+            if (expendsTime > DViewCtx.FRAME_TIME) {
+                return true;
+            }
+        }
 
         // update
         // render
@@ -90,6 +143,13 @@ export class DViewCtx {
             }
         }
 
+        // { // check time
+        //     const expendsTime = Date.now() - startTime;
+        //     if (expendsTime > DViewCtx.FRAME_TIME) {
+        //         return true;
+        //     }
+        // }
+
         // 渲染
         this.dirtyset.forEach((v, k) => {
             v.render();
@@ -99,8 +159,12 @@ export class DViewCtx {
             console.log("loop not empty ", this.relayoutset.size, this.dirtyset.size);
         }
 
-        return (this.relayoutset.size > 0 || this.dirtyset.size > 0);
-        // return false;
+        if (hasUpdate || this.relayoutset.size > 0 || this.dirtyset.size > 0) {
+            return true;
+        }
+
+        return this.onIdle();
+
     }
 
     private _continueLoop() {

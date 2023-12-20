@@ -54,7 +54,7 @@ export function render(h: Function,
     if (shape.isNoTransform()) {
         const shadows = shape.style.shadows;
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, shape, path, varsContainer, comsMap);
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer);
         const b_len = shape.style.borders.length;
         if (b_len) {
             const props: any = {}
@@ -105,7 +105,7 @@ export function render(h: Function,
         // shadow
         const shadows = shape.style.shadows;
         const shape_id = shape.id.slice(0, 4);
-        const shadow = shadowR(h, shape_id, shape, path, varsContainer, comsMap); // todo 
+        const shadow = shadowR(h, shape_id, shape, path, varsContainer); // todo 
         const b_len = shape.style.borders.length;
         if (b_len) {
             const path = shape.getPath().toString();

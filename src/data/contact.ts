@@ -478,17 +478,20 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     }
     private __pathCache: Path | undefined;
     getPath(): Path {
-        const offsetX = 0;
-        const offsetY = 0;
-        const width = this.frame.width;
-        const height = this.frame.height;
-        const points = this.getPoints();
-        const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, this.fixedRadius);
-        this.__pathCache = new Path(path);
-        return this.__pathCache;
+        return this.getPathOfFrame(this.frame, this.fixedRadius);
     }
     getPath2(): Path {
-        return this.getPath()
+        return this.getPath();
+    }
+    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+        const offsetX = 0;
+        const offsetY = 0;
+        const width = frame.width;
+        const height = frame.height;
+        const points = this.getPoints();
+        const path = parsePath(points, !!this.isClosed, offsetX, offsetY, width, height, fixedRadius);
+        this.__pathCache = new Path(path);
+        return this.__pathCache;
     }
     getTextLayout(): TextLayout | undefined {
         if (!this.text || !this.mark) return;

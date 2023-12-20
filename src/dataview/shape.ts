@@ -1,5 +1,5 @@
-import { RenderTransform, renderBorders, renderFills } from "../render";
-import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path } from "../data/classes";
+import { RenderTransform, innerShadowId, renderBorders, renderFills, renderShadows } from "../render";
+import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { EL, elh } from "./el";
 import { ResizingConstraints } from "../data/consts";
@@ -205,8 +205,8 @@ export class ShapeView extends DataView {
     m_fixedRadius?: number;
 
     // cache
-    m_fills?: EL[]; // 不缓存,可回收
-    m_borders?: EL[];
+    // m_fills?: EL[]; // 不缓存,可回收
+    // m_borders?: EL[];
     m_path?: Path;
     m_pathstr?: string;
 
@@ -228,7 +228,7 @@ export class ShapeView extends DataView {
         this.m_hflip = shape.isFlippedHorizontal;
         this.m_vflip = shape.isFlippedVertical;
         this.m_rotate = shape.rotation;
-        this.m_fixedRadius = (shape as any).fixedRadius; // rectangle
+        this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
 
         this._layout(this.m_data, this.m_transx, this.m_varsContainer);
     }
@@ -238,8 +238,8 @@ export class ShapeView extends DataView {
             this.m_path = undefined;
             this.m_pathstr = undefined;
         }
-        if (args.includes('fills')) this.m_fills = undefined;
-        if (args.includes('borders')) this.m_borders = undefined;
+        // if (args.includes('fills')) this.m_fills = undefined;
+        // if (args.includes('borders')) this.m_borders = undefined;
         // this.updateRenderArgs(this.data.frame, this.data.isFlippedHorizontal, this.data.isFlippedVertical, this.data.rotation, this.data.fixedRadius)
     }
 
@@ -308,7 +308,7 @@ export class ShapeView extends DataView {
     }
 
     // =================== update ========================
-    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number) {
+    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined) {
         const _frame = this.frame;
         if (isDiffShapeFrame(_frame, frame)) {
             _frame.x = frame.x;
@@ -317,14 +317,14 @@ export class ShapeView extends DataView {
             _frame.height = frame.height;
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            if (this.m_borders) {
-                // recycleELArr(this.m_borders);
-                this.m_borders = undefined;
-            }
-            if (this.m_fills) {
-                // recycleELArr(this.m_fills);
-                this.m_fills = undefined;
-            }
+            // if (this.m_borders) {
+            //     // recycleELArr(this.m_borders);
+            //     this.m_borders = undefined;
+            // }
+            // if (this.m_fills) {
+            //     // recycleELArr(this.m_fills);
+            //     this.m_fills = undefined;
+            // }
         }
         this.m_hflip = hflip;
         this.m_vflip = vflip;
@@ -333,14 +333,14 @@ export class ShapeView extends DataView {
             this.m_fixedRadius = radius;
             this.m_pathstr = undefined; // need update
             this.m_path = undefined;
-            if (this.m_borders) {
-                // recycleELArr(this.m_borders);
-                this.m_borders = undefined;
-            }
-            if (this.m_fills) {
-                // recycleELArr(this.m_fills);
-                this.m_fills = undefined;
-            }
+            // if (this.m_borders) {
+            //     // recycleELArr(this.m_borders);
+            //     this.m_borders = undefined;
+            // }
+            // if (this.m_fills) {
+            //     // recycleELArr(this.m_fills);
+            //     this.m_fills = undefined;
+            // }
         }
     }
 
@@ -376,7 +376,7 @@ export class ShapeView extends DataView {
         // let nodes: Array<any>;
         if (!transform || notTrans) {
             // update frame, hflip, vflip, rotate
-            this.updateLayoutArgs(frame, hflip, vflip, rotate);
+            this.updateLayoutArgs(frame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
             // todo 需要继续update childs
             this.layoutOnNormal(varsContainer);
             return;
@@ -448,7 +448,7 @@ export class ShapeView extends DataView {
             const cscaleY = parentFrame.height / saveH;
 
             // update frame, hflip, vflip, rotate
-            this.updateLayoutArgs(parentFrame, hflip, vflip, rotate);
+            this.updateLayoutArgs(parentFrame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
             this.layoutOnRectShape(varsContainer, parentFrame, cscaleX, cscaleY);
 
             return;
@@ -470,7 +470,7 @@ export class ShapeView extends DataView {
             const frame = new ShapeFrame(x, y, width, height);
             fixFrameByConstrain(shape, transform.parentFrame, frame);
 
-            this.updateLayoutArgs(frame, hflip, vflip, rotate);
+            this.updateLayoutArgs(frame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
             this.layoutOnRectShape(varsContainer, frame, scaleX, scaleY);
             return;
         }
@@ -489,7 +489,7 @@ export class ShapeView extends DataView {
         const cscaleY = parentFrame.height / bbox.height;
 
         // update frame, rotate, hflip...
-        this.updateLayoutArgs(parentFrame, undefined, undefined, undefined);
+        this.updateLayoutArgs(parentFrame, undefined, undefined, undefined, (shape as PathShape).fixedRadius);
 
         this.layoutOnDiamondShape(varsContainer, cscaleX, cscaleY, rotate, vflip, hflip, bbox, m);
 
@@ -502,7 +502,7 @@ export class ShapeView extends DataView {
         // todo props没更新时是否要update
         // 在frame、flip、rotate修改时需要update
         const tid = this.id;
-        const needLayout = this.m_ctx.removeReLayout(tid); // remove from changeset
+        const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
 
         if (props) {
             // 
@@ -522,12 +522,12 @@ export class ShapeView extends DataView {
             }
             if (diffVars) {
                 // update varscontainer
+                this.m_ctx.removeDirty(this);
                 this.m_varsContainer = props.varsContainer;
                 const _id = this.id;
-                if (_id !== tid) {
-                    this.m_ctx.removeDirty(tid);
-                    // tid = _id;
-                }
+                // if (_id !== tid) {
+                //     // tid = _id;
+                // }
             }
         }
 
@@ -540,18 +540,24 @@ export class ShapeView extends DataView {
     // ================== render ===========================
 
 
-    protected renderFills() {
-        if (!this.m_fills) {
-            this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
-        }
-        return this.m_fills;
+    protected renderFills(): EL[] {
+        // if (!this.m_fills) {
+        //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+        // }
+        // return this.m_fills;
+        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
     }
 
-    protected renderBorders() {
-        if (!this.m_borders) {
-            this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
-        }
-        return this.m_borders;
+    protected renderBorders(): EL[] {
+        // if (!this.m_borders) {
+        //     this.m_borders = renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
+        // }
+        // return this.m_borders;
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
+    }
+
+    protected renderShadows(filterId: string): EL[] {
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.m_data, this.frame);
     }
 
     protected renderProps(): { [key: string]: string } {
@@ -594,7 +600,7 @@ export class ShapeView extends DataView {
     render(): number {
 
         const tid = this.id;
-        const isDirty = this.m_ctx.removeDirty(tid);
+        const isDirty = this.m_ctx.removeDirty(this);
         if (!isDirty) {
             return this.m_render_version;
         }
@@ -613,24 +619,23 @@ export class ShapeView extends DataView {
 
         const props = this.renderProps();
 
+        const filterId = this.m_data.id.slice(0, 4);
+        const shadows = this.renderShadows(filterId);
 
-        // shadows todo
-        // const shadows = this.getShadows();
-        // const shape_id = shape.id.slice(0, 4);
-        // const shadow = renderShadows(elh, shape_id, shadows, this.getBorders(), path, shape, this.m_varsContainer, comsMap); // todo!
-        // if (shadow.length) {
-        //     const ex_props = Object.assign({}, props);
-        //     delete props.style;
-        //     delete props.transform;
-        //     const inner_url = innerShadowId(shape_id, shadows);
-        //     if (shadows.length) props.filter = `${inner_url}`;
-        //     const body = h("g", props, childs);
-        //     return h("g", ex_props, [...shadow, body]);
-        // } else {
-        //     return h("g", props, childs);
-        // }
+        if (shadows.length > 0) { // 阴影
+            const ex_props = Object.assign({}, props);
+            delete props.style;
+            delete props.transform;
+            delete props.opacity;
 
-        this.reset("g", props, [...fills, ...childs, ...borders]);
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            const body = elh("g", props, [...fills, ...childs, ...borders]);
+            this.reset("g", ex_props, [...shadows, body])
+        }
+        else {
+            this.reset("g", props, [...fills, ...childs, ...borders]);
+        }
         return ++this.m_render_version;
     }
 }

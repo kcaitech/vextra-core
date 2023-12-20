@@ -1,6 +1,6 @@
 import { elh } from "./el";
 import { GroupShapeView } from "./groupshape";
-import { renderFills } from "../render";
+import { innerShadowId, renderFills } from "../render";
 
 export class ArtboradView extends GroupShapeView {
 
@@ -22,10 +22,11 @@ export class ArtboradView extends GroupShapeView {
     // }
 
     protected renderFills() {
-        if (!this.m_fills) {
-            this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
-        }
-        return this.m_fills;
+        // if (!this.m_fills) {
+        //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+        // }
+        // return this.m_fills;
+        return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } {
@@ -54,10 +55,47 @@ export class ArtboradView extends GroupShapeView {
     }
 
     render(): number {
-        const r = super.render();
-        if (r) {
-            this.eltag = "svg";
+        const isDirty = this.m_ctx.removeDirty(this);
+        if (!isDirty) {
+            return this.m_render_version;
         }
-        return r;
+
+        if (!this.isVisible()) {
+            this.reset("");
+            return ++this.m_render_version;
+        }
+
+        // fill
+        const fills = this.renderFills() || []; // cache
+        // childs
+        const childs = this.renderContents(); // VDomArray
+        // border
+        const borders = this.renderBorders() || []; // ELArray
+
+        const props = this.renderProps();
+
+        const filterId = this.m_data.id.slice(0, 4);
+        const shadows = this.renderShadows(filterId);
+
+        if (shadows.length > 0) { // 阴影
+            const frame = this.frame;
+            const ex_props: any = {};
+            ex_props.opacity = props.opacity;
+            ex_props.transform = `translate(${frame.x},${frame.y})`;
+
+            // delete props.style;
+            // delete props.transform;
+            delete props.opacity;
+            props.x = '0';
+            props.y = '0';
+            const inner_url = innerShadowId(filterId, this.getShadows());
+            props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
+            const body = elh("svg", props, [...fills, ...childs, ...borders]);
+            this.reset("g", ex_props, [...shadows, body])
+        }
+        else {
+            this.reset("svg", props, [...fills, ...childs, ...borders]);
+        }
+        return ++this.m_render_version;
     }
 }

@@ -1,11 +1,10 @@
 import { OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, VariableType } from "../data/classes";
-import { ShapeView, matrix2parent } from "./shape";
+import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView } from "./view";
 import { fixFrameByConstrain, isDiffRenderTransform, isDiffVarsContainer, isNoTransform } from "./shape";
 import { RenderTransform } from "../render";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
-import { EL } from "./el";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
 
@@ -13,18 +12,21 @@ export class SymbolRefView extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
-        const data = this.m_data as SymbolRefShape
-        const symMgr = data.getSymbolMgr();
-        const refId = this.getRefId();
-        this.m_refId = refId;
-        symMgr?.get(refId).then((sym) => {
-            if (this.m_refId === refId) {
-                this.m_sym = sym;
-                this.m_ctx.setReLayout(this);
-            }
-        }).catch((err) => {
-            console.error(err);
-        })
+
+        this.symwatcher = this.symwatcher.bind(this);
+        this.loadsym();
+        // const data = this.m_data as SymbolRefShape
+        // const symMgr = data.getSymbolMgr();
+        // const refId = this.getRefId();
+        // this.m_refId = refId;
+        // symMgr?.get(refId).then((sym) => {
+        //     if (this.m_refId === refId) {
+        //         this.m_sym = sym;
+        //         this.m_ctx.setReLayout(this);
+        //     }
+        // }).catch((err) => {
+        //     console.error(err);
+        // })
     }
 
     protected isNoSupportDiamondScale(): boolean {
@@ -42,34 +44,51 @@ export class SymbolRefView extends ShapeView {
 
     private m_refId: string | undefined;
     private m_sym: SymbolShape | undefined;
+    private m_union: SymbolShape | undefined;
+
+    onDataChange(...args: any[]): void {
+        this.loadsym();
+    }
+
+    symwatcher(...args: any[]) {
+        // todo
+        // this.m_ctx.setReLayout(this);
+    }
 
     // 需要自己加载symbol
     // private __data: SymbolShape | undefined;
     // private __union: SymbolShape | undefined;
     // private __startLoad: string = "";
-    // updater() {
-    //     const symMgr = (this.m_data as SymbolRefShape).getSymbolMgr();
-    //     if (!symMgr) return;
-    //     const refId = this.getRefId();
-    //     if (this.__startLoad === refId) {
-    //         return;
-    //     }
-    //     this.__startLoad = refId;
-    //     symMgr.get(refId).then((val) => {
-    //         if (this.__startLoad !== refId) return;
-    //         if (this.__data) this.__data.unwatch(watcher);
-    //         this.__data = val;
-    //         if (this.__data) this.__data.watch(watcher);
+    loadsym() {
+        const symMgr = (this.m_data as SymbolRefShape).getSymbolMgr();
+        if (!symMgr) return;
+        const refId = this.getRefId();
+        if (this.m_refId === refId) {
+            return;
+        }
+        this.m_refId = refId;
+        symMgr.get(refId).then((val) => {
+            if (this.m_refId !== refId) return;
+            if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
+            this.m_sym = val;
+            if (this.m_sym) this.m_sym.watch(this.symwatcher);
 
-    //         // union
-    //         const union = this.__data?.parent instanceof SymbolUnionShape ? this.__data.parent : undefined;
-    //         if (this.__union?.id !== union?.id) {
-    //             if (this.__union) this.__union.unwatch(watcher);
-    //             this.__union = union;
-    //             if (this.__union) this.__union.watch(watcher);
-    //         }
-    //     })
-    // }
+            // union
+            const union = this.m_sym?.parent instanceof SymbolUnionShape ? this.m_sym.parent : undefined;
+            if (this.m_union?.id !== union?.id) {
+                if (this.m_union) this.m_union.unwatch(this.symwatcher);
+                this.m_union = union;
+                if (this.m_union) this.m_union.watch(this.symwatcher);
+            }
+            this.m_ctx.setReLayout(this);
+        })
+    }
+
+    onDestory(): void {
+        super.onDestory();
+        if (this.m_union) this.m_union.unwatch(this.symwatcher);
+        if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
+    }
 
     private layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>) {
         let cdom: DataView | undefined = resue.get(child.id);
@@ -87,7 +106,7 @@ export class SymbolRefView extends ShapeView {
 
     layout(props?: PropsType | undefined): void {
         const tid = this.id;
-        const needLayout = this.m_ctx.removeReLayout(tid); // remove from changeset
+        const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
 
         if (props) {
             // 
@@ -107,12 +126,12 @@ export class SymbolRefView extends ShapeView {
             }
             if (diffVars) {
                 // update varscontainer
+                this.m_ctx.removeDirty(this);
                 this.m_varsContainer = props.varsContainer;
                 const _id = this.id;
-                if (_id !== tid) {
-                    this.m_ctx.removeDirty(tid);
-                    // tid = _id;
-                }
+                // if (_id !== tid) {
+                //     // tid = _id;
+                // }
             }
         }
 
@@ -142,8 +161,8 @@ export class SymbolRefView extends ShapeView {
             // todo: 临时hack
             const saveLayoutNormal = this.layoutOnNormal;
             const saveLayoutOnRectShape = this.layoutOnRectShape;
-            this.layoutOnNormal = () => {};
-            this.layoutOnRectShape = () => {};
+            this.layoutOnNormal = () => { };
+            this.layoutOnRectShape = () => { };
             this._layout(this.m_data, this.m_transx, varsContainer);
             this.layoutOnNormal = saveLayoutNormal;
             this.layoutOnRectShape = saveLayoutOnRectShape;

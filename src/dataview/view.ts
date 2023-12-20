@@ -87,6 +87,9 @@ export class DataView extends EventEL {
         super("");
         this.m_ctx = ctx;
         this.m_data = props.data;
+        this.m_transx = props.transx;
+        this.m_varsContainer = props.varsContainer;
+        this.m_isVirtual = props.isVirtual;
 
         this._datawatcher = this._datawatcher.bind(this);
         // watch data & varsContainer
@@ -94,10 +97,6 @@ export class DataView extends EventEL {
         if (this.m_varsContainer) {
             this.m_varsContainer.forEach((c) => c.watch(this._datawatcher));
         }
-
-        this.m_transx = props.transx;
-        this.m_varsContainer = props.varsContainer;
-        this.m_isVirtual = props.isVirtual;
 
         this.m_ctx.setDirty(this);
     }
@@ -294,8 +293,8 @@ export class DataView extends EventEL {
         if (this.m_parent) throw new Error("parent is not null");
         if (this.m_isdistroyed) throw new Error("already distroyed");
         const tid = this.id;
-        this.m_ctx.removeReLayout(tid);
-        this.m_ctx.removeDirty(tid);
+        this.m_ctx.removeReLayout(this);
+        this.m_ctx.removeDirty(this);
 
         // if (this.m_el) {
         //     this.m_el.remove();
