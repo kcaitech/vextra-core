@@ -484,6 +484,10 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextFontSize(index: number, len: number, fontSize: number) {
+        // fix fontSize
+        if (typeof fontSize !== 'number') {
+            fontSize = Number.parseFloat(fontSize);
+        }
         if (len === 0) {
             if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
             this.__cachedSpanAttr.fontSize = fontSize;
