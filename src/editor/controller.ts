@@ -219,7 +219,7 @@ export class Controller {
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -237,7 +237,7 @@ export class Controller {
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -262,7 +262,7 @@ export class Controller {
                     this.__repo.transactCtx.fireNotify();
                     status = Status.Fulfilled;
                     return newShape
-                } catch(e) {
+                } catch (e) {
                     console.error(e);
                     status = Status.Exception;
                 }
@@ -282,7 +282,7 @@ export class Controller {
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -303,13 +303,13 @@ export class Controller {
                     const layout = shape.getLayout();
                     shape.frame.width = layout.contentWidth;
                     shape.frame.height = layout.contentHeight;
-    
+
                     api.shapeInsert(page, parent, shape, parent.childs.length)
                     newShape = parent.childs.at(-1);
                     this.__repo.transactCtx.fireNotify();
                     status = Status.Fulfilled;
                     return newShape
-                } catch(e) {
+                } catch (e) {
                     console.error(e);
                     status = Status.Exception;
                 }
@@ -328,7 +328,26 @@ export class Controller {
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
-            } catch(e) {
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const init_cutout = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame): Shape | undefined => {
+            try {
+                savepage = page;
+                status = Status.Pending;
+                const shape = newCutoutShape(name, frame);
+                const xy = parent.frame2Root();
+                shape.frame.x -= xy.x;
+                shape.frame.y -= xy.y;
+                api.shapeInsert(page, parent, shape, parent.childs.length);
+                newShape = parent.childs.at(-1);
+                newShape && api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+                return newShape
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -341,7 +360,7 @@ export class Controller {
                 api.shapeModifyContactTo(savepage, newShape as ContactShape, to);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -356,17 +375,19 @@ export class Controller {
                 translateTo(api, savepage, newShape, x, y);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
         }
         const setFrame = (point: PageXY) => {
-            if (!newShape || !savepage) return;
+            if (!newShape || !savepage) {
+                return;
+            }
             status = Status.Pending;
             try {
                 if (newShape.type === ShapeType.Line) {
-                    adjustRB2(api, savepage, newShape, point.x, point.y);
+                    pathEdit(api, savepage, newShape as PathShape, 1, point); // 线条的创建过程由路径编辑来完成
                 } else {
                     const { x: sx, y: sy } = anchor;
                     const { x: px, y: py } = point;
@@ -379,7 +400,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -398,7 +419,7 @@ export class Controller {
                 translateTo(api, savepage, newShape, x1.x, x1.y);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -432,7 +453,7 @@ export class Controller {
                 api.setFillColor(page, target, 0, new Color(1, 255, 255, 255));
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -457,9 +478,12 @@ export class Controller {
                             }
                         }
                     }
+                    if (newShape.type === ShapeType.Line && savepage) {
+                        update_frame_by_points(api, savepage, newShape as PathShape)
+                    }
                     this.__repo.commit();
                 }
-                catch(e) {
+                catch (e) {
                     console.error(e);
                     this.__repo.rollback();
                 }
@@ -467,25 +491,6 @@ export class Controller {
                 this.__repo.rollback();
             }
             return undefined;
-        }
-        const init_cutout = (page: Page, parent: GroupShape, name: string, frame: ShapeFrame): Shape | undefined => {
-            try {
-                savepage = page;
-                status = Status.Pending;
-                const shape = newCutoutShape(name, frame);
-                const xy = parent.frame2Root();
-                shape.frame.x -= xy.x;
-                shape.frame.y -= xy.y;
-                api.shapeInsert(page, parent, shape, parent.childs.length);
-                newShape = parent.childs.at(-1);
-                newShape && api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-                return newShape
-            } catch(e) {
-                console.error(e);
-                status = Status.Exception;
-            }
         }
         return { init, init_media, init_text, init_arrow, init_contact, setFrame, setFrameByWheel, collect, init_table, contact_to, migrate, close, init_cutout }
     }
@@ -502,7 +507,7 @@ export class Controller {
                 api.shapeModifyRotate(page, shape, newDeg);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -529,7 +534,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -548,7 +553,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -560,7 +565,7 @@ export class Controller {
                 pathEdit(api, page, shape as PathShape, index, end);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -570,7 +575,7 @@ export class Controller {
                 if (need_update_frame) {
                     update_frame_by_points(api, page, shape as PathShape);
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -605,7 +610,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -633,7 +638,7 @@ export class Controller {
                     const sf_common = np.computeCoord3(target_xy);
                     // 计算自转后的xy
                     const r = s.rotation || 0;
-    
+
                     let cr = deg;
                     if (s.isFlippedHorizontal) cr = -cr;
                     if (s.isFlippedVertical) cr = -cr;
@@ -646,7 +651,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -685,7 +690,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -698,7 +703,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -711,7 +716,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -724,7 +729,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -758,7 +763,7 @@ export class Controller {
                 after_insert_point(page, api, shape, index);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -769,7 +774,7 @@ export class Controller {
                 pathEdit(api, page, shape, index, end, m);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -780,7 +785,7 @@ export class Controller {
                 pointsEdit(api, page, shape, indexes, dx, dy);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -790,7 +795,7 @@ export class Controller {
             try {
                 update_frame_by_points(api, page, shape as PathShape);
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -815,7 +820,7 @@ export class Controller {
                 const len = shape.points.length;
                 api.deletePoints(page, shape as PathShape, 0, len);
                 api.contactModifyEditState(page, shape, false);
-    
+
                 const p = shape.getPoints();
                 if (p.length === 0) throw new Error();
                 const points = [p[0], p.pop()!];
@@ -825,7 +830,7 @@ export class Controller {
                     points[i] = p;
                 }
                 api.addPoints(page, shape as PathShape, points);
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -846,7 +851,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -869,7 +874,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -883,7 +888,7 @@ export class Controller {
                 translateTo(api, page, shape, x, y);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -895,7 +900,7 @@ export class Controller {
                 contact_edit(api, page, shape, index, index + 1, dx, dy);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -923,7 +928,7 @@ export class Controller {
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -949,7 +954,7 @@ export class Controller {
                 __pre_curve(page, api, shape, index);
                 mode = CurveMode.Mirrored;
                 this.__repo.transactCtx.fireNotify();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -967,7 +972,7 @@ export class Controller {
                     }
                 }
                 this.__repo.transactCtx.fireNotify();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
@@ -979,7 +984,7 @@ export class Controller {
         const close = () => {
             try {
                 update_frame_by_points2(api, page, shape);
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 status = Status.Exception;
             }
