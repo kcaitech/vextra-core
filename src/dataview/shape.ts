@@ -611,7 +611,7 @@ export class ShapeView extends DataView {
         }
 
         if (!this.isVisible()) {
-            this.reset("");
+            this.reset("g"); // 还是要给个节点，不然后后面可见了挂不上dom
             return ++this.m_render_version;
         }
 
