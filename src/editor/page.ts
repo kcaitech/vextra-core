@@ -86,6 +86,7 @@ import {
 import { is_circular_ref2 } from "./utils/ref_check";
 import { ExportFormat, Shadow } from "../data/baseclasses";
 import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
+import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -280,7 +281,7 @@ export interface ExportFormatFileFormatAction {
     value: ExportFileFormat
 }
 
-function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
+export function getHorizontalRadians(A: { x: number, y: number }, B: { x: number, y: number }) {
     return Math.atan2(B.y - A.y, B.x - A.x)
 }
 
@@ -1457,15 +1458,38 @@ export class PageEditor {
         }
     }
 
-    setShapesRotate(shapes: Shape[], v: number) {
-        const api = this.__repo.start('setShapesRotate', {});
+    modifyShapesWidth(shapes: Shape[], val: number) {
         try {
+            const api = this.__repo.start('modifyShapesWidth', {});
+            modify_shapes_width(api, this.__page, shapes, val)
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    modifyShapesHeight(shapes: Shape[], val: number) {
+        try {
+            const api = this.__repo.start('modifyShapesHeight', {});
+            modify_shapes_height(api, this.__page, shapes, val)
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    setShapesRotate(shapes: Shape[], v: number) {
+        try {
+            const api = this.__repo.start('setShapesRotate', {});
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = shapes[i];
 
                 if (is_straight(s)) {
                     const r = get_rotate_for_straight(s as PathShape, v);
+
                     api.shapeModifyRotate(this.__page, s, r);
+
+                    update_frame_by_points(api, this.__page, s as PathShape);
                 } else {
                     api.shapeModifyRotate(this.__page, s, v);
                 }
@@ -2181,7 +2205,7 @@ export class PageEditor {
 
                     if (position === "upper") {
                         index++;
-                    }                    
+                    }
 
                     api.shapeMove(this.__page, parent, parent.indexOfChild(item), host_parent, index);
 
