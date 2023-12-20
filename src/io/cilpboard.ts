@@ -1,4 +1,4 @@
-import {GroupShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape} from "../data/shape";
+import { GroupShape, ImageShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
 import {
     exportArtboard,
     exportGroupShape,
@@ -28,19 +28,25 @@ import {
     importTextShape
 } from "../data/baseimport";
 import * as types from "../data/typesdefine";
-import {v4} from "uuid";
-import {Document} from "../data/document";
-import {newSymbolRefShape, newTextShape, newTextShapeByText} from "../editor/creator";
-import {Api} from "../editor/command/recordapi";
-import {translateTo} from "../editor/frame";
-import {Page} from "../data/page";
+import { v4 } from "uuid";
+import { Document } from "../data/document";
+import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/creator";
+import { Api } from "../editor/command/recordapi";
+import { translateTo } from "../editor/frame";
+import { Page } from "../data/page";
 
 export function set_childs_id(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         const shape = shapes[i] as GroupShape;
-        if (!shape) continue;
+        if (!shape) {
+            continue;
+        }
+
         shape.id = v4();
-        if (shape.childs && shape.childs.length) set_childs_id(shape.childs);
+
+        if (shape.childs && shape.childs.length) {
+            set_childs_id(shape.childs);
+        }
     }
 }
 
@@ -82,17 +88,22 @@ export function export_shape(shapes: Shape[]) {
 }
 
 // 从剪切板导入图形
-export function import_shape(document: Document, source: types.Shape[]) {
+export function import_shape_from_clipboard(document: Document, source: Shape[], medias?: any) {
     const ctx: IImportContext = new class implements IImportContext {
         document: Document = document;
     };
     const result: Shape[] = [];
+
     try {
         for (let i = 0, len = source.length; i < len; i++) {
-            const _s = source[i], type = _s.type;
+            const _s = source[i];
+            const type = _s.type;
             let r: Shape | undefined = undefined;
+
             if (type === ShapeType.Symbol) {
-                if (!document.symbolsMgr.getSync(_s.id)) continue;
+                if (!document.symbolsMgr.getSync(_s.id)) {
+                    continue;
+                }
                 const f = new ShapeFrame(_s.frame.x, _s.frame.y, _s.frame.width, _s.frame.height);
                 if ((_s instanceof SymbolUnionShape)) {
                     const dlt = (_s as any).childs[0];
@@ -106,35 +117,50 @@ export function import_shape(document: Document, source: types.Shape[]) {
             }
 
             _s.id = v4();
+
             if (type === ShapeType.Rectangle) {
-                r = importRectShape(_s as types.RectShape);
+                r = importRectShape(_s as any as types.RectShape);
             } else if (type === ShapeType.Oval) {
-                r = importOvalShape(_s as types.OvalShape);
+                r = importOvalShape(_s as any as types.OvalShape);
             } else if (type === ShapeType.Line) {
-                r = importLineShape(_s as types.LineShape);
+                r = importLineShape(_s as any as types.LineShape);
             } else if (type === ShapeType.Image) {
-                r = importImageShape(_s as types.ImageShape, ctx);
+                r = importImageShape(_s as any as types.ImageShape, ctx);
+
+                if (r) {
+                    after_paster_image(document, r as any as ImageShape, medias);
+                }
             } else if (type === ShapeType.Text) {
-                r = importTextShape(_s as types.TextShape, ctx);
+                r = importTextShape(_s as any as types.TextShape, ctx);
             } else if (type === ShapeType.Path) {
-                r = importPathShape(_s as types.PathShape);
+                r = importPathShape(_s as any as types.PathShape);
             } else if (type === ShapeType.Artboard) {
-                const children = (_s as GroupShape).childs;
+                const children = (_s as any).childs;
                 children && children.length && set_childs_id(children);
-                r = importArtboard(_s as types.Artboard, ctx);
+                r = importArtboard(_s as any, ctx);
             } else if (type === ShapeType.Group) {
                 const children = (_s as GroupShape).childs;
+
                 children && children.length && set_childs_id(children);
-                r = importGroupShape(_s as types.GroupShape, ctx);
+
+                r = importGroupShape(_s as any, ctx);
             } else if (type === ShapeType.Table) {
-                const children = (_s as GroupShape).childs;
+                const children = (_s as any as GroupShape).childs
+                    ;
                 children && children.length && set_childs_id(children);
-                r = importTableShape(_s as types.TableShape, ctx);
+
+                r = importTableShape(_s as any as types.TableShape, ctx);
             } else if (type === ShapeType.SymbolRef) {
-                if (!document.symbolsMgr.getSync((_s as any).refId)) continue;
-                r = importSymbolRefShape(_s as types.SymbolRefShape, ctx);
+                if (!document.symbolsMgr.getSync((_s as any as types.SymbolRefShape).refId)) {
+                    continue;
+                }
+
+                r = importSymbolRefShape(_s as any as types.SymbolRefShape, ctx);
             }
-            r && result.push(r);
+
+            if (r) {
+                result.push(r);
+            }
         }
     } catch (error) {
         console.log(error);
@@ -148,7 +174,7 @@ export function import_shape(document: Document, source: types.Shape[]) {
  * @returns
  */
 export function transform_data(document: Document, src: Shape[]): Shape[] {
-    return import_shape(document, export_shape(src));
+    return import_shape_from_clipboard(document, export_shape(src));
 }
 
 /**
@@ -206,7 +232,7 @@ export function XYsBounding(points: { x: number, y: number }[]) {
     const bottom = Math.max(...ys);
     const left = Math.min(...xs);
     const right = Math.max(...xs);
-    return {top, bottom, left, right};
+    return { top, bottom, left, right };
 }
 
 export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
@@ -216,13 +242,44 @@ export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
         const m = s.matrix2Root();
         const f = s.frame;
         const ps: { x: number, y: number }[] = [
-            {x: 0, y: 0},
-            {x: f.width, y: 0},
-            {x: f.width, y: f.height},
-            {x: 0, y: f.height}
+            { x: 0, y: 0 },
+            { x: f.width, y: 0 },
+            { x: f.width, y: f.height },
+            { x: 0, y: f.height }
         ];
         for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
     }
     const b = XYsBounding(points);
-    return [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {x: b.left, y: b.bottom}];
+    return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
+}
+
+export function after_paster_image(document: Document, shape: ImageShape, media: any) {
+    if (!media) {
+        return;
+    }
+    const ref = shape.imageRef;
+
+    const m = media[ref];
+
+    if (!m) {
+        return;
+    }
+
+    if (document.mediasMgr.getSync(ref)) {
+        delete media[ref];
+        return;
+    }
+
+    const base64 = atob(m.split('base64,')[1]);
+
+    const buff = new Uint8Array(base64.length);
+    for (let i = 0; i < base64.length; i++) {
+        buff[i] = base64.charCodeAt(i);
+    }
+
+    const _media = { base64: m, buff };
+
+    media[ref] = _media;
+
+    document.mediasMgr.add(ref, _media);
 }
