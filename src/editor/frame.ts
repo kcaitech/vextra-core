@@ -499,7 +499,7 @@ export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: numb
 
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
-export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: number) { // 左下角
+export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: number) { // 左下角    
     const p = shape.parent;
     if (!p) return;
     // 需要满足右上(rt)不动
@@ -518,7 +518,7 @@ export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     const savert = matrix2parent.computeCoord(frame.width, 0) // rt 计算右上角的位置（坐标系：Parent）
     const m = matrix2parent;
     h = (m.m00 * (savert.y - target.y) - m.m10 * (savert.x - target.x)) / (m.m10 * m.m01 - m.m00 * m.m11);
-    w = (savert.x - target.x + m.m01 * h) / m.m00;
+    // w = (savert.x - target.x + m.m01 * h) / m.m00;
     if (w < 0) {
         api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
@@ -563,7 +563,7 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     const matrix2parent = shape.matrix2Parent();
     const target = matrix_parent2page.inverseCoord(x, y); // 右上目标位置（坐标系：页面）
     const cur = matrix2parent.computeCoord(frame.width, 0); // 右上当前位置（坐标系：页面）
-    let dx = 0;
+    let dx = target.x - cur.x;
     let dy = target.y - cur.y;
     const xy2 = matrix2parent.inverseCoord(target.x, target.y);
     let w = xy2.x;
@@ -571,7 +571,8 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     const savelb = matrix2parent.computeCoord(0, frame.height) // lb
     const m = matrix2parent;
     h = (m.m00 * (savelb.y - target.y) - m.m10 * (savelb.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01)
-    w = (target.x - savelb.x + m.m01 * h) / m.m00;
+    // w = (target.x - savelb.x + m.m01 * h) / m.m00;
+
     if (w < 0) {
         api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal)
         if (shape.rotation) {
@@ -607,7 +608,7 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
 
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
-export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number) {
+export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number) {    
     const p = shape.parent;
     if (!p) return;
     // 需要满足左下(lt)不动
@@ -619,12 +620,13 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     let dx = 0;
     let dy = 0;
     const xy2 = matrix2parent.inverseCoord(target.x, target.y);
-    let w = frame.width - xy2.x;
+    // let w = frame.width - xy2.x;
+    let w = xy2.x;
     let h = frame.height - xy2.y;
     const savelt = matrix2parent.computeCoord(0, 0) // lt
     const m = matrix2parent;
     h = -(m.m00 * (savelt.y - target.y) - m.m10 * (savelt.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01);
-    w = (target.x - savelt.x + m.m01 * -h) / m.m00;
+    // w = (target.x - savelt.x + m.m01 * -h) / m.m00;
     if (w < 0) {
         api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
         if (shape.rotation) {
