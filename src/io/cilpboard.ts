@@ -119,21 +119,21 @@ export function import_shape_from_clipboard(document: Document, source: Shape[],
             _s.id = v4();
 
             if (type === ShapeType.Rectangle) {
-                r = importRectShape(_s as any);
+                r = importRectShape(_s as any as types.RectShape);
             } else if (type === ShapeType.Oval) {
-                r = importOvalShape(_s as any);
+                r = importOvalShape(_s as any as types.OvalShape);
             } else if (type === ShapeType.Line) {
-                r = importLineShape(_s as any);
+                r = importLineShape(_s as any as types.LineShape);
             } else if (type === ShapeType.Image) {
-                r = importImageShape(_s as any, ctx);
+                r = importImageShape(_s as any as types.ImageShape, ctx);
 
                 if (r) {
-                    after_paster_image(document, r as any, medias);
+                    after_paster_image(document, r as any as ImageShape, medias);
                 }
             } else if (type === ShapeType.Text) {
-                r = importTextShape(_s as any, ctx);
+                r = importTextShape(_s as any as types.TextShape, ctx);
             } else if (type === ShapeType.Path) {
-                r = importPathShape(_s as any);
+                r = importPathShape(_s as any as types.PathShape);
             } else if (type === ShapeType.Artboard) {
                 const children = (_s as any).childs;
                 children && children.length && set_childs_id(children);
@@ -149,9 +149,9 @@ export function import_shape_from_clipboard(document: Document, source: Shape[],
                     ;
                 children && children.length && set_childs_id(children);
 
-                r = importTableShape(_s as any, ctx);
+                r = importTableShape(_s as any as types.TableShape, ctx);
             } else if (type === ShapeType.SymbolRef) {
-                if (!document.symbolsMgr.getSync((_s as any).refId)) {
+                if (!document.symbolsMgr.getSync((_s as any as types.SymbolRefShape).refId)) {
                     continue;
                 }
 
