@@ -269,4 +269,20 @@ export class SymbolRefView extends ShapeView {
     layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
         throw new Error("Method not implemented.");
     }
+
+
+    protected renderProps(): { [key: string]: string; } {
+        const props = super.renderProps() as any;
+        if (!this.m_sym) return props;
+        const contextSettings = this.m_sym.style.contextSettings;
+        if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+            if (props.opacity !== undefined) {
+                props.opacity = props.opacity * contextSettings.opacity;
+            }
+            else {
+                props.opacity = contextSettings.opacity;
+            }
+        }
+        return props;
+    }
 }

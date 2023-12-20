@@ -201,6 +201,17 @@ export function render(h: Function,
     if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
         props.opacity = contextSettings.opacity;
     }
+    {
+        const contextSettings = sym.style.contextSettings;
+        if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
+            if (props.opacity !== undefined) {
+                props.opacity = props.opacity * contextSettings.opacity;
+            }
+            else {
+                props.opacity = contextSettings.opacity;
+            }
+        }
+    }
 
     if (notTrans) {
         props.transform = `translate(${frame.x},${frame.y})`;
