@@ -55,7 +55,7 @@ export class ArtboradView extends GroupShapeView {
     }
 
     render(): number {
-        const isDirty = this.m_ctx.removeDirty(this);
+        const isDirty = this.checkAndResetDirty();
         if (!isDirty) {
             return this.m_render_version;
         }

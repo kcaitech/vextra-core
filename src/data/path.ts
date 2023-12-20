@@ -931,7 +931,7 @@ curvHandler['z'] = (ctx: CurvCtx, item: any[]) => {
 // -------------------------------------------------------------
 
 export class Path {
-    private m_segs: any[];
+    private m_segs: (string | number)[][];
     private __bounds?: Bounds;
 
     constructor(path?: (string | number)[][] | string) {
@@ -979,5 +979,10 @@ export class Path {
     }
     toCurvePoints(width: number, height: number): { points: CurvePoint[], isClosed?: boolean }[] {
         return convertPath2CurvePoints(this.m_segs, width, height);
+    }
+
+    freeze() {
+        this.m_segs.forEach(seg => Object.freeze(seg));
+        Object.freeze(this.m_segs);
     }
 }

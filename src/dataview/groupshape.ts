@@ -107,13 +107,13 @@ function render2path(shape: ShapeView): Path {
     if (shapeIsGroup) fixedRadius = shape.m_fixedRadius;
     if (!shapeIsGroup || shape.m_children.length === 0) {
         const path = shape instanceof TextShapeView ? shape.getTextPath() : shape.getPath();
-        return path;
+        return path.clone();
     }
 
     const cc = shape.m_children.length;
     const child0 = shape.m_children[0] as ShapeView;
     const frame0 = child0.frame;
-    const path0 = render2path(child0);
+    const path0 = render2path(child0).clone();
 
     if (child0.isNoTransform()) {
         path0.translate(frame0.x, frame0.y);
@@ -132,7 +132,7 @@ function render2path(shape: ShapeView): Path {
     for (let i = 1; i < cc; i++) {
         const child1 = shape.m_children[i] as ShapeView;
         const frame1 = child1.frame;
-        const path1 = render2path(child1);
+        const path1 = render2path(child1).clone();
         if (child1.isNoTransform()) {
             path1.translate(frame1.x, frame1.y);
         } else {

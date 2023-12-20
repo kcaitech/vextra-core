@@ -289,6 +289,7 @@ export class ShapeView extends DataView {
     getPath() {
         if (this.m_path) return this.m_path;
         this.m_path = this.m_data.getPathOfFrame(this.frame, this.m_fixedRadius); // todo fixedRadius
+        this.m_path.freeze();
         return this.m_path;
     }
 
@@ -597,10 +598,14 @@ export class ShapeView extends DataView {
 
     protected m_render_version: number = 0;
 
+    protected checkAndResetDirty(): boolean {
+        return this.m_ctx.removeDirty(this);
+    }
+
     render(): number {
 
-        const tid = this.id;
-        const isDirty = this.m_ctx.removeDirty(this);
+        // const tid = this.id;
+        const isDirty = this.checkAndResetDirty();
         if (!isDirty) {
             return this.m_render_version;
         }

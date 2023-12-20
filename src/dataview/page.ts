@@ -1,4 +1,23 @@
 import { GroupShapeView } from "./groupshape";
+import { ShapeView, isDiffShapeFrame } from "./shape";
+
+function checkFrame(v: ShapeView) {
+    const lhs = v.frame;
+    const rhs = v.m_data.frame;
+    if (isDiffShapeFrame(lhs, rhs)) {
+        console.error(`frame not match: ${lhs} vs ${rhs}`, v.name)
+    }
+    v.m_children.forEach((c) => checkFrame(c as ShapeView));
+}
+
+function checkPath(v: ShapeView) {
+    const lhs = v.getPathStr();
+    const rhs = v.m_data.getPath().toString();
+    if (lhs!== rhs) {
+        console.error(`path not match: ${lhs} vs ${rhs}`, v.name)
+    }
+    v.m_children.forEach((c) => checkPath(c as ShapeView));
+}
 
 export class PageView extends GroupShapeView {
 
@@ -31,5 +50,13 @@ export class PageView extends GroupShapeView {
             this.eltag = "svg";
         }
         return r;
+    }
+
+    // for debug
+    dbgCheckFrame() {
+        checkFrame(this);
+    }
+    dbgCheckPath() {
+        checkPath(this);
     }
 }
