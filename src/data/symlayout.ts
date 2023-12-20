@@ -2,7 +2,7 @@
 // 与editor/frame.ts 重复
 
 import { Matrix } from "../basic/matrix";
-import { GroupShape, PathShape, Shape, ShapeFrame, ShapeType } from "./shape";
+import { GroupShape, PathShape, Shape, ShapeFrame, ShapeType, ImageShape } from "./shape";
 import { Point2D } from "./typesdefine";
 import { ResizingConstraints } from "./consts";
 
@@ -190,7 +190,7 @@ export function layoutChilds(childs: Shape[], containerFrame: ShapeFrame, symbol
 
             layoutChilds(c.childs, c.frame, boundingBox);
         }
-        else if (c instanceof PathShape) {
+        else if (c instanceof PathShape && !(c instanceof ImageShape)) {
             // 摆正并处理points
             const matrix = c.matrix2Parent();
             const cFrame = c.frame;
