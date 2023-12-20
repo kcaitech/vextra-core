@@ -2055,19 +2055,23 @@ export class PageEditor {
         if (host.type === ShapeType.SymbolRef && position === 'inner') {
             return false;
         }
+
         if (is_part_of_symbolref(host)) {
             return false;
         }
+
         const host_parent: GroupShape | undefined = host.parent as GroupShape;
         if (!host_parent || host_parent.isVirtualShape) {
             return false;
         }
-        const pre: Shape[] = [];
+
+        let pre: Shape[] = [];
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
             if (is_exist_invalid_shape([item])) {
                 continue;
             }
+
             let next = false;
             let p: Shape | undefined = host;
             while (p) {
@@ -2077,17 +2081,20 @@ export class PageEditor {
                 }
                 p = p.parent;
             }
+
             if (next) {
                 continue;
             }
+
             pre.push(item);
         }
+
         if (!pre.length) {
             return false;
         }
 
-        const api = this.__repo.start('afterShapeListDrag', {});
         try {
+            const api = this.__repo.start('afterShapeListDrag', {});
             if (position === "inner") {
                 for (let i = 0, l = pre.length; i < l; i++) {
                     const item = pre[i];
@@ -2129,6 +2136,10 @@ export class PageEditor {
                     }
                 }
             } else {
+                if (position === 'lower') {
+                    pre = pre.reverse();
+                }
+
                 let previous_index: number = -1;
 
                 for (let i = 0, l = pre.length; i < l; i++) {
@@ -2153,23 +2164,24 @@ export class PageEditor {
                             continue;
                         }
                     }
+
                     const beforeXY = item.frame2Root();
 
                     let index = 0;
 
-                    if (previous_index > 0) {
-                        index = previous_index + 1;
+                    if (previous_index >= 0) {
+                        index = previous_index;
                     } else {
                         index = host_parent.indexOfChild(host);
-
-                        if (parent.id === host_parent.id) { // 同一父级
-                            index = modify_index((parent) as GroupShape, item, host, index);
-                        }
-
-                        if (position === "upper") {
-                            index++;
-                        }
                     }
+
+                    if (parent.id === host_parent.id) { // 同一父级
+                        index = modify_index((parent) as GroupShape, item, host, index);
+                    }
+
+                    if (position === "upper") {
+                        index++;
+                    }                    
 
                     api.shapeMove(this.__page, parent, parent.indexOfChild(item), host_parent, index);
 
