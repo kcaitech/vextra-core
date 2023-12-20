@@ -21,7 +21,7 @@ export class ImageShapeView extends ShapeView {
         const shape = this.m_data as ImageShape;
         const path = this.getPathStr();
         const frame = this.frame;
-        const id = "clippath-image-" + objectId(shape);
+        const id = "clippath-image-" + objectId(this);
         const cp = clippathR(elh, id, path);
         const url = shape.peekImage(true);
         const img = elh("image", {

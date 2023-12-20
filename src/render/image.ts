@@ -7,6 +7,7 @@ import {render as clippathR} from "./clippath"
 import {Matrix} from "../basic/matrix";
 import {innerShadowId, renderWithVars as shadowR} from "./shadow";
 
+let clip_id: number = 0;
 export function render(h: Function, shape: ImageShape, imgPH: string, transform: RenderTransform | undefined,
                        varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
                        reflush?: number) {
@@ -120,7 +121,7 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
     // const path0 = shape.getPathOfFrame(frame);
     const path = path0.toString();
 
-    const id = "clippath-image-" + objectId(shape);
+    const id = "clippath-image-" + (clip_id++);
     const cp = clippathR(h, id, path);
     const childs = [cp];
 
