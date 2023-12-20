@@ -1,6 +1,6 @@
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
-import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
+import { CurvePoint, GroupShape, ImageShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { Text } from "../data/text";
 import { ContactType, Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
@@ -160,7 +160,7 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
 
             afterModifyGroupShapeWH(api, page, c, scaleX, scaleY, boundingBox);
         }
-        else if (c instanceof PathShape) {
+        else if (c instanceof PathShape && !(c instanceof ImageShape)) {
             // 摆正并处理points
             const matrix = c.matrix2Parent();
             const cFrame = c.frame;
