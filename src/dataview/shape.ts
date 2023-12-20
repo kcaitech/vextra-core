@@ -374,7 +374,7 @@ export class ShapeView extends DataView {
 
         let notTrans = isNoTransform(transform);
 
-        // let nodes: Array<any>;
+        // case 1 不需要变形
         if (!transform || notTrans) {
             // update frame, hflip, vflip, rotate
             this.updateLayoutArgs(frame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
@@ -395,51 +395,52 @@ export class ShapeView extends DataView {
         const resizingConstraint = shape.resizingConstraint;
         const fixWidth = resizingConstraint && ResizingConstraints.hasWidth(resizingConstraint);
         const fixHeight = resizingConstraint && ResizingConstraints.hasHeight(resizingConstraint);
+        // case 2 没有旋转，或者形状规则，不会出现菱形变形
         if (!rotate || fixWidth || fixHeight) {
             const saveW = width;
             const saveH = height;
-            if (fixWidth || fixHeight) {
-                if (fixWidth && fixHeight) {
-                    // 不需要缩放，但要调整位置
-                    x *= scaleX;
-                    y *= scaleY;
-                    // 居中
-                    x += (width * (scaleX - 1)) / 2;
-                    y += (height * (scaleY - 1)) / 2;
-                } else if (rotate) {
-                    const m = new Matrix();
-                    m.rotate(rotate / 360 * 2 * Math.PI);
-                    m.scale(scaleX, scaleY);
-                    const _newscale = m.computeRef(1, 1);
-                    m.scale(1 / scaleX, 1 / scaleY);
-                    const newscale = m.inverseRef(_newscale.x, _newscale.y);
-                    x *= scaleX;
-                    y *= scaleY;
-
-                    if (fixWidth) {
-                        x += (width * (newscale.x - 1)) / 2;
-                        newscale.x = 1;
-                    } else {
-                        y += (height * (newscale.y - 1)) / 2;
-                        newscale.y = 1;
-                    }
-                    width *= newscale.x;
-                    height *= newscale.y;
-                } else {
-                    const newscaleX = fixWidth ? 1 : scaleX;
-                    const newscaleY = fixHeight ? 1 : scaleY;
-                    x *= scaleX;
-                    y *= scaleY;
-                    if (fixWidth) x += (width * (scaleX - 1)) / 2;
-                    if (fixHeight) y += (height * (scaleY - 1)) / 2;
-                    width *= newscaleX;
-                    height *= newscaleY;
-                }
-            } else {
+            if (!(fixWidth || fixHeight)) { // no fixSize and no rotate
+                // no rotate
                 x *= scaleX;
                 y *= scaleY;
                 width *= scaleX;
                 height *= scaleY;
+            }
+            else if (fixWidth && fixHeight) {
+                // 不需要缩放，但要调整位置
+                x *= scaleX;
+                y *= scaleY;
+                // 居中
+                x += (width * (scaleX - 1)) / 2;
+                y += (height * (scaleY - 1)) / 2;
+            } else if (rotate) { // fixWidth || fixHeight
+                const m = new Matrix();
+                m.rotate(rotate / 360 * 2 * Math.PI);
+                m.scale(scaleX, scaleY);
+                const _newscale = m.computeRef(1, 1);
+                m.scale(1 / scaleX, 1 / scaleY);
+                const newscale = m.inverseRef(_newscale.x, _newscale.y);
+                x *= scaleX;
+                y *= scaleY;
+
+                if (fixWidth) {
+                    x += (width * (newscale.x - 1)) / 2;
+                    newscale.x = 1;
+                } else {
+                    y += (height * (newscale.y - 1)) / 2;
+                    newscale.y = 1;
+                }
+                width *= newscale.x;
+                height *= newscale.y;
+            } else { // no rotate && (fixWidth || fixHeight)
+                const newscaleX = fixWidth ? 1 : scaleX;
+                const newscaleY = fixHeight ? 1 : scaleY;
+                x *= scaleX;
+                y *= scaleY;
+                if (fixWidth) x += (width * (scaleX - 1)) / 2;
+                if (fixHeight) y += (height * (scaleY - 1)) / 2;
+                width *= newscaleX;
+                height *= newscaleY;
             }
 
             const parentFrame = new ShapeFrame(x, y, width, height);
@@ -455,6 +456,7 @@ export class ShapeView extends DataView {
             return;
         }
 
+        // case 3 不支持菱形变形
         if (this.isNoSupportDiamondScale()) {
 
             const m = new Matrix();
@@ -476,6 +478,7 @@ export class ShapeView extends DataView {
             return;
         }
 
+        // case 4 菱形变形
         // cur frame
         frame = new ShapeFrame(x, y, width, height);
         // matrix2parent
