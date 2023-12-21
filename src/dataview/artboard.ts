@@ -44,11 +44,11 @@ export class ArtboradView extends GroupShapeView {
             props.opacity = contextSettings.opacity;
         }
 
-        const frame = shape.frame;
+        const frame = this.frame;
         props.width = frame.width;
         props.height = frame.height;
-        props.x = frame.x;
-        props.y = frame.y;
+        props.x = 0;
+        props.y = 0;
         props.viewBox = `0 0 ${frame.width} ${frame.height}`;
 
         return props;
@@ -72,30 +72,37 @@ export class ArtboradView extends GroupShapeView {
         // border
         const borders = this.renderBorders() || []; // ELArray
 
-        const props = this.renderProps();
+        const svgprops = this.renderProps();
 
         const filterId = this.m_data.id.slice(0, 4);
         const shadows = this.renderShadows(filterId);
 
-        if (shadows.length > 0) { // 阴影
-            const frame = this.frame;
-            const ex_props: any = {};
-            ex_props.opacity = props.opacity;
-            ex_props.transform = `translate(${frame.x},${frame.y})`;
+        const props: any = {};
+        props.opacity = svgprops.opacity;
+        delete svgprops.opacity;
 
-            // delete props.style;
-            // delete props.transform;
-            delete props.opacity;
-            props.x = '0';
-            props.y = '0';
+        const frame = this.frame;
+        if (!this.isNoTransform()) {
+            const cx = frame.x + frame.width / 2;
+            const cy = frame.y + frame.height / 2;
+            const style: any = {}
+            style.transform = "translate(" + cx + "px," + cy + "px) "
+            if (this.m_hflip) style.transform += "rotateY(180deg) "
+            if (this.m_vflip) style.transform += "rotateX(180deg) "
+            if (this.m_rotate) style.transform += "rotate(" + this.m_rotate + "deg) "
+            style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
+            props.style = style;
+        } else {
+            props.transform = `translate(${frame.x},${frame.y})`;
+        }
+
+        if (shadows.length > 0) { // 阴影
             const inner_url = innerShadowId(filterId, this.getShadows());
-            props.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
-            const body = elh("svg", props, [...fills, ...childs, ...borders]);
-            this.reset("g", ex_props, [...shadows, body])
+            svgprops.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
         }
-        else {
-            this.reset("svg", props, [...fills, ...childs, ...borders]);
-        }
+
+        const body = elh("svg", svgprops, [...fills, ...childs, ...borders]);
+        this.reset("g", props, [...shadows, body])
         return ++this.m_render_version;
     }
 }
