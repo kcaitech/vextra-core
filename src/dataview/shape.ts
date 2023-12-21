@@ -6,7 +6,7 @@ import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
-import { objectId } from "basic/objectid";
+import { objectId } from "../basic/objectid";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
