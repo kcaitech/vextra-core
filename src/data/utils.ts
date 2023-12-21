@@ -117,7 +117,9 @@ function remove_duplicate_point(points: PageXY[]) {
     const result: PageXY[] = [], cache: any = {};
     for (let i = 0, len = points.length; i < len; i++) {
         const { x, y } = points[i];
-        if (cache[`${x}_${y}`]) continue;
+        if (cache[`${x}_${y}`]) {
+            continue;
+        }
         result.push(points[i]);
         cache[`${x}_${y}`] = true;
     }
@@ -155,42 +157,63 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
     preparation_point.push(...XYsBoundingPoints([b_start_point, b_end_point, t3, t4])); // 伪起点和伪终点形成的矩形 和 终点元素包围框 组成一个大矩形 的四个顶点
 
     const t5 = get_intersection([start_point, b_start_point], [end_point, b_end_point]);
-    if (t5) preparation_point.push(t5);
-    if (!t5) {
+    if (t5) {
+        preparation_point.push(t5);
+    } else {
         const t7 = get_intersection([start_point, b_start_point], [b_end_point, { x: b_end_point.x + OFFSET, y: b_end_point.y }]);
-        if (t7) preparation_point.push(t7);
+        if (t7) {
+            preparation_point.push(t7);
+        }
 
         const t9 = get_intersection([start_point, b_start_point], [b_end_point, { x: b_end_point.x, y: b_end_point.y + OFFSET }]);
-        if (t9) preparation_point.push(t9);
+        if (t9) {
+            preparation_point.push(t9);
+        }
 
         const t11 = get_intersection([end_point, b_end_point], [b_start_point, { x: b_start_point.x + OFFSET, y: b_start_point.y }]);
-        if (t11) preparation_point.push(t11);
+        if (t11) {
+            preparation_point.push(t11);
+        }
 
         const t13 = get_intersection([end_point, b_end_point], [b_end_point, { x: b_start_point.x, y: b_start_point.y + OFFSET }]);
-        if (t13) preparation_point.push(t13);
+        if (t13) {
+            preparation_point.push(t13);
+        }
     }
 
     preparation_point = remove_duplicate_point(preparation_point);
+
     return { start_point, end_point, b_start_point, b_end_point, preparation_point, ff1, ff2 };
 }
 export function gen_raw(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Matrix, m2: Matrix) {
     const OFFSET = 20;
-    const p1 = shape1.parent, p2 = shape2.parent;
+    const p1 = shape1.parent;
+    const p2 = shape2.parent;
+
     if (!p1 || !p2) return false;
-    const p2r1 = p1.matrix2Root(), p2r2 = p2.matrix2Root();
-    const box1 = shape1.boundingBox(), box2 = shape2.boundingBox();
-    const s1xy1 = p2r1.computeCoord2(box1.x, box1.y), s2xy1 = p2r2.computeCoord2(box2.x, box2.y);
-    const s1xy2 = p2r1.computeCoord2(box1.x + box1.width, box1.y + box1.height), s2xy2 = p2r2.computeCoord2(box2.x + box2.width, box2.y + box2.height);
-    const s1w = s1xy2.x - s1xy1.x, s1h = s1xy2.y - s1xy1.y;
-    const s2w = s2xy2.x - s2xy1.x, s2h = s2xy2.y - s2xy1.y;
-    const ff1 = { x: s1xy1.x, y: s1xy1.y, width: s1w, height: s1h };
-    const ff2 = { x: s2xy1.x, y: s2xy1.y, width: s2w, height: s2h };
-    const start_point = get_pagexy(shape1, type1, m1), end_point = get_pagexy(shape2, type2, m2);
+
+    const p2r1 = p1.matrix2Root();
+    const p2r2 = p2.matrix2Root();
+
+    const box1 = shape1.boundingBox();
+    const box2 = shape2.boundingBox();
+
+    const s1xy1 = p2r1.computeCoord2(box1.x, box1.y);
+    const s2xy1 = p2r2.computeCoord2(box2.x, box2.y);
+
+    const s1xy2 = p2r1.computeCoord2(box1.x + box1.width, box1.y + box1.height);
+    const s2xy2 = p2r2.computeCoord2(box2.x + box2.width, box2.y + box2.height);
+
+    const start_point = get_pagexy(shape1, type1, m1);
+    const end_point = get_pagexy(shape2, type2, m2);
+
     if (!start_point || !end_point) return false;
     const preparation_point_green: PageXY[] = [];
     const b_start_point = get_nearest_border_point(shape1, type1, m1, s1xy1, s1xy2);
     const b_end_point = get_nearest_border_point(shape2, type2, m2, s2xy1, s2xy2);
+
     if (!b_start_point || !b_end_point) return false;
+
     preparation_point_green.push(b_start_point, b_end_point); // 获取伪起点和伪终点,并将它们添加到数组里
 
     const preparation_point_yellow: PageXY[] = [];
@@ -488,22 +511,35 @@ class AStar {
 }
 export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2: ContactType, m1: Matrix, m2: Matrix, m3: Matrix) {
     const params = gen_baisc_params(shape1, type1, shape2, type2, m1, m2);
-    if (!params) return false;
+
+    if (!params) {
+        return;
+    }
+
     let { start_point, end_point, b_start_point, b_end_point, preparation_point, ff1, ff2 } = params;
+
     const aStar = new AStar(ff1, ff2, b_start_point, b_end_point, preparation_point);
+
     let path = aStar.run();
+
     if (!path.length) { // 第二次寻找
         preparation_point = [start_point, ...preparation_point, end_point];
         const aStar2 = new AStar(ff1, ff2, start_point, end_point, preparation_point);
         path = aStar2.run_easy()
     }
-    if (!path.length) return false;
+
+    if (!path.length) {
+        return;
+    }
+
     path = [start_point, ...path, end_point];
+
     const points: CurvePoint[] = [];
     for (let i = 0, len = path.length; i < len; i++) {
         const p = m3.computeCoord3(path[i]);
         points.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
     }
+
     return points;
 }
 /**
@@ -515,14 +551,14 @@ export function slice_invalid_point(points: CurvePoint[]) {
     for (let i = 1, len = points.length - 1; i < len; i++) {
         const p1y = points[i - 1].y;
         const p3y = points[i + 1].y;
-        if (Math.abs(p3y - p1y) > 0.00001) result_x.push(points[i]);
+        if (Math.abs(p3y - p1y) > 0.0001) result_x.push(points[i]);
     }
     result_x.push(points[points.length - 1]); // 再处理垂直方向上的无效点
     let result_y = [result_x[0]];
     for (let i = 1, len = result_x.length - 1; i < len; i++) {
         let p1x = result_x[i - 1].x;
         let p3x = result_x[i + 1].x;
-        if (Math.abs(p3x - p1x) > 0.00001) result_y.push(result_x[i]);
+        if (Math.abs(p3x - p1x) > 0.0001) result_y.push(result_x[i]);
     }
     result_y.push(result_x[result_x.length - 1]);
     return result_y;
@@ -531,8 +567,8 @@ export function slice_invalid_point(points: CurvePoint[]) {
  * @description 给两点确定两点是否同一水平或同一垂线上
  */
 export function d(a: PageXY, b: XY): 'ver' | 'hor' | false {
-    if (Math.abs(a.x - b.x) < 0.00001) return 'ver';
-    if (Math.abs(a.y - b.y) < 0.00001) return 'hor';
+    if (Math.abs(a.x - b.x) < 0.0001) return 'ver';
+    if (Math.abs(a.y - b.y) < 0.0001) return 'hor';
     return false;
 }
 export function update_contact_points(api: Api, shape: ContactShape, page: Page) {
@@ -591,6 +627,198 @@ export function copyShape(source: types.Shape) {
         return importContactShape(source as types.ContactShape)
     }
     throw new Error("unknow shape type: " + source.typeId)
+}
+
+export function handle_contact_from(page: Page, shape: ContactShape, points: CurvePoint[], self_matrix: Matrix) {
+    if (!shape.from) {
+        return;
+    }
+
+    const fromShape = page.getShape(shape.from.shapeId);
+
+    if (!fromShape) {
+        return;
+    }
+
+    const type1 = shape.from.contactType;
+
+    const from_matrix = fromShape.matrix2Root();
+
+    let p = shape.get_pagexy(fromShape, type1, from_matrix);
+
+    if (!p) {
+        return;
+    }
+
+    p = self_matrix.computeCoord3(p);
+
+    const start_point = p;
+
+    points[0] = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
+
+    let border_p = shape.get_nearest_border_point(fromShape, type1);
+
+    if (!border_p) {
+        return;
+    }
+
+    border_p = self_matrix.computeCoord3(border_p);
+
+    points.splice(1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
+
+    const s1 = border_p;
+
+    return { page, fromShape, type1, self_matrix, from_matrix, start_point, s1 };
+}
+
+export function handle_contact_to(page: Page, shape: ContactShape, points: CurvePoint[], self_matrix: Matrix) {
+    if (!shape.to) {
+        return;
+    }
+
+    const toShape = page.getShape(shape.to.shapeId);
+
+    if (!toShape) {
+        return;
+    }
+
+    const type2 = shape.to.contactType;
+
+    const to_matrix = toShape.matrix2Root();
+
+    let p = shape.get_pagexy(toShape, type2, to_matrix);
+
+    if (!p) {
+        return;
+    }
+
+    p = self_matrix.computeCoord3(p);
+    const end_point = p;
+    points[points.length - 1] = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
+
+    let border_p = shape.get_nearest_border_point(toShape, type2);
+
+    if (!border_p) {
+        return;
+    }
+
+    border_p = self_matrix.computeCoord3(border_p);
+    points.splice(points.length - 1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
+
+    const s2 = border_p;
+
+    return { page, toShape, type2, self_matrix, to_matrix, end_point, s2 }
+}
+
+export function path_for_edited(points: CurvePoint[], start_point: PageXY, end_point: PageXY, s1: PageXY | undefined, s2: PageXY | undefined) {
+    const result: CurvePoint[] = [...points];
+    if (s1) { // 编辑过后，不需要外围点再做为活点
+        result.splice(1, 1);
+    }
+
+    if (s2) {
+        result.splice(result.length - 2, 1);
+    }
+
+    { // 在第一个点后面再寻找一个新的活点
+        const flex_point1 = start_point;
+        const flex_point2 = result[1] ? { x: result[1].x, y: result[1].y } : undefined;
+        if (flex_point1 && flex_point2) {
+            const _d = d(flex_point1, s1 as PageXY);
+            let p: undefined | CurvePoint;
+
+            if (_d === 'hor') {
+                p = new CurvePoint(v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
+            } else if (_d === 'ver') {
+                p = new CurvePoint(v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
+            }
+            if (p) {
+                result.splice(1, 1, p);
+            }
+        }
+    }
+
+    {
+        const len = result.length;
+        const flex_point1 = end_point;
+        const flex_point2 = result[len - 2] ? { x: result[len - 2].x, y: result[len - 2].y } : undefined;
+        if (flex_point1 && flex_point2) {
+            const _d = d(flex_point1, s2 as PageXY);
+
+            if (_d === 'hor') {
+                const p = new CurvePoint(v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
+                result.splice(len - 2, 1, p);
+            } else if (_d === 'ver') {
+                const p = new CurvePoint(v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
+                result.splice(len - 2, 1, p);
+            }
+        }
+    }
+    return slice_invalid_point(result); // 最后削减无效点
+}
+
+function get_direction_for_free_contact(start: CurvePoint, end: CurvePoint) {
+    const dx = Math.abs(end.x - start.x);
+    const dy = Math.abs(end.y - start.y);
+
+    return dx > dy ? 'horizontal' : 'vertical';
+}
+const __handle: { [key: string]: (points: CurvePoint[], start: CurvePoint, end: CurvePoint) => CurvePoint[] } = {};
+__handle['horizontal'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint) {
+    const mid = (end.x + start.x) / 2;
+
+    const _p1 = new CurvePoint(v4(), mid, start.y, CurveMode.Straight);
+    const _p2 = new CurvePoint(v4(), mid, end.y, CurveMode.Straight);
+
+    points.splice(1, 0, _p1, _p2);
+
+    return points;
+}
+__handle['vertical'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint) {
+    const mid = (end.y + start.y) / 2;
+
+    const _p1 = new CurvePoint(v4(), start.x, mid, CurveMode.Straight);
+    const _p2 = new CurvePoint(v4(), end.x, mid, CurveMode.Straight);
+
+    points.splice(1, 0, _p1, _p2);
+
+    return points;
+}
+export function path_for_free_contact(points: CurvePoint[]) {
+    const start = points[0];
+    const end = points[1];
+
+    if (!start || !end) {
+        return;
+    }
+
+    const direction = get_direction_for_free_contact(start, end);
+
+    __handle[direction](points, start, end);
+}
+export function path_for_free_end_contact(points: CurvePoint[], start: PageXY | undefined) {
+    if (!start) {
+        const _s = points[0];
+        start = { x: _s.x, y: _s.y };
+    }
+    const end = points.pop();
+
+    if (!end) {
+        return;
+    }
+
+    points.push(new CurvePoint(v4(), end.x, start.y, CurveMode.Straight), end);
+}
+export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | undefined) {
+    if (!end) {
+        return path_for_free_contact(points);
+    }
+    const start = points[0];
+    const _end = new CurvePoint(v4(), end.x, end.y, CurveMode.Straight);
+
+    const direction = get_direction_for_free_contact(start, _end);
+
+    __handle[direction](points, start, _end);
 }
 
 function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], i: number | undefined = undefined) {
