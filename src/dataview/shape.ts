@@ -6,6 +6,7 @@ import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
+import { objectId } from "basic/objectid";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -627,7 +628,7 @@ export class ShapeView extends DataView {
 
         const props = this.renderProps();
 
-        const filterId = this.m_data.id.slice(0, 4);
+        const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
 
         if (shadows.length > 0) { // 阴影

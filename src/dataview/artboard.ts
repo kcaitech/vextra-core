@@ -1,6 +1,7 @@
 import { elh } from "./el";
 import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderFills } from "../render";
+import { objectId } from "basic/objectid";
 
 export class ArtboradView extends GroupShapeView {
 
@@ -74,7 +75,7 @@ export class ArtboradView extends GroupShapeView {
 
         const svgprops = this.renderProps();
 
-        const filterId = this.m_data.id.slice(0, 4);
+        const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
 
         const props: any = {};
