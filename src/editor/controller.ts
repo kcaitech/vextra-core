@@ -36,7 +36,7 @@ import { exportCurvePoint } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name } from "./utils/symbol";
-import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, update_frame_by_points2 } from "./utils/path";
+import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, update_frame_by_points2, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
 
 interface PageXY { // 页面坐标系的xy
@@ -145,6 +145,7 @@ export interface AsyncContactEditor {
     pre: () => void;
     modify_contact_from: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
     modify_contact_to: (m_target: PageXY, clear_target?: { apex: ContactForm, p: PageXY }) => void;
+    before: (index: number) => void;
     modify_sides: (index: number, dx: number, dy: number) => void;
     migrate: (targetParent: GroupShape) => void;
     close: () => undefined;
@@ -817,19 +818,27 @@ export class Controller {
         let status: Status = Status.Pending;
         const pre = () => {
             try {
+                status = Status.Pending
                 const len = shape.points.length;
+
                 api.deletePoints(page, shape as PathShape, 0, len);
+
                 api.contactModifyEditState(page, shape, false);
 
                 const p = shape.getPoints();
-                if (p.length === 0) throw new Error();
+                if (p.length === 0) {
+                    throw new Error('none point');
+                }
+
                 const points = [p[0], p.pop()!];
                 for (let i = 0, len = points.length; i < len; i++) {
                     const p = importCurvePoint(exportCurvePoint(points[i]));
                     p.id = v4();
                     points[i] = p;
                 }
-                api.addPoints(page, shape as PathShape, points);
+
+                api.addPoints(page, shape, points);
+                status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
                 status = Status.Exception;
@@ -893,8 +902,16 @@ export class Controller {
                 status = Status.Exception;
             }
         }
+        const before = (index: number) => {
+            try {
+                status === Status.Pending;
+                before_modify_side(api, page, shape, index);
+                status === Status.Fulfilled;
+            } catch (error) {
+                console.log(error);
+            }
+        }
         const modify_sides = (index: number, dx: number, dy: number) => {
-            if (shape.type !== ShapeType.Contact) return;
             try {
                 status = Status.Pending;
                 contact_edit(api, page, shape, index, index + 1, dx, dy);
@@ -906,14 +923,14 @@ export class Controller {
             }
         }
         const close = () => {
-            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+            if (status === Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
             } else {
                 this.__repo.rollback();
             }
             return undefined;
         }
-        return { pre, modify_contact_from, modify_contact_to, modify_sides, migrate, close }
+        return { pre, modify_contact_from, modify_contact_to, before, modify_sides, migrate, close }
     }
 
     public asyncOpacityEditor(shapes: Shape[], page: Page): AsyncOpacityEditor {
