@@ -132,6 +132,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         let start_point: PageXY | undefined = undefined; // 首尾点(活点)
         let end_point: PageXY | undefined = undefined;
 
+
         if (this.to || this.from) {
             self_matrix = gen_matrix1(this);
             page = this.getPage() as Page;
