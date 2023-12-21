@@ -112,17 +112,33 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
 
     if (index === 0) { // 如果编辑的线为第一根线；
         const from = shape.from;
-        if (!from) return result;
+        if (!from) {
+            const p = result[0];
+            result.splice(1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            return result;
+        }
 
         const fromShape = page.getShape((from as ContactForm).shapeId);
-        if (!fromShape) return result;
+        if (!fromShape) {
+            const p = result[0];
+            result.splice(1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            return result;
+        }
 
         const xy_result = get_box_pagexy(fromShape);
-        if (!xy_result) return result;
+        if (!xy_result) {
+            const p = result[0];
+            result.splice(1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            return result;
+        }
 
         const { xy1, xy2 } = xy_result;
         let p = get_nearest_border_point(fromShape, from.contactType, fromShape.matrix2Root(), xy1, xy2);
-        if (!p) return result
+        if (!p) {
+            const p = result[0];
+            result.splice(1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            return result
+        }
 
         const m1 = shape.matrix2Root();
         const f = shape.frame;
@@ -137,14 +153,33 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
     if (index === len - 2) { // 编辑的线为最后一根线；
         len = result.length; // 更新一下长度，因为部分场景下，编辑的线会同时为第一根线和最后一根线，若是第一根线的话，原数据已经更改，需要在下次更改数据前并判定为最后一根线后去更新result长度。
         const to = shape.to;
-        if (!to) return result;
+        if (!to) {
+            const p = points[points.length - 1];
+            result.splice(len - 1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            return result;
+        }
+
         const toShape = page.getShape((to as ContactForm).shapeId);
-        if (!toShape) return result;
+        if (!toShape) {
+            const p = points[points.length - 1];
+            result.splice(len - 1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            return result;
+        }
+
         const xy_result = get_box_pagexy(toShape);
-        if (!xy_result) return result;
+        if (!xy_result) {
+            const p = points[points.length - 1];
+            result.splice(len - 1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            return result;
+        }
+
         const { xy1, xy2 } = xy_result;
         let p = get_nearest_border_point(toShape, to.contactType, toShape.matrix2Root(), xy1, xy2);
-        if (!p) return result
+        if (!p) {
+            const p = points[points.length - 1];
+            result.splice(len - 1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            return result;
+        }
 
         const m1 = shape.matrix2Root();
         const f = shape.frame;
@@ -167,7 +202,6 @@ export function before_modify_side(api: Api, page: Page, shape: ContactShape, in
 
     api.contactModifyEditState(page, shape, true);
 }
-
 export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
     const nf = s.boundingBox2();
     const w = s.frame.width, h = s.frame.height;

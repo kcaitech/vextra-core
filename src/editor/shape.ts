@@ -1479,16 +1479,22 @@ export class ShapeEditor {
         const shape = this.__shape;
         this._repoWrap("reset_contact_path", (api) => {
             api.contactModifyEditState(this.__page, shape, false);
+
             const points = get_points_for_init(this.__page, shape, 1, shape.getPoints());
+
             const len = shape.points.length;
+
             api.deletePoints(this.__page, shape, 0, len);
+
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = importCurvePoint(exportCurvePoint(points[i]));
                 p.id = v4();
                 points[i] = p;
             }
+
             api.addPoints(this.__page, shape, points);
             update_frame_by_points(api, this.__page, shape);
+            console.log('reset path');
         });
     }
 
