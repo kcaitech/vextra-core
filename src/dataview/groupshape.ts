@@ -206,6 +206,10 @@ export class GroupShapeView extends ShapeView {
             this.m_ctx.setDirty(this);
             // }
         }
+        this.onChildChange(...args);
+    }
+
+    protected onChildChange(...args: any[]) {
     }
 
     onDestory(): void {
