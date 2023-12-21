@@ -819,25 +819,25 @@ export class Controller {
         const pre = () => {
             try {
                 status = Status.Pending
-                const len = shape.points.length;
-
-                api.deletePoints(page, shape as PathShape, 0, len);
-
-                api.contactModifyEditState(page, shape, false);
-
                 const p = shape.getPoints();
                 if (p.length === 0) {
                     throw new Error('none point');
                 }
 
-                const points = [p[0], p.pop()!];
+                const points = [p[0], p[p.length - 1]];
                 for (let i = 0, len = points.length; i < len; i++) {
                     const p = importCurvePoint(exportCurvePoint(points[i]));
                     p.id = v4();
                     points[i] = p;
                 }
 
+                const len = shape.points.length;
+                api.deletePoints(page, shape as PathShape, 0, len);
+
+                api.contactModifyEditState(page, shape, false);
+
                 api.addPoints(page, shape, points);
+                
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
