@@ -711,20 +711,27 @@ export function handle_contact_to(page: Page, shape: ContactShape, points: Curve
 
 export function path_for_edited(points: CurvePoint[], start_point: PageXY, end_point: PageXY, s1: PageXY | undefined, s2: PageXY | undefined) {
     const result: CurvePoint[] = [...points];
-    if (s1) { // 编辑过后，不需要外围点再做为活点
+
+    // 编辑过后，不需要外围点再做为活点
+    if (s1) {
         result.splice(1, 1);
+    } else {
+        s1 = result[1];
     }
 
     if (s2) {
         result.splice(result.length - 2, 1);
+    } else {
+        s2 = result[result.length - 2];
     }
 
     { // 在第一个点后面再寻找一个新的活点
         const flex_point1 = start_point;
         const flex_point2 = result[1] ? { x: result[1].x, y: result[1].y } : undefined;
         if (flex_point1 && flex_point2) {
-            const _d = d(flex_point1, s1 as PageXY);
             let p: undefined | CurvePoint;
+
+            const _d = d(flex_point1, s1 as PageXY);
 
             if (_d === 'hor') {
                 p = new CurvePoint(v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
