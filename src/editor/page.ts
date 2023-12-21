@@ -1034,7 +1034,7 @@ export class PageEditor {
             let index = parent.childs.length;
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
-                shape.id = uuid();
+                // shape.id = uuid();
                 api.shapeInsert(this.__page, parent, shape, index);
                 result.push(parent.childs[index]);
                 index++;
@@ -1062,7 +1062,7 @@ export class PageEditor {
             for (let i = 0, len = actions.length; i < len; i++) {
                 const shape = shapes[i];
                 const { parent, index } = actions[i];
-                shape.id = uuid();
+                // shape.id = uuid();
                 api.shapeInsert(this.__page, parent, shape, index);
                 result.push(parent.childs[index]);
             }
