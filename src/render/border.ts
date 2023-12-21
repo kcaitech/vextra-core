@@ -73,6 +73,8 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
         h("mask", {
             id: maskId,
             maskContentUnits: "userSpaceOnUse",
+            x,
+            y,
             width,
             height
         }, [
@@ -110,11 +112,13 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
     return h("g", [
         h("mask", {
             id: mask2Id,
+            x, y,
             width,
             height
         }, [
             h("mask", {
                 id: mask1Id,
+                x: -thickness, y: -thickness,
                 width,
                 height
             }, [
@@ -249,7 +253,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
     }
     const mask = h(
         "mask",
-        { id: maskId },
+        { id: maskId, x: -thickness, y: -thickness, width, height },
         [
             h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
             h("path", { d: path, fill: "black" })
