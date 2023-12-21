@@ -3,11 +3,8 @@
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
 import { Border, Gradient, BorderPosition, FillType, GradientType, ShapeFrame, Shape, SymbolRefShape, SymbolShape, Variable, OverrideType, VariableType } from "../data/classes";
-import { findOverrideAndVar } from "./basic";
+import { findOverrideAndVar, randomId } from "./basic";
 
-function randomId() {
-    return Math.floor((Math.random() * 10000) + 1);
-}
 
 const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
 const angularHandler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};

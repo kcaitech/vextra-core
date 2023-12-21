@@ -248,3 +248,7 @@ export function transformPoints(points: CurvePoint[], matrix: Matrix) {
     }
     return ret;
 }
+
+export function randomId() {
+    return Math.floor((Math.random() * 10000) + 1);
+}

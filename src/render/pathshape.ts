@@ -1,7 +1,7 @@
 import { Path, PathShape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 import { renderWithVars as fillR } from "./fill";
 import { renderWithVars as borderR } from "./border"
-import { RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent, transformPoints } from "./basic";
+import { RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent, randomId, transformPoints } from "./basic";
 import { parsePath } from "../data/pathparser";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
@@ -187,7 +187,7 @@ export function render(h: Function, shape: PathShape, transform: RenderTransform
         return h('path', props);
     } else {
         const shadows = shape.style.shadows;
-        const shape_id = shape.id.slice(0, 4);
+        const shape_id = shape.id.slice(0, 4) + randomId();
         const shadow = shadowR(h, shape_id, shape, path, varsContainer);
         if (shadow.length) {
             const ex_props = Object.assign({}, props);

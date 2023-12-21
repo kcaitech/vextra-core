@@ -1,7 +1,7 @@
 import { SymbolShape, ShapeType, SymbolUnionShape } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
-import { isVisible } from "./basic";
+import { isVisible, randomId } from "./basic";
 import { renderGroupChilds2 } from "./group";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 function renderSym(h: Function,
@@ -53,7 +53,7 @@ export function render(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, 
     }
     const shadows = shape.style.shadows;
     const ex_props = Object.assign({}, props);
-    const shape_id = shape.id.slice(0, 4);
+    const shape_id = shape.id.slice(0, 4) + randomId();
     const shadow = shadowR(h, shape_id, shape, path);
     if (shadow.length) {
         delete props.style;

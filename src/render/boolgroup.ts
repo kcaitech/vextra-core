@@ -4,7 +4,7 @@ import { renderWithVars as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
-import { RenderTransform, isVisible } from "./basic";
+import { RenderTransform, isVisible, randomId } from "./basic";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 
 // find first usable style
@@ -240,7 +240,7 @@ export function render(h: Function, shape: GroupShape, transform: RenderTransfor
     else {
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
-        const shape_id = shape.id.slice(0, 4);
+        const shape_id = shape.id.slice(0, 4) + randomId();
         const shadow = shadowR(h, shape_id, shape, pathstr, varsContainer);
         if (shadow.length) {
             delete props.style;

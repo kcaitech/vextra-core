@@ -1,7 +1,7 @@
 import {GroupShape, Path, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape} from "../data/classes";
 import {renderWithVars as fillR} from "./fill";
 import {renderWithVars as borderR} from "./border";
-import {RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent} from "./basic";
+import {RenderTransform, boundingBox, fixFrameByConstrain, isNoTransform, isVisible, matrix2parent, randomId} from "./basic";
 import {Matrix} from "../basic/matrix";
 import {ResizingConstraints} from "../data/consts";
 import {innerShadowId, renderWithVars as shadowR} from "./shadow";
@@ -248,7 +248,7 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
         props.style = style;
     }
     const shadows = shape.style.shadows;
-    const shape_id = shape.id.slice(0, 4);
+    const shape_id = shape.id.slice(0, 4) + randomId();
     const shadow = shadowR(h, shape_id, shape, path, varsContainer);
     if (shadow.length) {
         const ex_props = Object.assign({}, props);
