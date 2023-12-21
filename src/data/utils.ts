@@ -125,7 +125,6 @@ function remove_duplicate_point(points: PageXY[]) {
     }
     return result;
 }
-
 /**
  * @description 生成寻路计算的必要参数，其中确定点位(绘制寻路地图)是关键😫
  */
