@@ -99,15 +99,8 @@ function match_for_contact(source: Shape[]) {
 
     const all = new Map<string, Shape>();
     const contacts: types.ContactShape[] = [];
-    for (let i = 0, l = source.length; i < l; i++) {
-        const s = source[i];
 
-        all.set(s.id, s);
-
-        if (s.type === ShapeType.Contact) {
-            contacts.push(s as unknown as types.ContactShape);
-        }
-    }
+    finder(source);
 
     if (!contacts.length) {
         return already_change;
@@ -163,6 +156,23 @@ function match_for_contact(source: Shape[]) {
     }
 
     return already_change;
+
+    function finder(shapes: Shape[]) {
+        for (let i = 0, l = shapes.length; i < l; i++) {
+            const s = shapes[i];
+
+            all.set(s.id, s);
+
+            if (s.type === ShapeType.Contact) {
+                contacts.push(s as unknown as types.ContactShape);
+            }
+
+            if (s.type === ShapeType.Group || s.type === ShapeType.Artboard) {
+                const __shapes = (s as GroupShape).childs;
+                finder(__shapes);
+            }
+        }
+    }
 }
 
 // 从剪切板导入图形
