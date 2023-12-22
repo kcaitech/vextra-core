@@ -802,7 +802,7 @@ export function path_for_free_contact(points: CurvePoint[]) {
 
     __handle[direction](points, start, end);
 }
-export function path_for_free_end_contact(points: CurvePoint[], start: PageXY | undefined) {
+export function path_for_free_end_contact(shape: ContactShape,points: CurvePoint[], start: PageXY | undefined) {
     if (!start) {
         const _s = points[0];
         start = { x: _s.x, y: _s.y };
@@ -813,7 +813,11 @@ export function path_for_free_end_contact(points: CurvePoint[], start: PageXY | 
         return;
     }
 
-    points.push(new CurvePoint(v4(), end.x, start.y, CurveMode.Straight), end);
+    if (Math.abs(start.y - end.y) * shape.frame.height < 5) {
+        points.push(new CurvePoint(v4(), end.x, start.y, CurveMode.Straight));
+    } else {
+        points.push(new CurvePoint(v4(), end.x, start.y, CurveMode.Straight), end);
+    }
 }
 export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | undefined) {
     if (!end) {

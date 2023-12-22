@@ -193,7 +193,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         }
 
         if (fromShape && !toShape) {
-            path_for_free_end_contact(points, s1);
+            path_for_free_end_contact(this, points, s1);
         }
 
         if (!fromShape && toShape) {
@@ -222,7 +222,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         this.__pathCache = new Path(path);
         return this.__pathCache;
     }
-    
+
     private __page: Shape | undefined;
     page() {
         if (!this.__page) {
