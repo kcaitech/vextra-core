@@ -6,24 +6,17 @@ import { DViewCtx, PropsType } from "./viewctx";
 
 export class ContactLineView extends ShapeView {
 
-    // private stop1: any;
-    // private stop2: any;
     private from: undefined | Shape;
     private to: undefined | Shape;
     private fromparents: Shape[] = [];
     private toparents: Shape[] = [];
+    private page: Page | undefined = undefined;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         this.wathcer_sides = this.wathcer_sides.bind(this);
 
         this.updateApex();
-        // if (this.from) {
-        //     this.stop1 = this.from.watch(this.wathcer_sides);
-        // }
-        // if (this.to) {
-        //     this.stop2 = this.to.watch(this.wathcer_sides);
-        // }
     }
 
     private wathcer_sides(t: any) {
@@ -52,61 +45,104 @@ export class ContactLineView extends ShapeView {
         }
     }
 
-    private updateApex() {
-        const self: ContactShape = this.m_data as ContactShape;
-        const page = self.getPage() as Page;
-        if (self.from) {
-            const nf = page.getShape((self.from as ContactForm).shapeId);
-            if (nf) {
-                if (this.from && this.from.id === nf.id) {
-                    // do nothing
-                }
-                else if (this.from) {
-                    this.unwatchApex(this.from, this.fromparents);
-                    this.from = nf;
-                    this.watchApex(this.from, this.fromparents);
-                }
-                else {
-                    this.from = nf;
-                    this.watchApex(this.from, this.fromparents);
-                }
-            }
-            else if (this.from) {
-                this.unwatchApex(this.from, this.fromparents);
-                this.from = undefined;
-            }
-        } else {
+    private getPage() {
+        if (!this.page) {
+            this.page = this.m_data.getPage() as Page;
+        }
+        return this.page;
+    }
+
+    private modify_from_side_watch(f: ContactForm | undefined) {
+        if (!f) {
             if (this.from) {
                 this.unwatchApex(this.from, this.fromparents);
                 this.from = undefined;
             }
+            return;
         }
-        if (self.to) {
-            const nt = page.getShape((self.to as ContactForm).shapeId);
-            if (nt) {
-                if (this.to && this.to.id === nt.id) {
-                    // do nothing
-                }
-                else if (this.to) {
-                    this.unwatchApex(this.to, this.toparents);
-                    this.to = nt;
-                    this.watchApex(this.to, this.toparents);
-                }
-                else {
-                    this.to = nt;
-                    this.watchApex(this.to, this.toparents);
-                }
+
+        const page = this.getPage();
+
+        const nf = page.getShape(f.shapeId);
+
+        if (nf) {
+            if (this.from && this.from.id === nf.id) {
+                // do nothing
             }
-            else if (this.to) {
-                this.unwatchApex(this.to, this.toparents);
-                this.to = undefined;
+            else if (this.from) {
+                this.unwatchApex(this.from, this.fromparents);
+
+                this.from = nf;
+
+                this.watchApex(this.from, this.fromparents);
             }
-        } else {
+            else {
+                this.from = nf;
+                this.watchApex(this.from, this.fromparents);
+            }
+
+            return;
+        }
+
+        if (this.from) {
+            this.unwatchApex(this.from, this.fromparents);
+            this.from = undefined;
+        }
+    }
+
+    private modify_to_side_watch(t: ContactForm | undefined) {
+        if (!t) {
             if (this.to) {
                 this.unwatchApex(this.to, this.toparents);
                 this.to = undefined;
             }
+
+            return;
         }
+
+        const page = this.getPage();
+
+        const nt = page.getShape(t.shapeId);
+
+        if (nt) {
+            if (this.to && this.to.id === nt.id) {
+                // do nothing
+            }
+            else if (this.to) {
+                this.unwatchApex(this.to, this.toparents);
+
+                this.to = nt;
+
+                this.watchApex(this.to, this.toparents);
+            }
+            else {
+                this.to = nt;
+                this.watchApex(this.to, this.toparents);
+            }
+
+            return;
+        }
+
+        if (this.to) {
+            this.unwatchApex(this.to, this.toparents);
+            this.to = undefined;
+        }
+    }
+    onDataChange(...args: any[]): void {
+        super.onDataChange(...args);
+
+        if (args.includes('points') || args.includes('shape-frame')) {
+            return;
+        }
+
+        this.updateApex();
+    }
+
+    private updateApex() {
+        const self: ContactShape = this.m_data as ContactShape;
+
+        this.modify_from_side_watch(self.from);
+        this.modify_to_side_watch(self.to)
     }
 
     onDestory(): void {

@@ -3,15 +3,14 @@ import { Text } from "./text";
 import * as classes from "./baseclasses"
 import { BasicArray } from "./basic";
 export { CurveMode, ShapeType, BoolOp, ExportOptions, ResizeType, ExportFormat, Point2D, CurvePoint, ShapeFrame, Ellipse, PathSegment } from "./baseclasses"
-import { ShapeType, CurvePoint, ShapeFrame, Point2D } from "./baseclasses"
+import { ShapeType, CurvePoint, ShapeFrame } from "./baseclasses"
 import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
-import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { ContactForm, ContactType, CurveMode } from "./baseclasses";
-import { v4 } from "uuid";
-import { d, gen_baisc_params, gen_matrix1, gen_path, gen_raw, slice_invalid_point } from "./utils";
+import { ContactForm, ContactType } from "./baseclasses";
+import { gen_matrix1, gen_path, handle_contact_from, handle_contact_to, path_for_edited, path_for_free_contact, path_for_free_end_contact, path_for_free_start_contact, slice_invalid_point } from "./utils";
 import { PathShape, Shape } from "./shape";
+import { Page } from "./page";
 interface PageXY {
     x: number
     y: number
@@ -51,7 +50,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     /**
      * @description 根据连接类型，在图形身上找一个点。该点的坐标系为页面坐标系
      */
-    private get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
+    get_pagexy(shape: Shape, type: ContactType, m2r: Matrix) {
         const f = shape.frame;
         switch (type) {
             case ContactType.Top: return m2r.computeCoord2(f.width / 2, 0);
@@ -61,10 +60,11 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             default: return false
         }
     }
+
     /**
      * @description 根据连接类型，在外围寻找一个最合适的点。该点的坐标系为页面坐标系
      */
-    private get_nearest_border_point(shape: Shape, contactType: ContactType) { // 寻找距离外围最近的一个点
+    get_nearest_border_point(shape: Shape, contactType: ContactType) { // 寻找距离外围最近的一个点
         const f = shape.frame, m2r = shape.matrix2Root();
         const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
         const t = m2r.computeCoord2(0, 0);
@@ -107,382 +107,111 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             return op;
         }
     }
+
     /**
-     * @description 红点 —— points经过头尾加工、处理外围点、削减无效点，最后在页面上渲染的点
+     * @description points经过头尾加工、处理外围点、削减无效点，最后在页面上渲染的点
      */
     getPoints(): CurvePoint[] {
         const points = [...this.points];
-        let page: any;
-        let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false; // 外围点：s1出发图形的外围点，s2目的图形的外围点
-        let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：连接线自身的坐标系，单位为宽高比例系数(0-1)
-        let fromShape: undefined | Shape, toShape: undefined | Shape; // 出发图形、目的图形
-        let type1: ContactType, type2: ContactType; // 首尾连接类型
-        let start_point: PageXY, end_point: PageXY; // 首尾点(活点)
 
-        if (this.from) {
-            page = this.getPage();
-            if (page) {
-                fromShape = page.getShape((this.from as ContactForm).shapeId);
-                if (fromShape) {
-                    type1 = (this.from as ContactForm).contactType;
-                    self_matrix = gen_matrix1(this);
-                    from_matrix = fromShape.matrix2Root();
-                    let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix); // 获取开始点p
-                    if (p) {
-                        p = self_matrix.computeCoord3(p);
-                        start_point = p;
-                        const fp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-                        points[0] = fp; // points的第一个点替换为开始点p
-                    }
-                    let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType); // 获取第一个外围点
-                    if (border_p) {
-                        border_p = self_matrix.computeCoord3(border_p); // 在没有编辑的状态下，外围点需要作为一个活点加入到渲染点中。
-                        points.splice(1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
-                        s1 = border_p;
-                    }
-                }
-            }
-        }
-        if (this.to) {
-            if (!page) page = this.getPage();
-            if (page) {
-                toShape = page.getShape((this.to as ContactForm).shapeId);
-                if (toShape) {
-                    type2 = (this.to as ContactForm).contactType;
-                    if (!self_matrix) self_matrix = gen_matrix1(this);
-                    to_matrix = toShape.matrix2Root();
-                    let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix); // 获取终点p
-                    if (p) {
-                        p = self_matrix.computeCoord3(p);
-                        end_point = p;
-                        const lp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-                        points[points.length - 1] = lp; // points的最后一个点替换为终点p
-                    }
-                    let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType); // 获取第二个外围点
-                    if (border_p) {
-                        border_p = self_matrix.computeCoord3(border_p);
-                        points.splice(points.length - 1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
-                        s2 = border_p;
-                    }
-                }
-            }
-        }
-        // 连接线被用户编辑过
-        if (this.isEdited) {
-            const result: CurvePoint[] = [...points];
-            if (s1) result.splice(1, 1); // 编辑过后，不需要外围点再做为活点
-            if (s2) result.splice(result.length - 2, 1);
-            { // 在第一个点后面再寻找一个新的活点
-                const flex_point1 = start_point!;
-                const flex_point2 = result[1] ? {x: result[1].x, y: result[1].y} : undefined;
-                if (flex_point1 && flex_point2) {
-                    const _d = d(flex_point1, s1 as PageXY);
-                    let p: undefined | CurvePoint;
-                    if (_d === 'hor') {
-                        p = new CurvePoint(v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
-                    } else if (_d === 'ver') {
-                        p = new CurvePoint(v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
-                    }
-                    if (p) result.splice(1, 1, p);
-                }
-            }
-            {
-                const len = result.length;
-                const flex_point1 = end_point!;
-                const flex_point2 = result[len - 2] ? {x: result[len - 2].x, y: result[len - 2].y} : undefined;
-                if (flex_point1 && flex_point2) {
-                    const _d = d(flex_point1, s2 as PageXY);
-                    if (_d === 'hor') {
-                        const p = new CurvePoint(v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
-                        result.splice(len - 2, 1, p);
-                    } else if (_d === 'ver') {
-                        const p = new CurvePoint(v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
-                        result.splice(len - 2, 1, p);
-                    }
-                }
-            }
-            return slice_invalid_point(result); // 最后削减无效点
-        }
-        // 未被编辑，由寻路算法计算连接线路径
-        if (fromShape && toShape) {
-            const result = gen_path(fromShape, type1!, toShape, type2!, from_matrix!, to_matrix!, self_matrix!);
-            if (result && result.length) return slice_invalid_point(result);
-        }
-        if (!fromShape && !toShape) { }
-        if (fromShape && !toShape) {
-            const p = points.pop();
-            if (p && s1) {
-                points.push(new CurvePoint(v4(), p.x, s1.y, CurveMode.Straight), p);
-            }
-        }
-        if (!fromShape && toShape) { }
-        return slice_invalid_point(points);
-    }
-    /**
-     * @description 计算路径时候可能会经过的点
-     */
-    getTemp() {
-        if (this.isEdited) return [];
-        const points = [...this.points];
         let page: any;
-        let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false; // 特殊点：s1出发图形的外围点，s2目的图形的外围点
-        let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：图形自身的坐标系，单位为比例系数
-        let fromShape: undefined | Shape, toShape: undefined | Shape; //sides 出发图形、目的图形
-        let type1, type2;
-        if (this.from) {
-            if (!page) page = this.getPage();
-            if (page) {
-                fromShape = page.getShape((this.from as ContactForm).shapeId);
-                if (fromShape) {
-                    type1 = (this.from as ContactForm).contactType;
-                    if (!self_matrix) self_matrix = gen_matrix1(this);
-                    if (!from_matrix) from_matrix = fromShape.matrix2Root();
-                    let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
-                    if (p) {
-                        p = self_matrix.computeCoord3(p);
-                        const fp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-                        points[0] = fp;
-                    }
-                    let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType);
-                    if (border_p) {
-                        border_p = self_matrix.computeCoord3(border_p);
-                        points.splice(1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
-                        s1 = border_p;
-                    }
-                }
-            }
+
+        let s1: undefined | { x: number, y: number } = undefined; // 外围点：s1出发图形的外围点，s2目的图形的外围点
+        let s2: undefined | { x: number, y: number } = undefined;
+
+        let self_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：连接线自身的坐标系，单位为宽高比例系数(0-1)
+        let from_matrix: undefined | Matrix;
+        let to_matrix: undefined | Matrix;
+
+        let fromShape: undefined | Shape; // 出发图形、目的图形
+        let toShape: undefined | Shape;
+
+        let type1: ContactType; // 首尾连接类型
+        let type2: ContactType;
+
+        let start_point: PageXY | undefined = undefined; // 首尾点(活点)
+        let end_point: PageXY | undefined = undefined;
+
+
+        if (this.to || this.from) {
+            self_matrix = gen_matrix1(this);
+            page = this.getPage() as Page;
         }
-        if (this.to) {
-            if (!page) page = this.getPage();
-            if (page) {
-                toShape = page.getShape((this.to as ContactForm).shapeId);
-                if (toShape) {
-                    type2 = (this.to as ContactForm).contactType;
-                    if (!self_matrix) self_matrix = gen_matrix1(this);
-                    if (!to_matrix) to_matrix = toShape.matrix2Root();
-                    let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
-                    if (p) {
-                        p = self_matrix.computeCoord3(p);
-                        const lp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-                        points[points.length - 1] = lp;
-                    }
-                    let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
-                    if (border_p) {
-                        border_p = self_matrix.computeCoord3(border_p);
-                        const t = points.pop();
-                        if (t) points.push(new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight), t);
-                        s2 = border_p;
-                    }
-                }
-            }
+
+        const from_params = handle_contact_from(page, this, points, self_matrix!);
+        if (from_params) {
+            fromShape = from_params.fromShape;
+            type1 = from_params.type1;
+            from_matrix = from_params.from_matrix;
+            start_point = from_params.start_point;
+            s1 = from_params.s1;
         }
-        // 寻找中间拐点
-        if (fromShape && toShape && type1 && type2) {
-            if (!self_matrix) self_matrix = gen_matrix1(this);
-            if (!from_matrix) from_matrix = fromShape.matrix2Root();
-            if (!to_matrix) to_matrix = toShape.matrix2Root();
-            const params = gen_baisc_params(fromShape, type1, toShape, type2, from_matrix, to_matrix);
-            if (!params) return [];
-            const { preparation_point } = params;
-            const path = preparation_point;
-            const points: CurvePoint[] = [];
-            for (let i = 0, len = path.length; i < len; i++) {
-                const p = self_matrix.computeCoord3(path[i]);
-                points.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
-            }
+
+        const to_params = handle_contact_to(page, this, points, self_matrix!);
+        if (to_params) {
+            toShape = to_params.toShape;
+            type2 = to_params.type2;
+            to_matrix = to_params.to_matrix;
+            end_point = to_params.end_point;
+            s2 = to_params.s2;
+        }
+
+        if (points.length <= 1) {
+            console.log(this.name, ': points.length <= 1');
             return points;
         }
 
-    }
-    getTemp2() {
-        if (this.isEdited) return [];
-        const points = [...this.points];
-        let page: any;
-        let s1: false | { x: number, y: number } = false, s2: false | { x: number, y: number } = false; // 特殊点：s1出发图形的外围点，s2目的图形的外围点
-        let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 一些可复用矩阵 self_matrix：图形自身的坐标系，单位为比例系数
-        let fromShape: undefined | Shape, toShape: undefined | Shape; //sides 出发图形、目的图形
-        let type1, type2;
-        if (this.from) {
-            if (!page) page = this.getPage();
-            if (page) {
-                fromShape = page.getShape((this.from as ContactForm).shapeId);
-                if (fromShape) {
-                    type1 = (this.from as ContactForm).contactType;
-                    if (!self_matrix) self_matrix = gen_matrix1(this);
-                    if (!from_matrix) from_matrix = fromShape.matrix2Root();
-                    let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
-                    if (p) {
-                        p = self_matrix.computeCoord3(p);
-                        const fp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-                        points[0] = fp;
-                    }
-                    let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType);
-                    if (border_p) {
-                        border_p = self_matrix.computeCoord3(border_p);
-                        points.splice(1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
-                        s1 = border_p;
-                    }
-                }
+        // 连接线被编辑过
+        if (this.isEdited) {
+            if (!self_matrix) {
+                self_matrix = gen_matrix1(this);
             }
-        }
-        if (this.to) {
-            if (!page) page = this.getPage();
-            if (page) {
-                toShape = page.getShape((this.to as ContactForm).shapeId);
-                if (toShape) {
-                    type2 = (this.to as ContactForm).contactType;
-                    if (!self_matrix) self_matrix = gen_matrix1(this);
-                    if (!to_matrix) to_matrix = toShape.matrix2Root();
-                    let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
-                    if (p) {
-                        p = self_matrix.computeCoord3(p);
-                        const lp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-                        points[points.length - 1] = lp;
-                    }
-                    let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
-                    if (border_p) {
-                        border_p = self_matrix.computeCoord3(border_p);
-                        const t = points.pop();
-                        if (t) points.push(new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight), t);
-                        s2 = border_p;
-                    }
-                }
+
+            if (!start_point) {
+                const _p0 = points[0];
+                start_point = self_matrix.computeCoord2(_p0.x, _p0.y);
             }
-        }
-        // 寻找中间拐点
-        if (fromShape && toShape && type1 && type2) {
-            if (!self_matrix) self_matrix = gen_matrix1(this);
-            if (!from_matrix) from_matrix = fromShape.matrix2Root();
-            if (!to_matrix) to_matrix = toShape.matrix2Root();
-            const params = gen_raw(fromShape, type1, toShape, type2, from_matrix, to_matrix);
-            if (!params) return [];
-            const { preparation_point_green, preparation_point_red, preparation_point_yellow } = params;
-            const path1 = preparation_point_green;
-            const path2 = preparation_point_red;
-            const path3 = preparation_point_yellow;
-            const points1: CurvePoint[] = [];
-            const points2: CurvePoint[] = [];
-            const points3: CurvePoint[] = [];
-            for (let i = 0, len = path1.length; i < len; i++) {
-                const p = self_matrix.computeCoord3(path1[i]);
-                points1.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+
+            if (!end_point) {
+                const _p_end = points[points.length - 1];
+                end_point = self_matrix.computeCoord2(_p_end.x, _p_end.y);
             }
-            for (let i = 0, len = path2.length; i < len; i++) {
-                const p = self_matrix.computeCoord3(path2[i]);
-                points2.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
-            }
-            for (let i = 0, len = path3.length; i < len; i++) {
-                const p = self_matrix.computeCoord3(path3[i]);
-                points3.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
-            }
-            return { points1, points2, points3 };
+
+            return path_for_edited(points, start_point, end_point, s1, s2); // 最后削减无效点
         }
 
+        // 未被编辑，由寻路算法计算连接线路径
+        if (fromShape && toShape) {
+            const result = gen_path(fromShape, type1!, toShape, type2!, from_matrix!, to_matrix!, self_matrix!);
+            if (result?.length) {
+                return slice_invalid_point(result);
+            }
+        }
+
+        if (!fromShape && !toShape) {
+            path_for_free_contact(points);
+        }
+
+        if (fromShape && !toShape) {
+            path_for_free_end_contact(this, points, s1);
+        }
+
+        if (!fromShape && toShape) {
+            path_for_free_start_contact(points, s2);
+        }
+
+        return slice_invalid_point(points);
     }
-    /**
-     * @description 绿点 —— points经过头尾加工、处理外围点之后的点
-     */
-    green_points() {
-        const points = [...this.points];
-        let page: any;
-        let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix;
-        let fromShape: undefined | Shape, toShape: undefined | Shape; // 出发图形、目的图形
-        let start_point: PageXY, end_point: PageXY;
-        if (this.from) {
-            if (!page) page = this.getPage();
-            if (page) {
-                fromShape = page.getShape((this.from as ContactForm).shapeId);
-                if (fromShape) {
-                    self_matrix = gen_matrix1(this);
-                    from_matrix = fromShape.matrix2Root();
-                    let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix!);
-                    if (p) {
-                        p = self_matrix.computeCoord3(p);
-                        start_point = p;
-                        const fp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-                        points[0] = fp;
-                    }
-                    let border_p = this.get_nearest_border_point(fromShape, (this.from as ContactForm).contactType);
-                    if (border_p) {
-                        border_p = self_matrix.computeCoord3(border_p);
-                        points.splice(1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
-                    }
-                }
-            }
-        }
-        if (this.to) {
-            if (!page) page = this.getPage();
-            if (page) {
-                toShape = page.getShape((this.to as ContactForm).shapeId);
-                if (toShape) {
-                    if (!self_matrix) self_matrix = gen_matrix1(this);
-                    to_matrix = toShape.matrix2Root();
-                    let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
-                    if (p) {
-                        p = self_matrix.computeCoord3(p);
-                        end_point = p;
-                        const lp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-                        points[points.length - 1] = lp;
-                    }
-                    let border_p = this.get_nearest_border_point(toShape, (this.to as ContactForm).contactType);
-                    if (border_p) {
-                        border_p = self_matrix.computeCoord3(border_p);
-                        points.splice(points.length - 1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
-                    }
-                }
-            }
-        }
-        return points;
-    }
-    /**
-     * @description 黄点：数据层(points)上真实存在的，并经过头尾加工的点，这里不存在外围点、也不会削减无效点
-     */
-    yellow_points() {
-        const points = [...this.points];
-        let page: any;
-        let self_matrix: undefined | Matrix, from_matrix: undefined | Matrix, to_matrix: undefined | Matrix; // 可复用矩阵
-        let fromShape: undefined | Shape, toShape: undefined | Shape; // 出发图形、目的图形
-        if (this.from) { // 加工头部 —— 头部存在图形，则根据头部的连接方式，把数据层(points)上的第一个点替换成头部图形上的某一点
-            if (!page) page = this.getPage();
-            if (page) {
-                fromShape = page.getShape((this.from as ContactForm).shapeId);
-                if (fromShape) {
-                    self_matrix = gen_matrix1(this);
-                    from_matrix = fromShape.matrix2Root();
-                    let p = this.get_pagexy(fromShape, (this.from as ContactForm).contactType, from_matrix);
-                    if (p) {
-                        p = self_matrix.computeCoord3(p);
-                        const fp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-                        points[0] = fp; // 替换
-                    }
-                }
-            }
-        }
-        if (this.to) { // 加工尾部
-            if (!page) page = this.getPage();
-            if (page) {
-                toShape = page.getShape((this.to as ContactForm).shapeId);
-                if (toShape) {
-                    if (!self_matrix) self_matrix = gen_matrix1(this);
-                    to_matrix = toShape.matrix2Root();
-                    let p = this.get_pagexy(toShape, (this.to as ContactForm).contactType, to_matrix);
-                    if (p) {
-                        p = self_matrix.computeCoord3(p);
-                        const lp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-                        points[points.length - 1] = lp;
-                    }
-                }
-            }
-        }
-        return points;
-    }
+
     private __pathCache: Path | undefined;
     getPath(): Path {
         return this.getPathOfFrame(this.frame, this.fixedRadius);
     }
+
     getPath2(): Path {
         return this.getPath();
     }
+
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const offsetX = 0;
         const offsetY = 0;
@@ -493,11 +222,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         this.__pathCache = new Path(path);
         return this.__pathCache;
     }
-    getTextLayout(): TextLayout | undefined {
-        if (!this.text || !this.mark) return;
-        this.text.updateSize(40, 100);
-        return this.text.getLayout();
-    }
+
     private __page: Shape | undefined;
     page() {
         if (!this.__page) {

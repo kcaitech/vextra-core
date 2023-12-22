@@ -1,6 +1,7 @@
 import { GroupShape, ImageShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
 import {
     exportArtboard,
+    exportContactShape,
     exportGroupShape,
     exportImageShape,
     exportLineShape,
@@ -16,6 +17,7 @@ import {
 import {
     IImportContext,
     importArtboard,
+    importContactShape,
     importGroupShape,
     importImageShape,
     importLineShape,
@@ -35,17 +37,18 @@ import { Api } from "../editor/command/recordapi";
 import { translateTo } from "../editor/frame";
 import { Page } from "../data/page";
 
-export function set_childs_id(shapes: Shape[]) {
+export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         const shape = shapes[i] as GroupShape;
         if (!shape) {
             continue;
         }
-
-        shape.id = v4();
+        if (!matched?.has(shape.id)) {
+            shape.id = v4();
+        }
 
         if (shape.childs && shape.childs.length) {
-            set_childs_id(shape.childs);
+            set_childs_id(shape.childs, matched);
         }
     }
 }
@@ -78,13 +81,98 @@ export function export_shape(shapes: Shape[]) {
             content = exportSymbolShape(shape as unknown as types.SymbolShape);
         } else if (type === ShapeType.SymbolRef) {
             content = exportSymbolRefShape(shape as unknown as types.SymbolRefShape);
+        } else if (type === ShapeType.Contact) {
+            content = exportContactShape(shape as unknown as types.ContactShape);
         }
         if (content) {
-            content.style.contacts && (content.style.contacts = undefined);
             result.push(content);
         }
     }
     return result;
+}
+
+/**
+ * @description 导入之前匹配连接线
+ */
+function match_for_contact(source: Shape[]) {
+    const already_change = new Set<string>();
+
+    const all = new Map<string, Shape>();
+    const contacts: types.ContactShape[] = [];
+
+    finder(source);
+
+    if (!contacts.length) {
+        return already_change;
+    }
+
+    const units: { contact: Shape, from: Shape | undefined, to: Shape | undefined }[] = [];
+
+    for (let i = 0, l = contacts.length; i < l; i++) {
+        const c = contacts[i];
+
+        const from = all.get(c.from?.shapeId || '') || undefined;
+        const to = all.get(c.to?.shapeId || '') || undefined;
+
+        units.push({ contact: c as unknown as Shape, from, to });
+    }
+
+    const modified = new Set<Shape>();
+
+    for (let i = 0, l = units.length; i < l; i++) {
+        const { contact, from, to } = units[i];
+
+        if (!from) {
+            (contact as unknown as types.ContactShape).from = undefined;
+        } else {
+            if (modified.has(from)) {
+                (contact as unknown as types.ContactShape).from!.shapeId = from.id;
+            } else {
+                from.id = v4();
+
+                (contact as unknown as types.ContactShape).from!.shapeId = from.id;
+
+                already_change.add(from.id);
+
+                modified.add(from);
+            }
+        }
+
+        if (!to) {
+            (contact as unknown as types.ContactShape).to = undefined;
+        } else {
+            if (modified.has(to)) {
+                (contact as unknown as types.ContactShape).to!.shapeId = to.id;
+            } else {
+                to.id = v4();
+
+                (contact as unknown as types.ContactShape).to!.shapeId = to.id;
+
+                already_change.add(to.id);
+
+                modified.add(to);
+            }
+        }
+    }
+
+    return already_change;
+
+    function finder(shapes: Shape[]) {
+        for (let i = 0, l = shapes.length; i < l; i++) {
+            const s = shapes[i];
+
+            all.set(s.id, s);
+
+            if (s.type === ShapeType.Contact) {
+                contacts.push(s as unknown as types.ContactShape);
+            }
+
+            if (s.type === ShapeType.Group || s.type === ShapeType.Artboard) {
+                const __shapes = (s as GroupShape).childs;
+                finder(__shapes);
+            }
+        }
+    }
 }
 
 // 从剪切板导入图形
@@ -93,6 +181,8 @@ export function import_shape_from_clipboard(document: Document, source: Shape[],
         document: Document = document;
     };
     const result: Shape[] = [];
+
+    const matched = match_for_contact(source);
 
     try {
         for (let i = 0, len = source.length; i < len; i++) {
@@ -116,7 +206,9 @@ export function import_shape_from_clipboard(document: Document, source: Shape[],
                 continue;
             }
 
-            _s.id = v4();
+            if (!matched.has(_s.id)) {
+                _s.id = v4();
+            }
 
             if (type === ShapeType.Rectangle) {
                 r = importRectShape(_s as any as types.RectShape);
@@ -136,26 +228,26 @@ export function import_shape_from_clipboard(document: Document, source: Shape[],
                 r = importPathShape(_s as any as types.PathShape);
             } else if (type === ShapeType.Artboard) {
                 const children = (_s as any).childs;
-                children && children.length && set_childs_id(children);
+                children && children.length && set_childs_id(children, matched);
                 r = importArtboard(_s as any, ctx);
             } else if (type === ShapeType.Group) {
                 const children = (_s as GroupShape).childs;
 
-                children && children.length && set_childs_id(children);
+                children && children.length && set_childs_id(children, matched);
 
                 r = importGroupShape(_s as any, ctx);
             } else if (type === ShapeType.Table) {
-                const children = (_s as any as GroupShape).childs
-                    ;
-                children && children.length && set_childs_id(children);
+                const children = (_s as any as GroupShape).childs;
+                children && children.length && set_childs_id(children, matched);
 
                 r = importTableShape(_s as any as types.TableShape, ctx);
             } else if (type === ShapeType.SymbolRef) {
                 if (!document.symbolsMgr.getSync((_s as any as types.SymbolRefShape).refId)) {
                     continue;
                 }
-
                 r = importSymbolRefShape(_s as any as types.SymbolRefShape, ctx);
+            } else if (type === ShapeType.Contact) {
+                r = importContactShape(_s as any as types.ContactShape, ctx)
             }
 
             if (r) {
