@@ -577,7 +577,7 @@ export class ShapeView extends DataView {
         }
 
         if (this.isNoTransform()) {
-            props.transform = `translate(${frame.x},${frame.y})`
+            if (frame.x !== 0 || frame.y !== 0) props.transform = `translate(${frame.x},${frame.y})`
         } else {
             const cx = frame.x + frame.width / 2;
             const cy = frame.y + frame.height / 2;
