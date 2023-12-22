@@ -91,44 +91,48 @@ export function export_shape(shapes: Shape[]) {
     return result;
 }
 
+/**
+ * @description 导入之前匹配连接线
+ */
 function match_for_contact(source: Shape[]) {
     const already_change = new Set<string>();
 
     const all = new Map<string, Shape>();
-    const contact: types.ContactShape[] = [];
+    const contacts: types.ContactShape[] = [];
     for (let i = 0, l = source.length; i < l; i++) {
         const s = source[i];
 
         all.set(s.id, s);
 
         if (s.type === ShapeType.Contact) {
-            contact.push(s as unknown as types.ContactShape);
+            contacts.push(s as unknown as types.ContactShape);
         }
     }
 
-    if (!contact.length) {
+    if (!contacts.length) {
         return already_change;
     }
 
     const units: { contact: Shape, from: Shape | undefined, to: Shape | undefined }[] = [];
 
-    for (let i = 0, l = contact.length; i < l; i++) {
-        const c = contact[i];
+    for (let i = 0, l = contacts.length; i < l; i++) {
+        const c = contacts[i];
+
         const from = all.get(c.from?.shapeId || '') || undefined;
         const to = all.get(c.to?.shapeId || '') || undefined;
 
-        units.push({ contact: c as unknown as Shape, from, to })
+        units.push({ contact: c as unknown as Shape, from, to });
     }
 
-    const from_keys = new Set<Shape>();
-    const to_keys = new Set<Shape>();
+    const modified = new Set<Shape>();
 
     for (let i = 0, l = units.length; i < l; i++) {
         const { contact, from, to } = units[i];
+
         if (!from) {
             (contact as unknown as types.ContactShape).from = undefined;
         } else {
-            if (from_keys.has(from)) {
+            if (modified.has(from)) {
                 (contact as unknown as types.ContactShape).from!.shapeId = from.id;
             } else {
                 from.id = v4();
@@ -137,14 +141,14 @@ function match_for_contact(source: Shape[]) {
 
                 already_change.add(from.id);
 
-                from_keys.add(from);
+                modified.add(from);
             }
         }
 
         if (!to) {
             (contact as unknown as types.ContactShape).to = undefined;
         } else {
-            if (to_keys.has(to)) {
+            if (modified.has(to)) {
                 (contact as unknown as types.ContactShape).to!.shapeId = to.id;
             } else {
                 to.id = v4();
@@ -153,7 +157,7 @@ function match_for_contact(source: Shape[]) {
 
                 already_change.add(to.id);
 
-                to_keys.add(to);
+                modified.add(to);
             }
         }
     }
@@ -169,6 +173,7 @@ export function import_shape_from_clipboard(document: Document, source: Shape[],
     const result: Shape[] = [];
 
     const matched = match_for_contact(source);
+
     try {
         for (let i = 0, len = source.length; i < len; i++) {
             const _s = source[i];
