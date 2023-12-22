@@ -64,7 +64,6 @@ import { TableShape } from "../data/table";
 export { newText, newText2 } from "../data/textutils";
 import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-import { mergeParaAttr, mergeSpanAttr } from "../data/textutils";
 import { ContactForm } from "../data/baseclasses";
 
 export function addCommonAttr(shape: Shape) {
@@ -348,13 +347,18 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
 }
 
 export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm): ContactShape {
-    const style = newStyle();
+    const style = newflatStyle();
+
     style.endMarkerType = types.MarkerType.OpenArrow;
+
     const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
     const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.Straight);
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
+
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 128, 128, 128), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
+
     style.borders.push(border);
+
     const text = new Text(new BasicArray());
     const para = new Para('添加文本\n', new BasicArray());
     para.attr = new ParaAttr();
@@ -365,11 +369,16 @@ export function newContact(name: string, frame: ShapeFrame, apex?: ContactForm):
     span.fontSize = 14;
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);
+
     const shape = new ContactShape(uuid(), name, types.ShapeType.Contact, frame, style, curvePoint, false, false, text, false);
+
     shape.from = apex;
     shape.to = undefined;
+
     shape.fixedRadius = 12;
+
     addCommonAttr(shape);
+
     return shape;
 }
 
