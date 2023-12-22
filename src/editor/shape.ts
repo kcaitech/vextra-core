@@ -38,7 +38,7 @@ import {
 } from "./utils/other";
 import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
-import { _clip, _typing_modify, modify_points_xy, replace_path_shape_points, update_frame_by_points, update_path_shape_frame } from "./utils/path";
+import { _clip, _typing_modify, get_points_for_init, modify_points_xy, replace_path_shape_points, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 
 function varParent(_var: Variable) {
@@ -1090,7 +1090,7 @@ export class ShapeEditor {
         try {
             api.addShadow(this.__page, this.__shape, shadow, this.__shape.style.shadows.length);
             this.__repo.commit();
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             this.__repo.rollback();
         }
@@ -1103,7 +1103,7 @@ export class ShapeEditor {
             try {
                 api.deleteShadowAt(this.__page, this.__shape, idx)
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1117,7 +1117,7 @@ export class ShapeEditor {
             try {
                 api.setShadowPosition(this.__page, this.__shape, idx, position);
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1131,7 +1131,7 @@ export class ShapeEditor {
             try {
                 api.setShadowEnable(this.__page, this.__shape, idx, isEnabled);
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1154,7 +1154,7 @@ export class ShapeEditor {
             try {
                 api.setShadowOffsetX(this.__page, this.__shape, idx, offserX);
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1168,7 +1168,7 @@ export class ShapeEditor {
             try {
                 api.setShadowOffsetY(this.__page, this.__shape, idx, offsetY);
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1191,7 +1191,7 @@ export class ShapeEditor {
             try {
                 api.setShadowSpread(this.__page, this.__shape, idx, spread);
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1207,7 +1207,7 @@ export class ShapeEditor {
                 api.addExportFormat(this.__page, this.__shape, format, length);
             }
             this.__repo.commit();
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             this.__repo.rollback();
         }
@@ -1219,7 +1219,7 @@ export class ShapeEditor {
             try {
                 api.deleteExportFormatAt(this.__page, this.__shape, idx)
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1232,7 +1232,7 @@ export class ShapeEditor {
             try {
                 api.setExportFormatScale(this.__page, this.__shape, idx, scale);
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1245,7 +1245,7 @@ export class ShapeEditor {
             try {
                 api.setExportFormatName(this.__page, this.__shape, idx, name);
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1258,7 +1258,7 @@ export class ShapeEditor {
             try {
                 api.setExportFormatFileFormat(this.__page, this.__shape, idx, fileFormat);
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1271,7 +1271,7 @@ export class ShapeEditor {
             try {
                 api.setExportFormatPerfix(this.__page, this.__shape, idx, perfix);
                 this.__repo.commit();
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 this.__repo.rollback();
             }
@@ -1282,7 +1282,7 @@ export class ShapeEditor {
         try {
             api.setExportTrimTransparent(this.__page, this.__shape, trim);
             this.__repo.commit();
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             this.__repo.rollback();
         }
@@ -1292,7 +1292,7 @@ export class ShapeEditor {
         try {
             api.setExportCanvasBackground(this.__page, this.__shape, background);
             this.__repo.commit();
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             this.__repo.rollback();
         }
@@ -1302,7 +1302,7 @@ export class ShapeEditor {
         try {
             api.setExportPreviewUnfold(this.__page, this.__shape, unfold);
             this.__repo.commit();
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             this.__repo.rollback();
         }
@@ -1466,72 +1466,6 @@ export class ShapeEditor {
         });
     }
 
-    /**
-     * @description 寻找可能需要产生的新点
-     */
-    private get_points_for_init(index: number, points: CurvePoint[]) {
-        let len = points.length;
-        let result = [...points];
-        const shape = this.__shape as ContactShape;
-        if (index === 0) { // 如果编辑的线为第一根线；
-            const from = shape.from;
-            if (!from) return result;
-            const fromShape = this.__page.getShape((from as ContactForm).shapeId);
-            if (!fromShape) return result;
-            const xy_result = get_box_pagexy(fromShape);
-            if (!xy_result) return result;
-            const { xy1, xy2 } = xy_result;
-            let p = get_nearest_border_point(fromShape, from.contactType, fromShape.matrix2Root(), xy1, xy2);
-            if (!p) return result
-
-            const m1 = this.__shape.matrix2Root();
-            const f = this.__shape.frame;
-            m1.preScale(f.width, f.height);
-            const m2 = new Matrix(m1.inverse);
-
-            p = m2.computeCoord3(p);
-            const cp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-            const cp2 = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-            result.splice(1, 0, cp, cp2);
-        }
-        if (index === len - 2) { // 编辑的线为最后一根线；
-            len = result.length; // 更新一下长度，因为部分场景下，编辑的线会同时为第一根线和最后一根线，若是第一根线的话，原数据已经更改，需要在下次更改数据前并判定为最后一根线后去更新result长度。
-            const to = shape.to;
-            if (!to) return result;
-            const toShape = this.__page.getShape((to as ContactForm).shapeId);
-            if (!toShape) return result;
-            const xy_result = get_box_pagexy(toShape);
-            if (!xy_result) return result;
-            const { xy1, xy2 } = xy_result;
-            let p = get_nearest_border_point(toShape, to.contactType, toShape.matrix2Root(), xy1, xy2);
-            if (!p) return result
-
-            const m1 = this.__shape.matrix2Root();
-            const f = this.__shape.frame;
-            m1.preScale(f.width, f.height);
-            const m2 = new Matrix(m1.inverse);
-
-            p = m2.computeCoord3(p);
-            const cp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-            const cp2 = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-            result.splice(len - 1, 0, cp, cp2)
-        }
-        return result;
-    }
-
-    /**
-     * @description 编辑路径之前，初始化点 —— 在编辑路径之前，渲染的点也许并不存在于连接线的数据上(points)，另外，编辑的预期效果可能需要产生新的点才可能实现。
-     * 这个方法的目的就是把可能需要产生的新点、已经渲染的点全部更新到连接线的数据上以支持后续操作；
-     */
-    public pre_modify_side(index: number) {
-        if (this.__shape.type !== ShapeType.Contact) return false;
-        const shape = this.__shape as ContactShape;
-        const points = this.get_points_for_init(index, shape.getPoints());
-        this._repoWrap("init_points", (api) => {
-            replace_path_shape_points(this.__page, this.__shape as PathShape, api, points);
-        });
-    }
-
     public modify_frame_by_points() {
         this._repoWrap("modify_frame_by_points", (api) => {
             update_frame_by_points(api, this.__page, this.__shape as PathShape);
@@ -1539,20 +1473,28 @@ export class ShapeEditor {
     }
 
     public reset_contact_path() {
-        if (this.__shape.type !== ShapeType.Contact) return false;
-        const shape = this.__shape as ContactShape;
+        if (!(this.__shape instanceof ContactShape)) {
+            return false;
+        }
+        const shape = this.__shape;
         this._repoWrap("reset_contact_path", (api) => {
             api.contactModifyEditState(this.__page, shape, false);
-            const points = this.get_points_for_init(1, shape.getPoints());
+
+            const points = get_points_for_init(this.__page, shape, 1, shape.getPoints());
+
             const len = shape.points.length;
-            api.deletePoints(this.__page, this.__shape as PathShape, 0, len);
+
+            api.deletePoints(this.__page, shape, 0, len);
+
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = importCurvePoint(exportCurvePoint(points[i]));
                 p.id = v4();
                 points[i] = p;
             }
-            api.addPoints(this.__page, this.__shape as PathShape, points);
-            update_frame_by_points(api, this.__page, this.__shape as PathShape);
+
+            api.addPoints(this.__page, shape, points);
+            update_frame_by_points(api, this.__page, shape);
+            console.log('reset path');
         });
     }
 
