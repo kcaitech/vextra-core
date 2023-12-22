@@ -102,8 +102,8 @@ export class ArtboradView extends GroupShapeView {
             svgprops.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
         }
 
-        const body = elh("svg", svgprops, [...fills, ...childs, ...borders]);
-        this.reset("g", props, [...shadows, body])
+        const body = elh("svg", svgprops, [...fills, ...childs]);
+        this.reset("g", props, [...shadows, body, ...borders])
         return ++this.m_render_version;
     }
 }
