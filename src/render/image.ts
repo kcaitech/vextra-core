@@ -1,7 +1,7 @@
 import {ResizingConstraints} from "../data/consts";
 import {objectId} from "../basic/objectid";
 import {ImageShape, Path, ShapeFrame, SymbolRefShape, SymbolShape, Variable} from "../data/classes";
-import {RenderTransform, fixFrameByConstrain, isNoTransform, isVisible} from "./basic";
+import {RenderTransform, fixFrameByConstrain, isNoTransform, isVisible, randomId} from "./basic";
 import {renderWithVars as borderR} from "./border";
 import {render as clippathR} from "./clippath"
 import {Matrix} from "../basic/matrix";
@@ -165,7 +165,7 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
     if (reflush) props.reflush = reflush;
     const shadows = shape.style.shadows;
     const ex_props = Object.assign({}, props);
-    const shape_id = shape.id.slice(0, 4);
+    const shape_id = shape.id.slice(0, 4) + randomId();
     const shadow = shadowR(h, shape_id, shape, path, varsContainer);
     if (shadow.length) {
         delete props.style;

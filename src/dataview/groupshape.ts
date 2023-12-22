@@ -193,6 +193,28 @@ export class GroupShapeView extends ShapeView {
         // })
         // if (childsView.length > 0) this.addChilds(childsView);
         this.m_isboolgroup = (props.data as GroupShape).isBoolOpShape;
+        this._bubblewatcher = this._bubblewatcher.bind(this);
+        this.m_data.bubblewatch(this._bubblewatcher);
+    }
+
+    protected _bubblewatcher(...args: any[]) {
+        if (this.m_isboolgroup) {
+            // 不好判断，可能是boolop变更等
+            // if (args.includes('points') || args.includes('shape-frame')) {
+            this.m_path = undefined;
+            this.m_pathstr = undefined;
+            this.m_ctx.setDirty(this);
+            // }
+        }
+        this.onChildChange(...args);
+    }
+
+    protected onChildChange(...args: any[]) {
+    }
+
+    onDestory(): void {
+        super.onDestory();
+        this.m_data.bubbleunwatch(this._bubblewatcher);
     }
 
     onAddShapeData(shape: Shape): ShapeView {
@@ -224,35 +246,6 @@ export class GroupShapeView extends ShapeView {
     getDataChilds(): Shape[] {
         return (this.m_data as GroupShape).childs;
     }
-
-    // protected updateChildren(): void {
-    //     // update children
-    //     const reuse = new Map<string, DataView>();
-    //     this.m_children.forEach((c) => {
-    //         reuse.set(c.m_data.id, c);
-    //     });
-
-    //     const comsMap = this.m_ctx.comsMap;
-    //     const childs = this.getDataChilds();
-    //     for (let i = 0; i < childs.length; i++) {
-    //         const c = childs[i];
-    //         const cdom = reuse.get(c.id);
-    //         if (cdom) {
-    //             reuse.delete(c.id);
-    //             this.moveChild(cdom, i);
-    //         } else {
-    //             const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
-    //             const props = { data: c, varsContainer: this.m_varsContainer, isVirtual: this.m_isVirtual };
-    //             const ins = new Com(this.m_ctx, props) as DataView;
-    //             this.addChild(ins, i);
-    //         }
-    //     }
-
-    //     if (this.m_children.length > childs.length) {
-    //         const count = this.m_children.length - childs.length;
-    //         this.removeChilds(childs.length, count).forEach((c) => c.onDestory());
-    //     }
-    // }
 
     m_need_updatechilds: boolean = false;
 

@@ -3,11 +3,8 @@
 import { render as renderGradient } from "./gradient";
 import { objectId } from '../basic/objectid';
 import { Border, Gradient, BorderPosition, FillType, GradientType, ShapeFrame, Shape, SymbolRefShape, SymbolShape, Variable, OverrideType, VariableType } from "../data/classes";
-import { findOverrideAndVar } from "./basic";
+import { findOverrideAndVar, randomId } from "./basic";
 
-function randomId() {
-    return Math.floor((Math.random() * 10000) + 1);
-}
 
 const handler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
 const angularHandler: { [key: string]: (h: Function, frame: ShapeFrame, border: Border, path: string) => any } = {};
@@ -76,6 +73,8 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
         h("mask", {
             id: maskId,
             maskContentUnits: "userSpaceOnUse",
+            x,
+            y,
             width,
             height
         }, [
@@ -113,11 +112,13 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
     return h("g", [
         h("mask", {
             id: mask2Id,
+            x, y,
             width,
             height
         }, [
             h("mask", {
                 id: mask1Id,
+                x: -thickness, y: -thickness,
                 width,
                 height
             }, [
@@ -252,7 +253,7 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
     }
     const mask = h(
         "mask",
-        { id: maskId },
+        { id: maskId, x: -thickness, y: -thickness, width, height },
         [
             h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
             h("path", { d: path, fill: "black" })

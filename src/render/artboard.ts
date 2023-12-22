@@ -1,7 +1,7 @@
 import { renderGroupChilds as gR } from "./group";
 import { render as borderR } from "./border";
 import { Artboard, ShapeType, SymbolShape, SymbolRefShape, Variable } from '../data/classes';
-import { isVisible, RenderTransform } from "./basic";
+import { isVisible, randomId, RenderTransform } from "./basic";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 import { Color } from "../data/color";
 
@@ -53,7 +53,7 @@ export function render(h: Function,
     const path = shape.getPath().toString();
     if (shape.isNoTransform()) {
         const shadows = shape.style.shadows;
-        const shape_id = shape.id.slice(0, 4);
+        const shape_id = shape.id.slice(0, 4) + randomId();
         const shadow = shadowR(h, shape_id, shape, path, varsContainer);
         const b_len = shape.style.borders.length;
         if (b_len) {
@@ -104,7 +104,7 @@ export function render(h: Function,
 
         // shadow
         const shadows = shape.style.shadows;
-        const shape_id = shape.id.slice(0, 4);
+        const shape_id = shape.id.slice(0, 4) + randomId();
         const shadow = shadowR(h, shape_id, shape, path, varsContainer); // todo 
         const b_len = shape.style.borders.length;
         if (b_len) {

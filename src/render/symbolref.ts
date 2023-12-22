@@ -2,7 +2,7 @@ import { Path, ShapeFrame, ShapeType, SymbolUnionShape, SymbolRefShape, SymbolSh
 import { renderGroupChilds2, renderGroupChilds3 } from "./group";
 import { renderWithVars as fillR } from "./fill";
 import { renderWithVars as borderR } from "./border"
-import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible } from "./basic";
+import { RenderTransform, fixFrameByConstrain, isNoTransform, isVisible, randomId } from "./basic";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
@@ -238,7 +238,7 @@ export function render(h: Function,
     else {
         const shadows = shape.style.shadows;
         const ex_props = Object.assign({}, props);
-        const shape_id = shape.id.slice(0, 4);
+        const shape_id = shape.id.slice(0, 4) + randomId();
         const shadow = shadowR(h, shape_id, shape, path);
         if (shadow.length) {
             delete props.style;

@@ -1,6 +1,6 @@
 
 
-import { DefaultColor, RenderTransform, findOverrideAndVar, fixFrameByConstrain, isColorEqual, isNoTransform, isVisible } from "./basic";
+import { DefaultColor, RenderTransform, findOverrideAndVar, fixFrameByConstrain, isColorEqual, isNoTransform, isVisible, randomId } from "./basic";
 import { TextShape, Path, Color, SymbolShape, SymbolRefShape, ShapeFrame, OverrideType, VariableType, Para, ParaAttr, Text, Span, Variable } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
@@ -391,7 +391,7 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
     }
     const shadows = shape.style.shadows;
     const ex_props = Object.assign({}, props);
-    const shape_id = shape.id.slice(0, 4);
+    const shape_id = shape.id.slice(0, 4) + randomId();
     const shadow = shadowR(h, shape_id, shape, path, varsContainer);
     if (shadow.length) {
         delete props.style;
