@@ -670,6 +670,24 @@ export class Controller {
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             try {
                 status = Status.Pending;
+                // 考虑翻转、旋转
+                let hflip = false;
+                let vflip = false;
+                let rotate = 0;
+                let p: Shape | undefined = targetParent;
+                while (p) {
+                    if (p.isFlippedHorizontal) {
+                        hflip = !hflip;
+                    }
+                    if (p.isFlippedVertical) {
+                        vflip = !vflip;
+                    }
+                    if (p.rotation) {
+                        rotate += p.rotation;
+                    }
+                    p = p.parent;
+                }
+
                 let index = targetParent.childs.length;
                 for (let i = 0, len = sortedShapes.length; i < len; i++) {
                     const shape = sortedShapes[i];
@@ -683,8 +701,34 @@ export class Controller {
                         const name = get_state_name(shape as any, dlt);
                         api.shapeModifyName(page, shape, `${origin.name}/${name}`);
                     }
+
+                    let ohflip = false;
+                    let ovflip = false;
+                    let orotate = 0;
+                    let p: Shape | undefined = shape.parent;
+                    while (p) {
+                        if (p.isFlippedHorizontal) {
+                            ohflip = !ohflip;
+                        }
+                        if (p.isFlippedVertical) {
+                            ovflip = !ovflip;
+                        }
+                        if (p.rotation) {
+                            orotate += p.rotation;
+                        }
+                        p = p.parent;
+                    }
                     const { x, y } = shape.frame2Root();
                     api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
+
+                    if (hflip !== ohflip) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
+                    if (vflip !== ovflip) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+                    let d = orotate - rotate;
+                    if ((shape.isFlippedHorizontal ?? false) !== (shape.isFlippedVertical ?? false)) {
+                        d = -d;
+                    }
+                    if (d) api.shapeModifyRotate(page, shape, (shape.rotation || 0) + d);
+
                     translateTo(api, page, shape, x, y);
                     after_migrate(page, api, origin);
                 }
