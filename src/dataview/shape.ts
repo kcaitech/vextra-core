@@ -287,7 +287,7 @@ export class ShapeView extends DataView {
         this.m_pathstr = this.getPath().toString(); // todo fixedRadius
         return this.m_pathstr;
     }
-    getPath() {
+    getPath() {        
         if (this.m_path) return this.m_path;
         this.m_path = this.m_data.getPathOfFrame(this.frame, this.m_fixedRadius); // todo fixedRadius
         this.m_path.freeze();

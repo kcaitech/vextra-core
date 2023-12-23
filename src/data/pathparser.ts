@@ -238,6 +238,7 @@ export function parsePath(points: CurvePoint[], isClosed: boolean, offsetX: numb
 
         let preHandle = add(multiply(vPre, -radius * kappa), preTangent);
         let nextHandle = add(multiply(vNext, -radius * kappa), nextTangent);
+        
         let preSlices: Point2D[][] = [];
         let nextSlices: Point2D[][] = [];
 

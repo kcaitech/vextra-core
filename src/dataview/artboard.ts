@@ -26,7 +26,7 @@ export class ArtboradView extends GroupShapeView {
         // if (!this.m_fills) {
         //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
         // }
-        // return this.m_fills;
+        // return this.m_fills;                
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
     }
 
