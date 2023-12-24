@@ -13,6 +13,7 @@ import { addCommonAttr, newGroupShape } from "../../editor/creator";
 import { getHorizontalAngle } from "../../editor/page";
 import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
+import { translateTo } from "../../editor/frame";
 interface XY {
     x: number
     y: number
@@ -202,30 +203,27 @@ export function before_modify_side(api: Api, page: Page, shape: ContactShape, in
 
     api.contactModifyEditState(page, shape, true);
 }
+
 export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
-    const nf = s.boundingBox2();
-    const w = s.frame.width, h = s.frame.height;
-
-    const mp = s.matrix2Parent();
-    mp.preScale(w, h);
-
-    if (s.rotation) {
-        api.shapeModifyRotate(page, s, 0);
-    }
-    if (s.isFlippedHorizontal) {
-        api.shapeModifyHFlip(page, s, false);
-    }
-    if (s.isFlippedVertical) {
-        api.shapeModifyVFlip(page, s, false);
-    }
-
-    api.shapeModifyX(page, s, nf.x);
-    api.shapeModifyY(page, s, nf.y);
-    api.shapeModifyWH(page, s, Math.max(nf.width, minimum_WH), Math.max(nf.height, minimum_WH));
+    const m = s.matrix2Root();
 
     const f = s.frame;
 
-    const mp2 = s.matrix2Parent();
+    const w = f.width;
+    const h = f.height;
+
+    const mp = new Matrix(s.matrix2Parent());
+    mp.preScale(w, h);
+
+    const nf = s.boundingBox3();
+
+    api.shapeModifyWH(page, s, Math.max(nf.width, minimum_WH), Math.max(nf.height, minimum_WH));
+
+    const t = m.computeCoord2(nf.x, nf.y);
+
+    translateTo(api, page, s, t.x, t.y);
+
+    const mp2 = new Matrix(s.matrix2Parent());
     mp2.preScale(f.width, f.height);
     mp.multiAtLeft(mp2.inverse);
 
@@ -252,7 +250,7 @@ export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
         api.shapeModifyCurvPoint(page, s, i, mp.computeCoord2(p.x, p.y));
     }
 
-    // console.log(s.name, 'update frame by "update_frame_by_points"');
+    console.log(s.name, 'update frame by "update_frame_by_points" 2344');
 }
 export function update_frame_by_points2(api: Api, page: Page, s: PathShape) {
     const nf = s.boundingBox2();
