@@ -308,7 +308,7 @@ export class Shape extends Basic implements classes.Shape {
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
 
-    boundingBox3(): ShapeFrame {
+    boundingBox3(): ShapeFrame { // 保留transform的前提下计算Bounds
         const path = this.getPath();
         if (path.length > 0) {
             const bounds = path.calcBounds();
