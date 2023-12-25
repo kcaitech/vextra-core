@@ -36,7 +36,7 @@ import { exportCurvePoint } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name } from "./utils/symbol";
-import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, update_frame_by_points2, before_modify_side } from "./utils/path";
+import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
 
 interface PageXY { // 页面坐标系的xy
@@ -1000,7 +1000,7 @@ export class Controller {
         }
         const close = () => {
             try {
-                update_frame_by_points2(api, page, shape);
+                update_frame_by_points(api, page, shape);
             } catch (e) {
                 console.error(e);
                 status = Status.Exception;

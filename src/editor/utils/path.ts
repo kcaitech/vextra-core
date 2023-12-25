@@ -221,7 +221,7 @@ export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
 
     const t = m.computeCoord2(nf.x, nf.y);
 
-    translateTo(api, page, s, t.x, t.y);
+    translateTo(api, page, s, t.x, t.y); // todo 可优化
 
     const mp2 = new Matrix(s.matrix2Parent());
     mp2.preScale(f.width, f.height);
@@ -250,6 +250,10 @@ export function update_frame_by_points(api: Api, page: Page, s: PathShape) {
         api.shapeModifyCurvPoint(page, s, i, mp.computeCoord2(p.x, p.y));
     }
 }
+/**
+ * @deprecated
+ * @description 在更新frame过程中去除了transform
+ */
 export function update_frame_by_points2(api: Api, page: Page, s: PathShape) {
     const nf = s.boundingBox2();
     const w = s.frame.width, h = s.frame.height;
