@@ -23,8 +23,6 @@ import { Api } from "./command/recordapi";
 import { exportCurvePoint } from "../data/baseexport";
 import { importBorder, importCurvePoint, importFill } from "../data/baseimport";
 import { v4 } from "uuid";
-import { get_box_pagexy, get_nearest_border_point } from "../data/utils";
-import { Matrix } from "../basic/matrix";
 import { ContactShape } from "../data/contact";
 import { Document, SymbolRefShape, Text } from "../data/classes";
 import { uuid } from "../basic/uuid";
