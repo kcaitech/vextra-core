@@ -210,13 +210,18 @@ export class Controller {
             try {
                 savepage = page;
                 status = Status.Pending;
+
                 const shape = this.create(type, name, frame);
-                const xy = parent.frame2Root();
-                shape.frame.x -= xy.x;
-                shape.frame.y -= xy.y;
+
                 api.shapeInsert(page, parent, shape, parent.childs.length);
-                newShape = parent.childs.at(-1);
-                if (newShape?.type === ShapeType.Artboard) api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+
+                newShape = parent.childs[parent.childs.length - 1];
+                if (newShape.type === ShapeType.Artboard) {
+                    api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+                }
+
+                translateTo(api, savepage, newShape, frame.x, frame.y);
+
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
@@ -390,14 +395,7 @@ export class Controller {
                 if (newShape.type === ShapeType.Line) {
                     pathEdit(api, savepage, newShape as PathShape, 1, point); // 线条的创建过程由路径编辑来完成
                 } else {
-                    const { x: sx, y: sy } = anchor;
-                    const { x: px, y: py } = point;
-                    const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
-                    const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
-                    const height = x2.y - x1.y;
-                    const width = x2.x - x1.x;
-                    expandTo(api, savepage, newShape, width, height);
-                    translateTo(api, savepage, newShape, x1.x, x1.y);
+                    adjustRB2(api, savepage, newShape, point.x, point.y);
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
