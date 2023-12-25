@@ -1127,13 +1127,21 @@ export class PageEditor {
             const api = this.__repo.start("shapesModifyFixedRadius", {});
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
+
+                if (shape.type === ShapeType.Artboard) {
+                    api.shapeModifyFixedRadius(this.__page, shape as GroupShape, val);
+                    continue;
+                }
+
                 if (!(shape instanceof PathShape)) {
                     continue;
                 }
 
-                const is_rect = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image]
+                const is_rect = [ShapeType.Rectangle, ShapeType.Image]
                     .includes(shape.type) && shape.isClosed;
+
                 const points = shape.points;
+
                 if (is_rect) {
                     for (let i = 0, l = points.length; i < l; i++) {
                         api.modifyPointCornerRadius(this.__page, shape, i, val);
@@ -1145,6 +1153,7 @@ export class PageEditor {
 
                     api.shapeModifyFixedRadius(this.__page, shape, val);
                 }
+
                 update_frame_by_points(api, this.__page, shape);
             }
             this.__repo.commit();
@@ -1152,7 +1161,6 @@ export class PageEditor {
             console.log('shapesModifyFixedRadius', error);
             this.__repo.rollback();
         }
-
     }
 
     /**
