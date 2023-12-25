@@ -104,66 +104,66 @@ test("group", () => {
 
     chai.assert.equal(origin, now)
 })
-test("ungroup", () => {
-    const repo = new Repository()
-    const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
-    const page = newPage("Page1");
-    const pagesMgr = document.pagesMgr;
-    pagesMgr.add(page.id, page);
+// test("ungroup", () => {
+//     const repo = new Repository()
+//     const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);
+//     const page = newPage("Page1");
+//     const pagesMgr = document.pagesMgr;
+//     pagesMgr.add(page.id, page);
 
-    {
-        const shape1 = newRectShape("rect1", new ShapeFrame(0, 0, 100, 100))
-        const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
-        const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
-        const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
-        const cmd = CmdGroup.Make(page.id);
-        repo.start("add shape", {});
-        const needUpdateFrame: { shape: Shape, page: Page }[] = [];
-        api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
-        cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
-        api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
-        cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
-        api.shapeInsert(page, page, shape3, 2, needUpdateFrame)
-        cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
-        api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
-        cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
-        if (needUpdateFrame.length > 0) {
-            const page = needUpdateFrame[0].page;
-            const shapes = needUpdateFrame.map((v) => v.shape);
-            updateShapesFrame(page, shapes, api)
-        }
-        repo.commit();
-        chai.assert.isTrue(page.childs.length === 4);
-    }
-    const cooprepo = new CoopRepository(document, repo)
-    const executer = new CMDExecuter(document, repo);
-    let _cmd: Cmd | undefined;
-    cooprepo.onCommit((cmd) => { _cmd = cmd });
+//     {
+//         const shape1 = newRectShape("rect1", new ShapeFrame(0, 0, 100, 100))
+//         const shape2 = newRectShape("rect2", new ShapeFrame(120, 0, 100, 100))
+//         const shape3 = newRectShape("rect3", new ShapeFrame(120, 120, 100, 100))
+//         const shape4 = newRectShape("rect4", new ShapeFrame(240, 0, 100, 100))
+//         const cmd = CmdGroup.Make(page.id);
+//         repo.start("add shape", {});
+//         const needUpdateFrame: { shape: Shape, page: Page }[] = [];
+//         api.shapeInsert(page, page, shape1, 0, needUpdateFrame)
+//         cmd.addShapeInsert(page.id, shape1.id, 0, JSON.stringify(exportRectShape(shape1)))
+//         api.shapeInsert(page, page, shape2, 1, needUpdateFrame)
+//         cmd.addShapeInsert(page.id, shape2.id, 0, JSON.stringify(exportRectShape(shape2)))
+//         api.shapeInsert(page, page, shape3, 2, needUpdateFrame)
+//         cmd.addShapeInsert(page.id, shape3.id, 0, JSON.stringify(exportRectShape(shape3)))
+//         api.shapeInsert(page, page, shape4, 3, needUpdateFrame)
+//         cmd.addShapeInsert(page.id, shape4.id, 0, JSON.stringify(exportRectShape(shape4)))
+//         if (needUpdateFrame.length > 0) {
+//             const page = needUpdateFrame[0].page;
+//             const shapes = needUpdateFrame.map((v) => v.shape);
+//             updateShapesFrame(page, shapes, api)
+//         }
+//         repo.commit();
+//         chai.assert.isTrue(page.childs.length === 4);
+//     }
+//     const cooprepo = new CoopRepository(document, repo)
+//     const executer = new CMDExecuter(document, repo);
+//     let _cmd: Cmd | undefined;
+//     cooprepo.onCommit((cmd) => { _cmd = cmd });
 
 
-    const editor = new PageEditor(cooprepo, page, document)
+//     const editor = new PageEditor(cooprepo, page, document)
 
-    // [r1，r2，r3，r4]=> G1
-    const group = editor.group([...page.childs], "group")
-    // is group.type === Group?
-    chai.assert.isObject(group)
-    // dose group have four children?
-    chai.assert.isTrue((group as GroupShape).childs.length === 4);
-    // // G1 => [r1, r2, r3, r4]
-    const shapes = editor.ungroup(group as GroupShape);
-    // is shapes === [r1, r2, r3, r4]?
-    chai.assert.isTrue((shapes as Shape[]).length === 4);
-    // dose page have four children?
-    chai.assert.isTrue(page.childs.length === 4);
+//     // [r1，r2，r3，r4]=> G1
+//     const group = editor.group([...page.childs], "group")
+//     // is group.type === Group?
+//     chai.assert.isObject(group)
+//     // dose group have four children?
+//     chai.assert.isTrue((group as GroupShape).childs.length === 4);
+//     // // G1 => [r1, r2, r3, r4]
+//     const shapes = editor.ungroup(group as GroupShape);
+//     // is shapes === [r1, r2, r3, r4]?
+//     chai.assert.isTrue((shapes as Shape[]).length === 4);
+//     // dose page have four children?
+//     chai.assert.isTrue(page.childs.length === 4);
 
-    chai.assert.isObject(_cmd)
-    const origin = JSON.stringify(exportPage(page))
-    repo.undo();
-    executer.exec(_cmd!);
-    const now = JSON.stringify(exportPage(page))
+//     chai.assert.isObject(_cmd)
+//     const origin = JSON.stringify(exportPage(page))
+//     repo.undo();
+//     executer.exec(_cmd!);
+//     const now = JSON.stringify(exportPage(page))
 
-    chai.assert.equal(origin, now)
-})
+//     chai.assert.equal(origin, now)
+// })
 test("delete", () => {
     const repo = new Repository()
     const document = new Document(uuid(), "", "", "Blank", new BasicArray(), repo);

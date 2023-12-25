@@ -671,6 +671,25 @@ export class Controller {
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             try {
                 status = Status.Pending;
+
+                const parents: Shape[] = [];
+                let ohflip = false;
+                let ovflip = false;
+                let p: Shape | undefined = targetParent;
+                while (p) {
+                    parents.push(p);
+                    if (p.isFlippedHorizontal) {
+                        ohflip = !ohflip;
+                    }
+                    if (p.isFlippedVertical) {
+                        ovflip = !ovflip;
+                    }
+                    p = p.parent;
+                }
+
+                const pm = targetParent.matrix2Root();
+                const pminverse = pm.inverse;
+
                 let index = targetParent.childs.length;
                 for (let i = 0, len = sortedShapes.length; i < len; i++) {
                     const shape = sortedShapes[i];
@@ -684,8 +703,53 @@ export class Controller {
                         const name = get_state_name(shape as any, dlt);
                         api.shapeModifyName(page, shape, `${origin.name}/${name}`);
                     }
-                    const { x, y } = shape.frame2Root();
+
+                    // origin
+                    let hflip = false;
+                    let vflip = false;
+                    let p0: Shape | undefined = shape.parent;
+                    while (p0) {
+                        if (p0.isFlippedHorizontal) {
+                            hflip = !hflip;
+                        }
+                        if (p0.isFlippedVertical) {
+                            vflip = !vflip;
+                        }
+                        p0 = p0.parent;
+                    }
+
+                    const m = shape.matrix2Root();
+                    const { x, y } = m.computeCoord(0, 0);
                     api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
+
+                    if (hflip !== ohflip) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
+                    if (vflip !== ovflip) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+
+                    m.multiAtLeft(pminverse);
+                    let sina = m.m10;
+                    let cosa = m.m00;
+                    if (shape.isFlippedVertical) sina = -sina;
+                    if (shape.isFlippedHorizontal) cosa = -cosa;
+                    let rotate = Math.asin(sina); // 奇函数
+
+                    // 确定角度所在象限
+                    // sin(π-a) = sin(a)
+                    // sin(-π-a) = sin(a)
+                    // asin 返回值范围 -π/2 ~ π/2, 第1、4象限
+                    if (cosa < 0) {
+                        if (sina > 0) rotate = Math.PI - rotate;
+                        else if (sina < 0) rotate = -Math.PI - rotate;
+                        else rotate = Math.PI;
+                    }
+
+                    if (!Number.isNaN(rotate)) {
+                        const r = (rotate / (2 * Math.PI) * 360) % 360;
+                        if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
+                    }
+                    else {
+                        console.log('rotate is NaN', rotate);
+                    }
+
                     translateTo(api, page, shape, x, y);
                     after_migrate(page, api, origin);
                 }
@@ -837,7 +901,7 @@ export class Controller {
                 api.contactModifyEditState(page, shape, false);
 
                 api.addPoints(page, shape, points);
-                
+
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
