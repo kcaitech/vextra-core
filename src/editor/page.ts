@@ -334,13 +334,13 @@ export class PageEditor {
             let childrens: Shape[] = [];
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
-                if (shape.isVirtualShape) return false;
-                if (!shape.parent) return false;
+                if (shape.isVirtualShape) continue;
+                if (!shape.parent) continue;
                 const childs = ungroup(this.__page, shape, api);
                 childrens.push(...childs);
             }
             this.__repo.commit();
-            return childrens;
+            return childrens.length > 0 ? childrens : false;
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
