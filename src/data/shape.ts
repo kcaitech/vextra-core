@@ -283,7 +283,7 @@ export class Shape extends Basic implements classes.Shape {
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
     /**
-     * @deprecated
+     * @description 无论是否transform都进行Bounds计算并返回
      */
     boundingBox2(): ShapeFrame {
         const path = this.getPath();
@@ -307,8 +307,10 @@ export class Shape extends Basic implements classes.Shape {
         const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
-
-    boundingBox3(): ShapeFrame { // 保留transform的前提下计算Bounds
+    /**
+     * @description 保留transform的前提下计算Bounds并返回
+     */
+    boundingBox3(): ShapeFrame {
         const path = this.getPath();
         if (path.length > 0) {
             const bounds = path.calcBounds();
