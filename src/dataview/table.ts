@@ -10,7 +10,22 @@ export class TableView extends ShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         this.updateChildren();
+        this._bubblewatcher = this._bubblewatcher.bind(this);
+        this.m_data.bubblewatch(this._bubblewatcher);
     }
+
+    protected _bubblewatcher(...args: any[]) {
+        // this.onChildChange(...args);
+        if (args.includes('borders')) this.m_ctx.setDirty(this);
+    }
+
+    onDestory(): void {
+        super.onDestory();
+        this.m_data.bubbleunwatch(this._bubblewatcher);
+    }
+
+    // protected onChildChange(...args: any[]) {
+    // }
 
     protected isNoSupportDiamondScale(): boolean {
         return true;
@@ -24,7 +39,8 @@ export class TableView extends ShapeView {
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
-        if (args.includes('cells')) this.m_need_updatechilds = true;
+        // if (args.includes('cells')) 
+        this.m_need_updatechilds = true;
     }
 
     protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
@@ -54,13 +70,14 @@ export class TableView extends ShapeView {
                 const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
                 if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                     const cdom = reuse.get(cell.id);
+                    const props = { data: cell, transx: this.m_transx, varsContainer: this.m_varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual };
                     if (cdom) {
                         reuse.delete(cell.id);
                         this.moveChild(cdom, idx);
+                        cdom.layout(props);
                     } else {
                         // const comsMap = this.m_ctx.comsMap;
                         const Com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle)!;
-                        const props = { data: cell, transx: this.m_transx, varsContainer: this.m_varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual };
                         const ins = new Com(this.m_ctx, props) as DataView;
                         this.addChild(ins, idx);
                     }
