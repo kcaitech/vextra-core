@@ -19,7 +19,7 @@ import {
 import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ContactRoleType, CurveMode, ShapeType } from "../data/typesdefine";
-import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape } from "./creator";
+import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape, getTransformByEnv, modifyTransformByEnv } from "./creator";
 
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
@@ -213,6 +213,8 @@ export class Controller {
 
                 const shape = this.create(type, name, frame);
 
+                modifyTransformByEnv(shape, parent);
+
                 api.shapeInsert(page, parent, shape, parent.childs.length);
 
                 newShape = parent.childs[parent.childs.length - 1];
@@ -302,16 +304,20 @@ export class Controller {
                         name = name.slice(0, 19) + '...';
                     }
                     const shape = newTextShape(name);
+
+                    modifyTransformByEnv(shape, parent);
+
                     shape.text.insertText(content, 0);
-                    const xy = parent.frame2Root();
-                    shape.frame.x = frame.x - xy.x;
-                    shape.frame.y = frame.y - xy.y;
+
                     const layout = shape.getLayout();
                     shape.frame.width = layout.contentWidth;
                     shape.frame.height = layout.contentHeight;
 
                     api.shapeInsert(page, parent, shape, parent.childs.length)
-                    newShape = parent.childs.at(-1);
+                    newShape = parent.childs[parent.childs.length - 1];
+
+                    translateTo(api, page, newShape, frame.x, frame.y);
+
                     this.__repo.transactCtx.fireNotify();
                     status = Status.Fulfilled;
                     return newShape
@@ -343,12 +349,15 @@ export class Controller {
             try {
                 savepage = page;
                 status = Status.Pending;
+
                 const shape = newCutoutShape(name, frame);
-                const xy = parent.frame2Root();
-                shape.frame.x -= xy.x;
-                shape.frame.y -= xy.y;
+                modifyTransformByEnv(shape, parent);
+
                 api.shapeInsert(page, parent, shape, parent.childs.length);
-                newShape = parent.childs.at(-1);
+                newShape = parent.childs[parent.childs.length - 1];
+
+                translateTo(api, page, newShape, frame.x, frame.y);
+
                 newShape && api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;

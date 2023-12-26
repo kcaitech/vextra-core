@@ -65,6 +65,7 @@ export { newText, newText2 } from "../data/textutils";
 import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 import { ContactForm } from "../data/baseclasses";
+import { Matrix } from "../basic/matrix";
 
 export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
@@ -239,12 +240,12 @@ export function newOvalShape(name: string, frame: ShapeFrame): OvalShape {
 export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const style = newflatStyle();
     const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
-    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.Straight);
+    const ePoint = new CurvePoint(uuid(), 1, 0, CurveMode.Straight);
+    frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const id = uuid();
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
     style.borders.push(border);
-    const shape = new LineShape(id, name, types.ShapeType.Line, frame, style, curvePoint, false);
+    const shape = new LineShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, false);
     addCommonAttr(shape);
     return shape;
 }
@@ -253,7 +254,8 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const style = newflatStyle();
     style.endMarkerType = types.MarkerType.OpenArrow;
     const sPoint = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
-    const ePoint = new CurvePoint(uuid(), 1, 1, CurveMode.Straight);
+    const ePoint = new CurvePoint(uuid(), 1, 0, CurveMode.Straight);
+    frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
     const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
     style.borders.push(border);
@@ -430,4 +432,60 @@ export function newSymbolRefShape(name: string, frame: ShapeFrame, refId: string
     addCommonAttr(ref);
     ref.setSymbolMgr(symbol_mgr);
     return ref;
+}
+
+export function getTransformByEnv(env: GroupShape) {
+    const result = { flipH: false, flipV: false, rotation: 0 };
+
+    // flip
+    let ohflip = false;
+    let ovflip = false;
+
+    let p: Shape | undefined = env;
+    while (p) {
+        if (p.isFlippedHorizontal) {
+            ohflip = !ohflip;
+        }
+        if (p.isFlippedVertical) {
+            ovflip = !ovflip;
+        }
+        p = p.parent;
+    }
+
+    result.flipH = ohflip;
+    result.flipV = ovflip;
+
+    // rotate
+    const pm = env.matrix2Root();
+    const pminverse = pm.inverse;
+
+    const m = new Matrix(pminverse);
+
+    let sina = m.m10;
+    let cosa = m.m00;
+
+    if (result.flipH) sina = -sina;
+    if (result.flipV) cosa = -cosa;
+
+    let rotate = Math.asin(sina);
+
+    if (cosa < 0) {
+        if (sina > 0) rotate = Math.PI - rotate;
+        else if (sina < 0) rotate = -Math.PI - rotate;
+        else rotate = Math.PI;
+    }
+
+    if (!Number.isNaN(rotate)) {
+        result.rotation = (rotate / (2 * Math.PI) * 360) % 360;
+    }
+
+    return result;
+}
+
+export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
+    const transform = getTransformByEnv(env);
+
+    shape.isFlippedHorizontal = transform.flipH;
+    shape.isFlippedVertical = transform.flipV;
+    shape.rotation = transform.rotation;
 }
