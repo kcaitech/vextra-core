@@ -4,8 +4,8 @@ import { uuid } from "../../basic/uuid";
 import { Page } from "../../data/page";
 import { Api } from "../command/recordapi";
 import { BasicArray } from "../../data/basic";
-import { Border, Fill } from "../../data/style";
-import { importBorder, importFill } from "../../data/baseimport";
+import { Border, Fill, Shadow } from "../../data/style";
+import { importBorder, importFill, importShadow } from "../../data/baseimport";
 
 /**
  * @description 图层是否为组件实例的引用部分
@@ -240,8 +240,8 @@ export function modify_variable_with_api(api: Api, page: Page, shape: Shape, var
  */
 export function shape4border(api: Api, page: Page, shape: Shape) {
     const _var = override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-        const fills = _var?.value ?? shape.style.borders;
-        return new BasicArray(...(fills as Array<Border>).map((v) => {
+        const bordors = _var?.value ?? shape.style.borders;
+        return new BasicArray(...(bordors as Array<Border>).map((v) => {
             return importBorder(v);
         }
         ))
@@ -260,6 +260,17 @@ export function shape4fill(api: Api, page: Page, shape: Shape) {
             const imgmgr = v.getImageMgr();
             if (imgmgr) ret.setImageMgr(imgmgr)
             return ret;
+        }
+        ))
+    }, api, shape)
+    return _var || shape;
+}
+
+export function shape4shadow(api: Api, page: Page, shape: Shape) {
+    const _var = override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {
+        const shadows = _var?.value ?? shape.style.shadows;
+        return new BasicArray(...(shadows as Array<Shadow>).map((v) => {
+            return importShadow(v);
         }
         ))
     }, api, shape)

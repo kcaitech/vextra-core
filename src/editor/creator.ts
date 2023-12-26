@@ -134,7 +134,9 @@ export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Art
     template_artboard.id = uuid();
     template_artboard.name = name;
     template_artboard.frame = frame;
+
     const artboard = importArtboard(template_artboard as types.Artboard);
+
     if (style) {
         artboard.style = style;
     } else {
@@ -142,8 +144,11 @@ export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Art
         const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
         artboard.style.fills.push(fill);
     }
-    artboard.isVisible = true;
-    artboard.isLocked = false;
+
+    addCommonAttr(artboard);
+
+    artboard.fixedRadius = 0;
+
     return artboard
 }
 

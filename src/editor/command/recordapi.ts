@@ -995,36 +995,39 @@ export class Api {
             }
         })
     }
-    addShadow(page: Page, shape: Shape, shadow: Shadow, index: number) {
+    addShadow(page: Page, shape: Shape | Variable, shadow: Shadow, index: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            basicapi.addShadow(shape.style.shadows, shadow, index);
+            const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+            basicapi.addShadow(shadows, shadow, index);
             this.addCmd(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, index, exportShadow(shadow)))
         })
     }
-    deleteShadows(page: Page, shape: Shape, index: number, strength: number) {
+    deleteShadows(page: Page, shape: Shape | Variable, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const shadows = basicapi.deleteShadows(shape.style.shadows, index, strength);
-            if (shadows && shadows.length) {
-                for (let i = 0; i < shadows.length; i++) {
-                    const shadow = shadows[i];
+            const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+            const dels = basicapi.deleteShadows(shadows, index, strength);
+            if (dels && dels.length) {
+                for (let i = 0; i < dels.length; i++) {
+                    const shadow = dels[i];
                     this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, index, exportShadow(shadow)));
                 }
             }
         })
-
     }
-    deleteShadowAt(page: Page, shape: Shape, idx: number) {
+    deleteShadowAt(page: Page, shape: Shape | Variable, idx: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const shadow = basicapi.deleteShadowAt(shape.style.shadows, idx);
+            const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+            const shadow = basicapi.deleteShadowAt(shadows, idx);
             if (shadow) this.addCmd(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, idx, exportShadow(shadow)));
         })
     }
-    setShadowEnable(page: Page, shape: Shape, idx: number, isEnable: boolean) {
+    setShadowEnable(page: Page, shape: Shape | Variable, idx: number, isEnable: boolean) {
         checkShapeAtPage(page, shape);
-        const shadow = shape.style.shadows[idx];
+        const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+        const shadow = shadows[idx];
         if (shadow) {
             this.__trap(() => {
                 const save = shadow.isEnabled;
@@ -1033,9 +1036,10 @@ export class Api {
             })
         }
     }
-    setShadowOffsetX(page: Page, shape: Shape, idx: number, offsetX: number) {
+    setShadowOffsetX(page: Page, shape: Shape | Variable, idx: number, offsetX: number) {
         checkShapeAtPage(page, shape);
-        const shadow = shape.style.shadows[idx];
+        const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+        const shadow = shadows[idx];
         if (shadow) {
             this.__trap(() => {
                 const save = shadow.offsetX;
@@ -1044,9 +1048,10 @@ export class Api {
             })
         }
     }
-    setShadowOffsetY(page: Page, shape: Shape, idx: number, offsetY: number) {
+    setShadowOffsetY(page: Page, shape: Shape | Variable, idx: number, offsetY: number) {
         checkShapeAtPage(page, shape);
-        const shadow = shape.style.shadows[idx];
+        const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+        const shadow = shadows[idx];
         if (shadow) {
             this.__trap(() => {
                 const save = shadow.offsetY;
@@ -1055,9 +1060,10 @@ export class Api {
             })
         }
     }
-    setShadowBlur(page: Page, shape: Shape, idx: number, blur: number) {
+    setShadowBlur(page: Page, shape: Shape | Variable, idx: number, blur: number) {
         checkShapeAtPage(page, shape);
-        const shadow = shape.style.shadows[idx];
+        const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+        const shadow = shadows[idx];
         if (shadow) {
             this.__trap(() => {
                 const save = shadow.blurRadius;
@@ -1066,9 +1072,10 @@ export class Api {
             })
         }
     }
-    setShadowSpread(page: Page, shape: Shape, idx: number, spread: number) {
+    setShadowSpread(page: Page, shape: Shape | Variable, idx: number, spread: number) {
         checkShapeAtPage(page, shape);
-        const shadow = shape.style.shadows[idx];
+        const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+        const shadow = shadows[idx];
         if (shadow) {
             this.__trap(() => {
                 const save = shadow.spread;
@@ -1077,9 +1084,10 @@ export class Api {
             })
         }
     }
-    setShadowColor(page: Page, shape: Shape, idx: number, color: Color) {
+    setShadowColor(page: Page, shape: Shape | Variable, idx: number, color: Color) {
         checkShapeAtPage(page, shape);
-        const shadow = shape.style.shadows[idx];
+        const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+        const shadow = shadows[idx];
         if (shadow) {
             this.__trap(() => {
                 const save = shadow.color;
@@ -1088,9 +1096,10 @@ export class Api {
             })
         }
     }
-    setShadowPosition(page: Page, shape: Shape, idx: number, position: ShadowPosition) {
+    setShadowPosition(page: Page, shape: Shape | Variable, idx: number, position: ShadowPosition) {
         checkShapeAtPage(page, shape);
-        const shadow = shape.style.shadows[idx];
+        const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+        const shadow = shadows[idx];
         if (shadow) {
             this.__trap(() => {
                 const save = shadow.position;

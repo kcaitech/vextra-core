@@ -205,7 +205,7 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name
         uuid(),
         true,
         types.FillType.SolidColor,
-        new Color(1, 255, 153, 0),
+        new Color(1, 127, 88, 249),
         BorderPosition.Inner,
         2,
         border_style

@@ -328,14 +328,19 @@ export class PageEditor {
         return false;
     }
 
-    ungroup(shape: GroupShape): false | Shape[] {
-        if (shape.isVirtualShape) return false;
-        if (!shape.parent) return false;
+    ungroup(shapes: GroupShape[]): false | Shape[] {
         const api = this.__repo.start("", {});
         try {
-            const childs = ungroup(this.__page, shape, api);
+            let childrens: Shape[] = [];
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                if (shape.isVirtualShape) continue;
+                if (!shape.parent) continue;
+                const childs = ungroup(this.__page, shape, api);
+                childrens.push(...childs);
+            }
             this.__repo.commit();
-            return childs;
+            return childrens.length > 0 ? childrens : false;
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
@@ -377,14 +382,19 @@ export class PageEditor {
      * @param shape
      * @returns { false | Shape[] } 成功则返回被解除容器的所有子元素
      */
-    dissolution_artboard(shape: Artboard): false | Shape[] {
-        if (shape.isVirtualShape) return false;
-        if (!shape.parent) return false;
+    dissolution_artboard(shapes: Artboard[]): false | Shape[] {
         const api = this.__repo.start("dissolution_artboard", {});
         try {
-            const childs = ungroup(this.__page, shape, api);
+            let childrens: Shape[] = [];
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                if (shape.isVirtualShape) continue;
+                if (!shape.parent) continue;
+                const childs = ungroup(this.__page, shape, api);
+                childrens.push(...childs);
+            }
             this.__repo.commit();
-            return childs;
+            return childrens.length > 0 ? childrens : false;
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
@@ -1122,13 +1132,21 @@ export class PageEditor {
             const api = this.__repo.start("shapesModifyFixedRadius", {});
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
+
+                if (shape.type === ShapeType.Artboard) {
+                    api.shapeModifyFixedRadius(this.__page, shape as GroupShape, val);
+                    continue;
+                }
+
                 if (!(shape instanceof PathShape)) {
                     continue;
                 }
 
-                const is_rect = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image]
+                const is_rect = [ShapeType.Rectangle, ShapeType.Image]
                     .includes(shape.type) && shape.isClosed;
+
                 const points = shape.points;
+
                 if (is_rect) {
                     for (let i = 0, l = points.length; i < l; i++) {
                         api.modifyPointCornerRadius(this.__page, shape, i, val);
@@ -1140,6 +1158,7 @@ export class PageEditor {
 
                     api.shapeModifyFixedRadius(this.__page, shape, val);
                 }
+
                 update_frame_by_points(api, this.__page, shape);
             }
             this.__repo.commit();
@@ -1147,7 +1166,6 @@ export class PageEditor {
             console.log('shapesModifyFixedRadius', error);
             this.__repo.rollback();
         }
-
     }
 
     /**
