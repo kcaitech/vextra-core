@@ -264,6 +264,14 @@ export class GroupShapeView extends ShapeView {
         // todo boolgroup
     }
 
+    protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+        super._layout(shape, transform, varsContainer);
+        if (this.m_need_updatechilds) {
+            this.notify("childs"); // notify childs change
+            this.m_need_updatechilds = false;
+        }
+    }
+
     protected renderFills(): EL[] {
         if ((this.m_data as GroupShape).isBoolOpShape) {
             return super.renderFills();
@@ -307,10 +315,10 @@ export class GroupShapeView extends ShapeView {
     updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number | undefined): void {
         super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
         // todo
-        if (this.m_need_updatechilds) {
-            // this.updateChildren();
-            this.m_need_updatechilds = false;
-        }
+        // if (this.m_need_updatechilds) {
+        //     // this.updateChildren();
+        //     this.m_need_updatechilds = false;
+        // }
     }
 
     protected layoutOnNormal(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {

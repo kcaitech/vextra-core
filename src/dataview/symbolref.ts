@@ -98,7 +98,7 @@ export class SymbolRefView extends ShapeView {
         if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
     }
 
-    private layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>) {
+    private layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>): boolean {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, transx, varsContainer, isVirtual: true };
         if (!cdom) {
@@ -106,10 +106,11 @@ export class SymbolRefView extends ShapeView {
             const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
             cdom = new Com(this.m_ctx, props) as DataView;
             this.addChild(cdom, idx);
-            return;
+            return true;
         }
-        this.moveChild(cdom, idx);
+        const changed = this.moveChild(cdom, idx);
         cdom.layout(props);
+        return changed;
     }
 
     layout(props?: PropsType | undefined): void {
@@ -242,19 +243,31 @@ export class SymbolRefView extends ShapeView {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
+        let changed = false;
         for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i]
             // update childs
-            this.layoutChild(cc, i, undefined, varsContainer, resue);
+            if (this.layoutChild(cc, i, undefined, varsContainer, resue)) {
+                changed = true;
+            }
         }
         // 删除多余的
-        this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+
+        if (this.m_children.length > childs.length) {
+            this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+            changed = true;
+        }
+
+        if (changed) {
+            this.notify("childs");
+        }
     }
 
     layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeFrame, scaleX: number, scaleY: number): void {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
+        let changed = false;
         for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i]
             const transform = {
@@ -268,10 +281,19 @@ export class SymbolRefView extends ShapeView {
                 rotate: 0
             }
             // update childs
-            this.layoutChild(cc, i, transform, varsContainer!, resue);
+            if (this.layoutChild(cc, i, transform, varsContainer!, resue)) {
+                changed = true;
+            }
         }
         // 删除多余的
-        this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+        if (this.m_children.length > childs.length) {
+            this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+            changed = true;
+        }
+
+        if (changed) {
+            this.notify("childs"); // notify childs change
+        }
     }
 
     layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {

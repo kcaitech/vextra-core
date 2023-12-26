@@ -237,7 +237,7 @@ export class DataView extends EventEL {
         return dom;
     }
 
-    moveChild(child: DataView, toIdx: number) {
+    moveChild(child: DataView, toIdx: number): boolean {
         if (child.m_parent !== this) {
             throw new Error("child not in this parent");
         }
@@ -246,13 +246,14 @@ export class DataView extends EventEL {
         }
         const fIdx = this.m_children.indexOf(child);
         if (fIdx === toIdx) {
-            return;
+            return false;
         }
         if (fIdx < 0) {
             throw new Error("child not in this parent");
         }
         this.m_children.splice(fIdx, 1);
         this.m_children.splice(toIdx, 0, child);
+        return true;
     }
 
     removeChilds(idx: number, len: number) {
