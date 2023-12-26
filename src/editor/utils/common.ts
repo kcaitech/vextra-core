@@ -1,10 +1,16 @@
-import { expandTo } from "../../editor/frame";
+import { expandTo, translate, translateTo } from "../../editor/frame";
 import { Page } from "../../data/page";
-import { PathShape, Shape } from "../../data/shape";
+import { PathShape, Shape, ShapeFrame } from "../../data/shape";
 import { Api } from "../../editor/command/recordapi";
 import { is_straight, update_frame_by_points } from "./path";
 import { getHorizontalRadians } from "../../editor/page";
+import { Artboard } from "../../data/artboard";
+import { Point2D } from "../../data/typesdefine";
+import { float_accuracy } from "../../basic/consts";
 
+function equal_with_mean(a: number, b: number) {
+    return Math.abs(a - b) < float_accuracy;
+}
 /**
  * @description 修改直线的width，操作的是直线段的第二个CurvePoint
  */
@@ -75,5 +81,71 @@ export function modify_shapes_height(api: Api, page: Page, shapes: Shape[], val:
         }
 
         expandTo(api, page, shape, w, val);
+    }
+}
+/**
+ * @description 裁剪容器空白区域(保留自身transform)
+ */
+export function adapt_for_artboard(api: Api, page: Page, artboard: Artboard) {
+    const minimum_WH = 0.01;
+    const children = artboard.childs;
+    if (!children.length) {
+        console.log('adapt_for_artboard: !children.length');
+        return;
+    }
+
+    
+    const m_artboard_to_root = artboard.matrix2Root();
+    
+    const f = artboard.frame;
+    const box = get_new_box();
+
+    if (no_need_to_adapt()) {
+        throw new Error("adapt_for_artboard: no_need_to_adapt");
+    }
+
+    re_children_layout();
+
+    api.shapeModifyWH(page, artboard, Math.max(box.width, minimum_WH), Math.max(box.height, minimum_WH));
+
+    const artboard_xy = m_artboard_to_root.computeCoord2(box.x, box.y);
+    translateTo(api, page, artboard, artboard_xy.x, artboard_xy.y);
+
+    // utils
+    function get_new_box() {
+        const points: Point2D[] = [];
+
+        children.forEach(c => {
+            const f = c.frame;
+            const m2p = c.matrix2Parent();
+            points.push(
+                ...[
+                    { x: 0, y: 0 },
+                    { x: f.width, y: 0 },
+                    { x: f.width, y: f.height },
+                    { x: 0, y: f.height }
+                ]
+                    .map(i => m2p.computeCoord3(i))
+            )
+        })
+
+        const minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
+        const maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
+        const miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);
+        const maxy = points.reduce((pre, cur) => Math.max(pre, cur.y), points[0].y);
+
+        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+    }
+    function no_need_to_adapt() {
+        return equal_with_mean(0, box.x)
+            && equal_with_mean(0, box.y)
+            && equal_with_mean(f.width, box.width)
+            && equal_with_mean(f.height, box.height)
+    }
+    function re_children_layout() {
+        children.forEach(c => {
+            api.shapeModifyX(page, c, c.frame.x - box.x);
+            api.shapeModifyY(page, c, c.frame.y - box.y);
+        })
     }
 }

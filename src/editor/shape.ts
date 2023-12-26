@@ -38,6 +38,7 @@ import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./u
 import { newText, newText2 } from "./creator";
 import { _clip, _typing_modify, get_points_for_init, modify_points_xy, replace_path_shape_points, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
+import { adapt_for_artboard } from "./utils/common";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -1308,45 +1309,18 @@ export class ShapeEditor {
 
     // 容器自适应大小
     public adapt() {
-        if (this.__shape.type === ShapeType.Artboard) {
-            const childs = (this.__shape as Artboard).childs;
-            if (childs.length) {
-                const api = this.__repo.start("adapt", {});
-                try {
-                    const __points: [number, number][] = [];
-                    childs.forEach(p => {
-                        const { width, height } = p.frame;
-                        let _ps: [number, number][] = [
-                            [0, 0],
-                            [width, 0],
-                            [width, height],
-                            [0, height]
-                        ]
-                        const m = p.matrix2Root();
-                        _ps = _ps.map(p => {
-                            const np = m.computeCoord(p[0], p[1]);
-                            return [np.x, np.y];
-                        })
-                        __points.push(..._ps);
-                    })
-                    const box = createHorizontalBox(__points);
-                    if (box) {
-                        const { x: ox, y: oy } = this.__shape.frame2Root();
-                        const { dx, dy } = { dx: ox - box.left, dy: oy - box.top };
-                        for (let i = 0; i < childs.length; i++) {
-                            translate(api, this.__page, childs[i], dx, dy);
-                        }
-                        expandTo(api, this.__page, this.__shape, box.right - box.left, box.bottom - box.top);
-                        translateTo(api, this.__page, this.__shape, box.left, box.top);
-                        this.__repo.commit();
-                    } else {
-                        this.__repo.rollback();
-                    }
-                } catch (error) {
-                    console.log(error);
-                    this.__repo.rollback();
-                }
-            }
+        if (!(this.__shape instanceof Artboard)) {
+            console.log('adapt: !(this.__shape instanceof Artboard)');
+            return;
+        }
+
+        try {
+            const api = this.__repo.start("adapt", {});
+            adapt_for_artboard(api, this.__page, this.__shape);
+            this.__repo.commit();
+        } catch (error) {
+            console.log('adapt', error);
+            this.__repo.rollback();
         }
     }
 
