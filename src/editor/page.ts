@@ -328,14 +328,19 @@ export class PageEditor {
         return false;
     }
 
-    ungroup(shape: GroupShape): false | Shape[] {
-        if (shape.isVirtualShape) return false;
-        if (!shape.parent) return false;
+    ungroup(shapes: GroupShape[]): false | Shape[] {
         const api = this.__repo.start("", {});
         try {
-            const childs = ungroup(this.__page, shape, api);
+            let childrens: Shape[] = [];
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                if (shape.isVirtualShape) continue;
+                if (!shape.parent) continue;
+                const childs = ungroup(this.__page, shape, api);
+                childrens.push(...childs);
+            }
             this.__repo.commit();
-            return childs;
+            return childrens.length > 0 ? childrens : false;
         } catch (e) {
             console.log(e)
             this.__repo.rollback();
