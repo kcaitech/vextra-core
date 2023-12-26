@@ -46,6 +46,14 @@ export class SymbolRefView extends ShapeView {
     private m_sym: SymbolShape | undefined;
     private m_union: SymbolShape | undefined;
 
+
+    get symData() {
+        return this.m_sym;
+    }
+    get refId() {
+        return this.m_refId;
+    }
+
     onDataChange(...args: any[]): void {
         this.loadsym();
     }

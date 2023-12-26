@@ -76,14 +76,16 @@ export class FoldDirTree<T extends DirItem> {
         return undefined;
     }
 
-    indexOf(data: T): number {
-        const node = this.__id2node.get(data.id);
+    indexOf(data: string | T): number {
+        const dataId = typeof data ==='string'? data : data.id;
+        const node = this.__id2node.get(dataId);
         if (node) return this.__dirtree.indexOf(node)
         return -1;
     }
 
-    isFold(data: T): boolean {
-        const node = this.__id2node.get(data.id);
+    isFold(data: string | T): boolean {
+        const dataId = typeof data ==='string'? data : data.id;
+        const node = this.__id2node.get(dataId);
         return (node && node.__data.fold) ?? true; // 默认是折叠的
     }
 
@@ -113,11 +115,12 @@ export class FoldDirTree<T extends DirItem> {
         return true;
     }
 
-    fold(data: T): boolean {
-        const node = this.__id2node.get(data.id);
+    fold(data: string | T): boolean {
+        const dataId = typeof data ==='string'? data : data.id;
+        const node = this.__id2node.get(dataId);
         if (!node) return false;
         if (node.__data.fold) return false;
-        return this.__fold(node, data);
+        return this.__fold(node, node.__data.data);
     }
 
     private __removeIdMap(p: NodeType<T>) {
@@ -156,11 +159,12 @@ export class FoldDirTree<T extends DirItem> {
         return true;
     }
 
-    unfold(data: T): boolean {
-        const node = this.__id2node.get(data.id);
+    unfold(data: string | T): boolean {
+        const dataId = typeof data ==='string'? data : data.id;
+        const node = this.__id2node.get(dataId);
         if (!node) return false;
         if (!node.__data.fold) return false;
-        return this.__unfold(node, data);
+        return this.__unfold(node, node.__data.data);
     }
 
     toggleFold(data: T): boolean {
