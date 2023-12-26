@@ -121,7 +121,7 @@ export class DataView extends EventEL {
     get childs() {
         return this.m_children;
     }
-    get naviChilds() {
+    get naviChilds(): DataView[] | undefined {
         return this.m_children;
     }
     get type() {

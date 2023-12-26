@@ -43,6 +43,11 @@ export class TableView extends ShapeView {
         this.m_need_updatechilds = true;
     }
 
+    // 单元格不展示
+    get naviChilds(): ShapeView[] | undefined {
+        return undefined;
+    }
+
     protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
         super._layout(shape, transform, varsContainer);
         if (this.m_need_updatechilds) {

@@ -217,7 +217,7 @@ export class ShapeView extends DataView {
     get childs(): ShapeView[] {
         return this.m_children as ShapeView[];
     }
-    get naviChilds(): ShapeView[] {
+    get naviChilds(): ShapeView[] | undefined {
         return this.m_children as ShapeView[];
     }
 
