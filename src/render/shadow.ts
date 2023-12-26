@@ -1,15 +1,15 @@
 import { OverrideType, Shadow, ShadowPosition, ShapeType, VariableType } from "../data/baseclasses";
-import { Style } from "../data/style";
+import { Border, Fill, Style } from "../data/style";
 import { Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
 import { render as borderR } from "./border";
 import { findOverrideAndVar } from "../data/utils";
 
 const shadowOri: {
-    [key: string]: (h: Function, style: Style, frame: ShapeFrame, id: string, i: number, path: string) => any
+    [key: string]: (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[]) => any
 } = {};
-shadowOri[ShadowPosition.Outer] = function (h: Function, style: Style, frame: ShapeFrame, id: string, i: number, path: string): any {
+shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[]): any {
     const { width, height } = frame;
-    const shadow = style.shadows[i];
+    // const shadow = style.shadows[i];
     const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
     getFilterPropsValue(shadow, frame, f_props);
     const { color, offsetX, offsetY, blurRadius, spread } = shadow;
@@ -37,16 +37,16 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, style: Style, frame: Sh
     ])
     let fill = 'none';
 
-    if (style && style.fills.length) {
-        for (let i = 0; i < style.fills.length; i++) {
-            const _fill = style.fills[i];
+    if (fills.length) {
+        for (let i = 0; i < fills.length; i++) {
+            const _fill = fills[i];
             if (_fill.color.alpha !== 0) {
                 fill = 'black';
                 break;
             }
         }
     }
-    const border = borderR(h, style!.borders, frame, path)
+    const border = borderR(h, borders, frame, path)
 
     const body_props: any = {
         d: path,
@@ -60,9 +60,9 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, style: Style, frame: Sh
     const p = h('g', g_props, [h('path', body_props), ...border]);
     return { filter, p }
 }
-shadowOri[ShadowPosition.Inner] = function (h: Function, style: Style, frame: ShapeFrame, id: string, i: number, path: string): any {
+shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[]): any {
     const f_id = `inner-shadow-${id + i}`;
-    const shadow = style.shadows[i];
+    // const shadow = style.shadows[i];
     const { color, offsetX, offsetY, blurRadius, spread } = shadow;
     const fe_offset_props = {
         dx: offsetX,
@@ -116,8 +116,8 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, style: Style, frame: Sh
     return h('filter', filter_props, h_node);
 }
 
-function shadowShape(h: Function, shape: Shape, id: string): any {
-    const shadows = shape.style.shadows.filter(s => s.position === ShadowPosition.Outer);
+function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: string): any {
+    shadows = shadows.filter(s => s.position === ShadowPosition.Outer);
     const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
     if (shadows.length === 0) return undefined;
     const h_nodes = [];
@@ -126,7 +126,7 @@ function shadowShape(h: Function, shape: Shape, id: string): any {
         const position = shadow.position;
         if (!shadow.isEnabled) continue;
         if (position === ShadowPosition.Outer) {
-            getFilterPropsValue(shadow, shape.frame, f_props);
+            getFilterPropsValue(shadow, frame, f_props);
             const { color, offsetX, offsetY, blurRadius, spread } = shadow;
             const fe_color_matrix = {
                 in: `SourceAlpha`,
@@ -186,9 +186,9 @@ function shadowShape(h: Function, shape: Shape, id: string): any {
     return filter;
 }
 
-export function render(h: Function, id: string, shadows: Shadow[], path: string, shape: Shape, frame: ShapeFrame) {
+export function render(h: Function, id: string, shadows: Shadow[], path: string, frame: ShapeFrame, fills: Fill[], borders: Border[], shapeType: ShapeType) {
     const elArr = [];
-    const style = shape.style;
+    // const style = shape.style;
     // const frame = shape.frame;
     const inner_f = [];
     const filters = [];
@@ -198,18 +198,18 @@ export function render(h: Function, id: string, shadows: Shadow[], path: string,
         const position = shadow.position;
         if (!shadow.isEnabled) continue;
         if (position === ShadowPosition.Outer) {
-            if (shape.type === ShapeType.Rectangle || shape.type === ShapeType.Artboard || shape.type === ShapeType.Oval) {
-                const { filter, p } = shadowOri[position](h, style, frame, id, i, path);
+            if (shapeType === ShapeType.Rectangle || shapeType === ShapeType.Artboard || shapeType === ShapeType.Oval) {
+                const { filter, p } = shadowOri[position](h, shadow, frame, id, i, path, fills, borders);
                 filters.push(filter);
                 paths.push(p);
             }
         } else if (position === ShadowPosition.Inner) {
-            const filter = shadowOri[position](h, style, frame, id, i, path);
+            const filter = shadowOri[position](h, shadow, frame, id, i, path, fills, borders);
             inner_f.push(filter);
         }
     }
-    if (shape.type !== ShapeType.Rectangle && shape.type !== ShapeType.Artboard && shape.type !== ShapeType.Oval) {
-        const filter = shadowShape(h, shape, id);
+    if (shapeType !== ShapeType.Rectangle && shapeType !== ShapeType.Artboard && shapeType !== ShapeType.Oval) {
+        const filter = shadowShape(h, shadows, frame, id);
         if (filter) {
             elArr.push(filter);
         }
@@ -248,7 +248,7 @@ const getFilterPropsValue = (shadow: Shadow, frame: ShapeFrame, f_props: any) =>
     f_props.props_y.push(props_y);
 }
 
-export function renderWithVars(h: Function, id: string, shape: Shape, path: string,
+export function renderWithVars(h: Function, id: string, shape: Shape, frame: ShapeFrame, path: string,
     varsContainer?: (SymbolRefShape | SymbolShape)[] | undefined
 ) {
     let shadows = shape.style.shadows;
@@ -275,5 +275,17 @@ export function renderWithVars(h: Function, id: string, shape: Shape, path: stri
             }
         }
     }
-    return render(h, id, shadows, path, shape, shape.frame);
+    let fills = shape.style.fills;
+    if (varsContainer) {
+        const _vars = findOverrideAndVar(shape, OverrideType.Fills, varsContainer);
+        if (_vars) {
+            // (hdl as any as VarWatcher)._watch_vars(propertyKey.toString(), _vars);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === VariableType.Fills) {
+                // return _var.value;
+                fills = _var.value;
+            }
+        }
+    }
+    return render(h, id, shadows, path, frame, fills, borders, shape.type);
 }

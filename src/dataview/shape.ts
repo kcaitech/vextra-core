@@ -562,7 +562,7 @@ export class ShapeView extends DataView {
     }
 
     protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.m_data, this.frame);
+        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getFills(), this.getBorders(), this.m_data.type);
     }
 
     protected renderProps(): { [key: string]: string } {

@@ -166,7 +166,7 @@ export function render(h: Function, shape: ImageShape, imgPH: string, transform:
     const shadows = shape.style.shadows;
     const ex_props = Object.assign({}, props);
     const shape_id = shape.id.slice(0, 4) + randomId();
-    const shadow = shadowR(h, shape_id, shape, path, varsContainer);
+    const shadow = shadowR(h, shape_id, shape, frame, path, varsContainer);
     if (shadow.length) {
         delete props.style;
         delete props.transform;
