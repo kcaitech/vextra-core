@@ -96,7 +96,7 @@ export class CoopRepository {
             else {
                 undoCmd.unitId = unitId;
             }
-            console.log("undo cmd", undoCmd)
+            console.log("undo cmd", cmdClone(undoCmd))
             for (const h of this.__undoRedoListener) {
                 const newCmd = h(UndoRedoType.Undo, undoCmd, sourceCmdId)
                 if (newCmd === undefined) {
@@ -127,7 +127,7 @@ export class CoopRepository {
             else {
                 redoCmd.unitId = unitId;
             }
-            console.log("redo cmd", redoCmd)
+            console.log("redo cmd", cmdClone(redoCmd))
             for (const h of this.__undoRedoListener) {
                 const newCmd = h(UndoRedoType.Redo, redoCmd, oldCmdId)
                 if (newCmd === undefined) {
