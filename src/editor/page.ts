@@ -382,14 +382,19 @@ export class PageEditor {
      * @param shape
      * @returns { false | Shape[] } 成功则返回被解除容器的所有子元素
      */
-    dissolution_artboard(shape: Artboard): false | Shape[] {
-        if (shape.isVirtualShape) return false;
-        if (!shape.parent) return false;
+    dissolution_artboard(shapes: Artboard[]): false | Shape[] {
         const api = this.__repo.start("dissolution_artboard", {});
         try {
-            const childs = ungroup(this.__page, shape, api);
+            let childrens: Shape[] = [];
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                if (shape.isVirtualShape) continue;
+                if (!shape.parent) continue;
+                const childs = ungroup(this.__page, shape, api);
+                childrens.push(...childs);
+            }
             this.__repo.commit();
-            return childs;
+            return childrens.length > 0 ? childrens : false;
         } catch (e) {
             console.log(e)
             this.__repo.rollback();

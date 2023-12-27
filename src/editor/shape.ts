@@ -18,7 +18,7 @@ import { Artboard } from "../data/artboard";
 import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { ContactForm, CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme } from "../data/typesdefine";
+import { CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme } from "../data/typesdefine";
 import { Api } from "./command/recordapi";
 import { exportCurvePoint } from "../data/baseexport";
 import { importBorder, importCurvePoint, importFill } from "../data/baseimport";
@@ -34,9 +34,9 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
+import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, shape4shadow } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
-import { _clip, _typing_modify, get_points_for_init, modify_points_xy, replace_path_shape_points, update_frame_by_points, update_path_shape_frame } from "./utils/path";
+import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 import { adapt_for_artboard } from "./utils/common";
 
@@ -876,8 +876,8 @@ export class ShapeEditor {
     private shape4border(api: Api, shape?: Shape) {
         const _shape = shape ?? this.__shape;
         const _var = this.overrideVariable(VariableType.Borders, OverrideType.Borders, (_var) => {
-            const fills = _var?.value ?? _shape.style.borders;
-            return new BasicArray(...(fills as Array<Border>).map((v) => {
+            const borders = _var?.value ?? _shape.style.borders;
+            return new BasicArray(...(borders as Array<Border>).map((v) => {
                 const ret = importBorder(v);
                 return ret;
             }
@@ -1087,7 +1087,9 @@ export class ShapeEditor {
     public addShadow(shadow: Shadow) {
         const api = this.__repo.start("addShadow", {});
         try {
-            api.addShadow(this.__page, this.__shape, shadow, this.__shape.style.shadows.length);
+            const shape = shape4shadow(api, this.__page, this.__shape);
+            const l = shape instanceof Shape ? shape.style.borders.length : shape.value.length;
+            api.addShadow(this.__page, shape, shadow, l);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1096,104 +1098,98 @@ export class ShapeEditor {
     }
 
     public deleteShadow(idx: number) {
-        const shadow = this.__shape.style.shadows[idx];
-        if (shadow) {
-            const api = this.__repo.start("deleteShadow", {});
-            try {
-                api.deleteShadowAt(this.__page, this.__shape, idx)
-                this.__repo.commit();
-            } catch (e) {
-                console.error(e);
-                this.__repo.rollback();
-            }
+        const api = this.__repo.start("deleteShadow", {});
+        try {
+            const shape = shape4shadow(api, this.__page, this.__shape);
+            api.deleteShadowAt(this.__page, shape, idx)
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
 
     public setShadowPosition(idx: number, position: ShadowPosition) {
-        const shadow = this.__shape.style.shadows[idx];
-        if (shadow) {
-            const api = this.__repo.start("setShadowPosition", {});
-            try {
-                api.setShadowPosition(this.__page, this.__shape, idx, position);
-                this.__repo.commit();
-            } catch (e) {
-                console.error(e);
-                this.__repo.rollback();
-            }
+        const api = this.__repo.start("setShadowPosition", {});
+        try {
+            const shape = shape4shadow(api, this.__page, this.__shape);
+            api.setShadowPosition(this.__page, shape, idx, position);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
 
     public setShadowEnable(idx: number, isEnabled: boolean) {
-        const shadow = this.__shape.style.shadows[idx];
-        if (shadow) {
-            const api = this.__repo.start("setShadowEnable", {});
-            try {
-                api.setShadowEnable(this.__page, this.__shape, idx, isEnabled);
-                this.__repo.commit();
-            } catch (e) {
-                console.error(e);
-                this.__repo.rollback();
-            }
+        const api = this.__repo.start("setShadowEnable", {});
+        try {
+            const shape = shape4shadow(api, this.__page, this.__shape);
+            api.setShadowEnable(this.__page, shape, idx, isEnabled);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
 
     public setShadowColor(idx: number, color: Color) {
-        const shadow = this.__shape.style.shadows[idx];
-        if (shadow) {
-            const api = this.__repo.start("setShadowColor", {});
-            api.setShadowColor(this.__page, this.__shape, idx, color);
+        const api = this.__repo.start("setShadowColor", {});
+        try {
+            const shape = shape4shadow(api, this.__page, this.__shape);
+            api.setShadowColor(this.__page, shape, idx, color);
             this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
 
     public setShadowOffsetX(idx: number, offserX: number) {
-        const shadow = this.__shape.style.shadows[idx];
-        if (shadow) {
-            const api = this.__repo.start("setShadowOffsetX", {});
-            try {
-                api.setShadowOffsetX(this.__page, this.__shape, idx, offserX);
-                this.__repo.commit();
-            } catch (e) {
-                console.error(e);
-                this.__repo.rollback();
-            }
+        const api = this.__repo.start("setShadowOffsetX", {});
+        try {
+            const shape = shape4shadow(api, this.__page, this.__shape);
+            api.setShadowOffsetX(this.__page, shape, idx, offserX);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
 
     public setShadowOffsetY(idx: number, offsetY: number) {
-        const shadow = this.__shape.style.shadows[idx];
-        if (shadow) {
-            const api = this.__repo.start("setShadowOffsetY", {});
-            try {
-                api.setShadowOffsetY(this.__page, this.__shape, idx, offsetY);
-                this.__repo.commit();
-            } catch (e) {
-                console.error(e);
-                this.__repo.rollback();
-            }
+        const api = this.__repo.start("setShadowOffsetY", {});
+        try {
+            const shape = shape4shadow(api, this.__page, this.__shape);
+            api.setShadowOffsetY(this.__page, shape, idx, offsetY);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
 
     public setShadowBlur(idx: number, blur: number) {
-        const shadow = this.__shape.style.shadows[idx];
-        if (shadow) {
-            const api = this.__repo.start("setShadowBlur", {});
-            api.setShadowBlur(this.__page, this.__shape, idx, blur);
+        const api = this.__repo.start("setShadowBlur", {});
+        try {
+            const shape = shape4shadow(api, this.__page, this.__shape);
+            api.setShadowBlur(this.__page, shape, idx, blur);
             this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
 
     public setShadowSpread(idx: number, spread: number) {
-        const shadow = this.__shape.style.shadows[idx];
-        if (shadow) {
-            const api = this.__repo.start("setShadowSpread", {});
-            try {
-                api.setShadowSpread(this.__page, this.__shape, idx, spread);
-                this.__repo.commit();
-            } catch (e) {
-                console.error(e);
-                this.__repo.rollback();
-            }
+        const api = this.__repo.start("setShadowSpread", {});
+        try {
+            const shape = shape4shadow(api, this.__page, this.__shape);
+            api.setShadowSpread(this.__page, this.__shape, idx, spread);
+            this.__repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.__repo.rollback();
         }
     }
     // export ops
