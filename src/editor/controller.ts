@@ -238,12 +238,16 @@ export class Controller {
             try {
                 savepage = page;
                 status = Status.Pending;
+
                 const shape = newArrowShape(name, frame);
-                const xy = parent.frame2Root();
-                shape.frame.x -= xy.x;
-                shape.frame.y -= xy.y;
+
+                modifyTransformByEnv(shape, parent);
+
                 api.shapeInsert(page, parent, shape, parent.childs.length);
-                newShape = parent.childs.at(-1);
+                newShape = parent.childs[parent.childs.length - 1];
+
+                translateTo(api, savepage, newShape, frame.x, frame.y);
+                
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape

@@ -243,7 +243,7 @@ export function newLineShape(name: string, frame: ShapeFrame): LineShape {
     const ePoint = new CurvePoint(uuid(), 1, 0, CurveMode.Straight);
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
     style.borders.push(border);
     const shape = new LineShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, false);
     addCommonAttr(shape);
@@ -257,7 +257,7 @@ export function newArrowShape(name: string, frame: ShapeFrame): LineShape {
     const ePoint = new CurvePoint(uuid(), 1, 0, CurveMode.Straight);
     frame.height = 1;
     const curvePoint = new BasicArray<CurvePoint>(sPoint, ePoint);
-    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 2, new BorderStyle(0, 0));
+    const border = new Border(uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0), types.BorderPosition.Center, 1, new BorderStyle(0, 0));
     style.borders.push(border);
     const shape = new LineShape(uuid(), name, types.ShapeType.Line, frame, style, curvePoint, false);
     addCommonAttr(shape);
@@ -487,5 +487,16 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
 
     shape.isFlippedHorizontal = transform.flipH;
     shape.isFlippedVertical = transform.flipV;
-    shape.rotation = transform.rotation;
+
+    let r = transform.rotation;
+
+    if (transform.flipH) {
+        r = r - 180;
+    }
+    if (transform.flipV) {
+        r = r - 180;
+    }
+
+    shape.rotation = r;
+    transform.rotation = r;
 }
