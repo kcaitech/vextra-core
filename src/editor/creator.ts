@@ -497,6 +497,5 @@ export function modifyTransformByEnv(shape: Shape, env: GroupShape) {
         r = r - 180;
     }
 
-    shape.rotation = r;
-    transform.rotation = r;
+    shape.rotation = r % 360;
 }
