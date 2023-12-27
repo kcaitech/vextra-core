@@ -438,19 +438,16 @@ export class Text extends Basic implements classes.Text {
             return this.__layout;
         }
 
-        // const layoutWidth = ((b: TextBehaviour) => {
-        //     switch (b) {
-        //         case TextBehaviour.Flexible: return Number.MAX_VALUE;
-        //         case TextBehaviour.Fixed: return width;
-        //         case TextBehaviour.FixWidthAndHeight: return height;
-        //     }
-        //     // return Number.MAX_VALUE
-        // })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+        const layoutWidth = ((b: TextBehaviour) => {
+            switch (b) {
+                case TextBehaviour.Flexible: return Number.MAX_VALUE;
+                case TextBehaviour.Fixed: return width;
+                case TextBehaviour.FixWidthAndHeight: return width;
+            }
+            // return Number.MAX_VALUE
+        })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
 
-        this.__frameHeight = height;
-        this.__frameWidth = width;
-
-        return layoutText(this, width, height);
+        return layoutText(this, layoutWidth, height);
     }
 
     getLayout() {

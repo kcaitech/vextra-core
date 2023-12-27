@@ -41,25 +41,16 @@ export class TextShapeView extends ShapeView {
 
     renderContents(): EL[] {
         const text = this.getText();
-        const frame = this.frame;
-
-        if (!this.m_layout) {
-            this.m_layout = text.getLayout2(frame.width, frame.height);
+        if (this.m_isVirtual) {
+            const frame = this.frame;
+            if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
+            return renderTextLayout(elh, this.m_layout);
         }
-
-        return renderTextLayout(elh, this.m_layout);
-
-        // const text = this.getText();
-        // if (this.m_isVirtual) {
-        //     const frame = this.frame;
-        //     if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
-        //     return renderTextLayout(elh, this.m_layout);
-        // }
-        // else {
-        //     // todo: 临时方案，后续应该把data里的layout数据去掉
-        //     const layout = text.getLayout();
-        //     return renderTextLayout(elh, layout!);
-        // }
+        else {
+            // todo: 临时方案，后续应该把data里的layout数据去掉
+            const layout = text.getLayout();
+            return renderTextLayout(elh, layout!);
+        }
     }
 
     clearCache() {
