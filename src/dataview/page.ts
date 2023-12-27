@@ -1,4 +1,5 @@
 import { Page } from "../data/page";
+import { ArtboradView } from "./artboard";
 import { GroupShapeView } from "./groupshape";
 import { ShapeView, isDiffShapeFrame } from "./shape";
 import { DataView, RootView } from "./view";
@@ -24,14 +25,23 @@ function checkPath(v: ShapeView) {
 export class PageView extends GroupShapeView implements RootView {
 
     private m_views: Map<string, ShapeView> = new Map();
+    private m_artboards: Map<string, ArtboradView> = new Map();
 
     onAddView(view: ShapeView | ShapeView[]): void {
-        if (Array.isArray(view)) view.forEach((v) => this.m_views.set(v.id, v));
-        else this.m_views.set(view.id, view);
+        const add = (v: ShapeView) => {
+            this.m_views.set(v.id, v);
+            if (v instanceof ArtboradView) this.m_artboards.set(v.id, v);
+        }
+        if (Array.isArray(view)) view.forEach(add);
+        else add(view);
     }
     onRemoveView(view: ShapeView | ShapeView[]): void {
-        if (Array.isArray(view)) view.forEach((v) => this.m_views.delete(v.id));
-        else this.m_views.delete(view.id);
+        const remove = (v: ShapeView) => {
+            this.m_views.delete(v.id);
+            if (v instanceof ArtboradView) this.m_artboards.delete(v.id);
+        }
+        if (Array.isArray(view)) view.forEach(remove);
+        else remove(view);
     }
 
     get data(): Page {
@@ -40,6 +50,10 @@ export class PageView extends GroupShapeView implements RootView {
 
     get shapes() {
         return this.m_views;
+    }
+
+    get artboardList() {
+        return Array.from(this.m_artboards.values());
     }
 
     getShape(id: string) {

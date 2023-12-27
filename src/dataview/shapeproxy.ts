@@ -142,10 +142,7 @@ class ShapeHdl extends HdlBase {
             if (!parent) {
                 return undefined;
             }
-            if (!parent.isVirtualShape) {
-                return parent.data;
-            }
-            return proxyView(parent);
+            return adapt2Shape(parent);
         }
         if (propStr === 'style') {
             if (!this.m_style) {
@@ -310,6 +307,6 @@ export function proxyView(view: ShapeView) {
 }
 
 export function adapt2Shape(view: ShapeView) {
-    if (view.isVirtualShape) return proxyView(view);
+    if (view.isVirtualShape || view instanceof SymbolRefView) return proxyView(view);
     return view.data;
 }

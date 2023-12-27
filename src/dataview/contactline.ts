@@ -19,6 +19,10 @@ export class ContactLineView extends ShapeView {
         this.updateApex();
     }
 
+    get data(): ContactShape {
+        return this.m_data as ContactShape;
+    }
+
     private wathcer_sides(t: any) {
         // todo 可以再精细点
         this.updateApex();
@@ -173,5 +177,9 @@ export class ContactLineView extends ShapeView {
             // return [elh('path', props)];
             return [];
         }
+    }
+
+    getPoints() {
+        return this.data.getPoints(); // todo 缓存
     }
 }

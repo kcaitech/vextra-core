@@ -67,8 +67,6 @@ export class DViewCtx extends EventEmitter {
     protected focusshape: Shape | undefined;
 
     protected onIdle(): boolean {
-        // emit nextTick
-        this.emit("nextTick");
         return false;
     }
     // todo idle
@@ -146,6 +144,12 @@ export class DViewCtx extends EventEmitter {
             }
         }
 
+        const emitStartTime = Date.now();
+        // 排版完成，emit nextTick
+        this.emit("nextTick");
+        if (Date.now() - emitStartTime > DViewCtx.FRAME_TIME) {
+            console.error("!!! nextTick too long !!!");
+        }
         // { // check time
         //     const expendsTime = Date.now() - startTime;
         //     if (expendsTime > DViewCtx.FRAME_TIME) {

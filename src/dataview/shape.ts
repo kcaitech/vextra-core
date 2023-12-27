@@ -220,6 +220,15 @@ export class ShapeView extends DataView {
     get naviChilds(): ShapeView[] | undefined {
         return this.m_children as ShapeView[];
     }
+    get rotation() {
+        return this.m_rotate;
+    }
+    get isFlippedHorizontal() {
+        return this.m_hflip;
+    }
+    get isFlippedVertical() {
+        return this.m_vflip;
+    }
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);

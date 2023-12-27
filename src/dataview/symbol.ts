@@ -9,4 +9,8 @@ export class SymbolView extends GroupShapeView {
     get variables() {
         return this.data.variables;
     }
+
+    get isSymbolUnionShape() {
+        return this.data.isSymbolUnionShape;
+    }
 }
