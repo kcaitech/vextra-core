@@ -692,7 +692,7 @@ export class PageEditor {
             }
             const tmpArtboard: Artboard = newArtboard(shape.name, tmpFrame, style);
             initFrame(tmpArtboard, shape.frame);
-            tmpArtboard.childs = shape.virtualChilds! as BasicArray<Shape>;
+            tmpArtboard.childs = shape.naviChilds! as BasicArray<Shape>;
             tmpArtboard.varbinds = shape.varbinds;
             const symbolData = exportArtboard(tmpArtboard); // todo 如果symbol只有一个child时
 
