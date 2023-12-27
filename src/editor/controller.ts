@@ -137,6 +137,8 @@ export interface AsyncTransfer {
     trans: (start: PageXY, end: PageXY) => void;
     stick: (dx: number, dy: number) => void;
     transByWheel: (dx: number, dy: number) => void;
+    shortPaste: (shapes: Shape[], actions: { parent: GroupShape, index: number }[]) => false | Shape[];
+
     close: () => undefined;
     abort: () => void;
 }
@@ -672,9 +674,10 @@ export class Controller {
     }
 
     // 图形位置移动
-    public asyncTransfer(shapes: Shape[], page: Page): AsyncTransfer {
+    public asyncTransfer(source: Shape[], page: Page): AsyncTransfer {
         const api = this.__repo.start("transfer", {});
         let status: Status = Status.Pending;
+        let shapes = source;
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             try {
                 status = Status.Pending;
@@ -806,6 +809,26 @@ export class Controller {
                 status = Status.Exception;
             }
         }
+        const shortPaste = (_ss: Shape[], actions: { parent: GroupShape, index: number }[]) => {
+            try {
+                status = Status.Pending;
+                const result: Shape[] = [];
+                for (let i = 0, len = actions.length; i < len; i++) {
+                    const shape = _ss[i];
+                    const { parent, index } = actions[i];
+                    api.shapeInsert(page, parent, shape, index);
+                    result.push(parent.childs[index]);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+                shapes = result;
+                return result;
+            } catch (error) {
+                console.log(error);
+                status = Status.Exception;
+                return false;
+            }
+        }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
@@ -817,7 +840,7 @@ export class Controller {
         const abort = () => {
             this.__repo.rollback();
         }
-        return { migrate, trans, stick, close, transByWheel, abort }
+        return { migrate, trans, stick, transByWheel, shortPaste, abort, close }
     }
 
     public asyncPathEditor(shape: PathShape, page: Page): AsyncPathEditor {
