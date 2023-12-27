@@ -442,7 +442,7 @@ export class Text extends Basic implements classes.Text {
             switch (b) {
                 case TextBehaviour.Flexible: return Number.MAX_VALUE;
                 case TextBehaviour.Fixed: return width;
-                case TextBehaviour.FixWidthAndHeight: return height;
+                case TextBehaviour.FixWidthAndHeight: return width;
             }
             // return Number.MAX_VALUE
         })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)

@@ -264,11 +264,20 @@ export class GroupShapeView extends ShapeView {
         // todo boolgroup
     }
 
+    // fills
     protected renderFills(): EL[] {
         if ((this.m_data as GroupShape).isBoolOpShape) {
             return super.renderFills();
         }
         return []; // group无fill
+    }
+
+    // borders
+    protected renderBorders(): EL[] {
+        if ((this.m_data as GroupShape).isBoolOpShape) {
+            return super.renderBorders();
+        }
+        return []; // group无border
     }
 
     getPath() {
