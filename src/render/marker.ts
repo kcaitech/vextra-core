@@ -13,28 +13,38 @@ marker[MarkerType.FilledArrow] = function (h: Function, style: Style, border: Bo
         markerHeight: range * 6,
         orient: "auto-start-reverse"
     }
+    if (range === 1) {
+        delete marker_props.viewBox;
+        marker_props.markerWidth = range * 12;
+        marker_props.markerHeight = range * 12
+    }
     const marker_content_props: any = {
         d: 'M 2 2 L 8 5 L 2 8 Z',
         stroke: 'none',
-        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
+        fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")"
     }
     return h('marker', marker_props, [h("path", marker_content_props)]);
 }
 marker[MarkerType.OpenArrow] = function (h: Function, style: Style, border: Border, id: number | string) {
     const color = border.color;
     const range = border.thickness;
-    const marker_props: any = {
+    let marker_props: any = {
         id: "arrow-" + id,
         viewBox: `0 0 ${range * 3} ${range * 6}`,
         refX: "7.5",
         refY: "5",
-        markerWidth: range * 3,
+        markerWidth: range * 6,
         markerHeight: range * 6,
         orient: "auto-start-reverse"
     }
+    if (range === 1) {
+        delete marker_props.viewBox;
+        marker_props.markerWidth = range * 12;
+        marker_props.markerHeight = range * 12
+    }
     const marker_content_props: any = {
         points: '4,2 8,5 4,8',
-        stroke: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")",
+        stroke: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
         'stroke-linecap': 'round',
         'stroke-linejoin': 'round',
         fill: "none"
@@ -53,10 +63,15 @@ marker[MarkerType.FilledCircle] = function (h: Function, style: Style, border: B
         markerHeight: range * 6,
         orient: "auto-start-reverse"
     }
+    if (range === 1) {
+        delete marker_props.viewBox;
+        marker_props.markerWidth = range * 12;
+        marker_props.markerHeight = range * 12
+    }
     const marker_content_props: any = {
         cx: 5, cy: 5, r: 3,
         stroke: 'none',
-        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")",
+        fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
     }
     return h('marker', marker_props, [h("circle", marker_content_props)]);
 }
@@ -72,10 +87,15 @@ marker[MarkerType.FilledSquare] = function (h: Function, style: Style, border: B
         markerHeight: range * 6,
         orient: "auto-start-reverse"
     }
+    if (range === 1) {
+        delete marker_props.viewBox;
+        marker_props.markerWidth = range * 12;
+        marker_props.markerHeight = range * 12
+    }
     const marker_content_props: any = {
         d: 'M5 2 L8 5 L5 8 L2 5 z',
         stroke: 'none',
-        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
+        fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")"
     }
     return h('marker', marker_props, [h("path", marker_content_props)]);
 }
@@ -94,7 +114,7 @@ marker[MarkerType.Square] = function (h: Function, style: Style, border: Border,
     const marker_content_props: any = {
         d: 'M0 0 h10 l10 h-10  z',
         stroke: 'none',
-        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
+        fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")"
     }
     return h('marker', marker_props, [h("path", marker_content_props)]);
 }
@@ -110,11 +130,14 @@ marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, 
         markerHeight: range,
         orient: "auto-start-reverse"
     }
+    if (range === 1) {
+        marker_props.viewBox = `0 0 ${range * 12} ${range * 12}` ;
+    }
     const marker_content_props: any = {
         // d: "M 0 2 A 3 3 0 1 1 0 8z",
         cx: 5, cy: 5, r: 3,
         stroke: 'none',
-        fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
+        fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")"
     }
     return h('marker', marker_props, [h("circle", marker_content_props)]);
 }
