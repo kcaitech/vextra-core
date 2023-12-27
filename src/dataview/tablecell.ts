@@ -4,6 +4,7 @@ import { EL, elh } from "./el";
 import { ShapeView, isDiffShapeFrame } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { DViewCtx, PropsType } from "./viewctx";
+import { TextLocate, locateText } from "../data/textlocate";
 
 export class TableCellView extends ShapeView {
 
@@ -40,6 +41,24 @@ export class TableCellView extends ShapeView {
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
         return v ? v.value : (this.m_data as TableCell).text;
+    }
+
+    get text() {
+        return this.getText();
+    }
+
+    locateText(x: number, y: number): TextLocate {
+        let layout;
+        const text = this.getText();
+        if (this.isVirtualShape) {
+            const frame = this.frame;
+            if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
+            layout = this.m_layout;
+        }
+        else {
+            layout = text.getLayout();
+        }
+        return locateText(layout, x, y);
     }
 
     getTextPath() {

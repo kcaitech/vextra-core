@@ -14,6 +14,10 @@ export class TableView extends ShapeView {
         this.m_data.bubblewatch(this._bubblewatcher);
     }
 
+    get data(): TableShape {
+        return this.m_data as TableShape;
+    }
+
     protected _bubblewatcher(...args: any[]) {
         // this.onChildChange(...args);
         if (args.includes('borders')) this.m_ctx.setDirty(this);
@@ -122,5 +126,17 @@ export class TableView extends ShapeView {
         // 单元格的边框要后画
         nodes.push(...cell_border_nodes);
         return nodes;
+    }
+
+    getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+        return this.data.getVisibleCells(rowStart, rowEnd, colStart, colEnd);
+    }
+
+    getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+        return this.data.getCells(rowStart, rowEnd, colStart, colEnd);
+    }
+
+    getLayout() {
+        return this.data.getLayout();
     }
 }

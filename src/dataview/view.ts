@@ -32,7 +32,7 @@ class EventEL extends EL {
             remove: () => {
                 if (this._emitLevel === 0) rm();
                 else this._removes.push(rm);
-            } 
+            }
         };
     }
     emit(name: string, ...args: any[]) {
@@ -70,6 +70,10 @@ class EventEL extends EL {
     }
 }
 
+export interface RootView {
+    onAddView(view: DataView | DataView[]): void;
+    onRemoveView(view: DataView | DataView[]): void;
+}
 
 export class DataView extends EventEL {
     m_ctx: DViewCtx;
@@ -192,10 +196,13 @@ export class DataView extends EventEL {
 
         this.m_nodeCount += child.m_nodeCount;
         let p = this.m_parent;
+        let root: DataView = this;
         while (p) {
+            root = p;
             p.m_nodeCount += child.m_nodeCount;
             p = p.m_parent;
         }
+        (root as any as RootView).onAddView(child);
     }
 
     addChilds(childs: DataView[], idx?: number) {
@@ -217,10 +224,13 @@ export class DataView extends EventEL {
 
         this.m_nodeCount += nodeCount;
         let p = this.m_parent;
+        let root: DataView = this;
         while (p) {
+            root = p;
             p.m_nodeCount += nodeCount;
             p = p.m_parent;
         }
+        (root as any as RootView).onAddView(childs);
     }
 
     removeChild(idx: number) {
@@ -228,11 +238,14 @@ export class DataView extends EventEL {
         if (dom) {
             this.m_nodeCount -= dom.m_nodeCount;
             let p = this.m_parent;
+            let root: DataView = this;
             while (p) {
+                root = p;
                 p.m_nodeCount -= dom.m_nodeCount;
                 p = p.m_parent;
             }
             dom.m_parent = undefined;
+            (root as any as RootView).onRemoveView(dom);
         }
         return dom;
     }
@@ -258,7 +271,7 @@ export class DataView extends EventEL {
 
     removeChilds(idx: number, len: number) {
         const dom = this.m_children.splice(idx, len);
-        if (dom) {
+        if (dom && dom.length) {
             let nodeCount = 0;
             dom.forEach(d => {
                 d.m_parent = undefined;
@@ -267,10 +280,13 @@ export class DataView extends EventEL {
 
             this.m_nodeCount -= nodeCount;
             let p = this.m_parent;
+            let root: DataView = this;
             while (p) {
+                root = p;
                 p.m_nodeCount -= nodeCount;
                 p = p.m_parent;
             }
+            (root as any as RootView).onRemoveView(dom);
         }
         return dom;
     }

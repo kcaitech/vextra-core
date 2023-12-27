@@ -138,8 +138,8 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
     frame.height = ch;
 }
 
-export function matrix2parent(x: number, y: number, width: number, height: number, rotate: number, hflip: boolean, vflip: boolean) {
-    const m = new Matrix();
+export function matrix2parent(x: number, y: number, width: number, height: number, rotate: number, hflip: boolean, vflip: boolean, matrix?: Matrix) {
+    const m = matrix || new Matrix();
     if (rotate || hflip || vflip) {
         const cx = width / 2;
         const cy = height / 2;
@@ -254,13 +254,56 @@ export class ShapeView extends DataView {
         }
     }
 
-    matrix2Parent(): Matrix {
+    matrix2Parent(matrix?: Matrix): Matrix {
         const frame = this.frame;
         return matrix2parent(frame.x, frame.y, frame.width, frame.height, this.m_rotate || 0, !!this.m_hflip, !!this.m_vflip);
     }
 
+    matrix2Root() {
+        let s: ShapeView | undefined = this;
+        const m = new Matrix();
+        while (s) {
+            s.matrix2Parent(m);
+            s = s.parent;
+        }
+        return m;
+    }
+
+    /**
+     * root: page 往上一级
+     * @returns
+     */
+    frame2Root(): ShapeFrame {
+        const frame = this.frame;
+        const m = this.matrix2Root();
+        const lt = m.computeCoord(0, 0);
+        const rb = m.computeCoord(frame.width, frame.height);
+        return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
+    }
+
+    frame2Parent(): ShapeFrame {
+        if (this.isNoTransform()) return this.frame;
+        const frame = this.frame;
+        const m = this.matrix2Parent();
+        const lt = m.computeCoord(0, 0);
+        const rb = m.computeCoord(frame.width, frame.height);
+        return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
+    }
+
     get frame(): ShapeFrame {
         return this.m_frame;
+    }
+
+    getPage(): ShapeView {
+        let p: ShapeView = this;
+        while (p.m_parent) {
+            p = p.m_parent as ShapeView;
+        }
+        return p;
+    }
+
+    get varbinds() {
+        return this.m_data.varbinds;
     }
 
     isNoTransform() {
@@ -287,7 +330,7 @@ export class ShapeView extends DataView {
         this.m_pathstr = this.getPath().toString(); // todo fixedRadius
         return this.m_pathstr;
     }
-    getPath() {        
+    getPath() {
         if (this.m_path) return this.m_path;
         this.m_path = this.m_data.getPathOfFrame(this.frame, this.m_fixedRadius); // todo fixedRadius
         this.m_path.freeze();
@@ -304,10 +347,10 @@ export class ShapeView extends DataView {
         return v ? v.value : !!this.m_data.isLocked;
     }
 
-    prepare() {
-        // prepare path
-        // prepare frame
-    }
+    // prepare() {
+    //     // prepare path
+    //     // prepare frame
+    // }
 
     // =================== update ========================
     updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined) {

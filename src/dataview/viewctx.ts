@@ -1,6 +1,7 @@
 import { RenderTransform } from "../render";
 import { Shape, ShapeType, SymbolShape } from "../data/shape";
 import { SymbolRefShape } from "../data/classes";
+import { EventEmitter } from "../basic/event";
 
 
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
@@ -24,7 +25,7 @@ export interface ViewType {
     new(ctx: DViewCtx, props: PropsType): DataView;
 }
 
-export class DViewCtx {
+export class DViewCtx extends EventEmitter {
 
     static FRAME_TIME = 40; // 25帧
 
@@ -66,6 +67,8 @@ export class DViewCtx {
     protected focusshape: Shape | undefined;
 
     protected onIdle(): boolean {
+        // emit nextTick
+        this.emit("nextTick");
         return false;
     }
     // todo idle
@@ -164,7 +167,6 @@ export class DViewCtx {
         }
 
         return this.onIdle();
-
     }
 
     private _continueLoop() {

@@ -8,13 +8,16 @@ import { RenderTransform } from "../render";
 
 export class PathShapeView extends ShapeView {
 
+    get data(): PathShape {
+        return this.m_data as PathShape;
+    }
+
     m_points?: CurvePoint[];
 
     protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
         this.m_points = undefined;
         super._layout(shape, transform, varsContainer);
     }
-
 
     layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
         const shape = this.m_data as PathShape;

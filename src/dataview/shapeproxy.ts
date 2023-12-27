@@ -235,31 +235,6 @@ class GroupShapeHdl extends ShapeHdl {
     }
 }
 
-export function proxyView(view: ShapeView) {
-
-    const shape = view.data;
-
-    let hdl;
-    if (shape instanceof GroupShape) {
-        hdl = new GroupShapeHdl(view);
-    }
-    else if (shape instanceof SymbolRefShape) {
-        hdl = new SymbolRefShapeHdl(view);
-    }
-    else if (shape instanceof TextShape) {
-        hdl = new TextShapeHdl(view);
-    }
-    else if (shape instanceof PathShape) {
-        hdl = new PathShapeHdl(view);
-    }
-    else {
-        hdl = new ShapeHdl(view);
-    }
-
-    return new Proxy<Shape>(shape, hdl);
-}
-
-
 class ShapeArrayHdl extends HdlBase {
 
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
@@ -292,7 +267,6 @@ class SymbolRefShapeHdl extends GroupShapeHdl {
         }
         return super.get(target, propertyKey, receiver);
     }
-
 }
 
 
@@ -309,5 +283,33 @@ class TextShapeHdl extends ShapeHdl {
 
         return super.get(target, propertyKey, receiver);
     }
+}
 
+export function proxyView(view: ShapeView) {
+
+    const shape = view.data;
+
+    let hdl;
+    if (shape instanceof GroupShape) {
+        hdl = new GroupShapeHdl(view);
+    }
+    else if (shape instanceof SymbolRefShape) {
+        hdl = new SymbolRefShapeHdl(view);
+    }
+    else if (shape instanceof TextShape) {
+        hdl = new TextShapeHdl(view);
+    }
+    else if (shape instanceof PathShape) {
+        hdl = new PathShapeHdl(view);
+    }
+    else {
+        hdl = new ShapeHdl(view);
+    }
+
+    return new Proxy<Shape>(shape, hdl);
+}
+
+export function adapt2Shape(view: ShapeView) {
+    if (view.isVirtualShape) return proxyView(view);
+    return view.data;
 }

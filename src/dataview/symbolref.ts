@@ -54,6 +54,14 @@ export class SymbolRefView extends ShapeView {
         return this.m_refId;
     }
 
+    get data() {
+        return this.m_data as SymbolRefShape;
+    }
+
+    get variables() {
+        return this.data.variables;
+    }
+
     onDataChange(...args: any[]): void {
         this.loadsym();
     }

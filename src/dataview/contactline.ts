@@ -45,7 +45,7 @@ export class ContactLineView extends ShapeView {
         }
     }
 
-    private getPage() {
+    private getPageShape() {
         if (!this.page) {
             this.page = this.m_data.getPage() as Page;
         }
@@ -61,7 +61,7 @@ export class ContactLineView extends ShapeView {
             return;
         }
 
-        const page = this.getPage();
+        const page = this.getPageShape();
 
         const nf = page.getShape(f.shapeId);
 
@@ -100,7 +100,7 @@ export class ContactLineView extends ShapeView {
             return;
         }
 
-        const page = this.getPage();
+        const page = this.getPageShape();
 
         const nt = page.getShape(t.shapeId);
 
