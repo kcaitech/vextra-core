@@ -50,8 +50,8 @@ export class SymbolRefView extends ShapeView {
     get symData() {
         return this.m_sym;
     }
-    get refId() {
-        return this.m_refId;
+    get refId(): string {
+        return this.getRefId();
     }
 
     get data() {

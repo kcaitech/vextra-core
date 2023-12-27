@@ -180,6 +180,10 @@ export class GroupShapeView extends ShapeView {
 
     m_isboolgroup: boolean | undefined;
 
+    get data(): GroupShape {
+        return this.m_data as GroupShape;
+    }
+
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         // super调了layout，layout中会初始化子对象

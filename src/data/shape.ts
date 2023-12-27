@@ -409,6 +409,18 @@ export class Shape extends Basic implements classes.Shape {
 
     onRemoved() {
     }
+
+    getFills() {
+        return this.style.fills;
+    }
+
+    getBorders() {
+        return this.style.borders;
+    }
+
+    getShadows() {
+        return this.style.shadows;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {

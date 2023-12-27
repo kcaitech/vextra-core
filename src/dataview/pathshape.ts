@@ -12,6 +12,10 @@ export class PathShapeView extends ShapeView {
         return this.m_data as PathShape;
     }
 
+    get points() {
+        return this.m_points || this.data.points;
+    }
+
     m_points?: CurvePoint[];
 
     protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
