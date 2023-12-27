@@ -1,7 +1,7 @@
 import { TextLayout } from "../data/textlayout";
 import { OverrideType, Path, ShapeFrame, TableCell, TableCellType, Text, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
-import { ShapeView } from "./shape";
+import { ShapeView, isDiffShapeFrame } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { DViewCtx, PropsType } from "./viewctx";
 
@@ -20,10 +20,21 @@ export class TableCellView extends ShapeView {
         this.m_frame.height = frame.height;
     }
 
-    layout(props: PropsType, force?: boolean | undefined): void {
-        // super.update(props, force);
+    layout(props?: PropsType & { frame?: ShapeFrame }): void {
+
         this.m_ctx.removeReLayout(this);
-        // this.m_ctx.setDirty(this);
+
+        const frame = props?.frame;
+        if (frame && isDiffShapeFrame(this.m_frame, frame)) {
+            this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
+            this.m_textpath = undefined;
+            this.m_layout = undefined; // todo
+            if (!this.m_isVirtual) {
+                const shape = this.m_data as TableCell;
+                shape.text?.updateSize(frame.width, frame.height);
+            }
+            this.m_ctx.setDirty(this);
+        }
     }
 
     getText(): Text {

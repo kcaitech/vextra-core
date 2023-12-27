@@ -197,6 +197,14 @@ class StyleHdl extends HdlBase {
             if (val) return val.value;
             return Reflect.get(target, propertyKey, receiver);
         }
+        if (propStr === 'shadows') {
+            const val = _getOnVar(
+                this.__parent,
+                OverrideType.Shadows,
+                VariableType.Shadows);
+            if (val) return val.value;
+            return Reflect.get(target, propertyKey, receiver);
+        }
         return super.get(target, propertyKey, receiver);
     }
 
