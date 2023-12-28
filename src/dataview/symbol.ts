@@ -13,4 +13,8 @@ export class SymbolView extends GroupShapeView {
     get isSymbolUnionShape() {
         return this.data.isSymbolUnionShape;
     }
+
+    get symtags() {
+        return this.data.symtags;
+    }
 }

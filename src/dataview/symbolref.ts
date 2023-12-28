@@ -1,4 +1,4 @@
-import { OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, VariableType } from "../data/classes";
+import { OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
 import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView } from "./view";
@@ -7,6 +7,7 @@ import { RenderTransform } from "../render";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
+import { findOverride, findVar } from "./basic";
 
 export class SymbolRefView extends ShapeView {
 
@@ -69,6 +70,35 @@ export class SymbolRefView extends ShapeView {
     symwatcher(...args: any[]) {
         // todo
         // this.m_ctx.setReLayout(this);
+    }
+
+    // todo
+    findOverride(refId: string, type: OverrideType): Variable[] | undefined {
+        if (this.symData) {
+            const override = this.symData.getOverrid(refId, type);
+            if (override) {
+                const ret = [override.v];
+                if (this.m_varsContainer) findVar(override.v.id, ret, this.m_varsContainer);
+                return ret;
+            }
+        }
+        const override = this.data.getOverrid(refId, type);
+        if (override) {
+            const ret = [override.v];
+            // this.id
+            refId = override.v.id;
+            if (this.isVirtualShape) {
+                refId = (this as any).originId + '/' + refId;
+            }
+            else {
+                refId = this.id + '/' + refId;
+            }
+            if (this.m_varsContainer) findVar(refId, ret, this.m_varsContainer);
+            return ret;
+        }
+        const thisId = this.isVirtualShape ? (this.data).id : this.id;
+        if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
+        return this.m_varsContainer && findOverride(refId, type, this.m_varsContainer);
     }
 
     // 需要自己加载symbol
