@@ -208,7 +208,12 @@ export class ShapeEditor {
         if (!p) throw new Error();
         const shape = this.__shape;
         let r: Shape | undefined = shape;
-        while (r && r.isVirtualShape) r = r.parent;
+        if (!r.isVirtualShape) {
+            while (r && !(r instanceof SymbolShape)) r = r.parent;
+        } else {
+            while (r && r.isVirtualShape) r = r.parent;
+        }
+
         if (!r) throw new Error();
 
         // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
