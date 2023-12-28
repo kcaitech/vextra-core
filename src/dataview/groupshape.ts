@@ -188,8 +188,8 @@ export class GroupShapeView extends ShapeView {
         return this.data.getBoolOp();
     }
 
-    constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props);
+    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
+        super(ctx, props, false);
         // super调了layout，layout中会初始化子对象
         // const childs = this.getDataChilds();
         // const childsView: DataView[] = childs.map((c) => {
@@ -203,6 +203,8 @@ export class GroupShapeView extends ShapeView {
         this.m_isboolgroup = (props.data as GroupShape).isBoolOpShape;
         this._bubblewatcher = this._bubblewatcher.bind(this);
         this.m_data.bubblewatch(this._bubblewatcher);
+
+        if (isTopClass) this.afterInit();
     }
 
     protected _bubblewatcher(...args: any[]) {

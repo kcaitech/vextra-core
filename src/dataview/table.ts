@@ -9,10 +9,11 @@ import { locateCell, locateCellIndex } from "../data/tablelocate";
 export class TableView extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props);
+        super(ctx, props, false);
         this.updateChildren();
         this._bubblewatcher = this._bubblewatcher.bind(this);
         this.m_data.bubblewatch(this._bubblewatcher);
+        this.afterInit();
     }
 
     get data(): TableShape {
@@ -152,15 +153,10 @@ export class TableView extends ShapeView {
     }
 
     locateCell2(cell: TableCell): (TableGridItem & { cell: TableCell | undefined }) | undefined {
-        const index = this.data.indexOfCell(cell);
-        if (!index || !index.visible) return;
-        const item = this.getLayout().grid.get(index.rowIdx, index.colIdx);
-        if (!item) return;
-        return {
-            index: item.index,
-            frame: item.frame,
-            span: item.span,
-            cell
-        }
+        return this.data.locateCell2(cell);
+    }
+
+    indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
+        return this.data.indexOfCell(cell);
     }
 }

@@ -5,8 +5,14 @@ import { ShapeView, matrix2parent, transformPoints } from "./shape";
 import { Matrix } from "../basic/matrix";
 import { PathSegment } from "../data/typesdefine";
 import { RenderTransform } from "../render";
+import { DViewCtx, PropsType } from "./viewctx";
 
 export class PathShapeView2 extends ShapeView {
+
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props, false);
+        this.afterInit();
+    }
 
     m_pathsegs?: PathSegment[];
 

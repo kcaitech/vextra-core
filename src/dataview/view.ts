@@ -73,6 +73,7 @@ class EventEL extends EL {
 export interface RootView {
     onAddView(view: DataView | DataView[]): void;
     onRemoveView(view: DataView | DataView[]): void;
+    get isRootView(): boolean;
 }
 
 export class DataView extends EventEL {
@@ -202,7 +203,9 @@ export class DataView extends EventEL {
             p.m_nodeCount += child.m_nodeCount;
             p = p.m_parent;
         }
-        (root as any as RootView).onAddView(child);
+        if ((root as any).isRootView) {
+            (root as any as RootView).onAddView(child);
+        }
     }
 
     addChilds(childs: DataView[], idx?: number) {
@@ -230,7 +233,9 @@ export class DataView extends EventEL {
             p.m_nodeCount += nodeCount;
             p = p.m_parent;
         }
-        (root as any as RootView).onAddView(childs);
+        if ((root as any).isRootView) {
+            (root as any as RootView).onAddView(childs);
+        }
     }
 
     removeChild(idx: number) {
@@ -245,7 +250,9 @@ export class DataView extends EventEL {
                 p = p.m_parent;
             }
             dom.m_parent = undefined;
-            (root as any as RootView).onRemoveView(dom);
+            if ((root as any).isRootView) {
+                (root as any as RootView).onRemoveView(dom);
+            }
         }
         return dom;
     }
@@ -286,7 +293,9 @@ export class DataView extends EventEL {
                 p.m_nodeCount -= nodeCount;
                 p = p.m_parent;
             }
-            (root as any as RootView).onRemoveView(dom);
+            if ((root as any).isRootView) {
+                (root as any as RootView).onRemoveView(dom);
+            }
         }
         return dom;
     }

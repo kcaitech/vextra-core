@@ -9,8 +9,9 @@ export class ImageShapeView extends ShapeView {
     private m_imgPH: string;
 
     constructor(ctx: DViewCtx, props: PropsType, imgPH: string) {
-        super(ctx, props);
+        super(ctx, props, false);
         this.m_imgPH = imgPH;
+        this.afterInit();
     }
 
     protected isNoSupportDiamondScale(): boolean {

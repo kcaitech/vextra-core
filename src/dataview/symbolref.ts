@@ -12,7 +12,7 @@ import { findOverride, findVar } from "./basic";
 export class SymbolRefView extends ShapeView {
 
     constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props);
+        super(ctx, props, false);
 
         this.symwatcher = this.symwatcher.bind(this);
         this.loadsym();
@@ -28,6 +28,7 @@ export class SymbolRefView extends ShapeView {
         // }).catch((err) => {
         //     console.error(err);
         // })
+        this.afterInit();
     }
 
     protected isNoSupportDiamondScale(): boolean {

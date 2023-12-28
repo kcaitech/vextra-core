@@ -11,7 +11,7 @@ export class TableCellView extends ShapeView {
     private m_imgPH: string;
 
     constructor(ctx: DViewCtx, props: PropsType & { frame?: ShapeFrame }, imgPH: string) {
-        super(ctx, props);
+        super(ctx, props, false);
         this.m_imgPH = imgPH;
 
         const frame = props.frame!;
@@ -19,6 +19,7 @@ export class TableCellView extends ShapeView {
         this.m_frame.y = frame.y;
         this.m_frame.width = frame.width;
         this.m_frame.height = frame.height;
+        this.afterInit();
     }
 
     layout(props?: PropsType & { frame?: ShapeFrame }): void {

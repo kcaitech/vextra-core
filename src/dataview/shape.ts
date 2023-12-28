@@ -211,6 +211,23 @@ export class ShapeView extends DataView {
     m_path?: Path;
     m_pathstr?: string;
 
+    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
+        super(ctx, props);
+        const shape = props.data;
+        const frame = shape.frame;
+        this.m_frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
+        this.m_hflip = shape.isFlippedHorizontal;
+        this.m_vflip = shape.isFlippedVertical;
+        this.m_rotate = shape.rotation;
+        this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
+
+        if (isTopClass) this.afterInit();
+    }
+
+    protected afterInit() {
+        this._layout(this.m_data, this.m_transx, this.m_varsContainer);
+    }
+
     get parent(): ShapeView | undefined {
         return this.m_parent as ShapeView;
     }
@@ -287,19 +304,6 @@ export class ShapeView extends DataView {
         const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
         const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
         return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-    }
-
-    constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props);
-        const shape = props.data;
-        const frame = shape.frame;
-        this.m_frame = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
-        this.m_hflip = shape.isFlippedHorizontal;
-        this.m_vflip = shape.isFlippedVertical;
-        this.m_rotate = shape.rotation;
-        this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
-
-        this._layout(this.m_data, this.m_transx, this.m_varsContainer);
     }
 
     onDataChange(...args: any[]): void {
