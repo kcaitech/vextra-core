@@ -885,3 +885,87 @@ export function findOverrideAndVar(
     const _vars = findOverride(id, overType, varsContainer);
     return _vars;
 }
+
+function distanceTo(p0: XY, p1: XY) {
+    return Math.hypot(p0.x - p1.x, p0.y - p1.y);
+}
+
+function calcAngleABC(A: XY, B: XY, C: XY) {
+    const AB = distanceTo(A, B);
+    const BC = distanceTo(B, C);
+    const AC = distanceTo(C, A);
+    return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
+}
+
+function minus(p0: XY, p1: XY): XY {
+    return { x: p0.x - p1.x, y: p0.y - p1.y };
+}
+
+function norm(p: XY) {
+    const d = Math.hypot(p.x, p.y);
+    // invariant(d !== 0, 'cant norm a vector whos len is zero');
+    return { x: p.x / d, y: p.y / d };
+}
+
+function multiply(p: XY, d: number): XY {
+    return { x: p.x * d, y: p.y * d };
+}
+
+function add(p: XY, pt: XY) {
+    return { x: p.x + pt.x, y: p.y + pt.y };
+}
+
+function get_bezier_c(pre: XY, cur: XY, next: XY, radius: number, minDist: number) {
+    const radian = calcAngleABC(pre, cur, next);
+
+    if (Number.isNaN(radian)) {
+        return ["l", 0, 0];
+    }
+
+    const tangent = Math.tan(radian / 2);
+
+    let dist = radius / tangent;
+
+    if (dist > minDist) {
+        dist = minDist;
+        radius = dist * tangent;
+    }
+
+    const vPre = norm(minus(pre, cur));
+    const vNext = norm(minus(next, cur));
+
+    let preTangent = add(multiply(vPre, dist), cur);
+    let nextTangent = add(multiply(vNext, dist), cur);
+
+    const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4);
+
+    let preHandle = add(multiply(vPre, -radius * kappa), preTangent);
+    let nextHandle = add(multiply(vNext, -radius * kappa), nextTangent);
+
+    return ['C', preHandle.x, preHandle.y, nextHandle.x, nextHandle.y, nextTangent.x, nextTangent.y];
+}
+
+export function _get_path(shape: types.Artboard) {
+    const f = shape.frame;
+
+    const min = Math.min(f.width, f.height) / 2;
+
+    const radius = Math.min(min, shape.fixedRadius || 0);
+
+    const lt = { x: 0, y: 0 };
+    const rt = { x: f.width, y: 0 };
+    const rb = { x: f.width, y: f.height };
+    const lb = { x: 0, y: f.height };
+
+    const m = ['M', radius, 0];
+    const t = ['L', f.width - radius, 0];
+    const rtc = get_bezier_c(lt, rt, rb, radius, min);
+    const r = ['L', f.width, f.height - radius];
+    const rbc = get_bezier_c(rt, rb, lb, radius, min);
+    const b = ['L', radius, f.height];
+    const lbc = get_bezier_c(rb, lb, lt, radius, min);
+    const l = ['L', 0, radius];
+    const ltc = get_bezier_c(lb, lt, rt, radius, min);
+
+    return [m, t, rtc, r, rbc, b, lbc, l, ltc, ["z"]];
+}
