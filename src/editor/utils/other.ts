@@ -208,7 +208,9 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name
         union.variables.set(k, v);
     });
 
-    const border_style = new BorderStyle(4, 4);
+    union.fixedRadius = 4;
+    
+    const border_style = new BorderStyle(5, 5);
     const border = new Border(
         uuid(),
         true,
