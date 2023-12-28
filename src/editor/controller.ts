@@ -38,6 +38,7 @@ import { after_migrate, unable_to_migrate } from "./utils/migrate";
 import { get_state_name } from "./utils/symbol";
 import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
+import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -504,7 +505,10 @@ export class Controller {
     }
 
     // 单个图形异步编辑
-    public asyncRectEditor(shape: Shape, page: Page): AsyncBaseAction {
+    public asyncRectEditor(_shape: Shape | ShapeView, _page: Page | PageView): AsyncBaseAction {
+        const shape = _shape instanceof ShapeView ? adapt2Shape(_shape) : _shape;
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
         let need_update_frame = false;
@@ -598,7 +602,10 @@ export class Controller {
     }
 
     // 多对象的异步编辑
-    public asyncMultiEditor(shapes: Shape[], page: Page): AsyncMultiAction {
+    public asyncMultiEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncMultiAction {
+        const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
         const pMap: Map<string, Matrix> = new Map();
@@ -672,7 +679,10 @@ export class Controller {
     }
 
     // 图形位置移动
-    public asyncTransfer(shapes: Shape[], page: Page): AsyncTransfer {
+    public asyncTransfer(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncTransfer {
+        const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+
         const api = this.__repo.start("transfer", {});
         let status: Status = Status.Pending;
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
@@ -820,7 +830,10 @@ export class Controller {
         return { migrate, trans, stick, close, transByWheel, abort }
     }
 
-    public asyncPathEditor(shape: PathShape, page: Page): AsyncPathEditor {
+    public asyncPathEditor(_shape: PathShape | PathShapeView, _page: Page | PageView): AsyncPathEditor {
+        const shape: PathShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as PathShape : _shape as PathShape;
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+
         const api = this.__repo.start("asyncPathEditor", {});
         let status: Status = Status.Pending;
         const w = shape.frame.width, h = shape.frame.height;
@@ -884,7 +897,10 @@ export class Controller {
         return { addNode, execute, execute2, close, abort }
     }
 
-    public asyncContactEditor(shape: ContactShape, page: Page): AsyncContactEditor {
+    public asyncContactEditor(_shape: ContactShape | ContactLineView, _page: Page | PageView): AsyncContactEditor {
+        const shape: ContactShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as ContactShape : _shape as ContactShape;
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+
         const api = this.__repo.start("action", {});
         let status: Status = Status.Pending;
         const pre = () => {
@@ -1004,7 +1020,10 @@ export class Controller {
         return { pre, modify_contact_from, modify_contact_to, before, modify_sides, migrate, close }
     }
 
-    public asyncOpacityEditor(shapes: Shape[], page: Page): AsyncOpacityEditor {
+    public asyncOpacityEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncOpacityEditor {
+        const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+
         const api = this.__repo.start("asyncOpacityEditor", {});
         let status: Status = Status.Pending;
         const execute = (contextSettingOpacity: number) => {
@@ -1032,7 +1051,10 @@ export class Controller {
         return { execute, close }
     }
 
-    public asyncPathHandle(shape: PathShape, page: Page, index: number): AsyncPathHandle {
+    public asyncPathHandle(_shape: PathShape | PathShapeView, _page: Page | PageView, index: number): AsyncPathHandle {
+        const shape: PathShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as PathShape : _shape as PathShape;
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+
         const curvePoint = shape.points[index];
         let mode = curvePoint.mode;
         let status: Status = Status.Pending;
