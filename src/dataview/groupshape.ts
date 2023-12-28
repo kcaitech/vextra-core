@@ -184,6 +184,10 @@ export class GroupShapeView extends ShapeView {
         return this.m_data as GroupShape;
     }
 
+    getBoolOp() {
+        return this.data.getBoolOp();
+    }
+
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         // super调了layout，layout中会初始化子对象

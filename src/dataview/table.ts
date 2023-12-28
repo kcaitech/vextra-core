@@ -1,9 +1,10 @@
 import { RenderTransform, renderBorders } from "../render";
-import { Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, TableCell, TableShape } from "../data/classes";
+import { Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, TableCell, TableGridItem, TableShape } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
+import { locateCell, locateCellIndex } from "../data/tablelocate";
 
 export class TableView extends ShapeView {
 
@@ -138,5 +139,28 @@ export class TableView extends ShapeView {
 
     getLayout() {
         return this.data.getLayout();
+    }
+
+    locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
+        const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCell | undefined }) | undefined;
+        if (item) item.cell = this.data.getCellAt(item.index.row, item.index.col);
+        return item;
+    }
+
+    locateCellIndex(x: number, y: number): { row: number, col: number } | undefined {
+        return locateCellIndex(this.getLayout(), x, y);
+    }
+
+    locateCell2(cell: TableCell): (TableGridItem & { cell: TableCell | undefined }) | undefined {
+        const index = this.data.indexOfCell(cell);
+        if (!index || !index.visible) return;
+        const item = this.getLayout().grid.get(index.rowIdx, index.colIdx);
+        if (!item) return;
+        return {
+            index: item.index,
+            frame: item.frame,
+            span: item.span,
+            cell
+        }
     }
 }

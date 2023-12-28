@@ -1,15 +1,18 @@
-import { PathShape, Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
+import { CurvePoint, PathShape, Shape, ShapeFrame, SymbolRefShape, SymbolShape } from "../data/classes";
 import { Path } from "../data/path";
 import { parsePath } from "../data/pathparser";
 import { ShapeView, matrix2parent, transformPoints } from "./shape";
 import { Matrix } from "../basic/matrix";
-import { CurvePoint } from "../data/typesdefine";
 import { RenderTransform } from "../render";
 
 export class PathShapeView extends ShapeView {
 
     get data(): PathShape {
         return this.m_data as PathShape;
+    }
+
+    get isClosed() {
+        return this.data.isClosed;
     }
 
     get points() {

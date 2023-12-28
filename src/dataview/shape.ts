@@ -232,6 +232,12 @@ export class ShapeView extends DataView {
     get fixedRadius() {
         return this.m_fixedRadius;
     }
+    get resizingConstraint() {
+        return this.data.resizingConstraint;
+    }
+    get constrainerProportions() {
+        return this.data.constrainerProportions;
+    }
 
     // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
