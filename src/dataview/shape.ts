@@ -328,7 +328,7 @@ export class ShapeView extends DataView {
 
     matrix2Parent(matrix?: Matrix): Matrix {
         const frame = this.frame;
-        return matrix2parent(frame.x, frame.y, frame.width, frame.height, this.m_rotate || 0, !!this.m_hflip, !!this.m_vflip);
+        return matrix2parent(frame.x, frame.y, frame.width, frame.height, this.m_rotate || 0, !!this.m_hflip, !!this.m_vflip, matrix);
     }
 
     matrix2Root() {
