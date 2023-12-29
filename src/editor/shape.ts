@@ -208,10 +208,10 @@ export class ShapeEditor {
         if (!p) throw new Error();
         const shape = this.__shape;
         let r: Shape | undefined = shape;
-        if (!r.isVirtualShape) {
-            while (r && !(r instanceof SymbolShape)) r = r.parent;
-        } else {
+        if (r.isVirtualShape) {
             while (r && r.isVirtualShape) r = r.parent;
+        } else {
+            while (r && !(r instanceof SymbolShape)) r = r.parent;
         }
 
         if (!r) throw new Error();
