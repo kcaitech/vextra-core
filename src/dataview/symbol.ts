@@ -1,7 +1,10 @@
 import { SymbolShape } from "../data/shape";
 import { GroupShapeView } from "./groupshape";
-import { renderBorders, renderFills } from "../render";
+import { RenderTransform, renderBorders, renderFills } from "../render";
 import { EL, elh } from "./el";
+import { Shape, ShapeType, SymbolShape } from "../data/shape";
+import { VarsContainer } from "./viewctx";
+import { DataView } from "./view"
 
 export class SymbolView extends GroupShapeView {
     get data() {
@@ -27,5 +30,20 @@ export class SymbolView extends GroupShapeView {
     // borders
     protected renderBorders(): EL[] {
         return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
+    }
+
+    protected layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>) {
+        let cdom: DataView | undefined = resue.get(child.id);
+        varsContainer = [...(varsContainer || []), this.data as SymbolShape];
+        const props = { data: child, transx, varsContainer, isVirtual: this.m_isVirtual };
+        if (!cdom) {
+            const comsMap = this.m_ctx.comsMap;
+            const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
+            cdom = new Com(this.m_ctx, props) as DataView;
+            this.addChild(cdom, idx);
+            return;
+        }
+        this.moveChild(cdom, idx);
+        cdom.layout(props);
     }
 }
