@@ -138,6 +138,8 @@ export interface AsyncTransfer {
     trans: (start: PageXY, end: PageXY) => void;
     stick: (dx: number, dy: number) => void;
     transByWheel: (dx: number, dy: number) => void;
+    shortPaste: (shapes: Shape[], actions: { parent: GroupShape, index: number }[]) => false | Shape[];
+
     close: () => undefined;
     abort: () => void;
 }
@@ -237,12 +239,16 @@ export class Controller {
             try {
                 savepage = page;
                 status = Status.Pending;
+
                 const shape = newArrowShape(name, frame);
-                const xy = parent.frame2Root();
-                shape.frame.x -= xy.x;
-                shape.frame.y -= xy.y;
+
+                modifyTransformByEnv(shape, parent);
+
                 api.shapeInsert(page, parent, shape, parent.childs.length);
-                newShape = parent.childs.at(-1);
+                newShape = parent.childs[parent.childs.length - 1];
+
+                translateTo(api, savepage, newShape, frame.x, frame.y);
+                
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
@@ -680,7 +686,7 @@ export class Controller {
 
     // 图形位置移动
     public asyncTransfer(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncTransfer {
-        const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
+        let shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
         const api = this.__repo.start("transfer", {});
@@ -816,6 +822,26 @@ export class Controller {
                 status = Status.Exception;
             }
         }
+        const shortPaste = (_ss: Shape[], actions: { parent: GroupShape, index: number }[]) => {
+            try {
+                status = Status.Pending;
+                const result: Shape[] = [];
+                for (let i = 0, len = actions.length; i < len; i++) {
+                    const shape = _ss[i];
+                    const { parent, index } = actions[i];
+                    api.shapeInsert(page, parent, shape, index);
+                    result.push(parent.childs[index]);
+                }
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+                shapes = result;
+                return result;
+            } catch (error) {
+                console.log(error);
+                status = Status.Exception;
+                return false;
+            }
+        }
         const close = () => {
             if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
                 this.__repo.commit();
@@ -827,7 +853,7 @@ export class Controller {
         const abort = () => {
             this.__repo.rollback();
         }
-        return { migrate, trans, stick, close, transByWheel, abort }
+        return { migrate, trans, stick, transByWheel, shortPaste, abort, close }
     }
 
     public asyncPathEditor(_shape: PathShape | PathShapeView, _page: Page | PageView): AsyncPathEditor {
