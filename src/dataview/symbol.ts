@@ -1,4 +1,3 @@
-import { SymbolShape } from "../data/shape";
 import { GroupShapeView } from "./groupshape";
 import { RenderTransform, renderBorders, renderFills } from "../render";
 import { EL, elh } from "./el";
