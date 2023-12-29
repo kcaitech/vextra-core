@@ -94,6 +94,10 @@ export class TextShapeView extends ShapeView {
             notify = true;
         }
         // notify?
-        if (notify) this.notify("shape-frame");
+        if (notify) {
+            this.m_pathstr = undefined; // need update
+            this.m_path = undefined;
+            this.notify("shape-frame");
+        }
     }
 }

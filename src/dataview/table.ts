@@ -5,8 +5,11 @@ import { ShapeView } from "./shape";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { locateCell, locateCellIndex } from "../data/tablelocate";
+import { TableCellView } from "./tablecell";
 
 export class TableView extends ShapeView {
+
+    private m_cells: Map<string, TableCellView> = new Map();
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props, false);
@@ -18,6 +21,10 @@ export class TableView extends ShapeView {
 
     get data(): TableShape {
         return this.m_data as TableShape;
+    }
+
+    get cells(): Map<string, TableCellView> {
+        return this.m_cells;
     }
 
     protected _bubblewatcher(...args: any[]) {
@@ -91,13 +98,17 @@ export class TableView extends ShapeView {
                         const Com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle)!;
                         const ins = new Com(this.m_ctx, props) as DataView;
                         this.addChild(ins, idx);
+                        this.m_cells.set(ins.id, ins as TableCellView);
                     }
                     ++idx;
                 }
             }
         }
         if (this.m_children.length > idx) {
-            this.removeChilds(idx, this.m_children.length - idx).forEach((c) => c.destory());
+            this.removeChilds(idx, this.m_children.length - idx).forEach((c) => {
+                this.m_cells.delete(c.id);
+                c.destory();
+            });
         }
     }
 
@@ -156,7 +167,7 @@ export class TableView extends ShapeView {
         return this.data.locateCell2(cell);
     }
 
-    indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
-        return this.data.indexOfCell(cell);
+    indexOfCell(cell: TableCell | TableCellView): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
+        return cell instanceof TableCellView ? this.data.indexOfCell(cell.data) : this.data.indexOfCell(cell);
     }
 }

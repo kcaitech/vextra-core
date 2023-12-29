@@ -22,6 +22,19 @@ export class TableCellView extends ShapeView {
         this.afterInit();
     }
 
+    protected afterInit(): void {
+        const frame = this.frame;
+        if (!this.isVirtualShape && this.cellType === TableCellType.Text) {
+            console.log(Object.assign( {}, frame));
+            const text = this.getText();
+            text.updateSize(frame.width, frame.height);
+        }
+    }
+
+    get data(): TableCell {
+        return this.m_data as TableCell;
+    }
+
     layout(props?: PropsType & { frame?: ShapeFrame }): void {
 
         this.m_ctx.removeReLayout(this);
@@ -48,6 +61,10 @@ export class TableCellView extends ShapeView {
 
     get text() {
         return this.getText();
+    }
+
+    get cellType() {
+        return this.data.cellType;
     }
 
     getLayout() {
