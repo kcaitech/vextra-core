@@ -220,6 +220,9 @@ export class GroupShapeView extends ShapeView {
     }
 
     protected onChildChange(...args: any[]) {
+        if (args.includes('fills') || args.includes('borders')) {
+            this.notify(...args); // 通知界面更新
+        }
     }
 
     onDestory(): void {
