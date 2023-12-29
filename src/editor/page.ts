@@ -507,15 +507,16 @@ export class PageEditor {
     makeStatus(symbol: SymbolShape, attri_name: string, dlt: string, isDefault: boolean) {
         const api = this.__repo.start("makeStatus", {});
         try {
-            if (!(symbol instanceof SymbolUnionShape)) {
+            if (symbol instanceof SymbolUnionShape) {
+                const v = isDefault ? SymbolShape.Default_State : dlt;
+                const _var = new Variable(uuid(), VariableType.Status, attri_name, v);
+                api.shapeAddVariable(this.__page, symbol, _var);
+            } else {
                 const u = make_union(api, this.__page, symbol, attri_name);
                 if (!u) {
                     throw new Error('make union failed!');
                 }
                 symbol = u;
-            } else {
-                const _var = new Variable(uuid(), VariableType.Status, attri_name, isDefault ? SymbolShape.Default_State : dlt);
-                api.shapeAddVariable(this.__page, symbol, _var);
             }
             this.__repo.commit();
             return symbol;

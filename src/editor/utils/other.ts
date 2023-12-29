@@ -1,4 +1,4 @@
-import {float_accuracy} from "../../basic/consts";
+import { float_accuracy } from "../../basic/consts";
 import {
     Border,
     BorderPosition,
@@ -22,14 +22,14 @@ import {
     Variable,
     VariableType
 } from "../../data/classes";
-import {Api} from "../command/recordapi";
-import {BasicMap} from "../../data/basic";
-import {newSymbolRefShape, newSymbolShape, newSymbolShapeUnion} from "../creator";
-import {uuid} from "../../basic/uuid";
+import { Api } from "../command/recordapi";
+import { BasicMap } from "../../data/basic";
+import { newSymbolRefShape, newSymbolShape, newSymbolShapeUnion } from "../creator";
+import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
-import {translateTo} from "../frame";
-import {exportStyle} from "../../data/baseexport";
-import {importStyle} from "../../data/baseimport";
+import { translateTo } from "../frame";
+import { exportStyle } from "../../data/baseexport";
+import { importStyle } from "../../data/baseimport";
 
 interface _Api {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
@@ -101,17 +101,17 @@ export function find_state_space(union: SymbolShape) {
         const child = childs[i];
         const m2p = child.matrix2Parent(), f = child.frame;
         const point = [
-            {x: 0, y: 0},
-            {x: f.width, y: 0},
-            {x: f.width, y: f.height},
-            {x: 0, y: f.height}
+            { x: 0, y: 0 },
+            { x: f.width, y: 0 },
+            { x: f.width, y: f.height },
+            { x: 0, y: f.height }
         ].map(p => m2p.computeCoord3(p));
         for (let j = 0; j < 4; j++) {
             if (point[j].x > space_x) space_x = point[j].x;
             if (point[j].y > space_y) space_y = point[j].y;
         }
     }
-    return {x: space_x, y: space_y};
+    return { x: space_x, y: space_y };
 }
 
 export function modify_frame_after_inset_state(page: Page, api: Api, union: SymbolShape) {
@@ -189,18 +189,28 @@ export function gen_special_value_for_state(symbol: SymbolShape, variable: Varia
 
 export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name: string) {
     const p = symbol.parent;
-    if (!p || (p instanceof SymbolUnionShape)) return false;
+    if (!p || (p instanceof SymbolUnionShape)) {
+        return false;
+    }
 
-    const symIndex = (p as SymbolUnionShape).indexOfChild(symbol);
-    if (symIndex < 0) return false;
+    const symIndex = (p as GroupShape).indexOfChild(symbol);
+    if (symIndex < 0) {
+        return false;
+    }
 
     const box = symbol.boundingBox();
-    // 定义第一个状态的frame
     const state_frame = new ShapeFrame(box.x - 20, box.y - 20, box.width + 40, box.height + 40);
 
     let union = newSymbolShapeUnion(symbol.name, state_frame);
 
-    const border_style = new BorderStyle(4, 4);
+    const _origin_vars = symbol.variables;
+    _origin_vars.forEach((v, k) => {
+        union.variables.set(k, v);
+    });
+
+    union.fixedRadius = 4;
+    
+    const border_style = new BorderStyle(5, 5);
     const border = new Border(
         uuid(),
         true,
@@ -216,12 +226,17 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name
     union.variables.set(_var.id, _var);
 
     const insert_result = api.shapeInsert(page, p as GroupShape, union, symIndex);
-    if (!insert_result) return false;
+    if (!insert_result) {
+        return false;
+    }
+
+    symbol.variables.forEach((_, k) => {
+        api.shapeRemoveVariable(page, symbol, k);
+    });
+
     union = insert_result as SymbolUnionShape;
+
     api.shapeMove(page, p as GroupShape, symIndex + 1, union, 0);
-
-    // document.symbolsMgr.add(n_sym.id, n_sym as SymbolShape); // 不需要加入了
-
     api.shapeModifyX(page, symbol, 20);
     api.shapeModifyY(page, symbol, 20);
 
@@ -377,7 +392,7 @@ export function adjust_selection_before_group(document: Document, page: Page, sh
             const insert_index = parent.indexOfChild(shape);
             api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
             if (shape instanceof SymbolUnionShape) continue;
-            const {x, y, width, height} = shape.frame;
+            const { x, y, width, height } = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
             shapes[i] = api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;
@@ -399,7 +414,7 @@ function handler_childs(document: Document, page: Page, shapes: Shape[], api: Ap
             const insert_index = parent.indexOfChild(shape);
             api.shapeMove(page, parent, insert_index, page, page.childs.length); // 把组件移到页面下
             if (shape instanceof SymbolUnionShape) continue;
-            const {x, y, width, height} = shape.frame;
+            const { x, y, width, height } = shape.frame;
             const f = new ShapeFrame(x, y, width, height);
             const refShape: SymbolRefShape = newSymbolRefShape(shape.name, f, shape.id, document.symbolsMgr);
             api.shapeInsert(page, parent, refShape, insert_index) as SymbolRefShape;

@@ -61,10 +61,23 @@ function varParent(_var: Variable) {
 
 function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
     const p = varParent(_var); // todo 如果p是symbolref(root), shape.isVirtual
-    if (!p) throw new Error();
-    let r: Shape | undefined = shape;
-    while (r && r.isVirtualShape) r = r.parent;
-    if (!r) throw new Error();
+        if (!p) throw new Error();
+        let r: Shape | undefined = shape;
+        if (r.isVirtualShape) {
+            while (r && r.isVirtualShape) r = r.parent;
+        } else if (r instanceof SymbolRefShape) {
+            // do nothing
+        } else {
+            while (
+                r
+                &&
+                !(r instanceof SymbolShape && !(r.parent instanceof SymbolUnionShape))
+            ) {
+                r = r.parent;
+            }
+        }
+
+        if (!r) throw new Error();
 
     // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
     // shape, 可能是virtual, 任意对象，比如在修改填充，它的root是symbolref
