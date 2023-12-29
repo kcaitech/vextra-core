@@ -210,6 +210,8 @@ export class ShapeEditor {
         let r: Shape | undefined = shape;
         if (r.isVirtualShape) {
             while (r && r.isVirtualShape) r = r.parent;
+        } else if (r instanceof SymbolRefShape) {
+            // do nothing
         } else {
             while (r && !(r instanceof SymbolShape)) r = r.parent;
         }

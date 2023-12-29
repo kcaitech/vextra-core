@@ -63,7 +63,14 @@ function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, a
     const p = varParent(_var); // todo 如果p是symbolref(root), shape.isVirtual
     if (!p) throw new Error();
     let r: Shape | undefined = shape;
-    while (r && r.isVirtualShape) r = r.parent;
+    if (r.isVirtualShape) {
+        while (r && r.isVirtualShape) r = r.parent;
+    } else if (r instanceof SymbolRefShape) {
+        // do nothing
+    } else {
+        while (r && !(r instanceof SymbolShape)) r = r.parent;
+    }
+
     if (!r) throw new Error();
 
     // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
