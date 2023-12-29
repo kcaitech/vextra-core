@@ -4,7 +4,7 @@ import { EL, elh } from "./el";
 import { ShapeView, isDiffShapeFrame } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { DViewCtx, PropsType } from "./viewctx";
-import { TextLocate, locateText } from "../data/textlocate";
+import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
 
 export class TableCellView extends ShapeView {
 
@@ -41,31 +41,43 @@ export class TableCellView extends ShapeView {
 
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
-        return v ? v.value : (this.m_data as TableCell).text;
+        const ret = v ? v.value : (this.m_data as TableCell).text;
+        if (!ret) throw new Error('text not found');
+        return ret;
     }
 
     get text() {
         return this.getText();
     }
 
-    locateText(x: number, y: number): TextLocate {
-        let layout;
+    getLayout() {
         const text = this.getText();
         if (this.isVirtualShape) {
             const frame = this.frame;
             if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
-            layout = this.m_layout;
+            return this.m_layout;
         }
         else {
-            layout = text.getLayout();
+            return text.getLayout();
         }
+    }
+
+    locateText(x: number, y: number): TextLocate {
+        const layout = this.getLayout();
         return locateText(layout, x, y);
+    }
+
+    locateRange(start: number, end: number): { x: number, y: number }[] {
+        return locateRange(this.getLayout(), start, end);
+    }
+
+    locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
+        return locateCursor(this.getLayout(), index, cursorAtBefore);
     }
 
     getTextPath() {
         if (!this.m_textpath) {
-            const text = this.getText();
-            this.m_textpath = renderText2Path(text, 0, 0)
+            this.m_textpath = renderText2Path(this.getLayout(), 0, 0)
         }
         return this.m_textpath;
     }
@@ -109,16 +121,8 @@ export class TableCellView extends ShapeView {
             });
             return [img];
         } else if (cellType === TableCellType.Text) {
-            if (this.m_isVirtual) {
-                const text = this.getText();
-                if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
-                return renderTextLayout(elh, this.m_layout);
-            }
-            else {
-                // todo: 临时方案，后续应该把data里的layout数据去掉
-                const layout = shape.getLayout();
-                return renderTextLayout(elh, layout!);
-            }
+            const layout = this.getLayout();
+            return renderTextLayout(elh, layout);
         }
         return [];
     }

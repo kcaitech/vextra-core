@@ -1,9 +1,9 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Path, Text, TextShape, VariableType } from "../data/classes";
+import { OverrideType, Path, ShapeFrame, Text, TextShape, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
-import { TextLocate, locateText } from "../data/textlocate";
+import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
 
 export class TextShapeView extends ShapeView {
 
@@ -21,24 +21,37 @@ export class TextShapeView extends ShapeView {
         return this.getText();
     }
 
-    locateText(x: number, y: number): TextLocate {
-        let layout;
+    getLayout() {
         const text = this.getText();
         if (this.isVirtualShape) {
             const frame = this.frame;
-            if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
-            layout = this.m_layout;
+            if (!this.m_layout) {
+                this.m_layout = text.getLayout2(frame.width, frame.height);
+                this.updateFrameByLayout();
+            }
+            return this.m_layout;
         }
         else {
-            layout = text.getLayout();
+            return text.getLayout();
         }
+    }
+
+    locateText(x: number, y: number): TextLocate {
+        const layout = this.getLayout();
         return locateText(layout, x, y);
+    }
+
+    locateRange(start: number, end: number): { x: number, y: number }[] {
+        return locateRange(this.getLayout(), start, end);
+    }
+
+    locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
+        return locateCursor(this.getLayout(), index, cursorAtBefore);
     }
 
     getTextPath() {
         if (!this.m_textpath) {
-            const text = this.getText();
-            this.m_textpath = renderText2Path(text, 0, 0)
+            this.m_textpath = renderText2Path(this.getLayout(), 0, 0)
         }
         return this.m_textpath;
     }
@@ -56,14 +69,31 @@ export class TextShapeView extends ShapeView {
     }
 
     renderContents(): EL[] {
-        const text = this.getText();
-        if (this.isVirtualShape) {
-            const frame = this.frame;
-            if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
-            return renderTextLayout(elh, this.m_layout);
+        const layout = this.getLayout();
+        return renderTextLayout(elh, layout);
+    }
+
+    updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined): void {
+        super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
+        // update frame by layout
+        this.updateFrameByLayout();
+    }
+
+    private updateFrameByLayout() {
+        if (!this.isVirtualShape || !this.m_layout) return;
+
+        const width = this.m_layout.contentWidth;
+        const height = this.m_layout.contentHeight;
+        let notify = false;
+        if (width > this.m_frame.width) {
+            this.m_frame.width = width;
+            notify = true;
         }
-        else {
-            return renderTextLayout(elh, text.getLayout());
+        if (height > this.m_frame.height) {
+            this.m_frame.height = height;
+            notify = true;
         }
+        // notify?
+        if (notify) this.notify("shape-frame");
     }
 }

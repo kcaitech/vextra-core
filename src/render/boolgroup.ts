@@ -116,7 +116,7 @@ export function render2path(shape: Shape): Path {
     let fixedRadius: number | undefined;
     if (shapeIsGroup) fixedRadius = shape.fixedRadius;
     if (!shapeIsGroup || shape.childs.length === 0) {
-        const path = shape instanceof TextShape ? renderText2Path(shape.text, 0, 0) : shape.getPath(fixedRadius);
+        const path = shape instanceof TextShape ? renderText2Path(shape.getLayout(), 0, 0) : shape.getPath(fixedRadius);
         return path;
     }
 
