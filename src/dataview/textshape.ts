@@ -61,11 +61,14 @@ export class TextShapeView extends ShapeView {
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
-        if (args.includes('text')) { // todo 文本要支持局部重排
-            this.m_layout = undefined;
-            this.m_textpath = undefined;
-        }
         // if (args.includes('variable')) this.m_layout = undefined; // 不确定是不是text变量？
+
+        if (args.includes('text')) { // todo 文本要支持局部重排
+            this.clearCache();
+        }
+        else if (args.includes('shape-frame')) {
+            this.clearCache();
+        }
     }
 
     renderContents(): EL[] {
@@ -99,5 +102,10 @@ export class TextShapeView extends ShapeView {
             this.m_path = undefined;
             this.notify("shape-frame");
         }
+    }
+
+    clearCache() {
+        this.m_layout = undefined;
+        this.m_textpath = undefined;
     }
 }

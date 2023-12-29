@@ -11,6 +11,7 @@ import {
     VariableType
 } from "../data/classes";
 import { findOverrideAndVar } from "../data/utils";
+import { randomId } from "./basic";
 import { render as marker } from "./marker";
 
 function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
@@ -26,23 +27,25 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
     const fillType = border.fillType;
     if (fillType === FillType.SolidColor) {
         const color = border.color;
-        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
+        body_props.stroke = "rgb(" + color.red + "," + color.green + "," + color.blue + ")";
     }
     const g_cs: any[] = [h('path', body_props)];
     if (endMarkerType !== MarkerType.Line || startMarkerType !== MarkerType.Line) {
         if (endMarkerType && endMarkerType !== MarkerType.Line) {
-            const id = "e-" + objectId(shape);
+            const rId = randomId();
+            const id = "e-" + objectId(shape) + "-" + rId;
             g_cs.unshift(marker(h, style, border, endMarkerType, id));
             body_props['marker-end'] = `url(#arrow-${id})`;
         }
         if (startMarkerType && startMarkerType !== MarkerType.Line) {
-            const id = "s-" + objectId(shape);
+            const rId = randomId();
+            const id = "s-" + objectId(shape) + "-" + rId;
             g_cs.unshift(marker(h, style, border, startMarkerType, id));
             body_props['marker-start'] = `url(#arrow-${id})`;
         }
-        return g_cs;
+        return h('g', { opacity: border.color.alpha }, g_cs);
     }
-    return h('path', body_props);
+    return h('path', { opacity: border.color.alpha }, body_props);
 }
 
 
