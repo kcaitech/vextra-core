@@ -32,7 +32,7 @@ class EventEL extends EL {
             remove: () => {
                 if (this._emitLevel === 0) rm();
                 else this._removes.push(rm);
-            } 
+            }
         };
     }
     emit(name: string, ...args: any[]) {
@@ -70,6 +70,11 @@ class EventEL extends EL {
     }
 }
 
+export interface RootView {
+    onAddView(view: DataView | DataView[]): void;
+    onRemoveView(view: DataView | DataView[]): void;
+    get isRootView(): boolean;
+}
 
 export class DataView extends EventEL {
     m_ctx: DViewCtx;
@@ -121,7 +126,7 @@ export class DataView extends EventEL {
     get childs() {
         return this.m_children;
     }
-    get naviChilds() {
+    get naviChilds(): DataView[] | undefined {
         return this.m_children;
     }
     get type() {
@@ -192,9 +197,14 @@ export class DataView extends EventEL {
 
         this.m_nodeCount += child.m_nodeCount;
         let p = this.m_parent;
+        let root: DataView = this;
         while (p) {
+            root = p;
             p.m_nodeCount += child.m_nodeCount;
             p = p.m_parent;
+        }
+        if ((root as any).isRootView) {
+            (root as any as RootView).onAddView(child);
         }
     }
 
@@ -217,9 +227,14 @@ export class DataView extends EventEL {
 
         this.m_nodeCount += nodeCount;
         let p = this.m_parent;
+        let root: DataView = this;
         while (p) {
+            root = p;
             p.m_nodeCount += nodeCount;
             p = p.m_parent;
+        }
+        if ((root as any).isRootView) {
+            (root as any as RootView).onAddView(childs);
         }
     }
 
@@ -228,16 +243,21 @@ export class DataView extends EventEL {
         if (dom) {
             this.m_nodeCount -= dom.m_nodeCount;
             let p = this.m_parent;
+            let root: DataView = this;
             while (p) {
+                root = p;
                 p.m_nodeCount -= dom.m_nodeCount;
                 p = p.m_parent;
             }
             dom.m_parent = undefined;
+            if ((root as any).isRootView) {
+                (root as any as RootView).onRemoveView(dom);
+            }
         }
         return dom;
     }
 
-    moveChild(child: DataView, toIdx: number) {
+    moveChild(child: DataView, toIdx: number): boolean {
         if (child.m_parent !== this) {
             throw new Error("child not in this parent");
         }
@@ -246,18 +266,19 @@ export class DataView extends EventEL {
         }
         const fIdx = this.m_children.indexOf(child);
         if (fIdx === toIdx) {
-            return;
+            return false;
         }
         if (fIdx < 0) {
             throw new Error("child not in this parent");
         }
         this.m_children.splice(fIdx, 1);
         this.m_children.splice(toIdx, 0, child);
+        return true;
     }
 
     removeChilds(idx: number, len: number) {
         const dom = this.m_children.splice(idx, len);
-        if (dom) {
+        if (dom && dom.length) {
             let nodeCount = 0;
             dom.forEach(d => {
                 d.m_parent = undefined;
@@ -266,9 +287,14 @@ export class DataView extends EventEL {
 
             this.m_nodeCount -= nodeCount;
             let p = this.m_parent;
+            let root: DataView = this;
             while (p) {
+                root = p;
                 p.m_nodeCount -= nodeCount;
                 p = p.m_parent;
+            }
+            if ((root as any).isRootView) {
+                (root as any as RootView).onRemoveView(dom);
             }
         }
         return dom;

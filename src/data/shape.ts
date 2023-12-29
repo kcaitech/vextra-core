@@ -28,6 +28,7 @@ import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
+import { _get_path } from "./utils";
 export { Variable } from "./variable";
 
 // todo
@@ -409,6 +410,18 @@ export class Shape extends Basic implements classes.Shape {
 
     onRemoved() {
     }
+
+    getFills() {
+        return this.style.fills;
+    }
+
+    getBorders() {
+        return this.style.borders;
+    }
+
+    getShadows() {
+        return this.style.shadows;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -759,6 +772,24 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
 
     get isSymbolUnionShape() {
         return true;
+    }
+    
+    getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
+        const w = frame.width;
+        const h = frame.height;
+        let path = [];
+        if (fixedRadius) {
+            path = _get_path(this);
+        } else {
+            path = [
+                ["M", 0, 0],
+                ["l", w, 0],
+                ["l", 0, h],
+                ["l", -w, 0],
+                ["z"]
+            ]
+        }
+        return new Path(path);
     }
 }
 

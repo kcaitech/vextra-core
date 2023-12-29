@@ -4,13 +4,14 @@ import { EL, elh } from "./el";
 import { ShapeView, isDiffShapeFrame } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { DViewCtx, PropsType } from "./viewctx";
+import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
 
 export class TableCellView extends ShapeView {
 
     private m_imgPH: string;
 
     constructor(ctx: DViewCtx, props: PropsType & { frame?: ShapeFrame }, imgPH: string) {
-        super(ctx, props);
+        super(ctx, props, false);
         this.m_imgPH = imgPH;
 
         const frame = props.frame!;
@@ -18,6 +19,19 @@ export class TableCellView extends ShapeView {
         this.m_frame.y = frame.y;
         this.m_frame.width = frame.width;
         this.m_frame.height = frame.height;
+        this.afterInit();
+    }
+
+    protected afterInit(): void {
+        const frame = this.frame;
+        if (!this.isVirtualShape && this.cellType === TableCellType.Text) {
+            const text = this.getText();
+            text.updateSize(frame.width, frame.height);
+        }
+    }
+
+    get data(): TableCell {
+        return this.m_data as TableCell;
     }
 
     layout(props?: PropsType & { frame?: ShapeFrame }): void {
@@ -39,13 +53,47 @@ export class TableCellView extends ShapeView {
 
     getText(): Text {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
-        return v ? v.value : (this.m_data as TableCell).text;
+        const ret = v ? v.value : (this.m_data as TableCell).text;
+        if (!ret) throw new Error('text not found');
+        return ret;
+    }
+
+    get text() {
+        return this.getText();
+    }
+
+    get cellType() {
+        return this.data.cellType;
+    }
+
+    getLayout() {
+        const text = this.getText();
+        if (this.isVirtualShape) {
+            const frame = this.frame;
+            if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
+            return this.m_layout;
+        }
+        else {
+            return text.getLayout();
+        }
+    }
+
+    locateText(x: number, y: number): TextLocate {
+        const layout = this.getLayout();
+        return locateText(layout, x, y);
+    }
+
+    locateRange(start: number, end: number): { x: number, y: number }[] {
+        return locateRange(this.getLayout(), start, end);
+    }
+
+    locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
+        return locateCursor(this.getLayout(), index, cursorAtBefore);
     }
 
     getTextPath() {
         if (!this.m_textpath) {
-            const text = this.getText();
-            this.m_textpath = renderText2Path(text, 0, 0)
+            this.m_textpath = renderText2Path(this.getLayout(), 0, 0)
         }
         return this.m_textpath;
     }
@@ -89,16 +137,8 @@ export class TableCellView extends ShapeView {
             });
             return [img];
         } else if (cellType === TableCellType.Text) {
-            if (this.m_isVirtual) {
-                const text = this.getText();
-                if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
-                return renderTextLayout(elh, this.m_layout);
-            }
-            else {
-                // todo: 临时方案，后续应该把data里的layout数据去掉
-                const layout = shape.getLayout();
-                return renderTextLayout(elh, layout!);
-            }
+            const layout = this.getLayout();
+            return renderTextLayout(elh, layout);
         }
         return [];
     }

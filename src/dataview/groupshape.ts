@@ -180,8 +180,16 @@ export class GroupShapeView extends ShapeView {
 
     m_isboolgroup: boolean | undefined;
 
-    constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props);
+    get data(): GroupShape {
+        return this.m_data as GroupShape;
+    }
+
+    getBoolOp() {
+        return this.data.getBoolOp();
+    }
+
+    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
+        super(ctx, props, false);
         // super调了layout，layout中会初始化子对象
         // const childs = this.getDataChilds();
         // const childsView: DataView[] = childs.map((c) => {
@@ -195,6 +203,8 @@ export class GroupShapeView extends ShapeView {
         this.m_isboolgroup = (props.data as GroupShape).isBoolOpShape;
         this._bubblewatcher = this._bubblewatcher.bind(this);
         this.m_data.bubblewatch(this._bubblewatcher);
+
+        if (isTopClass) this.afterInit();
     }
 
     protected _bubblewatcher(...args: any[]) {
@@ -264,6 +274,14 @@ export class GroupShapeView extends ShapeView {
         // todo boolgroup
     }
 
+    protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {
+        super._layout(shape, transform, varsContainer);
+        if (this.m_need_updatechilds) {
+            this.notify("childs"); // notify childs change
+            this.m_need_updatechilds = false;
+        }
+    }
+
     // fills
     protected renderFills(): EL[] {
         if ((this.m_data as GroupShape).isBoolOpShape) {
@@ -299,7 +317,7 @@ export class GroupShapeView extends ShapeView {
         return childs;
     }
 
-    private layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>) {
+    protected layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>) {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, transx, varsContainer, isVirtual: this.m_isVirtual };
         if (!cdom) {
@@ -316,10 +334,10 @@ export class GroupShapeView extends ShapeView {
     updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number | undefined): void {
         super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
         // todo
-        if (this.m_need_updatechilds) {
-            // this.updateChildren();
-            this.m_need_updatechilds = false;
-        }
+        // if (this.m_need_updatechilds) {
+        //     // this.updateChildren();
+        //     this.m_need_updatechilds = false;
+        // }
     }
 
     protected layoutOnNormal(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): void {

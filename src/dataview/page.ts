@@ -1,5 +1,9 @@
+import { Page } from "../data/page";
+import { ArtboradView } from "./artboard";
 import { GroupShapeView } from "./groupshape";
 import { ShapeView, isDiffShapeFrame } from "./shape";
+import { DataView, RootView } from "./view";
+import { DViewCtx, PropsType } from "./viewctx";
 
 function checkFrame(v: ShapeView) {
     const lhs = v.frame;
@@ -13,13 +17,59 @@ function checkFrame(v: ShapeView) {
 function checkPath(v: ShapeView) {
     const lhs = v.getPathStr();
     const rhs = v.m_data.getPath().toString();
-    if (lhs!== rhs) {
+    if (lhs !== rhs) {
         console.error(`path not match: ${lhs} vs ${rhs}`, v.name)
     }
     v.m_children.forEach((c) => checkPath(c as ShapeView));
 }
 
-export class PageView extends GroupShapeView {
+export class PageView extends GroupShapeView implements RootView {
+
+    private m_views: Map<string, ShapeView> = new Map();
+    private m_artboards: Map<string, ArtboradView> = new Map();
+
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props, false);
+        this.afterInit();
+    }
+
+    onAddView(view: ShapeView | ShapeView[]): void {
+        const add = (v: ShapeView) => {
+            this.m_views.set(v.id, v);
+            if (v instanceof ArtboradView) this.m_artboards.set(v.id, v);
+            v.m_children.forEach((c) => add(c as ShapeView));
+        }
+        if (Array.isArray(view)) view.forEach(add);
+        else add(view);
+    }
+    onRemoveView(view: ShapeView | ShapeView[]): void {
+        const remove = (v: ShapeView) => {
+            this.m_views.delete(v.id);
+            if (v instanceof ArtboradView) this.m_artboards.delete(v.id);
+            v.m_children.forEach((c) => remove(c as ShapeView));
+        }
+        if (Array.isArray(view)) view.forEach(remove);
+        else remove(view);
+    }
+    get isRootView() {
+        return true;
+    }
+
+    get data(): Page {
+        return this.m_data as Page;
+    }
+
+    get shapes() {
+        return this.m_views;
+    }
+
+    get artboardList() {
+        return Array.from(this.m_artboards.values());
+    }
+
+    getShape(id: string) {
+        return this.m_views.get(id);
+    }
 
     protected renderProps() {
         let width = Math.ceil(Math.max(100, this.m_data.frame.width));

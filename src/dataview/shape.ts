@@ -138,8 +138,8 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
     frame.height = ch;
 }
 
-export function matrix2parent(x: number, y: number, width: number, height: number, rotate: number, hflip: boolean, vflip: boolean) {
-    const m = new Matrix();
+export function matrix2parent(x: number, y: number, width: number, height: number, rotate: number, hflip: boolean, vflip: boolean, matrix?: Matrix) {
+    const m = matrix || new Matrix();
     if (rotate || hflip || vflip) {
         const cx = width / 2;
         const cy = height / 2;
@@ -211,17 +211,7 @@ export class ShapeView extends DataView {
     m_path?: Path;
     m_pathstr?: string;
 
-    get parent(): ShapeView | undefined {
-        return this.m_parent as ShapeView;
-    }
-    get childs(): ShapeView[] {
-        return this.m_children as ShapeView[];
-    }
-    get naviChilds(): ShapeView[] {
-        return this.m_children as ShapeView[];
-    }
-
-    constructor(ctx: DViewCtx, props: PropsType) {
+    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
         super(ctx, props);
         const shape = props.data;
         const frame = shape.frame;
@@ -231,7 +221,89 @@ export class ShapeView extends DataView {
         this.m_rotate = shape.rotation;
         this.m_fixedRadius = (shape as PathShape).fixedRadius; // rectangle
 
+        if (isTopClass) this.afterInit();
+    }
+
+    protected afterInit() {
         this._layout(this.m_data, this.m_transx, this.m_varsContainer);
+    }
+
+    get parent(): ShapeView | undefined {
+        return this.m_parent as ShapeView;
+    }
+    get childs(): ShapeView[] {
+        return this.m_children as ShapeView[];
+    }
+    get naviChilds(): ShapeView[] | undefined {
+        return this.m_children as ShapeView[];
+    }
+    get rotation() {
+        return this.m_rotate;
+    }
+    get isFlippedHorizontal() {
+        return this.m_hflip;
+    }
+    get isFlippedVertical() {
+        return this.m_vflip;
+    }
+    get fixedRadius() {
+        return this.m_fixedRadius;
+    }
+    get resizingConstraint() {
+        return this.data.resizingConstraint;
+    }
+    get constrainerProportions() {
+        return this.data.constrainerProportions;
+    }
+
+    // private __boundingBox?: ShapeFrame;
+    boundingBox(): ShapeFrame {
+        if (this.isNoTransform()) return this.frame;
+        const path = this.getPath();
+        if (path.length > 0) {
+            const m = this.matrix2Parent();
+            path.transform(m);
+            const bounds = path.calcBounds();
+            return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+        }
+
+        const frame = this.frame;
+        const m = this.matrix2Parent();
+        const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
+            x: 0,
+            y: frame.height
+        }]
+            .map((p) => m.computeCoord(p));
+        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+    }
+    /**
+     * @description 无论是否transform都进行Bounds计算并返回
+     */
+    boundingBox2(): ShapeFrame {
+        const path = this.getPath();
+        if (path.length > 0) {
+            const m = this.matrix2Parent();
+            path.transform(m);
+            const bounds = path.calcBounds();
+            return new ShapeFrame(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+        }
+
+        const frame = this.frame;
+        const m = this.matrix2Parent();
+        const corners = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, {
+            x: 0,
+            y: frame.height
+        }]
+            .map((p) => m.computeCoord(p));
+        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
     }
 
     onDataChange(...args: any[]): void {
@@ -254,13 +326,56 @@ export class ShapeView extends DataView {
         }
     }
 
-    matrix2Parent(): Matrix {
+    matrix2Parent(matrix?: Matrix): Matrix {
         const frame = this.frame;
-        return matrix2parent(frame.x, frame.y, frame.width, frame.height, this.m_rotate || 0, !!this.m_hflip, !!this.m_vflip);
+        return matrix2parent(frame.x, frame.y, frame.width, frame.height, this.m_rotate || 0, !!this.m_hflip, !!this.m_vflip, matrix);
+    }
+
+    matrix2Root() {
+        let s: ShapeView | undefined = this;
+        const m = new Matrix();
+        while (s) {
+            s.matrix2Parent(m);
+            s = s.parent;
+        }
+        return m;
+    }
+
+    /**
+     * root: page 往上一级
+     * @returns
+     */
+    frame2Root(): ShapeFrame {
+        const frame = this.frame;
+        const m = this.matrix2Root();
+        const lt = m.computeCoord(0, 0);
+        const rb = m.computeCoord(frame.width, frame.height);
+        return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
+    }
+
+    frame2Parent(): ShapeFrame {
+        if (this.isNoTransform()) return this.frame;
+        const frame = this.frame;
+        const m = this.matrix2Parent();
+        const lt = m.computeCoord(0, 0);
+        const rb = m.computeCoord(frame.width, frame.height);
+        return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
     }
 
     get frame(): ShapeFrame {
         return this.m_frame;
+    }
+
+    getPage(): ShapeView {
+        let p: ShapeView = this;
+        while (p.m_parent) {
+            p = p.m_parent as ShapeView;
+        }
+        return p;
+    }
+
+    get varbinds() {
+        return this.m_data.varbinds;
     }
 
     isNoTransform() {
@@ -287,7 +402,7 @@ export class ShapeView extends DataView {
         this.m_pathstr = this.getPath().toString(); // todo fixedRadius
         return this.m_pathstr;
     }
-    getPath() {        
+    getPath() {
         if (this.m_path) return this.m_path;
         this.m_path = this.m_data.getPathOfFrame(this.frame, this.m_fixedRadius); // todo fixedRadius
         this.m_path.freeze();
@@ -304,10 +419,10 @@ export class ShapeView extends DataView {
         return v ? v.value : !!this.m_data.isLocked;
     }
 
-    prepare() {
-        // prepare path
-        // prepare frame
-    }
+    // prepare() {
+    //     // prepare path
+    //     // prepare frame
+    // }
 
     // =================== update ========================
     updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined) {

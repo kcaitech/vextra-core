@@ -27,9 +27,9 @@ function isBlankChar(charCode: number) {
     return false;
 }
 
-export function renderText2Path(shapetext: Text, offsetX: number, offsetY: number): Path {
+export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: number): Path {
     const getTextPath = gPal.text.getTextPath;
-    const { yOffset, paras } = shapetext.getLayout();
+    const { yOffset, paras } = layout;
     const pc = paras.length;
 
     const paths = new Path();
@@ -408,7 +408,7 @@ export function render(h: Function, shape: TextShape, transform: RenderTransform
 //
 // for test text path
 export function render_(h: Function, shape: TextShape, reflush?: number) {
-    const path = renderText2Path(shape.text, 0, 0);
+    const path = renderText2Path(shape.getLayout(), 0, 0);
 
     const childs = [h('path', { d: path })]
 

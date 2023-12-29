@@ -13,10 +13,16 @@ export class ContactLineView extends ShapeView {
     private page: Page | undefined = undefined;
 
     constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props);
+        super(ctx, props, false);
         this.wathcer_sides = this.wathcer_sides.bind(this);
 
         this.updateApex();
+
+        this.afterInit();
+    }
+
+    get data(): ContactShape {
+        return this.m_data as ContactShape;
     }
 
     private wathcer_sides(t: any) {
@@ -45,7 +51,7 @@ export class ContactLineView extends ShapeView {
         }
     }
 
-    private getPage() {
+    private getPageShape() {
         if (!this.page) {
             this.page = this.m_data.getPage() as Page;
         }
@@ -61,7 +67,7 @@ export class ContactLineView extends ShapeView {
             return;
         }
 
-        const page = this.getPage();
+        const page = this.getPageShape();
 
         const nf = page.getShape(f.shapeId);
 
@@ -100,7 +106,7 @@ export class ContactLineView extends ShapeView {
             return;
         }
 
-        const page = this.getPage();
+        const page = this.getPageShape();
 
         const nt = page.getShape(t.shapeId);
 
@@ -173,5 +179,9 @@ export class ContactLineView extends ShapeView {
             // return [elh('path', props)];
             return [];
         }
+    }
+
+    getPoints() {
+        return this.data.getPoints(); // todo 缓存
     }
 }

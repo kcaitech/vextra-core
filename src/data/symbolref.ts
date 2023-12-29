@@ -10,8 +10,6 @@ import { uuid } from "../basic/uuid";
 import { Shape, SymbolShape } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
-import { proxyShape } from "./symproxy";
-import { layoutChilds } from "./symlayout";
 import { findOverrideAndVar } from "./utils";
 
 function genRefId(refId: string, type: OverrideType) {
@@ -34,7 +32,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
     variables: BasicMap<string, Variable>
 
-    __childs?: Shape[];
+    // __childs?: Shape[];
 
     constructor(
         id: string,
@@ -55,18 +53,18 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         this.refId = refId
         this.variables = variables;
         (variables as any).typeId = "variable";
-        this.origin_watcher = this.origin_watcher.bind(this);
-        this.updater = this.updater.bind(this);
+        // this.origin_watcher = this.origin_watcher.bind(this);
+        // this.updater = this.updater.bind(this);
         // this.updater();
     }
 
-    private __childsIsDirty: boolean = false;
-    origin_watcher(...args: any[]) {
-        if (args.indexOf("variable") >= 0) return;
-        if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
-        super.notify(...args);
-        this.relayout();
-    }
+    // private __childsIsDirty: boolean = false;
+    // origin_watcher(...args: any[]) {
+    //     if (args.indexOf("variable") >= 0) return;
+    //     if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
+    //     super.notify(...args);
+    //     this.relayout();
+    // }
 
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
         const id0 = targetId[0];
@@ -82,105 +80,109 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.overrides.delete(key);
     }
 
-    symData: SymbolShape | undefined;
-    private __startLoad: string | undefined;
-
-    updater(notify: boolean = true): boolean { // 自己的override也要更新
-        const symMgr = this.__symMgr;
-        if (!symMgr) return false;
-        if (this.isVirtualShape) throw new Error("virtual shape can not be updated");
-        const refId = this.refId;
-        if (!refId) return false;
-        if (this.__startLoad === refId) {
-            if (this.symData) { // 更新subdata
-
-                // 也要更新下
-                this.__childsIsDirty = true;
-                if (notify) this.notify("childs");
-                return true;
-            }
-            return false;
-        }
-
-        this.__startLoad = refId;
-        symMgr.get(refId).then((val) => {
-            if (this.symData) this.symData.unwatch(this.updater);
-            this.symData = val;
-            if (this.symData) this.symData.watch(this.updater);
-
-            this.__childsIsDirty = true;
-            // if (notify) this.notify();
-            this.notify("childs");
-        })
-        return false;
+    // 由proxy实现
+    get symData(): SymbolShape | undefined {
+        return undefined;
     }
+
+    // symData: SymbolShape | undefined;
+    // private __startLoad: string | undefined;
+
+    // updater(notify: boolean = true): boolean { // 自己的override也要更新
+    //     const symMgr = this.__symMgr;
+    //     if (!symMgr) return false;
+    //     if (this.isVirtualShape) throw new Error("virtual shape can not be updated");
+    //     const refId = this.refId;
+    //     if (!refId) return false;
+    //     if (this.__startLoad === refId) {
+    //         if (this.symData) { // 更新subdata
+
+    //             // 也要更新下
+    //             this.__childsIsDirty = true;
+    //             if (notify) this.notify("childs");
+    //             return true;
+    //         }
+    //         return false;
+    //     }
+
+    //     this.__startLoad = refId;
+    //     symMgr.get(refId).then((val) => {
+    //         if (this.symData) this.symData.unwatch(this.updater);
+    //         this.symData = val;
+    //         if (this.symData) this.symData.watch(this.updater);
+
+    //         this.__childsIsDirty = true;
+    //         // if (notify) this.notify();
+    //         this.notify("childs");
+    //     })
+    //     return false;
+    // }
 
     // private __startLoad: string | undefined;
-    private getSymChilds(): Shape[] | undefined {
-        if (!this.symData) {
-            if (!this.__startLoad) this.updater();
-            return;
-        }
-        return (this.symData)?.childs || [];
-    }
-
+    // private getSymChilds(): Shape[] | undefined {
+    //     if (!this.symData) {
+    //         if (!this.__startLoad) this.updater();
+    //         return;
+    //     }
+    //     return (this.symData)?.childs || [];
+    // }
     // for render
-    get virtualChilds(): Shape[] | undefined {
-        if (this.__childs) {
-            if (this.__childsIsDirty) {
-                // todo
-                const childs = this.getSymChilds() || [];
-                const _childs = this.__childs;
-                if (_childs.length > childs.length) {
-                    // 回收多余的
-                    for (let i = childs.length, len = _childs.length; i < len; ++i) {
-                        (_childs[i] as any).remove;
-                    }
-                }
-                _childs.length = childs.length;
-                const prefix = this.id + '/';
-                for (let i = 0, len = childs.length; i < len; ++i) {
-                    const c = _childs[i]; // 可能undefined
-                    const origin = childs[i];
-                    if (c && (c as any).originId === origin.id) {
-                        continue;
-                    }
-                    if (c) (c as any).remove;
-                    _childs[i] = proxyShape(this, origin, this, prefix + origin.id);
-                }
-                this.__childsIsDirty = false;
-            }
-            return this.__childs;
-        }
-        const childs = this.getSymChilds();
-        if (!childs || childs.length === 0) return;
-        const prefix = this.id + '/';
-        this.__childs = childs.map((c) => proxyShape(this, c, this, prefix + c.id));
-        layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
-        this.__childsIsDirty = false;
-        return this.__childs;
-    }
+    // get virtualChilds(): Shape[] | undefined {
+    //     if (this.__childs) {
+    //         if (this.__childsIsDirty) {
+    //             // todo
+    //             const childs = this.getSymChilds() || [];
+    //             const _childs = this.__childs;
+    //             if (_childs.length > childs.length) {
+    //                 // 回收多余的
+    //                 for (let i = childs.length, len = _childs.length; i < len; ++i) {
+    //                     (_childs[i] as any).remove;
+    //                 }
+    //             }
+    //             _childs.length = childs.length;
+    //             const prefix = this.id + '/';
+    //             for (let i = 0, len = childs.length; i < len; ++i) {
+    //                 const c = _childs[i]; // 可能undefined
+    //                 const origin = childs[i];
+    //                 if (c && (c as any).originId === origin.id) {
+    //                     continue;
+    //                 }
+    //                 if (c) (c as any).remove;
+    //                 _childs[i] = proxyShape(this, origin, this, prefix + origin.id);
+    //             }
+    //             this.__childsIsDirty = false;
+    //         }
+    //         return this.__childs;
+    //     }
+    //     const childs = this.getSymChilds();
+    //     if (!childs || childs.length === 0) return;
+    //     const prefix = this.id + '/';
+    //     this.__childs = childs.map((c) => proxyShape(this, c, this, prefix + c.id));
+    //     layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
+    //     this.__childsIsDirty = false;
+    //     return this.__childs;
+    // }
 
-    private __relayouting: any;
-    relayout() {
-        if (this.__childs && !this.__relayouting) {
-            this.__relayouting = setTimeout(() => {
-                const childs = this.getSymChilds();
-                if (this.__childs && childs && childs.length > 0) {
-                    this.__childs.forEach((c) => (c as any).resetLayout);
-                    layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
-                    this.__childs.forEach((c) => (c as any).layoutChilds);
-                    this.notify();
-                }
-                this.__relayouting = undefined;
-            }, 0);
-        }
-    }
+    // private __relayouting: any;
+    // relayout() {
+    //     if (this.__childs && !this.__relayouting) {
+    //         this.__relayouting = setTimeout(() => {
+    //             const childs = this.getSymChilds();
+    //             if (this.__childs && childs && childs.length > 0) {
+    //                 this.__childs.forEach((c) => (c as any).resetLayout);
+    //                 layoutChilds(this.__childs, this.frame, childs[0].parent!.frame);
+    //                 this.__childs.forEach((c) => (c as any).layoutChilds);
+    //                 this.notify();
+    //             }
+    //             this.__relayouting = undefined;
+    //         }, 0);
+    //     }
+    // }
 
     // for navigation column
-    get naviChilds(): Shape[] | undefined {
-        return this.virtualChilds;
-    }
+    // get naviChilds(): Shape[] | undefined {
+    //     return this.virtualChilds;
+    // }
 
     private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
@@ -214,21 +216,21 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.refId;
     }
 
-    onRemoved(): void {
-        // 构建symbol proxy shadow, 在这里需要unwatch
+    // onRemoved(): void {
+    //     // 构建symbol proxy shadow, 在这里需要unwatch
 
-        if (this.__childs) {
-            // todo compare
-            this.__childs.forEach((c: any) => c.remove)
-            this.__childs = undefined;
-        }
-        this.symData?.unwatch(this.updater);
-    }
+    //     if (this.__childs) {
+    //         // todo compare
+    //         this.__childs.forEach((c: any) => c.remove)
+    //         this.__childs = undefined;
+    //     }
+    //     this.symData?.unwatch(this.updater);
+    // }
 
-    setFrameSize(w: number, h: number): void {
-        super.setFrameSize(w, h);
-        this.relayout();
-    }
+    // setFrameSize(w: number, h: number): void {
+    //     super.setFrameSize(w, h);
+    //     this.relayout();
+    // }
 
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const x = 0;
@@ -370,79 +372,79 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.variables && this.variables.get(varId);
     }
 
-    findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
-        if (this.symData) {
+    // findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
+    //     if (this.symData) {
 
-            const override = this.symData.getOverrid(varId, OverrideType.Variable);
-            if (override) {
-                ret.push(override.v);
-                // scope??
-                varId = override.v.id;
-            }
-            else {
-                const _var = this.symData.getVar(varId);
-                if (_var) {
-                    ret.push(_var);
-                }
-            }
-        }
-        const override = this.getOverrid(varId, OverrideType.Variable);
-        if (override) {
-            ret.push(override.v);
-            super.findVar(override.v.id, ret);
-            return;
-        }
-        const _var = this.getVar(varId);
-        if (_var) {
-            ret.push(_var);
-        }
-        // 考虑scope
-        // varId要叠加上refid
-        if (this.isVirtualShape) {
-            varId = (this as any).originId + '/' + varId;
-        }
-        else {
-            varId = this.id + '/' + varId;
-        }
-        super.findVar(varId, ret);
-        return;
-    }
+    //         const override = this.symData.getOverrid(varId, OverrideType.Variable);
+    //         if (override) {
+    //             ret.push(override.v);
+    //             // scope??
+    //             varId = override.v.id;
+    //         }
+    //         else {
+    //             const _var = this.symData.getVar(varId);
+    //             if (_var) {
+    //                 ret.push(_var);
+    //             }
+    //         }
+    //     }
+    //     const override = this.getOverrid(varId, OverrideType.Variable);
+    //     if (override) {
+    //         ret.push(override.v);
+    //         super.findVar(override.v.id, ret);
+    //         return;
+    //     }
+    //     const _var = this.getVar(varId);
+    //     if (_var) {
+    //         ret.push(_var);
+    //     }
+    //     // 考虑scope
+    //     // varId要叠加上refid
+    //     if (this.isVirtualShape) {
+    //         varId = (this as any).originId + '/' + varId;
+    //     }
+    //     else {
+    //         varId = this.id + '/' + varId;
+    //     }
+    //     super.findVar(varId, ret);
+    //     return;
+    // }
     removeVar(key: string) {
         if (!this.variables) return false;
         // TODO 解绑
         return this.variables.delete(key);
     }
-    findOverride(refId: string, type: OverrideType): Variable[] | undefined {
-        if (this.symData) {
-            const override = this.symData.getOverrid(refId, type);
-            if (override) {
-                const ret = [override.v];
-                this.findVar(override.v.id, ret);
-                return ret;
-            }
-        }
-        const override = this.getOverrid(refId, type);
-        if (override) {
-            const ret = [override.v];
-            // this.id
-            refId = override.v.id;
-            if (this.isVirtualShape) {
-                refId = (this as any).originId + '/' + refId;
-            }
-            else {
-                refId = this.id + '/' + refId;
-            }
-            super.findVar(refId, ret);
-            return ret;
-        }
-        const thisId = this.isVirtualShape ? (this as any).originId : this.id;
-        if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
+    // findOverride(refId: string, type: OverrideType): Variable[] | undefined {
+    //     if (this.symData) {
+    //         const override = this.symData.getOverrid(refId, type);
+    //         if (override) {
+    //             const ret = [override.v];
+    //             this.findVar(override.v.id, ret);
+    //             return ret;
+    //         }
+    //     }
+    //     const override = this.getOverrid(refId, type);
+    //     if (override) {
+    //         const ret = [override.v];
+    //         // this.id
+    //         refId = override.v.id;
+    //         if (this.isVirtualShape) {
+    //             refId = (this as any).originId + '/' + refId;
+    //         }
+    //         else {
+    //             refId = this.id + '/' + refId;
+    //         }
+    //         super.findVar(refId, ret);
+    //         return ret;
+    //     }
+    //     const thisId = this.isVirtualShape ? (this as any).originId : this.id;
+    //     if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
 
-        return super.findOverride(refId, type);
-    }
+    //     return super.findOverride(refId, type);
+    // }
 
-    public notify(...args: any[]): void {
-        if (this.updater(false)) super.notify("childs", ...args);// todo
-        else super.notify(...args);
-    }
+    // public notify(...args: any[]): void {
+    //     if (this.updater(false)) super.notify("childs", ...args);// todo
+    //     else super.notify(...args);
+    // }
 }
