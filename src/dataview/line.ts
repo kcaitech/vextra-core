@@ -12,8 +12,6 @@ export class LineView extends ShapeView {
 
     protected renderBorders(): EL[] {
         if (this.m_data.style.borders.length > 0) {
-            console.log('fixed');
-
             return renderBorders(elh, this.m_data.style, this.getBorders(), this.getPathStr(), this.m_data);
         } else {
             // const props: any = {};
