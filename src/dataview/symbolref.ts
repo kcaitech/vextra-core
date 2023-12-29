@@ -89,7 +89,7 @@ export class SymbolRefView extends ShapeView {
             // this.id
             refId = override.v.id;
             if (this.isVirtualShape) {
-                refId = (this as any).originId + '/' + refId;
+                refId = (this.data).id + '/' + refId;
             }
             else {
                 refId = this.id + '/' + refId;

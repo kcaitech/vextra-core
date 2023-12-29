@@ -949,7 +949,10 @@ export class Path {
         this.__bounds = undefined; // todo
     }
     clone(): Path {
-        const segs = JSON.parse(JSON.stringify(this.m_segs))
+        const segs: (string | number)[][] = [];
+        this.m_segs.forEach((v) => {
+            segs.push(v.slice());
+        })
         const path = new Path(segs);
         path.__bounds = this.__bounds;
         return path;

@@ -135,8 +135,6 @@ class ShapeHdl extends HdlBase {
         const propStr = propertyKey.toString();
         if (propStr === 'isVirtualShape') return this.m_view.isVirtualShape;
         if (propStr === 'id') return this.m_view.id;
-        if (propStr === 'originId') return this.m_view.data.id;
-        if (propStr === '__origin') return this.m_view.data;
         if (propStr === 'parent' || propStr === '__parent') {
             const parent = this.m_view.parent;
             if (!parent) {
@@ -234,7 +232,7 @@ class GroupShapeHdl extends ShapeHdl {
 
 class ShapeArrayHdl extends HdlBase {
 
-    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+    get(target: object, propertyKey: PropertyKey, receiver?: any): any {
         const val = Reflect.get(target, propertyKey, receiver);
         if (val instanceof ShapeView) {
             return proxyView(val);
@@ -243,18 +241,26 @@ class ShapeArrayHdl extends HdlBase {
     }
 }
 
-class SymbolRefShapeHdl extends GroupShapeHdl {
+class SymbolRefShapeHdl extends ShapeHdl {
+
+    m_childs?: ShapeView[];
 
     get view(): SymbolRefView {
         return this.m_view as SymbolRefView;
     }
 
-    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+    get(target: object, propertyKey: PropertyKey, receiver?: any): any {
         const propStr = propertyKey.toString();
-        // if (propStr === 'virtualChilds' || propStr === 'naviChilds') {
-
-        //     return this.__childs;
-        // }
+        if (propStr === 'naviChilds' || propStr === 'childs') {
+            if (!this.m_childs) {
+                const childs = this.m_view.childs;
+                if (childs) {
+                    const hdl = new ShapeArrayHdl();
+                    this.m_childs = new Proxy<ShapeView[]>(childs, hdl);
+                }
+            }
+            return this.m_childs;
+        }
 
         if (propStr === "symData") { // todo hack
             return this.view.symData;
@@ -262,7 +268,15 @@ class SymbolRefShapeHdl extends GroupShapeHdl {
         if (propStr === "refId") {
             return this.view.refId;
         }
-        return super.get(target, propertyKey, receiver);
+
+        if (this.m_view.isVirtualShape) return super.get(target, propertyKey, receiver);
+
+        return Reflect.get(target, propertyKey, receiver);
+    }
+
+    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
+        if (this.m_view.isVirtualShape) return super.set(target, propertyKey, value, receiver);
+        return Reflect.set(target, propertyKey, value, receiver);
     }
 }
 

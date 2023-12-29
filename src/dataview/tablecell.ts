@@ -25,7 +25,6 @@ export class TableCellView extends ShapeView {
     protected afterInit(): void {
         const frame = this.frame;
         if (!this.isVirtualShape && this.cellType === TableCellType.Text) {
-            console.log(Object.assign( {}, frame));
             const text = this.getText();
             text.updateSize(frame.width, frame.height);
         }
