@@ -213,7 +213,13 @@ export class ShapeEditor {
         } else if (r instanceof SymbolRefShape) {
             // do nothing
         } else {
-            while (r && !(r instanceof SymbolShape)) r = r.parent;
+            while (
+                r
+                &&
+                !(r instanceof SymbolShape && !(r.parent instanceof SymbolUnionShape))
+            ) {
+                r = r.parent;
+            }
         }
 
         if (!r) throw new Error();
