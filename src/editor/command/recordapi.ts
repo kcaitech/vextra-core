@@ -473,7 +473,8 @@ export class Api {
     shapeRemoveVariable(page: Page, shape: SymbolShape | SymbolRefShape, key: string) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
-            const _var = shape.getVar(key)!;
+            const _var = shape.getVar(key);
+            if (!_var) return;
             shape.removeVar(key);
             const shapeId = genShapeId(shape);
             shapeId.push(key);
