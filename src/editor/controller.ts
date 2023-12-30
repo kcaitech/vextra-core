@@ -95,7 +95,7 @@ export interface AsyncCreator {
     init_contact: (page: Page, parent: GroupShape, frame: ShapeFrame, name: string, apex?: ContactForm) => Shape | undefined;
     setFrame: (point: PageXY) => void;
     setFrameByWheel: (point: PageXY) => void;
-    collect: (page: Page, shapes: Shape[], target: Artboard) => void;
+    collect: (page: Page | PageView, shapes: Shape[], target: Artboard) => void;
     init_table: (page: Page, parent: GroupShape, name: string, frame: ShapeFrame, row: number, col: number) => Shape | undefined;
     contact_to: (p: PageXY, to?: ContactForm) => void;
     migrate: (targetParent: GroupShape) => void;
@@ -439,7 +439,8 @@ export class Controller {
                 status = Status.Exception;
             }
         }
-        const collect = (page: Page, shapes: Shape[], target: Artboard) => { // 容器收束
+        const collect = (page: Page | PageView, shapes: Shape[], target: Artboard) => { // 容器收束
+            page = page instanceof PageView? page.data : page;
             status = Status.Pending;
             try {
                 if (shapes.length) {
