@@ -321,6 +321,7 @@ export function proxyView(view: ShapeView) {
 }
 
 export function adapt2Shape(view: ShapeView) {
+    if (!(view instanceof ShapeView)) throw new Error("view is not a ShapeView");
     if (view.isVirtualShape || view instanceof SymbolRefView) return proxyView(view);
     return view.data;
 }
