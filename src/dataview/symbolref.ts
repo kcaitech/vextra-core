@@ -128,6 +128,8 @@ export class SymbolRefView extends ShapeView {
                 if (this.m_union) this.m_union.watch(this.symwatcher);
             }
             this.m_ctx.setReLayout(this);
+        }).catch((e) => {
+            console.error(e);
         })
     }
 
