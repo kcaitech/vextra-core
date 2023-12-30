@@ -16,14 +16,16 @@ export class TextShapeView extends ShapeView {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
         return v ? v.value : (this.m_data as TextShape).text;
     }
-
+    get data() {
+        return this.m_data as TextShape;
+    }
     get text() {
         return this.getText();
     }
 
     getLayout() {
         const text = this.getText();
-        if (this.isVirtualShape) {
+        if (this.isVirtualShape || text !== this.data.text/* todo */) {
             const frame = this.frame;
             if (!this.m_layout) {
                 this.m_layout = text.getLayout2(frame.width, frame.height);
