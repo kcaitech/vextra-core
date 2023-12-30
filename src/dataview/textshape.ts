@@ -27,8 +27,9 @@ export class TextShapeView extends ShapeView {
         const text = this.getText();
         if (this.isVirtualShape || text !== this.data.text/* todo */) {
             const frame = this.frame;
-            if (!this.m_layout) {
+            if (!this.m_layout || this.m_layoutText !== text) {
                 this.m_layout = text.getLayout2(frame.width, frame.height);
+                this.m_layoutText = text;
                 this.updateFrameByLayout();
             }
             return this.m_layout;
@@ -59,6 +60,7 @@ export class TextShapeView extends ShapeView {
     }
 
     private m_layout?: TextLayout;
+    private m_layoutText?: Text;
     private m_textpath?: Path;
 
     onDataChange(...args: any[]): void {
@@ -108,6 +110,7 @@ export class TextShapeView extends ShapeView {
 
     clearCache() {
         this.m_layout = undefined;
+        this.m_layoutText = undefined;
         this.m_textpath = undefined;
     }
 }
