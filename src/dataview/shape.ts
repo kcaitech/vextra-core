@@ -234,6 +234,15 @@ export class ShapeView extends DataView {
     get childs(): ShapeView[] {
         return this.m_children as ShapeView[];
     }
+    get style() {
+        return this.data.style;
+    }
+    get exportOptions() {
+        return this.data.exportOptions;
+    }
+    get contextSettings() {
+        return this.data.style.contextSettings;
+    }
     get naviChilds(): ShapeView[] | undefined {
         return this.m_children as ShapeView[];
     }
