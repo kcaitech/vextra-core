@@ -89,7 +89,7 @@ export class TableView extends ShapeView {
                 const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
                 if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                     const cdom = reuse.get(cell.id);
-                    const props = { data: cell, transx: this.m_transx, varsContainer: this.m_varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual };
+                    const props = { data: cell, transx: this.m_transx, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual };
                     if (cdom) {
                         reuse.delete(cell.id);
                         this.moveChild(cdom, idx);

@@ -226,7 +226,7 @@ export class ShapeView extends DataView {
     }
 
     protected afterInit() {
-        this._layout(this.m_data, this.m_transx, this.m_varsContainer);
+        this._layout(this.m_data, this.m_transx, this.varsContainer);
     }
 
     get parent(): ShapeView | undefined {
@@ -327,8 +327,8 @@ export class ShapeView extends DataView {
     }
 
     protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
-        if (!this.m_varsContainer) return;
-        const _vars = findOverrideAndVar(this.m_data, ot, this.m_varsContainer);
+        if (!this.varsContainer) return;
+        const _vars = findOverrideAndVar(this.m_data, ot, this.varsContainer);
         if (!_vars) return;
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === vt) {
@@ -639,7 +639,7 @@ export class ShapeView extends DataView {
             if (props.data.id !== this.m_data.id) throw new Error('id not match');
             // check
             const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
-            const diffVars = isDiffVarsContainer(props.varsContainer, this.m_varsContainer);
+            const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
             if (!needLayout &&
                 !diffTransform &&
                 !diffVars) {
@@ -653,7 +653,7 @@ export class ShapeView extends DataView {
             if (diffVars) {
                 // update varscontainer
                 this.m_ctx.removeDirty(this);
-                this.m_varsContainer = props.varsContainer;
+                this.varsContainer = props.varsContainer;
                 const _id = this.id;
                 // if (_id !== tid) {
                 //     // tid = _id;
@@ -662,7 +662,7 @@ export class ShapeView extends DataView {
         }
 
         this.m_ctx.setDirty(this);
-        this._layout(this.m_data, this.m_transx, this.m_varsContainer);
+        this._layout(this.m_data, this.m_transx, this.varsContainer);
         this.notify("layout");
         this.emit("layout");
     }

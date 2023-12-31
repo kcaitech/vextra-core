@@ -82,7 +82,7 @@ export class DataView extends EventEL {
     m_children: DataView[] = [];
     m_parent: DataView | undefined;
     m_transx?: RenderTransform;
-    m_varsContainer?: (SymbolRefShape | SymbolShape)[];
+    private m_varsContainer?: (SymbolRefShape | SymbolShape)[];
     m_isVirtual?: boolean;
 
     m_isdistroyed: boolean = false;
@@ -99,11 +99,22 @@ export class DataView extends EventEL {
         this._datawatcher = this._datawatcher.bind(this);
         // watch data & varsContainer
         this.m_data.watch(this._datawatcher);
+        this.varsContainer = (props.varsContainer);
+
+        this.m_ctx.setDirty(this);
+    }
+
+    protected get varsContainer() {
+        return this.m_varsContainer;
+    }
+    protected set varsContainer(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+        if (this.m_varsContainer) {
+            this.m_varsContainer.forEach((c) => c.unwatch(this._datawatcher));
+        }
+        this.m_varsContainer = varsContainer;
         if (this.m_varsContainer) {
             this.m_varsContainer.forEach((c) => c.watch(this._datawatcher));
         }
-
-        this.m_ctx.setDirty(this);
     }
 
     // mock shape

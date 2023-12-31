@@ -31,6 +31,19 @@ export class SymbolRefView extends ShapeView {
         this.afterInit();
     }
 
+    protected afterInit(): void {
+        if (!this.m_sym) {
+            super.afterInit();
+            return;
+        }
+        const varsContainer = (this.varsContainer || []).concat(this.m_data as SymbolRefShape);
+        if (this.m_sym.parent instanceof SymbolUnionShape) {
+            varsContainer.push(this.m_sym.parent);
+        }
+        varsContainer.push(this.m_sym);
+        this._layout(this.m_data, this.m_transx, varsContainer);
+    }
+
     protected isNoSupportDiamondScale(): boolean {
         return true;
     }
@@ -79,7 +92,7 @@ export class SymbolRefView extends ShapeView {
             const override = this.symData.getOverrid(refId, type);
             if (override) {
                 const ret = [override.v];
-                if (this.m_varsContainer) findVar(override.v.id, ret, this.m_varsContainer);
+                if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
                 return ret;
             }
         }
@@ -94,12 +107,12 @@ export class SymbolRefView extends ShapeView {
             else {
                 refId = this.id + '/' + refId;
             }
-            if (this.m_varsContainer) findVar(refId, ret, this.m_varsContainer);
+            if (this.varsContainer) findVar(refId, ret, this.varsContainer);
             return ret;
         }
         const thisId = this.isVirtualShape ? (this.data).id : this.id;
         if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
-        return this.m_varsContainer && findOverride(refId, type, this.m_varsContainer);
+        return this.varsContainer && findOverride(refId, type, this.varsContainer);
     }
 
     // todo
@@ -121,7 +134,7 @@ export class SymbolRefView extends ShapeView {
         const override = this.data.getOverrid(varId, OverrideType.Variable);
         if (override) {
             ret.push(override.v);
-            if (this.m_varsContainer) findVar(override.v.id, ret, this.m_varsContainer);
+            if (this.varsContainer) findVar(override.v.id, ret, this.varsContainer);
             return;
         }
         const _var = this.data.getVar(varId);
@@ -136,7 +149,7 @@ export class SymbolRefView extends ShapeView {
         else {
             varId = this.id + '/' + varId;
         }
-        if (this.m_varsContainer) findVar(varId, ret, this.m_varsContainer);
+        if (this.varsContainer) findVar(varId, ret, this.varsContainer);
         return;
     }
 
@@ -208,7 +221,7 @@ export class SymbolRefView extends ShapeView {
             if (props.data.id !== this.m_data.id) throw new Error('id not match');
             // check
             const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
-            const diffVars = isDiffVarsContainer(props.varsContainer, this.m_varsContainer);
+            const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
             if (!needLayout &&
                 !diffTransform &&
                 !diffVars) {
@@ -222,7 +235,7 @@ export class SymbolRefView extends ShapeView {
             if (diffVars) {
                 // update varscontainer
                 this.m_ctx.removeDirty(this);
-                this.m_varsContainer = props.varsContainer;
+                this.varsContainer = props.varsContainer;
                 const _id = this.id;
                 // if (_id !== tid) {
                 //     // tid = _id;
@@ -236,7 +249,7 @@ export class SymbolRefView extends ShapeView {
             this.removeChilds(0, this.m_children.length).forEach((c) => c.destory());
             return;
         }
-        const varsContainer = (this.m_varsContainer || []).concat(this.m_data as SymbolRefShape);
+        const varsContainer = (this.varsContainer || []).concat(this.m_data as SymbolRefShape);
         if (this.m_sym.parent instanceof SymbolUnionShape) {
             varsContainer.push(this.m_sym.parent);
         }

@@ -245,7 +245,7 @@ export class GroupShapeView extends ShapeView {
             throw new Error('shape not found');
         }
 
-        const props = { data: shape, varsContainer: this.m_varsContainer, isVirtual: this.m_isVirtual };
+        const props = { data: shape, varsContainer: this.varsContainer, isVirtual: this.m_isVirtual };
 
         const comsMap = this.m_ctx.comsMap;
         const Com = comsMap.get(shape.type) || comsMap.get(ShapeType.Rectangle)!;
