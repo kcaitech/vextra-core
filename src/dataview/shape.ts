@@ -1,6 +1,7 @@
-import { RenderTransform, innerShadowId, renderBorders, renderFills, renderShadows } from "../render";
+import { innerShadowId, renderBorders, renderFills, renderShadows } from "../render";
 import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
+import { RenderTransform } from "./basic";
 import { EL, elh } from "./el";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";

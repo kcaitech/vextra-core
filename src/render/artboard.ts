@@ -1,7 +1,7 @@
 import { renderGroupChilds as gR } from "./group";
 import { render as borderR } from "./border";
-import { Artboard, ShapeType, SymbolShape, SymbolRefShape, Variable } from '../data/classes';
-import { isVisible, randomId, RenderTransform } from "./basic";
+import { Artboard, ShapeType, SymbolShape, SymbolRefShape } from '../data/classes';
+import { isVisible, randomId } from "./basic";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 import { Color } from "../data/color";
 
@@ -11,7 +11,6 @@ const defaultColor = Color.DefaultColor;
 export function render(h: Function,
     shape: Artboard,
     comsMap: Map<ShapeType, any>,
-    transform: RenderTransform | undefined, // todo
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
     reflush?: number) {
     if (!isVisible(shape, varsContainer)) return;
@@ -48,7 +47,7 @@ export function render(h: Function,
         }
     }
 
-    childs.push(...gR(h, shape, comsMap, undefined, varsContainer)); // 后代元素放中间
+    childs.push(...gR(h, shape, comsMap, varsContainer)); // 后代元素放中间
 
     const path = shape.getPath().toString();
     if (shape.isNoTransform()) {

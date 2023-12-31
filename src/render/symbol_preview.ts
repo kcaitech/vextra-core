@@ -16,7 +16,7 @@ function renderSym(h: Function,
     varsContainer.push(sym);
     // 应该同groupshape
     const childs = sym.childs;
-    const nodes = renderGroupChilds2(h, childs, comsMap, undefined, varsContainer);
+    const nodes = renderGroupChilds2(h, childs, comsMap, varsContainer);
     return nodes;
 
 }

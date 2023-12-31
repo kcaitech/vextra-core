@@ -1,4 +1,4 @@
-import { RenderTransform } from "../render";
+import { RenderTransform } from "./basic";
 import { Shape, ShapeType, SymbolShape } from "../data/shape";
 import { SymbolRefShape } from "../data/classes";
 import { EventEmitter } from "../basic/event";
@@ -69,6 +69,39 @@ export class DViewCtx extends EventEmitter {
     protected onIdle(): boolean {
         return false;
     }
+
+    layoutAll() {
+        // 先按层级排序，由高向下更新
+        const update: { data: DataView, level: number }[] = [];
+        const level = (v: DataView) => {
+            let l = 0;
+            let p = v.parent;
+            while (p) {
+                l++;
+                p = p.parent;
+            }
+            return l;
+        }
+
+        this.relayoutset.forEach((v, k) => {
+            update.push({
+                data: v,
+                level: level(v)
+            });
+        });
+
+        // 小的在前
+        update.sort((a, b) => {
+            return a.level - b.level;
+        });
+
+        for (let i = 0; i < update.length; i++) {
+            const d = update[i].data;
+            if (this.relayoutset.has(d.id)) { // 再次判断，可能已经更新过了
+                d.layout();
+            }
+        }
+    }
     // todo idle
     // todo selection
     // protected idlecallbacks: Array<() => boolean> = [];
@@ -113,36 +146,7 @@ export class DViewCtx extends EventEmitter {
 
         // update
         // render
-        // 先按层级排序，由高向下更新
-        const update: { data: DataView, level: number }[] = [];
-        const level = (v: DataView) => {
-            let l = 0;
-            let p = v.parent;
-            while (p) {
-                l++;
-                p = p.parent;
-            }
-            return l;
-        }
-
-        this.relayoutset.forEach((v, k) => {
-            update.push({
-                data: v,
-                level: level(v)
-            });
-        });
-
-        // 小的在前
-        update.sort((a, b) => {
-            return a.level - b.level;
-        });
-
-        for (let i = 0; i < update.length; i++) {
-            const d = update[i].data;
-            if (this.relayoutset.has(d.id)) { // 再次判断，可能已经更新过了
-                d.layout();
-            }
-        }
+        this.layoutAll();
 
         const emitStartTime = Date.now();
         // 排版完成，emit nextTick

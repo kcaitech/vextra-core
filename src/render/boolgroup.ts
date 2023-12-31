@@ -4,7 +4,7 @@ import { renderWithVars as borderR } from "./border"
 import { renderText2Path } from "./text";
 import { IPalPath, gPal } from "../basic/pal";
 import { parsePath } from "../data/pathparser";
-import { RenderTransform, isVisible, randomId } from "./basic";
+import { isVisible, randomId } from "./basic";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 
 // find first usable style
@@ -185,7 +185,7 @@ export function render2path(shape: Shape): Path {
     return resultpath;
 }
 
-export function render(h: Function, shape: GroupShape, transform: RenderTransform | undefined,
+export function render(h: Function, shape: GroupShape, 
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
     reflush?: number): any {
     if (!isVisible(shape, varsContainer)) return;

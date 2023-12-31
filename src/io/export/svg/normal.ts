@@ -1,5 +1,5 @@
 import { GroupShape, ImageShape, PathShape, RectShape, Shape, SymbolUnionShape, SymbolShape, TextShape } from "../../../data/shape";
-import { RenderTransform, renderArtboard as art } from "../../../render";
+import { renderArtboard as art } from "../../../render";
 import { renderGroup as group } from "../../../render";
 import { renderBoolOpShape as boolgroup } from "../../../render";
 import { renderImage as image } from "../../../render";
@@ -14,38 +14,38 @@ import { ShapeType, SymbolRefShape } from "../../../data/classes";
 
 const comsMap: Map<ShapeType, ComType> = new Map();
 
-comsMap.set(ShapeType.Artboard, (data: Shape, transform: RenderTransform | undefined,
+comsMap.set(ShapeType.Artboard, (data: Shape, 
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
-    return art(h, data as Artboard, comsMap, transform, varsContainer, undefined);
+    return art(h, data as Artboard, comsMap, varsContainer, undefined);
 });
-comsMap.set(ShapeType.Group, (data: Shape, transform: RenderTransform | undefined,
+comsMap.set(ShapeType.Group, (data: Shape, 
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
-    if ((data as GroupShape).isBoolOpShape) return boolgroup(h, data as GroupShape, transform, varsContainer);
-    return group(h, data as GroupShape, comsMap, transform, varsContainer, undefined);
-});
-
-comsMap.set(ShapeType.Image, (data: Shape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
-    return image(h, data as ImageShape, "", transform, varsContainer, undefined);
-});
-comsMap.set(ShapeType.Page, (data: Shape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
-    return group(h, data as GroupShape, comsMap, transform, varsContainer, undefined);
-});
-comsMap.set(ShapeType.Path, (data: Shape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
-    return path(h, data as PathShape, transform, varsContainer, undefined);
-});
-comsMap.set(ShapeType.Rectangle, (data: Shape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
-    return rect(h, data as RectShape, transform, varsContainer, undefined);
-});
-comsMap.set(ShapeType.Text, (data: Shape, transform: RenderTransform | undefined,
-    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
-    return text(h, data as TextShape, transform, varsContainer, undefined);
+    if ((data as GroupShape).isBoolOpShape) return boolgroup(h, data as GroupShape, varsContainer);
+    return group(h, data as GroupShape, comsMap, varsContainer, undefined);
 });
 
-comsMap.set(ShapeType.SymbolRef, (data: Shape, transform: RenderTransform | undefined,
+comsMap.set(ShapeType.Image, (data: Shape, 
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return image(h, data as ImageShape, "", varsContainer, undefined);
+});
+comsMap.set(ShapeType.Page, (data: Shape, 
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return group(h, data as GroupShape, comsMap, varsContainer, undefined);
+});
+comsMap.set(ShapeType.Path, (data: Shape, 
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return path(h, data as PathShape, varsContainer, undefined);
+});
+comsMap.set(ShapeType.Rectangle, (data: Shape, 
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return rect(h, data as RectShape, varsContainer, undefined);
+});
+comsMap.set(ShapeType.Text, (data: Shape, 
+    varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
+    return text(h, data as TextShape, varsContainer, undefined);
+});
+
+comsMap.set(ShapeType.SymbolRef, (data: Shape, 
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     const shape = data as SymbolRefShape;
     const symMgr = shape.getSymbolMgr();
@@ -54,9 +54,9 @@ comsMap.set(ShapeType.SymbolRef, (data: Shape, transform: RenderTransform | unde
     const sym0 = symMgr.getSync(refId);
     if (!sym0) return "";
 
-    return symref(h, data as SymbolRefShape, sym0, comsMap, transform, varsContainer, undefined);
+    return symref(h, data as SymbolRefShape, sym0, comsMap, varsContainer, undefined);
 });
-comsMap.set(ShapeType.Symbol, (data: Shape, transform: RenderTransform | undefined,
+comsMap.set(ShapeType.Symbol, (data: Shape, 
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return sym(h, data as SymbolShape, comsMap);
 });

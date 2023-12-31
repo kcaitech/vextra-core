@@ -1,4 +1,4 @@
-import { OverrideType, Shape, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
+import { OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/classes";
 
 export function stringh(tag: string, attrs?: any, childs?: Array<string>): string;
 export function stringh(tag: string, childs?: Array<string>): string;
@@ -119,3 +119,16 @@ export function findOverrideAndVar(
     return _vars;
 }
 
+
+export interface RenderTransform {
+    // 为保持位置及形状不变，提前设置给子对象的参数
+    dx: number
+    dy: number
+    rotate: number
+    hflip: boolean
+    vflip: boolean
+
+    scaleX: number // == parent.frame.width / parentFrame.width ?
+    scaleY: number
+    parentFrame: ShapeFrame // parent的实际绘制frame
+}

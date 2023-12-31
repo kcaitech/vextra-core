@@ -1,7 +1,7 @@
 import { BoolOp, GroupShape, Path, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, parsePath } from "../data/classes";
 import { ShapeView } from "./shape";
 import { matrix2parent } from "./shape";
-import { RenderTransform } from "../render";
+import { RenderTransform } from "./basic";
 import { Matrix } from "../basic/matrix";
 import { EL } from "./el";
 import { DataView } from "./view";

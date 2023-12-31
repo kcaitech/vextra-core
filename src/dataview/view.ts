@@ -1,6 +1,6 @@
 import { DViewCtx, PropsType } from "./viewctx";
 import { Shape, SymbolRefShape, SymbolShape } from "../data/classes";
-import { RenderTransform } from "../render";
+import { RenderTransform } from "./basic";
 import { genid } from "./basic";
 import { EL } from "./el";
 
@@ -153,28 +153,6 @@ export class DataView extends EventEL {
     onDataChange(...args: any[]) {
 
     }
-
-    // 1. 新创建，则正常创建，append
-    // 2. 运行期更新，
-    //    2.1 内部更新
-    //        2.1.1 仅更新dom内部
-    //        2.1.2 更换dom节点类型
-    //    2.2 外部更新
-    //        2.2.1 移动位置
-    // 3. 销毁
-
-    // bind(node: HTMLElement /* old, for reuse */) { // 
-    //     // if same tag, modify
-    //     // else replace
-    //     if (this.m_el === node) return;
-    //     if (this.m_el) this.m_el.remove();
-    //     this.m_el = node;
-    //     this.m_ctx.dirtyset.set(this.id(), this);
-    // }
-
-    // unbind() {
-    //     if (this.m_el && this.m_el.parentNode) this.m_el.remove();
-    // }
 
     layout(props?: PropsType) {
         throw new Error('not implemented');

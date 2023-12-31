@@ -3,7 +3,7 @@ import { Path } from "../data/path";
 import { parsePath } from "../data/pathparser";
 import { ShapeView, matrix2parent, transformPoints } from "./shape";
 import { Matrix } from "../basic/matrix";
-import { RenderTransform } from "../render";
+import { RenderTransform } from "./basic";
 import { DViewCtx, PropsType } from "./viewctx";
 
 export class PathShapeView extends ShapeView {

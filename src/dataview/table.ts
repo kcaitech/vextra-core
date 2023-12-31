@@ -1,11 +1,12 @@
-import { RenderTransform, renderBorders } from "../render";
-import { Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, TableCell, TableGridItem, TableShape } from "../data/classes";
+import { renderBorders } from "../render";
+import { Shape, ShapeType, SymbolRefShape, SymbolShape, TableCell, TableGridItem, TableShape } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { locateCell, locateCellIndex } from "../data/tablelocate";
 import { TableCellView } from "./tablecell";
+import { RenderTransform } from "./basic";
 
 export class TableView extends ShapeView {
 

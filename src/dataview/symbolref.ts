@@ -3,7 +3,7 @@ import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView } from "./view";
 import { fixFrameByConstrain, isDiffRenderTransform, isDiffVarsContainer, isNoTransform } from "./shape";
-import { RenderTransform } from "../render";
+import { RenderTransform } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
@@ -15,7 +15,7 @@ export class SymbolRefView extends ShapeView {
         super(ctx, props, false);
 
         this.symwatcher = this.symwatcher.bind(this);
-        this.loadsym();
+        this.loadsym(true);
         // const data = this.m_data as SymbolRefShape
         // const symMgr = data.getSymbolMgr();
         // const refId = this.getRefId();
@@ -102,11 +102,49 @@ export class SymbolRefView extends ShapeView {
         return this.m_varsContainer && findOverride(refId, type, this.m_varsContainer);
     }
 
+    // todo
+    findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
+        if (this.symData) {
+            const override = this.symData.getOverrid(varId, OverrideType.Variable);
+            if (override) {
+                ret.push(override.v);
+                // scope??
+                varId = override.v.id;
+            }
+            else {
+                const _var = this.symData.getVar(varId);
+                if (_var) {
+                    ret.push(_var);
+                }
+            }
+        }
+        const override = this.data.getOverrid(varId, OverrideType.Variable);
+        if (override) {
+            ret.push(override.v);
+            if (this.m_varsContainer) findVar(override.v.id, ret, this.m_varsContainer);
+            return;
+        }
+        const _var = this.data.getVar(varId);
+        if (_var) {
+            ret.push(_var);
+        }
+        // 考虑scope
+        // varId要叠加上refid
+        if (this.isVirtualShape) {
+            varId = (this.data).id + '/' + varId;
+        }
+        else {
+            varId = this.id + '/' + varId;
+        }
+        if (this.m_varsContainer) findVar(varId, ret, this.m_varsContainer);
+        return;
+    }
+
     // 需要自己加载symbol
     // private __data: SymbolShape | undefined;
     // private __union: SymbolShape | undefined;
     // private __startLoad: string = "";
-    loadsym() {
+    loadsym(trysync: boolean = false) {
         const symMgr = (this.m_data as SymbolRefShape).getSymbolMgr();
         if (!symMgr) return;
         const refId = this.getRefId();
@@ -114,12 +152,11 @@ export class SymbolRefView extends ShapeView {
             return;
         }
         this.m_refId = refId;
-        symMgr.get(refId).then((val) => {
+        const onload = (val: SymbolShape) => {
             if (this.m_refId !== refId) return;
             if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
             this.m_sym = val;
             if (this.m_sym) this.m_sym.watch(this.symwatcher);
-
             // union
             const union = this.m_sym?.parent instanceof SymbolUnionShape ? this.m_sym.parent : undefined;
             if (this.m_union?.id !== union?.id) {
@@ -128,6 +165,14 @@ export class SymbolRefView extends ShapeView {
                 if (this.m_union) this.m_union.watch(this.symwatcher);
             }
             this.m_ctx.setReLayout(this);
+        }
+        if (trysync) {
+            const val = symMgr.getSync(refId);
+            onload(val as SymbolShape);
+            return;
+        }
+        symMgr.get(refId).then((val) => {
+            onload(val as SymbolShape);
         }).catch((e) => {
             console.error(e);
         })

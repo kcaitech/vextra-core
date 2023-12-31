@@ -2,9 +2,8 @@ import { ShapeFrame, SymbolRefShape, SymbolShape, Variable } from "../data/class
 import { TableCell, TableCellType } from "../data/classes";
 import { renderTextLayout } from "./text";
 import { render as fillR } from "./fill";
-import { RenderTransform } from "./basic";
 
-export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: string, transform: RenderTransform | undefined,
+export function render(h: Function, shape: TableCell, frame: ShapeFrame, imgPH: string, 
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, 
     reflush?: number): any {
     // const isVisible = shape.isVisible ?? true;
