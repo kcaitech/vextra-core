@@ -1,5 +1,5 @@
 import { innerShadowId, renderBorders, renderFills, renderShadows } from "../render";
-import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape } from "../data/classes";
+import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape, Fill, Border, Shadow } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { RenderTransform } from "./basic";
 import { EL, elh } from "./el";
@@ -392,17 +392,17 @@ export class ShapeView extends DataView {
         return !this.m_hflip && !this.m_vflip && !this.m_rotate;
     }
 
-    getFills() {
+    getFills(): Fill[] {
         const v = this._findOV(OverrideType.Fills, VariableType.Fills);
         return v ? v.value : this.m_data.style.fills;
     }
 
-    getBorders() {
+    getBorders(): Border[] {
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
         return v ? v.value : this.m_data.style.borders;
     }
 
-    getShadows() {
+    getShadows(): Shadow[] {
         const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
         return v ? v.value : this.m_data.style.shadows;
     }
