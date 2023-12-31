@@ -231,12 +231,12 @@ class SymbolRefShapeHdl extends ShapeHdl {
         if (propStr === "findVar") {
             return this.findVar;
         }
-
-        const h = shandler[propStr];
-        if (h) return h(this.m_view);
-
+        
         if (this.m_view.isVirtualShape) return super.get(target, propertyKey, receiver);
-
+        
+        if (propStr === "__isAdapted") {
+            return true;
+        }
         return Reflect.get(target, propertyKey, receiver);
     }
 
