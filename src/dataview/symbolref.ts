@@ -83,7 +83,7 @@ export class SymbolRefView extends ShapeView {
 
     symwatcher(...args: any[]) {
         // todo
-        // this.m_ctx.setReLayout(this);
+        this.m_ctx.setReLayout(this);
     }
 
     // todo

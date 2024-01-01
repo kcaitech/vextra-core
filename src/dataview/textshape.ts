@@ -120,7 +120,8 @@ export class TextShapeView extends ShapeView {
         }
         super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
         // update frame by layout
-        this.updateFrameByLayout();
+        // this.updateFrameByLayout();
+        this.getLayout(); // 要提前排版，不然frame不对，填充不对。也可以考虑先renderContents，再renderFills。
     }
 
     private updateFrameByLayout() {
