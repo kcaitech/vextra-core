@@ -1,4 +1,4 @@
-import { GroupShape, ImageShape, PathShape, RectShape, Shape, SymbolUnionShape, SymbolShape, TextShape } from "../../../data/shape";
+import { GroupShape, ImageShape, PathShape, RectShape, Shape, SymbolShape, TextShape } from "../../../data/shape";
 import { renderArtboard as art } from "../../../render";
 import { renderGroup as group } from "../../../render";
 import { renderBoolOpShape as boolgroup } from "../../../render";
@@ -11,41 +11,82 @@ import { renderSymbol as sym } from "../../../render";
 import { ComType, h } from "./basic";
 import { Artboard } from "../../../data/artboard";
 import { ShapeType, SymbolRefShape } from "../../../data/classes";
+import {
+    ArtboradView, ContactLineView, CutoutShapeView, DViewCtx,
+    GroupShapeView, ImageShapeView,
+    LineView, PathShapeView, PathShapeView2,
+    RectShapeView, SymbolRefView, SymbolView,
+    TableCellView, TableView, TextShapeView,
+    adapt2Shape, isAdaptedShape
+} from "../../../dataview";
 
 const comsMap: Map<ShapeType, ComType> = new Map();
 
-comsMap.set(ShapeType.Artboard, (data: Shape, 
+comsMap.set(ShapeType.Artboard, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return art(h, data as Artboard, comsMap, varsContainer, undefined);
 });
-comsMap.set(ShapeType.Group, (data: Shape, 
+comsMap.set(ShapeType.Group, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     if ((data as GroupShape).isBoolOpShape) return boolgroup(h, data as GroupShape, varsContainer);
     return group(h, data as GroupShape, comsMap, varsContainer, undefined);
 });
 
-comsMap.set(ShapeType.Image, (data: Shape, 
+comsMap.set(ShapeType.Image, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return image(h, data as ImageShape, "", varsContainer, undefined);
 });
-comsMap.set(ShapeType.Page, (data: Shape, 
+comsMap.set(ShapeType.Page, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return group(h, data as GroupShape, comsMap, varsContainer, undefined);
 });
-comsMap.set(ShapeType.Path, (data: Shape, 
+comsMap.set(ShapeType.Path, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return path(h, data as PathShape, varsContainer, undefined);
 });
-comsMap.set(ShapeType.Rectangle, (data: Shape, 
+comsMap.set(ShapeType.Rectangle, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return rect(h, data as RectShape, varsContainer, undefined);
 });
-comsMap.set(ShapeType.Text, (data: Shape, 
+comsMap.set(ShapeType.Text, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return text(h, data as TextShape, varsContainer, undefined);
 });
 
-comsMap.set(ShapeType.SymbolRef, (data: Shape, 
+
+function initComsMap(comsMap: Map<ShapeType, any>) {
+    comsMap.set(ShapeType.Artboard, ArtboradView);
+    comsMap.set(ShapeType.Group, GroupShapeView);
+    comsMap.set(ShapeType.Image, ImageShapeView);
+    // comsMap.set(ShapeType.Page, ShapeGroup);
+    comsMap.set(ShapeType.Path, PathShapeView);
+    comsMap.set(ShapeType.Path2, PathShapeView2);
+    // comsMap.set(ShapeType.Rectangle, PathShapeDom);
+    comsMap.set(ShapeType.Oval, PathShapeView);
+    comsMap.set(ShapeType.Text, TextShapeView);
+    comsMap.set(ShapeType.Symbol, SymbolView);
+    comsMap.set(ShapeType.SymbolUnion, SymbolView);
+    comsMap.set(ShapeType.SymbolRef, SymbolRefView);
+    comsMap.set(ShapeType.Line, LineView);
+    comsMap.set(ShapeType.Table, TableView);
+    comsMap.set(ShapeType.Contact, ContactLineView);
+    comsMap.set(ShapeType.TableCell, TableCellView);
+    comsMap.set(ShapeType.Cutout, CutoutShapeView);
+    comsMap.set(ShapeType.Rectangle, RectShapeView);
+}
+
+function makeAdapt(shape: SymbolRefShape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined): { shape: SymbolRefShape, view: SymbolRefView, ctx: DViewCtx } {
+    const adaptCtx = new DViewCtx();
+    initComsMap(adaptCtx.comsMap);
+    const adaptView = new SymbolRefView(adaptCtx, {
+        data: shape,
+        varsContainer,
+        isVirtual: false
+    });
+    const adapt = adapt2Shape(adaptView) as SymbolRefShape;
+    return { shape: adapt, view: adaptView, ctx: adaptCtx };
+}
+comsMap.set(ShapeType.SymbolRef, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     const shape = data as SymbolRefShape;
     const symMgr = shape.getSymbolMgr();
@@ -54,9 +95,18 @@ comsMap.set(ShapeType.SymbolRef, (data: Shape,
     const sym0 = symMgr.getSync(refId);
     if (!sym0) return "";
 
-    return symref(h, data as SymbolRefShape, sym0, comsMap, varsContainer, undefined);
+    if (shape.isVirtualShape || isAdaptedShape(shape)) {
+        symref(h, shape, sym0, comsMap, varsContainer, undefined);
+    }
+
+    const adapt = makeAdapt(shape, varsContainer);
+    adapt.ctx.layoutAll();
+    const ret = symref(h, adapt.shape, sym0, comsMap, varsContainer, undefined);
+
+    adapt.view.destory();
+    return ret;
 });
-comsMap.set(ShapeType.Symbol, (data: Shape, 
+comsMap.set(ShapeType.Symbol, (data: Shape,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => {
     return sym(h, data as SymbolShape, comsMap);
 });
