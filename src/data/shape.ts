@@ -182,6 +182,10 @@ export class Shape extends Basic implements classes.Shape {
         return this.getPathOfFrame(this.frame, fixedRadius);
     }
 
+    getPathStr(fixedRadius?: number): string {
+        return this.getPath(fixedRadius).toString();
+    }
+
     getPage(): Shape | undefined {
         let p: Shape | undefined = this;
         while (p && p.type !== ShapeType.Page) p = p.parent;

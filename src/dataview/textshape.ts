@@ -1,7 +1,7 @@
 import { TextLayout } from "../data/textlayout";
-import { OverrideType, Path, ShapeFrame, Text, TextShape, VariableType } from "../data/classes";
+import { OverrideType, Path, ShapeFrame, Text, TextBehaviour, TextShape, TextVerAlign, VariableType } from "../data/classes";
 import { EL, elh } from "./el";
-import { ShapeView } from "./shape";
+import { ShapeView, isDiffShapeFrame } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
 
@@ -16,17 +16,20 @@ export class TextShapeView extends ShapeView {
         const v = this._findOV(OverrideType.Text, VariableType.Text);
         return v ? v.value : (this.m_data as TextShape).text;
     }
-
+    get data() {
+        return this.m_data as TextShape;
+    }
     get text() {
         return this.getText();
     }
 
     getLayout() {
         const text = this.getText();
-        if (this.isVirtualShape) {
+        if (this.isVirtualShape || text !== this.data.text/* todo */) {
             const frame = this.frame;
-            if (!this.m_layout) {
+            if (!this.m_layout || this.m_layoutText !== text) {
                 this.m_layout = text.getLayout2(frame.width, frame.height);
+                this.m_layoutText = text;
                 this.updateFrameByLayout();
             }
             return this.m_layout;
@@ -57,6 +60,7 @@ export class TextShapeView extends ShapeView {
     }
 
     private m_layout?: TextLayout;
+    private m_layoutText?: Text;
     private m_textpath?: Path;
 
     onDataChange(...args: any[]): void {
@@ -76,10 +80,48 @@ export class TextShapeView extends ShapeView {
         return renderTextLayout(elh, layout);
     }
 
+    __layoutWidth: number = 0;
+    __frameHeight: number = 0;
+    __frameWidth: number = 0;
+    private updateSize(w: number, h: number) {
+        const text = this.m_layoutText;
+        if (!text) return;
+        const layoutWidth = ((b: TextBehaviour) => {
+            switch (b) {
+                case TextBehaviour.Flexible: return Number.MAX_VALUE;
+                case TextBehaviour.Fixed: return w;
+                case TextBehaviour.FixWidthAndHeight: return w;
+            }
+            // return Number.MAX_VALUE
+        })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
+        if (this.__layoutWidth !== layoutWidth) {
+            this.__frameHeight = h;
+            this.__layoutWidth = layoutWidth;
+            this.m_layout = undefined;
+        }
+        else if (this.__frameHeight !== h && this.m_layout) {
+            const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
+            const yOffset: number = ((align: TextVerAlign) => {
+                switch (align) {
+                    case TextVerAlign.Top: return 0;
+                    case TextVerAlign.Middle: return (h - this.m_layout.contentHeight) / 2;
+                    case TextVerAlign.Bottom: return h - this.m_layout.contentHeight;
+                }
+            })(vAlign);
+            this.m_layout.yOffset = yOffset;
+        }
+        this.__frameWidth = w;
+        this.__frameHeight = h;
+    }
+
     updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined): void {
+        if (this.isVirtualShape && isDiffShapeFrame(this.m_frame, frame)) {
+            this.updateSize(frame.width, frame.height);
+        }
         super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
         // update frame by layout
-        this.updateFrameByLayout();
+        // this.updateFrameByLayout();
+        this.getLayout(); // 要提前排版，不然frame不对，填充不对。也可以考虑先renderContents，再renderFills。
     }
 
     private updateFrameByLayout() {
@@ -106,6 +148,10 @@ export class TextShapeView extends ShapeView {
 
     clearCache() {
         this.m_layout = undefined;
+        this.m_layoutText = undefined;
         this.m_textpath = undefined;
+        this.__layoutWidth = 0;
+        this.__frameHeight = 0;
+        this.__frameWidth = 0;
     }
 }

@@ -1,7 +1,7 @@
 
 // 用于替换掉symbolproxy
 
-import { GroupShape, PathShape, Shape, TextShape } from "../data/shape";
+import { GroupShape, OverrideType, PathShape, Shape, TextShape, Variable } from "../data/shape";
 import { ShapeView } from "./shape";
 import { Style } from "../data/style";
 import { SymbolRefView } from "./symbolref";
@@ -53,54 +53,24 @@ class StyleHdl extends HdlBase {
     }
 }
 
-class TextHdl extends HdlBase {
-
-    private m_view: ShapeView;
-    private m_parent: Shape;
-    constructor(view: ShapeView, parent: Shape/* proxyed */) {
-        super();
-        this.m_view = view;
-        this.m_parent = parent;
-    }
-
-    set(target: object, propertyKey: PropertyKey, value: any, receiver?: any): boolean {
-        const propStr = propertyKey.toString();
-        // if (propStr === "__layout") {
-        //     this.__layout = value;
-        //     return true;
-        // }
-        // if (propStr === "__layoutWidth") {
-        //     this.__layoutWidth = value;
-        //     return true;
-        // }
-        // if (propStr === "__frameWidth") {
-        //     this.__frameWidth = value;
-        //     return true;
-        // }
-        // if (propStr === "__frameHeight") {
-        //     this.__frameHeight = value;
-        //     return true;
-        // }
-        return super.set(target, propertyKey, value, receiver);
-    }
-
-    get(target: object, propertyKey: PropertyKey, receiver?: any) {
-        const propStr = propertyKey.toString();
-        // if (propStr === "__layout") {
-        //     return this.__layout;
-        // }
-        // if (propStr === "__layoutWidth") {
-        //     return this.__layoutWidth;
-        // }
-        // if (propStr === "__frameWidth") {
-        //     return this.__frameWidth;
-        // }
-        // if (propStr === "__frameHeight") {
-        //     return this.__frameHeight;
-        // }
-        return super.get(target, propertyKey, receiver);
-    }
-}
+const shandler: {[key: string]: (view: ShapeView) => any} = {};
+shandler['isVirtualShape'] = (view: ShapeView) => view.isVirtualShape;
+shandler['id'] = (view: ShapeView) => view.id;
+shandler['parent'] = shandler['__parent'] = (view: ShapeView) => {
+    const parent = view.parent;
+    if (!parent) return undefined;
+    return adapt2Shape(parent);
+};
+shandler['isVisible'] = (view: ShapeView) => view.isVisible();
+shandler['isLocked'] = (view: ShapeView) => view.isLocked();
+shandler['frame'] = (view: ShapeView) => view.frame;
+shandler['isFlippedVertical'] = (view: ShapeView) => view.isFlippedVertical;
+shandler['isFlippedHorizontal'] = (view: ShapeView) => view.isFlippedHorizontal;
+shandler['rotation'] = (view: ShapeView) => view.rotation;
+shandler['isNoTransform'] = (view: ShapeView) => { return () => view.isNoTransform(); }
+shandler['getPath'] = (view: ShapeView) => { return () => view.getPath(); }
+shandler['getPathStr'] = (view: ShapeView) => { return () => view.getPathStr(); }
+shandler['__isAdapted'] = (view: ShapeView) => true; // 判断是否是proxy
 
 class ShapeHdl extends HdlBase {
     m_view: ShapeView;
@@ -133,27 +103,15 @@ class ShapeHdl extends HdlBase {
 
     get(target: object, propertyKey: PropertyKey, receiver?: any): any {
         const propStr = propertyKey.toString();
-        if (propStr === 'isVirtualShape') return this.m_view.isVirtualShape;
-        if (propStr === 'id') return this.m_view.id;
-        if (propStr === 'parent' || propStr === '__parent') {
-            const parent = this.m_view.parent;
-            if (!parent) {
-                return undefined;
-            }
-            return adapt2Shape(parent);
-        }
+        const h = shandler[propStr];
+        if (h) return h(this.m_view);
+
         if (propStr === 'style') {
             if (!this.m_style) {
                 const hdl = new StyleHdl(this.m_view, receiver as Shape);
                 this.m_style = new Proxy<Style>(this.m_view.data.style, hdl);
             }
             return this.m_style;
-        }
-        if (propStr === "isVisible") {
-            return this.m_view.isVisible();
-        }
-        if (propStr === "isLocked") {
-            return this.m_view.isLocked();
         }
         if (propStr === "watch") {
             return this.watch;
@@ -164,21 +122,6 @@ class ShapeHdl extends HdlBase {
         if (propStr === "notify") {
             return this.notify;
         }
-        if (propStr === "frame") {
-            return this.m_view.frame;
-        }
-        if (propStr === "isFlippedVertical") {
-            return this.m_view.m_vflip;
-        }
-        if (propStr === "isFlippedHorizontal") {
-            return this.m_view.m_hflip;
-        }
-        if (propStr === "rotation") {
-            return this.m_view.m_rotate;
-        }
-        // if (propStr === "points") {
-        //     return this.m_view.;
-        // }
         return super.get(target, propertyKey, receiver);
     }
 }
@@ -245,8 +188,22 @@ class SymbolRefShapeHdl extends ShapeHdl {
 
     m_childs?: ShapeView[];
 
+    constructor(view: SymbolRefView) {
+        super(view);
+        this.findOverride = this.findOverride.bind(this);
+        this.findVar = this.findVar.bind(this);
+    }
+
     get view(): SymbolRefView {
         return this.m_view as SymbolRefView;
+    }
+
+    findOverride(refId: string, type: OverrideType): Variable[] | undefined {
+        return this.view.findOverride(refId, type);
+    }
+
+    findVar(varId: string, ret: Variable[]): void {
+        return this.view.findVar(varId, ret);
     }
 
     get(target: object, propertyKey: PropertyKey, receiver?: any): any {
@@ -268,9 +225,18 @@ class SymbolRefShapeHdl extends ShapeHdl {
         if (propStr === "refId") {
             return this.view.refId;
         }
-
+        if (propStr === "findOverride") {
+            return this.findOverride;
+        }
+        if (propStr === "findVar") {
+            return this.findVar;
+        }
+        
         if (this.m_view.isVirtualShape) return super.get(target, propertyKey, receiver);
-
+        
+        if (propStr === "__isAdapted") {
+            return true;
+        }
         return Reflect.get(target, propertyKey, receiver);
     }
 
@@ -296,7 +262,7 @@ class TextShapeHdl extends ShapeHdl {
     }
 }
 
-export function proxyView(view: ShapeView) {
+function proxyView(view: ShapeView) {
 
     const shape = view.data;
 
@@ -305,7 +271,7 @@ export function proxyView(view: ShapeView) {
         hdl = new GroupShapeHdl(view);
     }
     else if (shape instanceof SymbolRefShape) {
-        hdl = new SymbolRefShapeHdl(view);
+        hdl = new SymbolRefShapeHdl(view as SymbolRefView);
     }
     else if (shape instanceof TextShape) {
         hdl = new TextShapeHdl(view);
@@ -321,6 +287,11 @@ export function proxyView(view: ShapeView) {
 }
 
 export function adapt2Shape(view: ShapeView) {
+    if (!(view instanceof ShapeView)) throw new Error("view is not a ShapeView");
     if (view.isVirtualShape || view instanceof SymbolRefView) return proxyView(view);
     return view.data;
+}
+
+export function isAdaptedShape(shape: Shape) {
+    return (shape as any).__isAdapted;
 }

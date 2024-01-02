@@ -1,9 +1,10 @@
 import { GroupShapeView } from "./groupshape";
-import { RenderTransform, renderBorders, renderFills } from "../render";
+import { renderBorders, renderFills } from "../render";
 import { EL, elh } from "./el";
 import { Shape, ShapeType, SymbolShape } from "../data/shape";
 import { VarsContainer } from "./viewctx";
 import { DataView } from "./view"
+import { RenderTransform } from "./basic";
 
 export class SymbolView extends GroupShapeView {
     get data() {

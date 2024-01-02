@@ -1,7 +1,7 @@
 import { BoolOp, GroupShape, Path, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, parsePath } from "../data/classes";
 import { ShapeView } from "./shape";
 import { matrix2parent } from "./shape";
-import { RenderTransform } from "../render";
+import { RenderTransform } from "./basic";
 import { Matrix } from "../basic/matrix";
 import { EL } from "./el";
 import { DataView } from "./view";
@@ -220,6 +220,9 @@ export class GroupShapeView extends ShapeView {
     }
 
     protected onChildChange(...args: any[]) {
+        if (args.includes('fills') || args.includes('borders')) {
+            this.notify(...args); // 通知界面更新
+        }
     }
 
     onDestory(): void {
@@ -242,7 +245,7 @@ export class GroupShapeView extends ShapeView {
             throw new Error('shape not found');
         }
 
-        const props = { data: shape, varsContainer: this.m_varsContainer, isVirtual: this.m_isVirtual };
+        const props = { data: shape, varsContainer: this.varsContainer, isVirtual: this.m_isVirtual };
 
         const comsMap = this.m_ctx.comsMap;
         const Com = comsMap.get(shape.type) || comsMap.get(ShapeType.Rectangle)!;

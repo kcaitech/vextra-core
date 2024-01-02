@@ -1,9 +1,8 @@
-import { RenderTransform } from "../../../render/basic";
+
 import { Shape } from "../../../data/shape";
 import { SymbolRefShape, SymbolShape } from "../../../data/classes";
 
 export type ComType = (data: Shape,
-    transx: RenderTransform | undefined,
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) => string;
 
 export function h(com: ComType, attrs?: any): string;

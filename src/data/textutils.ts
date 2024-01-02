@@ -307,6 +307,7 @@ export function newText2(textAttr?: TextAttr, paraAttr?: ParaAttr, spanAttr?: Sp
     span.color = new Color(0.85, 0, 0, 0);
     para.spans.push(span);
     if (textAttr) {
+        mergeTextAttr(text, textAttr);
         mergeParaAttr(para, textAttr);
         mergeSpanAttr(span, textAttr);
     }

@@ -1,9 +1,10 @@
 import { renderGroupChilds as gR } from "./group";
 import { render as borderR } from "./border";
-import { Artboard, ShapeType, SymbolShape, SymbolRefShape, Variable } from '../data/classes';
-import { isVisible, randomId, RenderTransform } from "./basic";
+import { Artboard, ShapeType, SymbolShape, SymbolRefShape } from '../data/classes';
+import { isVisible, randomId } from "./basic";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 import { Color } from "../data/color";
+import { render as renderFills } from "./fill";
 
 const defaultColor = Color.DefaultColor;
 
@@ -11,7 +12,6 @@ const defaultColor = Color.DefaultColor;
 export function render(h: Function,
     shape: Artboard,
     comsMap: Map<ShapeType, any>,
-    transform: RenderTransform | undefined, // todo
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
     reflush?: number) {
     if (!isVisible(shape, varsContainer)) return;
@@ -35,22 +35,16 @@ export function render(h: Function,
     const frame = shape.frame;
     ab_props.width = frame.width, ab_props.height = frame.height;
     ab_props.viewBox = `0 0 ${frame.width} ${frame.height}`;
-    // 
+
+    const path = shape.getPathStr();
     // background 背景色垫底
     const fills = shape.style.fills;
     if (fills && fills.length) {
-        for (let i = 0; i < fills.length; i++) {
-            const color = fills[i].color || defaultColor;
-            childs.push(h("rect", {
-                x: 0, y: 0, width: frame.width, height: frame.height,
-                fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
-            }))
-        }
+        childs.push(...renderFills(h, fills, frame, path));
     }
 
-    childs.push(...gR(h, shape, comsMap, undefined, varsContainer)); // 后代元素放中间
+    childs.push(...gR(h, shape, comsMap, varsContainer)); // 后代元素放中间
 
-    const path = shape.getPath().toString();
     if (shape.isNoTransform()) {
         const shadows = shape.style.shadows;
         const shape_id = shape.id.slice(0, 4) + randomId();
@@ -60,7 +54,6 @@ export function render(h: Function,
             const props: any = {}
             if (reflush) props.reflush = reflush;
             props.transform = `translate(${frame.x},${frame.y})`;
-            const path = shape.getPath().toString();
             ab_props.x = 0, ab_props.y = 0;
             const ex_props = Object.assign({}, props);
             if (shadow.length) {
@@ -108,7 +101,6 @@ export function render(h: Function,
         const shadow = shadowR(h, shape_id, shape, frame, path, varsContainer); // todo 
         const b_len = shape.style.borders.length;
         if (b_len) {
-            const path = shape.getPath().toString();
             if (shadow.length) {
                 const ex_props = Object.assign({}, props);
                 delete props.style;

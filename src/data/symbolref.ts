@@ -371,10 +371,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     getVar(varId: string) {
         return this.variables && this.variables.get(varId);
     }
+    removeVar(key: string) {
+        if (!this.variables) return false;
+        // TODO 解绑
+        return this.variables.delete(key);
+    }
 
     // findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
     //     if (this.symData) {
-
     //         const override = this.symData.getOverrid(varId, OverrideType.Variable);
     //         if (override) {
     //             ret.push(override.v);
@@ -409,11 +413,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     //     super.findVar(varId, ret);
     //     return;
     // }
-    removeVar(key: string) {
-        if (!this.variables) return false;
-        // TODO 解绑
-        return this.variables.delete(key);
-    }
     // findOverride(refId: string, type: OverrideType): Variable[] | undefined {
     //     if (this.symData) {
     //         const override = this.symData.getOverrid(refId, type);
@@ -439,10 +438,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     //     }
     //     const thisId = this.isVirtualShape ? (this as any).originId : this.id;
     //     if (refId !== thisId) refId = thisId + '/' + refId; // fix ref自己查找自己的override
-
     //     return super.findOverride(refId, type);
     // }
-
     // public notify(...args: any[]): void {
     //     if (this.updater(false)) super.notify("childs", ...args);// todo
     //     else super.notify(...args);

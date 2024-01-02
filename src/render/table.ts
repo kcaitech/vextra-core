@@ -1,9 +1,9 @@
 import { ShapeType, SymbolRefShape, SymbolShape, TableCell, TableShape, Variable } from "../data/classes";
 import { render as fillR } from "./fill";
 import { render as borderR } from "./border";
-import { RenderTransform, isVisible } from "./basic";
+import { isVisible } from "./basic";
 
-export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, transform: RenderTransform | undefined,
+export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, any>, 
     varsContainer: (SymbolRefShape | SymbolShape)[] | undefined,
     bubbleupdate?: () => void,
     reflush?: number): any {
@@ -27,7 +27,7 @@ export function render(h: Function, shape: TableShape, comsMap: Map<ShapeType, a
             const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
             if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                 const com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle);
-                const node = h(com, { data: cell, key: cell.id, frame: cellLayout.frame, transform, varsContainer, bubbleupdate });
+                const node = h(com, { data: cell, key: cell.id, frame: cellLayout.frame, varsContainer, bubbleupdate });
                 nodes.push(node);
             }
         }

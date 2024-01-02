@@ -1,11 +1,12 @@
-import { RenderTransform, renderBorders } from "../render";
-import { Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, TableCell, TableGridItem, TableShape } from "../data/classes";
+import { renderBorders } from "../render";
+import { Shape, ShapeType, SymbolRefShape, SymbolShape, TableCell, TableGridItem, TableShape } from "../data/classes";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { locateCell, locateCellIndex } from "../data/tablelocate";
 import { TableCellView } from "./tablecell";
+import { RenderTransform } from "./basic";
 
 export class TableView extends ShapeView {
 
@@ -88,7 +89,7 @@ export class TableView extends ShapeView {
                 const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
                 if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                     const cdom = reuse.get(cell.id);
-                    const props = { data: cell, transx: this.m_transx, varsContainer: this.m_varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual };
+                    const props = { data: cell, transx: this.m_transx, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual };
                     if (cdom) {
                         reuse.delete(cell.id);
                         this.moveChild(cdom, idx);
