@@ -1,6 +1,6 @@
-import { elh } from "./el";
+import { EL, elh } from "./el";
 import { GroupShapeView } from "./groupshape";
-import { innerShadowId, renderFills } from "../render";
+import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
 
 export class ArtboradView extends GroupShapeView {
@@ -22,12 +22,12 @@ export class ArtboradView extends GroupShapeView {
     //     return this.m_el?.outerHTML || "";
     // }
 
-    protected renderFills() {
-        // if (!this.m_fills) {
-        //     this.m_fills = renderFills(elh, this.getFills(), this.frame, this.getPathStr());
-        // }
-        // return this.m_fills;                
+    protected renderFills(): EL[] {
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
+    }
+
+    protected renderBorders(): EL[] {
+        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr());
     }
 
     protected renderProps(): { [key: string]: string } {
