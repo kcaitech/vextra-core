@@ -1,5 +1,5 @@
 
-const _el_instance: EL[] = [];
+// const _el_instance: EL[] = [];
 // let _el_id: number = 0;
 
 // function recycleEL(el: EL) {
@@ -10,6 +10,34 @@ const _el_instance: EL[] = [];
 
 export type ELAttr = { [key: string]: string | { [key: string]: string } };
 
+const _check_el_childs = false; // for debug
+function assignELChilds(childs?: string | EL | EL[]): string | EL[] {
+    if (!childs) {
+        return [];
+    }
+    else if (Array.isArray(childs)) {
+        // check childs
+        if (_check_el_childs) {
+            const _childs = childs as EL[];
+            for (let i = 0; i < _childs.length; i++) {
+                if (!(_childs[i] instanceof EL)) {
+                    throw new Error('childs must be EL array');
+                }
+            }
+        }
+        return childs;
+    }
+    else if (typeof childs == 'string') {
+        return childs;
+    }
+    else if (childs instanceof EL) {
+        return [childs]
+    }
+    else {
+        throw new Error('childs must be string or EL or EL array')
+    }
+}
+
 export class EL {
     // el?: HTMLElement | SVGElement;
     // _id: number;
@@ -19,13 +47,14 @@ export class EL {
     elchilds: string | EL[];
 
     static make(tag: string, attr?: { [key: string]: string }, childs?: string | EL | EL[]): EL {
-        let el = _el_instance.pop();
-        if (el) {
-            el.reset(tag, attr, childs);
-        } else {
-            el = new EL(tag, attr, childs);
-        }
-        return el;
+        return new EL(tag, attr, childs);
+        // let el = _el_instance.pop();
+        // if (el) {
+        //     el.reset(tag, attr, childs);
+        // } else {
+        //     el = new EL(tag, attr, childs);
+        // }
+        // return el;
     }
 
     // id() {
@@ -36,14 +65,14 @@ export class EL {
         // this._id = id;
         this.eltag = tag;
         this.elattr = attr || {};
-        this.elchilds = childs ? (Array.isArray(childs) ? childs : (typeof childs === 'string' ? childs : [childs])) : [];
+        this.elchilds = assignELChilds(childs);
     }
 
     constructor(tag: string, attr?: ELAttr, childs?: string | EL | EL[]) {
         // this._id = id;
         this.eltag = tag;
         this.elattr = attr || {};
-        this.elchilds = childs ? (Array.isArray(childs) ? childs : (typeof childs === 'string' ? childs : [childs])) : [];
+        this.elchilds = assignELChilds(childs);
     }
 
     get isViewNode() {
