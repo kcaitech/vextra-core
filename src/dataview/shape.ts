@@ -269,7 +269,7 @@ export class ShapeView extends DataView {
     // private __boundingBox?: ShapeFrame;
     boundingBox(): ShapeFrame {
         if (this.isNoTransform()) return this.frame;
-        const path = this.getPath();
+        const path = this.getPath().clone();
         if (path.length > 0) {
             const m = this.matrix2Parent();
             path.transform(m);
@@ -294,7 +294,7 @@ export class ShapeView extends DataView {
      * @description 无论是否transform都进行Bounds计算并返回
      */
     boundingBox2(): ShapeFrame {
-        const path = this.getPath();
+        const path = this.getPath().clone();
         if (path.length > 0) {
             const m = this.matrix2Parent();
             path.transform(m);
