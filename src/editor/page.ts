@@ -1138,7 +1138,7 @@ export class PageEditor {
                     api.shapeModifyFixedRadius(this.__page, shape as GroupShape, val);
                     continue;
                 }
-                
+
                 if (!(shape instanceof PathShape)) {
                     continue;
                 }
@@ -1444,6 +1444,32 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 translate(api, this.__page, action.target, action.transX, action.transY);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    modifyShapesX(actions: { target: Shape, x: number }[]) {
+        const api = this.__repo.start('modifyShapesX', {});
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const action = actions[i];
+                api.shapeModifyX(this.__page, action.target, action.x);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
+    modifyShapesY(actions: { target: Shape, y: number }[]) {
+        const api = this.__repo.start('modifyShapesY', {});
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const action = actions[i];
+                api.shapeModifyY(this.__page, action.target, action.y);
             }
             this.__repo.commit();
         } catch (error) {
