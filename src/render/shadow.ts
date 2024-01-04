@@ -50,7 +50,6 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
 
     const body_props: any = {
         d: path,
-        stroke: 'black',
         fill,
     }
     const g_props = {

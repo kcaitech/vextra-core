@@ -1,4 +1,4 @@
-import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape, SymbolShape, Variable } from "./shape";
+import { GroupShape, Shape, ShapeFrame, ShapeType, ImageShape, PathShape, RectShape, TextShape, SymbolShape, Variable, CutoutShape } from "./shape";
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, WatchableObject } from "./basic";
@@ -17,6 +17,7 @@ export class Page extends GroupShape implements classes.Page {
     __collect: PageCollectNotify = new PageCollectNotify();
     __symbolshapes: Map<string, SymbolShape> = new Map();
     isReserveLib: boolean;
+    cutouts: Map<string, CutoutShape> = new Map();
     constructor(
         id: string,
         name: string,
@@ -63,6 +64,9 @@ export class Page extends GroupShape implements classes.Page {
         if (shape.type === ShapeType.Symbol) {
             this.__symbolshapes.set(shape.id, shape as SymbolShape);
         }
+        if (shape.type === ShapeType.Cutout) {
+            this.cutouts.set(shape.id, shape as CutoutShape);
+        }
         if (recursive && (shape instanceof GroupShape)) {
             const childs = shape.childs;
             childs.forEach((c) => this.onAddShape(c))
@@ -75,6 +79,9 @@ export class Page extends GroupShape implements classes.Page {
         }
         if (shape.type === ShapeType.Symbol) {
             this.__symbolshapes.delete(shape.id);
+        }
+        if (shape.type === ShapeType.Cutout) {
+            this.cutouts.delete(shape.id);
         }
         shape.onRemoved();
         if (recursive && (shape instanceof GroupShape)) {
@@ -118,5 +125,8 @@ export class Page extends GroupShape implements classes.Page {
         }
 
         return ret;
+    }
+    get cutoutList() {
+        return Array.from(this.cutouts.values());
     }
 }
