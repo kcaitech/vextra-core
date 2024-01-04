@@ -270,7 +270,7 @@ export class DataView extends EventEL {
         if (dom && dom.length) {
             let nodeCount = 0;
             dom.forEach(d => {
-                d.m_parent = undefined;
+                // d.m_parent = undefined;
                 nodeCount += d.m_nodeCount;
             });
 
