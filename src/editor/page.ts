@@ -1134,11 +1134,11 @@ export class PageEditor {
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
 
-                if (shape.type === ShapeType.Artboard) {
+                if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Group) {
                     api.shapeModifyFixedRadius(this.__page, shape as GroupShape, val);
                     continue;
                 }
-
+                
                 if (!(shape instanceof PathShape)) {
                     continue;
                 }

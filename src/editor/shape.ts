@@ -868,12 +868,10 @@ export class ShapeEditor {
     }
 
     public setFillEnable(idx: number, value: boolean) {
-        if (this.__shape.type !== ShapeType.Artboard) {
-            this._repoWrap("setFillEnable", (api) => {
-                const shape = this.shape4fill(api);
-                api.setFillEnable(this.__page, shape, idx, value);
-            });
-        }
+        this._repoWrap("setFillEnable", (api) => {
+            const shape = this.shape4fill(api);
+            api.setFillEnable(this.__page, shape, idx, value);
+        });
     }
 
     public deleteFill(idx: number) {
