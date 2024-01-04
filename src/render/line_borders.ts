@@ -45,7 +45,8 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         }
         return h('g', { opacity: border.color.alpha }, g_cs);
     }
-    return h('path', { opacity: border.color.alpha }, body_props);
+    body_props['opacity'] = border.color.alpha;
+    return h('path', body_props);
 }
 
 

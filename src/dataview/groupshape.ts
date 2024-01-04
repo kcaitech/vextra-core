@@ -414,5 +414,4 @@ export class GroupShapeView extends ShapeView {
         // 删除多余的
         this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
     }
-
 }

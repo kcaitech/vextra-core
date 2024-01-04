@@ -1,5 +1,6 @@
 import { Page } from "../data/page";
 import { ArtboradView } from "./artboard";
+import { CutoutShapeView } from "./cutout";
 import { GroupShapeView } from "./groupshape";
 import { ShapeView, isDiffShapeFrame } from "./shape";
 import { DataView, RootView } from "./view";
@@ -27,6 +28,7 @@ export class PageView extends GroupShapeView implements RootView {
 
     private m_views: Map<string, ShapeView> = new Map();
     private m_artboards: Map<string, ArtboradView> = new Map();
+    private m_cutouts: Map<string, CutoutShapeView> = new Map();
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props, false);
@@ -37,15 +39,19 @@ export class PageView extends GroupShapeView implements RootView {
         const add = (v: ShapeView) => {
             this.m_views.set(v.id, v);
             if (v instanceof ArtboradView) this.m_artboards.set(v.id, v);
+            if (v instanceof CutoutShapeView) this.m_cutouts.set(v.id, v);
             v.m_children.forEach((c) => add(c as ShapeView));
         }
         if (Array.isArray(view)) view.forEach(add);
         else add(view);
     }
-    onRemoveView(view: ShapeView | ShapeView[]): void {
+    onRemoveView(parent: ShapeView, view: ShapeView | ShapeView[]): void {
         const remove = (v: ShapeView) => {
+            const cur = this.m_views.get(v.id);
+            if (cur && cur.parent?.id !== parent.id) return; // 已经不是同一个了
             this.m_views.delete(v.id);
             if (v instanceof ArtboradView) this.m_artboards.delete(v.id);
+            if (v instanceof CutoutShapeView) this.m_cutouts.delete(v.id);
             v.m_children.forEach((c) => remove(c as ShapeView));
         }
         if (Array.isArray(view)) view.forEach(remove);
@@ -65,6 +71,10 @@ export class PageView extends GroupShapeView implements RootView {
 
     get artboardList() {
         return Array.from(this.m_artboards.values());
+    }
+
+    get cutoutList() {
+        return Array.from(this.m_cutouts.values());
     }
 
     getShape(id: string) {
