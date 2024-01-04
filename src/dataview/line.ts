@@ -1,7 +1,7 @@
-import { ShapeView } from "./shape";
 import { render as renderBorders } from "../render/line_borders"
 import { EL, elh } from "./el";
-export class LineView extends ShapeView {
+import { PathShapeView } from "./pathshape";
+export class LineView extends PathShapeView {
     protected isNoSupportDiamondScale(): boolean {
         return true;
     }
