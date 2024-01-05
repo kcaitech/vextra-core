@@ -160,7 +160,7 @@ export class DataView extends EventEL {
     }
 
     onDestory() {
-console.log('onDestory', this.id);
+
     }
 
     onDataChange(...args: any[]) {
