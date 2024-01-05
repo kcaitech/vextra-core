@@ -162,7 +162,7 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: stri
             h_nodes.push(...h_node);
         }
     }
-    const filter_props: any = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
+    const filter_props: any = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%', filterUnits: 'userSpaceOnUse' };
     filter_props.width = Math.max(...f_props.props_w) + Math.max(...f_props.props_w);
     filter_props.height = Math.max(...f_props.props_h) + Math.max(...f_props.props_h);
     filter_props.x = Math.min(...f_props.props_x) + Math.min(...f_props.props_x);
