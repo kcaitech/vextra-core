@@ -5,23 +5,6 @@ import { objectId } from "../basic/objectid";
 
 export class ArtboradView extends GroupShapeView {
 
-    // 检查显示区域
-    // 1. 太小时显示成image
-    // 2. 
-
-    // private _bubblewatcher(...args: any[]) {
-
-    // }
-
-    // onDestory(): void {
-    //     super.onDestory();
-    //     this.m_data.unbubblewatch(this._bubblewatcher);
-    // }
-
-    // toSVGString(): string {
-    //     return this.m_el?.outerHTML || "";
-    // }
-
     protected renderFills(): EL[] {
         return renderFills(elh, this.getFills(), this.frame, this.getPathStr());
     }
