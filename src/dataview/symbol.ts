@@ -4,7 +4,7 @@ import { EL, elh } from "./el";
 import { Shape, ShapeType, SymbolShape } from "../data/shape";
 import { VarsContainer } from "./viewctx";
 import { DataView, RootView } from "./view"
-import { RenderTransform } from "./basic";
+import { RenderTransform, getShapeViewId } from "./basic";
 
 export class SymbolView extends GroupShapeView {
     get data() {
@@ -43,7 +43,7 @@ export class SymbolView extends GroupShapeView {
             return;
         }
 
-        cdom = rView && rView.getView(child.id);
+        cdom = rView && rView.getView(getShapeViewId(child, varsContainer));
         if (cdom) {
             // 将cdom移除再add到当前group
             const p = cdom.parent;
