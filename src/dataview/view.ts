@@ -73,6 +73,8 @@ class EventEL extends EL {
 export interface RootView {
     onAddView(view: DataView | DataView[]): void;
     onRemoveView(parent: DataView, view: DataView | DataView[]): void;
+    getView(id: string): DataView | undefined;
+    addDelayDestory(view: DataView | DataView[]): void;
     get isRootView(): boolean;
 }
 
@@ -174,6 +176,14 @@ export class DataView extends EventEL {
         return 0;
     }
 
+    getRootView(): RootView | undefined {
+        let p: DataView | undefined = this;
+        while (p) {
+            if ((p as any as RootView).isRootView) return p as any as RootView;
+            p = p.m_parent;
+        }
+    }
+
     addChild(child: DataView, idx?: number) {
         if (child.m_parent) throw new Error('child already added');
         if (idx !== undefined) {
@@ -227,7 +237,10 @@ export class DataView extends EventEL {
         }
     }
 
-    removeChild(idx: number) {
+    removeChild(idx: number | DataView) {
+        if (typeof idx !==  'number') {
+            idx = this.m_children.findIndex(c => c.id === (idx as DataView).id);
+        }
         const dom = this.m_children.splice(idx, 1)[0];
         if (dom) {
             this.m_nodeCount -= dom.m_nodeCount;

@@ -1,7 +1,7 @@
 import { OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
 import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
-import { DataView } from "./view";
+import { DataView, RootView } from "./view";
 import { fixFrameByConstrain, isDiffRenderTransform, isDiffVarsContainer, isNoTransform } from "./shape";
 import { RenderTransform } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
@@ -197,23 +197,34 @@ export class SymbolRefView extends ShapeView {
         if (this.m_sym) this.m_sym.unwatch(this.symwatcher);
     }
 
-    private layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>): boolean {
+    private layoutChild(child: Shape, idx: number, transx: RenderTransform | undefined, varsContainer: VarsContainer | undefined, resue: Map<string, DataView>, rView: RootView | undefined): boolean {
         let cdom: DataView | undefined = resue.get(child.id);
         const props = { data: child, transx, varsContainer, isVirtual: true };
-        if (!cdom) {
-            const comsMap = this.m_ctx.comsMap;
-            const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
-            cdom = new Com(this.m_ctx, props) as DataView;
+
+        if (cdom) {
+            const changed = this.moveChild(cdom, idx);
+            cdom.layout(props);
+            return changed;
+        }
+
+        cdom = rView && rView.getView(child.id);
+        if (cdom) {
+            // 将cdom移除再add到当前group
+            const p = cdom.parent;
+            if (p) p.removeChild(cdom);
             this.addChild(cdom, idx);
+            cdom.layout(props);
             return true;
         }
-        const changed = this.moveChild(cdom, idx);
-        cdom.layout(props);
-        return changed;
+
+        const comsMap = this.m_ctx.comsMap;
+        const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
+        cdom = new Com(this.m_ctx, props) as DataView;
+        this.addChild(cdom, idx);
+        return true;
     }
 
     layout(props?: PropsType | undefined): void {
-        const tid = this.id;
         const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
 
         if (props) {
@@ -342,18 +353,21 @@ export class SymbolRefView extends ShapeView {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
+        const rootView = this.getRootView();
         let changed = false;
         for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i]
             // update childs
-            if (this.layoutChild(cc, i, undefined, varsContainer, resue)) {
+            if (this.layoutChild(cc, i, undefined, varsContainer, resue, rootView)) {
                 changed = true;
             }
         }
         // 删除多余的
 
         if (this.m_children.length > childs.length) {
-            this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+            const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
+            if (rootView) rootView.addDelayDestory(removes);
+            else removes.forEach((c => c.destory()));
             changed = true;
         }
 
@@ -366,6 +380,7 @@ export class SymbolRefView extends ShapeView {
         const childs = this.getDataChilds();
         const resue: Map<string, DataView> = new Map();
         this.m_children.forEach((c) => resue.set(c.data.id, c));
+        const rootView = this.getRootView();
         let changed = false;
         for (let i = 0, len = childs.length; i < len; i++) {
             const cc = childs[i]
@@ -380,13 +395,15 @@ export class SymbolRefView extends ShapeView {
                 rotate: 0
             }
             // update childs
-            if (this.layoutChild(cc, i, transform, varsContainer!, resue)) {
+            if (this.layoutChild(cc, i, transform, varsContainer!, resue, rootView)) {
                 changed = true;
             }
         }
         // 删除多余的
         if (this.m_children.length > childs.length) {
-            this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+            const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
+            if (rootView) rootView.addDelayDestory(removes);
+            else removes.forEach((c => c.destory()));
             changed = true;
         }
 
