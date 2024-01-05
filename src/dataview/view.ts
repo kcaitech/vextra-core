@@ -74,6 +74,7 @@ export interface RootView {
     onAddView(view: DataView | DataView[]): void;
     onRemoveView(parent: DataView, view: DataView | DataView[]): void;
     getView(id: string): DataView | undefined;
+    addDelayDestory(view: DataView | DataView[]): void;
     get isRootView(): boolean;
 }
 
@@ -159,7 +160,7 @@ export class DataView extends EventEL {
     }
 
     onDestory() {
-
+console.log('onDestory', this.id);
     }
 
     onDataChange(...args: any[]) {

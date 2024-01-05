@@ -47,12 +47,10 @@ export class SymbolView extends GroupShapeView {
         if (cdom) {
             // 将cdom移除再add到当前group
             const p = cdom.parent;
-            if (p) {
-                p.removeChild(cdom);
-                this.addChild(cdom, idx);
-                cdom.layout(props);
-                return;
-            }
+            if (p) p.removeChild(cdom);
+            this.addChild(cdom, idx);
+            cdom.layout(props);
+            return;
         }
 
         const comsMap = this.m_ctx.comsMap;

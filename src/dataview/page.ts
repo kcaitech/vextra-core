@@ -29,10 +29,20 @@ export class PageView extends GroupShapeView implements RootView {
     private m_views: Map<string, ShapeView> = new Map();
     private m_artboards: Map<string, ArtboradView> = new Map();
     private m_cutouts: Map<string, CutoutShapeView> = new Map();
+    private m_delaydestorys: Map<string, ShapeView> = new Map();
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props, false);
         this.afterInit();
+
+        const destoryDelayDestorys = () => {
+            this.m_delaydestorys.forEach((v) => {
+                if (v.parent) return; // 已复用
+                v.destory();
+            });
+            this.m_delaydestorys.clear();
+        }
+        ctx.on("nextTick", destoryDelayDestorys);
     }
 
     onAddView(view: ShapeView | ShapeView[]): void {
@@ -57,6 +67,18 @@ export class PageView extends GroupShapeView implements RootView {
         if (Array.isArray(view)) view.forEach(remove);
         else remove(view);
     }
+    getView(id: string) {
+        return this.m_views.get(id) || this.m_delaydestorys.get(id);
+    }
+    addDelayDestory(view: ShapeView | ShapeView[]): void {
+        const add = (v: ShapeView) => {
+            if (v.parent) throw new Error("view has parent, not removed?");
+            this.m_delaydestorys.set(v.id, v);
+        }
+        if (Array.isArray(view)) view.forEach(add);
+        else add(view);
+    }
+
     get isRootView() {
         return true;
     }
@@ -78,10 +100,6 @@ export class PageView extends GroupShapeView implements RootView {
     }
 
     getShape(id: string) {
-        return this.m_views.get(id);
-    }
-
-    getView(id: string) {
         return this.m_views.get(id);
     }
 

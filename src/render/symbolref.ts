@@ -5,29 +5,6 @@ import { render as borderR } from "./border"
 import { isVisible, randomId } from "./basic";
 import { innerShadowId, render as shadowR } from "./shadow";
 import { isAdaptedShape } from "../dataview";
-// function renderSym(h: Function,
-//     ref: SymbolRefShape,
-//     refframe: ShapeFrame,
-//     sym: SymbolShape,
-//     comsMap: Map<ShapeType, any>,
-//     varsContainer?: (SymbolRefShape | SymbolShape)[]): any {
-//     // varsContainer.push(sym);
-//     // 转成view
-//     if (ref.isVirtualShape || isAdaptedShape(ref)) {
-//         const childs: Array<any> = renderGroupChilds2(h, ref.naviChilds || [], comsMap, varsContainer);
-//         return childs;
-//     }
-//     const ctx = new DViewCtx();
-//     // todo
-//     const view = new SymbolRefView(ctx, {
-//         data: ref,
-//         varsContainer,
-//         isVirtual: false
-//     });
-//     const adapt = adapt2Shape(view);
-
-//     return renderGroupChilds2(h, adapt.naviChilds || [], comsMap, undefined);
-// }
 
 export function render(h: Function,
     shape: SymbolRefShape,

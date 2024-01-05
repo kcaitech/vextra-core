@@ -211,12 +211,10 @@ export class SymbolRefView extends ShapeView {
         if (cdom) {
             // 将cdom移除再add到当前group
             const p = cdom.parent;
-            if (p) {
-                p.removeChild(cdom);
-                this.addChild(cdom, idx);
-                cdom.layout(props);
-                return true;
-            }
+            if (p) p.removeChild(cdom);
+            this.addChild(cdom, idx);
+            cdom.layout(props);
+            return true;
         }
 
         const comsMap = this.m_ctx.comsMap;
@@ -227,7 +225,6 @@ export class SymbolRefView extends ShapeView {
     }
 
     layout(props?: PropsType | undefined): void {
-        const tid = this.id;
         const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
 
         if (props) {
@@ -368,7 +365,9 @@ export class SymbolRefView extends ShapeView {
         // 删除多余的
 
         if (this.m_children.length > childs.length) {
-            this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+            const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
+            if (rootView) rootView.addDelayDestory(removes);
+            else removes.forEach((c => c.destory()));
             changed = true;
         }
 
@@ -402,7 +401,9 @@ export class SymbolRefView extends ShapeView {
         }
         // 删除多余的
         if (this.m_children.length > childs.length) {
-            this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+            const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
+            if (rootView) rootView.addDelayDestory(removes);
+            else removes.forEach((c => c.destory()));
             changed = true;
         }
 

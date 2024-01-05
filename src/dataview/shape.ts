@@ -631,7 +631,6 @@ export class ShapeView extends DataView {
     layout(props?: PropsType) {
         // todo props没更新时是否要update
         // 在frame、flip、rotate修改时需要update
-        const tid = this.id;
         const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
 
         if (props) {

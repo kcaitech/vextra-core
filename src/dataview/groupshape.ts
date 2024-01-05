@@ -298,12 +298,10 @@ export class GroupShapeView extends ShapeView {
         if (cdom) {
             // 将cdom移除再add到当前group
             const p = cdom.parent;
-            if (p) {
-                p.removeChild(cdom);
-                this.addChild(cdom, idx);
-                cdom.layout(props);
-                return;
-            }
+            if (p) p.removeChild(cdom);
+            this.addChild(cdom, idx);
+            cdom.layout(props);
+            return;
         }
 
         const comsMap = this.m_ctx.comsMap;
@@ -332,7 +330,9 @@ export class GroupShapeView extends ShapeView {
             this.layoutChild(cc, i, undefined, varsContainer, resue, rootView);
         }
         // 删除多余的
-        this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
+        if (rootView) rootView.addDelayDestory(removes);
+        else removes.forEach((c => c.destory()));
     }
 
     layoutOnRectShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, parentFrame: ShapeFrame, scaleX: number, scaleY: number): void {
@@ -356,7 +356,9 @@ export class GroupShapeView extends ShapeView {
             this.layoutChild(cc, i, transform, varsContainer!, resue, rootView);
         }
         // 删除多余的
-        this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
+        if (rootView) rootView.addDelayDestory(removes);
+        else removes.forEach((c => c.destory()));
     }
 
     layoutOnDiamondShape(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined, scaleX: number, scaleY: number, rotate: number, vflip: boolean, hflip: boolean, bbox: ShapeFrame, m: Matrix): void {
@@ -393,6 +395,8 @@ export class GroupShapeView extends ShapeView {
             this.layoutChild(cc, i, transform, varsContainer!, resue, rootView);
         }
         // 删除多余的
-        this.removeChilds(childs.length, Number.MAX_VALUE).forEach((c => c.destory()));
+        const removes = this.removeChilds(childs.length, Number.MAX_VALUE);
+        if (rootView) rootView.addDelayDestory(removes);
+        else removes.forEach((c => c.destory()));
     }
 }
