@@ -3,7 +3,7 @@ import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
 import { fixFrameByConstrain, isDiffRenderTransform, isDiffVarsContainer, isNoTransform } from "./shape";
-import { RenderTransform } from "./basic";
+import { RenderTransform, getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
@@ -207,7 +207,7 @@ export class SymbolRefView extends ShapeView {
             return changed;
         }
 
-        cdom = rView && rView.getView(child.id);
+        cdom = rView && rView.getView(getShapeViewId(child, varsContainer));
         if (cdom) {
             // 将cdom移除再add到当前group
             const p = cdom.parent;

@@ -99,6 +99,12 @@ export function genid(shape: Shape,
     return shape.id;
 }
 
+export function getShapeViewId(shape: Shape,
+    varsContainer?: (SymbolRefShape | SymbolShape)[]) {
+    if (varsContainer) return genid(shape, varsContainer);
+    return shape.id;
+}
+
 export function findOverrideAndVar(
     shape: Shape, // not proxyed
     overType: OverrideType,

@@ -1,7 +1,7 @@
 import { BoolOp, GroupShape, Path, Shape, ShapeFrame, ShapeType, SymbolRefShape, SymbolShape, parsePath } from "../data/classes";
 import { ShapeView } from "./shape";
 import { matrix2parent } from "./shape";
-import { RenderTransform } from "./basic";
+import { RenderTransform, getShapeViewId } from "./basic";
 import { Matrix } from "../basic/matrix";
 import { EL } from "./el";
 import { DataView, RootView } from "./view";
@@ -294,7 +294,7 @@ export class GroupShapeView extends ShapeView {
             return;
         }
 
-        cdom = rView && rView.getView(child.id);
+        cdom = rView && rView.getView(getShapeViewId(child, varsContainer));
         if (cdom) {
             // 将cdom移除再add到当前group
             const p = cdom.parent;
