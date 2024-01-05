@@ -219,6 +219,7 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
 /* shape */
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -270,6 +271,7 @@ export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext)
 /* shadow */
 export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.Shadow {
     const ret: impl.Shadow = new impl.Shadow (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.isEnabled,
         source.blurRadius,
@@ -397,6 +399,7 @@ export function importGradientType(source: types.GradientType, ctx?: IImportCont
 /* fill */
 export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
     const ret: impl.Fill = new impl.Fill (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.isEnabled,
         importFillType(source.fillType, ctx),
@@ -548,6 +551,30 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
 export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): impl.CurveMode {
     return source
 }
+/* crdt table index */
+export function importCrdtIndex2(source: types.CrdtIndex2, ctx?: IImportContext): impl.CrdtIndex2 {
+    const ret: impl.CrdtIndex2 = new impl.CrdtIndex2 (
+        importCrdtIndex(source.x, ctx),
+        importCrdtIndex(source.y, ctx)
+    )
+    return ret
+}
+/* crdt array index */
+export function importCrdtIndex(source: types.CrdtIndex, ctx?: IImportContext): impl.CrdtIndex {
+    const ret: impl.CrdtIndex = new impl.CrdtIndex (
+        source.order,
+        source.uid
+    )
+    if (source.index !== undefined) ret.index = (() => {
+        const ret = new BasicArray<number>()
+        for (let i = 0, len = source.index && source.index.length; i < len; i++) {
+            const r = source.index[i]
+            if (r) ret.push(r)
+        }
+        return ret
+    })()
+    return ret
+}
 /* context settings */
 export function importContextSettings(source: types.ContextSettings, ctx?: IImportContext): impl.ContextSettings {
     const ret: impl.ContextSettings = new impl.ContextSettings (
@@ -637,6 +664,7 @@ export function importBulletNumbersBehavior(source: types.BulletNumbersBehavior,
 /* border */
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
     const ret: impl.Border = new impl.Border (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.isEnabled,
         importFillType(source.fillType, ctx),
@@ -697,6 +725,7 @@ export function importBlendMode(source: types.BlendMode, ctx?: IImportContext): 
 /* text shape */
 export function importTextShape(source: types.TextShape, ctx?: IImportContext): impl.TextShape {
     const ret: impl.TextShape = new impl.TextShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -737,27 +766,17 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
     // 兼容旧数据
     if ((source as any).childs) source.datas = (source as any).childs;
     const ret: impl.TableShape = new impl.TableShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(undefined | impl.TableCell)>()
+            const ret = new BasicArray<impl.TableCell>()
             for (let i = 0, len = source.datas && source.datas.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.datas[i]
-                    if (!val) {
-                        return val ?? undefined
-                    }
-                    if (val.typeId == 'table-cell') {
-                        return importTableCell(val as types.TableCell, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                ret.push(r)
+                const r = importTableCell(source.datas[i], ctx)
+                if (r) ret.push(r)
             }
             return ret
         })(),
@@ -810,11 +829,13 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
 /* table cell */
 export function importTableCell(source: types.TableCell, ctx?: IImportContext): impl.TableCell {
     const ret: impl.TableCell = new impl.TableCell (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx)
+        importStyle(source.style, ctx),
+        importCrdtIndex2(source.crdtidx2, ctx)
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
@@ -857,6 +878,7 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         source.overrides = (source as any).virbindsEx
     }
     const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -935,6 +957,7 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
 /* path shape */
 export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
     const ret: impl.PathShape2 = new impl.PathShape2 (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -979,6 +1002,7 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
 /* path shape */
 export function importPathShape(source: types.PathShape, ctx?: IImportContext): impl.PathShape {
     const ret: impl.PathShape = new impl.PathShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1024,6 +1048,7 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
 /* rect shape */
 export function importRectShape(source: types.RectShape, ctx?: IImportContext): impl.RectShape {
     const ret: impl.RectShape = new impl.RectShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1119,6 +1144,7 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
 /* page */
 export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
     const ret: impl.Page = new impl.Page (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1215,6 +1241,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
 /* oval shape */
 export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
     const ret: impl.OvalShape = new impl.OvalShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1261,6 +1288,7 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
 /* line shape */
 export function importLineShape(source: types.LineShape, ctx?: IImportContext): impl.LineShape {
     const ret: impl.LineShape = new impl.LineShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1337,6 +1365,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         source.points.push(p1, p2, p3, p4);
     }
     const ret: impl.ImageShape = new impl.ImageShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1385,6 +1414,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
 /* group shape */
 export function importGroupShape(source: types.GroupShape, ctx?: IImportContext): impl.GroupShape {
     const ret: impl.GroupShape = new impl.GroupShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1490,6 +1520,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         source.overrides = (source as any).virbindsEx
     }
     const ret: impl.SymbolShape = new impl.SymbolShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1617,6 +1648,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
 /* symbol union shape */
 export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IImportContext): impl.SymbolUnionShape {
     const ret: impl.SymbolUnionShape = new impl.SymbolUnionShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1750,6 +1782,7 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
 /* cutout shape */
 export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContext): impl.CutoutShape {
     const ret: impl.CutoutShape = new impl.CutoutShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1796,6 +1829,7 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
 /* contact shape */
 export function importContactShape(source: types.ContactShape, ctx?: IImportContext): impl.ContactShape {
     const ret: impl.ContactShape = new impl.ContactShape (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1846,6 +1880,7 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
 /* artboard shape */
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     const ret: impl.Artboard = new impl.Artboard (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name,
         importShapeType(source.type, ctx),

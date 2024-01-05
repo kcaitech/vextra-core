@@ -2,6 +2,9 @@
     "description": "fill",
     "type": "object",
     "properties": {
+        "crdtidx": {
+            "$ref": "./crdt-index.json"
+        },
         "typeId": {
             "type": "string",
             "default": "shape"
@@ -33,6 +36,7 @@
         }
     },
     "required": [
+        "crdtidx",
         "typeId",
         "id",
         "isEnabled",

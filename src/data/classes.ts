@@ -10,6 +10,6 @@ export * from './table'
 export * from './contact'
 export * from './symbolref'
 export * from './color'
-// export * from './symbolstates'
+export * from './crdt'
 
 export { parsePath } from './pathparser'

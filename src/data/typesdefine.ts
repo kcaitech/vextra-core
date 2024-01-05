@@ -132,6 +132,7 @@ export type SpanAttr = {
 }
 /* shape */
 export type Shape = {
+    crdtidx: CrdtIndex
     typeId: string
     id: string
     type: ShapeType
@@ -191,6 +192,7 @@ export type ShapeFrame = {
 }
 /* shadow */
 export type Shadow = {
+    crdtidx: CrdtIndex
     id: string
     isEnabled: boolean
     blurRadius: number
@@ -298,6 +300,7 @@ export enum GradientType {
 }
 /* fill */
 export type Fill = {
+    crdtidx: CrdtIndex
     typeId: string
     id: string
     isEnabled: boolean
@@ -395,6 +398,17 @@ export enum CurveMode {
     Asymmetric = 'asymmetric',
     Disconnected = 'disconnected',
 }
+/* crdt table index */
+export type CrdtIndex2 = {
+    x: CrdtIndex
+    y: CrdtIndex
+}
+/* crdt array index */
+export type CrdtIndex = {
+    index?: number[]
+    order: number
+    uid: string
+}
 /* context settings */
 export type ContextSettings = {
     blenMode: BlendMode
@@ -470,6 +484,7 @@ export enum BulletNumbersBehavior {
 }
 /* border */
 export type Border = {
+    crdtidx: CrdtIndex
     typeId: string
     id: string
     isEnabled: boolean
@@ -550,13 +565,14 @@ export type TextShape = Shape & {
 }
 /* table shape */
 export type TableShape = Shape & {
-    datas: (undefined | TableCell)[]
+    datas: TableCell[]
     rowHeights: number[]
     colWidths: number[]
     textAttr?: TextAttr
 }
 /* table cell */
 export type TableCell = Shape & {
+    crdtidx2: CrdtIndex2
     cellType?: TableCellType
     text?: Text
     imageRef?: string

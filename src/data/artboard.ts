@@ -4,9 +4,11 @@ import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
 import { Path } from "./path";
 import { _get_path } from "./utils";
+import { CrdtIndex } from "./crdt";
 export class Artboard extends GroupShape implements classes.Artboard {
     typeId = 'artboard';
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -15,6 +17,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
         childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
     ) {
         super(
+            crdtidx,
             id,
             name,
             ShapeType.Artboard,

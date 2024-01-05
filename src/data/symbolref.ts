@@ -11,6 +11,7 @@ import { Shape, SymbolShape } from "./shape";
 import { Path } from "./path";
 import { Variable } from "./variable";
 import { findOverrideAndVar } from "./utils";
+import { CrdtIndex } from "./crdt";
 
 function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
@@ -35,6 +36,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     // __childs?: Shape[];
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -44,6 +46,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         variables: BasicMap<string, Variable>
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,

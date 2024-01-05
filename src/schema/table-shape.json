@@ -5,15 +5,7 @@
         "datas": {
             "type": "array",
             "items": {
-                "oneOf": [
-                    {
-                        "type": "undefined"
-                    },
-                    {
-                        "$ref": "./table-cell.json"
-                    }
-                ],
-                "containUndefined": true
+                "$ref": "./table-cell.json"
             }
         },
         "rowHeights": {

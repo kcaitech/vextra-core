@@ -1,0 +1,17 @@
+{
+    "description": "crdt table index",
+    "type": "object",
+    "properties": {
+        "x": {
+            "$ref": "./crdt-index.json"
+        },
+        "y": {
+            "$ref": "./crdt-index.json"
+        }
+    },
+    "required": [
+        "x",
+        "y"
+    ],
+    "additionalProperties": false
+}

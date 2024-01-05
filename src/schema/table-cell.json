@@ -2,6 +2,9 @@
     "description": "table cell",
     "type": "object",
     "properties": {
+        "crdtidx2": {
+            "$ref": "./crdt-index2.json"
+        },
         "cellType": {
             "$ref": "./table-cell-type.json"
         },
@@ -21,7 +24,9 @@
             "default": 1
         }
     },
-    "required": [],
+    "required": [
+        "crdtidx2"
+    ],
     "allOf": [
         {
             "$ref": "./shape.json"

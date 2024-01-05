@@ -4,6 +4,7 @@ import * as classes from "./baseclasses"
 import { BasicArray, WatchableObject } from "./basic";
 import { Artboard } from "./artboard";
 import { SymbolRefShape, TableCell } from "./classes";
+import { CrdtIndex } from "./crdt";
 class PageCollectNotify extends WatchableObject {
     constructor() {
         super();
@@ -19,6 +20,7 @@ export class Page extends GroupShape implements classes.Page {
     isReserveLib: boolean;
     cutouts: Map<string, CutoutShape> = new Map();
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -28,6 +30,7 @@ export class Page extends GroupShape implements classes.Page {
         isReserveLib?: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             ShapeType.Page,

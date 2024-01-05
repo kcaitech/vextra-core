@@ -11,12 +11,14 @@ import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "
 import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 import { uuid } from "../basic/uuid";
+import { CrdtIndex, CrdtIndex2 } from "./crdt";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
 export class TableCell extends Shape implements classes.TableCell {
 
     typeId = 'table-cell'
+    crdtidx2: CrdtIndex2
     cellType?: TableCellType
     text?: Text
     imageRef?: string
@@ -26,19 +28,23 @@ export class TableCell extends Shape implements classes.TableCell {
     private __cacheData?: { buff: Uint8Array, base64: string };
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame, // cell里的frame是无用的，真实的位置大小通过行高列宽计算
-        style: Style
+        style: Style,
+        crdtidx2: CrdtIndex2
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
             frame,
             style
         )
+        this.crdtidx2 = crdtidx2
     }
 
     get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
@@ -181,13 +187,13 @@ export class TableCell extends Shape implements classes.TableCell {
     }
 }
 
-export function newCell(): TableCell {
-    return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
-        new BasicArray<Border>(),
-        new BasicArray<Fill>(),
-        new BasicArray<Shadow>()
-    ))
-}
+// export function newCell(): TableCell {
+//     return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
+//         new BasicArray<Border>(),
+//         new BasicArray<Fill>(),
+//         new BasicArray<Shadow>()
+//     ))
+// }
 
 export class TableShape extends Shape implements classes.TableShape {
 
@@ -196,7 +202,7 @@ export class TableShape extends Shape implements classes.TableShape {
     static MaxColCount = 50;
 
     typeId = 'table-shape'
-    datas: BasicArray<(TableCell | undefined)>
+    datas: BasicArray<TableCell>
     rowHeights: BasicArray<number>
     colWidths: BasicArray<number>
     textAttr?: TextAttr // 文本默认属性
@@ -208,16 +214,18 @@ export class TableShape extends Shape implements classes.TableShape {
     private __widthTotalWeights: number;
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        datas: BasicArray<(TableCell | undefined)>,
+        datas: BasicArray<TableCell>,
         rowHeights: BasicArray<number>,
         colWidths: BasicArray<number>
     ) {
         super(
+            crdtidx,
             id,
             name,
             ShapeType.Table,
@@ -446,21 +454,23 @@ export class TableShape extends Shape implements classes.TableShape {
         const index = rowIdx * this.colWidths.length + colIdx;
         const cell = this.datas[index];
         if (!cell && initCell) {
-            return this.initCell(index);
+            // return this.initCell(index);
+            // todo 待处理
+            throw new Error("not implemented")
         }
         return cell;
     }
 
-    private initCell(index: number) {
-        this.datas[index] = newCell();
-        // add to index
-        const cell = this.datas[index];
-        // this.getCellIndexs().set(cell!.id, index);
-        if (this.__cellIndexs.size > 0) {
-            this.__cellIndexs.set(cell!.id, index)
-        }
-        return cell;
-    }
+    // private initCell(index: number) {
+    //     this.datas[index] = newCell();
+    //     // add to index
+    //     const cell = this.datas[index];
+    //     // this.getCellIndexs().set(cell!.id, index);
+    //     if (this.__cellIndexs.size > 0) {
+    //         this.__cellIndexs.set(cell!.id, index)
+    //     }
+    //     return cell;
+    // }
 
     /**
      * 获取未被覆盖的单元格

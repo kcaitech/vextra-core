@@ -1,0 +1,23 @@
+{
+    "description": "crdt array index",
+    "type": "object",
+    "properties": {
+        "index": {
+            "type": "array",
+            "items": {
+                "type": "integer"
+            }
+        },
+        "order": {
+            "type": "integer"
+        },
+        "uid": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "order",
+        "uid"
+    ],
+    "additionalProperties": false
+}

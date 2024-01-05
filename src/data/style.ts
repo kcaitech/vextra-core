@@ -7,6 +7,7 @@ import {
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
 import { Color } from "./color";
+import { CrdtIndex } from "./crdt";
 export {
     GradientType,
     BlendMode,
@@ -38,6 +39,7 @@ export {
 
 export class Border extends Basic implements classes.Border {
     typeId = 'border'
+    crdtidx: CrdtIndex
     id: string
     isEnabled: boolean
     fillType: FillType
@@ -48,6 +50,7 @@ export class Border extends Basic implements classes.Border {
     gradient?: Gradient
     borderStyle: BorderStyle
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         isEnabled: boolean,
         fillType: FillType,
@@ -57,6 +60,7 @@ export class Border extends Basic implements classes.Border {
         borderStyle: BorderStyle,
     ) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.isEnabled = isEnabled
         this.fillType = fillType
@@ -69,6 +73,7 @@ export class Border extends Basic implements classes.Border {
 
 export class Fill extends Basic implements classes.Fill {
     typeId = 'fill'
+    crdtidx: CrdtIndex
     id: string
     isEnabled: boolean
     fillType: FillType
@@ -81,12 +86,14 @@ export class Fill extends Basic implements classes.Fill {
     private __cacheData?: { buff: Uint8Array, base64: string };
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         isEnabled: boolean,
         fillType: FillType,
         color: Color
     ) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.isEnabled = isEnabled
         this.fillType = fillType

@@ -29,6 +29,7 @@ import { Variable } from "./variable";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 import { _get_path } from "./utils";
+import { CrdtIndex } from "./crdt";
 export { Variable } from "./variable";
 
 // todo
@@ -62,6 +63,7 @@ export class Shape extends Basic implements classes.Shape {
 
     // shape
     typeId = 'shape'
+    crdtidx: CrdtIndex
     id: string
     type: ShapeType
     frame: ShapeFrame
@@ -85,6 +87,7 @@ export class Shape extends Basic implements classes.Shape {
     varbinds?: BasicMap<string, string>
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -92,6 +95,7 @@ export class Shape extends Basic implements classes.Shape {
         style: Style
     ) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.name = name
         this.type = type
@@ -436,6 +440,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
     fixedRadius?: number
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -444,6 +449,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape)>
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -559,6 +565,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -568,6 +575,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         variables: BasicMap<string, Variable>
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -755,6 +763,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
 export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnionShape {
     typeId = 'symbol-union-shape'
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -764,6 +773,7 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
         variables: BasicMap<string, Variable>
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -804,6 +814,7 @@ export class PathShape extends Shape implements classes.PathShape {
     fixedRadius?: number
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -813,6 +824,7 @@ export class PathShape extends Shape implements classes.PathShape {
         isClosed: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -870,6 +882,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     fixedRadius?: number
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -878,6 +891,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         pathsegs: BasicArray<PathSegment>
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -922,6 +936,7 @@ export class RectShape extends PathShape implements classes.RectShape {
     typeId = 'rect-shape'
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -931,6 +946,7 @@ export class RectShape extends PathShape implements classes.RectShape {
         isClosed: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -973,6 +989,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     private __cacheData?: { buff: Uint8Array, base64: string };
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -983,6 +1000,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         imageRef: string
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -1031,6 +1049,7 @@ export class OvalShape extends PathShape implements classes.OvalShape {
     ellipse: classes.Ellipse
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -1041,6 +1060,7 @@ export class OvalShape extends PathShape implements classes.OvalShape {
         ellipse: classes.Ellipse
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -1058,6 +1078,7 @@ export class LineShape extends PathShape implements classes.LineShape {
     typeId = 'line-shape'
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -1067,6 +1088,7 @@ export class LineShape extends PathShape implements classes.LineShape {
         isClosed: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -1084,6 +1106,7 @@ export class TextShape extends Shape implements classes.TextShape {
     fixedRadius?: number
 
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -1092,6 +1115,7 @@ export class TextShape extends Shape implements classes.TextShape {
         text: Text
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -1157,6 +1181,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
     scalingStroke: boolean;
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string,
         type: ShapeType,
@@ -1167,6 +1192,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         scalingStroke: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
