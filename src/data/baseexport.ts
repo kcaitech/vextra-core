@@ -548,7 +548,7 @@ export function exportCrdtIndex2(source: types.CrdtIndex2, ctx?: IExportContext)
 /* crdt array index */
 export function exportCrdtIndex(source: types.CrdtIndex, ctx?: IExportContext): types.CrdtIndex {
     const ret = {
-        index: source.index && (() => {
+        index: (() => {
             const ret = []
             for (let i = 0, len = source.index.length; i < len; i++) {
                 const r = source.index[i]

@@ -405,7 +405,7 @@ export type CrdtIndex2 = {
 }
 /* crdt array index */
 export type CrdtIndex = {
-    index?: number[]
+    index: number[]
     order: number
     uid: string
 }

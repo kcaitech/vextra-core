@@ -562,17 +562,17 @@ export function importCrdtIndex2(source: types.CrdtIndex2, ctx?: IImportContext)
 /* crdt array index */
 export function importCrdtIndex(source: types.CrdtIndex, ctx?: IImportContext): impl.CrdtIndex {
     const ret: impl.CrdtIndex = new impl.CrdtIndex (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.index && source.index.length; i < len; i++) {
+                const r = source.index[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.order,
         source.uid
     )
-    if (source.index !== undefined) ret.index = (() => {
-        const ret = new BasicArray<number>()
-        for (let i = 0, len = source.index && source.index.length; i < len; i++) {
-            const r = source.index[i]
-            if (r) ret.push(r)
-        }
-        return ret
-    })()
     return ret
 }
 /* context settings */

@@ -620,14 +620,16 @@ export class CrdtIndex2 extends Basic {
  */
 export class CrdtIndex extends Basic {
     typeId = 'crdt-index'
-    index?: BasicArray<number >
+    index: BasicArray<number >
     order: number
     uid: string
     constructor(
+        index: BasicArray<number >,
         order: number,
         uid: string
     ) {
         super()
+        this.index = index
         this.order = order
         this.uid = uid
     }
