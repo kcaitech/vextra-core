@@ -517,7 +517,6 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
             }
             return ret
         })(),
-        source.symbols,
         source.lastCmdId
     )
     return ret

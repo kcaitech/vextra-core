@@ -525,7 +525,6 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
             }
             return ret
         })(),
-        symbols: source.symbols,
         lastCmdId: source.lastCmdId,
     }
     return ret

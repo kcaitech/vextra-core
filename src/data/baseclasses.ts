@@ -553,20 +553,17 @@ export class DocumentMeta extends Basic {
     id: string
     name: string
     pagesList: BasicArray<PageListItem >
-    symbols: string
     lastCmdId: string
     constructor(
         id: string,
         name: string,
         pagesList: BasicArray<PageListItem >,
-        symbols: string,
         lastCmdId: string
     ) {
         super()
         this.id = id
         this.name = name
         this.pagesList = pagesList
-        this.symbols = symbols
         this.lastCmdId = lastCmdId
     }
 }

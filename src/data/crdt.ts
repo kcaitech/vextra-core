@@ -1,6 +1,7 @@
 
 import * as classes from "./baseclasses"
 import { Basic, BasicArray } from "./basic"
+
 /**
  * crdt table index 
  */
@@ -41,6 +42,11 @@ export class CrdtIndex extends Basic implements classes.CrdtIndex {
 
     notify(...args: any[]): void {
     }
+}
+
+export interface CrdtItem {
+    id: string; // uuid
+    crdtindex: CrdtIndex;
 }
 
 export class CrdtNumber extends Basic implements classes.CrdtNumber {

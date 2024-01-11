@@ -373,7 +373,6 @@ export type DocumentMeta = {
     id: string
     name: string
     pagesList: PageListItem[]
-    symbols: string
     lastCmdId: string
 }
 /* curve point */
