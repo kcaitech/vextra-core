@@ -10,7 +10,7 @@ const shadowOri: {
 shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: ShapeFrame, id: string, i: number, path: string, fills: Fill[], borders: Border[]): any {
     const { width, height } = frame;
     // const shadow = style.shadows[i];
-    const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
+    const f_props: any = { props_w: [width * 0.4], props_h: [height * 0.4], props_x: [-(width * 0.2)], props_y: [-(height * 0.2)] }
     getFilterPropsValue(shadow, frame, f_props);
     const { color, offsetX, offsetY, blurRadius, spread } = shadow;
     const { red, green, blue, alpha } = color;
@@ -117,7 +117,8 @@ shadowOri[ShadowPosition.Inner] = function (h: Function, shadow: Shadow, frame: 
 
 function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: string): any {
     shadows = shadows.filter(s => s.position === ShadowPosition.Outer);
-    const f_props: any = { props_w: [], props_h: [], props_x: [], props_y: [] }
+    const { width, height } = frame;
+    const f_props: any = { props_w: [width * 0.8], props_h: [height * 0.8], props_x: [-(width * 0.4)], props_y: [-(height * 0.4)] }
     if (shadows.length === 0) return undefined;
     const h_nodes = [];
     for (let i = 0; i < shadows.length; i++) {
@@ -162,7 +163,7 @@ function shadowShape(h: Function, shadows: Shadow[], frame: ShapeFrame, id: stri
             h_nodes.push(...h_node);
         }
     }
-    const filter_props: any = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%' };
+    const filter_props: any = { id: 'pd_outer-' + id, x: '-20%', y: '-20%', height: '140%', width: '140%', filterUnits: 'userSpaceOnUse' };
     filter_props.width = Math.max(...f_props.props_w) + Math.max(...f_props.props_w);
     filter_props.height = Math.max(...f_props.props_h) + Math.max(...f_props.props_h);
     filter_props.x = Math.min(...f_props.props_x) + Math.min(...f_props.props_x);

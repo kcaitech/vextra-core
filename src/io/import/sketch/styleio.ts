@@ -129,7 +129,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         })(d['fillType']);
         const color: Color = importColor(d['color']);
 
-        const contextSettings: ContextSettings = importContextSettings(d['contextSettings']);
+        const contextSettings: ContextSettings | undefined = d['contextSettings'] && importContextSettings(d['contextSettings']);
         let gradient;
         // let gradientType;
         if (fillType == FillType.Gradient && d['gradient']) {
@@ -150,9 +150,12 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
 
         const thickness: number = d['thickness'];
 
-        const borderStyle: BorderStyle = ((dashPattern: number[]) => {
+        const borderStyle: BorderStyle = ((dashPattern: number[] | undefined) => {
             const bs = new BorderStyle(0, 0);
-            if (dashPattern.length === 1) {
+            if (!dashPattern) {
+                //
+            }
+            else if (dashPattern.length === 1) {
                 bs.length = dashPattern[0];
                 bs.gap = 0;
             } else if (dashPattern.length === 2) {
@@ -160,7 +163,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
                 bs.gap = dashPattern[1];
             }
             return bs
-        })(data['borderOptions'].dashPattern);
+        })(data['borderOptions'] ? data['borderOptions'].dashPattern : undefined);
 
         const border = new Border(uuid(), isEnabled, fillType, color, position, thickness, borderStyle);
         border.gradient = gradient;
@@ -180,7 +183,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
     const startMarkerType: MarkerType = getMarkerType(data['startMarkerType']);
     const endMarkerType: MarkerType = getMarkerType(data['endMarkerType']);
 
-    const contextSettings: ContextSettings = importContextSettings(data['contextSettings']);
+    const contextSettings: ContextSettings | undefined = data['contextSettings'] && importContextSettings(data['contextSettings']);
     const fills: Fill[] = (data['fills'] || []).map((d: IJSON) => {
         const isEnabled: boolean = d['isEnabled'];
         const fillType = ((t) => {
@@ -194,7 +197,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             }
         })(d['fillType']);
         const color: Color = importColor(d['color']);
-        const contextSettings: ContextSettings = importContextSettings(d['contextSettings']);
+        const contextSettings: ContextSettings | undefined = d['contextSettings'] && importContextSettings(d['contextSettings']);
 
         let gradient;
         // let gradientType;

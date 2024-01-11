@@ -4,6 +4,7 @@ import { EL, elh } from "./el";
 import { ShapeView, isDiffShapeFrame } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
+import { newText, newText2 } from "../data/textutils";
 
 export class TextShapeView extends ShapeView {
 
@@ -27,10 +28,20 @@ export class TextShapeView extends ShapeView {
         const text = this.getText();
         if (this.isVirtualShape || text !== this.data.text/* todo */) {
             const frame = this.frame;
-            if (!this.m_layout || this.m_layoutText !== text) {
-                this.m_layout = text.getLayout2(frame.width, frame.height);
+            if (!this.m_layout || this.m_layoutText !== text) { // todo text可能是string
+                if (typeof text === 'string') {
+                    if (!this.m_layoutText2) {
+                        const originText = this.data.text;
+                        this.m_layoutText2 = newText2(originText, originText.paras[0], originText.paras[0]?.spans[0]);
+                        this.m_layoutText2.insertText(text, 0);
+                    }
+                    this.m_layout = this.m_layoutText2.getLayout2(frame.width, frame.height);
+                } else {
+                    this.m_layoutText2 = undefined;
+                    this.m_layout = text.getLayout2(frame.width, frame.height);
+                    this.updateFrameByLayout();
+                }
                 this.m_layoutText = text;
-                this.updateFrameByLayout();
             }
             return this.m_layout;
         }
@@ -61,6 +72,7 @@ export class TextShapeView extends ShapeView {
 
     private m_layout?: TextLayout;
     private m_layoutText?: Text;
+    private m_layoutText2?: Text;
     private m_textpath?: Path;
 
     onDataChange(...args: any[]): void {
@@ -84,7 +96,10 @@ export class TextShapeView extends ShapeView {
     __frameHeight: number = 0;
     __frameWidth: number = 0;
     private updateSize(w: number, h: number) {
-        const text = this.m_layoutText;
+        let text = this.m_layoutText;
+        if (typeof text === 'string') {
+            text = this.m_layoutText2;
+        }
         if (!text) return;
         const layoutWidth = ((b: TextBehaviour) => {
             switch (b) {
@@ -149,6 +164,7 @@ export class TextShapeView extends ShapeView {
     clearCache() {
         this.m_layout = undefined;
         this.m_layoutText = undefined;
+        this.m_layoutText2 = undefined;
         this.m_textpath = undefined;
         this.__layoutWidth = 0;
         this.__frameHeight = 0;
