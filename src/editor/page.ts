@@ -1138,11 +1138,11 @@ export class PageEditor {
                     api.shapeModifyFixedRadius(this.__page, shape as GroupShape, val);
                     continue;
                 }
-
+                
                 if (!(shape instanceof PathShape)) {
                     continue;
                 }
-
+                
                 const is_rect = [ShapeType.Rectangle, ShapeType.Image]
                     .includes(shape.type) && shape.isClosed;
 
