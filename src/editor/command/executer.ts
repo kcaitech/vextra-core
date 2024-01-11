@@ -450,7 +450,10 @@ export class CMDExecuter {
             const pointId = cmd.arrayAttrId;
             // find point
             const pointIdx = shape.points.findIndex((p) => p.id === pointId)
-            if (pointIdx < 0) return;
+            if (pointIdx < 0) {
+                console.error("pointIdx < 0");
+                return;
+            }
 
             const opId = op.opId;
             const value = cmd.value;
@@ -484,9 +487,8 @@ export class CMDExecuter {
                 api.shapeModifyHasTo(page, shape, pointIdx, v);
             }
             else if (opId === POINTS_ATTR_ID.cornerRadius) {
-                if (value) {
-                    api.shapeModifyPointCornerRadius(page, shape, pointIdx, Number(value));
-                }
+                const v = value ? 0 : value;
+                api.shapeModifyPointCornerRadius(page, shape, pointIdx, Number(v));
             }
             else {
                 console.error("not implemented ", op)
