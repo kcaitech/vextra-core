@@ -261,8 +261,11 @@ export class ShapeEditor {
         const variables = (this.__shape as SymbolRefShape).variables;
         const overrides = (this.__shape as SymbolRefShape).overrides;
         const symData = (this.__shape as SymbolRefShape).symData;
-        const symParent = symData?.parent;
-        const root_data = (symParent instanceof SymbolUnionShape ? symParent : symData);
+        // const symParent = symData?.parent;
+        // const root_data = (symParent instanceof SymbolUnionShape ? symParent : symData);
+
+        const root_data = symData;
+
         if (!variables || !overrides || !root_data) {
             console.log('!variables || !overrides || !root_data');
             return false;
