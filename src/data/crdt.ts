@@ -44,11 +44,6 @@ export class CrdtIndex extends Basic implements classes.CrdtIndex {
     }
 }
 
-export interface CrdtItem {
-    id: string; // uuid
-    crdtindex: CrdtIndex;
-}
-
 export class CrdtNumber extends Basic implements classes.CrdtNumber {
     typeId = 'crdt-number'
     id: string
