@@ -72,14 +72,13 @@ import {
 } from "../../data/classes";
 
 import * as api from "../basicapi"
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID, TABLE_ATTR_ID, SHADOW_ID, SHAPE_ATTR_ID, SHADOW_ATTR_ID, CUTOUT_ID, CUTOUT_ATTR_ID, } from "./consts";
+import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, TEXT_ATTR_ID, TABLE_ATTR_ID, SHADOW_ID, SHADOW_ATTR_ID, CUTOUT_ID, CUTOUT_ATTR_ID, } from "./consts";
 import { Repository } from "../../data/transact";
 import { Cmd, CmdType, OpType } from "../../coop/data/classes";
 import { ArrayOpRemove, TableOpTarget, ArrayOpAttr, ArrayOpInsert, ShapeOpInsert } from "../../coop/data/classes";
 import { importShape, updateShapesFrame } from "./utils";
 import { CmdGroup } from "../../coop/data/cmdgroup";
 import { CMDHandler } from "./handler";
-import { shapeModifyCurveMode } from "../basicapi";
 
 export class CMDExecuter {
     private __document: Document;
