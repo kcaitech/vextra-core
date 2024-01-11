@@ -1,4 +1,4 @@
-import { Border, Fill, Style, Shadow } from "./style";
+import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
@@ -10,9 +10,7 @@ import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
 import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
-import { uuid } from "../basic/uuid";
-import { CrdtIndex, CrdtIndex2 } from "./crdt";
-import { CrdtNumber } from "./typesdefine";
+import { CrdtNumber, CrdtIndex, CrdtIndex2 } from "./crdt";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
@@ -141,13 +139,13 @@ export class TableCell extends Shape implements classes.TableCell {
         const rowSpan = Math.max(this.rowSpan ?? 1, 1);
         const colSpan = Math.max(this.colSpan ?? 1, 1);
 
-        let widthWeight = table.colWidths[indexCell.colIdx];
+        let widthWeight = table.colWidths[indexCell.colIdx].value;
         for (let i = 1; i < colSpan; ++i) {
-            widthWeight += table.colWidths[indexCell.colIdx + i];
+            widthWeight += table.colWidths[indexCell.colIdx + i].value;
         }
-        let heightWeight = table.rowHeights[indexCell.rowIdx];
+        let heightWeight = table.rowHeights[indexCell.rowIdx].value;
         for (let i = 1; i < rowSpan; ++i) {
-            heightWeight += table.rowHeights[indexCell.rowIdx + i];
+            heightWeight += table.rowHeights[indexCell.rowIdx + i].value;
         }
 
         const width = widthWeight / table.widthTotalWeights * table.frame.width;
@@ -336,8 +334,8 @@ export class TableShape extends Shape implements classes.TableShape {
 
     setColWidth(idx: number, weight: number) {
         const colWidths = this.colWidths;
-        const origin = colWidths[idx];
-        colWidths[idx] = weight;
+        const origin = colWidths[idx].value;
+        colWidths[idx].value = weight;
         this.__widthTotalWeights -= origin;
         this.__widthTotalWeights += weight;
         this.reLayout();
@@ -345,8 +343,8 @@ export class TableShape extends Shape implements classes.TableShape {
 
     setRowHeight(idx: number, weight: number) {
         const rowHeights = this.rowHeights;
-        const origin = rowHeights[idx];
-        rowHeights[idx] = weight;
+        const origin = rowHeights[idx].value;
+        rowHeights[idx].value = weight;
         this.__heightTotalWeights -= origin;
         this.__heightTotalWeights += weight;
         this.reLayout();

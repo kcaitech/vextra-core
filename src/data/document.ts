@@ -78,9 +78,10 @@ export class Document extends (DocumentMeta) {
         lastCmdId: string, // 此版本最后一个cmd的id
         name: string,
         pagesList: BasicArray<PageListItem>,
+        symbols: string,
         guard: IDataGuard
     ) {
-        super(id, name, pagesList ?? new BasicArray(), lastCmdId)
+        super(id, name, pagesList ?? new BasicArray(), symbols, lastCmdId)
         this.__versionId = versionId;
         this.__name = name;
         this.__pages = new ResourceMgr<Page>(guard);

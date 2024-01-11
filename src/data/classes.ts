@@ -9,6 +9,7 @@ export * from './comment'
 export * from './table'
 export * from './contact'
 export * from './symbolref'
+export * from './symbolslot'
 export * from './color'
 export * from './crdt'
 
