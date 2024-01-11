@@ -2,6 +2,7 @@ import { GroupShape, ImageShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape,
 import {
     exportArtboard,
     exportContactShape,
+    exportCutoutShape,
     exportGroupShape,
     exportImageShape,
     exportLineShape,
@@ -18,6 +19,7 @@ import {
     IImportContext,
     importArtboard,
     importContactShape,
+    importCutoutShape,
     importGroupShape,
     importImageShape,
     importLineShape,
@@ -83,6 +85,8 @@ export function export_shape(shapes: Shape[]) {
             content = exportSymbolRefShape(shape as unknown as types.SymbolRefShape);
         } else if (type === ShapeType.Contact) {
             content = exportContactShape(shape as unknown as types.ContactShape);
+        } else if (type === ShapeType.Cutout) {
+            content = exportCutoutShape(shape as unknown as types.CutoutShape);
         }
         if (content) {
             result.push(content);
@@ -248,6 +252,8 @@ export function import_shape_from_clipboard(document: Document, source: Shape[],
                 r = importSymbolRefShape(_s as any as types.SymbolRefShape, ctx);
             } else if (type === ShapeType.Contact) {
                 r = importContactShape(_s as any as types.ContactShape, ctx)
+            } else if (type === ShapeType.Cutout) {
+                r = importCutoutShape(_s as any as types.CutoutShape, ctx);
             }
 
             if (r) {
