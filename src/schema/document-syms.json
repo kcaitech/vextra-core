@@ -2,18 +2,24 @@
     "description": "document syms",
     "type": "object",
     "properties": {
-        "pageId": {
-            "type": "string"
-        },
         "symbols": {
-            "type": "array",
-            "items": {
+            "type": "map",
+            "key": {
                 "type": "string"
+            },
+            "value": {
+                "oneOf": [
+                    {
+                        "$ref": "./symbol-union-shape.json"
+                    },
+                    {
+                        "$ref": "./symbol-shape.json"
+                    }
+                ]
             }
         }
     },
     "required": [
-        "pageId",
         "symbols"
     ],
     "additionalProperties": false

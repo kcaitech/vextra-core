@@ -18,6 +18,9 @@
                 "$ref": "./page-list-item.json"
             }
         },
+        "symbols": {
+            "type": "string"
+        },
         "lastCmdId": {
             "type": "string",
             "default": ""
@@ -27,6 +30,7 @@
         "id",
         "name",
         "pagesList",
+        "symbols",
         "lastCmdId"
     ],
     "additionalProperties": false

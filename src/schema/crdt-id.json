@@ -1,0 +1,17 @@
+{
+    "description": "crdt id",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "order": {
+            "type": "integer"
+        }
+    },
+    "required": [
+        "id",
+        "order"
+    ],
+    "additionalProperties": false
+}

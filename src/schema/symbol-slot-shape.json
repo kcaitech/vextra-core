@@ -1,0 +1,17 @@
+{
+    "description": "symbol slot shape",
+    "type": "object",
+    "properties": {
+        "refId": {
+            "type": "string",
+            "default": "$uuid"
+        }
+    },
+    "required": [],
+    "allOf": [
+        {
+            "$ref": "./shape.json"
+        }
+    ],
+    "additionalProperties": false
+}

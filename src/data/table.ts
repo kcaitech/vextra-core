@@ -12,6 +12,7 @@ import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 import { uuid } from "../basic/uuid";
 import { CrdtIndex, CrdtIndex2 } from "./crdt";
+import { CrdtNumber } from "./typesdefine";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
@@ -203,8 +204,8 @@ export class TableShape extends Shape implements classes.TableShape {
 
     typeId = 'table-shape'
     datas: BasicArray<TableCell>
-    rowHeights: BasicArray<number>
-    colWidths: BasicArray<number>
+    rowHeights: BasicArray<CrdtNumber>
+    colWidths: BasicArray<CrdtNumber>
     textAttr?: TextAttr // 文本默认属性
 
     __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
@@ -221,8 +222,8 @@ export class TableShape extends Shape implements classes.TableShape {
         frame: ShapeFrame,
         style: Style,
         datas: BasicArray<TableCell>,
-        rowHeights: BasicArray<number>,
-        colWidths: BasicArray<number>
+        rowHeights: BasicArray<CrdtNumber>,
+        colWidths: BasicArray<CrdtNumber>
     ) {
         super(
             crdtidx,
@@ -236,8 +237,8 @@ export class TableShape extends Shape implements classes.TableShape {
         this.colWidths = colWidths
         this.datas = datas;
         this.datas.setTypeId('cells');
-        this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur, 0);
-        this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur, 0);
+        this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur.value, 0);
+        this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur.value, 0);
     }
 
     getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
@@ -298,15 +299,15 @@ export class TableShape extends Shape implements classes.TableShape {
         const frame = this.frame;
         const width = frame.width;
         const colWidths = this.colWidths;
-        const colWBase = colWidths.reduce((sum, cur) => sum + cur, 0);
-        return colWidths.map((val) => val / colWBase * width);
+        const colWBase = colWidths.reduce((sum, cur) => sum + cur.value, 0);
+        return colWidths.map((val) => val.value / colWBase * width);
     }
     getRowHeights() {
         const frame = this.frame;
         const height = frame.height;
         const rowHeights = this.rowHeights;
         const rowHBase = this.heightTotalWeights;
-        return rowHeights.map((val) => val / rowHBase * height);
+        return rowHeights.map((val) => val.value / rowHBase * height);
     }
     insertRow(idx: number, weight: number, data: (TableCell | undefined)[]) {
         tableInsertRow(this, idx, weight, data);
@@ -316,7 +317,7 @@ export class TableShape extends Shape implements classes.TableShape {
     removeRow(idx: number): (TableCell | undefined)[] {
         const weight = this.rowHeights[idx];
         const ret = tableRemoveRow(this, idx);
-        this.__heightTotalWeights -= weight;
+        this.__heightTotalWeights -= weight.value;
         this.reLayout();
         return ret;
     }
@@ -328,7 +329,7 @@ export class TableShape extends Shape implements classes.TableShape {
     removeCol(idx: number): (TableCell | undefined)[] {
         const weight = this.colWidths[idx];
         const ret = tableRemoveCol(this, idx);
-        this.__widthTotalWeights -= weight;
+        this.__widthTotalWeights -= weight.value;
         this.reLayout();
         return ret;
     }
@@ -361,8 +362,8 @@ export class TableShape extends Shape implements classes.TableShape {
             this.reLayout();
             return;
         }
-        const widthTotalWeights = this.colWidths.reduce((p, c) => p + c, 0);
-        const heightTotalWeights = this.rowHeights.reduce((p, c) => p + c, 0);
+        const widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
+        const heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
         if (this.__widthTotalWeights !== widthTotalWeights ||
             this.__heightTotalWeights !== heightTotalWeights) {
             this.__widthTotalWeights = widthTotalWeights;
@@ -372,8 +373,8 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     reLayout() {
-        this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c, 0);
-        this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c, 0);
+        this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
+        this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
         this.__layout = undefined;
         this.__cellIndexs.clear();
     }

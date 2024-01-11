@@ -42,3 +42,37 @@ export class CrdtIndex extends Basic implements classes.CrdtIndex {
     notify(...args: any[]): void {
     }
 }
+
+export class CrdtNumber extends Basic implements classes.CrdtNumber {
+    typeId = 'crdt-number'
+    id: string
+    crdtindex: CrdtIndex
+    value: number
+    constructor(
+        id: string,
+        crdtindex: CrdtIndex,
+        value: number
+    ) {
+        super()
+        this.id = id
+        this.crdtindex = crdtindex
+        this.value = value
+    }
+
+    notify(...args: any[]): void {
+    }
+}
+
+export class CrdtId extends Basic implements classes.CrdtId {
+    typeId = 'crdt-id'
+    id: string
+    order: number
+    constructor(
+        id: string,
+        order: number
+    ) {
+        super()
+        this.id = id
+        this.order = order
+    }
+}

@@ -366,14 +366,14 @@ export type Ellipse = {
 }
 /* document syms */
 export type DocumentSyms = {
-    pageId: string
-    symbols: string[]
+    symbols: Map<string, (SymbolUnionShape | SymbolShape)>
 }
 /* document meta */
 export type DocumentMeta = {
     id: string
     name: string
     pagesList: PageListItem[]
+    symbols: string
     lastCmdId: string
 }
 /* curve point */
@@ -398,6 +398,12 @@ export enum CurveMode {
     Asymmetric = 'asymmetric',
     Disconnected = 'disconnected',
 }
+/* crdt number */
+export type CrdtNumber = {
+    id: string
+    crdtindex: CrdtIndex
+    value: number
+}
 /* crdt table index */
 export type CrdtIndex2 = {
     x: CrdtIndex
@@ -408,6 +414,11 @@ export type CrdtIndex = {
     index: number[]
     order: number
     uid: string
+}
+/* crdt id */
+export type CrdtId = {
+    id: string
+    order: number
 }
 /* context settings */
 export type ContextSettings = {
@@ -566,8 +577,8 @@ export type TextShape = Shape & {
 /* table shape */
 export type TableShape = Shape & {
     datas: TableCell[]
-    rowHeights: number[]
-    colWidths: number[]
+    rowHeights: CrdtNumber[]
+    colWidths: CrdtNumber[]
     textAttr?: TextAttr
 }
 /* table cell */
@@ -578,6 +589,10 @@ export type TableCell = Shape & {
     imageRef?: string
     rowSpan?: number
     colSpan?: number
+}
+/* symbol slot shape */
+export type SymbolSlotShape = Shape & {
+    refId?: string
 }
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
@@ -618,10 +633,6 @@ export type TextAttr = ParaAttr & {
     textBehaviour?: TextBehaviour
     padding?: Padding
 }
-/* page */
-export type Page = Shape & {
-    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolRefShape | TableShape | CutoutShape | SymbolUnionShape | SymbolShape)[]
-}
 /* oval shape */
 export type OvalShape = PathShape & {
     ellipse: Ellipse
@@ -635,18 +646,22 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape)[]
+    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolSlotShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape)[]
     isBoolOpShape?: boolean
     fixedRadius?: number
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
+    crdtId: CrdtId
     overrides?: Map<string, string>
     variables: Map<string, Variable>
     symtags?: Map<string, string>
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape & {
+}
+/* page */
+export type Page = GroupShape & {
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {

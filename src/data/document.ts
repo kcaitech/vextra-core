@@ -7,7 +7,8 @@ import { GroupShape, SymbolShape, TextShape } from "./shape";
 import { TableCell, TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 
-export { DocumentMeta, PageListItem, DocumentSyms } from "./baseclasses";
+export { DocumentMeta, PageListItem } from "./baseclasses";
+export { DocumentSyms } from "./documentsyms";
 
 export enum LibType {
     Symbol = 'symbol-lib',

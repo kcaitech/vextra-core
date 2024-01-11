@@ -481,13 +481,24 @@ export function importEllipse(source: types.Ellipse, ctx?: IImportContext): impl
 /* document syms */
 export function importDocumentSyms(source: types.DocumentSyms, ctx?: IImportContext): impl.DocumentSyms {
     const ret: impl.DocumentSyms = new impl.DocumentSyms (
-        source.pageId,
         (() => {
-            const ret = new BasicArray<string>()
-            for (let i = 0, len = source.symbols && source.symbols.length; i < len; i++) {
-                const r = source.symbols[i]
-                if (r) ret.push(r)
-            }
+            const ret = new BasicMap<string, (impl.SymbolUnionShape | impl.SymbolShape)>()
+            const val = source.symbols as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+            Object.keys(val).forEach((k) => {
+                const v = val[k];
+                ret.set(k, (() => {
+                    const val = v
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    {
+                        throw new Error('unknow val: ' + val)
+                    }
+                })())
+            });
             return ret
         })()
     )
@@ -506,6 +517,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
             }
             return ret
         })(),
+        source.symbols,
         source.lastCmdId
     )
     return ret
@@ -551,6 +563,15 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
 export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): impl.CurveMode {
     return source
 }
+/* crdt number */
+export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext): impl.CrdtNumber {
+    const ret: impl.CrdtNumber = new impl.CrdtNumber (
+        source.id,
+        importCrdtIndex(source.crdtindex, ctx),
+        source.value
+    )
+    return ret
+}
 /* crdt table index */
 export function importCrdtIndex2(source: types.CrdtIndex2, ctx?: IImportContext): impl.CrdtIndex2 {
     const ret: impl.CrdtIndex2 = new impl.CrdtIndex2 (
@@ -572,6 +593,14 @@ export function importCrdtIndex(source: types.CrdtIndex, ctx?: IImportContext): 
         })(),
         source.order,
         source.uid
+    )
+    return ret
+}
+/* crdt id */
+export function importCrdtId(source: types.CrdtId, ctx?: IImportContext): impl.CrdtId {
+    const ret: impl.CrdtId = new impl.CrdtId (
+        source.id,
+        source.order
     )
     return ret
 }
@@ -781,17 +810,17 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
             return ret
         })(),
         (() => {
-            const ret = new BasicArray<number>()
+            const ret = new BasicArray<impl.CrdtNumber>()
             for (let i = 0, len = source.rowHeights && source.rowHeights.length; i < len; i++) {
-                const r = source.rowHeights[i]
+                const r = importCrdtNumber(source.rowHeights[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
         (() => {
-            const ret = new BasicArray<number>()
+            const ret = new BasicArray<impl.CrdtNumber>()
             for (let i = 0, len = source.colWidths && source.colWidths.length; i < len; i++) {
-                const r = source.colWidths[i]
+                const r = importCrdtNumber(source.colWidths[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -866,6 +895,43 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
     if (source.rowSpan !== undefined) ret.rowSpan = source.rowSpan
     if (source.colSpan !== undefined) ret.colSpan = source.colSpan
+    return ret
+}
+/* symbol slot shape */
+export function importSymbolSlotShape(source: types.SymbolSlotShape, ctx?: IImportContext): impl.SymbolSlotShape {
+    const ret: impl.SymbolSlotShape = new impl.SymbolSlotShape (
+        importCrdtIndex(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx)
+    )
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.refId !== undefined) ret.refId = source.refId
     return ret
 }
 /* symbol ref shape */
@@ -1141,103 +1207,6 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     if (source.padding !== undefined) ret.padding = importPadding(source.padding, ctx)
     return ret
 }
-/* page */
-export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
-    const ret: impl.Page = new impl.Page (
-        importCrdtIndex(source.crdtidx, ctx),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.ContactShape | impl.SymbolRefShape | impl.TableShape | impl.CutoutShape | impl.SymbolUnionShape | impl.SymbolShape)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.childs[i]
-                    if (val.typeId == 'shape') {
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'flatten-shape') {
-                        return importFlattenShape(val as types.FlattenShape, ctx)
-                    }
-                    if (val.typeId == 'group-shape') {
-                        return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'image-shape') {
-                        return importImageShape(val as types.ImageShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape') {
-                        return importPathShape(val as types.PathShape, ctx)
-                    }
-                    if (val.typeId == 'rect-shape') {
-                        return importRectShape(val as types.RectShape, ctx)
-                    }
-                    if (val.typeId == 'text-shape') {
-                        return importTextShape(val as types.TextShape, ctx)
-                    }
-                    if (val.typeId == 'oval-shape') {
-                        return importOvalShape(val as types.OvalShape, ctx)
-                    }
-                    if (val.typeId == 'line-shape') {
-                        return importLineShape(val as types.LineShape, ctx)
-                    }
-                    if (val.typeId == 'artboard') {
-                        return importArtboard(val as types.Artboard, ctx)
-                    }
-                    if (val.typeId == 'contact-shape') {
-                        return importContactShape(val as types.ContactShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
-                    }
-                    if (val.typeId == 'table-shape') {
-                        return importTableShape(val as types.TableShape, ctx)
-                    }
-                    if (val.typeId == 'cutout-shape') {
-                        return importCutoutShape(val as types.CutoutShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-union-shape') {
-                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-shape') {
-                        return importSymbolShape(val as types.SymbolShape, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    return ret
-}
 /* oval shape */
 export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
     const ret: impl.OvalShape = new impl.OvalShape (
@@ -1421,7 +1390,7 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape | impl.CutoutShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolSlotShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape | impl.CutoutShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1439,6 +1408,9 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-slot-shape') {
+                        return importSymbolSlotShape(val as types.SymbolSlotShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)
@@ -1527,7 +1499,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape | impl.CutoutShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolSlotShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape | impl.CutoutShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1545,6 +1517,9 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                     }
                     if (val.typeId == 'symbol-ref-shape') {
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-slot-shape') {
+                        return importSymbolSlotShape(val as types.SymbolSlotShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)
@@ -1587,6 +1562,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
             }
             return ret
         })(),
+        importCrdtId(source.crdtId, ctx),
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
             const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
@@ -1655,7 +1631,7 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape | impl.CutoutShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolSlotShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape | impl.CutoutShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1673,6 +1649,9 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
                     }
                     if (val.typeId == 'symbol-ref-shape') {
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-slot-shape') {
+                        return importSymbolSlotShape(val as types.SymbolSlotShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)
@@ -1715,6 +1694,7 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
             }
             return ret
         })(),
+        importCrdtId(source.crdtId, ctx),
         (() => {
             const ret = new BasicMap<string, impl.Variable>()
             const val = source.variables as any; // json没有map对象,导入导出的是{[key: string]: value}对象
@@ -1743,6 +1723,108 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
         });
         return ret
     })()
+    if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    return ret
+}
+/* page */
+export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
+    const ret: impl.Page = new impl.Page (
+        importCrdtIndex(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolSlotShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape | impl.CutoutShape)>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
+                const r = (() => {
+                    const val = source.childs[i]
+                    if (val.typeId == 'group-shape') {
+                        return importGroupShape(val as types.GroupShape, ctx)
+                    }
+                    if (val.typeId == 'image-shape') {
+                        return importImageShape(val as types.ImageShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape') {
+                        return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'rect-shape') {
+                        return importRectShape(val as types.RectShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-ref-shape') {
+                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-slot-shape') {
+                        return importSymbolSlotShape(val as types.SymbolSlotShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
+                    }
+                    if (val.typeId == 'text-shape') {
+                        return importTextShape(val as types.TextShape, ctx)
+                    }
+                    if (val.typeId == 'artboard') {
+                        return importArtboard(val as types.Artboard, ctx)
+                    }
+                    if (val.typeId == 'line-shape') {
+                        return importLineShape(val as types.LineShape, ctx)
+                    }
+                    if (val.typeId == 'oval-shape') {
+                        return importOvalShape(val as types.OvalShape, ctx)
+                    }
+                    if (val.typeId == 'table-shape') {
+                        return importTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'contact-shape') {
+                        return importContactShape(val as types.ContactShape, ctx)
+                    }
+                    if (val.typeId == 'shape') {
+                        return importShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        return importFlattenShape(val as types.FlattenShape, ctx)
+                    }
+                    if (val.typeId == 'cutout-shape') {
+                        return importCutoutShape(val as types.CutoutShape, ctx)
+                    }
+                    {
+                        throw new Error('unknow val: ' + val)
+                    }
+                })()
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
     if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
@@ -1887,7 +1969,7 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape | impl.CutoutShape)>()
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolSlotShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape | impl.CutoutShape)>()
             for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
                 const r = (() => {
                     const val = source.childs[i]
@@ -1905,6 +1987,9 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                     }
                     if (val.typeId == 'symbol-ref-shape') {
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-slot-shape') {
+                        return importSymbolSlotShape(val as types.SymbolSlotShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
                         return importSymbolShape(val as types.SymbolShape, ctx)

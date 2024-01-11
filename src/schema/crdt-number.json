@@ -1,0 +1,21 @@
+{
+    "description": "crdt number",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "crdtindex": {
+            "$ref": "./crdt-index.json"
+        },
+        "value": {
+            "type": "number"
+        }
+    },
+    "required": [
+        "id",
+        "crdtindex",
+        "value"
+    ],
+    "additionalProperties": false
+}

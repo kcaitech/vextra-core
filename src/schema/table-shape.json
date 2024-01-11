@@ -11,13 +11,13 @@
         "rowHeights": {
             "type": "array",
             "items": {
-                "type": "number"
+                "$ref": "./crdt-number.json"
             }
         },
         "colWidths": {
             "type": "array",
             "items": {
-                "type": "number"
+                "$ref": "./crdt-number.json"
             }
         },
         "textAttr": {
