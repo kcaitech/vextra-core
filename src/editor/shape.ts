@@ -204,34 +204,73 @@ export class ShapeEditor {
      * @param api
      */
     modifyVariable2(_var: Variable, value: any, api: Api) {
-        const p = varParent(_var); // todo 如果p是symbolref(root), shape.isVirtual
-        if (!p) throw new Error();
-        const shape = this.__shape;
-        let r: Shape | undefined = shape;
-        if (r.isVirtualShape) {
-            while (r && r.isVirtualShape) r = r.parent;
-        } else if (r instanceof SymbolRefShape) {
-            // do nothing
-        } else {
-            while (
-                r
-                &&
-                !(r instanceof SymbolShape && !(r.parent instanceof SymbolUnionShape))
-            ) {
-                r = r.parent;
+        const p = varParent(_var);
+        if (!p) {
+            console.log('!p');
+            return;
+        }
+
+        const vars = this.__shape.varsContainer;
+
+        if (!vars) {
+            if (this.__shape.isVirtualShape) {
+                throw new Error();
+            } else {
+                let sym: undefined | Shape = this.__shape;
+
+                while (sym && !(sym instanceof SymbolShape)) {
+                    sym = sym.parent;
+                }
+
+
+                if (this.__shape instanceof SymbolRefShape && p.id !== sym?.id) {
+                    this._overrideVariable(_var, value, api);
+                } else {
+                    api.shapeModifyVariable(this.__page, _var, value);
+                }
+            }
+            console.log('!vars');
+            return;
+        }
+
+        let first_symbolref_index = -1;
+        let p_index = -1;
+
+        for (let i = vars.length - 1; i > -1; i--) {
+            const item = vars[i];
+
+            if (item.type === ShapeType.SymbolRef) {
+                first_symbolref_index = i
+            }
+
+            if (item.id === p.id) {
+                p_index = i;
             }
         }
 
-        if (!r) throw new Error();
+        if (first_symbolref_index === -1) {
+            let sym: undefined | Shape = this.__shape;
 
-        // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
-        // shape, 可能是virtual, 任意对象，比如在修改填充，它的root是symbolref
-        // shape, 非virtual的情况：symbolref, symbol, 其它不需要修改variable, root是自己
-        // r.id === p.id时，p非virtual(symbolref or symbol), 同时p是shape的直接父级，可直接修改
-        // r.id !== p.id时
-        //     p为virtual，则应该override
-        //     p非virtual，p应该是symbol，不是shape的直接父级，应该override
-        if (r.id !== p.id) {
+            while (sym && !(sym instanceof SymbolShape)) {
+                sym = sym.parent;
+            }
+
+            if (this.__shape instanceof SymbolRefShape && p.id !== sym?.id) {
+                this._overrideVariable(_var, value, api);
+            } else {
+                api.shapeModifyVariable(this.__page, _var, value);
+            }
+
+            return;
+        }
+
+        if (p_index === -1) {
+            this._overrideVariable(_var, value, api);
+            console.log('p_index === -1');
+            return;
+        }
+
+        if (first_symbolref_index < p_index) {
             this._overrideVariable(_var, value, api);
         } else {
             api.shapeModifyVariable(this.__page, _var, value);
@@ -239,7 +278,7 @@ export class ShapeEditor {
     }
 
     /**
-     * @description 修改实例身上某一个变量的值 --01b627f5b636
+     * @description 修改实例身上某一个变量的值
      * @param _var
      * @param value
      */

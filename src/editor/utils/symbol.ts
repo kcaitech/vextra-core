@@ -61,32 +61,65 @@ function varParent(_var: Variable) {
 
 function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
     const p = varParent(_var); // todo 如果p是symbolref(root), shape.isVirtual
-        if (!p) throw new Error();
-        let r: Shape | undefined = shape;
-        if (r.isVirtualShape) {
-            while (r && r.isVirtualShape) r = r.parent;
-        } else if (r instanceof SymbolRefShape) {
-            // do nothing
+    if (!p) {
+        console.log('!p');
+        return;
+    }
+
+    const vars = shape.varsContainer;
+
+    if (!vars) {
+        if (shape.isVirtualShape) {
+            throw new Error();
         } else {
-            while (
-                r
-                &&
-                !(r instanceof SymbolShape && !(r.parent instanceof SymbolUnionShape))
-            ) {
-                r = r.parent;
+            let sym: undefined | Shape = shape;
+
+            while (sym && !(sym instanceof SymbolShape)) {
+                sym = shape.parent;
+            }
+
+            if (!sym) {
+                throw new Error();
+            }
+
+            if (shape instanceof SymbolRefShape && p.id !== sym.id) {
+                _override_variable(page, sym, _var, value, api);
+            } else {
+                api.shapeModifyVariable(page, _var, value);
             }
         }
+        
+        console.log('!vars');
+        return;
+    }
 
-        if (!r) throw new Error();
+    let first_symbolref_index = -1;
+    let p_index = -1;
 
-    // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
-    // shape, 可能是virtual, 任意对象，比如在修改填充，它的root是symbolref
-    // shape, 非virtual的情况：symbolref, symbol, 其它不需要修改variable, root是自己
-    // r.id === p.id时，p非virtual(symbolref or symbol), 同时p是shape的直接父级，可直接修改
-    // r.id !== p.id时
-    //     p为virtual，则应该override
-    //     p非virtual，p应该是symbol，不是shape的直接父级，应该override
-    if (r.id !== p.id) {
+    for (let i = vars.length - 1; i > -1; i--) {
+        const item = vars[i];
+
+        if (item.type === ShapeType.SymbolRef) {
+            first_symbolref_index = i
+        }
+
+        if (item.id === p.id) {
+            p_index = i;
+        }
+    }
+
+    if (first_symbolref_index === -1) {
+        _override_variable(page, shape, _var, value, api);
+        return;
+    }
+
+    if (p_index === -1) {
+        _override_variable(page, shape, _var, value, api);
+        console.log('p_index === -1');
+        return;
+    }
+
+    if (first_symbolref_index < p_index) {
         _override_variable(page, shape, _var, value, api);
     } else {
         api.shapeModifyVariable(page, _var, value);
