@@ -105,7 +105,7 @@ export class DataView extends EventEL {
         this.m_ctx.setDirty(this);
     }
 
-    protected get varsContainer() {
+    get varsContainer() {
         return this.m_varsContainer;
     }
     protected set varsContainer(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {

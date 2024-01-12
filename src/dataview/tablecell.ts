@@ -112,6 +112,7 @@ export class TableCellView extends ShapeView {
             this.m_textpath = undefined;
         }
         // if (args.includes('variable')) this.m_layout = undefined; // 不确定是不是text变量？
+        this.renderContents(); // 暂时没有类型可以用来筛选
     }
 
     protected renderBorders(): EL[] {
