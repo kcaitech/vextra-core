@@ -14,7 +14,7 @@ export class ContactLineView extends PathShapeView {
     private page: Page | undefined = undefined;
 
     constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props);
+        super(ctx, props, false);
         this.wathcer_sides = this.wathcer_sides.bind(this);
 
         this.updateApex();

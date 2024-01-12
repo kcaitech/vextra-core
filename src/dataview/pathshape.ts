@@ -8,11 +8,11 @@ import { DViewCtx, PropsType } from "./viewctx";
 
 export class PathShapeView extends ShapeView {
 
-    constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props, false);
+    constructor(ctx: DViewCtx, props: PropsType, isTopClass: boolean = true) {
+        super(ctx, props, isTopClass);
         this.afterInit();
     }
-    
+
     get data(): PathShape {
         return this.m_data as PathShape;
     }
