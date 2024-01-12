@@ -32,6 +32,10 @@ export class TableView extends ShapeView {
         // // this.onChildChange(...args);
         // if (args.includes('borders')) this.m_ctx.setDirty(this);
 
+        if (args.includes('text')) {
+            return;
+        }
+
         this.m_ctx.setDirty(this);
     }
 
