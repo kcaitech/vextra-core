@@ -107,12 +107,12 @@ export class TableCellView extends ShapeView {
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
-        if (args.includes('text')) { // todo 文本要支持局部重排
+        if (args.includes('text') || this.data.cellType !== TableCellType.Text) { // todo 文本要支持局部重排
             this.m_layout = undefined;
             this.m_textpath = undefined;
         }
         // if (args.includes('variable')) this.m_layout = undefined; // 不确定是不是text变量？
-        this.renderContents(); // 暂时没有类型可以用来筛选
+        this.renderContents();
     }
 
     protected renderBorders(): EL[] {
@@ -138,6 +138,9 @@ export class TableCellView extends ShapeView {
             });
             return [img];
         } else if (cellType === TableCellType.Text) {
+            if (!this.m_isVirtual) {
+                shape.text?.updateSize(frame.width, frame.height);
+            }
             const layout = this.getLayout();
             return renderTextLayout(elh, layout);
         }
