@@ -1300,8 +1300,8 @@ export class Api {
         } finally {
             this.repo.transactCtx.settrap = save;
         }
-        console.log(pageId,'pageId');
-        
+        console.log(pageId, 'pageId');
+
         this.addCmd(PageCmdModify.Make(document.id, pageId, PAGE_ATTR_ID.previewUnfold, JSON.stringify(unfold), JSON.stringify(s_unfold)));
     }
     // text

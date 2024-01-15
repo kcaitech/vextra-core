@@ -487,7 +487,7 @@ export class CMDExecuter {
                 api.shapeModifyHasTo(page, shape, pointIdx, v);
             }
             else if (opId === POINTS_ATTR_ID.cornerRadius) {
-                const v = value ? 0 : value;
+                const v = value ? JSON.parse(value) : 0;
                 api.shapeModifyPointCornerRadius(page, shape, pointIdx, Number(v));
             }
             else {

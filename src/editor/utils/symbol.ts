@@ -6,6 +6,8 @@ import { Api } from "../command/recordapi";
 import { BasicArray } from "../../data/basic";
 import { Border, Fill, Shadow } from "../../data/style";
 import { importBorder, importFill, importShadow } from "../../data/baseimport";
+import { newText2 } from "../../editor/creator";
+import { Text } from "../../data/classes";
 
 /**
  * @description 图层是否为组件实例的引用部分
@@ -59,7 +61,7 @@ function varParent(_var: Variable) {
     return p;
 }
 
-function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
+export function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
     const p = varParent(_var); // todo 如果p是symbolref(root), shape.isVirtual
     if (!p) {
         console.log('!p');
@@ -72,25 +74,30 @@ function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, a
         if (shape.isVirtualShape) {
             throw new Error();
         } else {
-            let sym: undefined | Shape = shape;
-
-            while (sym && !(sym instanceof SymbolShape)) {
-                sym = shape.parent;
-            }
-
-            if (!sym) {
-                throw new Error();
-            }
-
-            if (shape instanceof SymbolRefShape && p.id !== sym.id) {
-                _override_variable(page, sym, _var, value, api);
+            if (shape instanceof SymbolRefShape && p.id !== shape?.id) {
+                _override_variable(page, shape, _var, value, api);
             } else {
                 api.shapeModifyVariable(page, _var, value);
             }
         }
-        
+
         console.log('!vars');
         return;
+    }
+
+    // 直接在组件图层下操作变量
+    let __p: Shape | undefined = shape;
+    while (__p) {
+        if (__p instanceof SymbolRefShape) {
+            break;
+        }
+
+        if (__p instanceof SymbolShape) {
+            api.shapeModifyVariable(page, _var, value);
+            return;
+        }
+
+        __p = __p.parent;
     }
 
     let first_symbolref_index = -1;
@@ -109,12 +116,21 @@ function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, a
     }
 
     if (first_symbolref_index === -1) {
-        _override_variable(page, shape, _var, value, api);
+        if (shape instanceof SymbolRefShape && p.id !== shape?.id) {
+            _override_variable(page, shape, _var, value, api);
+        } else {
+            api.shapeModifyVariable(page, _var, value);
+        }
+        console.log('first_symbolref_index === -1');
         return;
     }
 
     if (p_index === -1) {
-        _override_variable(page, shape, _var, value, api);
+        if (shape instanceof SymbolRefShape && p.id !== shape?.id) {
+            _override_variable(page, shape, _var, value, api);
+        } else {
+            api.shapeModifyVariable(page, _var, value);
+        }
         console.log('p_index === -1');
         return;
     }
@@ -136,15 +152,18 @@ function _override_variable(page: Page, shape: Shape, _var: Variable, value: any
         if (p.isVirtualShape) throw new Error();
         p = shape;
     }
+    let symisp = true;
     let sym: Shape | undefined = p;
     while (sym && sym.isVirtualShape) {
         sym = sym.parent;
+        symisp = false;
     }
     if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
-    let override_id = p.id;
-    override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-    if (override_id.length === 0) throw new Error();
-    if (!(p instanceof SymbolRefShape)) {
+
+    let override_id = symisp ? "" : p.id;
+    if (!symisp) override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
+    if (!symisp && override_id.length === 0) throw new Error();
+    if (!(p instanceof SymbolRefShape)) { // 普通对象
         const idx = override_id.lastIndexOf('/');
         if (idx > 0) {
             override_id = override_id.substring(0, idx);
@@ -152,8 +171,21 @@ function _override_variable(page: Page, shape: Shape, _var: Variable, value: any
             override_id = ""
         }
     }
-    if (override_id.length > 0) override_id = override_id + "/";
+
+    if (override_id.length > 0) {
+        override_id += "/";
+    }
+
     override_id += _var.id;
+
+    // override text
+    if (_var.type === VariableType.Text
+        && typeof value === 'string') {
+        const origin = _var.value as Text;
+        const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
+        text.insertText(value, 0);
+        value = text;
+    }
     const _var2 = new Variable(uuid(), _var.type, _var.name, value);
     api.shapeAddVariable(page, sym, _var2);
     api.shapeAddOverride(page, sym, override_id, OverrideType.Variable, _var2.id);
