@@ -198,7 +198,12 @@ export class TableEditor extends ShapeEditor {
                 }
                 else if (c.cell.cellType === TableCellType.Text) {
                     if ((cell.cell?.cellType ?? TableCellType.None) === TableCellType.None) {
+                        // api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.Text);
+                        const _text = newText(this.shape.textAttr);
+                        _text.setTextBehaviour(TextBehaviour.Fixed);
+                        _text.setPadding(5, 0, 3, 0);
                         api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.Text);
+                        api.tableSetCellContentText(this.__page, this.shape, cell.rowIdx, cell.colIdx, _text);
                     }
                     if (cell.cell?.cellType === TableCellType.Text) {
                         if (c.cell.text) {
