@@ -1,26 +1,4 @@
-import {
-    Cmd,
-    PageCmdDelete,
-    PageCmdInsert,
-    PageCmdModify,
-    PageCmdMove,
-    ShapeArrayAttrInsert,
-    ShapeArrayAttrModify,
-    ShapeArrayAttrMove,
-    ShapeArrayAttrRemove,
-    ShapeCmdInsert,
-    ShapeCmdModify,
-    ShapeCmdMove,
-    ShapeCmdRemove,
-    TableCmdInsert,
-    TableCmdModify,
-    TableCmdRemove,
-    TableIndex,
-    TableOpTarget,
-    TextCmdInsert,
-    TextCmdModify,
-    TextCmdRemove
-} from "../../coop/data/classes";
+
 import * as basicapi from "../basicapi"
 import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";

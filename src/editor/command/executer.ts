@@ -240,7 +240,7 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(pageId)
         const op = cmd.ops[0];
         if (page && op.type === OpType.ShapeInsert) { // 后续page加载后需要更新！
-            const parent = page.getTarget(op.targetId);
+            const parent = page.getOpTarget(op.targetId);
             if (!parent || !(parent instanceof GroupShape)) {
                 throw new Error("shape insert, parent error")
             }
@@ -257,7 +257,7 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(pageId);
         if (!page) return;
         if (page && op.type === OpType.ShapeRemove) {
-            const parent = page.getTarget(parentId) as GroupShape;
+            const parent = page.getOpTarget(parentId) as GroupShape;
             if (!parent) throw new Error(`parent not find: ${parentId}`);
             const _op = op as ShapeOpRemove;
             const shape = parent.childs[_op.index];
@@ -276,9 +276,9 @@ export class CMDExecuter {
             const _op = op as ShapeOpMove;
             const parentId = _op.targetId;
             const parentId2 = _op.targetId2;
-            const parent = page.getTarget(parentId) as GroupShape;
+            const parent = page.getOpTarget(parentId) as GroupShape;
             if (!parent) throw new Error(`parent not find: ${parentId}`);
-            const parent2 = page.getTarget(parentId2);
+            const parent2 = page.getOpTarget(parentId2);
             if (!parent2) throw new Error(`parent2 not find: ${parentId2}`);
             const shape = parent.childs[_op.index];
             if (!shape) throw new Error(`shape not find: (index)${_op.index} (cmdShapeId)${_op.shapeId}`);
@@ -293,7 +293,7 @@ export class CMDExecuter {
         const op = cmd.ops[0]
         if (op.type !== OpType.ArrayInsert) return;
         const shapeId = op.targetId;
-        const shape = (shapeId[0] === page.id) ? page : page.getTarget(shapeId);
+        const shape = (shapeId[0] === page.id) ? page : page.getOpTarget(shapeId);
         if (!shape) {
             console.log("shape not find", shapeId)
             return;
@@ -332,7 +332,7 @@ export class CMDExecuter {
         if (!page) return;
         const op = cmd.ops[0]
         if (op.type !== OpType.ArrayRemove) return;
-        const shape = (op.targetId[0] === page.id) ? page : page.getTarget(op.targetId);
+        const shape = (op.targetId[0] === page.id) ? page : page.getOpTarget(op.targetId);
         if (!shape) {
             console.log("shape not find", op.targetId)
             return;
@@ -375,7 +375,7 @@ export class CMDExecuter {
         if (_op.type !== OpType.IdSet) {
             return;
         }
-        const shape = (_op.targetId[0] === page.id) ? page : page.getTarget(_op.targetId);
+        const shape = (_op.targetId[0] === page.id) ? page : page.getOpTarget(_op.targetId);
         // if (!(shape instanceof Shape)) {
         //     throw new Error();
         // }
@@ -561,7 +561,7 @@ export class CMDExecuter {
         if (!page) return;
         const op0 = cmd.ops[0]
         const op1 = cmd.ops[1]
-        const shape = (op0.targetId[0] === page.id) ? page : page.getTarget(op0.targetId);
+        const shape = (op0.targetId[0] === page.id) ? page : page.getOpTarget(op0.targetId);
         if (!shape) {
             console.log("shape not find", op0.targetId)
             return;
@@ -592,7 +592,7 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0] as TableOpInsert
-        const shape = page.getTarget(op.targetId);
+        const shape = page.getOpTarget(op.targetId);
 
         if (op.type !== OpType.TableInsert) {
             return;
@@ -618,7 +618,7 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0] as TableOpRemove
-        const shape = page.getTarget(op.targetId);
+        const shape = page.getOpTarget(op.targetId);
 
         if (op.type !== OpType.TableRemove) {
             return;
@@ -636,7 +636,7 @@ export class CMDExecuter {
         const page = this.__document.pagesMgr.getSync(cmd.blockId);
         if (!page) return;
         const op = cmd.ops[0] as TableOpModify;
-        const shape = page.getTarget(op.targetId);
+        const shape = page.getOpTarget(op.targetId);
 
         if (op.type !== OpType.TableModify) {
             return;
@@ -661,7 +661,7 @@ export class CMDExecuter {
         if (!page) return;
         const _op = cmd.ops[0]
         if (_op.type !== OpType.ArrayInsert) return;
-        const shape = page.getTarget(_op.targetId) as TextShape | Variable;
+        const shape = page.getOpTarget(_op.targetId) as TextShape | Variable;
 
         const op = _op as ArrayOpInsert;
         const text = cmd.parseText();
@@ -686,7 +686,7 @@ export class CMDExecuter {
         if (!page) return;
         const _op = cmd.ops[0]
         if (_op.type !== OpType.ArrayRemove) return;
-        const shape = page.getTarget(_op.targetId) as TextShape | Variable;
+        const shape = page.getOpTarget(_op.targetId) as TextShape | Variable;
 
         const op = _op as ArrayOpRemove;
         const shapetext = (shape instanceof Shape) ? shape.text : shape?.value;
@@ -703,7 +703,7 @@ export class CMDExecuter {
         if (_op.type !== OpType.ArrayAttr) {
             return;
         }
-        const shape = page.getTarget(_op.targetId) as TextShape | Variable;
+        const shape = page.getOpTarget(_op.targetId) as TextShape | Variable;
 
         const op = _op as ArrayOpAttr;
         const attrId = cmd.attrId

@@ -1,10 +1,13 @@
-import { Document } from "../../data/document";
+import { Document, PageListItem } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
 import { ContactShape, ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign, ContactForm } from "../../data/classes";
 import { BoolOp, BulletNumbersBehavior, BulletNumbersType, CurveMode, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
 import { Color } from "../../data/classes";
+import { crdtArrayMove, crdtIdSet } from "../../coop/client/crdt";
+import { crdtGetArrIndex } from "./basic";
+import { Op, OpType } from "../../coop/common/op";
 export * from "./fill";
 export * from "./border";
 export * from "./shadow";
@@ -14,13 +17,61 @@ export * from "./contact";
 export * from "./cutout";
 
 
-type TextShapeLike = Shape & { text: Text }
+// type TextShapeLike = Shape & { text: Text }
 
-export function pageInsert(document: Document, page: Page, index: number) {
-    document.insertPage(index, page)
+// insertPage(index: number, page: Page) {
+//     if (index < 0) return;
+//     const pageListItem = new PageListItem(page.id, page.name);
+//     this.pagesList.splice(index, 0, pageListItem);
+//     this.__pages.add(page.id, page);
+// }
+
+// deletePage(id: string): boolean {
+//     if (this.pagesList.length > 1) {
+//         const index = this.pagesList.findIndex(p => p.id === id);
+//         if (index < 0) return false;
+//         this.pagesList.splice(index, 1);
+//         return true;
+//     } else {
+//         return false;
+//     }
+// }
+
+// deletePageAt(index: number): boolean {
+//     if (index < 0 || index >= this.pagesList.length) return false;
+//     this.pagesList.splice(index, 1);
+//     return true;
+// }
+
+export function pageInsert(uid: string, document: Document, page: Page, index: number) {
+    // document.insertPage(index, page)
+    if (index < 0) return;
+    const ops: Op[] = [];
+    const pagesList = document.pagesList;
+    const idx = crdtGetArrIndex(uid, pagesList, index);
+    const pageListItem = new PageListItem(idx, page.id, page.name);
+    ops.push(crdtArrayMove(pagesList, {
+        id: pageListItem.id,
+        data: pageListItem,
+        to: idx,
+        path: ["document", "pagesList"],
+        type: OpType.CrdtArr,
+        order: Number.MAX_SAFE_INTEGER
+    }));
+    // pagesList.splice(index, 0, pageListItem);
+    // todo
+    ops.push(crdtIdSet(document.pagesMgr, {
+        id: page.id,
+        data: page,
+        path: ["document", "pages"],
+        type: OpType.Idset,
+        order: Number.MAX_SAFE_INTEGER
+    }));
+    // document.__pages.add(page.id, page);
+    return ops;
 }
 export function pageDelete(document: Document, index: number) {
-    document.deletePageAt(index)
+    return document.deletePageAt(index)
 }
 export function pageModifyName(document: Document, pageId: string, name: string) {
     const item = document.pagesList.find(p => p.id === pageId);
