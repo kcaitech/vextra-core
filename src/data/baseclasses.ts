@@ -163,12 +163,14 @@ export class Style extends Basic {
 export class Stop extends Basic {
     typeId = 'stop'
     position: number
-    color?: Color
+    color: Color
     constructor(
-        position: number
+        position: number,
+        color: Color
     ) {
         super()
         this.position = position
+        this.color = color
     }
 }
 /**

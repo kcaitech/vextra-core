@@ -193,9 +193,9 @@ export function importStrikethroughType(source: types.StrikethroughType, ctx?: I
 /* stop */
 export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
     const ret: impl.Stop = new impl.Stop (
-        source.position
+        source.position,
+        importColor(source.color, ctx)
     )
-    if (source.color !== undefined) ret.color = importColor(source.color, ctx)
     return ret
 }
 /* span attr */

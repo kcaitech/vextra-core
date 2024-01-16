@@ -113,7 +113,7 @@ export enum StrikethroughType {
 /* stop */
 export type Stop = {
     position: number
-    color?: Color
+    color: Color
 }
 /* span attr */
 export type SpanAttr = {

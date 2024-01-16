@@ -198,7 +198,7 @@ export function exportStrikethroughType(source: types.StrikethroughType, ctx?: I
 export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop {
     const ret = {
         position: source.position,
-        color: source.color && exportColor(source.color, ctx),
+        color: exportColor(source.color, ctx),
     }
     return ret
 }

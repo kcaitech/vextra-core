@@ -71,7 +71,7 @@ function importGradient(data: IJSON): Gradient {
         }
         position = Math.min(Math.max(0, position), 1);
         const color: Color = importColor(d['color']);
-        const stop = new Stop(position);
+        const stop = new Stop(position, color);
         stop.color = color;
         return stop;
     });
