@@ -40,7 +40,7 @@ shadowOri[ShadowPosition.Outer] = function (h: Function, shadow: Shadow, frame: 
     if (fills.length) {
         for (let i = 0; i < fills.length; i++) {
             const _fill = fills[i];
-            if (_fill.color.alpha !== 0) {
+            if (_fill.color.alpha !== 0 && _fill.isEnabled) {
                 fill = 'black';
                 break;
             }
