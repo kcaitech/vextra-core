@@ -41,41 +41,66 @@ export class Basic {
     clone(): Basic {
         throw new Error("not implemented")
     }
+
+    getCrdtPath(): string[] {
+        if (this.__parent) return this.__parent.getCrdtPath().concat(this.typeId);
+        else return [this.typeId];
+    }
 }
 
 export class BasicArray<T> extends Array<T> {
     protected __uuid = __uuid
     protected typeId = 'array';
+    protected __notifyId = this.typeId;
+    __pathNode = this.typeId;
 
     protected __parent?: Basic // 由DataGuard设置
     get parent() {
         return this.__parent;
     }
     notify(...args: any[]): void {
-        this.__parent && this.__parent.notify(this.typeId, ...args);
+        this.__parent && this.__parent.notify(this.__notifyId, ...args);
     }
-    setTypeId(typeId: string) {
-        this.typeId = typeId;
+    setNotifyId(notifyId: string) {
+        this.__notifyId = notifyId;
     }
     onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
         this.__parent && this.__parent.onRollback(from);
+    }
+    setCrdtPath(pathNode: string) {
+        this.__pathNode = pathNode;
+    }
+    getCrdtPath(): string[] { // todo
+        if (this.__parent) return this.__parent.getCrdtPath().concat(this.__pathNode);
+        else return [this.__pathNode];
     }
 }
 
 export class BasicMap<T0, T1> extends Map<T0, T1> {
     protected __uuid = __uuid
     protected typeId = 'map';
+    protected __notifyId = this.typeId;
+    __pathNode = this.typeId;
 
     protected __parent?: Basic
     get parent() {
         return this.__parent;
     }
-
+    setNotifyId(notifyId: string) {
+        this.__notifyId = notifyId;
+    }
     notify(...args: any[]): void {
-        this.__parent && this.__parent.notify(this.typeId, ...args);
+        this.__parent && this.__parent.notify(this.__notifyId, ...args);
     }
     onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
         this.__parent && this.__parent.onRollback(from);
+    }
+    setCrdtPath(pathNode: string) {
+        this.__pathNode = pathNode;
+    }
+    getCrdtPath(): string[] {
+        if (this.__parent) return this.__parent.getCrdtPath().concat(this.__pathNode);
+        else return [this.__pathNode];
     }
 }
 

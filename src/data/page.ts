@@ -43,15 +43,15 @@ export class Page extends GroupShape implements classes.Page {
         this.isReserveLib = !!isReserveLib;
     }
 
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
-        if (targetId.length > 0) {
-            const shapeId = targetId[0] as string;
+    getOpTarget(path: string[]): any {
+        if (path.length > 0) {
+            const shapeId = path[0] as string;
             const shape = this.getShape(shapeId);
             if (!shape) {
                 console.log("shape not find", shapeId)
                 return;
             }
-            return shape.getTarget(targetId.slice(1));
+            return shape.getOpTarget(path.slice(1));
         }
         return this;
     }

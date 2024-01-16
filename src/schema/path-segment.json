@@ -2,6 +2,9 @@
     "description": "path segment",
     "type": "object",
     "properties": {
+        "crdtidx": {
+            "$ref": "./crdt-index.json"
+        },
         "points": {
             "type": "array",
             "items": {

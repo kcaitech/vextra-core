@@ -2,7 +2,7 @@
     "description": "table shape",
     "type": "object",
     "properties": {
-        "datas": {
+        "childs": {
             "type": "array",
             "items": {
                 "$ref": "./table-cell.json"
@@ -25,7 +25,7 @@
         }
     },
     "required": [
-        "datas",
+        "childs",
         "rowHeights",
         "colWidths"
     ],

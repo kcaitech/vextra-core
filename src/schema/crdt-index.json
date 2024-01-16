@@ -3,10 +3,7 @@
     "type": "object",
     "properties": {
         "index": {
-            "type": "array",
-            "items": {
-                "type": "integer"
-            }
+            "type": "string"
         },
         "order": {
             "type": "integer"

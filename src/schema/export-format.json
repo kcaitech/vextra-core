@@ -2,6 +2,9 @@
     "description": "export format",
     "type": "object",
     "properties": {
+        "crdtidx": {
+            "$ref": "./crdt-index.json"
+        },
         "id": {
             "type": "string",
             "minLength": 32,

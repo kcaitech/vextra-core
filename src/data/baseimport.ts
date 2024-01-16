@@ -195,6 +195,7 @@ export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop 
     const ret: impl.Stop = new impl.Stop (
         source.position
     )
+    if (source.crdtidx !== undefined) ret.crdtidx = importCrdtIndex(source.crdtidx, ctx)
     if (source.color !== undefined) ret.color = importColor(source.color, ctx)
     return ret
 }
@@ -313,6 +314,7 @@ export function importPathSegment(source: types.PathSegment, ctx?: IImportContex
         })(),
         source.isClosed
     )
+    if (source.crdtidx !== undefined) ret.crdtidx = importCrdtIndex(source.crdtidx, ctx)
     return ret
 }
 /* para */
@@ -334,6 +336,7 @@ export function importPara(source: types.Para, ctx?: IImportContext): impl.Para 
 /* page list item */
 export function importPageListItem(source: types.PageListItem, ctx?: IImportContext): impl.PageListItem {
     const ret: impl.PageListItem = new impl.PageListItem (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.name
     )
@@ -431,14 +434,6 @@ export function importExportOptions(source: types.ExportOptions, ctx?: IImportCo
             }
             return ret
         })(),
-        (() => {
-            const ret = new BasicArray<string>()
-            for (let i = 0, len = source.includedChildIds && source.includedChildIds.length; i < len; i++) {
-                const r = source.includedChildIds[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
         source.childOptions,
         source.shouldTrim,
         source.trimTransparent,
@@ -458,6 +453,7 @@ export function importExportFormat(source: types.ExportFormat, ctx?: IImportCont
         source.scale,
         importExportVisibleScaleType(source.visibleScaleType, ctx)
     )
+    if (source.crdtidx !== undefined) ret.crdtidx = importCrdtIndex(source.crdtidx, ctx)
     return ret
 }
 /* export format nameing scheme */
@@ -549,6 +545,7 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
         source.y,
         importCurveMode(source.mode, ctx)
     )
+    if (source.crdtidx !== undefined) ret.crdtidx = importCrdtIndex(source.crdtidx, ctx)
     if (source.radius !== undefined) ret.radius = source.radius
     if (source.fromX !== undefined) ret.fromX = source.fromX
     if (source.fromY !== undefined) ret.fromY = source.fromY
@@ -566,7 +563,7 @@ export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): 
 export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext): impl.CrdtNumber {
     const ret: impl.CrdtNumber = new impl.CrdtNumber (
         source.id,
-        importCrdtIndex(source.crdtindex, ctx),
+        importCrdtIndex(source.crdtidx, ctx),
         source.value
     )
     return ret
@@ -582,14 +579,7 @@ export function importCrdtIndex2(source: types.CrdtIndex2, ctx?: IImportContext)
 /* crdt array index */
 export function importCrdtIndex(source: types.CrdtIndex, ctx?: IImportContext): impl.CrdtIndex {
     const ret: impl.CrdtIndex = new impl.CrdtIndex (
-        (() => {
-            const ret = new BasicArray<number>()
-            for (let i = 0, len = source.index && source.index.length; i < len; i++) {
-                const r = source.index[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
+        source.index,
         source.order,
         source.uid
     )
@@ -622,6 +612,7 @@ export function importContactRole(source: types.ContactRole, ctx?: IImportContex
         importContactRoleType(source.roleType, ctx),
         source.shapeId
     )
+    if (source.crdtidx !== undefined) ret.crdtidx = importCrdtIndex(source.crdtidx, ctx)
     return ret
 }
 /* contact role type */
@@ -802,8 +793,8 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         importStyle(source.style, ctx),
         (() => {
             const ret = new BasicArray<impl.TableCell>()
-            for (let i = 0, len = source.datas && source.datas.length; i < len; i++) {
-                const r = importTableCell(source.datas[i], ctx)
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
+                const r = importTableCell(source.childs[i], ctx)
                 if (r) ret.push(r)
             }
             return ret

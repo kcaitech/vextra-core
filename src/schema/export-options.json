@@ -8,14 +8,6 @@
                 "$ref": "./export-format.json"
             }
         },
-        "includedChildIds": {
-            "type": "array",
-            "items": {
-                "type": "string",
-                "minLength": 32,
-                "maxLength": 36
-            }
-        },
         "childOptions": {
             "type": "integer",
             "default": 0
@@ -39,7 +31,6 @@
     },
     "required": [
         "exportFormats",
-        "includedChildIds",
         "childOptions",
         "shouldTrim",
         "trimTransparent",

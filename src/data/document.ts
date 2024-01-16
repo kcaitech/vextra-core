@@ -31,7 +31,7 @@ function getTextFromGroupShape(shape: GroupShape | undefined): string {
         } else if (child instanceof GroupShape) {
             result += getTextFromGroupShape(child);
         } else if (child instanceof TableShape) {
-            result += (child.datas.filter(cell => !!cell) as BasicArray<(TableCell)>)
+            result += (child.childs.filter(cell => !!cell) as BasicArray<(TableCell)>)
                 .reduce((previousValue, currentValue) => previousValue + currentValue.text?.toString() ?? "", "");
         } else if (child instanceof TextShape) {
             result += child.text.toString();
@@ -114,30 +114,6 @@ export class Document extends (DocumentMeta) {
 
     get stylesMgr() {
         return this.__styles;
-    }
-
-    insertPage(index: number, page: Page) {
-        if (index < 0) return;
-        const pageListItem = new PageListItem(page.id, page.name);
-        this.pagesList.splice(index, 0, pageListItem);
-        this.__pages.add(page.id, page);
-    }
-
-    deletePage(id: string): boolean {
-        if (this.pagesList.length > 1) {
-            const index = this.pagesList.findIndex(p => p.id === id);
-            if (index < 0) return false;
-            this.pagesList.splice(index, 1);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    deletePageAt(index: number): boolean {
-        if (index < 0 || index >= this.pagesList.length) return false;
-        this.pagesList.splice(index, 1);
-        return true;
     }
 
     getPageItemAt(index: number): PageListItem | undefined {

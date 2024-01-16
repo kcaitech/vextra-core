@@ -112,6 +112,7 @@ export enum StrikethroughType {
 }
 /* stop */
 export type Stop = {
+    crdtidx?: CrdtIndex
     position: number
     color?: Color
 }
@@ -222,6 +223,7 @@ export type Point2D = {
 }
 /* path segment */
 export type PathSegment = {
+    crdtidx?: CrdtIndex
     points: CurvePoint[]
     isClosed: boolean
 }
@@ -233,6 +235,7 @@ export type Para = {
 }
 /* page list item */
 export type PageListItem = {
+    crdtidx: CrdtIndex
     id: string
     name: string
     versionId?: string
@@ -325,7 +328,6 @@ export enum ExportVisibleScaleType {
 /* export options */
 export type ExportOptions = {
     exportFormats: ExportFormat[]
-    includedChildIds: string[]
     childOptions: number
     shouldTrim: boolean
     trimTransparent: boolean
@@ -334,6 +336,7 @@ export type ExportOptions = {
 }
 /* export format */
 export type ExportFormat = {
+    crdtidx?: CrdtIndex
     id: string
     absoluteSize: number
     fileFormat: ExportFileFormat
@@ -377,6 +380,7 @@ export type DocumentMeta = {
 }
 /* curve point */
 export type CurvePoint = {
+    crdtidx?: CrdtIndex
     id: string
     radius?: number
     fromX?: number
@@ -400,7 +404,7 @@ export enum CurveMode {
 /* crdt number */
 export type CrdtNumber = {
     id: string
-    crdtindex: CrdtIndex
+    crdtidx: CrdtIndex
     value: number
 }
 /* crdt table index */
@@ -410,7 +414,7 @@ export type CrdtIndex2 = {
 }
 /* crdt array index */
 export type CrdtIndex = {
-    index: number[]
+    index: string
     order: number
     uid: string
 }
@@ -433,6 +437,7 @@ export enum ContactType {
 }
 /* contactstyle */
 export type ContactRole = {
+    crdtidx?: CrdtIndex
     id: string
     roleType: ContactRoleType
     shapeId: string
@@ -575,7 +580,7 @@ export type TextShape = Shape & {
 }
 /* table shape */
 export type TableShape = Shape & {
-    datas: TableCell[]
+    childs: TableCell[]
     rowHeights: CrdtNumber[]
     colWidths: CrdtNumber[]
     textAttr?: TextAttr

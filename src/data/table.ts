@@ -201,7 +201,7 @@ export class TableShape extends Shape implements classes.TableShape {
     static MaxColCount = 50;
 
     typeId = 'table-shape'
-    datas: BasicArray<TableCell>
+    childs: BasicArray<TableCell>
     rowHeights: BasicArray<CrdtNumber>
     colWidths: BasicArray<CrdtNumber>
     textAttr?: TextAttr // 文本默认属性
@@ -219,7 +219,7 @@ export class TableShape extends Shape implements classes.TableShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        datas: BasicArray<TableCell>,
+        childs: BasicArray<TableCell>,
         rowHeights: BasicArray<CrdtNumber>,
         colWidths: BasicArray<CrdtNumber>
     ) {
@@ -233,18 +233,18 @@ export class TableShape extends Shape implements classes.TableShape {
         )
         this.rowHeights = rowHeights
         this.colWidths = colWidths
-        this.datas = datas;
-        this.datas.setTypeId('cells');
+        this.childs = childs;
+        this.childs.setNotifyId('childs');
         this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur.value, 0);
         this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur.value, 0);
     }
 
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
+    getOpTarget(path: string[]): any {
         if (targetId.length > 0 && typeof targetId[0] !== 'string') {
             const index = targetId[0];
             const cell = this.getCellAt(index.rowIdx, index.colIdx, true);
             if (!cell) throw new Error("table cell not find")
-            return cell.getTarget(targetId.slice(1))
+            return cell.getOpTarget(targetId.slice(1))
         }
         return this;
     }
@@ -260,9 +260,9 @@ export class TableShape extends Shape implements classes.TableShape {
     /**
      * @deprecated
      */
-    get childs() {
-        return this.datas;
-    }
+    // get childs() {
+    //     return this.datas;
+    // }
 
     get widthTotalWeights() {
         return this.__widthTotalWeights;
@@ -402,8 +402,8 @@ export class TableShape extends Shape implements classes.TableShape {
 
     private getCellIndexs() {
         if (this.__cellIndexs.size === 0) {
-            this.datas.forEach((c, i) => {
-                if (c) this.__cellIndexs.set(c.id, i);
+            this.childs.forEach((c, i) => {
+                this.__cellIndexs.set(c.id, i);
             })
         }
         return this.__cellIndexs;
@@ -451,7 +451,7 @@ export class TableShape extends Shape implements classes.TableShape {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
         const index = rowIdx * this.colWidths.length + colIdx;
-        const cell = this.datas[index];
+        const cell = this.childs[index];
         if (!cell && initCell) {
             // return this.initCell(index);
             // todo 待处理

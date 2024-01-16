@@ -162,6 +162,7 @@ export class Style extends Basic {
  */
 export class Stop extends Basic {
     typeId = 'stop'
+    crdtidx?: CrdtIndex
     position: number
     color?: Color
     constructor(
@@ -320,6 +321,7 @@ export class Point2D extends Basic {
  */
 export class PathSegment extends Basic {
     typeId = 'path-segment'
+    crdtidx?: CrdtIndex
     points: BasicArray<CurvePoint >
     isClosed: boolean
     constructor(
@@ -353,14 +355,17 @@ export class Para extends Basic {
  */
 export class PageListItem extends Basic {
     typeId = 'page-list-item'
+    crdtidx: CrdtIndex
     id: string
     name: string
     versionId?: string
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         name: string
     ) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.name = name
     }
@@ -454,7 +459,6 @@ export class Fill extends Basic {
 export class ExportOptions extends Basic {
     typeId = 'export-options'
     exportFormats: BasicArray<ExportFormat >
-    includedChildIds: BasicArray<string >
     childOptions: number
     shouldTrim: boolean
     trimTransparent: boolean
@@ -462,7 +466,6 @@ export class ExportOptions extends Basic {
     unfold: boolean
     constructor(
         exportFormats: BasicArray<ExportFormat >,
-        includedChildIds: BasicArray<string >,
         childOptions: number,
         shouldTrim: boolean,
         trimTransparent: boolean,
@@ -471,7 +474,6 @@ export class ExportOptions extends Basic {
     ) {
         super()
         this.exportFormats = exportFormats
-        this.includedChildIds = includedChildIds
         this.childOptions = childOptions
         this.shouldTrim = shouldTrim
         this.trimTransparent = trimTransparent
@@ -484,6 +486,7 @@ export class ExportOptions extends Basic {
  */
 export class ExportFormat extends Basic {
     typeId = 'export-format'
+    crdtidx?: CrdtIndex
     id: string
     absoluteSize: number
     fileFormat: ExportFileFormat
@@ -572,6 +575,7 @@ export class DocumentMeta extends Basic {
  */
 export class CurvePoint extends Basic {
     typeId = 'curve-point'
+    crdtidx?: CrdtIndex
     id: string
     radius?: number
     fromX?: number
@@ -602,16 +606,16 @@ export class CurvePoint extends Basic {
 export class CrdtNumber extends Basic {
     typeId = 'crdt-number'
     id: string
-    crdtindex: CrdtIndex
+    crdtidx: CrdtIndex
     value: number
     constructor(
         id: string,
-        crdtindex: CrdtIndex,
+        crdtidx: CrdtIndex,
         value: number
     ) {
         super()
         this.id = id
-        this.crdtindex = crdtindex
+        this.crdtidx = crdtidx
         this.value = value
     }
 }
@@ -636,11 +640,11 @@ export class CrdtIndex2 extends Basic {
  */
 export class CrdtIndex extends Basic {
     typeId = 'crdt-index'
-    index: BasicArray<number >
+    index: string
     order: number
     uid: string
     constructor(
-        index: BasicArray<number >,
+        index: string,
         order: number,
         uid: string
     ) {
@@ -687,6 +691,7 @@ export class ContextSettings extends Basic {
  */
 export class ContactRole extends Basic {
     typeId = 'contact-role'
+    crdtidx?: CrdtIndex
     id: string
     roleType: ContactRoleType
     shapeId: string
@@ -939,7 +944,7 @@ export class TextShape extends Shape {
  */
 export class TableShape extends Shape {
     typeId = 'table-shape'
-    datas: BasicArray<TableCell >
+    childs: BasicArray<TableCell >
     rowHeights: BasicArray<CrdtNumber >
     colWidths: BasicArray<CrdtNumber >
     textAttr?: TextAttr
@@ -950,7 +955,7 @@ export class TableShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        datas: BasicArray<TableCell >,
+        childs: BasicArray<TableCell >,
         rowHeights: BasicArray<CrdtNumber >,
         colWidths: BasicArray<CrdtNumber >
     ) {
@@ -962,7 +967,7 @@ export class TableShape extends Shape {
             frame,
             style
         )
-        this.datas = datas
+        this.childs = childs
         this.rowHeights = rowHeights
         this.colWidths = colWidths
     }

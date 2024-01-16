@@ -60,6 +60,11 @@ export class Shape extends Basic implements classes.Shape {
         }
         this.parent?.bubblenotify(...args);
     }
+    getCrdtPath(): string[] {
+        const page = this.getPage();
+        if (page && page !== this) return [page.id, this.id];
+        else return [this.id];
+    }
 
     // shape
     typeId = 'shape'
@@ -138,7 +143,7 @@ export class Shape extends Basic implements classes.Shape {
     /**
      * for command
      */
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
+    getOpTarget(path: string[]): any {
         return this;
     }
 
@@ -458,7 +463,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
         )
         this.childs = childs;
         this.wideframe = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
-        (childs as any).typeId = "childs";
+        childs.setNotifyId("childs");
     }
 
     get naviChilds(): Shape[] | undefined {
@@ -587,16 +592,16 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         )
         this.crdtId = crdtId
         this.variables = variables;
-        (variables as any).typeId = "variable";
+        variables.setNotifyId("variable");
     }
 
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
+    getOpTarget(path: string[]): any {
         const id0 = targetId[0];
         if (typeof id0 === 'string' && id0.startsWith('varid:')) {
             const varid = id0.substring('varid:'.length);
             return this.getVar(varid);
         }
-        return super.getTarget(targetId);
+        return super.getOpTarget(targetId);
     }
 
     private _createVar4Override(type: OverrideType, value: any) {
@@ -792,7 +797,7 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
     get isSymbolUnionShape() {
         return true;
     }
-    
+
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const w = frame.width;
         const h = frame.height;
@@ -838,7 +843,7 @@ export class PathShape extends Shape implements classes.PathShape {
         )
         this.points = points;
         this.isClosed = isClosed;
-        points.setTypeId("points");
+        points.setNotifyId("points");
     }
     setClosedState(state: boolean) {
         this.isClosed = state;

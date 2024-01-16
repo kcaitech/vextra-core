@@ -1,21 +1,20 @@
 {
-    "description": "crdt number",
+    "description": "stop",
     "type": "object",
     "properties": {
-        "id": {
-            "type": "string"
-        },
         "crdtidx": {
             "$ref": "./crdt-index.json"
         },
-        "value": {
-            "type": "number"
+        "position": {
+            "type": "number",
+            "default": 0
+        },
+        "color": {
+            "$ref": "./color.json"
         }
     },
     "required": [
-        "id",
-        "crdtidx",
-        "value"
+        "position"
     ],
     "additionalProperties": false
 }

@@ -55,7 +55,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         )
         this.refId = refId
         this.variables = variables;
-        (variables as any).typeId = "variable";
+        this.variables.setNotifyId("variable");
         // this.origin_watcher = this.origin_watcher.bind(this);
         // this.updater = this.updater.bind(this);
         // this.updater();
@@ -69,13 +69,13 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     //     this.relayout();
     // }
 
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
+    getOpTarget(path: string[]): any {
         const id0 = targetId[0];
         if (typeof id0 === 'string' && id0.startsWith('varid:')) {
             const varid = id0.substring('varid:'.length);
             return this.getVar(varid);
         }
-        return super.getTarget(targetId);
+        return super.getOpTarget(targetId);
     }
 
     removeVirbindsEx(key: string) {
