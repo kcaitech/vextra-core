@@ -89,7 +89,8 @@ export const FILLS_ID = "fills"
 
 export const FILLS_ATTR_ID = {
     enable: "enable",
-    color: "color"
+    color: "color",
+    gradient: "gradient"
 }
 
 export const BORDER_ID = "border"
@@ -101,6 +102,7 @@ export const BORDER_ATTR_ID = {
     thickness: "thickness",
     position: "position",
     borderStyle: "borderStyle",
+    gradient: "gradient"
 }
 export const SHADOW_ATTR_ID = {
     enable: "enable",

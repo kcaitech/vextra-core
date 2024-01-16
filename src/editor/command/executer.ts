@@ -45,7 +45,8 @@ import {
     importCutoutShape,
     importExportFormat,
     importExportFileFormat,
-    importExportFormatNameingScheme
+    importExportFormatNameingScheme,
+    importGradient
 } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -404,6 +405,11 @@ export class CMDExecuter {
             } else if (opId === FILLS_ATTR_ID.enable) {
                 const enable = value && JSON.parse(value);
                 api.setFillEnable(fill, enable ?? false)
+            } else if (opId === FILLS_ATTR_ID.gradient) {
+                if (value) {
+                    const gradient = importGradient(JSON.parse(value));
+                    fill.gradient = gradient;
+                }
             }
             else {
                 console.error("not implemented ", op)

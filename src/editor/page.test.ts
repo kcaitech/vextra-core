@@ -12,7 +12,7 @@ import { Document } from "../data/document";
 import { Repository } from '../data/transact';
 import { newArtboard, newPage, newRectShape } from "./creator";
 import { v4 as uuid } from "uuid";
-import { ConstrainerProportionsAction, PageEditor, RotateAdjust } from './page';
+import { PageEditor, BatchAction2 } from './page';
 import { PageListItem, ShapeFrame } from '../data/baseclasses';
 import { GroupShape, Shape } from '../data/shape';
 import { exportArtboard, exportPage, exportRectShape } from '../data/baseexport';
@@ -32,8 +32,8 @@ function createTestDocument() {
 
     return document;
 }
-function get_actions_constrainer_proportions(shapes: Shape[], value: boolean): ConstrainerProportionsAction[] {
-    const actions: ConstrainerProportionsAction[] = [];
+function get_actions_constrainer_proportions(shapes: Shape[], value: boolean): BatchAction2[] {
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         actions.push({ target: shape, value })
@@ -41,7 +41,7 @@ function get_actions_constrainer_proportions(shapes: Shape[], value: boolean): C
     return actions;
 }
 export function get_actions_rotate(shapes: Shape[], value: number) {
-    const actions: RotateAdjust[] = [];
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         actions.push({ target: shape, value: value });
