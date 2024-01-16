@@ -57,9 +57,7 @@ export function render(h: Function,
             ab_props.x = 0, ab_props.y = 0;
             const ex_props = Object.assign({}, props);
             if (shadow.length) {
-                if (ab_props.opacity ?? 1 !== 1) {
-                    props.opacity = ab_props.opacity;
-                }
+                ex_props.opacity = ab_props.opacity;
                 delete props.style;
                 delete props.transform;
                 delete ab_props.opacity;
@@ -76,9 +74,7 @@ export function render(h: Function,
             if (shadow.length) {
                 ab_props.x = 0, ab_props.y = 0;
                 const props: any = {}
-                if (ab_props.opacity ?? 1 !== 1) {
-                    props.opacity = ab_props.opacity;
-                }
+                ex_props.opacity = ab_props.opacity;
                 delete ab_props.opacity;
                 ex_props.transform = `translate(${frame.x},${frame.y})`;
                 const inner_url = innerShadowId(shape_id, shadows);
@@ -110,10 +106,8 @@ export function render(h: Function,
         const b_len = shape.style.borders.length;
         if (b_len) {
             if (shadow.length) {
-                if (ab_props.opacity ?? 1 !== 1) {
-                    props.opacity = ab_props.opacity;
-                }
                 const ex_props = Object.assign({}, props);
+                ex_props.opacity = ab_props.opacity;
                 delete props.style;
                 delete props.transform;
                 delete ab_props.opacity;
@@ -127,9 +121,7 @@ export function render(h: Function,
         } else {
             if (shadow.length) {
                 const ex_props = Object.assign({}, props);
-                if (ab_props.opacity ?? 1 !== 1) {
-                    props.opacity = ab_props.opacity;
-                }
+                ex_props.opacity = ab_props.opacity;
                 delete props.style;
                 delete props.transform;
                 delete ab_props.opacity;
