@@ -3,8 +3,9 @@ import { ShapeView } from "./shape";
 import { render as renderBorders } from "../render/contact_borders"
 import { ContactForm, ContactShape, Page, Shape, ShapeType } from "../data/classes";
 import { DViewCtx, PropsType } from "./viewctx";
+import { PathShapeView } from "./pathshape";
 
-export class ContactLineView extends ShapeView {
+export class ContactLineView extends PathShapeView {
 
     private from: undefined | Shape;
     private to: undefined | Shape;
