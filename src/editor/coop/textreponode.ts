@@ -7,6 +7,7 @@ import { Page } from "../../data/page";
 import { ArrayOp, ArrayOpType } from "../../coop/common/arrayop";
 import { ParaAttrSetter, SpanAttrSetter } from "../../data/text";
 import { TextOpAttr, TextOpInsert } from "../../coop/client/textop";
+import { Shape } from "../../data/shape";
 
 // todo 考虑variable的text是string的情况
 function apply(text: Text, item: OpItem) {
@@ -54,7 +55,7 @@ export class TextRepoNode extends RepoNode {
         this.page = page;
     }
 
-    processRemote(ops: OpItem[]): void {
+    processRemote(ops: OpItem[], needUpdateFrame: Shape[]): void {
         if (ops.length === 0) return;
         this.ops.push(...ops);
         const text: Text = this.page.getOpTarget(ops[0].op.path); // todo text 是string的情况？

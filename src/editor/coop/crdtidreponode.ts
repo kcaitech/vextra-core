@@ -4,7 +4,8 @@ import { OpType } from "../../coop/common/op";
 import { OpItem } from "../../coop/common/repo";
 import { CrdtIdOp } from "../../coop/client/crdtidop";
 
-import { Basic } from "data/basic";
+import { Basic } from "../../data/basic";
+import { Shape } from "../../data/shape";
 
 function apply(target: Object, op: CrdtIdOp) {
     // todo 需要import ? 需要
@@ -24,7 +25,7 @@ export class CrdtIdRepoNode extends RepoNode {
         this.page = page;
     }
 
-    processRemote(ops: OpItem[]): void {
+    processRemote(ops: OpItem[], needUpdateFrame: Shape[]): void {
 
         if (ops.length === 0) return;
 

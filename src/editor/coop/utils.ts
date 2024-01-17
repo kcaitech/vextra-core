@@ -202,8 +202,8 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
     page.__collect.notify('collect'); // 收集辅助线采用的关键点位
 }
 
-export function importShape(data: string, document: Document) {
-    const source: { [key: string]: any } = JSON.parse(data);
+export function importShape(data: string | Object , document: Document) {
+    const source: { [key: string]: any } = typeof data === 'string' ? JSON.parse(data) : data;
     const ctx: IImportContext = new class implements IImportContext { document: Document = document };
     // if (source.typeId == 'shape') {
     //     return importShape(source as types.Shape, ctx)

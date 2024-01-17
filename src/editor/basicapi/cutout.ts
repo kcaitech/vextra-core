@@ -2,85 +2,86 @@ import { Page } from "../../data/page";
 import { BasicArray } from "../../data/basic";
 import { ExportFormat, ExportOptions, Shape } from "../../data/shape";
 import { ExportFileFormat, ExportFormatNameingScheme } from "../../data/style";
+import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
+import { ArrayMoveOpRecord } from "../../coop/client/crdt";
 
-export function addExportFormat(shape: Shape, format: ExportFormat, index: number) {
+export function addExportFormat(uid: string, shape: Shape, format: ExportFormat, index: number) {
     if (!shape.exportOptions) {
         const formats = new BasicArray<ExportFormat>();
-        const includedChildIds = new BasicArray<string>();
-        shape.exportOptions = new ExportOptions(formats, includedChildIds, 0, false, false, false, false);
+        shape.exportOptions = new ExportOptions(formats, 0, false, false, false, false);
     }
-    shape.exportOptions.exportFormats.splice(index, 0, format);
+    return crdtArrayInsert(uid, shape.exportOptions.exportFormats, index, format);
 }
-export function addPageExportFormat(page: Page, format: ExportFormat, index: number) {
-    if (!page.exportOptions) {
-        const formats = new BasicArray<ExportFormat>();
-        const includedChildIds = new BasicArray<string>();
-        page.exportOptions = new ExportOptions(formats, includedChildIds, 0, false, false, false, false);
-    }
-    page.exportOptions.exportFormats.splice(index, 0, format);
+export function addPageExportFormat(uid: string, page: Page, format: ExportFormat, index: number) {
+    return addExportFormat(uid, page, format, index);
 }
 
-export function deleteExportFormatAt(options: ExportOptions, index: number) {
-    return options.exportFormats.splice(index, 1)[0];
+export function deleteExportFormatAt(uid: string, options: ExportOptions, index: number) {
+    return crdtArrayRemove(uid, options.exportFormats, index);
 }
-export function deletePageExportFormatAt(options: ExportOptions, index: number) {
-    return options.exportFormats.splice(index, 1)[0];
+export function deletePageExportFormatAt(uid: string, options: ExportOptions, index: number) {
+    return deleteExportFormatAt(uid, options, index);
 }
-export function deleteExportFormats(options: ExportOptions, index: number, strength: number) {
-    return options.exportFormats.splice(index, strength);
+export function deleteExportFormats(uid: string, options: ExportOptions, index: number, strength: number) {
+    const ops: ArrayMoveOpRecord[] = [];
+    for (let i = index + strength - 1; i >= index; i--) {
+        const op = crdtArrayRemove(uid, options.exportFormats, i);
+        if (op) ops.push(op);
+    }
+    return ops;
 }
 
 export function setExportFormatScale(options: ExportOptions, index: number, scale: number) {
     const format: ExportFormat = options.exportFormats[index];
-    if (format) format.scale = scale;
+    if (format) return crdtSetAttr(format, "scale", scale); // format.scale = scale;
 }
 
 export function setExportFormatName(options: ExportOptions, index: number, name: string) {
     const format: ExportFormat = options.exportFormats[index];
-    if (format) format.name = name;
+    if (format) return crdtSetAttr(format, "name", name); // format.name = name;
 }
 export function setExportFormatPerfix(options: ExportOptions, index: number, Prefix: ExportFormatNameingScheme) {
     const format: ExportFormat = options.exportFormats[index];
-    if (format) format.namingScheme = Prefix;
+    if (format) return crdtSetAttr(format, "namingScheme", Prefix); // format.namingScheme = Prefix;
 }
 
 export function setExportFormatFileFormat(options: ExportOptions, index: number, fileFormat: ExportFileFormat) {
     const format: ExportFormat = options.exportFormats[index];
-    if (format) format.fileFormat = fileFormat;
+    if (format) return crdtSetAttr(format, "fileFormat", fileFormat); // format.fileFormat = fileFormat;
 }
 
 export function setExportTrimTransparent(options: ExportOptions, trim: boolean) {
-    options.trimTransparent = trim;
+    // options.trimTransparent = trim;
+    return crdtSetAttr(options, "trimTransparent", trim);
 }
 
 export function setExportCanvasBackground(options: ExportOptions, background: boolean) {
-    options.canvasBackground = background;
+    // options.canvasBackground = background;
+    return crdtSetAttr(options, "canvasBackground", background);
 }
 
 export function setExportPreviewUnfold(options: ExportOptions, unfold: boolean) {
-    options.unfold = unfold;
+    // options.unfold = unfold;
+    return crdtSetAttr(options, "unfold", unfold);
 }
 
 // page cutout
 export function setPageExportPreviewUnfold(options: ExportOptions, unfold: boolean) {
-    options.unfold = unfold;
+    // options.unfold = unfold;
+    return crdtSetAttr(options, "unfold", unfold);
 }
 
 export function setPageExportFormatScale(options: ExportOptions, index: number, scale: number) {
-    const format: ExportFormat = options.exportFormats[index];
-    if (format) format.scale = scale;
+    return setExportFormatScale(options, index, scale);
 }
 
 export function setPageExportFormatName(options: ExportOptions, index: number, name: string) {
-    const format: ExportFormat = options.exportFormats[index];
-    if (format) format.name = name;
+    return setExportFormatName(options, index, name);
 }
 export function setPageExportFormatPerfix(options: ExportOptions, index: number, Prefix: ExportFormatNameingScheme) {
-    const format: ExportFormat = options.exportFormats[index];
-    if (format) format.namingScheme = Prefix;
+    return setExportFormatPerfix(options, index, Prefix);
 }
 
 export function setPageExportFormatFileFormat(options: ExportOptions, index: number, fileFormat: ExportFileFormat) {
-    const format: ExportFormat = options.exportFormats[index];
-    if (format) format.fileFormat = fileFormat;
+    return setExportFormatFileFormat(options, index, fileFormat);
 }

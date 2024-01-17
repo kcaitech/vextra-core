@@ -20,7 +20,7 @@ import { CMDExecuter } from './command/executer';
 import { Cmd, CmdGroup } from '../coop/data/classes';
 import { CoopRepository } from './command/cooprepo';
 import { Page } from 'data/page';
-import { updateShapesFrame } from './command/utils';
+import { updateShapesFrame } from './coop/utils';
 
 function createTestDocument() {
     const repo = new Repository()

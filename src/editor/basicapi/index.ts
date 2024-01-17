@@ -8,3 +8,4 @@ export * from "./cutout";
 export * from "./page";
 export * from "./shape";
 export * from "./text";
+export * from "./basic";

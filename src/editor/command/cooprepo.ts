@@ -1,36 +1,27 @@
 
 import { Document } from "../../data/document";
 import { Repository } from "../../data/transact";
-import { CMDExecuter } from "./executer";
-import { CMDReverter } from "./reverter";
 import { Api } from "./recordapi";
 import { Page } from "../../data/page";
 import { uuid } from "../../basic/uuid";
-
-export enum UndoRedoType {
-    Undo,
-    Redo,
-}
+import { LocalCmd as Cmd } from "../coop/localcmd";
+import { ClientRepo } from "../coop/clientrepo";
 
 export class CoopRepository {
     private __repo: Repository;
-    private __cmdrevert: CMDReverter;
-    private __cmdexec: CMDExecuter;
-    private __commitListener: ((cmd: Cmd, isRemote: boolean) => void)[] = [];
-    private __rollbackListener: ((isRemote: boolean) => void)[] = [];
-    private __undoRedoListener: ((type: UndoRedoType, newCmd: Cmd, oldCmdId: string) => Cmd | undefined)[] = [];
-    private __allcmds: Cmd[] = [];
-    private __localcmds: (Cmd & { index: number })[] = [];
+    private __clientrepo: ClientRepo;
+    private __localcmds: Cmd[] = [];
     private __index: number = 0;
     private __api: Api;
 
-    constructor(document: Document, repo: Repository) {
+    constructor(uid: string, document: Document, repo: Repository) {
         this.__repo = repo;
         repo.transactCtx.settrap = true; // todo
-        this.__cmdrevert = new CMDReverter(document);
-        this.__cmdexec = new CMDExecuter(document, repo);
-        this.__api = new Api(repo);
-
+        this.__api = new Api(uid, repo);
+        this.__clientrepo = new ClientRepo((op, path) => {
+            // todo
+            throw new Error("not implemented");
+        })
         document.pagesMgr.setUpdater((data: Page) => {
             this.updateLazyData(data.id);
         })

@@ -5,6 +5,7 @@ import { OpItem } from "coop/common/repo";
 
 import { CrdtItem, crdtArrayMove } from "../../coop/client/crdt";
 import { CrdtArrayMoveOp } from "../../coop/client/crdtarrayop";
+import { Shape } from "../../data/shape";
 
 function apply(target: Array<CrdtItem>, op: CrdtArrayMoveOp) {
     return crdtArrayMove(target, op);
@@ -19,7 +20,7 @@ export class CrdtArrayReopNode extends RepoNode {
         this.page = page;
     }
 
-    processRemote(ops: OpItem[]): void {
+    processRemote(ops: OpItem[], needUpdateFrame: Shape[]): void {
         if (ops.length === 0) return;
         // 直接apply
         this.ops.push(...ops);
