@@ -46,6 +46,7 @@
         }
     },
     "required": [
+        "crdtidx",
         "id",
         "x",
         "y",

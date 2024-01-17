@@ -162,13 +162,15 @@ export class Style extends Basic {
  */
 export class Stop extends Basic {
     typeId = 'stop'
-    crdtidx?: CrdtIndex
+    crdtidx: CrdtIndex
     position: number
     color?: Color
     constructor(
+        crdtidx: CrdtIndex,
         position: number
     ) {
         super()
+        this.crdtidx = crdtidx
         this.position = position
     }
 }
@@ -321,14 +323,16 @@ export class Point2D extends Basic {
  */
 export class PathSegment extends Basic {
     typeId = 'path-segment'
-    crdtidx?: CrdtIndex
+    crdtidx: CrdtIndex
     points: BasicArray<CurvePoint >
     isClosed: boolean
     constructor(
+        crdtidx: CrdtIndex,
         points: BasicArray<CurvePoint >,
         isClosed: boolean
     ) {
         super()
+        this.crdtidx = crdtidx
         this.points = points
         this.isClosed = isClosed
     }
@@ -486,7 +490,7 @@ export class ExportOptions extends Basic {
  */
 export class ExportFormat extends Basic {
     typeId = 'export-format'
-    crdtidx?: CrdtIndex
+    crdtidx: CrdtIndex
     id: string
     absoluteSize: number
     fileFormat: ExportFileFormat
@@ -495,6 +499,7 @@ export class ExportFormat extends Basic {
     scale: number
     visibleScaleType: ExportVisibleScaleType
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         absoluteSize: number,
         fileFormat: ExportFileFormat,
@@ -504,6 +509,7 @@ export class ExportFormat extends Basic {
         visibleScaleType: ExportVisibleScaleType
     ) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.absoluteSize = absoluteSize
         this.fileFormat = fileFormat
@@ -575,7 +581,7 @@ export class DocumentMeta extends Basic {
  */
 export class CurvePoint extends Basic {
     typeId = 'curve-point'
-    crdtidx?: CrdtIndex
+    crdtidx: CrdtIndex
     id: string
     radius?: number
     fromX?: number
@@ -588,12 +594,14 @@ export class CurvePoint extends Basic {
     x: number
     y: number
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         x: number,
         y: number,
         mode: CurveMode
     ) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.x = x
         this.y = y
@@ -691,16 +699,18 @@ export class ContextSettings extends Basic {
  */
 export class ContactRole extends Basic {
     typeId = 'contact-role'
-    crdtidx?: CrdtIndex
+    crdtidx: CrdtIndex
     id: string
     roleType: ContactRoleType
     shapeId: string
     constructor(
+        crdtidx: CrdtIndex,
         id: string,
         roleType: ContactRoleType,
         shapeId: string
     ) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.roleType = roleType
         this.shapeId = shapeId
@@ -1368,6 +1378,7 @@ export class SymbolUnionShape extends SymbolShape {
  */
 export class Page extends GroupShape {
     typeId = 'page'
+    backgroundColor?: Color
     constructor(
         crdtidx: CrdtIndex,
         id: string,

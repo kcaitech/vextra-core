@@ -108,7 +108,7 @@ export class PageView extends GroupShapeView implements RootView {
         let height = Math.ceil(Math.max(100, this.m_data.frame.height));
         if (width % 2) width++;
         if (height % 2) height++;
-
+// todo backgroundColor
         const prop: any = {
             version: "1.1",
             xmlns: "http://www.w3.org/2000/svg",

@@ -26,12 +26,13 @@ export class Basic {
     typeId = '';
 
     protected __parent?: Basic
+    __propKey?: string; // this在parent中的属性名
     get parent() {
         return this.__parent;
     }
 
     notify(...args: any[]): void {
-        this.__parent && this.__parent.notify(this.typeId, ...args);
+        this.__parent && this.__parent.notify(this.__propKey, ...args);
     }
 
     onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
@@ -43,90 +44,56 @@ export class Basic {
     }
 
     getCrdtPath(): string[] {
-        if (this.__parent) return this.__parent.getCrdtPath().concat(this.typeId);
-        else return [this.typeId];
+        if (!this.__parent) return [];
+        if (Array.isArray(this.__parent)) this.__parent.getCrdtPath();
+        return this.__parent.getCrdtPath().concat(this.__propKey!);
     }
 }
 
 export class BasicArray<T> extends Array<T> {
     protected __uuid = __uuid
     protected typeId = 'array';
-    protected __notifyId = this.typeId;
-    __pathNode = this.typeId;
 
     protected __parent?: Basic // 由DataGuard设置
+    __propKey?: string; // this在parent中的属性名
     get parent() {
         return this.__parent;
     }
     notify(...args: any[]): void {
-        this.__parent && this.__parent.notify(this.__notifyId, ...args);
+        this.__parent && this.__parent.notify(this.__propKey, ...args);
     }
-    setNotifyId(notifyId: string) {
-        this.__notifyId = notifyId;
-    }
+
     onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
         this.__parent && this.__parent.onRollback(from);
     }
-    setCrdtPath(pathNode: string) {
-        this.__pathNode = pathNode;
-    }
-    getCrdtPath(): string[] { // todo
-        if (this.__parent) return this.__parent.getCrdtPath().concat(this.__pathNode);
-        else return [this.__pathNode];
+    getCrdtPath(): string[] {
+        if (this.__parent) return this.__parent.getCrdtPath().concat(this.__propKey!);
+        else return [];
     }
 }
 
 export class BasicMap<T0, T1> extends Map<T0, T1> {
     protected __uuid = __uuid
     protected typeId = 'map';
-    protected __notifyId = this.typeId;
-    __pathNode = this.typeId;
+
 
     protected __parent?: Basic
+    __propKey?: string; // this在parent中的属性名
     get parent() {
         return this.__parent;
     }
-    setNotifyId(notifyId: string) {
-        this.__notifyId = notifyId;
-    }
+
     notify(...args: any[]): void {
-        this.__parent && this.__parent.notify(this.__notifyId, ...args);
+        this.__parent && this.__parent.notify(this.__propKey, ...args);
     }
     onRollback(from: string) { // 非正常事务中，需要清空一些缓存数据
         this.__parent && this.__parent.onRollback(from);
     }
-    setCrdtPath(pathNode: string) {
-        this.__pathNode = pathNode;
-    }
     getCrdtPath(): string[] {
-        if (this.__parent) return this.__parent.getCrdtPath().concat(this.__pathNode);
-        else return [this.__pathNode];
+        if (this.__parent) return this.__parent.getCrdtPath().concat(this.__propKey!);
+        else return [];
     }
 }
-
-// @deprecated 这个用法导致语法检查失效
-// type Constructor<T = Record<string, any>> = new (...args: any[]) => T;
-// export const Watchable = <T extends Constructor>(SuperClass: T) =>
-//     class extends SuperClass implements Notifiable {
-//         public __uuid = __uuid
-//         public __watcher: Set<((...args: any[]) => void)> = new Set();
-//         public watch(watcher: ((...args: any[]) => void)): (() => void) {
-//             this.__watcher.add(watcher);
-//             return () => {
-//                 this.__watcher.delete(watcher);
-//             };
-//         }
-//         public unwatch(watcher: ((...args: any[]) => void)): boolean {
-//             return this.__watcher.delete(watcher);
-//         }
-//         public notify(...args: any[]) {
-//             if (this.__watcher.size === 0) return;
-//             // 在set的foreach内部修改set会导致无限循环
-//             Array.from(this.__watcher).forEach(w => {
-//                 w(...args);
-//             });
-//         }
-//     }
 
 export class WatchableObject extends Basic implements Notifiable {
     public __watcher: Set<((...args: any[]) => void)> = new Set();

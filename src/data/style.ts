@@ -186,8 +186,6 @@ export class Style extends Basic implements classes.Style {
         this.borders = borders
         this.fills = fills
         this.shadows = shadows
-        borders.setNotifyId("borders");
-        fills.setNotifyId("fills");
     }
 
     private findVar(varId: string, ret: Variable[]): boolean {

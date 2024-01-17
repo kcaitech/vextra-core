@@ -234,7 +234,6 @@ export class TableShape extends Shape implements classes.TableShape {
         this.rowHeights = rowHeights
         this.colWidths = colWidths
         this.childs = childs;
-        this.childs.setNotifyId('childs');
         this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur.value, 0);
         this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur.value, 0);
     }

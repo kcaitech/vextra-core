@@ -1,7 +1,11 @@
 {
     "description": "page",
     "type": "object",
-    "properties": {},
+    "properties": {
+        "backgroundColor": {
+            "$ref": "./color.json"
+        }
+    },
     "required": [],
     "allOf": [
         {

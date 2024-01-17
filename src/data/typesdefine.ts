@@ -112,7 +112,7 @@ export enum StrikethroughType {
 }
 /* stop */
 export type Stop = {
-    crdtidx?: CrdtIndex
+    crdtidx: CrdtIndex
     position: number
     color?: Color
 }
@@ -223,7 +223,7 @@ export type Point2D = {
 }
 /* path segment */
 export type PathSegment = {
-    crdtidx?: CrdtIndex
+    crdtidx: CrdtIndex
     points: CurvePoint[]
     isClosed: boolean
 }
@@ -336,7 +336,7 @@ export type ExportOptions = {
 }
 /* export format */
 export type ExportFormat = {
-    crdtidx?: CrdtIndex
+    crdtidx: CrdtIndex
     id: string
     absoluteSize: number
     fileFormat: ExportFileFormat
@@ -380,7 +380,7 @@ export type DocumentMeta = {
 }
 /* curve point */
 export type CurvePoint = {
-    crdtidx?: CrdtIndex
+    crdtidx: CrdtIndex
     id: string
     radius?: number
     fromX?: number
@@ -437,7 +437,7 @@ export enum ContactType {
 }
 /* contactstyle */
 export type ContactRole = {
-    crdtidx?: CrdtIndex
+    crdtidx: CrdtIndex
     id: string
     roleType: ContactRoleType
     shapeId: string
@@ -666,6 +666,7 @@ export type SymbolUnionShape = SymbolShape & {
 }
 /* page */
 export type Page = GroupShape & {
+    backgroundColor?: Color
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {

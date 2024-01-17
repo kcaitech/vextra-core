@@ -193,9 +193,9 @@ export function importStrikethroughType(source: types.StrikethroughType, ctx?: I
 /* stop */
 export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
     const ret: impl.Stop = new impl.Stop (
+        importCrdtIndex(source.crdtidx, ctx),
         source.position
     )
-    if (source.crdtidx !== undefined) ret.crdtidx = importCrdtIndex(source.crdtidx, ctx)
     if (source.color !== undefined) ret.color = importColor(source.color, ctx)
     return ret
 }
@@ -304,6 +304,7 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
 /* path segment */
 export function importPathSegment(source: types.PathSegment, ctx?: IImportContext): impl.PathSegment {
     const ret: impl.PathSegment = new impl.PathSegment (
+        importCrdtIndex(source.crdtidx, ctx),
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
@@ -314,7 +315,6 @@ export function importPathSegment(source: types.PathSegment, ctx?: IImportContex
         })(),
         source.isClosed
     )
-    if (source.crdtidx !== undefined) ret.crdtidx = importCrdtIndex(source.crdtidx, ctx)
     return ret
 }
 /* para */
@@ -445,6 +445,7 @@ export function importExportOptions(source: types.ExportOptions, ctx?: IImportCo
 /* export format */
 export function importExportFormat(source: types.ExportFormat, ctx?: IImportContext): impl.ExportFormat {
     const ret: impl.ExportFormat = new impl.ExportFormat (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.absoluteSize,
         importExportFileFormat(source.fileFormat, ctx),
@@ -453,7 +454,6 @@ export function importExportFormat(source: types.ExportFormat, ctx?: IImportCont
         source.scale,
         importExportVisibleScaleType(source.visibleScaleType, ctx)
     )
-    if (source.crdtidx !== undefined) ret.crdtidx = importCrdtIndex(source.crdtidx, ctx)
     return ret
 }
 /* export format nameing scheme */
@@ -540,12 +540,12 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
         _source.mode = _source.curveMode;
     }
     const ret: impl.CurvePoint = new impl.CurvePoint (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         source.x,
         source.y,
         importCurveMode(source.mode, ctx)
     )
-    if (source.crdtidx !== undefined) ret.crdtidx = importCrdtIndex(source.crdtidx, ctx)
     if (source.radius !== undefined) ret.radius = source.radius
     if (source.fromX !== undefined) ret.fromX = source.fromX
     if (source.fromY !== undefined) ret.fromY = source.fromY
@@ -608,11 +608,11 @@ export function importContactType(source: types.ContactType, ctx?: IImportContex
 /* contactstyle */
 export function importContactRole(source: types.ContactRole, ctx?: IImportContext): impl.ContactRole {
     const ret: impl.ContactRole = new impl.ContactRole (
+        importCrdtIndex(source.crdtidx, ctx),
         source.id,
         importContactRoleType(source.roleType, ctx),
         source.shapeId
     )
-    if (source.crdtidx !== undefined) ret.crdtidx = importCrdtIndex(source.crdtidx, ctx)
     return ret
 }
 /* contact role type */
@@ -1841,6 +1841,7 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
         });
         return ret
     })()
+    if (source.backgroundColor !== undefined) ret.backgroundColor = importColor(source.backgroundColor, ctx)
     return ret
 }
 /* flatten shape */

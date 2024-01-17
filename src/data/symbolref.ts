@@ -55,19 +55,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         )
         this.refId = refId
         this.variables = variables;
-        this.variables.setNotifyId("variable");
-        // this.origin_watcher = this.origin_watcher.bind(this);
-        // this.updater = this.updater.bind(this);
-        // this.updater();
     }
-
-    // private __childsIsDirty: boolean = false;
-    // origin_watcher(...args: any[]) {
-    //     if (args.indexOf("variable") >= 0) return;
-    //     if (args.indexOf('childs') >= 0) this.__childsIsDirty = true;
-    //     super.notify(...args);
-    //     this.relayout();
-    // }
 
     getOpTarget(path: string[]): any {
         const id0 = targetId[0];

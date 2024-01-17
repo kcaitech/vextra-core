@@ -104,7 +104,7 @@ class ProxyHandler {
                 const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
                 this.__context.transact.push(r);
 
-                checkSetParent(value, target, this);
+                checkSetParent(value, target, this, propertyKey);
                 value = deepProxy(value, this);
 
                 const ret = Reflect.set(target, propertyKey, value, receiver);
@@ -122,7 +122,7 @@ class ProxyHandler {
             }
         }
 
-        checkSetParent(value, target, this);
+        checkSetParent(value, target, this, propertyKey);
         value = deepProxy(value, this);
 
         const ret = Reflect.set(target, propertyKey, value, receiver);
@@ -201,7 +201,7 @@ class ProxyHandler {
             set(key: any, value: any) {
                 const set_inner = Map.prototype.set.bind(target);
 
-                checkSetParent(value, target, h);
+                checkSetParent(value, target, h, key);
                 value = deepProxy(value, h);
                 set_inner(key, value);
                 const map_rec: MapRec = { isContentExist: true, content: value, key };
@@ -225,10 +225,11 @@ class ProxyHandler {
 
 export const isProxy = (obj: any): boolean => obj && obj["__isProxy"];
 
-function checkSetParent(value: any, parent: any, ph: ProxyHandler) {
+function checkSetParent(value: any, parent: any, ph: ProxyHandler, propertyKey: PropertyKey) {
     if (typeof value === 'object' && isDataBasicType(parent)) {
         // parent 也需要proxy上, 否则数据变动时不会触发通知
         value.__parent = isProxy(parent) ? parent : new Proxy(parent, ph);
+        value.__propKey = propertyKey; // 这有个问题是，数组
     }
 }
 
@@ -260,11 +261,11 @@ class Rec {
                     // 不影响length
                     Reflect.deleteProperty(this.__target, this.__propertyKey);
                 } else {
-                    checkSetParent(this.__value, this.__target, ph);
+                    checkSetParent(this.__value, this.__target, ph, this.__propertyKey);
                     Reflect.set(this.__target, this.__propertyKey, this.__value);
                 }
             } else {
-                checkSetParent(this.__value, this.__target, ph);
+                checkSetParent(this.__value, this.__target, ph, this.__propertyKey);
                 Reflect.set(this.__target, this.__propertyKey, this.__value);
             }
             this.__value = v;
@@ -493,7 +494,10 @@ function deepProxy(data: any, h: ProxyHandler): any {
                     // donothing
                 }
                 else if (typeof (v) === 'object') { // 还有array set map
-                    if (parent) v.__parent = parent;
+                    if (parent) {
+                        v.__parent = parent;
+                        v.__propKey = k;
+                    }
                     if (!isProxy(v)) {
                         m.set(k, new Proxy(v, h));
                         stack.push(v);
@@ -508,7 +512,10 @@ function deepProxy(data: any, h: ProxyHandler): any {
                     // donothing
                 }
                 else if (typeof (v) === 'object') { // 还有array set map
-                    if (parent) v.__parent = parent;
+                    if (parent) {
+                        v.__parent = parent;
+                        v.__propKey = k;
+                    }
                     if (!isProxy(v)) {
                         const p = new Proxy(v, h);
                         Reflect.set(d, k, p);

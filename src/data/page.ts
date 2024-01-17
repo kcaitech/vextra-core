@@ -3,8 +3,9 @@ import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, WatchableObject } from "./basic";
 import { Artboard } from "./artboard";
-import { SymbolRefShape, TableCell } from "./classes";
+import { Color } from "./color";
 import { CrdtIndex } from "./crdt";
+import { TableCell } from "./table";
 class PageCollectNotify extends WatchableObject {
     constructor() {
         super();
@@ -12,6 +13,7 @@ class PageCollectNotify extends WatchableObject {
 }
 export class Page extends GroupShape implements classes.Page {
     typeId = 'page';
+    backgroundColor?: Color;
     artboards: Map<string, Artboard> = new Map();
     shapes: Map<string, Shape> = new Map();
     __allshapes: Map<string, WeakRef<Shape>> = new Map(); // 包含被删除的

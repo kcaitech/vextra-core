@@ -197,7 +197,7 @@ export function exportStrikethroughType(source: types.StrikethroughType, ctx?: I
 /* stop */
 export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop {
     const ret = {
-        crdtidx: source.crdtidx && exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
         position: source.position,
         color: source.color && exportColor(source.color, ctx),
     }
@@ -308,7 +308,7 @@ export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): type
 /* path segment */
 export function exportPathSegment(source: types.PathSegment, ctx?: IExportContext): types.PathSegment {
     const ret = {
-        crdtidx: source.crdtidx && exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -451,7 +451,7 @@ export function exportExportOptions(source: types.ExportOptions, ctx?: IExportCo
 /* export format */
 export function exportExportFormat(source: types.ExportFormat, ctx?: IExportContext): types.ExportFormat {
     const ret = {
-        crdtidx: source.crdtidx && exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
         id: source.id,
         absoluteSize: source.absoluteSize,
         fileFormat: exportExportFileFormat(source.fileFormat, ctx),
@@ -528,7 +528,7 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
 /* curve point */
 export function exportCurvePoint(source: types.CurvePoint, ctx?: IExportContext): types.CurvePoint {
     const ret = {
-        crdtidx: source.crdtidx && exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
         id: source.id,
         radius: source.radius,
         fromX: source.fromX,
@@ -596,7 +596,7 @@ export function exportContactType(source: types.ContactType, ctx?: IExportContex
 /* contactstyle */
 export function exportContactRole(source: types.ContactRole, ctx?: IExportContext): types.ContactRole {
     const ret = {
-        crdtidx: source.crdtidx && exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
         id: source.id,
         roleType: exportContactRoleType(source.roleType, ctx),
         shapeId: source.shapeId,
@@ -1783,6 +1783,7 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                 });
                 return ret;
             })(),
+        backgroundColor: source.backgroundColor && exportColor(source.backgroundColor, ctx),
     }
     return ret
 }

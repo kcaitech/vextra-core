@@ -463,7 +463,6 @@ export class GroupShape extends Shape implements classes.GroupShape {
         )
         this.childs = childs;
         this.wideframe = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
-        childs.setNotifyId("childs");
     }
 
     get naviChilds(): Shape[] | undefined {
@@ -592,7 +591,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         )
         this.crdtId = crdtId
         this.variables = variables;
-        variables.setNotifyId("variable");
     }
 
     getOpTarget(path: string[]): any {
@@ -843,7 +841,6 @@ export class PathShape extends Shape implements classes.PathShape {
         )
         this.points = points;
         this.isClosed = isClosed;
-        points.setNotifyId("points");
     }
     setClosedState(state: boolean) {
         this.isClosed = state;
