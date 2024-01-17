@@ -1,21 +1,31 @@
-import { CurveMode, CurvePoint, Point2D } from "../../data/baseclasses";
+import { ArrayMoveOpRecord } from "../../coop/client/crdt";
+import { uuid } from "../../basic/uuid";
+import { CurveMode, CurvePoint } from "../../data/baseclasses";
 import { PathShape } from "../../data/shape";
-import { v4 } from "uuid";
+import { crdtArrayInsert, crdtArrayRemove } from "./basic";
 
-export function addPointAt(shape: PathShape, point: CurvePoint, index: number) {
-  shape.points.splice(index, 0, point);
+export function addPointAt(uid: string, shape: PathShape, point: CurvePoint, index: number) {
+    return crdtArrayInsert(uid, shape.points, index, point);
 }
-export function repalcePoints(shape: PathShape, points: CurvePoint[]) {
-  shape.points.splice(0, shape.points.length);
-  for (let i = 0; i < points.length; i++) {
-    const _p = points[i];
-    const p = new CurvePoint(v4(), _p.x, _p.y, CurveMode.Straight);
-    shape.points.push(p);
-  }
+export function repalcePoints(uid: string, shape: PathShape, points: CurvePoint[]) {
+    const ops: ArrayMoveOpRecord[] = [];
+    ops.push(...deletePoints(uid, shape, 0, shape.points.length));
+    for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        const copy = new CurvePoint(p.crdtidx, uuid(), p.x, p.y, CurveMode.Straight);
+        const op = crdtArrayInsert(uid, shape.points, i, copy);
+        if (op) ops.push(op);
+    }
+    return ops;
 }
-export function deletePoints(shape: PathShape, index: number, strength: number) {
-  return shape.points.splice(index, strength);
+export function deletePoints(uid: string, shape: PathShape, index: number, strength: number) {
+    const ops: ArrayMoveOpRecord[] = [];
+    for (let i = index + strength - 1; i >= index; i--) {
+        const op = crdtArrayRemove(uid, shape.points, i);
+        if (op) ops.push(op);
+    }
+    return ops;
 }
-export function deletePointAt(shape: PathShape, index: number) {
-  return shape.points.splice(index, 1);
+export function deletePointAt(uid: string, shape: PathShape, index: number) {
+    return crdtArrayRemove(uid, shape.points, index);
 }
