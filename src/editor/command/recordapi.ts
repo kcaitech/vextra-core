@@ -35,7 +35,6 @@ import { Border, BorderPosition, BorderStyle, ContextSettings, Fill, MarkerType,
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
-import { CmdGroup } from "../../coop/data/cmdgroup";
 import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -43,6 +42,9 @@ import { ContactForm, ContactRole, CurvePoint, ExportFormat, ExportOptions } fro
 import { ContactShape } from "../../data/contact"
 import { BasicMap, BasicArray } from "../../data/basic";
 import { Color } from "../../data/classes";
+import { Op } from "../../coop/common/op";
+import { LocalCmd as Cmd } from "../coop/localcmd";
+
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
 
@@ -53,32 +55,13 @@ function varParent(_var: Variable) {
 }
 
 function checkShapeAtPage(page: Page, obj: Shape | Variable) {
-    // if (obj instanceof VirtualShape) {
-    //     const id = obj.getRootId();
-    //     if (!page.getShape(id)) throw new Error("shape not inside page")
-    //     return;
-    // }
-    // if (obj instanceof TableCell) {
-    //     obj = obj.parent as Shape;
-    // }
     obj = obj instanceof Shape ? obj : varParent(obj) as Shape;
     const shapeid = obj.shapeId;
     if (!page.getShape(shapeid[0] as string)) throw new Error("shape not inside page")
 }
 
-function genShapeId(shape: Shape | Variable): Array<string | TableIndex> {
-    const _shape = shape instanceof Shape ? shape : varParent(shape) as Shape;
-    const shapeId = _shape.shapeId.map((v) => {
-        if (typeof v === 'string') return v;
-        return new TableIndex(v.rowIdx, v.colIdx);
-    });
-    if (shape instanceof Variable) shapeId.push("varid:" + shape.id); // varid
-    return shapeId;
-}
-
-
 export class Api {
-    private cmds: Cmd[] = [];
+    private cmds: Op[] = [];
     private needUpdateFrame: { shape: Shape, page: Page }[] = [];
     private repo: Repository;
     constructor(repo: Repository) {
@@ -96,7 +79,7 @@ export class Api {
             const update = this.needUpdateFrame.slice(0);
             const page = update[0].page;
             const shapes = update.map((v) => v.shape);
-            updateShapesFrame(page, shapes, this)
+            updateShapesFrame(page, shapes, basicapi) // 不需要生成op
         }
         this.needUpdateFrame.length = 0;
         if (this.cmds.length <= 1) return this.cmds[0];
@@ -117,6 +100,7 @@ export class Api {
     }
 
     private __trap(f: () => void) {
+        // todo
         const save = this.repo.transactCtx.settrap;
         this.repo.transactCtx.settrap = false;
         try {

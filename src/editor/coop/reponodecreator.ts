@@ -1,5 +1,5 @@
 import { Op, OpType } from "../../coop/common/op";
-import { RepoNode } from "../../coop/client/reponode";
+import { RepoNode } from "./reponode";
 
 export function reponodecreator(op: Op, path: string[]): RepoNode {
     // todo

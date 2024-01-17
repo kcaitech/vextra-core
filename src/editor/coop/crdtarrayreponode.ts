@@ -1,10 +1,10 @@
 import { Page } from "../../data/page";
-import { RepoNode } from "../../coop/client/reponode";
+import { RepoNode } from "./reponode";
 import { OpType } from "../../coop/common/op";
 import { OpItem } from "coop/common/repo";
 
 import { CrdtItem, crdtArrayMove } from "../../coop/client/crdt";
-import { CrdtArrayMoveOp } from "./crdtarrayop";
+import { CrdtArrayMoveOp } from "../../coop/client/crdtarrayop";
 
 function apply(target: Array<CrdtItem>, op: CrdtArrayMoveOp) {
     return crdtArrayMove(target, op);

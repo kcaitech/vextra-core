@@ -1,5 +1,5 @@
 import { OpItem } from "coop/common/repo";
-import { RepoNode } from "../../coop/client/reponode";
+import { RepoNode } from "./reponode";
 import { OpType } from "../../coop/common/op";
 
 import { Page } from "../../data/page";

@@ -1,8 +1,8 @@
 import { Page } from "../../data/page";
-import { RepoNode } from "../../coop/client/reponode";
+import { RepoNode } from "./reponode";
 import { OpType } from "../../coop/common/op";
 import { OpItem } from "../../coop/common/repo";
-import { CrdtIdOp } from "./crdtidop";
+import { CrdtIdOp } from "../../coop/client/crdtidop";
 
 import { Basic } from "data/basic";
 

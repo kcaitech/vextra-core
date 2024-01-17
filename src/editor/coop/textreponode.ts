@@ -1,12 +1,12 @@
 import { OpItem } from "coop/common/repo";
-import { RepoNode } from "../../coop/client/reponode";
+import { RepoNode } from "./reponode";
 import { OpType } from "../../coop/common/op";
 import { Text } from "../../data/text";
 import { transform } from "../../coop/common/arrayoptransform";
 import { Page } from "../../data/page";
 import { ArrayOp, ArrayOpType } from "../../coop/common/arrayop";
 import { ParaAttrSetter, SpanAttrSetter } from "../../data/text";
-import { TextOpAttr, TextOpInsert } from "./textop";
+import { TextOpAttr, TextOpInsert } from "../../coop/client/textop";
 
 // todo 考虑variable的text是string的情况
 function apply(text: Text, item: OpItem) {

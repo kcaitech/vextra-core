@@ -1,7 +1,7 @@
 import { Basic, BasicArray } from "../../data/basic";
 import { ArrayMoveOpRecord, CrdtItem, IdOpRecord, TreeMoveOpRecord, crdtGetArrIndex } from "../../coop/client/crdt";
 import { GroupShape, Shape, Variable } from "../../data/shape";
-import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../coop/textop";
+import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
 import { OpType } from "../../coop/common/op";
 import { Text } from "../../data/text";
 

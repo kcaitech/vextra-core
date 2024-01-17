@@ -1,28 +1,4 @@
-import {
-    PageCmdDelete,
-    PageCmdInsert,
-    PageCmdModify,
-    ShapeCmdRemove,
-    ShapeCmdInsert,
-    ShapeCmdMove,
-    TextCmdModify,
-    TextCmdRemove,
-    TextCmdInsert,
-    ShapeArrayAttrInsert,
-    ShapeArrayAttrRemove,
-    ShapeArrayAttrModify,
-    ShapeArrayAttrMove,
-    PageCmdMove,
-    ShapeOpMove,
-    IdOpSet,
-    ShapeOpRemove,
-    TableCmdInsert,
-    TableCmdRemove,
-    TableOpInsert,
-    TableCmdModify,
-    TableOpRemove,
-    TableOpModify
-} from "../../coop/data/classes";
+
 import { Document } from "../../data/document";
 import {
     IImportContext,
