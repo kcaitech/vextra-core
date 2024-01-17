@@ -4,7 +4,7 @@ import { OpType } from "../../coop/common/op";
 import { OpItem } from "coop/common/repo";
 
 import { CrdtItem, crdtArrayMove } from "../../coop/client/crdt";
-import { CrdtArrayMoveOp } from "../../coop/client/crdtarrayop";
+import { CrdtArrayMoveOp } from "./crdtarrayop";
 
 function apply(target: Array<CrdtItem>, op: CrdtArrayMoveOp) {
     return crdtArrayMove(target, op);

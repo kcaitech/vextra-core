@@ -6,7 +6,7 @@ import { transform } from "../../coop/common/arrayoptransform";
 import { Page } from "../../data/page";
 import { ArrayOp, ArrayOpType } from "../../coop/common/arrayop";
 import { ParaAttrSetter, SpanAttrSetter } from "../../data/text";
-import { TextOpAttr, TextOpInsert } from "../../coop/client/textop";
+import { TextOpAttr, TextOpInsert } from "./textop";
 
 // todo 考虑variable的text是string的情况
 function apply(text: Text, item: OpItem) {
@@ -19,7 +19,13 @@ function apply(text: Text, item: OpItem) {
         case ArrayOpType.None: break;
         case ArrayOpType.Insert:
             if (!(op instanceof TextOpInsert)) throw new Error("not text insert op");
-            text.insertFormatText(op.text, op.start);
+            if (op.text.type === "simple") {
+                text.insertText(op.text.text, op.start, { attr: op.text.attr });
+            } else if (op.text.type === "complex") {
+                text.insertFormatText(op.text.text, op.start);
+            } else {
+                throw new Error("not valid text insert op");
+            }
             break;
         case ArrayOpType.Remove:
             text.deleteText(op.start, op.length);

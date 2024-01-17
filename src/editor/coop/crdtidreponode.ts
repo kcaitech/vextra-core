@@ -2,7 +2,7 @@ import { Page } from "../../data/page";
 import { RepoNode } from "../../coop/client/reponode";
 import { OpType } from "../../coop/common/op";
 import { OpItem } from "../../coop/common/repo";
-import { CrdtIdOp } from "../../coop/client/crdtidop";
+import { CrdtIdOp } from "./crdtidop";
 
 import { Basic } from "data/basic";
 

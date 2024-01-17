@@ -1,4 +1,4 @@
-import { Cmd, CmdGroup } from "../../coop/data/classes";
+
 import { Document } from "../../data/document";
 import { Repository } from "../../data/transact";
 import { CMDExecuter } from "./executer";
@@ -6,7 +6,6 @@ import { CMDReverter } from "./reverter";
 import { Api } from "./recordapi";
 import { Page } from "../../data/page";
 import { uuid } from "../../basic/uuid";
-import { setOpsOrderForCmd, cmdClone } from "../../coop/common";
 
 export enum UndoRedoType {
     Undo,
