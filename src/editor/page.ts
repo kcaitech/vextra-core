@@ -469,7 +469,7 @@ export class PageEditor {
             const frame = importShapeFrame((exportShapeFrame(shape0.frame)));
             if (shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius) {
                 const style = importStyle(exportStyle(shape0.style));
-                const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
+                const symbolShape = newSymbolShape(shape0.name, frame, style);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 sym = api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
                 const children = shape0.childs;
@@ -1138,11 +1138,11 @@ export class PageEditor {
                     api.shapeModifyFixedRadius(this.__page, shape as GroupShape, val);
                     continue;
                 }
-                
+
                 if (!(shape instanceof PathShape)) {
                     continue;
                 }
-                
+
                 const is_rect = [ShapeType.Rectangle, ShapeType.Image]
                     .includes(shape.type) && shape.isClosed;
 
