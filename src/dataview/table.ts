@@ -35,7 +35,7 @@ export class TableView extends ShapeView {
         if (args.includes('text')) {
             return;
         }
-
+        this.updateChildren();
         this.m_ctx.setDirty(this);
     }
 
