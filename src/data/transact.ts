@@ -13,6 +13,7 @@ export class TContext {
     public cache: Map<number, Set<PropertyKey>> = new Map();
     private __notifys: Map<number, Notifiable> = new Map();
     public optiNotify: boolean = true;
+    settrap: boolean = true;
     addNotify(target: Notifiable | undefined) {
         if (!target) {
             //
@@ -64,6 +65,9 @@ class ProxyHandler {
         }
         if (this.__context.transact === undefined) {
             throw new Error(`NOT inside transact: set '${propertyKey.toString()}'`);
+        }
+        if (this.__context.settrap) {
+            throw new Error(`NOT inside Api: set '${propertyKey.toString()}'`);
         }
 
         let needNotify = false;
@@ -132,7 +136,10 @@ class ProxyHandler {
             return Reflect.deleteProperty(target, propertyKey);
         }
         if (this.__context.transact === undefined) {
-            throw new Error("NOT inside transact!");
+            throw new Error(`NOT inside transact: delete '${propertyKey.toString()}'`);
+        }
+        if (this.__context.settrap) {
+            throw new Error(`NOT inside Api: delete '${propertyKey.toString()}'`);
         }
         if (!swapCached(this.__context, target, propertyKey)) {
             const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
@@ -156,11 +163,12 @@ class ProxyHandler {
             return Reflect.get(target, propertyKey, receiver).bind(target);
         } else if (propertyKey === 'set' || propertyKey === 'delete') { // 需要进入事务的方法
             if (this.__context.transact === undefined) { // 二级处理中有对底层数据的修改，所以应该在事务内进行
-                throw new Error("NOT inside transact!");
+                throw new Error(`NOT inside transact: set '${propertyKey.toString()}'`);
             }
-            else {
-                return Reflect.get(this.sub(this.__context, target, this), propertyKey);
+            if (this.__context.settrap) {
+                throw new Error(`NOT inside Api: set '${propertyKey.toString()}'`);
             }
+            return Reflect.get(this.sub(this.__context, target, this), propertyKey);
         } else if (propertyKey === 'size') { // map对象上唯一的一个可访问属性
             return target.size;
         } else if (propertyKey === 'clear') { // todo clear操作为批量删除，也需要进入事务
