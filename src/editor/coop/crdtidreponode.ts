@@ -2,15 +2,15 @@ import { Page } from "../../data/page";
 import { RepoNode } from "./reponode";
 import { OpType } from "../../coop/common/op";
 import { OpItem } from "../../coop/common/repo";
-import { CrdtIdOp } from "../../coop/client/crdtidop";
 
 import { Basic } from "../../data/basic";
 import { Shape } from "../../data/shape";
+import { IdSetOp } from "../../coop/client/crdt";
 
-function apply(target: Object, op: CrdtIdOp) {
+function apply(target: Object, op: IdSetOp) {
     // todo 需要import ? 需要
-    let value = op.value;
-    if (typeof op.value === 'object') switch (op.value.typeId) {
+    let value = op.data;
+    if (typeof op.data === 'object') switch (op.data.typeId) {
         // import
     }
     if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + op.value.typeId);
@@ -36,7 +36,7 @@ export class CrdtIdRepoNode extends RepoNode {
             const lastop = ops[ops.length - 1];
             const target = this.page.getOpTarget(lastop.op.path);
             // apply lastop
-            if (target) apply(target, lastop.op as CrdtIdOp);
+            if (target) apply(target, lastop.op as IdSetOp);
         }
     }
 

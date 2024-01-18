@@ -46,19 +46,33 @@ function checkShapeAtPage(page: Page, obj: Shape | Variable) {
 
 export class Api {
     private uid: string;
-    private ops: Op[] = [];
+    private cmd: Cmd | undefined;
     private needUpdateFrame: { shape: Shape, page: Page }[] = [];
     constructor(uid: string) {
         this.uid = uid;
     }
-    start() {
-        this.ops.length = 0;
+    start(description: string = "") {
+        this.cmd = {
+            id: uuid(),
+            mergeable: true,
+            delay: 500,
+            version: 0,
+            userId: this.uid,
+            ops: [],
+            isUndo: false,
+            blockId: [],
+            description,
+            time: Date.now(),
+            posttime: 0
+        };
         this.needUpdateFrame.length = 0;
     }
     isNeedCommit(): boolean {
-        return this.ops.length > 0;
+        return this.cmd !== undefined && this.cmd.ops.length > 0;
     }
     commit(): Cmd | undefined {
+        const cmd = this.cmd;
+        if (!cmd) return undefined;
         if (this.needUpdateFrame.length > 0) {
             const update = this.needUpdateFrame.slice(0);
             const page = update[0].page;
@@ -66,26 +80,14 @@ export class Api {
             updateShapesFrame(page, shapes, basicapi) // 不需要生成op
         }
         this.needUpdateFrame.length = 0;
-
-        // todo
-        return {
-            id: uuid(),
-            mergeable: true,
-            delay: 500,
-            version: 0,
-            userId: this.uid,
-            ops: this.ops.slice(0),
-            isUndo: false,
-            blockId: [""],
-            description: "",
-            time: 0,
-            posttime: 0
-        }
+        this.cmd = undefined;
+        return cmd;
     }
 
     private addOp(op: Op[] | Op | undefined) {
-        if (Array.isArray(op)) this.ops.push(...op);
-        else if (op) this.ops.push(op);
+        if (!this.cmd) throw new Error("need start first");
+        if (Array.isArray(op)) this.cmd.ops.push(...op);
+        else if (op) this.cmd.ops.push(op);
     }
 
     pageInsert(document: Document, page: Page, index: number) {

@@ -3,7 +3,7 @@ import { TableCell, TableCellType, TableShape } from "../../data/table";
 import { Color, CrdtIndex, CrdtNumber, Page, StrikethroughType, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr, newText } from "./basic";
 import { deleteText, insertComplexText } from "./text";
-import { uuid } from "basic/uuid";
+import { uuid } from "../../basic/uuid";
 
 export function tableSetCellContentType(cell: TableCell, contentType: TableCellType | undefined) {
     contentType = contentType === TableCellType.None ? undefined : contentType;

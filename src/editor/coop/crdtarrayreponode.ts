@@ -3,11 +3,10 @@ import { RepoNode } from "./reponode";
 import { OpType } from "../../coop/common/op";
 import { OpItem } from "coop/common/repo";
 
-import { CrdtItem, crdtArrayMove } from "../../coop/client/crdt";
-import { CrdtArrayMoveOp } from "../../coop/client/crdtarrayop";
+import { ArrayMoveOp, CrdtItem, crdtArrayMove } from "../../coop/client/crdt";
 import { Shape } from "../../data/shape";
 
-function apply(target: Array<CrdtItem>, op: CrdtArrayMoveOp) {
+function apply(target: Array<CrdtItem>, op: ArrayMoveOp) {
     return crdtArrayMove(target, op);
 }
 
@@ -28,7 +27,7 @@ export class CrdtArrayReopNode extends RepoNode {
         const target = this.page.getOpTarget(ops[0].op.path);
         for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
-            if (target) apply(target, op.op as CrdtArrayMoveOp);
+            if (target) apply(target, op.op as ArrayMoveOp);
         }
     }
 

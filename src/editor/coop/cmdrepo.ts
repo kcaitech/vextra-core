@@ -32,7 +32,7 @@ function classifyOps(cmds: Cmd[]) {
 // 一个page一个curversion，不可见page，cmd仅暂存
 // symbols要同步更新
 // 一个文档一个总的repo
-export class ClientRepo {
+export class CmdRepo {
 
     private nodecreator: (op: Op, path: string[]) => RepoNode
     constructor(creator: (op: Op, path: string[]) => RepoNode) {
