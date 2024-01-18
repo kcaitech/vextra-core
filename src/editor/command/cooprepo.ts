@@ -173,39 +173,5 @@ export class CoopRepository {
     }
     rollback(from: string = "", isRemote: boolean = false) {
         this.__repo.rollback(from);
-        this.__rollbackListener.forEach((l) => {
-            l(isRemote);
-        })
-    }
-
-    onCommit(listener: (cmd: Cmd, isRemote: boolean) => void) {
-        const _listeners = this.__commitListener;
-        _listeners.push(listener);
-        return {
-            stop() {
-                const idx = _listeners.indexOf(listener);
-                if (idx >= 0) _listeners.splice(idx, 1);
-            }
-        }
-    }
-    onRollback(listener: (isRemote: boolean) => void) {
-        const _listeners = this.__rollbackListener;
-        _listeners.push(listener);
-        return {
-            stop() {
-                const idx = _listeners.indexOf(listener);
-                if (idx >= 0) _listeners.splice(idx, 1);
-            }
-        }
-    }
-    onUndoRedo(listener: (type: UndoRedoType, newCmd: Cmd, oldCmdId: string) => Cmd | undefined) {
-        const _listeners = this.__undoRedoListener;
-        _listeners.push(listener);
-        return {
-            stop() {
-                const idx = _listeners.indexOf(listener);
-                if (idx >= 0) _listeners.splice(idx, 1);
-            }
-        }
     }
 }

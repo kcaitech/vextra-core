@@ -3,7 +3,8 @@ import { ArrayMoveOpRecord, CrdtItem, IdOpRecord, TreeMoveOpRecord, crdtGetArrIn
 import { GroupShape, Shape, Variable } from "../../data/shape";
 import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
 import { OpType } from "../../coop/common/op";
-import { Text } from "../../data/text";
+import { Para, ParaAttr, ParaAttrSetter, Span, SpanAttr, SpanAttrSetter, Text } from "../../data/text";
+import { uuid } from "../../basic/uuid";
 
 // 对象树操作
 export function crdtShapeInsert(uid: string, parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord {
@@ -87,25 +88,80 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
     }
 }
 
-// 文本操作
-export function otTextInsert(parent: Shape | Variable, text: Text | string, index: number, intext: string): TextOpInsertRecord {
-    if (typeof text === "string") {
-        // todo
-        throw new Error("not implemented");
-    }
-
+export function newText(content: string): Text {
+    const text = new Text(new BasicArray());
+    const para = new Para(content + '\n', new BasicArray());
+    text.paras.push(para);
+    const span = new Span(para.length);
+    para.spans.push(span);
+    return text;
 }
-export function otTextRemove(parent: Shape | Variable, text: Text | string, index: number, length: number): TextOpRemoveRecord {
+
+// 文本操作
+export function otTextInsert(parent: Shape | Variable, text: Text | string, index: number, str: Text | string, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }): TextOpInsertRecord {
     if (typeof text === "string") {
-        // todo
-        throw new Error("not implemented");
+        if (!(parent instanceof Variable)) throw new Error("something wrong"); // 目前仅variable会是string
+        text = newText(text);
+        parent.value = text;
     }
+    const type = typeof str === 'string' ? 'simple' : 'complex';
+    if (type === 'simple') {
+        text.insertText(str as string, index, props)
+        return new TextOpInsertRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
+            type: 'simple',
+            text: str as string,
+            props,
+        })
+    } else {
+        text.insertFormatText(str as Text, index);
+        return new TextOpInsertRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
+            type: 'complex',
+            text: str as Text
+        })
+    }
+}
+export function otTextRemove(parent: Shape | Variable, text: Text | string, index: number, length: number): TextOpRemoveRecord | undefined {
+    if (typeof text === "string") {
+        if (!(parent instanceof Variable)) throw new Error("something wrong"); // 目前仅variable会是string
+        text = newText(text);
+        parent.value = text;
+    }
+    const del = text.deleteText(index, length);
+    return del && new TextOpRemoveRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, del);
 }
 export function otTextSetAttr(parent: Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
     if (typeof text === "string") {
-        // todo
-        throw new Error("not implemented");
+        if (!(parent instanceof Variable)) throw new Error("something wrong"); // 目前仅variable会是string
+        text = newText(text);
+        parent.value = text;
     }
+    const ret = text.formatText(index, length, key, value);
+    return new TextOpAttrRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "span", key, value }, ret);
+}
+
+export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
+    if (typeof text === "string") {
+        if (!(parent instanceof Variable)) throw new Error("something wrong"); // 目前仅variable会是string
+        text = newText(text);
+        parent.value = text;
+    }
+    let ret;
+    if (key === "bulletNumbersType") {
+        ret = text.setBulletNumbersType(value, index, length);
+    }
+    else if (key === "bulletNumbersStart") {
+        ret = text.setBulletNumbersStart(value, index, length);
+    }
+    else if (key === "bulletNumbersBehavior") {
+        ret = text.setBulletNumbersBehavior(value, index, length);
+    }
+    else if (key === "indent") {
+        ret = text.setParaIndent(value, index, length);
+    }
+    else {
+        ret = text.formatPara(index, length, key, value);
+    }
+    return new TextOpAttrRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "para", key, value }, ret);
 }
 
 // 数据操作

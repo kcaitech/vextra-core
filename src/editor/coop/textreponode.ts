@@ -21,7 +21,7 @@ function apply(text: Text, item: OpItem) {
         case ArrayOpType.Insert:
             if (!(op instanceof TextOpInsert)) throw new Error("not text insert op");
             if (op.text.type === "simple") {
-                text.insertText(op.text.text, op.start, { attr: op.text.attr });
+                text.insertText(op.text.text, op.start, { attr: op.text.props?.attr, paraAttr: op.text.props?.paraAttr });
             } else if (op.text.type === "complex") {
                 text.insertFormatText(op.text.text, op.start);
             } else {
@@ -33,6 +33,13 @@ function apply(text: Text, item: OpItem) {
             break;
         case ArrayOpType.Attr:
             if (!(op instanceof TextOpAttr)) throw new Error("not text attr op");
+            // 
+            if (op.props.target === "para") {
+
+            } else {
+
+            }
+
             if (op.attr instanceof ParaAttrSetter) {
                 text.formatText(op.start, op.length, { paraAttr: op.attr });
             } else if (op.attr instanceof SpanAttrSetter) {

@@ -1,20 +1,34 @@
-import { Text } from "../../data/text";
+import { Para, Span, Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
 import { Color, Page, StrikethroughType, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
+import { crdtSetAttr } from "./basic";
+import { BasicArray } from "../../data/basic";
 
 export function tableSetCellContentType(cell: TableCell, contentType: TableCellType | undefined) {
-    // const cell = table.getCellAt(rowIdx, colIdx, true);
-    cell.setContentType(contentType);
+    contentType = contentType === TableCellType.None ? undefined : contentType;
+    return crdtSetAttr(cell, "cellType", contentType);
+}
+
+const newText = (content: string): Text => {
+    const text = new Text(new BasicArray());
+    const para = new Para(content + '\n', new BasicArray());
+    text.paras.push(para);
+    const span = new Span(para.length);
+    para.spans.push(span);
+    return text;
 }
 
 export function tableSetCellContentText(cell: TableCell, text: Text | undefined) {
-    // const cell = table.getCellAt(rowIdx, colIdx, true);
+    // todo 不可以重置text
+    if (!cell.text) cell.text = newText("");
+    if (cell.text.length > 1) {
+        // 
+    }
     cell!.setContentText(text);
 }
 
 export function tableSetCellContentImage(cell: TableCell, ref: string | undefined) {
-    // const cell = table.getCellAt(rowIdx, colIdx, true);
-    cell!.setContentImage(ref);
+    return crdtSetAttr(cell, "imageRef", ref);
 }
 
 export function tableModifyColWidth(page: Page, table: TableShape, idx: number, width: number) {

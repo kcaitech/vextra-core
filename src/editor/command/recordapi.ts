@@ -4,20 +4,9 @@ import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
 import {
-    exportBorder,
-    exportBorderPosition,
-    exportBorderStyle,
     exportColor,
-    exportContactForm,
-    exportContactRole, exportCurveMode,
-    exportCurvePoint,
-    exportFill,
-    exportPage,
-    exportPoint2D, exportShadow, exportShadowPosition,
     exportTableCell,
-    exportText,
-    exportVariable,
-    exportExportFormat, exportExportFileFormat, exportExportFormatNameingScheme
+    exportText
 } from "../../data/baseexport";
 import {
     GroupShape,
@@ -29,16 +18,18 @@ import {
     SymbolShape,
     VariableType, CurveMode
 } from "../../data/shape";
-import { exportShape, updateShapesFrame } from "../coop/utils";
-import { Border, BorderPosition, BorderStyle, ContextSettings, Fill, MarkerType, Style, Shadow } from "../../data/style";
+import { updateShapesFrame } from "../coop/utils";
+import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
-import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme } from "../../data/typesdefine";
+import {
+    BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
+    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme
+} from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
-import { ContactForm, ContactRole, CurvePoint, ExportFormat, ExportOptions } from "../../data/baseclasses";
+import { ContactForm, ContactRole, CurvePoint, ExportFormat } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
-import { BasicMap, BasicArray } from "../../data/basic";
 import { Color } from "../../data/classes";
 import { Op } from "../../coop/common/op";
 import { LocalCmd as Cmd } from "../coop/localcmd";
@@ -615,172 +606,82 @@ export class Api {
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            basicapi.insertSimpleText(_text, text, idx, { attr })
-            this.addOp(TextCmdInsert.Make(page.id, genShapeId(shape), idx, text.length, { type: "simple", text, attr, length: text.length }))
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.insertSimpleText(shape, _text, text, idx, { attr }));
     }
     insertComplexText(page: Page, shape: TextShapeLike | Variable, idx: number, text: Text) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            basicapi.insertComplexText(_text, text, idx)
-            this.addOp(TextCmdInsert.Make(page.id, genShapeId(shape), idx, text.length, { type: "complex", text: exportText(text), length: text.length }))
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.insertComplexText(shape, _text, text, idx));
     }
     deleteText(page: Page, shape: TextShapeLike | Variable, idx: number, len: number) {
         checkShapeAtPage(page, shape);
-        let del: Text | undefined;
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            del = basicapi.deleteText(_text, idx, len)
-            if (del && del.length > 0) this.addOp(TextCmdRemove.Make(page.id, genShapeId(shape), idx, del.length, { type: "complex", text: exportText(del), length: del.length }))
-        })
-        return del;
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.deleteText(shape, _text, idx, len));
     }
     textModifyColor(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, color: Color | undefined) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.textModifyColor(_text, idx, len, color);
-            ret.forEach((m) => {
-                const colorEqual = m.color === color || m.color && color && color.equals(m.color);
-                if (!colorEqual) {
-                    const cmd = TextCmdModify.Make(page.id,
-                        genShapeId(shape),
-                        idx,
-                        m.length,
-                        TEXT_ATTR_ID.color,
-                        color ? exportColor(color) : undefined,
-                        m.color ? exportColor(m.color) : undefined);
-                    this.addOp(cmd);
-                }
-                idx += m.length;
-            })
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyColor(shape, _text, idx, len, color));
     }
     textModifyFontName(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, fontname: string) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.textModifyFontName(_text, idx, len, fontname);
-            ret.forEach((m) => {
-                if (fontname !== m.fontName) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), idx, m.length, TEXT_ATTR_ID.fontName, fontname, m.fontName));
-                idx += m.length;
-            })
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyFontName(shape, _text, idx, len, fontname));
     }
     textModifyFontSize(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, fontsize: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.textModifyFontSize(_text, idx, len, fontsize);
-            ret.forEach((m) => {
-                if (fontsize !== m.fontSize) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), idx, m.length, TEXT_ATTR_ID.fontSize, fontsize, m.fontSize));
-                idx += m.length;
-            })
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyFontSize(shape, _text, idx, len, fontsize));
     }
 
     shapeModifyTextBehaviour(page: Page, _text: Text, textBehaviour: TextBehaviour) {
         checkShapeAtPage(page, _text.parent as Shape);
-        this.__trap(() => {
-            // const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.shapeModifyTextBehaviour(page, _text, textBehaviour);
-            if (ret !== textBehaviour) {
-                this.addOp(ShapeCmdModify.Make(page.id, genShapeId(_text.parent as Shape), SHAPE_ATTR_ID.textBehaviour, textBehaviour, ret));
-            }
-        })
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.shapeModifyTextBehaviour(page, _text, textBehaviour));
     }
     shapeModifyTextVerAlign(page: Page, shape: TextShapeLike | Variable, verAlign: TextVerAlign) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.shapeModifyTextVerAlign(_text, verAlign);
-            if (ret !== verAlign) {
-                this.addOp(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.textVerAlign, verAlign, ret));
-            }
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.shapeModifyTextVerAlign(_text, verAlign));
     }
 
     textModifyHighlightColor(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, color: Color | undefined) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.textModifyHighlightColor(_text, idx, len, color);
-            ret.forEach((m) => {
-                const colorEqual = m.highlight === color || m.highlight && color && color.equals(m.highlight);
-                if (!colorEqual) {
-                    const cmd = TextCmdModify.Make(page.id,
-                        genShapeId(shape),
-                        idx,
-                        m.length,
-                        TEXT_ATTR_ID.highlightColor,
-                        color ? exportColor(color) : undefined,
-                        m.highlight ? exportColor(m.highlight) : undefined);
-                    this.addOp(cmd);
-                }
-                idx += m.length;
-            })
-        });
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyHighlightColor(shape, _text, idx, len, color));
     }
     textModifyUnderline(page: Page, shape: TextShapeLike | Variable, underline: UnderlineType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.textModifyUnderline(_text, underline, index, len);
-            ret.forEach((m) => {
-                if (underline !== m.underline) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.underline, underline, m.underline));
-                index += m.length;
-            })
-        });
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyUnderline(shape, _text, underline, index, len));
     }
     textModifyStrikethrough(page: Page, shape: TextShapeLike | Variable, strikethrough: StrikethroughType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.textModifyStrikethrough(_text, strikethrough, index, len);
-            ret.forEach((m) => {
-                if (strikethrough !== m.strikethrough) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.strikethrough, strikethrough, m.strikethrough));
-                index += m.length;
-            })
-        });
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyStrikethrough(shape, _text, strikethrough, index, len));
     }
     textModifyBold(page: Page, shape: TextShapeLike | Variable, bold: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.textModifyBold(_text, bold, index, len);
-            ret.forEach((m) => {
-                if (bold !== m.bold) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.bold, bold, m.bold));
-                index += m.length;
-            })
-        });
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyBold(shape, _text, bold, index, len));
     }
     textModifyItalic(page: Page, shape: TextShapeLike | Variable, italic: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.textModifyItalic(_text, italic, index, len);
-            ret.forEach((m) => {
-                if (italic !== m.italic) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.italic, italic, m.italic));
-                index += m.length;
-            })
-        });
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyItalic(shape, _text, italic, index, len));
     }
 
     private _textModifyRemoveBulletNumbers(page: Page, shape: TextShapeLike | Variable, index: number, len: number) {
@@ -796,20 +697,16 @@ export class Api {
         })
 
         for (let i = 0, len = removeIndexs.length; i < len; i++) {
-            const del = basicapi.deleteText(_text, removeIndexs[i] - i, 1);
-            if (del && del.length > 0) this.addOp(TextCmdRemove.Make(page.id, genShapeId(shape), removeIndexs[i] - i, del.length, { type: "complex", text: exportText(del), length: del.length }))
+            this.addOp(basicapi.deleteText(shape, _text, removeIndexs[i] - i, 1));
         }
-        if (removeIndexs.length > 0) _text.reLayout();
+        if (removeIndexs.length > 0) _text.reLayout(); // todo
     }
 
     private _textModifySetBulletNumbers(page: Page, shape: TextShapeLike | Variable, type: BulletNumbersType, index: number, len: number) {
 
         const _text = shape instanceof Shape ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        const modifyeds = _text.setBulletNumbersType(type, index, len);
-        modifyeds.forEach((m) => {
-            this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), m.index, 1, TEXT_ATTR_ID.bulletNumbersType, type, m.origin));
-        })
+        this.addOp(basicapi.textModifyBulletNumbersType(shape, _text, type, index, len))
 
         const insertIndexs: number[] = [];
         _travelTextPara(_text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
@@ -828,176 +725,103 @@ export class Api {
             const attr = new SpanAttrSetter();
             attr.placeholder = true;
             attr.bulletNumbers = new BulletNumbers(type);
-            basicapi.insertSimpleText(_text, '*', insertIndexs[i] + i, { attr });
-            this.addOp(TextCmdInsert.Make(page.id, genShapeId(shape), insertIndexs[i] + i, 1, { type: "simple", text: '*', attr, length: 1 }))
+            this.addOp(basicapi.insertSimpleText(shape, _text, '*', insertIndexs[i] + i, { attr }))
         }
         if (insertIndexs.length > 0) _text.reLayout();
     }
 
     textModifyBulletNumbers(page: Page, shape: TextShapeLike | Variable, type: BulletNumbersType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const alignRange = _text.alignParaRange(index, len);
-            index = alignRange.index;
-            len = alignRange.len;
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        const alignRange = _text.alignParaRange(index, len);
+        index = alignRange.index;
+        len = alignRange.len;
 
-            if (type === undefined || type === BulletNumbersType.None) {
-                this._textModifyRemoveBulletNumbers(page, shape, index, len);
-            }
-            else {
-                this._textModifySetBulletNumbers(page, shape, type, index, len);
-            }
-        });
+        if (type === undefined || type === BulletNumbersType.None) {
+            this._textModifyRemoveBulletNumbers(page, shape, index, len);
+        }
+        else {
+            this._textModifySetBulletNumbers(page, shape, type, index, len);
+        }
     }
 
     textModifyBulletNumbersStart(page: Page, shape: TextShapeLike | Variable, start: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const modifyeds = _text.setBulletNumbersStart(start, index, len);
-            modifyeds.forEach((m) => {
-                this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), m.index, 1, TEXT_ATTR_ID.bulletNumbersStart, start, m.origin));
-            })
-        });
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyBulletNumbersStart(shape, _text, start, index, len))
     }
     textModifyBulletNumbersInherit(page: Page, shape: TextShapeLike | Variable, inherit: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const behavior = inherit ? BulletNumbersBehavior.Inherit : BulletNumbersBehavior.Renew;
-            const modifyeds = _text.setBulletNumbersBehavior(behavior, index, len);
-            modifyeds.forEach((m) => {
-                this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), m.index, 1, TEXT_ATTR_ID.bulletNumbersBehavior, behavior, m.origin));
-            })
-        });
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        const behavior = inherit ? BulletNumbersBehavior.Inherit : BulletNumbersBehavior.Renew;
+        this.addOp(basicapi.textModifyBulletNumbersBehavior(shape, _text, behavior, index, len))
     }
 
     textModifyHorAlign(page: Page, shape: TextShapeLike | Variable, horAlign: TextHorAlign, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            // fix index
-            const alignRange = _text.alignParaRange(index, len);
-            index = alignRange.index;
-            len = alignRange.len;
-
-            const ret = basicapi.textModifyHorAlign(_text, horAlign, index, len);
-            ret.forEach((m) => {
-                if (horAlign !== m.alignment) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.textHorAlign, horAlign, m.alignment));
-                index += m.length;
-            })
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        // fix index
+        const alignRange = _text.alignParaRange(index, len);
+        index = alignRange.index;
+        len = alignRange.len;
+        this.addOp(basicapi.textModifyHorAlign(shape, _text, horAlign, index, len));
     }
 
     textModifyParaIndent(page: Page, shape: TextShapeLike | Variable, indent: number | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            // fix index
-            // const alignRange = shape.text.alignParaRange(index, len);
-            // index = alignRange.index;
-            // len = alignRange.len;
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = _text.setParaIndent(indent, index, len);
-            ret.forEach((m) => {
-                if (indent !== m.origin) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.len, TEXT_ATTR_ID.indent, indent, m.origin));
-                index += m.len;
-            })
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifyParaIndent(shape, _text, indent, index, len));
     }
     textModifyMinLineHeight(page: Page, shape: TextShapeLike | Variable, minLineheight: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const alignRange = _text.alignParaRange(index, len);
-            index = alignRange.index;
-            len = alignRange.len;
-
-            const ret = basicapi.textModifyMinLineHeight(_text, minLineheight, index, len);
-            ret.forEach((m) => {
-                if (minLineheight !== m.minimumLineHeight) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.textMinLineheight, minLineheight, m.minimumLineHeight));
-                index += m.length;
-            })
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        const alignRange = _text.alignParaRange(index, len);
+        index = alignRange.index;
+        len = alignRange.len;
+        this.addOp(basicapi.textModifyMinLineHeight(shape, _text, minLineheight, index, len));
     }
     textModifyMaxLineHeight(page: Page, shape: TextShapeLike | Variable, maxLineheight: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const alignRange = _text.alignParaRange(index, len);
-            index = alignRange.index;
-            len = alignRange.len;
-
-            const ret = basicapi.textModifyMaxLineHeight(_text, maxLineheight, index, len);
-            ret.forEach((m) => {
-                if (maxLineheight !== m.maximumLineHeight) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.textMaxLineheight, maxLineheight, m.maximumLineHeight));
-                index += m.length;
-            })
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        const alignRange = _text.alignParaRange(index, len);
+        index = alignRange.index;
+        len = alignRange.len;
+        this.addOp(basicapi.textModifyMaxLineHeight(shape, _text, maxLineheight, index, len));
     }
     textModifyKerning(page: Page, shape: TextShapeLike | Variable, kerning: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            // const alignRange = shape.text.alignParaRange(index, len);
-            // index = alignRange.index;
-            // len = alignRange.len;
-
-            // const ret1 = basicapi.textModifyParaKerning(shape, kerning, index, len);
-            // ret1.forEach((m) => {
-            //     this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.paraKerning, kerning, m.kerning));
-            //     index += m.length;
-            // })
-
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
-            const ret = basicapi.textModifySpanKerning(_text, kerning, index, len);
-            ret.forEach((m) => {
-                if (m.kerning !== kerning) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.spanKerning, kerning, m.kerning));
-                index += m.length;
-            })
-        })
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        this.addOp(basicapi.textModifySpanKerning(shape, _text, kerning, index, len));
     }
     textModifyParaSpacing(page: Page, shape: TextShapeLike | Variable, paraSpacing: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
 
-            const alignRange = _text.alignParaRange(index, len);
-            index = alignRange.index;
-            len = alignRange.len;
-
-            const ret = basicapi.textModifyParaSpacing(_text, paraSpacing, index, len);
-            ret.forEach((m) => {
-                if (paraSpacing !== m.paraSpacing) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.paraSpacing, paraSpacing, m.paraSpacing));
-                index += m.length;
-            })
-        })
+        const alignRange = _text.alignParaRange(index, len);
+        index = alignRange.index;
+        len = alignRange.len;
+        this.addOp(basicapi.textModifyParaSpacing(shape, _text, paraSpacing, index, len));
     }
     textModifyTransform(page: Page, shape: TextShapeLike | Variable, transform: TextTransformType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _text = shape instanceof Shape ? shape.text : shape.value;
-            if (!_text || !(_text instanceof Text)) throw Error();
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
 
-            if (transform === TextTransformType.UppercaseFirst) {
-                const alignRange = _text.alignParaRange(index, len);
-                index = alignRange.index;
-                len = alignRange.len;
-            }
-            const ret1 = basicapi.textModifySpanTransfrom(_text, transform, index, len);
-            ret1.forEach((m) => {
-                if (m.transform !== transform) this.addOp(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.spanTransform, transform, m.transform));
-                index += m.length;
-            })
-        })
+        if (transform === TextTransformType.UppercaseFirst) {
+            const alignRange = _text.alignParaRange(index, len);
+            index = alignRange.index;
+            len = alignRange.len;
+        }
+        this.addOp(basicapi.textModifySpanTransfrom(shape, _text, transform, index, len));
     }
 
     // table
