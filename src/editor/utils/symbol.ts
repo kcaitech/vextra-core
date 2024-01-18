@@ -127,7 +127,11 @@ export function modify_variable(page: Page, shape: Shape, _var: Variable, value:
 
     if (p_index === -1) {
         if (shape instanceof SymbolRefShape && p.id !== shape?.id) {
-            _override_variable(page, shape, _var, value, api);
+            if (p instanceof SymbolShape) { // 组件上未被覆盖过的变量
+                _override_variable(page, shape, _var, value, api);
+            } else { // 在实例上被覆盖过的变量
+                _override_variable_for_symbolref(page, vars[0] as any, _var, value, api);
+            }
         } else {
             api.shapeModifyVariable(page, _var, value);
         }
@@ -136,7 +140,11 @@ export function modify_variable(page: Page, shape: Shape, _var: Variable, value:
     }
 
     if (first_symbolref_index < p_index) {
-        _override_variable(page, shape, _var, value, api);
+        if (p instanceof SymbolShape) {
+            _override_variable(page, shape, _var, value, api);
+        } else {
+            _override_variable_for_symbolref(page, vars[0] as any, _var, value, api);
+        }
     } else {
         api.shapeModifyVariable(page, _var, value);
     }
@@ -146,6 +154,8 @@ export function modify_variable(page: Page, shape: Shape, _var: Variable, value:
  * @description override "editor/shape/_overrideVariable"
  */
 function _override_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
+    console.log('override');
+
     let p = varParent(_var);
     if (!p) throw new Error();
     if (p instanceof SymbolShape) {
@@ -190,6 +200,33 @@ function _override_variable(page: Page, shape: Shape, _var: Variable, value: any
     api.shapeAddVariable(page, sym, _var2);
     api.shapeAddOverride(page, sym, override_id, OverrideType.Variable, _var2.id);
     return sym.getVar(_var2.id)!;
+}
+
+/**
+ * @description override "editor/shape/_overrideVariable"
+ */
+export function _override_variable_for_symbolref(page: Page, shape: SymbolRefShape, _var: Variable, value: any, api: Api) {
+    let p = varParent(_var);
+    if (!p) throw new Error();
+
+    let override_id = p.id.substring(p.id.indexOf('/') + 1);
+
+    if (override_id.length === 0) throw new Error();
+
+    override_id += `/${_var.id}`;
+
+    // override text
+    if (_var.type === VariableType.Text
+        && typeof value === 'string') {
+        const origin = _var.value as Text;
+        const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
+        text.insertText(value, 0);
+        value = text;
+    }
+    const _var2 = new Variable(uuid(), _var.type, _var.name, value);
+    api.shapeAddVariable(page, shape, _var2);
+    api.shapeAddOverride(page, shape, override_id, OverrideType.Variable, _var2.id);
+    return shape.getVar(_var2.id)!;
 }
 
 /**

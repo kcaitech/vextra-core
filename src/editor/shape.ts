@@ -34,7 +34,7 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, shape4shadow } from "./utils/symbol";
+import { _override_variable_for_symbolref, is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, shape4shadow } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
 import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
@@ -512,7 +512,7 @@ export class ShapeEditor {
         // 先查varbinds
         if (shape.varbinds && shape.varbinds.has(overrideType)) {
             const _vars: Variable[] = [];
-            const vars_path: Shape[] = [];
+            // const vars_path: Shape[] = shape.varsContainer;
             shape.findVar(shape.varbinds.get(overrideType)!, _vars);
             // if (_vars.length !== vars_path.length) throw new Error();
             const _var = _vars[_vars.length - 1];
@@ -520,6 +520,13 @@ export class ShapeEditor {
 
                 let p = varParent(_var);
                 if (!p) throw new Error();
+
+                // if (vars_path.length) {
+                //     const f = vars_path[0];
+                //     if (p instanceof SymbolRefShape && p.id !== f.id) {
+                //         return _override_variable_for_symbolref(this.__page, f as any, _var, _var.value, api);
+                //     }
+                // }
 
                 if (p.isVirtualShape || p instanceof SymbolShape) {
                     // override variable
