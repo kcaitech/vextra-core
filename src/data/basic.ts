@@ -45,7 +45,12 @@ export class Basic {
 
     getCrdtPath(): string[] {
         if (!this.__parent) return [];
-        if (Array.isArray(this.__parent)) this.__parent.getCrdtPath();
+        if (Array.isArray(this.__parent)) {
+            const path = this.__parent.getCrdtPath();
+            const id = (this as any).id; // hack
+            if (id) path.push(id);
+            return path;
+        }
         return this.__parent.getCrdtPath().concat(this.__propKey!);
     }
 }

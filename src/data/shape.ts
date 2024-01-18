@@ -554,7 +554,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
 export class FlattenShape extends GroupShape implements classes.FlattenShape {
 }
 
-function genRefId(refId: string, type: OverrideType) {
+export function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
     return refId + '/' + type;
 }
