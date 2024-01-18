@@ -33,7 +33,7 @@ import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
 import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/creator";
-import { Api } from "../editor/command/recordapi";
+import { Api } from "../editor/coop/recordapi";
 import { translateTo } from "../editor/frame";
 import { Page } from "../data/page";
 

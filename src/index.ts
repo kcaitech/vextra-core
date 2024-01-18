@@ -21,7 +21,7 @@ export * from "./io/cilpboard"
 export * from "./io/export/svg"
 
 // editor
-export * from "./editor/command/cooprepo"
+export * from "./editor/coop/cooprepo"
 export * from "./editor"
 export * from "./editor/document"
 export * from "./editor/page"

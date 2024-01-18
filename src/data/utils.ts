@@ -2,7 +2,7 @@ import { v4 } from "uuid";
 import { Matrix } from "../basic/matrix";
 import { CurvePoint, PathShape, Point2D, Shape, SymbolShape, Variable } from "./shape";
 import { ContactType, CurveMode, OverrideType } from "./typesdefine";
-import { Api } from "../editor/command/recordapi";
+import { Api } from "../editor/coop/recordapi";
 import { Page } from "./page";
 import { importCurvePoint } from "./baseimport";
 import { exportCurvePoint } from "./baseexport";
