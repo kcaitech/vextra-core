@@ -27,7 +27,7 @@ export {
     Padding
 } from "./baseclasses";
 import * as classes from "./baseclasses"
-import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
+import { deleteText, formatPara, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
 import { TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
@@ -358,12 +358,20 @@ export class Text extends Basic implements classes.Text {
         insertComplexText(this, text, index);
         if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, index, text.length, this.__layout);
     }
-    formatText(index: number, length: number, props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
+    formatText(index: number, length: number, key: string, value: any): { index: number, len: number, value: any }[] {
         if (index < 0) {
             throw new Error("index < 0");
         }
-        const ret = formatText(this, index, length, props)
-        if (this.__layout) this.__layout = layoutAtFormat(this, this.__layoutWidth, this.__frameHeight, index, length, this.__layout, props);
+        const ret = formatText(this, index, length, key, value)
+        if (this.__layout) this.__layout = layoutAtFormat(this, this.__layoutWidth, this.__frameHeight, index, length, this.__layout);
+        return ret;
+    }
+    formatPara(index: number, length: number, key: string, value: any): { index: number, len: number, value: any }[] {
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
+        const ret = formatPara(this, index, length, key, value)
+        if (this.__layout) this.__layout = layoutAtFormat(this, this.__layoutWidth, this.__frameHeight, index, length, this.__layout);
         return ret;
     }
     deleteText(index: number, count: number): Text | undefined {

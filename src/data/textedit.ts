@@ -256,8 +256,8 @@ export function insertComplexText(shapetext: Text, text: Text, index: number) {
     insertTextParas(shapetext, text.paras, index);
 }
 
-function __formatTextSpan(spans: Span[], spanIndex: number, index: number, length: number, attr: SpanAttr): Span[] {
-    const ret: Span[] = [];
+function __formatTextSpan(spans: Span[], spanIndex: number, index: number, length: number, key: string, value: any, offset: number): { index: number, len: number, value: any }[] {
+    const ret: { index: number, len: number, value: any }[] = [];
     while (length > 0 && spanIndex < spans.length) {
         const span = spans[spanIndex];
         if (index > 0) {
@@ -266,6 +266,7 @@ function __formatTextSpan(spans: Span[], spanIndex: number, index: number, lengt
             mergeSpanAttr(span1, span);
             span.length = index;
             spans.splice(spanIndex + 1, 0, span1);
+            offset += span.length;
             index = 0;
             spanIndex++;
             continue;
@@ -281,11 +282,10 @@ function __formatTextSpan(spans: Span[], spanIndex: number, index: number, lengt
         // index === 0 && span.length <= length
 
         // save origin
-        const span1 = new Span(span.length);
-        mergeSpanAttr(span1, span);
-        ret.push(span1);
-
-        mergeSpanAttr(span, attr);
+        ret.push({ index: index + offset, len: span.length, value: (span as any)[key] });
+        (span as any)[key] = value;
+        // mergeSpanAttr(span, attr);
+        offset += span.length;
         length -= span.length;
         if (spanIndex > 0 && !isDiffSpanAttr(span, spans[spanIndex - 1])) { // merge same span
             const preSpan = spans[spanIndex - 1];
@@ -299,36 +299,40 @@ function __formatTextSpan(spans: Span[], spanIndex: number, index: number, lengt
     return ret;
 }
 
-function _formatTextSpan(spans: Span[], index: number, length: number, attr: SpanAttr): Span[] {
+function _formatTextSpan(spans: Span[], index: number, length: number, key: string, value: any, offset: number): { index: number, len: number, value: any }[] {
     // 定位到span
     for (let i = 0, len = spans.length; i < len; i++) {
         const span = spans[i];
         if (index < span.length) {
-            return __formatTextSpan(spans, i, index, length, attr);
+            return __formatTextSpan(spans, i, index, length, key, value, offset);
         }
         else {
+            offset += span.length;
             index -= span.length;
         }
     }
     return [];
 }
 
-export function formatText(shapetext: Text, index: number, length: number, props: { attr?: SpanAttr, paraAttr?: ParaAttr }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
-    const ret: { spans: Span[], paras: (ParaAttr & { length: number })[] } = { spans: [], paras: [] };
+export function formatText(shapetext: Text, index: number, length: number, key: string, value: any): { index: number, len: number, value: any }[] {
+    const ret: { index: number, len: number, value: any }[] = [];
+    let offset = index;
     _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
-        if (props.paraAttr) {
-            const para1 = new ParaAttr();
-            if (para.attr) mergeParaAttr(para1, para.attr);
-            const end = Math.min(para.length, index + length);
-            const origin: ParaAttr & { length: number } = para1 as ParaAttr & { length: number };
-            origin.length = end - index;
-            ret.paras.push(origin);
+        ret.push(..._formatTextSpan(para.spans, index, length, key, value, offset));
+        offset += para.length;
+    })
+    return ret;
+}
 
-            mergeParaAttr(para, props.paraAttr);
-        }
-        if (props.attr) {
-            ret.spans.push(..._formatTextSpan(para.spans, index, length, props.attr));
-        }
+export function formatPara(shapetext: Text, index: number, length: number, key: string, value: any): { index: number, len: number, value: any }[] {
+    const ret: { index: number, len: number, value: any }[] = [];
+    let offset = index;
+    _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
+        const end = Math.min(para.length, index + length);
+        ret.push({ index: index + offset, len: end - index, value: (para.attr ? (para.attr as any)[key] : undefined) });
+        if (!para.attr) para.attr = new ParaAttr();
+        (para.attr as any)[key] = value;
+        offset += para.length;
     })
     return ret;
 }
@@ -510,8 +514,8 @@ export function deleteText(shapetext: Text, index: number, count: number): Text 
     }
 }
 
-export function setBulletNumbersType(shapetext: Text, type: BulletNumbersType, index: number, len: number): { index: number, len: number, origin: BulletNumbersType | undefined }[] {
-    const ret: { index: number, len: number, origin: BulletNumbersType | undefined }[] = [];
+export function setBulletNumbersType(shapetext: Text, type: BulletNumbersType, index: number, len: number): { index: number, len: number, value: BulletNumbersType | undefined }[] {
+    const ret: { index: number, len: number, value: BulletNumbersType | undefined }[] = [];
     _travelTextPara(shapetext.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
         index -= _index; // 对齐到0
         if (_index === 0 && para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
@@ -521,7 +525,7 @@ export function setBulletNumbersType(shapetext: Text, type: BulletNumbersType, i
                 const origin = cur.type;
                 cur.type = type;
 
-                ret.push({ index, len: 1, origin })
+                ret.push({ index, len: 1, value: origin })
             }
         }
         index += para.length;
@@ -529,8 +533,8 @@ export function setBulletNumbersType(shapetext: Text, type: BulletNumbersType, i
     return ret;
 }
 
-export function setBulletNumbersStart(shapetext: Text, start: number, index: number, len: number): { index: number, len: number, origin: number }[] {
-    const ret: { index: number, len: number, origin: number }[] = [];
+export function setBulletNumbersStart(shapetext: Text, start: number, index: number, len: number): { index: number, len: number, value: number }[] {
+    const ret: { index: number, len: number, value: number }[] = [];
     _travelTextPara(shapetext.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
         index -= _index; // 对齐到0
         if (_index === 0 && para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
@@ -539,7 +543,7 @@ export function setBulletNumbersStart(shapetext: Text, start: number, index: num
                 // fmt
                 const origin = cur.offset || 0;
                 cur.offset = start;
-                ret.push({ index, len: 1, origin })
+                ret.push({ index, len: 1, value: origin })
             }
         }
         index += para.length;
@@ -547,8 +551,8 @@ export function setBulletNumbersStart(shapetext: Text, start: number, index: num
     return ret;
 }
 
-export function setBulletNumbersBehavior(shapetext: Text, behavior: BulletNumbersBehavior, index: number, len: number): { index: number, len: number, origin: BulletNumbersBehavior | undefined }[] {
-    const ret: { index: number, len: number, origin: BulletNumbersBehavior | undefined }[] = [];
+export function setBulletNumbersBehavior(shapetext: Text, behavior: BulletNumbersBehavior, index: number, len: number): { index: number, len: number, value: BulletNumbersBehavior | undefined }[] {
+    const ret: { index: number, len: number, value: BulletNumbersBehavior | undefined }[] = [];
     _travelTextPara(shapetext.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
         index -= _index; // 对齐到0
         if (_index === 0 && para.text[0] === '*' && para.spans[0].bulletNumbers && para.spans[0].length === 1) {
@@ -557,7 +561,7 @@ export function setBulletNumbersBehavior(shapetext: Text, behavior: BulletNumber
                 // fmt
                 const origin = cur.behavior;
                 cur.behavior = behavior;
-                ret.push({ index, len: 1, origin })
+                ret.push({ index, len: 1, value: origin })
             }
         }
         index += para.length;
@@ -565,8 +569,8 @@ export function setBulletNumbersBehavior(shapetext: Text, behavior: BulletNumber
     return ret;
 }
 
-export function setParaIndent(shapetext: Text, indent: number | undefined, index: number, len: number): { index: number, len: number, origin: number | undefined }[] {
-    const ret: { index: number, len: number, origin: number | undefined }[] = [];
+export function setParaIndent(shapetext: Text, indent: number | undefined, index: number, len: number): { index: number, len: number, value: number | undefined }[] {
+    const ret: { index: number, len: number, value: number | undefined }[] = [];
     _travelTextPara(shapetext.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
         index -= _index; // 对齐到0
 
@@ -576,7 +580,7 @@ export function setParaIndent(shapetext: Text, indent: number | undefined, index
             // fmt
             if (!para.attr) para.attr = new ParaAttr();
             para.attr.indent = indent;
-            ret.push({ index, len: para.length, origin })
+            ret.push({ index, len: para.length, value: origin })
         }
 
         index += para.length;

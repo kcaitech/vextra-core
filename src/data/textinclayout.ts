@@ -229,8 +229,7 @@ export function layoutAtFormat(text: Text,
     layoutHeight: number,
     index: number,
     len: number,
-    layout: TextLayout,
-    props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): TextLayout {
+    layout: TextLayout): TextLayout {
     if (len <= 0) return layout;
 
     const padding = text.attr?.padding;
