@@ -22,7 +22,7 @@ import {
     Variable,
     VariableType
 } from "../../data/classes";
-import { Api } from "../command/recordapi";
+import { Api } from "../coop/recordapi";
 import { BasicMap } from "../../data/basic";
 import { newSymbolRefShape, newSymbolShape, newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";

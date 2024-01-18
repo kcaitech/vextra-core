@@ -24,8 +24,8 @@ import {
     ShapeType,
     Variable, Document, TableShape
 } from "../data/classes";
-import { CoopRepository } from "./command/cooprepo";
-import { Api } from "./command/recordapi";
+import { CoopRepository } from "./coop/cooprepo";
+import { Api } from "./coop/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data/basic";

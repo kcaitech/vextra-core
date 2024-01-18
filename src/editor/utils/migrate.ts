@@ -2,7 +2,7 @@ import { SymbolRefShape } from "../../data/symbolref";
 import { GroupShape, Shape, ShapeType, SymbolUnionShape, SymbolShape } from "../../data/shape";
 import { is_symbol_but_not_union } from "./other";
 import { is_circular_ref2 } from "./ref_check";
-import { Api } from "../command/recordapi";
+import { Api } from "../coop/recordapi";
 import { Page } from "../../data/page";
 import { is_exist_invalid_shape2, is_part_of_symbol } from "./symbol";
 

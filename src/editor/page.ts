@@ -30,8 +30,8 @@ import {
 import { Document } from "../data/document";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
-import { CoopRepository } from "./command/cooprepo";
-import { Api } from "./command/recordapi";
+import { CoopRepository } from "./coop/cooprepo";
+import { Api } from "./coop/recordapi";
 import {
     Artboard,
     Border,

@@ -4,8 +4,8 @@ import { Repository } from "../../data/transact";
 import { Api } from "./recordapi";
 import { Page } from "../../data/page";
 import { uuid } from "../../basic/uuid";
-import { LocalCmd as Cmd } from "../coop/localcmd";
-import { ClientRepo } from "../coop/clientrepo";
+import { LocalCmd as Cmd } from "./localcmd";
+import { ClientRepo } from "./cmdrepo";
 
 class TrapHdl {
     private repo: Repository;
@@ -30,7 +30,7 @@ class TrapHdl {
 
 export class CoopRepository {
     private __repo: Repository;
-    private __clientrepo: ClientRepo;
+    private __cmdrepo: ClientRepo;
     private __localcmds: Cmd[] = [];
     private __index: number = 0;
     private __api: Api;
@@ -39,7 +39,7 @@ export class CoopRepository {
         this.__repo = repo;
         repo.transactCtx.settrap = true; // todo
         this.__api = new Proxy<Api>(new Api(uid), new TrapHdl(repo));
-        this.__clientrepo = new ClientRepo((op, path) => {
+        this.__cmdrepo = new ClientRepo((op, path) => {
             // todo
             throw new Error("not implemented");
         })

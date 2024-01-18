@@ -6,7 +6,7 @@
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
 import { GroupShape, Shape } from "../data/shape";
-import { Api } from "./command/recordapi";
+import { Api } from "./coop/recordapi";
 
 export function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;

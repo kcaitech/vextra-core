@@ -22,10 +22,10 @@ import { ContactRoleType, CurveMode, ShapeType } from "../data/typesdefine";
 import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape, getTransformByEnv, modifyTransformByEnv } from "./creator";
 
 import { Page } from "../data/page";
-import { CoopRepository } from "./command/cooprepo";
+import { CoopRepository } from "./coop/cooprepo";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
-import { Api } from "./command/recordapi";
+import { Api } from "./coop/recordapi";
 import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";

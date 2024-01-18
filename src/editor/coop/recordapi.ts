@@ -1,13 +1,7 @@
 
 import * as basicapi from "../basicapi"
-import { Repository } from "../../data/transact";
 import { Page } from "../../data/page";
 import { Document } from "../../data/document";
-import {
-    exportColor,
-    exportTableCell,
-    exportText
-} from "../../data/baseexport";
 import {
     GroupShape,
     Shape,
@@ -16,12 +10,13 @@ import {
     TextShape,
     Variable,
     SymbolShape,
-    VariableType, CurveMode
+    VariableType,
+    CurveMode
 } from "../../data/shape";
-import { updateShapesFrame } from "../coop/utils";
+import { updateShapesFrame } from "./utils";
 import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
-import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
+import { RectShape, SymbolRefShape, TableCellType, TableShape } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
     StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme
@@ -32,7 +27,7 @@ import { ContactForm, ContactRole, CurvePoint, ExportFormat } from "../../data/b
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op } from "../../coop/common/op";
-import { LocalCmd as Cmd } from "../coop/localcmd";
+import { LocalCmd as Cmd } from "./localcmd";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -821,10 +816,7 @@ export class Api {
     tableSetCellContentText(page: Page, table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
         checkShapeAtPage(page, table);
         const cell = table.getCellAt(rowIdx, colIdx, true)!;
-        const origin = cell.text && exportText(cell.text);
-        if (origin !== text) { // undefined
-            this.addOp(basicapi.tableSetCellContentText(cell, text));
-        }
+        if (cell) this.addOp(basicapi.tableSetCellContentText(cell, text));
     }
 
     tableSetCellContentImage(page: Page, table: TableShape, rowIdx: number, colIdx: number, ref: string | undefined) {

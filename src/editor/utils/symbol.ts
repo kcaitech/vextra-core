@@ -2,7 +2,7 @@ import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, Sy
 import { SymbolRefShape } from "../../data/symbolref";
 import { uuid } from "../../basic/uuid";
 import { Page } from "../../data/page";
-import { Api } from "../command/recordapi";
+import { Api } from "../coop/recordapi";
 import { BasicArray } from "../../data/basic";
 import { Border, Fill, Shadow } from "../../data/style";
 import { importBorder, importFill, importShadow } from "../../data/baseimport";

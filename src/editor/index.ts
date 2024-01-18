@@ -6,7 +6,7 @@ import { DocEditor } from "./document";
 import { PageEditor } from "./page";
 import { ShapeEditor } from "./shape";
 import { Controller } from "./controller";
-import { CoopRepository } from "./command/cooprepo";
+import { CoopRepository } from "./coop/cooprepo";
 import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
 import { TableShape } from "../data/table";

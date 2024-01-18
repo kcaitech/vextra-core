@@ -1,4 +1,4 @@
-import { Api } from "../../editor/command/recordapi";
+import { Api } from "../coop/recordapi";
 import { ContactForm, CurveMode, ShapeType } from "../../data/typesdefine";
 import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../../data/shape";
 import { Page } from "../../data/page";

@@ -18,7 +18,7 @@ import { GroupShape, Shape } from '../data/shape';
 import { exportArtboard, exportPage, exportRectShape } from '../data/baseexport';
 import { CMDExecuter } from './command/executer';
 import { Cmd, CmdGroup } from '../coop/data/classes';
-import { CoopRepository } from './command/cooprepo';
+import { CoopRepository } from './coop/cooprepo';
 import { Page } from 'data/page';
 import { updateShapesFrame } from './coop/utils';
 
