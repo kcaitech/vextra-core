@@ -7,6 +7,27 @@ import { uuid } from "../../basic/uuid";
 import { LocalCmd as Cmd } from "../coop/localcmd";
 import { ClientRepo } from "../coop/clientrepo";
 
+class TrapHdl {
+    private repo: Repository;
+    constructor(repo: Repository) {
+        this.repo = repo;
+    }
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const ret = Reflect.get(target, propertyKey, receiver);
+        if (typeof ret !== "function") return ret;
+        return (...args: any[]) => {
+            const save = this.repo.transactCtx.settrap;
+            this.repo.transactCtx.settrap = false;
+            try {
+                return ret.apply(this, args);
+            }
+            finally {
+                this.repo.transactCtx.settrap = save;
+            }
+        }
+    }
+}
+
 export class CoopRepository {
     private __repo: Repository;
     private __clientrepo: ClientRepo;
@@ -17,7 +38,7 @@ export class CoopRepository {
     constructor(uid: string, document: Document, repo: Repository) {
         this.__repo = repo;
         repo.transactCtx.settrap = true; // todo
-        this.__api = new Api(uid, repo);
+        this.__api = new Proxy<Api>(new Api(uid), new TrapHdl(repo));
         this.__clientrepo = new ClientRepo((op, path) => {
             // todo
             throw new Error("not implemented");

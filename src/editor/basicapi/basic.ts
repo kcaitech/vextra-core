@@ -3,7 +3,7 @@ import { ArrayMoveOpRecord, CrdtItem, IdOpRecord, TreeMoveOpRecord, crdtGetArrIn
 import { GroupShape, Shape, Variable } from "../../data/shape";
 import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
 import { OpType } from "../../coop/common/op";
-import { Para, ParaAttr, ParaAttrSetter, Span, SpanAttr, SpanAttrSetter, Text } from "../../data/text";
+import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text";
 import { uuid } from "../../basic/uuid";
 
 // 对象树操作

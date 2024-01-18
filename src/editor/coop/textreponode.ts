@@ -33,19 +33,28 @@ function apply(text: Text, item: OpItem) {
             break;
         case ArrayOpType.Attr:
             if (!(op instanceof TextOpAttr)) throw new Error("not text attr op");
-            // 
-            if (op.props.target === "para") {
-
-            } else {
-
+            const key = op.props.key;
+            const value = op.props.value;
+            const index = op.start;
+            const length = op.length;
+            if (op.props.target === "span") {
+                text.formatText(index, length, key, value);
             }
-
-            if (op.attr instanceof ParaAttrSetter) {
-                text.formatText(op.start, op.length, { paraAttr: op.attr });
-            } else if (op.attr instanceof SpanAttrSetter) {
-                text.formatText(op.start, op.length, { attr: op.attr });
-            } else {
-                throw new Error("not text attr op");
+            // para
+            else if (key === "bulletNumbersType") {
+                text.setBulletNumbersType(value, index, length);
+            }
+            else if (key === "bulletNumbersStart") {
+                text.setBulletNumbersStart(value, index, length);
+            }
+            else if (key === "bulletNumbersBehavior") {
+                text.setBulletNumbersBehavior(value, index, length);
+            }
+            else if (key === "indent") {
+                text.setParaIndent(value, index, length);
+            }
+            else {
+                text.formatPara(index, length, key, value);
             }
             break;
         case ArrayOpType.Selection:

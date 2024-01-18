@@ -53,10 +53,8 @@ export class Api {
     private uid: string;
     private ops: Op[] = [];
     private needUpdateFrame: { shape: Shape, page: Page }[] = [];
-    private repo: Repository;
-    constructor(uid: string, repo: Repository) {
+    constructor(uid: string) {
         this.uid = uid;
-        this.repo = repo;
     }
     start() {
         this.ops.length = 0;
@@ -90,18 +88,6 @@ export class Api {
         }
     }
 
-    // todo 走proxy
-    // private __trap(f: () => void) {
-    //     // todo
-    //     const save = this.repo.transactCtx.settrap;
-    //     this.repo.transactCtx.settrap = false;
-    //     try {
-    //         f();
-    //     }
-    //     finally {
-    //         this.repo.transactCtx.settrap = save;
-    //     }
-    // }
     private addOp(op: Op[] | Op | undefined) {
         if (Array.isArray(op)) this.ops.push(...op);
         else if (op) this.ops.push(op);
@@ -827,225 +813,129 @@ export class Api {
     // table
     tableSetCellContentType(page: Page, table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx, true)!;
-            const origin = cell.cellType;
-            basicapi.tableSetCellContentType(cell, contentType);
-            this.addOp(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentType, contentType, origin))
-        })
+        // todo 这不对
+        const cell = table.getCellAt(rowIdx, colIdx, true);
+        if (cell) this.addOp(basicapi.tableSetCellContentType(cell, contentType));
     }
 
     tableSetCellContentText(page: Page, table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx, true)!;
-            const origin = cell.text && exportText(cell.text);
-            if (origin !== text) { // undefined
-                basicapi.tableSetCellContentText(cell, text);
-                this.addOp(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentText, text && exportText(text), origin))
-            }
-        })
+        const cell = table.getCellAt(rowIdx, colIdx, true)!;
+        const origin = cell.text && exportText(cell.text);
+        if (origin !== text) { // undefined
+            this.addOp(basicapi.tableSetCellContentText(cell, text));
+        }
     }
 
     tableSetCellContentImage(page: Page, table: TableShape, rowIdx: number, colIdx: number, ref: string | undefined) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx, true)!;
-            const origin = cell.imageRef;
-            if (origin !== ref) {
-                basicapi.tableSetCellContentImage(cell, ref);
-                this.addOp(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellContentImage, ref, origin))
-            }
-        })
+        const cell = table.getCellAt(rowIdx, colIdx, true)!;
+        const origin = cell.imageRef;
+        if (origin !== ref) {
+            this.addOp(basicapi.tableSetCellContentImage(cell, ref));
+        }
     }
 
     tableModifyColWidth(page: Page, table: TableShape, idx: number, width: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.colWidths[idx];
-            basicapi.tableModifyColWidth(page, table, idx, width);
-            this.addOp(TableCmdModify.Make(page.id, table.id, idx, TableOpTarget.Col, TABLE_ATTR_ID.colWidth, width, origin));
-        })
+        this.addOp(basicapi.tableModifyColWidth(page, table, idx, width));
     }
 
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.rowHeights[idx];
-            basicapi.tableModifyRowHeight(page, table, idx, height);
-            this.addOp(TableCmdModify.Make(page.id, table.id, idx, TableOpTarget.Row, TABLE_ATTR_ID.rowHeight, height, origin));
-        })
+        this.addOp(basicapi.tableModifyRowHeight(page, table, idx, height));
     }
 
-    tableInsertRow(page: Page, table: TableShape, idx: number, height: number, data: TableCell[]) {
+    tableInsertRow(page: Page, table: TableShape, idx: number, height: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            basicapi.tableInsertRow(page, table, idx, height, data);
-            const cells = data.map((cell) => exportTableCell(cell));
-            this.addOp(TableCmdInsert.Make(page.id, table.id, idx, TableOpTarget.Row, cells, height));
-        })
+        this.addOp(basicapi.tableInsertRow(this.uid, table, idx, height));
     }
 
     tableRemoveRow(page: Page, table: TableShape, idx: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.rowHeights[idx];
-            const del = basicapi.tableRemoveRow(page, table, idx);
-            const cells = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
-            this.addOp(TableCmdRemove.Make(page.id, table.id, idx, TableOpTarget.Row, cells, origin));
-        })
+        this.addOp(basicapi.tableRemoveRow(this.uid, table, idx));
+        // todo 删除对应的单元格
     }
 
-    tableInsertCol(page: Page, table: TableShape, idx: number, width: number, data: TableCell[]) {
+    tableInsertCol(page: Page, table: TableShape, idx: number, width: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            basicapi.tableInsertCol(page, table, idx, width, data);
-            const cells = data.map((cell) => exportTableCell(cell));
-            this.addOp(TableCmdInsert.Make(page.id, table.id, idx, TableOpTarget.Col, cells, width));
-        })
+        this.addOp(basicapi.tableInsertCol(this.uid, table, idx, width));
     }
 
     tableRemoveCol(page: Page, table: TableShape, idx: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.colWidths[idx];
-            const del = basicapi.tableRemoveCol(page, table, idx);
-            const cells = del.map((cell) => cell && ((cell.cellType ?? TableCellType.None) !== TableCellType.None) && exportTableCell(cell));
-            this.addOp(TableCmdRemove.Make(page.id, table.id, idx, TableOpTarget.Col, cells, origin));
-        })
+        this.addOp(basicapi.tableRemoveCol(this.uid, table, idx));
+        // todo 删除对应的单元格
     }
 
     tableModifyCellSpan(page: Page, table: TableShape, rowIdx: number, colIdx: number, rowSpan: number, colSpan: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const cell = table.getCellAt(rowIdx, colIdx, true)!;
-            const origin = { rowSpan: cell?.rowSpan, colSpan: cell?.colSpan };
-            if ((origin.rowSpan ?? 1) !== rowSpan || (origin.colSpan ?? 1) !== colSpan) {
-                basicapi.tableModifyCellSpan(cell, rowSpan, colSpan);
-                this.addOp(ShapeCmdModify.Make(page.id, [table.id, new TableIndex(rowIdx, colIdx)], SHAPE_ATTR_ID.cellSpan, { rowSpan, colSpan }, origin))
-            }
-        })
+        const cell = table.getCellAt(rowIdx, colIdx, true)!;
+        const origin = { rowSpan: cell?.rowSpan, colSpan: cell?.colSpan };
+        if ((origin.rowSpan ?? 1) !== rowSpan || (origin.colSpan ?? 1) !== colSpan) {
+            this.addOp(basicapi.tableModifyCellSpan(cell, rowSpan, colSpan));
+        }
     }
 
     // table text
     tableModifyTextColor(page: Page, table: TableShape, color: Color | undefined) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.color ? exportColor(table.textAttr?.color) : undefined;
-            basicapi.tableModifyTextColor(table, color);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextColor, color ? exportColor(color) : undefined, origin));
-        })
+        this.addOp(basicapi.tableModifyTextColor(table, color));
     }
     tableModifyTextHighlightColor(page: Page, table: TableShape, color: Color | undefined) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.highlight ? exportColor(table.textAttr?.highlight) : undefined;
-            basicapi.tableModifyTextHighlightColor(table, color);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextHighlight, color ? exportColor(color) : undefined, origin));
-        })
+        this.addOp(basicapi.tableModifyTextHighlightColor(table, color));
     }
     tableModifyTextFontName(page: Page, table: TableShape, fontName: string) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.fontName;
-            basicapi.tableModifyTextFontName(table, fontName);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextFontName, fontName, origin));
-        })
+        this.addOp(basicapi.tableModifyTextFontName(table, fontName));
     }
     tableModifyTextFontSize(page: Page, table: TableShape, fontSize: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.fontSize;
-            basicapi.tableModifyTextFontSize(table, fontSize);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextFontSize, fontSize, origin));
-        })
+        this.addOp(basicapi.tableModifyTextFontSize(table, fontSize));
     }
     tableModifyTextVerAlign(page: Page, table: TableShape, verAlign: TextVerAlign) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.verAlign;
-            basicapi.tableModifyTextVerAlign(table, verAlign);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextVerAlign, verAlign, origin));
-        })
+        this.addOp(basicapi.tableModifyTextVerAlign(table, verAlign));
     }
     tableModifyTextHorAlign(page: Page, table: TableShape, horAlign: TextHorAlign) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.alignment;
-            basicapi.tableModifyTextHorAlign(table, horAlign);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextHorAlign, horAlign, origin));
-        })
+        this.addOp(basicapi.tableModifyTextHorAlign(table, horAlign));
     }
     tableModifyTextMinLineHeight(page: Page, table: TableShape, lineHeight: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.minimumLineHeight;
-            basicapi.tableModifyTextMinLineHeight(table, lineHeight);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextMinLineHeight, lineHeight, origin));
-        })
+        this.addOp(basicapi.tableModifyTextMinLineHeight(table, lineHeight));
     }
     tableModifyTextMaxLineHeight(page: Page, table: TableShape, lineHeight: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.maximumLineHeight;
-            basicapi.tableModifyTextMaxLineHeight(table, lineHeight);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextMaxLineHeight, lineHeight, origin));
-        })
+        this.addOp(basicapi.tableModifyTextMaxLineHeight(table, lineHeight));
     }
     tableModifyTextKerning(page: Page, table: TableShape, kerning: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.kerning;
-            basicapi.tableModifyTextKerning(table, kerning);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextKerning, kerning, origin));
-        })
+        this.addOp(basicapi.tableModifyTextKerning(table, kerning));
     }
     tableModifyTextParaSpacing(page: Page, table: TableShape, paraSpacing: number) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.paraSpacing;
-            basicapi.tableModifyTextParaSpacing(table, paraSpacing);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextParaSpacing, paraSpacing, origin));
-        })
+        this.addOp(basicapi.tableModifyTextParaSpacing(table, paraSpacing));
     }
     tableModifyTextUnderline(page: Page, table: TableShape, underline: UnderlineType | undefined) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.underline;
-            basicapi.tableModifyTextUnderline(table, underline);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextUnderline, underline, origin));
-        })
+        this.addOp(basicapi.tableModifyTextUnderline(table, underline));
     }
     tableModifyTextStrikethrough(page: Page, table: TableShape, strikethrough: StrikethroughType | undefined) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.strikethrough;
-            basicapi.tableModifyTextStrikethrough(table, strikethrough);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextStrikethrough, strikethrough, origin));
-        })
+        this.addOp(basicapi.tableModifyTextStrikethrough(table, strikethrough));
     }
     tableModifyTextBold(page: Page, table: TableShape, bold: boolean) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.bold;
-            basicapi.tableModifyTextBold(table, bold);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextBold, bold, origin));
-        })
+        this.addOp(basicapi.tableModifyTextBold(table, bold));
     }
     tableModifyTextItalic(page: Page, table: TableShape, italic: boolean) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.italic;
-            basicapi.tableModifyTextItalic(table, italic);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextItalic, italic, origin));
-        })
+        this.addOp(basicapi.tableModifyTextItalic(table, italic));
     }
     tableModifyTextTransform(page: Page, table: TableShape, transform: TextTransformType | undefined) {
         checkShapeAtPage(page, table);
-        this.__trap(() => {
-            const origin = table.textAttr?.transform;
-            basicapi.tableModifyTextTransform(table, transform);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(table), SHAPE_ATTR_ID.tableTextTransform, transform, origin));
-        })
+        this.addOp(basicapi.tableModifyTextTransform(table, transform));
     }
 }
