@@ -435,8 +435,6 @@ export class Api {
         }
     }
     shapeModifyVariable(page: Page, _var: Variable, value: any) {
-        console.log('modify');
-
         // modify text var
         if (_var.value instanceof Text) {
             const _str = value.toString();
