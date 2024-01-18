@@ -1,4 +1,4 @@
-import { Basic, BasicArray } from "../../data/basic";
+import { Basic, BasicArray, BasicMap } from "../../data/basic";
 import { ArrayMoveOpRecord, CrdtItem, IdOpRecord, TreeMoveOpRecord, crdtGetArrIndex } from "../../coop/client/crdt";
 import { GroupShape, Shape, Variable } from "../../data/shape";
 import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
@@ -67,7 +67,7 @@ export function crdtShapeMove(uid: string, parent: GroupShape, index: number, pa
 }
 
 // 属性设置操作
-export function crdtSetAttr(obj: Basic, key: string, value: any): IdOpRecord {
+export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value: any): IdOpRecord {
     let origin;
     if (obj instanceof Map) {
         origin = obj.get(key);

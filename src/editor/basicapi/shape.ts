@@ -1,199 +1,191 @@
 import { Page } from "../../data/page";
-import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
-import { ContactShape, SymbolRefShape, ContactForm } from "../../data/classes";
-import { BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data/typesdefine";
+import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable, genRefId } from "../../data/shape";
+import { ContactShape, SymbolRefShape, ContactForm, ContextSettings } from "../../data/classes";
+import { BlendMode, BoolOp, CurveMode, MarkerType, OverrideType, Point2D } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
+import { crdtSetAttr } from "./basic";
 
 
 export function shapeModifyX(page: Page, shape: Shape, x: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    // translateTo(shape, x, y)
-    // needUpdateFrame.push(shape);
     const frame = shape.frame;
     if (x !== frame.x) {
-        frame.x = x;
+        const op = crdtSetAttr(frame, 'x', x);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        return op;
     }
 }
 export function shapeModifyY(page: Page, shape: Shape, y: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    // translateTo(shape, x, y)
-    // needUpdateFrame.push(shape);
     const frame = shape.frame;
     if (y !== frame.y) {
-        // frame.x = x;
-        frame.y = y;
+        const op = crdtSetAttr(frame, 'y', y);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        return op;
     }
 }
 export function shapeModifyWH(page: Page, shape: Shape, w: number, h: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const frame = shape.frame;
     if (w !== frame.width || h !== frame.height) {
-        // frame.width = w;
-        // frame.height = h;
-        shape.setFrameSize(w, h);
+        const op = [crdtSetAttr(frame, 'width', w), crdtSetAttr(frame, 'height', h)];
+        // shape.setFrameSize(w, h); // todo
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
-    }
-}
-export function shapeModifyWideX(page: Page, shape: Shape, x: number) {
-    const frame = (shape as GroupShape).frame;
-    if (x !== frame.x) {
-        frame.x = x;
-    }
-}
-export function shapeModifyWideY(page: Page, shape: Shape, y: number) {
-    const frame = (shape as GroupShape).frame;
-    if (y !== frame.y) {
-        frame.y = y;
-    }
-}
-export function shapeModifyWideWH(page: Page, shape: Shape, w: number, h: number) {
-    const frame = shape.frame;
-    if (w !== frame.width || h !== frame.height) {
-        (shape as GroupShape).setWideFrameSize(w, h);
+        return op;
     }
 }
 export function shapeModifyStartMarkerType(shape: Shape, mt: MarkerType) {
     const style = shape.style;
-    if (mt !== style.startMarkerType) {
-        style.startMarkerType = mt;
-    }
+    if (mt !== style.startMarkerType) return crdtSetAttr(style, 'startMarkerType', mt);
 }
 export function shapeModifyEndMarkerType(shape: Shape, mt: MarkerType) {
     const style = shape.style;
-    if (mt !== style.endMarkerType) {
-        style.endMarkerType = mt;
-    }
+    if (mt !== style.endMarkerType) return crdtSetAttr(style, 'endMarkerType', mt);
 }
 export function shapeModifyWidth(page: Page, shape: Shape, w: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const frame = shape.frame;
     if (w !== frame.width) {
-        // frame.width = w;
-        // frame.height = h;
-        shape.setFrameSize(w, frame.height);
+        // shape.setFrameSize(w, frame.height); // todo
+        const op = crdtSetAttr(frame, 'width', w);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        return op;
     }
 }
 export function shapeModifyHeight(page: Page, shape: Shape, h: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
     const frame = shape.frame;
     if (h !== frame.height) {
-        // frame.width = w;
-        // frame.height = h;
-        shape.setFrameSize(frame.width, h);
+        // shape.setFrameSize(frame.width, h);
+        const op = crdtSetAttr(frame, 'height', h);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        return op;
     }
 }
 export function shapeModifyRotate(page: Page, shape: Shape, rotate: number, needUpdateFrame?: { shape: Shape, page: Page }[]) {
+    rotate = rotate % 360;
     if (rotate !== shape.rotation) {
-        shape.rotation = rotate;
+        const op = crdtSetAttr(shape, 'rotation', rotate);
         if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+        return op;
     }
 }
 export function shapeModifyConstrainerProportions(shape: Shape, prop: boolean) {
-    shape.constrainerProportions = prop;
+    if (shape.constrainerProportions !== prop) return crdtSetAttr(shape, 'constrainerProportions', prop);
 }
 export function shapeModifyNameFixed(shape: Shape, isFixed: boolean) {
-    shape.nameIsFixed = isFixed;
+    if (shape.nameIsFixed !== isFixed) return crdtSetAttr(shape, 'nameIsFixed', isFixed);
 }
 export function shapeModifyContactTo(shape: ContactShape, to: ContactForm | undefined) {
-    shape.to = to;
+    return crdtSetAttr(shape, 'to', to);
 }
 export function shapeModifyContactFrom(shape: ContactShape, from: ContactForm | undefined) {
-    shape.from = from;
+    return crdtSetAttr(shape, 'from', from);
 }
 export function shapeModifyEditedState(shape: ContactShape, state: boolean) {
-    shape.isEdited = state;
+    return crdtSetAttr(shape, 'isEdited', state);
 }
 export function shapeModifyName(shape: Shape, name: string) {
-    shape.name = name;
+    return crdtSetAttr(shape, 'name', name);
 }
 export function shapeModifyVisible(shape: Shape | Variable, isVisible: boolean) {
-    if (shape instanceof Shape) shape.setVisible(isVisible);
-    else shape.value = isVisible;
+    if (shape instanceof Shape) return crdtSetAttr(shape, 'isVisible', isVisible);
+    else return crdtSetAttr(shape, 'value', isVisible); // shape.value = isVisible;
 }
 export function shapeModifyLock(shape: Shape, isLocked: boolean) {
-    shape.isLocked = isLocked;
+    return crdtSetAttr(shape, 'isLocked', isLocked);
 }
 export function shapeModifyHFlip(page: Page, shape: Shape, hflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    shape.isFlippedHorizontal = hflip;
+    const op = crdtSetAttr(shape, 'isFlippedHorizontal', hflip);
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    return op;
 }
 export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined, needUpdateFrame?: { shape: Shape, page: Page }[]) {
-    shape.isFlippedVertical = vflip;
+    const op = crdtSetAttr(shape, 'isFlippedVertical', vflip);
     if (needUpdateFrame) needUpdateFrame.push({ shape, page });
+    return op;
 }
 export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: number) {
-    shape.setResizingConstraint(resizingConstraint);
+    return crdtSetAttr(shape, 'resizingConstraint', resizingConstraint);
 }
 export function shapeModifyContextSettingOpacity(shape: Shape, contextSettingsOpacity: number) {
-    shape.setContextSettingsOpacity(contextSettingsOpacity);
+    if (!shape.style.contextSettings) {
+        shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+    }
+    return crdtSetAttr(shape.style.contextSettings, 'opacity', contextSettingsOpacity);
 }
 export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
-    shape.setRectRadius(lt, rt, rb, lb);
+    const ps = shape.points;
+    if (ps.length === 4) {
+        return [crdtSetAttr(ps[0], 'radius', lt), crdtSetAttr(ps[1], 'radius', rt), crdtSetAttr(ps[2], 'radius', rb), crdtSetAttr(ps[3], 'radius', lb)];
+    }
 }
 export function shapeModifyFixedRadius(shape: GroupShape | PathShape | PathShape2, fixedRadius: number | undefined) {
-    shape.fixedRadius = fixedRadius;
+    return crdtSetAttr(shape, 'fixedRadius', fixedRadius);
 }
 export function shapeModifyBoolOp(shape: Shape, op: BoolOp | undefined) {
-    shape.boolOp = op;
+    return crdtSetAttr(shape, 'boolOp', op);
 }
 export function shapeModifyPathShapeClosedStatus(shape: PathShape, is: boolean) {
-    shape.isClosed = is;
+    return crdtSetAttr(shape, 'isClosed', is);
 }
 export function shapeModifyBoolOpShape(shape: GroupShape, isOpShape: boolean | undefined) {
-    if (isOpShape) shape.isBoolOpShape = true;
-    else shape.isBoolOpShape = undefined;
+    return crdtSetAttr(shape, 'isBoolOpShape', isOpShape ? true : undefined);
 }
 
 export function shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
-    p.x = point.x;
-    p.y = point.y;
+    if (p) return [crdtSetAttr(p, 'x', point.x), crdtSetAttr(p, 'y', point.y)];
 }
 export function shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
-    p.fromX = point.x;
-    p.fromY = point.y;
+    if (p) return [crdtSetAttr(p, 'fromX', point.x), crdtSetAttr(p, 'fromY', point.y)];
 }
 export function shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
     const p = shape.points[index];
-    p.toX = point.x;
-    p.toY = point.y;
+    if (p) return [crdtSetAttr(p, 'toX', point.x), crdtSetAttr(p, 'toY', point.y)];
 }
 export function shapeModifyCurveMode(page: Page, shape: PathShape, index: number, curveMode: CurveMode) {
     const p = shape.points[index];
-    p.mode = curveMode;
+    if (p) return crdtSetAttr(p, 'mode', curveMode);
 }
 export function shapeModifyPointCornerRadius(page: Page, shape: PathShape, index: number, cornerRadius: number) {
     const p = shape.points[index];
-    p.radius = cornerRadius;
+    if (p) return crdtSetAttr(p, 'radius', cornerRadius);
 }
 export function shapeModifyHasFrom(page: Page, shape: PathShape, index: number, hasFrom: boolean) {
     const p = shape.points[index];
-    p.hasFrom = hasFrom;
+    if (p) return crdtSetAttr(p, 'hasFrom', hasFrom);
 }
 export function shapeModifyHasTo(page: Page, shape: PathShape, index: number, hasTo: boolean) {
     const p = shape.points[index];
-    p.hasTo = hasTo;
+    if (p) return crdtSetAttr(p, 'hasTo', hasTo);
 }
 export function shapeModifyVariable(page: Page, _var: Variable, value: any) {
-    _var.value = value;
+    return crdtSetAttr(_var, 'value', value);
 }
 export function shapeAddVariable(page: Page, shape: SymbolShape | SymbolRefShape, _var: Variable) {
-    shape.addVar(_var);
+    if (!shape.variables) shape.variables = new BasicMap<string, Variable>();
+    return crdtSetAttr(shape.variables, _var.id, _var);
 }
 export function shapeRemoveVariable(page: Page, shape: SymbolShape | SymbolRefShape, key: string) {
-    shape.removeVar(key);
+    if (shape.variables) return crdtSetAttr(shape.variables, key, undefined);
 }
 export function shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
     if (!shape.varbinds) shape.varbinds = new BasicMap();
-    shape.varbinds.set(type, varId);
+    return crdtSetAttr(shape.varbinds, type, varId);
+}
+export function shapeUnbindVar(shape: Shape, type: OverrideType) {
+    if (shape.varbinds) return crdtSetAttr(shape.varbinds, type, undefined);
 }
 export function shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
-    shape.addOverrid2(refId, attr, value);
+    shapeAddOverride(page, shape, refId, attr, value);
 }
 export function shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
-    shape.addOverrid2(refId, attr, value);
+    if (!shape.overrides) shape.overrides = new BasicMap<string, string>();
+    refId = genRefId(refId, attr); // id+type->var
+    shape.overrides.set(refId, value);
+    return crdtSetAttr(shape.overrides, refId, value);
 }
 export function shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
     if (!shape.symtags) shape.symtags = new BasicMap();
-    shape.setTag(varId, tag);
+    return crdtSetAttr(shape.symtags, varId, tag);
+}
+export function shapeRemoveOverride(shape: SymbolShape | SymbolRefShape, refId: string) {
+    if (shape.overrides) return crdtSetAttr(shape.overrides, refId, undefined);
 }

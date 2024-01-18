@@ -19,7 +19,6 @@ import {
     exportVariable,
     exportExportFormat, exportExportFileFormat, exportExportFormatNameingScheme
 } from "../../data/baseexport";
-import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, SHADOW_ID, SHADOW_ATTR_ID, CUTOUT_ID, CUTOUT_ATTR_ID } from "./consts";
 import {
     GroupShape,
     Shape,
@@ -145,13 +144,11 @@ export class Api {
     }
     shapeModifyX(page: Page, shape: Shape, x: number) {
         checkShapeAtPage(page, shape);
-        const frame = shape.frame;
-        if (x !== frame.x) this.addOp(basicapi.crdtSetAttr(frame, "x", x));
+        this.addOp(basicapi.shapeModifyX(page, shape, x, this.needUpdateFrame));
     }
     shapeModifyY(page: Page, shape: Shape, y: number) {
         checkShapeAtPage(page, shape);
-        const frame = shape.frame;
-        if (y !== frame.y) this.addOp(basicapi.crdtSetAttr(frame, "y", y));
+        this.addOp(basicapi.shapeModifyY(page, shape, y, this.needUpdateFrame));
     }
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number) {
         this.shapeModifyWidth(page, shape, w);
@@ -159,23 +156,19 @@ export class Api {
     }
     shapeModifyWidth(page: Page, shape: Shape, w: number) {
         checkShapeAtPage(page, shape);
-        const frame = shape.frame;
-        if (w !== frame.width) this.addOp(basicapi.crdtSetAttr(frame, "width", w));
+        this.addOp(basicapi.shapeModifyWidth(page, shape, w, this.needUpdateFrame));
     }
     shapeModifyHeight(page: Page, shape: Shape, h: number) {
         checkShapeAtPage(page, shape);
-        const frame = shape.frame;
-        if (h !== frame.height) this.addOp(basicapi.crdtSetAttr(frame, "height", h));
+        this.addOp(basicapi.shapeModifyHeight(page, shape, h, this.needUpdateFrame));
     }
     shapeModifyStartMarkerType(page: Page, shape: Shape, mt: MarkerType) {
         checkShapeAtPage(page, shape);
-        const style = shape.style;
-        if (mt !== style.startMarkerType) this.addOp(basicapi.crdtSetAttr(style, "startMarkerType", mt));
+        this.addOp(basicapi.shapeModifyStartMarkerType(shape, mt));
     }
     shapeModifyEndMarkerType(page: Page, shape: Shape, mt: MarkerType) {
         checkShapeAtPage(page, shape);
-        const style = shape.style;
-        if (mt !== style.endMarkerType) this.addOp(basicapi.crdtSetAttr(style, "endMarkerType", mt));
+        this.addOp(basicapi.shapeModifyEndMarkerType(shape, mt));
     }
 
     shapeModifyContactFrom(page: Page, shape: ContactShape, from: ContactForm | undefined) {
@@ -192,12 +185,11 @@ export class Api {
     }
     shapeModifyRotate(page: Page, shape: Shape, rotate: number) {
         checkShapeAtPage(page, shape);
-        rotate = rotate % 360;
-        if (rotate !== shape.rotation) this.addOp(basicapi.crdtSetAttr(shape, "rotation", rotate))
+        this.addOp(basicapi.shapeModifyRotate(page, shape, rotate));
     }
     shapeModifyConstrainerProportions(page: Page, shape: Shape, prop: boolean) {
         checkShapeAtPage(page, shape);
-        if (shape.constrainerProportions !== prop) this.addOp(basicapi.crdtSetAttr(shape, "constrainerProportions", prop));
+        this.addOp(basicapi.shapeModifyConstrainerProportions(shape, prop));
     }
     shapeModifyName(page: Page, shape: Shape, name: string) {
         checkShapeAtPage(page, shape);
@@ -205,7 +197,7 @@ export class Api {
     }
     shapeModifyNameFixed(page: Page, shape: Shape, isFixed: boolean) {
         checkShapeAtPage(page, shape);
-        if (shape.nameIsFixed !== isFixed) this.addOp(basicapi.crdtSetAttr(shape, "nameIsFixed", isFixed));
+        this.addOp(basicapi.shapeModifyNameFixed(shape, isFixed));
     }
     shapeModifyVariable(page: Page, _var: Variable, value: any) {
         // modify text var
@@ -225,77 +217,28 @@ export class Api {
     }
     shapeAddVariable(page: Page, shape: SymbolShape | SymbolRefShape, _var: Variable) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            shape.addVar(_var);
-            const shapeId = genShapeId(shape);
-            shapeId.push(_var.id);
-            const origin = new Variable(_var.id, _var.type, _var.name, undefined);
-            this.addOp(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyvar1, exportVariable(_var), exportVariable(origin)));
-        })
+        this.addOp(basicapi.shapeAddVariable(page, shape, _var));
     }
     shapeRemoveVariable(page: Page, shape: SymbolShape | SymbolRefShape, key: string) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const _var = shape.getVar(key);
-            if (!_var) return;
-            shape.removeVar(key);
-            const shapeId = genShapeId(shape);
-            shapeId.push(key);
-            const cur = new Variable(_var.id, _var.type, _var.name, undefined);
-            this.addOp(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyvar1, exportVariable(cur), exportVariable(_var)));
-        })
+        this.addOp(basicapi.shapeRemoveVariable(page, shape, key));
     }
     shapeRemoveVirbindsEx(page: Page, shape: SymbolShape | SymbolRefShape, key: string, varId: string, type: VariableType) {
         checkShapeAtPage(page, shape);
-        const save = shape.overrides?.get(key);
-        if (!save) return
-        this.__trap(() => {
-            const shapeId = genShapeId(shape);
-            (shape as SymbolRefShape).removeVirbindsEx(key);
-            shapeId.push(type);
-            this.addOp(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.overrides, { type, varId: undefined }, { type, varId: save }));
-        })
+        this.addOp(basicapi.shapeRemoveOverride(shape, key));
     }
     shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const save = shape.varbinds?.get(type);
-            if (!shape.varbinds) shape.varbinds = new BasicMap();
-            shape.varbinds.set(type, varId);
-            const shapeId = genShapeId(shape);
-            shapeId.push(type);
-            this.addOp(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.bindvar, { type, varId }, { type, varId: save }));
-        })
+        this.addOp(basicapi.shapeBindVar(page, shape, type, varId));
     }
     shapeUnbinVar(page: Page, shape: Shape, type: OverrideType) {
         checkShapeAtPage(page, shape);
-        const save = shape.varbinds?.get(type);
-        if (!save) return;
-        this.__trap(() => {
-            const shapeId = genShapeId(shape);
-            shape.varbinds!.delete(type);
-            shapeId.push(type);
-            this.addOp(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyoverride1, { type, varId: undefined }, { type, varId: save }));
-        })
+        this.addOp(basicapi.shapeUnbindVar(shape, type));
     }
-    // shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
-    //     checkShapeAtPage(page, shape);
-    //     this.__trap(() => {
-    //         const save = shape.getOverrid2(refId, attr);
-    //         shape.addOverrid2(refId, attr, value);
-    //         const shapeId = genShapeId(shape);
-    //         shapeId.push(refId + '/' + attr);
-    //         this.addCmd(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyoverride1, { refId, attr, value }, { refId, attr, value: save }));
-    //     })
-    // }
+
     shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            shape.addOverrid2(refId, attr, value);
-            const shapeId = genShapeId(shape);
-            shapeId.push(refId + '/' + attr);
-            this.addOp(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.modifyoverride1, { refId, attr, value }, { refId, attr, value: undefined }));
-        })
+        this.addOp(basicapi.shapeAddOverride(page, shape, refId, attr, value));
     }
 
     /**
@@ -303,14 +246,7 @@ export class Api {
      */
     shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const save = shape.symtags?.get(varId);
-            const shapeId = genShapeId(shape);
-            shapeId.push(varId);
-            if (!shape.symtags) shape.symtags = new BasicMap();
-            shape.setTag(varId, tag);
-            this.addOp(ShapeCmdModify.Make(page.id, shapeId, SHAPE_ATTR_ID.symtags, { varId, tag }, { varId, tag: save }));
-        })
+        this.addOp(basicapi.shapeModifyVartag(page, shape, varId, tag));
     }
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
         checkShapeAtPage(page, shape);
@@ -338,14 +274,7 @@ export class Api {
             return; // todo
         }
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            if (!shape.style.contextSettings) {
-                shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
-            }
-            const save = shape.style.contextSettings.opacity;
-            shape.setContextSettingsOpacity(contextSettingsOpacity);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.contextSettingsOpacity, contextSettingsOpacity, save))
-        })
+        this.addOp(basicapi.shapeModifyContextSettingOpacity(shape, contextSettingsOpacity));
     }
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
         checkShapeAtPage(page, shape);
@@ -353,11 +282,7 @@ export class Api {
     }
     shapeModifyRadius(page: Page, shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const save = shape.getRectRadius();
-            shape.setRectRadius(lt, rt, rb, lb);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.radius, { lt, rt, rb, lb }, save))
-        })
+        this.addOp(basicapi.shapeModifyRadius(shape, lt, rt, rb, lb));
     }
     shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2 | TextShape, fixedRadius: number | undefined) {
         checkShapeAtPage(page, shape);
@@ -365,33 +290,15 @@ export class Api {
     }
     shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const p = shape.points[index];
-            const origin: Point2D = { x: p.x, y: p.y }
-            p.x = point.x;
-            p.y = point.y;
-            this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, p.id, POINTS_ATTR_ID.point, exportPoint2D(point), origin))
-        })
+        this.addOp(basicapi.shapeModifyCurvPoint(page, shape, index, point));
     }
     shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const p = shape.points[index];
-            const origin = { x: p.fromX, y: p.fromY }
-            p.fromX = point.x;
-            p.fromY = point.y;
-            this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, p.id, POINTS_ATTR_ID.from, exportPoint2D(point), origin))
-        })
+        this.addOp(basicapi.shapeModifyCurvFromPoint(page, shape, index, point));
     }
     shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: Point2D) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const p = shape.points[index];
-            const origin = { x: p.toX, y: p.toY };
-            p.toX = point.x;
-            p.toY = point.y;
-            this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, p.id, POINTS_ATTR_ID.to, exportPoint2D(point), origin))
-        })
+        this.addOp(basicapi.shapeModifyCurvToPoint(page, shape, index, point));
     }
     shapeModifyBoolOp(page: Page, shape: Shape, op: BoolOp | undefined) {
         checkShapeAtPage(page, shape);
@@ -420,72 +327,41 @@ export class Api {
     // 添加一条border
     addBorderAt(page: Page, shape: Shape | Variable, border: Border, index: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-            basicapi.addBorderAt(borders, border, index);
-            this.addOp(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, index, exportBorder(border)))
-        })
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        this.addOp(basicapi.addBorderAt(this.uid, borders, border, index));
     }
     // 添加多条border
     addBorders(page: Page, shape: Shape | Variable, borders: Border[]) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const bordersOld = shape instanceof Shape ? shape.style.borders : shape.value;
-            for (let i = 0; i < borders.length; i++) {
-                const border = borders[i];
-                basicapi.addBorderAt(bordersOld, border, i);
-                this.addOp(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), BORDER_ID, border.id, i, exportBorder(border)));
-            }
-        })
+        const bordersOld = shape instanceof Shape ? shape.style.borders : shape.value;
+        for (let i = 0; i < borders.length; i++) {
+            const border = borders[i];
+            this.addOp(basicapi.addBorderAt(this.uid, bordersOld, border, i));
+        }
     }
     // 删除一次fill
     deleteFillAt(page: Page, shape: Shape | Variable, index: number) {
         checkShapeAtPage(page, shape);
         const fills = shape instanceof Shape ? shape.style.fills : shape.value;
-        if (!fills[index]) return;
-        this.__trap(() => {
-            const fill = basicapi.deleteFillAt(fills, index);
-            if (fill) this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, index, exportFill(fill)));
-        })
+        this.addOp(basicapi.deleteBorderAt(this.uid, fills, index));
     }
     // 批量删除fill
     deleteFills(page: Page, shape: Shape | Variable, index: number, strength: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const fillsOld = shape instanceof Shape ? shape.style.fills : shape.value;
-            const fills = basicapi.deleteFills(fillsOld, index, strength);
-            if (fills && fills.length) {
-                for (let i = 0; i < fills.length; i++) {
-                    const fill = fills[i];
-                    this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, index, exportFill(fill)));
-                }
-            }
-        })
+        const fillsOld = shape instanceof Shape ? shape.style.fills : shape.value;
+        this.addOp(basicapi.deleteFills(this.uid, fillsOld, index, strength));
     }
     // 删除一次border
     deleteBorderAt(page: Page, shape: Shape | Variable, index: number) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-        if (!borders[index]) return;
-        this.__trap(() => {
-            const border = basicapi.deleteBorderAt(borders, index);
-            if (border) this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), BORDER_ID, border.id, index, exportBorder(border)));
-        })
+        this.addOp(basicapi.deleteBorderAt(this.uid, borders, index));
     }
     // 批量删除border
     deleteBorders(page: Page, shape: Shape | Variable, index: number, strength: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const bordersOld = shape instanceof Shape ? shape.style.borders : shape.value;
-            const borders = basicapi.deleteBorders(bordersOld, index, strength);
-            if (borders && borders.length) {
-                for (let i = 0; i < borders.length; i++) {
-                    const border = borders[i];
-                    this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), BORDER_ID, border.id, index, exportBorder(border)));
-                }
-            }
-        })
-
+        const bordersOld = shape instanceof Shape ? shape.style.borders : shape.value;
+        this.addOp(basicapi.deleteBorders(this.uid, bordersOld, index, strength));
     }
     setFillColor(page: Page, shape: Shape | Variable, idx: number, color: Color) {
         checkShapeAtPage(page, shape);
@@ -538,437 +414,204 @@ export class Api {
     }
     moveBorder(page: Page, shape: Shape | Variable, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-
-            const border = borders.splice(idx, 1)[0];
-            if (border) {
-                borders.splice(idx2, 0, border);
-                this.addOp(ShapeArrayAttrMove.Make(page.id, genShapeId(shape), BORDER_ID, idx, idx2))
-            }
-        })
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        this.addOp(basicapi.moveBorder(this.uid, borders, idx, idx2));
     }
     // points
     addPointAt(page: Page, shape: PathShape, idx: number, point: CurvePoint) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            basicapi.addPointAt(shape, point, idx)
-            this.addOp(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), POINTS_ID, point.id, idx, exportCurvePoint(point)))
-        })
+        this.addOp(basicapi.addPointAt(this.uid, shape, point, idx));
     }
     deletePoints(page: Page, shape: PathShape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const points = basicapi.deletePoints(shape, index, strength);
-            if (points && points.length) {
-                for (let i = 0; i < points.length; i++) {
-                    const point = points[i];
-                    this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), POINTS_ID, point.id, index, exportCurvePoint(point)));
-                }
-            }
-        })
+        this.addOp(basicapi.deletePoints(this.uid, shape, index, strength));
     }
     deletePoint(page: Page, shape: PathShape, index: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const point = basicapi.deletePoints(shape, index, 1)[0];
-            if (!point) return;
-            this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), POINTS_ID, point.id, index, exportCurvePoint(point)));
-        })
+        this.addOp(basicapi.deletePointAt(this.uid, shape, index));
     }
     addPoints(page: Page, shape: PathShape, points: CurvePoint[]) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            for (let i = 0; i < points.length; i++) {
-                const point = points[i];
-                basicapi.addPointAt(shape, point, i);
-                this.addOp(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), POINTS_ID, point.id, i, exportCurvePoint(point)));
-            }
-        })
+        for (let i = 0; i < points.length; i++) {
+            const point = points[i];
+            this.addOp(basicapi.addPointAt(this.uid, shape, point, i));
+        }
     }
     modifyPointCurveMode(page: Page, shape: PathShape, index: number, curveMode: CurveMode) {
         checkShapeAtPage(page, shape);
-        const point = shape.points[index];
-        if (!point) return;
-        this.__trap(() => {
-            const save = point.mode;
-            point.mode = curveMode;
-            this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.curveMode, exportCurveMode(curveMode), exportCurveMode(save)));
-        })
+        this.addOp(basicapi.shapeModifyCurveMode(page, shape, index, curveMode))
     }
     modifyPointHasFrom(page: Page, shape: PathShape, index: number, hasFrom: boolean) {
         checkShapeAtPage(page, shape);
-        const point = shape.points[index];
-        if (!point) return;
-        this.__trap(() => {
-            const save = point.hasFrom;
-            point.hasFrom = hasFrom;
-            this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.hasFrom, hasFrom, save));
-        })
+        this.addOp(basicapi.shapeModifyHasFrom(page, shape, index, hasFrom));
     }
     modifyPointHasTo(page: Page, shape: PathShape, index: number, hasTo: boolean) {
         checkShapeAtPage(page, shape);
-        const point = shape.points[index];
-        if (!point) return;
-        this.__trap(() => {
-            const save = point.hasTo;
-            point.hasTo = hasTo;
-            this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.hasTo, hasTo, save));
-        })
+        this.addOp(basicapi.shapeModifyHasTo(page, shape, index, hasTo));
     }
     modifyPointCornerRadius(page: Page, shape: PathShape, index: number, cornerRadius: number) {
         checkShapeAtPage(page, shape);
-        const point = shape.points[index];
-        if (!point) return;
-        this.__trap(() => {
-            const save = point.radius;
-            point.radius = cornerRadius;
-            this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), POINTS_ID, point.id, POINTS_ATTR_ID.cornerRadius, cornerRadius, save));
-        })
+        this.addOp(basicapi.shapeModifyPointCornerRadius(page, shape, index, cornerRadius));
     }
     setCloseStatus(page: Page, shape: PathShape, isClosed: boolean) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const save = shape.isClosed;
-            shape.setClosedState(isClosed);
-            this.addOp(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.isClosed, isClosed, save));
-        })
+        this.addOp(basicapi.shapeModifyPathShapeClosedStatus(shape, isClosed));
     }
     // contacts
     addContactAt(page: Page, shape: Shape, contactRole: ContactRole, idx: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            basicapi.addContactShape(shape.style, contactRole);
-            this.addOp(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), CONTACTS_ID, contactRole.id, idx, exportContactRole(contactRole)))
-        })
+        this.addOp(basicapi.addContactShape(this.uid, shape.style, contactRole));
     }
     removeContactRoleAt(page: Page, shape: Shape, index: number) {
         checkShapeAtPage(page, shape);
         if (!shape.style.contacts || !shape.style.contacts[index]) return;
-        this.__trap(() => {
-            const contactRole = basicapi.removeContactRoleAt(shape.style, index);
-            if (contactRole) this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), CONTACTS_ID, contactRole.id, index, exportContactRole(contactRole)));
-        })
+        this.addOp(basicapi.removeContactRoleAt(this.uid, shape.style, index));
     }
     // shadow
     addShadows(page: Page, shape: Shape, shadows: Shadow[]) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            for (let i = 0; i < shadows.length; i++) {
-                const shadow = shadows[i];
-                basicapi.addShadow(shape.style.shadows, shadow, i);
-                this.addOp(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, i, exportShadow(shadow)));
-            }
-        })
+        for (let i = 0; i < shadows.length; i++) {
+            const shadow = shadows[i];
+            this.addOp(basicapi.addShadow(this.uid, shape.style.shadows, shadow, i));
+        }
     }
     addShadow(page: Page, shape: Shape | Variable, shadow: Shadow, index: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-            basicapi.addShadow(shadows, shadow, index);
-            this.addOp(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, index, exportShadow(shadow)))
-        })
+        const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+        this.addOp(basicapi.addShadow(this.uid, shadows, shadow, index));
     }
     deleteShadows(page: Page, shape: Shape | Variable, index: number, strength: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-            const dels = basicapi.deleteShadows(shadows, index, strength);
-            if (dels && dels.length) {
-                for (let i = 0; i < dels.length; i++) {
-                    const shadow = dels[i];
-                    this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, index, exportShadow(shadow)));
-                }
-            }
-        })
+        const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+        this.addOp(basicapi.deleteShadows(this.uid, shadows, index, strength));
     }
     deleteShadowAt(page: Page, shape: Shape | Variable, idx: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-            const shadow = basicapi.deleteShadowAt(shadows, idx);
-            if (shadow) this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, idx, exportShadow(shadow)));
-        })
+        const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
+        this.addOp(basicapi.deleteShadowAt(this.uid, shadows, idx));
     }
     setShadowEnable(page: Page, shape: Shape | Variable, idx: number, isEnable: boolean) {
         checkShapeAtPage(page, shape);
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-        const shadow = shadows[idx];
-        if (shadow) {
-            this.__trap(() => {
-                const save = shadow.isEnabled;
-                shadow.isEnabled = isEnable;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.enable, isEnable, save));
-            })
-        }
+        this.addOp(basicapi.setShadowEnable(shadows, idx, isEnable));
     }
     setShadowOffsetX(page: Page, shape: Shape | Variable, idx: number, offsetX: number) {
         checkShapeAtPage(page, shape);
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-        const shadow = shadows[idx];
-        if (shadow) {
-            this.__trap(() => {
-                const save = shadow.offsetX;
-                shadow.offsetX = offsetX;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.offsetX, offsetX, save));
-            })
-        }
+        this.addOp(basicapi.setShadowOffsetX(shadows, idx, offsetX));
     }
     setShadowOffsetY(page: Page, shape: Shape | Variable, idx: number, offsetY: number) {
         checkShapeAtPage(page, shape);
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-        const shadow = shadows[idx];
-        if (shadow) {
-            this.__trap(() => {
-                const save = shadow.offsetY;
-                shadow.offsetY = offsetY;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.offsetY, offsetY, save));
-            })
-        }
+        this.addOp(basicapi.setShadowOffsetY(shadows, idx, offsetY));
     }
     setShadowBlur(page: Page, shape: Shape | Variable, idx: number, blur: number) {
         checkShapeAtPage(page, shape);
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-        const shadow = shadows[idx];
-        if (shadow) {
-            this.__trap(() => {
-                const save = shadow.blurRadius;
-                shadow.blurRadius = blur;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.blurRadius, blur, save));
-            })
-        }
+        this.addOp(basicapi.setShadowBlur(shadows, idx, blur));
     }
     setShadowSpread(page: Page, shape: Shape | Variable, idx: number, spread: number) {
         checkShapeAtPage(page, shape);
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-        const shadow = shadows[idx];
-        if (shadow) {
-            this.__trap(() => {
-                const save = shadow.spread;
-                shadow.spread = spread;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.spread, spread, save));
-            })
-        }
+        this.addOp(basicapi.setShadowSpread(shadows, idx, spread));
     }
     setShadowColor(page: Page, shape: Shape | Variable, idx: number, color: Color) {
         checkShapeAtPage(page, shape);
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-        const shadow = shadows[idx];
-        if (shadow) {
-            this.__trap(() => {
-                const save = shadow.color;
-                shadow.color = color;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.color, exportColor(color), exportColor(save)));
-            })
-        }
+        this.addOp(basicapi.setShadowColor(shadows, idx, color));
     }
     setShadowPosition(page: Page, shape: Shape | Variable, idx: number, position: ShadowPosition) {
         checkShapeAtPage(page, shape);
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-        const shadow = shadows[idx];
-        if (shadow) {
-            this.__trap(() => {
-                const save = shadow.position;
-                shadow.position = position;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), SHADOW_ID, shadow.id, SHADOW_ATTR_ID.position, exportShadowPosition(position), exportShadowPosition(save)));
-            })
-        }
+        this.addOp(basicapi.setShadowPosition(shadows, idx, position));
     }
     // cutout
     deleteExportFormatAt(page: Page, shape: Shape, idx: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            if (!shape.exportOptions) return;
-            const format = basicapi.deleteExportFormatAt(shape.exportOptions, idx);
-            if (format) this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, idx, exportExportFormat(format)));
-        })
+        if (!shape.exportOptions) return;
+        this.addOp(basicapi.deleteExportFormatAt(this.uid, shape.exportOptions, idx));
     }
     deletePageExportFormatAt(page: Page, idx: number) {
-        this.__trap(() => {
-            if (!page.exportOptions) return;
-            const format = basicapi.deletePageExportFormatAt(page.exportOptions, idx);
-            if (format) this.addOp(ShapeArrayAttrRemove.Make(page.id, Array(page.id), CUTOUT_ID, format.id, idx, exportExportFormat(format)));
-        })
+        if (!page.exportOptions) return;
+        this.addOp(basicapi.deletePageExportFormatAt(this.uid, page.exportOptions, idx));
     }
     deleteExportFormats(page: Page, shape: Shape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            if (!shape.exportOptions) return;
-            const formats = basicapi.deleteExportFormats(shape.exportOptions, index, strength);
-            if (formats && formats.length) {
-                for (let i = 0; i < formats.length; i++) {
-                    const format = formats[i];
-                    this.addOp(ShapeArrayAttrRemove.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, index, exportExportFormat(format)));
-                }
-            }
-        })
-
+        if (!shape.exportOptions) return;
+        this.addOp(basicapi.deleteExportFormats(this.uid, shape.exportOptions, index, strength));
     }
     addExportFormats(page: Page, shape: Shape, formats: ExportFormat[]) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            for (let i = 0; i < formats.length; i++) {
-                const format = formats[i];
-                basicapi.addExportFormat(shape, format, i);
-                this.addOp(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, i, exportExportFormat(format)));
-            }
-        })
+        for (let i = 0; i < formats.length; i++) {
+            const format = formats[i];
+            this.addOp(basicapi.addExportFormat(this.uid, shape, format, i));
+        }
     }
     addExportFormat(page: Page, shape: Shape, format: ExportFormat, index: number) {
         checkShapeAtPage(page, shape);
-        this.__trap(() => {
-            if (!shape.exportOptions) {
-                const formats = new BasicArray<ExportFormat>();
-                const includedChildIds = new BasicArray<string>();
-                shape.exportOptions = new ExportOptions(formats, includedChildIds, 0, false, false, false, false);
-            }
-            basicapi.addExportFormat(shape, format, index);
-            this.addOp(ShapeArrayAttrInsert.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, index, exportExportFormat(format)))
-        })
+        this.addOp(basicapi.addExportFormat(this.uid, shape, format, index));
     }
     addPageExportFormat(page: Page, format: ExportFormat, index: number) {
-        this.__trap(() => {
-            if (!page.exportOptions) {
-                const formats = new BasicArray<ExportFormat>();
-                const includedChildIds = new BasicArray<string>();
-                page.exportOptions = new ExportOptions(formats, includedChildIds, 0, false, false, false, false);
-            }
-            basicapi.addPageExportFormat(page, format, index);
-            this.addOp(ShapeArrayAttrInsert.Make(page.id, Array(page.id), CUTOUT_ID, format.id, index, exportExportFormat(format)))
-        })
+        this.addOp(basicapi.addPageExportFormat(this.uid, page, format, index));
     }
     setExportFormatScale(page: Page, shape: Shape, idx: number, scale: number) {
         checkShapeAtPage(page, shape);
-        const format = shape.exportOptions?.exportFormats[idx];
-        if (format) {
-            this.__trap(() => {
-                const save = format.scale;
-                format.scale = scale;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.scale, scale, save));
-            })
-        }
+        if (!shape.exportOptions) return;
+        this.addOp(basicapi.setExportFormatScale(shape.exportOptions, idx, scale));
     }
     setPageExportFormatScale(page: Page, idx: number, scale: number) {
-        const format = page.exportOptions?.exportFormats[idx];
-        if (format) {
-            this.__trap(() => {
-                const save = format.scale;
-                format.scale = scale;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, Array(page.id), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.scale, scale, save));
-            })
-        }
+        if (!page.exportOptions) return;
+        this.addOp(basicapi.setPageExportFormatScale(page.exportOptions, idx, scale));
     }
     setExportFormatName(page: Page, shape: Shape, idx: number, name: string) {
         checkShapeAtPage(page, shape);
-        const format = shape.exportOptions?.exportFormats[idx];
-        if (format) {
-            this.__trap(() => {
-                const save = format.name;
-                format.name = name;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.name, name, save));
-            })
-        }
+        if (!shape.exportOptions) return;
+        this.addOp(basicapi.setExportFormatName(shape.exportOptions, idx, name));
     }
     setPageExportFormatName(page: Page, idx: number, name: string) {
-        const format = page.exportOptions?.exportFormats[idx];
-        if (format) {
-            this.__trap(() => {
-                const save = format.name;
-                format.name = name;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, Array(page.id), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.name, name, save));
-            })
-        }
+        if (!page.exportOptions) return;
+        this.addOp(basicapi.setPageExportFormatName(page.exportOptions, idx, name));
     }
     setExportFormatFileFormat(page: Page, shape: Shape, idx: number, fileFormat: ExportFileFormat) {
         checkShapeAtPage(page, shape);
-        const format = shape.exportOptions?.exportFormats[idx];
-        if (format) {
-            this.__trap(() => {
-                const save = format.fileFormat;
-                format.fileFormat = fileFormat;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.fileFormat, exportExportFileFormat(fileFormat), exportExportFileFormat(save)));
-            })
-        }
+        if (!shape.exportOptions) return;
+        this.addOp(basicapi.setExportFormatFileFormat(shape.exportOptions, idx, fileFormat));
     }
     setPageExportFormatFileFormat(page: Page, idx: number, fileFormat: ExportFileFormat) {
-        const format = page.exportOptions?.exportFormats[idx];
-        if (format) {
-            this.__trap(() => {
-                const save = format.fileFormat;
-                format.fileFormat = fileFormat;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, Array(page.id), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.fileFormat, exportExportFileFormat(fileFormat), exportExportFileFormat(save)));
-            })
-        }
+        if (!page.exportOptions) return;
+        this.addOp(basicapi.setPageExportFormatFileFormat(page.exportOptions, idx, fileFormat));
     }
     setExportFormatPerfix(page: Page, shape: Shape, idx: number, perfix: ExportFormatNameingScheme) {
         checkShapeAtPage(page, shape);
-        const format = shape.exportOptions?.exportFormats[idx];
-        if (format) {
-            this.__trap(() => {
-                const save = format.namingScheme;
-                format.namingScheme = perfix;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.perfix, exportExportFormatNameingScheme(perfix), exportExportFormatNameingScheme(save)));
-            })
-        }
+        if (!shape.exportOptions) return;
+        this.addOp(basicapi.setExportFormatPerfix(shape.exportOptions, idx, perfix));
     }
     setPageExportFormatPerfix(page: Page, idx: number, perfix: ExportFormatNameingScheme) {
-        const format = page.exportOptions?.exportFormats[idx];
-        if (format) {
-            this.__trap(() => {
-                const save = format.namingScheme;
-                format.namingScheme = perfix;
-                this.addOp(ShapeArrayAttrModify.Make(page.id, Array(page.id), CUTOUT_ID, format.id, CUTOUT_ATTR_ID.perfix, exportExportFormatNameingScheme(perfix), exportExportFormatNameingScheme(save)));
-            })
-        }
+        if (!page.exportOptions) return;
+        this.addOp(basicapi.setPageExportFormatPerfix(page.exportOptions, idx, perfix));
     }
     setExportTrimTransparent(page: Page, shape: Shape, trim: boolean) {
         checkShapeAtPage(page, shape);
-        const options = shape.exportOptions;
-        if (options) {
-            this.__trap(() => {
-                const save = options.trimTransparent;
-                options.trimTransparent = trim;
-                this.addOp(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.trimTransparent, trim, save));
-            })
-        }
+        if (!shape.exportOptions) return;
+        this.addOp(basicapi.setExportTrimTransparent(shape.exportOptions, trim));
     }
     setExportCanvasBackground(page: Page, shape: Shape, background: boolean) {
         checkShapeAtPage(page, shape);
-        const options = shape.exportOptions;
-        if (options) {
-            this.__trap(() => {
-                const save = options.canvasBackground;
-                options.canvasBackground = background;
-                this.addOp(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.canvasBackground, background, save));
-            })
-        }
+        if (!shape.exportOptions) return;
+        this.addOp(basicapi.setExportCanvasBackground(shape.exportOptions, background));
     }
     setExportPreviewUnfold(page: Page, shape: Shape, unfold: boolean) {
         checkShapeAtPage(page, shape);
-        const options = shape.exportOptions;
-        if (options) {
-            this.__trap(() => {
-                const save = options.unfold;
-                options.unfold = unfold;
-                this.addOp(ShapeCmdModify.Make(page.id, genShapeId(shape), SHAPE_ATTR_ID.previewUnfold, unfold, save));
-            })
-        }
+        if (!shape.exportOptions) return;
+        this.addOp(basicapi.setExportPreviewUnfold(shape.exportOptions, unfold));
     }
     setPageExportPreviewUnfold(document: Document, pageId: string, unfold: boolean) {
         const item = document.pagesMgr.getSync(pageId);
         if (!item) return;
-        const s_unfold = item.exportOptions!.unfold || false;
-        const save = this.repo.transactCtx.settrap;
-        this.repo.transactCtx.settrap = false;
-        try {
-            item.exportOptions!.unfold = unfold;
-        } finally {
-            this.repo.transactCtx.settrap = save;
-        }
-        console.log(pageId, 'pageId');
-
-        this.addOp(PageCmdModify.Make(document.id, pageId, PAGE_ATTR_ID.previewUnfold, JSON.stringify(unfold), JSON.stringify(s_unfold)));
+        if (!item.exportOptions) return;
+        this.addOp(basicapi.setPageExportPreviewUnfold(item.exportOptions, unfold));
     }
+
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);
@@ -1460,7 +1103,7 @@ export class Api {
         })
     }
 
-    // text
+    // table text
     tableModifyTextColor(page: Page, table: TableShape, color: Color | undefined) {
         checkShapeAtPage(page, table);
         this.__trap(() => {
