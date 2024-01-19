@@ -360,15 +360,15 @@ export const shape_handler: (ShapeModifyHandlerArray)[] = [
             {
                 opId: SHAPE_ATTR_ID.startMarkerType,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const st = value && JSON.parse(value) || false;
-                    api.shapeModifyStartMarkerType(shape as Shape, st)
+                    const st = value || undefined;
+                    api.shapeModifyStartMarkerType(shape as Shape, st as types.MarkerType)
                 }
             },
             {
                 opId: SHAPE_ATTR_ID.endMarkerType,
                 handler: (cmd: ShapeCmdModify, page: Page, shape: Shape | Variable, value: string | undefined, needUpdateFrame: UpdateFrameArray) => {
-                    const et = value && JSON.parse(value) || false;
-                    api.shapeModifyEndMarkerType(shape as Shape, et)
+                    const et = value || undefined;
+                    api.shapeModifyEndMarkerType(shape as Shape, et as types.MarkerType)
                 }
             },
 

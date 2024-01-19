@@ -108,13 +108,13 @@ export function shapeModifyWideWH(page: Page, shape: Shape, w: number, h: number
         (shape as GroupShape).setWideFrameSize(w, h);
     }
 }
-export function shapeModifyStartMarkerType(shape: Shape, mt: MarkerType) {
+export function shapeModifyStartMarkerType(shape: Shape, mt: MarkerType | undefined) {
     const style = shape.style;
     if (mt !== style.startMarkerType) {
         style.startMarkerType = mt;
     }
 }
-export function shapeModifyEndMarkerType(shape: Shape, mt: MarkerType) {
+export function shapeModifyEndMarkerType(shape: Shape, mt: MarkerType | undefined) {
     const style = shape.style;
     if (mt !== style.endMarkerType) {
         style.endMarkerType = mt;
