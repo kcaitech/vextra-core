@@ -25,6 +25,7 @@ export class RepoNode {
     type: OpType; // 一个节点仅可能接收一种类型的op
     ops: OpItem[] = []; // 与服务端保持一致的op
     localops: OpItem[] = []; // 本地op, 本地op的order一定是在ops之后的
+    localindex: number = 0; // node 也需要支持undo redo
 
     // 数据可能被替换？
     // _data: any; // op应用的对象
@@ -51,16 +52,19 @@ export class RepoNode {
         }
     }
     // 处理本地op
-    processLocal(ops: OpItem[]) {
+    processLocal(ops: OpItem[], needApply: boolean, needUpdateFrame: Shape[]) {
         this.localops.push(...ops);
     }
     // undo localops
-    processUndoLocal(ops: OpItem[], needUnApply: boolean, needUpdateFrame: Shape[]) { // localops undo后还需要保留op，并持续进行变换，直到被新的op覆盖（用于redo，主要是textop）
+    processUndoLocal(ops: OpItem[], needApply: boolean, needUpdateFrame: Shape[]) { // localops undo后还需要保留op，并持续进行变换，直到被新的op覆盖（用于redo，主要是textop）
         for (let i = ops.length - 1; i >= 0; i--) {
             const op = ops[i];
             const op2 = this.localops.pop();
             // check
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
         }
+    }
+    // redo
+    processRedoLocal(ops: OpItem[], needApply: boolean, needUpdateFrame: Shape[]) {
     }
 }

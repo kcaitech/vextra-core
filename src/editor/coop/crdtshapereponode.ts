@@ -8,9 +8,27 @@ import { Shape } from "../../data/shape";
 import { importShape } from "./utils";
 import { Document } from "../../data/document";
 
-function apply(page: Page, op: TreeMoveOp) {
-    // todo op data 需要import??
-    return crdtTreeMove(page, op);
+function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
+
+    if (op.data) { // 不管是不是shape都重新生成个新的？// 这有个问题，如果id没变，上层的监听一直在旧shape上
+        op.data = importShape(op.data, document);
+    }
+
+    let shape = page.getShape(op.id);
+    if (shape && shape.parent) { // 旧
+        needUpdateFrame.push(shape.parent);
+    }
+
+    const ret = crdtTreeMove(page, op);
+
+    shape = shape ?? page.getShape(op.id);
+    if (shape) {
+        needUpdateFrame.push(shape);
+    }
+
+    // todo 迁移notify??或者使用objectid
+
+    return ret;
 }
 
 function unapply(page: Page, op: TreeMoveOpRecord) {
@@ -40,16 +58,22 @@ export class CrdtShapeRepoNode extends RepoNode {
         // apply remote
         for (let i = 0; i < ops.length; i++) {
             const op = ops[i].op as TreeMoveOp;
-            if (op.data) {
-                op.data = importShape(op.data, this.document);
-                // needUpdateFrame.push(op.data as Shape);
-            }
-
-            apply(this.page, op)
+            apply(this.document, this.page, op, needUpdateFrame)
         }
         if (this.localops.length > 0) {
             for (let i = 0; i < this.localops.length; i++) {
-                apply(this.page, this.localops[i].op as TreeMoveOp)
+                const op = this.localops[i].op as TreeMoveOp;
+                apply(this.document, this.page, op, needUpdateFrame)
+            }
+        }
+    }
+
+    processLocal(ops: OpItem[], needApply: boolean, needUpdateFrame: Shape[]): void {
+        super.processLocal(ops, needApply, needUpdateFrame);
+        if (needApply) { // 在延迟加载page时需要apply
+            for (let i = 0; i < ops.length; i++) {
+                const op = ops[i].op as TreeMoveOp;
+                apply(this.document, this.page, op, needUpdateFrame)
             }
         }
     }

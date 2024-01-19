@@ -13,7 +13,7 @@ function apply(target: Object, op: IdSetOp) {
     if (typeof op.data === 'object') switch (op.data.typeId) {
         // import
     }
-    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + op.value.typeId);
+    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + op.data.typeId);
     (target as any)[op.id] = value;
 }
 

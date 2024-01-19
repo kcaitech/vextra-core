@@ -70,6 +70,10 @@ export class Api {
     isNeedCommit(): boolean {
         return this.cmd !== undefined && this.cmd.ops.length > 0;
     }
+    rollback() {
+        this.cmd = undefined;
+        this.needUpdateFrame.length = 0;
+    }
     commit(): Cmd | undefined {
         const cmd = this.cmd;
         if (!cmd) return undefined;
