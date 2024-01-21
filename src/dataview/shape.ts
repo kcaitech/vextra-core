@@ -1,5 +1,5 @@
 import { innerShadowId, renderBorders, renderFills, renderShadows } from "../render";
-import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape, Fill, Border, Shadow } from "../data/classes";
+import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape, Fill, Border, Shadow, CrdtIndex } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { RenderTransform } from "./basic";
 import { EL, elh } from "./el";
@@ -178,7 +178,7 @@ export function transformPoints(points: CurvePoint[], matrix: Matrix) {
     for (let i = 0, len = points.length; i < len; i++) {
         const p = points[i];
         const point: Point2D = matrix.computeCoord(p.x, p.y) as Point2D;
-        const transp = new CurvePoint("", point.x, point.y, p.mode);
+        const transp = new CurvePoint(new CrdtIndex([i], 0), "", point.x, point.y, p.mode);
 
         if (p.hasFrom) {
             transp.hasFrom = true;

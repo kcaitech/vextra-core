@@ -559,6 +559,14 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
 export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): impl.CurveMode {
     return source
 }
+/* crdt table index */
+export function importCrdtPoint(source: types.CrdtPoint, ctx?: IImportContext): impl.CrdtPoint {
+    const ret: impl.CrdtPoint = new impl.CrdtPoint (
+        importCrdtIndex(source.x, ctx),
+        importCrdtIndex(source.y, ctx)
+    )
+    return ret
+}
 /* crdt number */
 export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext): impl.CrdtNumber {
     const ret: impl.CrdtNumber = new impl.CrdtNumber (
@@ -568,20 +576,18 @@ export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext)
     )
     return ret
 }
-/* crdt table index */
-export function importCrdtIndex2(source: types.CrdtIndex2, ctx?: IImportContext): impl.CrdtIndex2 {
-    const ret: impl.CrdtIndex2 = new impl.CrdtIndex2 (
-        importCrdtIndex(source.x, ctx),
-        importCrdtIndex(source.y, ctx)
-    )
-    return ret
-}
 /* crdt array index */
 export function importCrdtIndex(source: types.CrdtIndex, ctx?: IImportContext): impl.CrdtIndex {
     const ret: impl.CrdtIndex = new impl.CrdtIndex (
-        source.index,
-        source.order,
-        source.uid
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.index && source.index.length; i < len; i++) {
+                const r = source.index[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.order
     )
     return ret
 }
@@ -783,7 +789,7 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
 export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
     // inject code
     // 兼容旧数据
-    if ((source as any).childs) source.datas = (source as any).childs;
+    if ((source as any).datas) source.childs = (source as any).datas;
     const ret: impl.TableShape = new impl.TableShape (
         importCrdtIndex(source.crdtidx, ctx),
         source.id,
@@ -854,7 +860,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
-        importCrdtIndex2(source.crdtidx2, ctx)
+        importCrdtPoint(source.crdtpoint, ctx)
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
@@ -1301,22 +1307,38 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         const id3 = "1519da3c-c692-4e1d-beb4-01a85cc56738"
         const id4 = "e857f541-4e7f-491b-96e6-2ca38f1d4c09"
         const p1: types.CurvePoint = {
+            crdtidx: {
+                index: [0],
+                order: 0
+            },
             id: id1,
             mode: types.CurveMode.Straight,
             x: 0, y: 0
         }; // lt
         const p2: types.CurvePoint =
         {
+            crdtidx: {
+                index: [1],
+                order: 0
+            },
             id: id2,
             mode: types.CurveMode.Straight,
             x: 1, y: 0
         }; // rt
         const p3: types.CurvePoint = {
+            crdtidx: {
+                index: [2],
+                order: 0
+            },
             id: id3,
             mode: types.CurveMode.Straight,
             x: 1, y: 1
         }; // rb
         const p4: types.CurvePoint = {
+            crdtidx: {
+                index: [3],
+                order: 0
+            },
             id: id4,
             mode: types.CurveMode.Straight,
             x: 0, y: 1

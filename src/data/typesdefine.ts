@@ -401,22 +401,21 @@ export enum CurveMode {
     Asymmetric = 'asymmetric',
     Disconnected = 'disconnected',
 }
+/* crdt table index */
+export type CrdtPoint = {
+    x: CrdtIndex
+    y: CrdtIndex
+}
 /* crdt number */
 export type CrdtNumber = {
     id: string
     crdtidx: CrdtIndex
     value: number
 }
-/* crdt table index */
-export type CrdtIndex2 = {
-    x: CrdtIndex
-    y: CrdtIndex
-}
 /* crdt array index */
 export type CrdtIndex = {
-    index: string
+    index: number[]
     order: number
-    uid: string
 }
 /* crdt id */
 export type CrdtId = {
@@ -587,7 +586,7 @@ export type TableShape = Shape & {
 }
 /* table cell */
 export type TableCell = Shape & {
-    crdtidx2: CrdtIndex2
+    crdtpoint: CrdtPoint
     cellType?: TableCellType
     text?: Text
     imageRef?: string

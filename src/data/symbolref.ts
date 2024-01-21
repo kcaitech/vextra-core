@@ -58,12 +58,12 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     }
 
     getOpTarget(path: string[]): any {
-        const id0 = targetId[0];
+        const id0 = path[0];
         if (typeof id0 === 'string' && id0.startsWith('varid:')) {
             const varid = id0.substring('varid:'.length);
             return this.getVar(varid);
         }
-        return super.getOpTarget(targetId);
+        return super.getOpTarget(path);
     }
 
     removeVirbindsEx(key: string) {

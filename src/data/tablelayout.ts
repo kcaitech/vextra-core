@@ -27,13 +27,13 @@ export function layoutTable(table: TableShape): TableLayout {
     let celli = 0;
 
     for (let ri = 0, rowLen = rowHeights.length, rowY = 0; ri < rowLen; ++ri) {
-        const rowHeight = rowHeights[ri] / rowHBase * height;
+        const rowHeight = rowHeights[ri].value / rowHBase * height;
 
         for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen; ++ci, ++celli) {
             const cell = cells[celli];
             const visible = !grid.get(ri, ci);
 
-            const colWidth = colWidths[ci] / colWBase * width;
+            const colWidth = colWidths[ci].value / colWBase * width;
             if (!visible) {
                 colX += colWidth;
                 continue;
@@ -71,14 +71,14 @@ export function layoutTable(table: TableShape): TableLayout {
             let dheight = 0;
             // fill grid
             for (let _ri = ri, rend = ri + rowSpan; _ri < rend; ++_ri) {
-                const rowHeight = rowHeights[_ri] / rowHBase * height;
+                const rowHeight = rowHeights[_ri].value / rowHBase * height;
 
                 let _h = 0;
                 for (let _ci = ci, cend = ci + colSpan; _ci < cend; ++_ci) {
                     grid.set(_ri, _ci, d)
 
                     if (dwidth === 0) {
-                        const colWidth = colWidths[_ci] / colWBase * width;
+                        const colWidth = colWidths[_ci].value / colWBase * width;
                         _h += colWidth;
                     }
                 }
@@ -98,7 +98,7 @@ export function layoutTable(table: TableShape): TableLayout {
         grid,
         width,
         height,
-        rowHeights: rowHeights.map((w) => w / rowHBase * height),
-        colWidths: colWidths.map((w) => w / colWBase * width)
+        rowHeights: rowHeights.map((w) => w.value / rowHBase * height),
+        colWidths: colWidths.map((w) => w.value / colWBase * width)
     }
 }

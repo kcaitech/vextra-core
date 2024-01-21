@@ -547,6 +547,14 @@ export function exportCurvePoint(source: types.CurvePoint, ctx?: IExportContext)
 export function exportCurveMode(source: types.CurveMode, ctx?: IExportContext): types.CurveMode {
     return source
 }
+/* crdt table index */
+export function exportCrdtPoint(source: types.CrdtPoint, ctx?: IExportContext): types.CrdtPoint {
+    const ret = {
+        x: exportCrdtIndex(source.x, ctx),
+        y: exportCrdtIndex(source.y, ctx),
+    }
+    return ret
+}
 /* crdt number */
 export function exportCrdtNumber(source: types.CrdtNumber, ctx?: IExportContext): types.CrdtNumber {
     const ret = {
@@ -556,20 +564,18 @@ export function exportCrdtNumber(source: types.CrdtNumber, ctx?: IExportContext)
     }
     return ret
 }
-/* crdt table index */
-export function exportCrdtIndex2(source: types.CrdtIndex2, ctx?: IExportContext): types.CrdtIndex2 {
-    const ret = {
-        x: exportCrdtIndex(source.x, ctx),
-        y: exportCrdtIndex(source.y, ctx),
-    }
-    return ret
-}
 /* crdt array index */
 export function exportCrdtIndex(source: types.CrdtIndex, ctx?: IExportContext): types.CrdtIndex {
     const ret = {
-        index: source.index,
+        index: (() => {
+            const ret = []
+            for (let i = 0, len = source.index.length; i < len; i++) {
+                const r = source.index[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         order: source.order,
-        uid: source.uid,
     }
     return ret
 }
@@ -863,7 +869,7 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
-        crdtidx2: exportCrdtIndex2(source.crdtidx2, ctx),
+        crdtpoint: exportCrdtPoint(source.crdtpoint, ctx),
         cellType: source.cellType && exportTableCellType(source.cellType, ctx),
         text: source.text && exportText(source.text, ctx),
         imageRef: source.imageRef,

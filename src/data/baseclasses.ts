@@ -609,6 +609,22 @@ export class CurvePoint extends Basic {
     }
 }
 /**
+ * crdt table index 
+ */
+export class CrdtPoint extends Basic {
+    typeId = 'crdt-point'
+    x: CrdtIndex
+    y: CrdtIndex
+    constructor(
+        x: CrdtIndex,
+        y: CrdtIndex
+    ) {
+        super()
+        this.x = x
+        this.y = y
+    }
+}
+/**
  * crdt number 
  */
 export class CrdtNumber extends Basic {
@@ -628,38 +644,19 @@ export class CrdtNumber extends Basic {
     }
 }
 /**
- * crdt table index 
- */
-export class CrdtIndex2 extends Basic {
-    typeId = 'crdt-index2'
-    x: CrdtIndex
-    y: CrdtIndex
-    constructor(
-        x: CrdtIndex,
-        y: CrdtIndex
-    ) {
-        super()
-        this.x = x
-        this.y = y
-    }
-}
-/**
  * crdt array index 
  */
 export class CrdtIndex extends Basic {
     typeId = 'crdt-index'
-    index: string
+    index: BasicArray<number >
     order: number
-    uid: string
     constructor(
-        index: string,
-        order: number,
-        uid: string
+        index: BasicArray<number >,
+        order: number
     ) {
         super()
         this.index = index
         this.order = order
-        this.uid = uid
     }
 }
 /**
@@ -987,7 +984,7 @@ export class TableShape extends Shape {
  */
 export class TableCell extends Shape {
     typeId = 'table-cell'
-    crdtidx2: CrdtIndex2
+    crdtpoint: CrdtPoint
     cellType?: TableCellType
     text?: Text
     imageRef?: string
@@ -1000,7 +997,7 @@ export class TableCell extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        crdtidx2: CrdtIndex2
+        crdtpoint: CrdtPoint
     ) {
         super(
             crdtidx,
@@ -1010,7 +1007,7 @@ export class TableCell extends Shape {
             frame,
             style
         )
-        this.crdtidx2 = crdtidx2
+        this.crdtpoint = crdtpoint
     }
 }
 /**

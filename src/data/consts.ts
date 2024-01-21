@@ -1,4 +1,5 @@
-import { CurveMode, CurvePoint, Point2D } from "./baseclasses";
+import { CurveMode, CurvePoint } from "./baseclasses";
+import { CrdtIndex } from "./crdt";
 
 function hasSetBit(val: number, mask: number): boolean {
     return !!(val & mask);
@@ -66,15 +67,19 @@ export const RECT_POINTS = (() => {
     const id3 = "a22094f2-6e4d-4d64-ab35-13fe5452f3a5"
     const id4 = "9407a2d0-e77b-4a44-a064-90f611342e39"
     const p1 = new CurvePoint(
+        new CrdtIndex([0], 0),
         id1, 0, 0, CurveMode.Straight
     );
     const p2 = new CurvePoint(
+        new CrdtIndex([1], 0),
         id2, 1, 0, CurveMode.Straight
     );
     const p3 = new CurvePoint(
+        new CrdtIndex([2], 0),
         id3, 1, 1, CurveMode.Straight
     );
     const p4 = new CurvePoint(
+        new CrdtIndex([3], 0),
         id4, 0, 1, CurveMode.Straight
     );
     return [p1, p2, p3, p4];

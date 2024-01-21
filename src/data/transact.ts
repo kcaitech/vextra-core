@@ -374,7 +374,7 @@ export class Repository extends WatchableObject implements IDataGuard {
     private __index: number = 0;
     private __needundo: boolean;
 
-    constructor(props?: { needundo?: boolean }) {
+    constructor(props?: { settrap?: boolean, needundo?: boolean }) {
         super();
         this.__context = new TContext();
         this.__ph = new ProxyHandler(this.__context);

@@ -3,19 +3,18 @@
     "type": "object",
     "properties": {
         "index": {
-            "type": "string"
+            "type": "array",
+            "items": {
+                "type": "integer"
+            }
         },
         "order": {
             "type": "integer"
-        },
-        "uid": {
-            "type": "string"
         }
     },
     "required": [
         "index",
-        "order",
-        "uid"
+        "order"
     ],
     "additionalProperties": false
 }

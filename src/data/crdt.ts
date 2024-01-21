@@ -1,13 +1,12 @@
 
 import * as classes from "./baseclasses"
-import * as types from "./typesdefine"
-import { Basic } from "./basic"
+import { Basic, BasicArray } from "./basic"
 
 /**
  * crdt table index 
  */
-export class CrdtIndex2 extends Basic implements classes.CrdtIndex2 {
-    typeId = 'crdt-index2'
+export class CrdtPoint extends Basic implements classes.CrdtPoint {
+    typeId = 'crdt-point'
     x: CrdtIndex
     y: CrdtIndex
     constructor(
@@ -27,18 +26,15 @@ export class CrdtIndex2 extends Basic implements classes.CrdtIndex2 {
  */
 export class CrdtIndex extends Basic implements classes.CrdtIndex {
     typeId = 'crdt-index'
-    index: string
+    index: BasicArray<number >
     order: number
-    uid: string
     constructor(
-        index: string,
-        order: number,
-        uid: string
+        index: number[],
+        order: number
     ) {
         super()
-        this.index = index
+        this.index = index as any;
         this.order = order
-        this.uid = uid
     }
 
     notify(...args: any[]): void {

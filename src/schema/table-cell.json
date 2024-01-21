@@ -2,8 +2,8 @@
     "description": "table cell",
     "type": "object",
     "properties": {
-        "crdtidx2": {
-            "$ref": "./crdt-index2.json"
+        "crdtpoint": {
+            "$ref": "./crdt-point.json"
         },
         "cellType": {
             "$ref": "./table-cell-type.json"
@@ -25,7 +25,7 @@
         }
     },
     "required": [
-        "crdtidx2"
+        "crdtpoint"
     ],
     "allOf": [
         {

@@ -594,12 +594,12 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     }
 
     getOpTarget(path: string[]): any {
-        const id0 = targetId[0];
+        const id0 = path[0];
         if (typeof id0 === 'string' && id0.startsWith('varid:')) {
             const varid = id0.substring('varid:'.length);
             return this.getVar(varid);
         }
-        return super.getOpTarget(targetId);
+        return super.getOpTarget(path);
     }
 
     private _createVar4Override(type: OverrideType, value: any) {

@@ -7,17 +7,16 @@ import { Path } from "./path";
 import { Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
-import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
 import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
-import { CrdtNumber, CrdtIndex, CrdtIndex2 } from "./crdt";
+import { CrdtNumber, CrdtIndex, CrdtPoint } from "./crdt";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
 export class TableCell extends Shape implements classes.TableCell {
 
     typeId = 'table-cell'
-    crdtidx2: CrdtIndex2
+    crdtpoint: CrdtPoint
     cellType?: TableCellType
     text?: Text
     imageRef?: string
@@ -33,7 +32,7 @@ export class TableCell extends Shape implements classes.TableCell {
         type: ShapeType,
         frame: ShapeFrame, // cell里的frame是无用的，真实的位置大小通过行高列宽计算
         style: Style,
-        crdtidx2: CrdtIndex2
+        crdtpoint: CrdtPoint
     ) {
         super(
             crdtidx,
@@ -43,7 +42,7 @@ export class TableCell extends Shape implements classes.TableCell {
             frame,
             style
         )
-        this.crdtidx2 = crdtidx2
+        this.crdtpoint = crdtpoint
     }
 
     get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
@@ -239,12 +238,12 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     getOpTarget(path: string[]): any {
-        if (targetId.length > 0 && typeof targetId[0] !== 'string') {
-            const index = targetId[0];
-            const cell = this.getCellAt(index.rowIdx, index.colIdx, true);
-            if (!cell) throw new Error("table cell not find")
-            return cell.getOpTarget(targetId.slice(1))
-        }
+        // if (path.length > 0 && typeof path[0] !== 'string') {
+        //     const index = path[0];
+        //     const cell = this.getCellAt(index.rowIdx, index.colIdx, true);
+        //     if (!cell) throw new Error("table cell not find")
+        //     return cell.getOpTarget(path.slice(1))
+        // }
         return this;
     }
 
@@ -259,9 +258,9 @@ export class TableShape extends Shape implements classes.TableShape {
     /**
      * @deprecated
      */
-    // get childs() {
-    //     return this.datas;
-    // }
+    get datas() {
+        return this.childs;
+    }
 
     get widthTotalWeights() {
         return this.__widthTotalWeights;
@@ -306,30 +305,30 @@ export class TableShape extends Shape implements classes.TableShape {
         const rowHBase = this.heightTotalWeights;
         return rowHeights.map((val) => val.value / rowHBase * height);
     }
-    insertRow(idx: number, weight: number, data: (TableCell | undefined)[]) {
-        tableInsertRow(this, idx, weight, data);
-        this.__heightTotalWeights += weight;
-        this.reLayout();
-    }
-    removeRow(idx: number): (TableCell | undefined)[] {
-        const weight = this.rowHeights[idx];
-        const ret = tableRemoveRow(this, idx);
-        this.__heightTotalWeights -= weight.value;
-        this.reLayout();
-        return ret;
-    }
-    insertCol(idx: number, weight: number, data: (TableCell | undefined)[]) {
-        tableInsertCol(this, idx, weight, data);
-        this.__widthTotalWeights += weight;
-        this.reLayout();
-    }
-    removeCol(idx: number): (TableCell | undefined)[] {
-        const weight = this.colWidths[idx];
-        const ret = tableRemoveCol(this, idx);
-        this.__widthTotalWeights -= weight.value;
-        this.reLayout();
-        return ret;
-    }
+    // insertRow(idx: number, weight: number, data: (TableCell | undefined)[]) {
+    //     tableInsertRow(this, idx, weight, data);
+    //     this.__heightTotalWeights += weight;
+    //     this.reLayout();
+    // }
+    // removeRow(idx: number): (TableCell | undefined)[] {
+    //     const weight = this.rowHeights[idx];
+    //     const ret = tableRemoveRow(this, idx);
+    //     this.__heightTotalWeights -= weight.value;
+    //     this.reLayout();
+    //     return ret;
+    // }
+    // insertCol(idx: number, weight: number, data: (TableCell | undefined)[]) {
+    //     tableInsertCol(this, idx, weight, data);
+    //     this.__widthTotalWeights += weight;
+    //     this.reLayout();
+    // }
+    // removeCol(idx: number): (TableCell | undefined)[] {
+    //     const weight = this.colWidths[idx];
+    //     const ret = tableRemoveCol(this, idx);
+    //     this.__widthTotalWeights -= weight.value;
+    //     this.reLayout();
+    //     return ret;
+    // }
 
     setColWidth(idx: number, weight: number) {
         const colWidths = this.colWidths;
