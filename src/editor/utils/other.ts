@@ -20,7 +20,8 @@ import {
     TextBehaviour,
     TextShape,
     Variable,
-    VariableType
+    VariableType,
+    CrdtIndex
 } from "../../data/classes";
 import { Api } from "../coop/recordapi";
 import { BasicMap } from "../../data/basic";
@@ -68,13 +69,13 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
     const rowSpan = Math.max(shape.rowSpan ?? 1, 1);
     const colSpan = Math.max(shape.colSpan ?? 1, 1);
 
-    let widthWeight = table.colWidths[indexCell.colIdx];
+    let widthWeight = table.colWidths[indexCell.colIdx].value;
     for (let i = 1; i < colSpan; ++i) {
-        widthWeight += table.colWidths[indexCell.colIdx + i];
+        widthWeight += table.colWidths[indexCell.colIdx + i].value;
     }
-    let heightWeight = table.rowHeights[indexCell.rowIdx];
+    let heightWeight = table.rowHeights[indexCell.rowIdx].value;
     for (let i = 1; i < rowSpan; ++i) {
-        heightWeight += table.rowHeights[indexCell.rowIdx + i];
+        heightWeight += table.rowHeights[indexCell.rowIdx + i].value;
     }
 
     const width = widthWeight / table.widthTotalWeights * table.frame.width;
@@ -84,8 +85,8 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
     if (layout.contentHeight > (height + float_accuracy)) {
         // set row height
         const rowIdx = indexCell.rowIdx + rowSpan - 1;
-        const curHeight = table.rowHeights[rowIdx] / table.heightTotalWeights * table.frame.height;
-        const weight = (curHeight + layout.contentHeight - height) / curHeight * table.rowHeights[rowIdx];
+        const curHeight = table.rowHeights[rowIdx].value / table.heightTotalWeights * table.frame.height;
+        const weight = (curHeight + layout.contentHeight - height) / curHeight * table.rowHeights[rowIdx].value;
         api.tableModifyRowHeight(page, table, rowIdx, weight);
         api.shapeModifyWH(page, table, table.frame.width, table.frame.height + layout.contentHeight - height);
     }
@@ -212,6 +213,7 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name
     
     const border_style = new BorderStyle(5, 5);
     const border = new Border(
+        new CrdtIndex([union.style.borders.length], 0),
         uuid(),
         true,
         types.FillType.SolidColor,

@@ -26,29 +26,29 @@ export function setBorderStyle(border: Border, borderStyle: BorderStyle) {
     return crdtSetAttr(border, "borderStyle", borderStyle);
 }
 
-export function deleteBorderAt(uid: string, borders: BasicArray<Border>, idx: number) {
-    return crdtArrayRemove(uid, borders, idx);
+export function deleteBorderAt(borders: BasicArray<Border>, idx: number) {
+    return crdtArrayRemove(borders, idx);
 }
 /**
  * @param idx 开始删的位置
  * @param strength 删除的个数
  * @returns 被删除的元素
  */
-export function deleteBorders(uid: string, borders: BasicArray<Border>, idx: number, strength: number) {
+export function deleteBorders(borders: BasicArray<Border>, idx: number, strength: number) {
     const ops: ArrayMoveOpRecord[] = [];
     for (let i = idx + strength - 1; i >= idx; i--) {
-        const op = crdtArrayRemove(uid, borders, i);
+        const op = crdtArrayRemove(borders, i);
         if (op) ops.push(op);
     }
     return ops;
 }
 
-export function addBorder(uid: string, borders: BasicArray<Border>, border: Border) {
-    return crdtArrayInsert(uid, borders, borders.length, border);
+export function addBorder(borders: BasicArray<Border>, border: Border) {
+    return crdtArrayInsert(borders, borders.length, border);
 }
-export function addBorderAt(uid: string, borders: BasicArray<Border>, border: Border, index: number) {
-    return crdtArrayInsert(uid, borders, index, border);
+export function addBorderAt(borders: BasicArray<Border>, border: Border, index: number) {
+    return crdtArrayInsert(borders, index, border);
 }
-export function moveBorder(uid: string, borders: BasicArray<Border>, idx: number, idx2: number) {
-    return crdtArrayMove(uid, borders, idx, idx2);
+export function moveBorder(borders: BasicArray<Border>, idx: number, idx2: number) {
+    return crdtArrayMove(borders, idx, idx2);
 }

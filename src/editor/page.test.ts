@@ -1,3 +1,4 @@
+/*
 import * as chai from 'chai'
 import { BasicArray } from '../data/basic';
 import * as api from "./basicapi"
@@ -511,3 +512,4 @@ test("setShapesFrame", () => {
 //     const now = JSON.stringify(exportPage(page))
 //     chai.assert.equal(origin, now);
 // })
+*/

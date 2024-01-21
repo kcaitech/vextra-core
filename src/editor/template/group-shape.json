@@ -1,6 +1,10 @@
 {
     "typeId": "group-shape",
     "id": "7B35A2C4-87A6-7033-A030-87CDE15F803B",
+    "crdtidx": {
+        "index": [],
+        "order": 0
+    },
     "name": "Group",
     "type": "group",
     "boolOp": "none",

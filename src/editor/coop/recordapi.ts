@@ -95,10 +95,10 @@ export class Api {
     }
 
     pageInsert(document: Document, page: Page, index: number) {
-        this.addOp(basicapi.pageInsert(this.uid, document, page, index));
+        this.addOp(basicapi.pageInsert(document, page, index));
     }
     pageDelete(document: Document, index: number) {
-        this.addOp(basicapi.pageDelete(this.uid, document, index));
+        this.addOp(basicapi.pageDelete(document, index));
     }
     pageModifyName(document: Document, pageId: string, name: string) {
         this.addOp(basicapi.pageModifyName(document, pageId, name));
@@ -109,16 +109,17 @@ export class Api {
         this.addOp(basicapi.crdtSetAttr(item, "backgroundColor", color));
     }
     pageMove(document: Document, pageId: string, fromIdx: number, toIdx: number) {
-        this.addOp(basicapi.pageMove(this.uid, document, fromIdx, toIdx));
+        this.addOp(basicapi.pageMove(document, fromIdx, toIdx));
     }
     shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number) {
-        this.addOp(basicapi.shapeInsert(this.uid, page, parent, shape, index, this.needUpdateFrame));
+        this.addOp(basicapi.shapeInsert(page, parent, shape, index, this.needUpdateFrame));
+        return page.getShape(shape.id) as Shape;
     }
     shapeDelete(page: Page, parent: GroupShape, index: number) {
-        this.addOp(basicapi.shapeDelete(this.uid, page, parent, index, this.needUpdateFrame));
+        this.addOp(basicapi.shapeDelete(page, parent, index, this.needUpdateFrame));
     }
     shapeMove(page: Page, fromParent: GroupShape, fromIdx: number, toParent: GroupShape, toIdx: number) {
-        this.addOp(basicapi.shapeMove(this.uid, page, fromParent, fromIdx, toParent, toIdx, this.needUpdateFrame));
+        this.addOp(basicapi.shapeMove(page, fromParent, fromIdx, toParent, toIdx, this.needUpdateFrame));
     }
     shapeModifyX(page: Page, shape: Shape, x: number) {
         checkShapeAtPage(page, shape);
@@ -291,7 +292,7 @@ export class Api {
     addFillAt(page: Page, shape: Shape | Variable, fill: Fill, index: number) {
         checkShapeAtPage(page, shape);
         const fills = shape instanceof Shape ? shape.style.fills : shape.value;
-        this.addOp(basicapi.addFillAt(this.uid, fills, fill, index));
+        this.addOp(basicapi.addFillAt(fills, fill, index));
     }
     // 添加多次fill
     addFills(page: Page, shape: Shape | Variable, fills: Fill[]) {
@@ -299,14 +300,14 @@ export class Api {
         const fillsOld = shape instanceof Shape ? shape.style.fills : shape.value;
         for (let i = 0; i < fills.length; i++) {
             const fill = fills[i];
-            this.addOp(basicapi.addFillAt(this.uid, fillsOld, fill, i));
+            this.addOp(basicapi.addFillAt(fillsOld, fill, i));
         }
     }
     // 添加一条border
     addBorderAt(page: Page, shape: Shape | Variable, border: Border, index: number) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-        this.addOp(basicapi.addBorderAt(this.uid, borders, border, index));
+        this.addOp(basicapi.addBorderAt(borders, border, index));
     }
     // 添加多条border
     addBorders(page: Page, shape: Shape | Variable, borders: Border[]) {
@@ -314,32 +315,32 @@ export class Api {
         const bordersOld = shape instanceof Shape ? shape.style.borders : shape.value;
         for (let i = 0; i < borders.length; i++) {
             const border = borders[i];
-            this.addOp(basicapi.addBorderAt(this.uid, bordersOld, border, i));
+            this.addOp(basicapi.addBorderAt(bordersOld, border, i));
         }
     }
     // 删除一次fill
     deleteFillAt(page: Page, shape: Shape | Variable, index: number) {
         checkShapeAtPage(page, shape);
         const fills = shape instanceof Shape ? shape.style.fills : shape.value;
-        this.addOp(basicapi.deleteBorderAt(this.uid, fills, index));
+        this.addOp(basicapi.deleteBorderAt(fills, index));
     }
     // 批量删除fill
     deleteFills(page: Page, shape: Shape | Variable, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         const fillsOld = shape instanceof Shape ? shape.style.fills : shape.value;
-        this.addOp(basicapi.deleteFills(this.uid, fillsOld, index, strength));
+        this.addOp(basicapi.deleteFills(fillsOld, index, strength));
     }
     // 删除一次border
     deleteBorderAt(page: Page, shape: Shape | Variable, index: number) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-        this.addOp(basicapi.deleteBorderAt(this.uid, borders, index));
+        this.addOp(basicapi.deleteBorderAt(borders, index));
     }
     // 批量删除border
     deleteBorders(page: Page, shape: Shape | Variable, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         const bordersOld = shape instanceof Shape ? shape.style.borders : shape.value;
-        this.addOp(basicapi.deleteBorders(this.uid, bordersOld, index, strength));
+        this.addOp(basicapi.deleteBorders(bordersOld, index, strength));
     }
     setFillColor(page: Page, shape: Shape | Variable, idx: number, color: Color) {
         checkShapeAtPage(page, shape);
@@ -388,31 +389,31 @@ export class Api {
     moveFill(page: Page, shape: Shape | Variable, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
         const fills = shape instanceof Shape ? shape.style.fills : shape.value;
-        this.addOp(basicapi.moveFill(this.uid, fills, idx, idx2));
+        this.addOp(basicapi.moveFill(fills, idx, idx2));
     }
     moveBorder(page: Page, shape: Shape | Variable, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-        this.addOp(basicapi.moveBorder(this.uid, borders, idx, idx2));
+        this.addOp(basicapi.moveBorder(borders, idx, idx2));
     }
     // points
     addPointAt(page: Page, shape: PathShape, idx: number, point: CurvePoint) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.addPointAt(this.uid, shape, point, idx));
+        this.addOp(basicapi.addPointAt(shape, point, idx));
     }
     deletePoints(page: Page, shape: PathShape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.deletePoints(this.uid, shape, index, strength));
+        this.addOp(basicapi.deletePoints(shape, index, strength));
     }
     deletePoint(page: Page, shape: PathShape, index: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.deletePointAt(this.uid, shape, index));
+        this.addOp(basicapi.deletePointAt(shape, index));
     }
     addPoints(page: Page, shape: PathShape, points: CurvePoint[]) {
         checkShapeAtPage(page, shape);
         for (let i = 0; i < points.length; i++) {
             const point = points[i];
-            this.addOp(basicapi.addPointAt(this.uid, shape, point, i));
+            this.addOp(basicapi.addPointAt(shape, point, i));
         }
     }
     modifyPointCurveMode(page: Page, shape: PathShape, index: number, curveMode: CurveMode) {
@@ -438,35 +439,35 @@ export class Api {
     // contacts
     addContactAt(page: Page, shape: Shape, contactRole: ContactRole, idx: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.addContactShape(this.uid, shape.style, contactRole));
+        this.addOp(basicapi.addContactShape(shape.style, contactRole));
     }
     removeContactRoleAt(page: Page, shape: Shape, index: number) {
         checkShapeAtPage(page, shape);
         if (!shape.style.contacts || !shape.style.contacts[index]) return;
-        this.addOp(basicapi.removeContactRoleAt(this.uid, shape.style, index));
+        this.addOp(basicapi.removeContactRoleAt(shape.style, index));
     }
     // shadow
     addShadows(page: Page, shape: Shape, shadows: Shadow[]) {
         checkShapeAtPage(page, shape);
         for (let i = 0; i < shadows.length; i++) {
             const shadow = shadows[i];
-            this.addOp(basicapi.addShadow(this.uid, shape.style.shadows, shadow, i));
+            this.addOp(basicapi.addShadow(shape.style.shadows, shadow, i));
         }
     }
     addShadow(page: Page, shape: Shape | Variable, shadow: Shadow, index: number) {
         checkShapeAtPage(page, shape);
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-        this.addOp(basicapi.addShadow(this.uid, shadows, shadow, index));
+        this.addOp(basicapi.addShadow(shadows, shadow, index));
     }
     deleteShadows(page: Page, shape: Shape | Variable, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-        this.addOp(basicapi.deleteShadows(this.uid, shadows, index, strength));
+        this.addOp(basicapi.deleteShadows(shadows, index, strength));
     }
     deleteShadowAt(page: Page, shape: Shape | Variable, idx: number) {
         checkShapeAtPage(page, shape);
         const shadows = shape instanceof Shape ? shape.style.shadows : shape.value;
-        this.addOp(basicapi.deleteShadowAt(this.uid, shadows, idx));
+        this.addOp(basicapi.deleteShadowAt(shadows, idx));
     }
     setShadowEnable(page: Page, shape: Shape | Variable, idx: number, isEnable: boolean) {
         checkShapeAtPage(page, shape);
@@ -507,30 +508,30 @@ export class Api {
     deleteExportFormatAt(page: Page, shape: Shape, idx: number) {
         checkShapeAtPage(page, shape);
         if (!shape.exportOptions) return;
-        this.addOp(basicapi.deleteExportFormatAt(this.uid, shape.exportOptions, idx));
+        this.addOp(basicapi.deleteExportFormatAt(shape.exportOptions, idx));
     }
     deletePageExportFormatAt(page: Page, idx: number) {
         if (!page.exportOptions) return;
-        this.addOp(basicapi.deletePageExportFormatAt(this.uid, page.exportOptions, idx));
+        this.addOp(basicapi.deletePageExportFormatAt(page.exportOptions, idx));
     }
     deleteExportFormats(page: Page, shape: Shape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         if (!shape.exportOptions) return;
-        this.addOp(basicapi.deleteExportFormats(this.uid, shape.exportOptions, index, strength));
+        this.addOp(basicapi.deleteExportFormats(shape.exportOptions, index, strength));
     }
     addExportFormats(page: Page, shape: Shape, formats: ExportFormat[]) {
         checkShapeAtPage(page, shape);
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
-            this.addOp(basicapi.addExportFormat(this.uid, shape, format, i));
+            this.addOp(basicapi.addExportFormat(shape, format, i));
         }
     }
     addExportFormat(page: Page, shape: Shape, format: ExportFormat, index: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.addExportFormat(this.uid, shape, format, index));
+        this.addOp(basicapi.addExportFormat(shape, format, index));
     }
     addPageExportFormat(page: Page, format: ExportFormat, index: number) {
-        this.addOp(basicapi.addPageExportFormat(this.uid, page, format, index));
+        this.addOp(basicapi.addPageExportFormat(page, format, index));
     }
     setExportFormatScale(page: Page, shape: Shape, idx: number, scale: number) {
         checkShapeAtPage(page, shape);
@@ -846,23 +847,23 @@ export class Api {
 
     tableInsertRow(page: Page, table: TableShape, idx: number, height: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableInsertRow(this.uid, table, idx, height));
+        this.addOp(basicapi.tableInsertRow(table, idx, height));
     }
 
     tableRemoveRow(page: Page, table: TableShape, idx: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableRemoveRow(this.uid, table, idx));
+        this.addOp(basicapi.tableRemoveRow(table, idx));
         // todo 删除对应的单元格
     }
 
     tableInsertCol(page: Page, table: TableShape, idx: number, width: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableInsertCol(this.uid, table, idx, width));
+        this.addOp(basicapi.tableInsertCol(table, idx, width));
     }
 
     tableRemoveCol(page: Page, table: TableShape, idx: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableRemoveCol(this.uid, table, idx));
+        this.addOp(basicapi.tableRemoveCol(table, idx));
         // todo 删除对应的单元格
     }
 

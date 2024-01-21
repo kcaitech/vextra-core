@@ -7,7 +7,7 @@ import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text";
 import { uuid } from "../../basic/uuid";
 
 // 对象树操作
-export function crdtShapeInsert(uid: string, parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord {
+export function crdtShapeInsert(parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord {
     shape = parent.addChildAt(shape, index);
     return {
         id: shape.id,
@@ -17,10 +17,10 @@ export function crdtShapeInsert(uid: string, parent: GroupShape, shape: Shape, i
         data: shape,
         from: undefined,
         isRemove: false,
-        to: { id: parent.id, index: shape.crdtidx.index, order: Number.MAX_SAFE_INTEGER, uid }
+        to: { id: parent.id, index: shape.crdtidx.index, order: Number.MAX_SAFE_INTEGER }
     };
 }
-export function crdtShapeRemove(uid: string, parent: GroupShape, index: number): TreeMoveOpRecord | undefined {
+export function crdtShapeRemove(parent: GroupShape, index: number): TreeMoveOpRecord | undefined {
     const shape = parent.removeChildAt(index);
     if (shape) return {
         id: shape.id,
@@ -28,14 +28,13 @@ export function crdtShapeRemove(uid: string, parent: GroupShape, index: number):
         path: parent.getCrdtPath(),
         order: Number.MAX_SAFE_INTEGER,
         data: shape,
-        from: { id: parent.id, index: shape.crdtidx.index, order: shape.crdtidx.order, uid: shape.crdtidx.uid },
+        from: { id: parent.id, index: shape.crdtidx.index, order: shape.crdtidx.order },
         isRemove: true,
         to: undefined
     };
 }
 /**
  * 
- * @param uid 
  * @param page 
  * @param parent 
  * @param index 
@@ -44,14 +43,14 @@ export function crdtShapeRemove(uid: string, parent: GroupShape, index: number):
  * @param needUpdateFrame 
  * @returns 
  */
-export function crdtShapeMove(uid: string, parent: GroupShape, index: number, parent2: GroupShape, index2: number): TreeMoveOpRecord | undefined {
+export function crdtShapeMove(parent: GroupShape, index: number, parent2: GroupShape, index2: number): TreeMoveOpRecord | undefined {
     if (parent.id === parent2.id) {
         if (Math.abs(index - index2) <= 1) return;
         if (index2 > index) index2--;
     }
     const shape = parent.childs.splice(index, 1)[0]
     if (!shape) return;
-    const newidx = crdtGetArrIndex(uid, parent2.childs, index2);
+    const newidx = crdtGetArrIndex(parent2.childs, index2);
     const oldidx = shape.crdtidx;
     shape.crdtidx = newidx;
     parent2.childs.splice(index2, 0, shape);
@@ -61,9 +60,9 @@ export function crdtShapeMove(uid: string, parent: GroupShape, index: number, pa
         path: parent2.getCrdtPath(),
         order: Number.MAX_SAFE_INTEGER,
         data: shape,
-        from: { id: parent.id, index: oldidx.index, order: oldidx.order, uid: oldidx.uid },
+        from: { id: parent.id, index: oldidx.index, order: oldidx.order },
         isRemove: true,
-        to: { id: parent2.id, index: newidx.index, order: Number.MAX_SAFE_INTEGER, uid }
+        to: { id: parent2.id, index: newidx.index, order: Number.MAX_SAFE_INTEGER }
     };
 }
 
@@ -165,8 +164,8 @@ export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string,
 }
 
 // 数据操作
-export function crdtArrayInsert(uid: string, arr: BasicArray<CrdtItem>, index: number, item: CrdtItem): ArrayMoveOpRecord {
-    const newidx = crdtGetArrIndex(uid, arr, index);
+export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: CrdtItem): ArrayMoveOpRecord {
+    const newidx = crdtGetArrIndex(arr, index);
     const oldidx = item.crdtidx;
     item.crdtidx = newidx;
     arr.splice(index, 0, item);
@@ -182,7 +181,7 @@ export function crdtArrayInsert(uid: string, arr: BasicArray<CrdtItem>, index: n
     }
 }
 
-export function crdtArrayRemove(uid: string, arr: BasicArray<CrdtItem>, index: number): ArrayMoveOpRecord | undefined {
+export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): ArrayMoveOpRecord | undefined {
     const item = arr[index];
     if (!item) return;
     const oldidx = item.crdtidx;
@@ -201,17 +200,16 @@ export function crdtArrayRemove(uid: string, arr: BasicArray<CrdtItem>, index: n
 
 /**
  * 
- * @param uid 
  * @param arr 
  * @param from 
  * @param to 移动前的index
  * @returns 
  */
-export function crdtArrayMove(uid: string, arr: BasicArray<CrdtItem>, from: number, to: number): ArrayMoveOpRecord | undefined {
+export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: number): ArrayMoveOpRecord | undefined {
     const item = arr[from];
     if (!item || Math.abs(from - to) <= 1) return;
     const oldidx = item.crdtidx;
-    const newidx = crdtGetArrIndex(uid, arr, to);
+    const newidx = crdtGetArrIndex(arr, to);
     arr.splice(from, 1);
     if (from < to) --to;
     arr.splice(to, 0, item);

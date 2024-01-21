@@ -5,27 +5,27 @@ import { ExportFileFormat, ExportFormatNameingScheme } from "../../data/style";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import { ArrayMoveOpRecord } from "../../coop/client/crdt";
 
-export function addExportFormat(uid: string, shape: Shape, format: ExportFormat, index: number) {
+export function addExportFormat(shape: Shape, format: ExportFormat, index: number) {
     if (!shape.exportOptions) {
         const formats = new BasicArray<ExportFormat>();
         shape.exportOptions = new ExportOptions(formats, 0, false, false, false, false);
     }
-    return crdtArrayInsert(uid, shape.exportOptions.exportFormats, index, format);
+    return crdtArrayInsert(shape.exportOptions.exportFormats, index, format);
 }
-export function addPageExportFormat(uid: string, page: Page, format: ExportFormat, index: number) {
-    return addExportFormat(uid, page, format, index);
+export function addPageExportFormat(page: Page, format: ExportFormat, index: number) {
+    return addExportFormat(page, format, index);
 }
 
-export function deleteExportFormatAt(uid: string, options: ExportOptions, index: number) {
-    return crdtArrayRemove(uid, options.exportFormats, index);
+export function deleteExportFormatAt(options: ExportOptions, index: number) {
+    return crdtArrayRemove(options.exportFormats, index);
 }
-export function deletePageExportFormatAt(uid: string, options: ExportOptions, index: number) {
-    return deleteExportFormatAt(uid, options, index);
+export function deletePageExportFormatAt(options: ExportOptions, index: number) {
+    return deleteExportFormatAt(options, index);
 }
-export function deleteExportFormats(uid: string, options: ExportOptions, index: number, strength: number) {
+export function deleteExportFormats(options: ExportOptions, index: number, strength: number) {
     const ops: ArrayMoveOpRecord[] = [];
     for (let i = index + strength - 1; i >= index; i--) {
-        const op = crdtArrayRemove(uid, options.exportFormats, i);
+        const op = crdtArrayRemove(options.exportFormats, i);
         if (op) ops.push(op);
     }
     return ops;

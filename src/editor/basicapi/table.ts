@@ -40,20 +40,20 @@ export function tableModifyRowHeight(page: Page, table: TableShape, idx: number,
     return rowHeights[idx] && crdtSetAttr(rowHeights[idx], "value", height);
 }
 
-export function tableInsertRow(uid: string, table: TableShape, idx: number, height: number) {
-    return crdtArrayInsert(uid, table.rowHeights, idx, new CrdtNumber(uuid(), new CrdtIndex("", 0, ""), height))
+export function tableInsertRow(table: TableShape, idx: number, height: number) {
+    return crdtArrayInsert(table.rowHeights, idx, new CrdtNumber(uuid(), new CrdtIndex([], 0), height))
 }
 
-export function tableRemoveRow(uid: string, table: TableShape, idx: number) {
-    return crdtArrayRemove(uid, table.rowHeights, idx);
+export function tableRemoveRow(table: TableShape, idx: number) {
+    return crdtArrayRemove(table.rowHeights, idx);
 }
 
-export function tableInsertCol(uid: string, table: TableShape, idx: number, width: number) {
-    return crdtArrayInsert(uid, table.colWidths, idx, new CrdtNumber(uuid(), new CrdtIndex("", 0, ""), width))
+export function tableInsertCol(table: TableShape, idx: number, width: number) {
+    return crdtArrayInsert(table.colWidths, idx, new CrdtNumber(uuid(), new CrdtIndex([], 0), width))
 }
 
-export function tableRemoveCol(uid: string, table: TableShape, idx: number) {
-    return crdtArrayRemove(uid, table.colWidths, idx);
+export function tableRemoveCol(table: TableShape, idx: number) {
+    return crdtArrayRemove(table.colWidths, idx);
 }
 
 export function tableModifyCellSpan(cell: TableCell, rowSpan: number | undefined, colSpan: number | undefined) {

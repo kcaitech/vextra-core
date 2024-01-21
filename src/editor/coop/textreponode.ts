@@ -82,7 +82,7 @@ export class TextRepoNode extends RepoNode {
             }
             return;
         }
-        // 需要变换
+        // 需要变换 // todo 服务端不作变换
         const remote = ops.map(op => op.op as ArrayOp);
         const local = this.localops.map(op => op.op as ArrayOp);
         const { lhs, rhs } = transform(remote, local);

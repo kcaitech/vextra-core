@@ -30,8 +30,6 @@ import {
 import { Document } from "../data/document";
 import { expand, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
-import { CoopRepository } from "./coop/cooprepo";
-import { Api } from "./coop/recordapi";
 import {
     Artboard,
     Border,
@@ -87,6 +85,8 @@ import { is_circular_ref2 } from "./utils/ref_check";
 import { ExportFormat, Shadow } from "../data/baseclasses";
 import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
+import { CoopRepository } from "./coop/cooprepo";
+import { Api } from "./coop/recordapi";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y

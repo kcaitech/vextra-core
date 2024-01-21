@@ -5,8 +5,8 @@ import { BasicArray } from "../../data/basic";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr } from "./basic";
 import { ArrayMoveOpRecord } from "../../coop/client/crdt";
 // 阴影
-export function deleteShadowAt(uid: string, shadows: BasicArray<Shadow>, idx: number) {
-    return crdtArrayRemove(uid, shadows, idx);
+export function deleteShadowAt(shadows: BasicArray<Shadow>, idx: number) {
+    return crdtArrayRemove(shadows, idx);
 }
 
 export function setShadowEnable(shadows: BasicArray<Shadow>, idx: number, enable: boolean) {
@@ -14,8 +14,8 @@ export function setShadowEnable(shadows: BasicArray<Shadow>, idx: number, enable
     if (s) return crdtSetAttr(s, "isEnabled", enable); // s.isEnabled = enable;
 }
 
-export function addShadow(uid: string, shadows: BasicArray<Shadow>, shadow: Shadow, index: number) {
-    return crdtArrayInsert(uid, shadows, index, shadow);
+export function addShadow(shadows: BasicArray<Shadow>, shadow: Shadow, index: number) {
+    return crdtArrayInsert(shadows, index, shadow);
 }
 
 export function setShadowColor(shadows: BasicArray<Shadow>, idx: number, color: Color) {
@@ -48,10 +48,10 @@ export function setShadowSpread(shadows: BasicArray<Shadow>, idx: number, spread
     if (shadow) return crdtSetAttr(shadow, "spread", spread); // shadow.spread = spread;
 }
 
-export function deleteShadows(uid: string, shadows: BasicArray<Shadow>, idx: number, strength: number) {
+export function deleteShadows(shadows: BasicArray<Shadow>, idx: number, strength: number) {
     const ops: ArrayMoveOpRecord[] = [];
     for (let i = idx + strength - 1; i >= idx; i--) {
-        const op = crdtArrayRemove(uid, shadows, i);
+        const op = crdtArrayRemove(shadows, i);
         if (op) ops.push(op);
     }
     return ops;

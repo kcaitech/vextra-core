@@ -39,6 +39,7 @@ import { get_state_name } from "./utils/symbol";
 import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
+import { CrdtIndex } from "../data/crdt";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -484,13 +485,13 @@ export class Controller {
                         if ((newShape as ContactShape).from) {
                             const shape1 = savepage?.getShape((newShape as ContactShape).from!.shapeId);
                             if (shape1) {
-                                api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.From, newShape.id), shape1.style.contacts?.length || 0);
+                                api.addContactAt(savepage!, shape1, new ContactRole(new CrdtIndex([], 0), v4(), ContactRoleType.From, newShape.id), shape1.style.contacts?.length || 0);
                             }
                         }
                         if ((newShape as ContactShape).to) {
                             const shape1 = savepage?.getShape((newShape as ContactShape).to!.shapeId);
                             if (shape1) {
-                                api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.To, newShape.id), shape1.style.contacts?.length || 0);
+                                api.addContactAt(savepage!, shape1, new ContactRole(new CrdtIndex([], 0), v4(), ContactRoleType.To, newShape.id), shape1.style.contacts?.length || 0);
                             }
                         }
                     }
@@ -870,7 +871,7 @@ export class Controller {
         const addNode = (index: number) => {
             status === Status.Pending
             try {
-                const p = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
+                const p = new CurvePoint(new CrdtIndex([], 0), uuid(), 0, 0, CurveMode.Straight);
                 api.addPointAt(page, shape as PathShape, index, p);
                 after_insert_point(page, api, shape, index);
                 this.__repo.transactCtx.fireNotify();
