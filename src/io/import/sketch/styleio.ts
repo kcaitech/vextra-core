@@ -10,7 +10,7 @@ import {
     Stop,
     Style
 } from "../../../data/style";
-import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D, Color } from "../../../data/classes"
+import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D, Color, CrdtIndex } from "../../../data/classes"
 import { BasicArray } from "../../../data/basic";
 import { uuid } from "../../../basic/uuid";
 import { IJSON, LoadContext } from "./basic";
@@ -71,11 +71,12 @@ function importGradient(data: IJSON): Gradient {
         }
         position = Math.min(Math.max(0, position), 1);
         const color: Color = importColor(d['color']);
-        const stop = new Stop(position);
+        const stop = new Stop(new CrdtIndex([], 0), position);
         stop.color = color;
         return stop;
     });
     stops.sort((a, b) => a.position == b.position ? -1 : a.position - b.position);
+    stops.forEach((v, i) => { v.crdtidx.index.push(i); });
     return new Gradient(elipseLength, from, to, gradientType, new BasicArray<Stop>(...stops));
 }
 
@@ -115,7 +116,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         )
     })(data['borderOptions']);
 
-    const borders: Border[] = (data['borders'] || []).map((d: IJSON) => {
+    const borders: Border[] = (data['borders'] || []).map((d: IJSON, i: number) => {
         const isEnabled: boolean = d['isEnabled'];
         const fillType: FillType = ((t) => {
             switch (t) {
@@ -162,7 +163,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             return bs
         })(data['borderOptions'].dashPattern);
 
-        const border = new Border(uuid(), isEnabled, fillType, color, position, thickness, borderStyle);
+        const border = new Border(new CrdtIndex([i], 0), uuid(), isEnabled, fillType, color, position, thickness, borderStyle);
         border.gradient = gradient;
         border.contextSettings = contextSettings;
         return border;
@@ -181,7 +182,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
     const endMarkerType: MarkerType = getMarkerType(data['endMarkerType']);
 
     const contextSettings: ContextSettings = importContextSettings(data['contextSettings']);
-    const fills: Fill[] = (data['fills'] || []).map((d: IJSON) => {
+    const fills: Fill[] = (data['fills'] || []).map((d: IJSON, i: number) => {
         const isEnabled: boolean = d['isEnabled'];
         const fillType = ((t) => {
             switch (t) {
@@ -217,18 +218,18 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             imageRef = ref.substring(ref.indexOf('/') + 1);
         }
 
-        const fill = new Fill(uuid(), isEnabled, fillType, color);
+        const fill = new Fill(new CrdtIndex([i], 0), uuid(), isEnabled, fillType, color);
         fill.gradient = gradient;
         fill.imageRef = imageRef;
         fill.contextSettings = contextSettings;
         fill.setImageMgr(ctx.mediasMgr);
         return fill;
     });
-    const shadows: Shadow[] = (data['shadows'] || []).map((d: IJSON) => {
+    const shadows: Shadow[] = (data['shadows'] || []).map((d: IJSON, i: number) => {
         const isEnabled: boolean = d['isEnabled'];
         const color: Color = importColor(d['color']);
         const blurRadius = d["blurRadius"], offsetX = d["offsetX"], offsetY = d["offsetY"], spread = d["spread"]
-        const shadow = new Shadow(uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread, ShadowPosition.Outer);
+        const shadow = new Shadow(new CrdtIndex([i], 0), uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread, ShadowPosition.Outer);
         return shadow;
     });
 

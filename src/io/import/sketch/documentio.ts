@@ -5,6 +5,7 @@ import {Document, PageListItem} from "../../../data/document";
 import { LzData } from "./lzdata";
 import { IJSON } from "./basic";
 import { DataLoader } from "./dataloader";
+import { CrdtIndex } from "../../../data/crdt";
 
 async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicArray<PageListItem> > {
     const metaJson: IJSON = await lzData.loadJson('meta.json');
@@ -24,7 +25,7 @@ async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicA
         const id = pageIds[i]
         // if (id === LibType.Symbol) continue; // 组件库页面
         const name = metaMap.get(id) || 'Unknow'
-        pageList.push(new PageListItem(id, name))
+        pageList.push(new PageListItem(new CrdtIndex([i], 0), id, name))
     }
 
     return pageList;
