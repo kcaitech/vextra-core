@@ -114,6 +114,7 @@ export enum StrikethroughType {
 export type Stop = {
     position: number
     color: Color
+    id: string
 }
 /* span attr */
 export type SpanAttr = {
@@ -284,7 +285,7 @@ export type GraphicsContextSettings = {
 /* gradient */
 export type Gradient = {
     typeId: string
-    elipseLength: number
+    elipseLength?: number
     from: Point2D
     to: Point2D
     stops: Stop[]

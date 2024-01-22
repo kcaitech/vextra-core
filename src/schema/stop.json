@@ -8,11 +8,18 @@
         },
         "color": {
             "$ref": "./color.json"
+        },
+        "id": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 36,
+            "default": "$uuid"
         }
     },
     "required": [
         "position",
-        "color"
+        "color",
+        "id"
     ],
     "additionalProperties": false
 }

@@ -199,6 +199,7 @@ export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop
     const ret = {
         position: source.position,
         color: exportColor(source.color, ctx),
+        id: source.id,
     }
     return ret
 }

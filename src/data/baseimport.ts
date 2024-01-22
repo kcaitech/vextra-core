@@ -194,7 +194,8 @@ export function importStrikethroughType(source: types.StrikethroughType, ctx?: I
 export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
     const ret: impl.Stop = new impl.Stop (
         source.position,
-        importColor(source.color, ctx)
+        importColor(source.color, ctx),
+        source.id
     )
     return ret
 }
@@ -375,7 +376,6 @@ export function importGraphicsContextSettings(source: types.GraphicsContextSetti
 /* gradient */
 export function importGradient(source: types.Gradient, ctx?: IImportContext): impl.Gradient {
     const ret: impl.Gradient = new impl.Gradient (
-        source.elipseLength,
         importPoint2D(source.from, ctx),
         importPoint2D(source.to, ctx),
         importGradientType(source.gradientType, ctx),
@@ -388,6 +388,7 @@ export function importGradient(source: types.Gradient, ctx?: IImportContext): im
             return ret
         })()
     )
+    if (source.elipseLength !== undefined) ret.elipseLength = source.elipseLength
     return ret
 }
 /* gradient type */

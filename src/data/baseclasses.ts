@@ -164,13 +164,16 @@ export class Stop extends Basic {
     typeId = 'stop'
     position: number
     color: Color
+    id: string
     constructor(
         position: number,
-        color: Color
+        color: Color,
+        id: string
     ) {
         super()
         this.position = position
         this.color = color
+        this.id = id
     }
 }
 /**
@@ -396,20 +399,18 @@ export class GraphicsContextSettings extends Basic {
  */
 export class Gradient extends Basic {
     typeId = 'gradient'
-    elipseLength: number
+    elipseLength?: number
     from: Point2D
     to: Point2D
     stops: BasicArray<Stop >
     gradientType: GradientType
     constructor(
-        elipseLength: number,
         from: Point2D,
         to: Point2D,
         gradientType: GradientType,
         stops: BasicArray<Stop >
     ) {
         super()
-        this.elipseLength = elipseLength
         this.from = from
         this.to = to
         this.gradientType = gradientType

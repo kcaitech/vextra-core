@@ -1,8 +1,8 @@
 import * as classes from "./baseclasses"
 import {
     Blur, BorderOptions, ColorControls, ContextSettings,
-    Shadow, WindingRule, FillType, Gradient, BorderPosition,
-    BorderStyle, MarkerType, ContactRole, VariableType
+    Shadow, WindingRule, FillType, BorderPosition,
+    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, Stop, GradientType
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
@@ -24,7 +24,6 @@ export {
     ExportVisibleScaleType,
     ColorControls,
     Stop,
-    Gradient,
     ContextSettings,
     Shadow,
     GraphicsContextSettings,
@@ -32,7 +31,7 @@ export {
     ContactForm,
     ContactType,
     ContactRole,
-    ContactRoleType, 
+    ContactRoleType,
     ShadowPosition
 } from "./baseclasses"
 
@@ -64,6 +63,29 @@ export class Border extends Basic implements classes.Border {
         this.position = position
         this.thickness = thickness
         this.borderStyle = borderStyle
+    }
+}
+
+export class Gradient extends Basic implements classes.Gradient {
+    typeId = 'gradient'
+    elipseLength?: number
+    from: Point2D
+    to: Point2D
+    stops: BasicArray<Stop>
+    gradientType: GradientType
+    constructor(
+        from: Point2D,
+        to: Point2D,
+        gradientType: GradientType,
+        stops: BasicArray<Stop>,
+        elipseLength?: number
+    ) {
+        super()
+        this.from = from
+        this.to = to
+        this.gradientType = gradientType
+        this.stops = stops
+        this.elipseLength = elipseLength;
     }
 }
 

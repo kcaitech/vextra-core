@@ -28,7 +28,6 @@
     },
     "required": [
         "typeId",
-        "elipseLength",
         "from",
         "to",
         "gradientType",

@@ -71,12 +71,12 @@ function importGradient(data: IJSON): Gradient {
         }
         position = Math.min(Math.max(0, position), 1);
         const color: Color = importColor(d['color']);
-        const stop = new Stop(position, color);
+        const stop = new Stop(position, color, d["id"]);
         stop.color = color;
         return stop;
     });
     stops.sort((a, b) => a.position == b.position ? -1 : a.position - b.position);
-    return new Gradient(elipseLength, from, to, gradientType, new BasicArray<Stop>(...stops));
+    return new Gradient(from, to, gradientType, new BasicArray<Stop>(...stops), elipseLength);
 }
 
 export function importStyle(ctx: LoadContext, data: IJSON): Style {
