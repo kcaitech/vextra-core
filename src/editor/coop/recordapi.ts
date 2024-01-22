@@ -45,19 +45,19 @@ function checkShapeAtPage(page: Page, obj: Shape | Variable) {
 }
 
 export class Api {
-    private uid: string;
+    // private uid: string;
     private cmd: Cmd | undefined;
     private needUpdateFrame: { shape: Shape, page: Page }[] = [];
-    constructor(uid: string) {
-        this.uid = uid;
-    }
+    // constructor(uid: string) {
+    //     this.uid = uid;
+    // }
     start(description: string = "") {
         this.cmd = {
             id: uuid(),
             mergeable: true,
             delay: 500,
-            version: 0,
-            userId: this.uid,
+            version: Number.MAX_SAFE_INTEGER,
+            // userId: this.uid,
             ops: [],
             isUndo: false,
             blockId: [],

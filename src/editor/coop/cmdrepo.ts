@@ -2,7 +2,7 @@ import { Shape } from "../../data/shape";
 import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { LocalCmd } from "./localcmd";
-import { RepoNode } from "./reponode";
+import { RepoNode, RepoNodePath } from "./reponode";
 import { Document } from "../../data/document";
 import { updateShapesFrame } from "./utils";
 import * as basicapi from "../basicapi"
@@ -41,8 +41,8 @@ function classifyOps(cmds: Cmd[]) {
 // 一个文档一个总的repo
 export class CmdRepo {
 
-    private nodecreator: (op: Op, path: string[]) => RepoNode
-    constructor(document: Document, cmds: Cmd[], localcmds: LocalCmd[], creator: (op: Op, path: string[]) => RepoNode) {
+    private nodecreator: (op: Op) => RepoNode
+    constructor(document: Document, cmds: Cmd[], localcmds: LocalCmd[], creator: (op: Op) => RepoNode) {
         this.document = document;
         // 用于加载本地的cmds
         this.cmds = cmds;
@@ -65,7 +65,7 @@ export class CmdRepo {
 
     // 不同bolck（page、document，不同repotree）
     // todo 怎么隔离不同page的repo
-    repotrees: Map<string, RepoNode> = new Map();
+    repotrees: Map<string, RepoNodePath> = new Map();
     // repotree: RepoNode = new RepoNode(OpType.None);
 
     private processRemoteCmds(cmds: Cmd[], needUpdateFrame: Map<string, Shape[]>) {
@@ -270,7 +270,7 @@ export class CmdRepo {
         for (let i = 0; i < _blockIds.length; i++) {
             const _blockId = _blockIds[i];
             if (this.repotrees.has(_blockId)) throw new Error("blockId already exists");
-            const repotree = new RepoNode(OpType.None);
+            const repotree = new RepoNodePath();
             this.repotrees.set(_blockId, repotree);
         }
 

@@ -6,6 +6,11 @@ import { Page } from "../../data/page";
 import { LocalCmd } from "./localcmd";
 import { CmdRepo } from "./cmdrepo";
 import { Cmd } from "../../coop/common/repo";
+import { Op, OpType } from "../../coop/common/op";
+import { TextRepoNode } from "./textreponode";
+import { CrdtArrayReopNode } from "./crdtarrayreponode";
+import { CrdtShapeRepoNode } from "./crdtshapereponode";
+import { CrdtIdRepoNode } from "./crdtidreponode";
 
 class TrapHdl {
     private repo: Repository;
@@ -19,11 +24,33 @@ class TrapHdl {
             const save = this.repo.transactCtx.settrap;
             this.repo.transactCtx.settrap = false;
             try {
-                return ret.apply(this, args);
+                return ret.apply(target, args);
             }
             finally {
                 this.repo.transactCtx.settrap = save;
             }
+        }
+    }
+}
+
+function nodecreator(document: Document) {
+    return (op: Op) => {
+        const pageId = op.path[0];
+        const page = document.pagesMgr.getSync(pageId);
+        if (!page) throw new Error("page not valid: " + pageId);
+        switch (op.type) {
+            case OpType.Array:
+                // text
+                return new TextRepoNode(page);
+            case OpType.CrdtArr:
+                // array
+                return new CrdtArrayReopNode(page);
+            case OpType.CrdtTree:
+                return new CrdtShapeRepoNode(document, page);
+            case OpType.Idset:
+                return new CrdtIdRepoNode(page);
+            case OpType.None:
+                throw new Error("op none?");
         }
     }
 }
@@ -35,14 +62,11 @@ export class CoopRepository {
     private __index: number = 0;
     private __api: Api;
 
-    constructor(uid: string, document: Document, repo: Repository, cmds: Cmd[], localcmds: LocalCmd[]) {
+    constructor(document: Document, repo: Repository, cmds: Cmd[] = [], localcmds: LocalCmd[] = []) {
         this.__repo = repo;
         repo.transactCtx.settrap = true; // todo
-        this.__api = new Proxy<Api>(new Api(uid), new TrapHdl(repo));
-        this.__cmdrepo = new CmdRepo(document, cmds, localcmds, (op, path) => {
-            // todo
-            throw new Error("not implemented");
-        })
+        this.__api = new Proxy<Api>(new Api(), new TrapHdl(repo));
+        this.__cmdrepo = new CmdRepo(document, cmds, localcmds, nodecreator(document))
 
         if (cmds.length > 0 || localcmds.length > 0) {
             this.__cmdrepo.updateBlockData([document.id]);

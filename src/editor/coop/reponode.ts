@@ -7,20 +7,8 @@ import { OpItem } from "../../coop/common/repo";
 // idop: shape, style, fill, border, shadow, text, variable...
 // crdttreeop: shapetree
 // crdtarrayop: pagelist, fills, borders, shadows, tablecellrowheights, tablecellcolwidths...
+
 export class RepoNode {
-
-    childs: Map<string, RepoNode> = new Map();
-
-    buildAndGet(op: Op, path: string[], creator: (op: Op, path: string[]) => RepoNode): RepoNode {
-        if (path.length === 0) return this;
-        let child = this.childs.get(path[0]);
-        if (!child) {
-            // bulid
-            child = creator(op, path);
-            this.childs.set(path[0], child);
-        }
-        return child.buildAndGet(op, path.slice(1), creator);
-    }
 
     type: OpType; // 一个节点仅可能接收一种类型的op
     ops: OpItem[] = []; // 与服务端保持一致的op
@@ -66,5 +54,27 @@ export class RepoNode {
     }
     // redo
     processRedoLocal(ops: OpItem[], needApply: boolean, needUpdateFrame: Shape[]) {
+    }
+}
+
+export class RepoNodePath {
+
+    node: RepoNode | undefined;
+    childs: Map<string, RepoNodePath> = new Map();
+
+    buildAndGet(op: Op, path: string[], creator: (op: Op) => RepoNode): RepoNode {
+        if (path.length === 0) {
+            if (!this.node) this.node = creator(op);
+            // check
+            if (this.node.type !== op.type) throw new Error("wrong node, expect node type: " + op.type + ", but get: " + this.node.type);
+            return this.node;
+        }
+        let child = this.childs.get(path[0]);
+        if (!child) {
+            // bulid
+            child = new RepoNodePath();
+            this.childs.set(path[0], child);
+        }
+        return child.buildAndGet(op, path.slice(1), creator);
     }
 }
