@@ -92,7 +92,7 @@ export class DataLoader {
         document.mediasMgr.setLoader((id) => this.loadMedia(id))
         document.pagesMgr.setLoader(async (id) => {
             const page = await this.loadPage(ctx, id)
-            document.pagesMgr.add(page.id, page)
+            // document.pagesMgr.add(page.id, page) // 在pagesMgr里也会add
             symbolsSet.forEach((v, k) => {
                 document.symbolsMgr.add(k, v);
             })

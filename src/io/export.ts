@@ -10,12 +10,11 @@
 [uuid]/metas/[document-refs.json...] // 文档内引用的其它文档数据记录
 */
 
-import {Document, LibType} from "../data/document";
-import {ShapeFrame, ShapeType} from "../data/baseclasses";
-import {Border, Fill, Page, Shadow, Style} from "../data/classes";
+import { Document } from "../data/document";
+import { Border, Fill, Page, Shadow, Style } from "../data/classes";
 import * as types from "../data/typesdefine"
-import {exportDocumentMeta, exportPage, exportSymbolShape, IExportContext} from "../data/baseexport";
-import {BasicArray} from "../data/basic";
+import { exportDocumentMeta, exportPage, IExportContext } from "../data/baseexport";
+import { BasicArray } from "../data/basic";
 
 export function newStyle(): Style {
     const borders = new BasicArray<Border>();
@@ -52,8 +51,8 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
     const pmgr = document.pagesMgr;
     const pages: types.Page[] = [];
     // const page_refartboards: string[][] = [];
-    const document_syms: { pageId: string, symbols: string[] }[] = [];
-    const referenced_syms: { pageId: string, symbols: string[] }[] = [];
+    // const document_syms: { pageId: string, symbols: string[] }[] = [];
+    // const referenced_syms: { pageId: string, symbols: string[] }[] = [];
     for (let i = 0, len = document.pagesList.length; i < len; i++) {
         const meta = document.pagesList[i];
         const pagedata: Page | undefined = await pmgr.get(meta.id)
@@ -62,11 +61,11 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
         pages.push(page);
 
         // 已经导出的组件
-        document_syms.push({pageId: page.id, symbols: Array.from(ctx.symbols.values())});
+        // document_syms.push({pageId: page.id, symbols: Array.from(ctx.symbols.values())});
         ctx.symbols.clear();
 
         // 文档内所引用的所有组件
-        referenced_syms.push({pageId: page.id, symbols: Array.from(ctx.referenced.values())})
+        // referenced_syms.push({pageId: page.id, symbols: Array.from(ctx.referenced.values())})
         ctx.referenced.clear();
 
         // const refartboards: string[] = [];
