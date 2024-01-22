@@ -158,8 +158,18 @@ export class CoopRepository {
         if (!cmd) throw new Error("no cmd to commit")
         this.__repo.commit()
 
-
         // todo check merge
+        // 文本输入
+        // 键盘移动
+        // 
+        if (this.__localcmds.length > 0 && this.__cmdrepo.localcmds.length > 0) {
+            const now = Date.now();
+            const last = this.__localcmds[this.__localcmds.length - 1];
+            if (now - last.time < 1000) {
+                // 考虑合并
+                // 需要个cmdtype
+            }
+        }
 
         this.__localcmds.length = this.__index;
         this.__localcmds.push(cmd);

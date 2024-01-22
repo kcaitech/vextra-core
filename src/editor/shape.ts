@@ -1099,7 +1099,7 @@ export class ShapeEditor {
         const api = this.__repo.start("addShadow", {});
         try {
             const shape = shape4shadow(api, this.__page, this.__shape);
-            const l = shape instanceof Shape ? shape.style.borders.length : shape.value.length;
+            const l = shape instanceof Shape ? shape.style.shadows.length : shape.value.length;
             api.addShadow(this.__page, shape, shadow, l);
             this.__repo.commit();
         } catch (e) {

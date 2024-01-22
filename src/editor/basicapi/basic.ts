@@ -5,14 +5,16 @@ import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../
 import { OpType } from "../../coop/common/op";
 import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text";
 import { uuid } from "../../basic/uuid";
+import { Page } from "../../data/page";
 
 // 对象树操作
-export function crdtShapeInsert(parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord {
+export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord {
+    shape.crdtidx = crdtGetArrIndex(parent.childs, index);
     shape = parent.addChildAt(shape, index);
     return {
         id: shape.id,
         type: OpType.CrdtTree,
-        path: parent.getCrdtPath(),
+        path: page.getCrdtPath(), // shape 操作统一到page
         order: Number.MAX_SAFE_INTEGER,
         data: shape,
         from: undefined,
@@ -20,12 +22,12 @@ export function crdtShapeInsert(parent: GroupShape, shape: Shape, index: number)
         to: { id: parent.id, index: shape.crdtidx.index, order: Number.MAX_SAFE_INTEGER }
     };
 }
-export function crdtShapeRemove(parent: GroupShape, index: number): TreeMoveOpRecord | undefined {
+export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): TreeMoveOpRecord | undefined {
     const shape = parent.removeChildAt(index);
     if (shape) return {
         id: shape.id,
         type: OpType.CrdtTree,
-        path: parent.getCrdtPath(),
+        path: page.getCrdtPath(), // shape 操作统一到page
         order: Number.MAX_SAFE_INTEGER,
         data: shape,
         from: { id: parent.id, index: shape.crdtidx.index, order: shape.crdtidx.order },
@@ -43,7 +45,7 @@ export function crdtShapeRemove(parent: GroupShape, index: number): TreeMoveOpRe
  * @param needUpdateFrame 
  * @returns 
  */
-export function crdtShapeMove(parent: GroupShape, index: number, parent2: GroupShape, index2: number): TreeMoveOpRecord | undefined {
+export function crdtShapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number): TreeMoveOpRecord | undefined {
     if (parent.id === parent2.id) {
         if (Math.abs(index - index2) <= 1) return;
         if (index2 > index) index2--;
@@ -57,7 +59,7 @@ export function crdtShapeMove(parent: GroupShape, index: number, parent2: GroupS
     return {
         id: shape.id,
         type: OpType.CrdtTree,
-        path: parent2.getCrdtPath(),
+        path: page.getCrdtPath(), // shape 操作统一到page
         order: Number.MAX_SAFE_INTEGER,
         data: shape,
         from: { id: parent.id, index: oldidx.index, order: oldidx.order },
@@ -80,7 +82,7 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
     return {
         id: key,
         type: OpType.Idset,
-        path: obj.getCrdtPath(),
+        path: obj.getCrdtPath().concat(key),
         order: Number.MAX_SAFE_INTEGER,
         data: value,
         origin
@@ -165,6 +167,8 @@ export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string,
 
 // 数据操作
 export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: CrdtItem): ArrayMoveOpRecord {
+    // check index
+    if (index < 0 || index > arr.length) throw new Error("index out of range");
     const newidx = crdtGetArrIndex(arr, index);
     const oldidx = item.crdtidx;
     item.crdtidx = newidx;
@@ -182,6 +186,7 @@ export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: 
 }
 
 export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): ArrayMoveOpRecord | undefined {
+    if (index < 0 || index >= arr.length) throw new Error("index out of range");
     const item = arr[index];
     if (!item) return;
     const oldidx = item.crdtidx;
@@ -206,6 +211,8 @@ export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): Array
  * @returns 
  */
 export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: number): ArrayMoveOpRecord | undefined {
+    if (from < 0 || from >= arr.length) throw new Error("index out of range");
+    if (to < 0 || to > arr.length) throw new Error("index out of range");
     const item = arr[from];
     if (!item || Math.abs(from - to) <= 1) return;
     const oldidx = item.crdtidx;

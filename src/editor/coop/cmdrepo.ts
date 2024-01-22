@@ -214,7 +214,7 @@ export class CmdRepo {
             console.log("abort received cmds: ", cmds);
             return;
         }
-        this.freshlocalcmdcount = 0;
+        this.freshlocalcmdcount = 0; // todo
         this.pendingcmds.push(...cmds);
         // need process
         this.processCmds();

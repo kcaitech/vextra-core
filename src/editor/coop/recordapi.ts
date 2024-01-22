@@ -26,8 +26,9 @@ import { uuid } from "../../basic/uuid";
 import { ContactForm, ContactRole, CurvePoint, ExportFormat } from "../../data/baseclasses";
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
-import { Op } from "../../coop/common/op";
-import { LocalCmd as Cmd } from "./localcmd";
+import { Op, OpType } from "../../coop/common/op";
+import { LocalCmd as Cmd, CmdMergeType } from "./localcmd";
+import { IdOpRecord } from "../../coop/client/crdt";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -45,24 +46,22 @@ function checkShapeAtPage(page: Page, obj: Shape | Variable) {
 }
 
 export class Api {
-    // private uid: string;
     private cmd: Cmd | undefined;
     private needUpdateFrame: { shape: Shape, page: Page }[] = [];
-    // constructor(uid: string) {
-    //     this.uid = uid;
-    // }
-    start(description: string = "") {
+
+    start(description: string = "", mergetype: CmdMergeType = CmdMergeType.Others) {
+        // todo 添加selection op
         this.cmd = {
-            id: uuid(),
-            mergeable: true,
+            id: "",
+            // mergeable: true,
+            mergetype,
             delay: 500,
             version: Number.MAX_SAFE_INTEGER,
-            // userId: this.uid,
             ops: [],
             isUndo: false,
             blockId: [],
             description,
-            time: Date.now(),
+            time: 0,
             posttime: 0
         };
         this.needUpdateFrame.length = 0;
@@ -77,6 +76,8 @@ export class Api {
     commit(): Cmd | undefined {
         const cmd = this.cmd;
         if (!cmd) return undefined;
+        cmd.id = uuid();
+        cmd.time = Date.now();
         if (this.needUpdateFrame.length > 0) {
             const update = this.needUpdateFrame.slice(0);
             const page = update[0].page;
@@ -85,6 +86,37 @@ export class Api {
         }
         this.needUpdateFrame.length = 0;
         this.cmd = undefined;
+        // merge op
+        if (cmd.ops.length > 1) {
+            // merge idset
+            // shapemove？
+            // arraymove？
+            // text?
+            const ops = [];
+            const idsetops = new Map<string, Op>();
+            for (let i = 0; i < cmd.ops.length; i++) {
+                const op = cmd.ops[i];
+                if (op.type === OpType.Idset) {
+                    const path = op.path.join(',');
+                    const pre = idsetops.get(path) as IdOpRecord;
+                    if (pre) {
+                        pre.data = (op as IdOpRecord).data;
+                    } else {
+                        idsetops.set(path, op);
+                    }
+                } else {
+                    ops.push(op);
+                }
+            }
+            if (idsetops.size > 0) for (let [_, v] of idsetops) {
+                ops.push(v);
+            }
+            if (ops.length < cmd.ops.length) {
+                // has merge
+                cmd.ops = ops;
+            }
+        }
+
         return cmd;
     }
 

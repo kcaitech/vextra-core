@@ -1863,7 +1863,7 @@ export class PageEditor {
             const api = this.__repo.start('shapesAddShadow', {});
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                api.addShadow(this.__page, target, value, target.style.borders.length);
+                api.addShadow(this.__page, target, value, target.style.shadows.length);
             }
             this.__repo.commit();
         } catch (error) {

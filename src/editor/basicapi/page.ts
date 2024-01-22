@@ -54,13 +54,13 @@ export function pageMove(document: Document, fromIdx: number, toIdx: number) {
 
 
 export function shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
-    const op = crdtShapeInsert(parent, shape, index);
+    const op = crdtShapeInsert(page, parent, shape, index);
     page.onAddShape(shape);
     needUpdateFrame.push({ shape, page });
     return op;
 }
 export function shapeDelete(page: Page, parent: GroupShape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
-    const op = crdtShapeRemove(parent, index);
+    const op = crdtShapeRemove(page, parent, index);
     if (op) {
         page.onRemoveShape(op.data as Shape);
         if (parent.childs.length > 0) {
@@ -70,7 +70,7 @@ export function shapeDelete(page: Page, parent: GroupShape, index: number, needU
     return op;
 }
 export function shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
-    const op = crdtShapeMove(parent, index, parent2, index2);
+    const op = crdtShapeMove(page, parent, index, parent2, index2);
     if (op) {
         needUpdateFrame.push({ shape: op.data as Shape, page })
         if (parent.id !== parent2.id && parent.childs.length > 0) {
