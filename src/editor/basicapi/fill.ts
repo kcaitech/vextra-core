@@ -1,5 +1,5 @@
 import { uuid } from "../../basic/uuid";
-import { Fill } from "../../data/style";
+import { Fill, FillType } from "../../data/style";
 import { Color } from "../../data/color";
 
 // 填充
@@ -34,6 +34,11 @@ export function toggleFillEnabled(fill: Fill, idx: number) {
 export function setFillEnable(fill: Fill, enable: boolean) {
     // const fill: Fill = fills[idx];
     if (fill) fill.isEnabled = enable;
+}
+
+export function setFillType(fill: Fill, fillType: FillType) {
+    // const fill: Fill = fills[idx];
+    if (fill) fill.fillType = fillType;
 }
 
 export function addFill(fills: Fill[], fill: Fill) {

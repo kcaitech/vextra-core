@@ -40,7 +40,7 @@ import {
     exportTableCell,
     exportText,
     exportVariable,
-    exportExportFormat, exportExportFileFormat, exportExportFormatNameingScheme
+    exportExportFormat, exportExportFileFormat, exportExportFormatNameingScheme, exportFillType
 } from "../../data/baseexport";
 import { BORDER_ATTR_ID, BORDER_ID, CONTACTS_ID, FILLS_ATTR_ID, FILLS_ID, PAGE_ATTR_ID, POINTS_ATTR_ID, POINTS_ID, SHAPE_ATTR_ID, TABLE_ATTR_ID, TEXT_ATTR_ID, SHADOW_ID, SHADOW_ATTR_ID, CUTOUT_ID, CUTOUT_ATTR_ID } from "./consts";
 import {
@@ -59,7 +59,7 @@ import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAl
 import { cmdmerge } from "./merger";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, FillType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, Gradient } from "../../data/typesdefine";
+import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, Gradient, FillType } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { ContactForm, ContactRole, CurvePoint, ExportFormat, ExportOptions } from "../../data/baseclasses";
@@ -801,6 +801,18 @@ export class Api {
         })
 
     }
+    setFillType(page: Page, shape: Shape | Variable, idx: number, fillType: FillType) {
+        checkShapeAtPage(page, shape);
+        const fills = shape instanceof Shape ? shape.style.fills : shape.value;
+        if (!fills[idx]) return;
+        this.__trap(() => {
+            const fill: Fill = fills[idx];
+            const save = fill.fillType;
+            basicapi.setFillType(fill, fillType);
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.fillType, fillType, save));
+        })
+
+    }
     setBorderColor(page: Page, shape: Shape | Variable, idx: number, color: Color) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
@@ -1300,8 +1312,8 @@ export class Api {
         } finally {
             this.repo.transactCtx.settrap = save;
         }
-        console.log(pageId,'pageId');
-        
+        console.log(pageId, 'pageId');
+
         this.addCmd(PageCmdModify.Make(document.id, pageId, PAGE_ATTR_ID.previewUnfold, JSON.stringify(unfold), JSON.stringify(s_unfold)));
     }
     // text
@@ -1925,9 +1937,9 @@ export class Api {
         }
         this.__trap(() => {
             const fill = fills[idx];
-            const save = fill.gradient;
+            const save = fill.gradient ? exportGradient(fill.gradient) : undefined;
             fill.gradient = gradient;
-            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.gradient, exportGradient(gradient), exportGradient(save)));
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.gradient, exportGradient(gradient), save));
         })
     }
 }

@@ -46,7 +46,8 @@ import {
     importExportFormat,
     importExportFileFormat,
     importExportFormatNameingScheme,
-    importGradient
+    importGradient,
+    importFillType
 } from "../../data/baseimport";
 import * as types from "../../data/typesdefine"
 import {
@@ -405,6 +406,10 @@ export class CMDExecuter {
             } else if (opId === FILLS_ATTR_ID.enable) {
                 const enable = value && JSON.parse(value);
                 api.setFillEnable(fill, enable ?? false)
+            } else if (opId === FILLS_ATTR_ID.fillType) {
+                if (value) {
+                    api.setFillType(fill, value as types.FillType)
+                }
             } else if (opId === FILLS_ATTR_ID.gradient) {
                 if (value) {
                     const gradient = importGradient(JSON.parse(value));

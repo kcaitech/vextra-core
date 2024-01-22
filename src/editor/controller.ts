@@ -166,6 +166,14 @@ export interface AsyncPathHandle {
     close: () => undefined;
 }
 
+export interface AsyncGradientEditor {
+    execute_from: (from: {x: number, y: number}) => void;
+    execute_to: (from: {x: number, y: number}) => void;
+    execute_elipselength: (length: number) => void;
+    execute_stop_position: (position: number) => void;
+    close: () => undefined;
+}
+
 export enum Status {
     Pending = 'pending',
     Fulfilled = 'fulfilled',
@@ -1134,6 +1142,61 @@ export class Controller {
             return undefined;
         }
         return { pre, execute, abort, close };
+    }
+    public asyncGradientEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncGradientEditor {
+        const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
+        const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+        const api = this.__repo.start("asyncGradientEditor", {});
+        let status: Status = Status.Pending;
+        const execute_from = (from: {x: number, y: number}) => {
+            status = Status.Pending;
+            try {
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_to = (to: {x: number, y: number}) => {
+            status = Status.Pending;
+            try {
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_elipselength = (length: number) => {
+            status = Status.Pending;
+            try {
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_stop_position = (position: number) => {
+            status = Status.Pending;
+            try {
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        return { execute_from, execute_to, execute_elipselength, execute_stop_position, close }
     }
 }
 

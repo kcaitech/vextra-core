@@ -2,7 +2,7 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
+import { BorderPosition, BorderStyle, FillType, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
 import { Border, Fill } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
@@ -1147,6 +1147,23 @@ export class TableEditor extends ShapeEditor {
             }
             else {
                 api.setFillEnable(this.__page, this.__shape, idx, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
+    public setFillType(idx: number, type: FillType, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setFillType", {});
+        try {
+            if (range) {
+                this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
+                    if (cell.cell) api.setFillType(this.__page, cell.cell, idx, type);
+                })
+            }
+            else {
+                api.setFillType(this.__page, this.__shape, idx, type);
             }
             this.__repo.commit();
         } catch (error) {

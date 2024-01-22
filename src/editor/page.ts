@@ -12,7 +12,7 @@ import {
 } from "../data/shape";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, ShadowPosition, ShapeType } from "../data/typesdefine";
+import { BoolOp, BorderPosition, ExportFileFormat, ExportFormatNameingScheme, FillType, GradientType, ShadowPosition, ShapeType } from "../data/typesdefine";
 import { Page } from "../data/page";
 import {
     initFrame,
@@ -42,7 +42,8 @@ import {
     SymbolRefShape,
     TableShape,
     Text,
-    Stop
+    Stop,
+    Gradient
 } from "../data/classes";
 import { TextShapeEditor } from "./textshape";
 import { get_frame, modify_frame_after_insert, set_childs_id, transform_data } from "../io/cilpboard";
@@ -83,7 +84,7 @@ import {
     shape4fill
 } from "./utils/symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { BorderStyle, ExportFormat, Shadow } from "../data/baseclasses";
+import { BorderStyle, ExportFormat, Point2D, Shadow } from "../data/baseclasses";
 import { get_rotate_for_straight, is_straight, update_frame_by_points } from "./utils/path";
 import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 
@@ -115,6 +116,12 @@ export interface BatchAction3 { // targer、index
 export interface BatchAction4 { // targer、value、type
     target: Shape
     index: number
+    type: 'fills' | 'borders'
+}
+export interface BatchAction5 { // targer、value、type
+    target: Shape
+    index: number
+    value: any
     type: 'fills' | 'borders'
 }
 
@@ -1107,11 +1114,11 @@ export class PageEditor {
                     api.shapeModifyFixedRadius(this.__page, shape as GroupShape, val);
                     continue;
                 }
-                
+
                 if (!(shape instanceof PathShape)) {
                     continue;
                 }
-                
+
                 const is_rect = [ShapeType.Rectangle, ShapeType.Image]
                     .includes(shape.type) && shape.isClosed;
 
@@ -1533,6 +1540,7 @@ export class PageEditor {
     }
 
     // 渐变
+    //翻转
     reverseShapesGradient(actions: BatchAction4[]) {
         try {
             const api = this.__repo.start('reverseShapesGradient', {});
@@ -1554,7 +1562,8 @@ export class PageEditor {
                 const new_stops: BasicArray<Stop> = new BasicArray<Stop>();
                 for (let _i = 0, _l = stops.length; _i < _l; _i++) {
                     const _stop = stops[_i];
-                    new_stops.unshift(importStop(exportStop(new Stop(1 - _stop.position, _stop.color))));
+                    const inver_index = stops.length - 1 - _i;
+                    new_stops.push(importStop(exportStop(new Stop(_stop.position, stops[inver_index].color, uuid()))));
                 }
                 const ng = importGradient(exportGradient(gradient));
                 ng.stops = new_stops;
@@ -1567,6 +1576,7 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
+    //旋转90度
     rotateShapesGradient(actions: BatchAction4[]) {
         try {
             const api = this.__repo.start('rotateShapesGradient', {});
@@ -1612,11 +1622,213 @@ export class PageEditor {
                 }
                 // todo 旋转渐变
                 const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
-                f(this.__page, target, index, gradient);
+                const shape = shape4fill(api, this.__page, target);
+                f(this.__page, shape, index, gradient);
             }
             this.__repo.commit();
         } catch (error) {
             console.log('rotateShapesGradient:', error);
+            this.__repo.rollback();
+        }
+    }
+    // 添加节点
+    addShapesGradientStop(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('addShapesGradientStop', {});
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                if (!gradient) {
+                    continue;
+                }
+                const new_gradient = importGradient(exportGradient(gradient));
+                new_gradient.stops.push(value);
+                const s = new_gradient.stops;
+                s.sort((a, b) => {
+                    if (a.position > b.position) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                })
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                const shape = shape4fill(api, this.__page, target);
+                f(this.__page, shape, index, new_gradient);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('addShapesGradientStop:', error);
+            this.__repo.rollback();
+        }
+    }
+    toggerShapeGradientType(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('toggerShapeGradientType', {});
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const s = shape4fill(api, this.__page, target);
+                if (gradient_container.fillType !== FillType.Gradient) {
+                    api.setFillType(this.__page, s, index, FillType.Gradient);
+                }
+                if (gradient) {
+                    const new_gradient = importGradient(exportGradient(gradient));
+                    new_gradient.gradientType = value;
+                    if (value === GradientType.Linear) {
+                        new_gradient.from.y = 0;
+                    } else {
+                        new_gradient.from.y = 0.5;
+                    }
+                    if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
+                        const frame = target.frame;
+                        new_gradient.elipseLength = ((frame.width / 2) / (frame.height / 2));
+                    } else if (value === GradientType.Angular && new_gradient.elipseLength === undefined) {
+                        new_gradient.elipseLength = 1;
+                    }
+                    new_gradient.stops[0].color = gradient_container.color;
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    f(this.__page, s, index, new_gradient);
+                } else {
+                    const stops = new BasicArray<Stop>();
+                    const { alpha, red, green, blue } = gradient_container.color;
+                    stops.push(new Stop(0, new Color(alpha, red, green, blue), uuid()), new Stop(1, new Color(0, red, green, blue), uuid()))
+                    const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
+                    const to = { x: 0.5, y: 1 };
+                    let elipseLength = 0;
+                    if (value === GradientType.Radial) {
+                        const frame = target.frame;
+                        elipseLength = ((frame.width / 2) / (frame.height / 2));
+                    } else if (value === GradientType.Angular) {
+                        elipseLength = 1;
+                    }
+                    const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    f(this.__page, s, index, new_gradient);
+                }
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('toggerShapeGradientType:', error);
+            this.__repo.rollback();
+        }
+    }
+    setShapesGradientStopColor(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('setShapesGradientStopColor', {});
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const stops = gradient.stops;
+                if (!stops?.length) {
+                    continue;
+                }
+                const { color, stop_i } = value;
+                const new_gradient = importGradient(exportGradient(gradient));
+                new_gradient.stops[stop_i].color = color;
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                const shape = shape4fill(api, this.__page, target);
+                if (type === 'fills') {
+                    api.setFillColor(this.__page, shape, index, new_gradient.stops[0].color as Color);
+                }
+                f(this.__page, shape, index, new_gradient);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('setShapesGradientStopColor:', error);
+            this.__repo.rollback();
+        }
+    }
+    deleteShapesGradientStop(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('setShapesGradientStopColor', {});
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const stops = gradient.stops;
+                if (!stops?.length || gradient.stops.length === 1) {
+                    continue;
+                }
+                const new_gradient = importGradient(exportGradient(gradient));
+                new_gradient.stops.splice(value, 1);
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                const shape = shape4fill(api, this.__page, target);
+                f(this.__page, shape, index, new_gradient);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('setShapesGradientStopColor:', error);
+            this.__repo.rollback();
+        }
+    }
+    setShapesGradientStopPosition(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('setShapesGradientStopPosition', {});
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const { position, id } = value;
+                const new_gradient = importGradient(exportGradient(gradient));
+                const stop_i = new_gradient.stops.findIndex((stop) => stop.id === id);
+                if (stop_i === -1) {
+                    console.warn(`gradient stop not found: ${id}`);
+                    continue;
+                }
+                new_gradient.stops[stop_i].position = position;
+                const s = new_gradient.stops;
+                s.sort((a, b) => {
+                    if (a.position > b.position) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                })
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                const shape = shape4fill(api, this.__page, target);
+                f(this.__page, shape, index, new_gradient);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('setShapesGradientStopPosition:', error);
             this.__repo.rollback();
         }
     }
@@ -1642,6 +1854,19 @@ export class PageEditor {
                 const { target, index, value } = actions[i];
                 const s = shape4fill(api, this.__page, target);
                 api.setFillEnable(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+    setShapesFillType(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesFillType', {});
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4fill(api, this.__page, target);
+                api.setFillType(this.__page, s, index, value);
             }
             this.__repo.commit();
         } catch (error) {
