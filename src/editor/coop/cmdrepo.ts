@@ -71,7 +71,7 @@ export class CmdRepo {
     private processRemoteCmds(cmds: Cmd[], needUpdateFrame: Map<string, Shape[]>) {
         // 处理远程过来的cmds
         // 可能的情况是，本地有cmd, 需要做变换
-
+        this.freshlocalcmdcount = 0;
         // 1. 分类op
         const subrepos = classifyOps(cmds);
 
@@ -214,7 +214,7 @@ export class CmdRepo {
             console.log("abort received cmds: ", cmds);
             return;
         }
-        this.freshlocalcmdcount = 0; // todo
+        // this.freshlocalcmdcount = 0;
         this.pendingcmds.push(...cmds);
         // need process
         this.processCmds();

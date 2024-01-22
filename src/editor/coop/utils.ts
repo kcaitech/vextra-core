@@ -144,6 +144,7 @@ interface Api {
 }
 
 export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
+    if (shapes.length === 0) return;
     type Node = { shape: Shape, updated: boolean, childs: Node[], changed: boolean, needupdate: boolean }
     const updatetree: Map<string, Node> = new Map();
     shapes.forEach((s) => {
