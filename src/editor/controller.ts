@@ -31,11 +31,11 @@ import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
 import { ContactForm, ContactRole } from "../data/baseclasses";
 import { ContactShape } from "../data/contact";
-import { importCurvePoint } from "../data/baseimport";
-import { exportCurvePoint } from "../data/baseexport";
+import { importCurvePoint, importGradient } from "../data/baseimport";
+import { exportCurvePoint, exportGradient } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
-import { get_state_name } from "./utils/symbol";
+import { get_state_name, shape4fill } from "./utils/symbol";
 import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
@@ -167,10 +167,10 @@ export interface AsyncPathHandle {
 }
 
 export interface AsyncGradientEditor {
-    execute_from: (from: {x: number, y: number}) => void;
-    execute_to: (from: {x: number, y: number}) => void;
+    execute_from: (from: { x: number, y: number }) => void;
+    execute_to: (from: { x: number, y: number }) => void;
     execute_elipselength: (length: number) => void;
-    execute_stop_position: (position: number) => void;
+    execute_stop_position: (position: number, id: string) => void;
     close: () => undefined;
 }
 
@@ -256,7 +256,7 @@ export class Controller {
                 newShape = parent.childs[parent.childs.length - 1];
 
                 translateTo(api, savepage, newShape, frame.x, frame.y);
-                
+
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
                 return newShape
@@ -448,7 +448,7 @@ export class Controller {
             }
         }
         const collect = (page: Page | PageView, shapes: Shape[], target: Artboard) => { // 容器收束
-            page = page instanceof PageView? page.data : page;
+            page = page instanceof PageView ? page.data : page;
             status = Status.Pending;
             try {
                 if (shapes.length) {
@@ -1143,14 +1143,30 @@ export class Controller {
         }
         return { pre, execute, abort, close };
     }
-    public asyncGradientEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncGradientEditor {
+    public asyncGradientEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView, index: number, type: 'fills' | 'borders'): AsyncGradientEditor {
         const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
         const api = this.__repo.start("asyncGradientEditor", {});
         let status: Status = Status.Pending;
-        const execute_from = (from: {x: number, y: number}) => {
+        const execute_from = (from: { x: number, y: number }) => {
             status = Status.Pending;
             try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const shape = shapes[i];
+                    const grad_type = shape.style[type];
+                    if (!grad_type?.length) {
+                        continue;
+                    }
+                    const gradient_container = grad_type[index];
+                    const gradient = gradient_container.gradient;
+                    if (!gradient) return;
+                    const new_gradient = importGradient(exportGradient(gradient));
+                    new_gradient.from.x = from.x;
+                    new_gradient.from.y = from.y;
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    const s = shape4fill(api, page, shape);
+                    f(page, s, index, new_gradient);
+                }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -1158,9 +1174,25 @@ export class Controller {
                 status = Status.Exception;
             }
         }
-        const execute_to = (to: {x: number, y: number}) => {
+        const execute_to = (to: { x: number, y: number }) => {
             status = Status.Pending;
             try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const shape = shapes[i];
+                    const grad_type = shape.style[type];
+                    if (!grad_type?.length) {
+                        continue;
+                    }
+                    const gradient_container = grad_type[index];
+                    const gradient = gradient_container.gradient;
+                    if (!gradient) return;
+                    const new_gradient = importGradient(exportGradient(gradient));
+                    new_gradient.to.x = to.x;
+                    new_gradient.to.y = to.y;
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    const s = shape4fill(api, page, shape);
+                    f(page, s, index, new_gradient);
+                }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -1171,6 +1203,21 @@ export class Controller {
         const execute_elipselength = (length: number) => {
             status = Status.Pending;
             try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const shape = shapes[i];
+                    const grad_type = shape.style[type];
+                    if (!grad_type?.length) {
+                        continue;
+                    }
+                    const gradient_container = grad_type[index];
+                    const gradient = gradient_container.gradient;
+                    if (!gradient) return;
+                    const new_gradient = importGradient(exportGradient(gradient));
+                    new_gradient.elipseLength = length;
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    const s = shape4fill(api, page, shape);
+                    f(page, s, index, new_gradient);
+                }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -1178,9 +1225,37 @@ export class Controller {
                 status = Status.Exception;
             }
         }
-        const execute_stop_position = (position: number) => {
+        const execute_stop_position = (position: number, id: string) => {
             status = Status.Pending;
             try {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const shape = shapes[i];
+                    const grad_type = shape.style[type];
+                    if (!grad_type?.length) {
+                        continue;
+                    }
+                    const gradient_container = grad_type[index];
+                    const gradient = gradient_container.gradient;
+                    if (!gradient) return;
+                    const new_gradient = importGradient(exportGradient(gradient));
+                    const stop_i = new_gradient.stops.findIndex((stop) => stop.id === id);
+                    if (stop_i === -1) {
+                        console.warn(`gradient stop not found: ${id}`);
+                        continue;
+                    }
+                    new_gradient.stops[stop_i].position = position;
+                    const g_s = new_gradient.stops;
+                    g_s.sort((a, b) => {
+                        if (a.position > b.position) {
+                            return 1;
+                        } else {
+                            return -1;
+                        }
+                    })
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    const s = shape4fill(api, page, shape);
+                    f(page, s, index, new_gradient);
+                }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
