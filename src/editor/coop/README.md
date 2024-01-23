@@ -17,3 +17,9 @@ todo 本地order应该设置为多少？？
 
 todo index的order怎么更新为op.order,
 todo 本地undo后的op也要实时变换，以在redo时可直接用。
+
+
+undo delete
+1. 当被undo的op已经有版本号，则undoop记录对应版本号的数据
+2. 当被undo的op正在上传，则待上传返回后，在undo-do-redo时重新更新undo记录的数据到返回的op的版本
+3. 当被undo的op还没上传，直接本地消掉不再上传

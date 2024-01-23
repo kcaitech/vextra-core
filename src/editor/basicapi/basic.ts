@@ -1,7 +1,7 @@
 import { Basic, BasicArray, BasicMap } from "../../data/basic";
 import { ArrayMoveOpRecord, CrdtItem, IdOpRecord, TreeMoveOpRecord, crdtGetArrIndex } from "../../coop/client/crdt";
 import { GroupShape, Shape, Variable } from "../../data/shape";
-import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
+import { TextOpAttrRecord, TextOpInsert, TextOpRemoveRecord } from "../../coop/client/textop";
 import { OpType } from "../../coop/common/op";
 import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text";
 import { uuid } from "../../basic/uuid";
@@ -99,7 +99,7 @@ export function newText(content: string): Text {
 }
 
 // 文本操作
-export function otTextInsert(parent: Shape | Variable, text: Text | string, index: number, str: Text | string, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }): TextOpInsertRecord {
+export function otTextInsert(parent: Shape | Variable, text: Text | string, index: number, str: Text | string, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }): TextOpInsert {
     if (typeof text === "string") {
         if (!(parent instanceof Variable)) throw new Error("something wrong"); // 目前仅variable会是string
         text = newText(text);
@@ -108,14 +108,14 @@ export function otTextInsert(parent: Shape | Variable, text: Text | string, inde
     const type = typeof str === 'string' ? 'simple' : 'complex';
     if (type === 'simple') {
         text.insertText(str as string, index, props)
-        return new TextOpInsertRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
+        return new TextOpInsert(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
             type: 'simple',
             text: str as string,
             props,
         })
     } else {
         text.insertFormatText(str as Text, index);
-        return new TextOpInsertRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
+        return new TextOpInsert(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
             type: 'complex',
             text: str as Text
         })

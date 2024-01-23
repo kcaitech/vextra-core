@@ -7,10 +7,11 @@ import { LocalCmd } from "./localcmd";
 import { CmdRepo } from "./cmdrepo";
 import { Cmd } from "../../coop/common/repo";
 import { Op, OpType } from "../../coop/common/op";
-import { TextRepoNode } from "./textreponode";
-import { CrdtArrayReopNode } from "./crdtarrayreponode";
-import { CrdtShapeRepoNode } from "./crdtshapereponode";
-import { CrdtIdRepoNode } from "./crdtidreponode";
+import { TextRepoNode } from "./reponode/textnode";
+import { CrdtArrayReopNode } from "./reponode/arraynode";
+import { CrdtShapeRepoNode } from "./reponode/shapenode";
+import { CrdtIdRepoNode } from "./reponode/idsetnode";
+import { ICoopNet } from "./net";
 
 class TrapHdl {
     private repo: Repository;
@@ -62,11 +63,11 @@ export class CoopRepository {
     private __index: number = 0;
     private __api: Api;
 
-    constructor(document: Document, repo: Repository, cmds: Cmd[] = [], localcmds: LocalCmd[] = []) {
+    constructor(document: Document, repo: Repository, net: ICoopNet, cmds: Cmd[] = [], localcmds: LocalCmd[] = []) {
         this.__repo = repo;
         repo.transactCtx.settrap = true; // todo
         this.__api = new Proxy<Api>(new Api(), new TrapHdl(repo));
-        this.__cmdrepo = new CmdRepo(document, cmds, localcmds, nodecreator(document))
+        this.__cmdrepo = new CmdRepo(document, cmds, localcmds, nodecreator(document), net)
 
         if (cmds.length > 0 || localcmds.length > 0) {
             this.__cmdrepo.updateBlockData([document.id]);

@@ -1,4 +1,4 @@
-import { Cmd } from "../../coop/common/repo";
+import { Cmd, OpItem } from "../../coop/common/repo";
 
 export enum CmdMergeType {
     TextInsert,
@@ -11,4 +11,8 @@ export interface LocalCmd extends Cmd {
     // mergeable: boolean; // 是否可合并
     delay: number; // 是否延迟同步
     mergetype: CmdMergeType; // 用于cmd合并
+}
+
+export interface LocalOpItem extends OpItem {
+    applyed: boolean;
 }

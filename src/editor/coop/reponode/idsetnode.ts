@@ -1,11 +1,10 @@
-import { Page } from "../../data/page";
+import { Page } from "../../../data/page";
 import { RepoNode } from "./reponode";
-import { OpType } from "../../coop/common/op";
-import { OpItem } from "../../coop/common/repo";
-
-import { Basic } from "../../data/basic";
-import { Shape } from "../../data/shape";
-import { IdSetOp } from "../../coop/client/crdt";
+import { OpType } from "../../../coop/common/op";
+import { Basic } from "../../../data/basic";
+import { Shape } from "../../../data/shape";
+import { IdSetOp } from "../../../coop/client/crdt";
+import { LocalOpItem as OpItem } from "../localcmd";
 
 function apply(target: Object, op: IdSetOp) {
     // todo 需要import ? 需要

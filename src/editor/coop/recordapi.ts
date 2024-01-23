@@ -57,6 +57,7 @@ export class Api {
             mergetype,
             delay: 500,
             version: Number.MAX_SAFE_INTEGER,
+            baseVer: 0,
             ops: [],
             isUndo: false,
             blockId: [],

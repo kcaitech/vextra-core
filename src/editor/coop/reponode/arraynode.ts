@@ -1,10 +1,9 @@
-import { Page } from "../../data/page";
+import { Page } from "../../../data/page";
 import { RepoNode } from "./reponode";
-import { OpType } from "../../coop/common/op";
-import { OpItem } from "coop/common/repo";
-
-import { ArrayMoveOp, CrdtItem, crdtArrayMove } from "../../coop/client/crdt";
-import { Shape } from "../../data/shape";
+import { OpType } from "../../../coop/common/op";
+import { ArrayMoveOp, CrdtItem, crdtArrayMove } from "../../../coop/client/crdt";
+import { Shape } from "../../../data/shape";
+import { LocalOpItem as OpItem } from "../localcmd";
 
 function apply(target: Array<CrdtItem>, op: ArrayMoveOp) {
     return crdtArrayMove(target, op);

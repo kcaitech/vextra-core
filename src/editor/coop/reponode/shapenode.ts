@@ -1,12 +1,11 @@
-import { OpItem } from "coop/common/repo";
 import { RepoNode } from "./reponode";
-import { OpType } from "../../coop/common/op";
-
-import { Page } from "../../data/page";
-import { TreeMoveOp, TreeMoveOpRecord, crdtTreeMove, undoTreeMove } from "../../coop/client/crdt";
-import { Shape } from "../../data/shape";
-import { importShape } from "./utils";
-import { Document } from "../../data/document";
+import { OpType } from "../../../coop/common/op";
+import { Page } from "../../../data/page";
+import { TreeMoveOp, TreeMoveOpRecord, crdtTreeMove, undoTreeMove } from "../../../coop/client/crdt";
+import { Shape } from "../../../data/shape";
+import { importShape } from "../utils";
+import { Document } from "../../../data/document";
+import { LocalOpItem as OpItem } from "../localcmd";
 
 function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
 

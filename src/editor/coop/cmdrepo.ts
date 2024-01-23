@@ -1,11 +1,13 @@
 import { Shape } from "../../data/shape";
-import { Op, OpType } from "../../coop/common/op";
-import { Cmd, OpItem } from "../../coop/common/repo";
+import { Op } from "../../coop/common/op";
+import { Cmd } from "../../coop/common/repo";
 import { LocalCmd } from "./localcmd";
-import { RepoNode, RepoNodePath } from "./reponode";
+import { RepoNode, RepoNodePath } from "./reponode/reponode";
 import { Document } from "../../data/document";
 import { updateShapesFrame } from "./utils";
 import * as basicapi from "../basicapi"
+import { ICoopNet } from "./net";
+import { LocalOpItem as OpItem } from "./localcmd";
 
 const POST_TIMEOUT = 5000; // 5s
 
@@ -30,7 +32,7 @@ function classifyOps(cmds: Cmd[]) {
                 arr = [];
                 subrepos.set(oppath, arr);
             }
-            arr.push({ op, cmd });
+            arr.push({ op, cmd, applyed: false });
         }
     }
     return subrepos;
@@ -42,12 +44,14 @@ function classifyOps(cmds: Cmd[]) {
 export class CmdRepo {
 
     private nodecreator: (op: Op) => RepoNode
-    constructor(document: Document, cmds: Cmd[], localcmds: LocalCmd[], creator: (op: Op) => RepoNode) {
+    private net: ICoopNet;
+    constructor(document: Document, cmds: Cmd[], localcmds: LocalCmd[], creator: (op: Op) => RepoNode, net: ICoopNet) {
         this.document = document;
         // 用于加载本地的cmds
         this.cmds = cmds;
         this.localcmds = localcmds;
         this.nodecreator = creator;
+        this.net = net;
     }
 
     document: Document;
@@ -214,6 +218,8 @@ export class CmdRepo {
             console.log("abort received cmds: ", cmds);
             return;
         }
+        // todo 检查cmd baseVer是否本地有,否则需要拉取远程cmds
+
         // this.freshlocalcmdcount = 0;
         this.pendingcmds.push(...cmds);
         // need process
@@ -234,6 +240,8 @@ export class CmdRepo {
             return; // 等返回
         }
 
+        const baseVer = this.cmds.length > 0 ? this.cmds[this.cmds.length - 1].version : this.baseVer;
+
         if (this.localcmds.length > 0) {
             // check
             // post local (根据cmd提交时间是否保留最后个cmd用于合并)
@@ -242,6 +250,7 @@ export class CmdRepo {
             const len = this.localcmds.length;
             for (let i = 0; i < len; i++) {
                 const cmd = this.localcmds[i];
+                cmd.baseVer = baseVer;
                 if ((i < len - 1) || (now - cmd.time > cmd.delay)) {
                     this.postingcmds.push(cmd);
                     cmd.posttime = now;
@@ -417,23 +426,23 @@ export class CmdRepo {
 
     private processRedoLocal(cmds: Cmd[], needApply: boolean, needUpdateFrame: Map<string, Shape[]>) {
         // 1. 分类op
-        const subrepos = classifyOps(cmds);
+        // const subrepos = classifyOps(cmds);
 
-        for (let [k, v] of subrepos.entries()) {
-            // 建立repotree
-            const op0 = v[0].op;
-            const blockId = op0.path[0];
-            const repotree = this.repotrees.get(blockId);
-            if (!repotree) continue;
-            const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
-            // apply op
-            let nuf = needUpdateFrame.get(k);
-            if (!nuf) {
-                nuf = [];
-                needUpdateFrame.set(k, nuf);
-            }
-            node.processRedoLocal(v, needApply, nuf);
-        }
+        // for (let [k, v] of subrepos.entries()) {
+        //     // 建立repotree
+        //     const op0 = v[0].op;
+        //     const blockId = op0.path[0];
+        //     const repotree = this.repotrees.get(blockId);
+        //     if (!repotree) continue;
+        //     const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+        //     // apply op
+        //     let nuf = needUpdateFrame.get(k);
+        //     if (!nuf) {
+        //         nuf = [];
+        //         needUpdateFrame.set(k, nuf);
+        //     }
+        //     node.processRedoLocal(v, needApply, nuf);
+        // }
     }
 
     // todo

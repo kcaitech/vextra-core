@@ -1,6 +1,6 @@
-import { Shape } from "../../data/shape";
-import { Op, OpType } from "../../coop/common/op";
-import { OpItem } from "../../coop/common/repo";
+import { Shape } from "../../../data/shape";
+import { Op, OpType } from "../../../coop/common/op";
+import { LocalOpItem as OpItem } from "../localcmd";
 
 // 现有的op
 // arrayop: textshape, tablecell, variable
@@ -12,15 +12,14 @@ export class RepoNode {
 
     type: OpType; // 一个节点仅可能接收一种类型的op
     ops: OpItem[] = []; // 与服务端保持一致的op
+    postingops: OpItem[] = [];
     localops: OpItem[] = []; // 本地op, 本地op的order一定是在ops之后的
-    localindex: number = 0; // node 也需要支持undo redo
 
-    // 数据可能被替换？
-    // _data: any; // op应用的对象
-    // get data() {
-    //     return this._data;
-    // }
-    constructor(type: OpType = OpType.None) {
+    localallops: OpItem[] = []; // 本地所有有效ops，用于undo、redo
+    localindex: number = 0; // undo, redo的index
+    localotindex: number = 0; // undo后需要参与变换的index
+
+    constructor(type: OpType) {
         this.type = type;
     }
 
@@ -43,6 +42,7 @@ export class RepoNode {
     processLocal(ops: OpItem[], needApply: boolean, needUpdateFrame: Shape[]) {
         this.localops.push(...ops);
     }
+
     // undo localops
     processUndoLocal(ops: OpItem[], needApply: boolean, needUpdateFrame: Shape[]) { // localops undo后还需要保留op，并持续进行变换，直到被新的op覆盖（用于redo，主要是textop）
         for (let i = ops.length - 1; i >= 0; i--) {
@@ -52,8 +52,10 @@ export class RepoNode {
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
         }
     }
-    // redo
-    processRedoLocal(ops: OpItem[], needApply: boolean, needUpdateFrame: Shape[]) {
+
+    // 将数据回退或者前进到特定版本
+    roll2Version(version: number) {
+
     }
 }
 
@@ -76,5 +78,22 @@ export class RepoNodePath {
             this.childs.set(path[0], child);
         }
         return child.buildAndGet(op, path.slice(1), creator);
+    }
+
+    // 将数据回退或者前进到特定版本
+    roll2Version(path: string[], version: number) {
+        // get
+        let node: RepoNodePath = this;
+        while (path.length > 0) {
+            const n = node.childs.get(path[0]);
+            if (!n) return; // throw new Error("path not exist");
+            node = n;
+            path = path.slice(1);
+        }
+        const roll = (node: RepoNodePath) => {
+            node.node?.roll2Version(version);
+            node.childs.forEach(roll);
+        }
+        roll(node);
     }
 }
