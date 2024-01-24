@@ -696,17 +696,19 @@ export class Controller {
 
     // 图形位置移动
     public asyncTransfer(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncTransfer {
-        let shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+        let shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         let origin_envs = new Map<string, { shape: ShapeView, index: number }[]>(); // 记录图层的原环境
         let except_envs: ShapeView[] = [];
-        let current_env: Shape | Page = page;
+        let current_env_id: string = '';
+        let shapes_set: Set<string> = new Set();
 
         const api = this.__repo.start("transfer", {});
         let status: Status = Status.Pending;
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             try {
-                if (targetParent.id === current_env.id) {
+                console.log('try to migrate');
+                if (targetParent.id === current_env_id) {
                     return;
                 }
 
@@ -718,7 +720,9 @@ export class Controller {
                     __migrate(api, page, targetParent, sortedShapes[i], dlt, index, env_transform);
                     index++;
                 }
+
                 setCurrentEnv(targetParent);
+
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -729,7 +733,7 @@ export class Controller {
         const backToStartEnv = (emit_by: Shape, dlt: string) => { // 特殊的migrate，让所有图层回到原环境
             try {
                 console.log('try to backToStartEnv');
-                if (emit_by.id === current_env.id) {
+                if (emit_by.id === current_env_id) {
                     return;
                 }
 
@@ -746,7 +750,6 @@ export class Controller {
                         const _v = v[i];
                         __migrate(api, page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index, env_transform);
                     }
-
                 });
                 this.__repo.transactCtx.fireNotify();
                 setCurrentEnv(emit_by);
@@ -839,7 +842,7 @@ export class Controller {
             return except_envs;
         }
         const setCurrentEnv = (cv: Shape | Page) => {
-            current_env = cv;
+            current_env_id = cv.id;
         }
         return {
             migrate, trans, stick, transByWheel, shortPaste,
