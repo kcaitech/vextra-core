@@ -1,7 +1,6 @@
 import { Shape } from "../../../data/shape";
 import { Op, OpType } from "../../../coop/common/op";
-import { LocalOpItem as OpItem } from "../localcmd";
-import { Cmd } from "../../../coop/common/repo";
+import { Cmd, OpItem } from "../../../coop/common/repo";
 
 
 export abstract class RepoNode {
@@ -18,10 +17,8 @@ export abstract class RepoNode {
     abstract receiveLocal(ops: OpItem[]): void;
     abstract commit(ops: OpItem[]): void;
 
-    abstract undoLocal(ops: OpItem[], needUpdateFrame: Shape[]): void | Op[];
-    abstract undoPosted(ops: OpItem[], needUpdateFrame: Shape[], newCmd: Cmd): void | Op[];
-    abstract redoLocal(ops: OpItem[], needUpdateFrame: Shape[]): void | Op[];
-    abstract redoPosted(ops: OpItem[], needUpdateFrame: Shape[], newCmd: Cmd): void | Op[];
+    abstract undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd): void;
+    abstract redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd): void;
     abstract dropOps(ops: OpItem[]): void;
 
     abstract roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]): void;

@@ -1,11 +1,11 @@
-import { OpType } from "../../../coop/common/op";
+import { Op, OpType } from "../../../coop/common/op";
 import { Page } from "../../../data/page";
 import { TreeMoveOp, TreeMoveOpRecord, crdtTreeMove, undoTreeMove } from "../../../coop/client/crdt";
 import { Shape } from "../../../data/shape";
 import { importShape } from "../utils";
 import { Document } from "../../../data/document";
-import { LocalOpItem as OpItem } from "../localcmd";
 import { RepoNode } from "./base";
+import { Cmd, OpItem } from "../../../coop/common/repo";
 
 function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
 
@@ -89,7 +89,7 @@ export class CrdtShapeRepoNode extends RepoNode {
             const op2 = this.localops.shift();
             // check
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
-            this.ops.push(op);
+            this.ops.push(op2);
         }
     }
     commit(ops: OpItem[]) {
@@ -105,20 +105,66 @@ export class CrdtShapeRepoNode extends RepoNode {
             if (op.cmd !== op2?.cmd) throw new Error("op not match");
         }
     }
-    undo(ops: OpItem[], needUpdateFrame: Shape[]) {
+    dropOps(ops: OpItem[]): void {
+    }
+    
+    undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         // check
         if (ops.length === 0) throw new Error();
-
+        const target = this.page;
+        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
         for (let i = ops.length - 1; i >= 0; i--) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
-            const record = unapply(this.page, ops[i].op as TreeMoveOpRecord);
-            if (record) {
-                ops[i].op = record;
+            const record: TreeMoveOpRecord | undefined = target && unapply(target, ops[i].op as TreeMoveOpRecord);
+            if (record) ops[i].op = record;
+        }
+
+        if (receiver) {
+            if (target) this.commit((ops.map(item => {
+                receiver.ops.push(item.op);
+                return { op: item.op, cmd: receiver }
+            })))
+        } else {
+            this.popLocal(ops);
+            // replace op
+            for (let i = 0; i < ops.length; i++) {
+                const op = ops[i];
+                const saveop = saveops![i];
+                const idx = op.cmd.ops.indexOf(saveop);
+                if (idx < 0) throw new Error();
+                op.cmd.ops.splice(idx, 1, op.op);
             }
         }
     }
-    redo(ops: OpItem[], needUpdateFrame: Shape[]) {
-        return this.undo(ops.reverse(), needUpdateFrame);
+
+    redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
+        // check
+        if (ops.length === 0) throw new Error();
+        ops.reverse();
+        const target = this.page;
+        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
+        for (let i = ops.length - 1; i >= 0; i--) {
+            if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
+            const record: TreeMoveOpRecord | undefined = target && unapply(target, ops[i].op as TreeMoveOpRecord);
+            if (record) ops[i].op = record;
+        }
+
+        if (receiver) {
+            if (target) this.commit((ops.map(item => {
+                receiver.ops.push(item.op);
+                return { op: item.op, cmd: receiver }
+            })))
+        } else {
+            // replace op
+            for (let i = 0; i < ops.length; i++) {
+                const op = ops[i];
+                const saveop = saveops![i];
+                const idx = op.cmd.ops.indexOf(saveop);
+                if (idx < 0) throw new Error();
+                op.cmd.ops.splice(idx, 1, op.op);
+            }
+            this.commit(ops);
+        }
     }
     roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]) {
         if (baseVer > version) throw new Error();

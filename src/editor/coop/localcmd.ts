@@ -12,6 +12,3 @@ export interface LocalCmd extends Cmd {
     delay: number; // 是否延迟同步
     mergetype: CmdMergeType; // 用于cmd合并
 }
-
-export interface LocalOpItem extends OpItem {
-}

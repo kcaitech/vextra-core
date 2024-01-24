@@ -1,9 +1,9 @@
 import { Page } from "../../../data/page";
-import { OpType } from "../../../coop/common/op";
+import { Op, OpType } from "../../../coop/common/op";
 import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, crdtArrayMove, undoArrayMove } from "../../../coop/client/crdt";
 import { Shape } from "../../../data/shape";
-import { LocalOpItem as OpItem } from "../localcmd";
 import { RepoNode } from "./base";
+import { Cmd, OpItem } from "../../../coop/common/repo";
 
 function apply(target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord {
     return crdtArrayMove(target, op);
@@ -75,14 +75,12 @@ export class CrdtArrayReopNode extends RepoNode {
             const op2 = this.localops.shift();
             // check
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
-            this.ops.push(op);
+            this.ops.push(op2);
         }
     }
 
     commit(ops: OpItem[]): void {
-        // this.localallops.length = this.localindex; // 丢弃被undo的ops
         this.localops.push(...ops);
-        // this.localallops.push(...ops);
     }
 
     popLocal(ops: OpItem[]) {
@@ -96,42 +94,67 @@ export class CrdtArrayReopNode extends RepoNode {
         }
     }
 
-    undo(ops: OpItem[], needUpdateFrame: Shape[]) {
+    dropOps(ops: OpItem[]): void {
+    }
+
+    undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         // check
         if (ops.length === 0) throw new Error();
         const target = this.page.getOpTarget(ops[0].op.path);
-        if (!target) {
-            return;
-        }
+        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
         for (let i = ops.length - 1; i >= 0; i--) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
-            const record = unapply(target, ops[i].op as ArrayMoveOpRecord);
-            if (record) {
-                ops[i].op = record;
+            const record: ArrayMoveOpRecord | undefined = target && unapply(target, ops[i].op as ArrayMoveOpRecord);
+            if (record) ops[i].op = record;
+        }
+
+        if (receiver) {
+            if (target) this.commit((ops.map(item => {
+                receiver.ops.push(item.op);
+                return { op: item.op, cmd: receiver }
+            })))
+        } else {
+            this.popLocal(ops);
+            // replace op
+            for (let i = 0; i < ops.length; i++) {
+                const op = ops[i];
+                const saveop = saveops![i];
+                const idx = op.cmd.ops.indexOf(saveop);
+                if (idx < 0) throw new Error();
+                op.cmd.ops.splice(idx, 1, op.op);
             }
         }
-        // const cmd = ops[0].cmd;
-        // if (cmd.posttime === 0) { // 未提交
-        //     // check
-        //     if (this.localops.length < ops.length) throw new Error();
-        //     this.localops.splice(this.localops.length - ops.length, ops.length);
-        // }
     }
 
-    redo(ops: OpItem[], needUpdateFrame: Shape[]) {
-        return this.undo(ops.reverse(), needUpdateFrame);
-        // if (ops.length === 0) throw new Error();
-        // const target = this.page.getOpTarget(ops[0].op.path);
-        // if (!target) {
-        //     return;
-        // }
-        // for (let i = 0; i < ops.length; i++) {
-        //     if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
-        //     const record = unapply(target, ops[i].op as ArrayMoveOpRecord);
-        //     if (record) {
-        //         ops[i].op = record;
-        //     }
-        // }
+    redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
+        // check
+        if (ops.length === 0) throw new Error();
+        ops.reverse();
+
+        const target = this.page.getOpTarget(ops[0].op.path);
+        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
+        for (let i = ops.length - 1; i >= 0; i--) {
+            if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
+            const record: ArrayMoveOpRecord | undefined = target && unapply(target, ops[i].op as ArrayMoveOpRecord);
+            if (record) ops[i].op = record;
+        }
+
+        if (receiver) {
+            if (target) this.commit((ops.map(item => {
+                receiver.ops.push(item.op);
+                return { op: item.op, cmd: receiver }
+            })))
+        } else {
+            // replace op
+            for (let i = 0; i < ops.length; i++) {
+                const op = ops[i];
+                const saveop = saveops![i];
+                const idx = op.cmd.ops.indexOf(saveop);
+                if (idx < 0) throw new Error();
+                op.cmd.ops.splice(idx, 1, op.op);
+            }
+            this.commit(ops);
+        }
     }
 
     roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]): void {

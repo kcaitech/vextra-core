@@ -1,13 +1,12 @@
 import { Shape } from "../../data/shape";
 import { Op } from "../../coop/common/op";
-import { Cmd } from "../../coop/common/repo";
+import { Cmd, OpItem } from "../../coop/common/repo";
 import { LocalCmd } from "./localcmd";
 import { RepoNode, RepoNodePath, nodecreator } from "./reponode";
 import { Document } from "../../data/document";
 import { updateShapesFrame } from "./utils";
 import * as basicapi from "../basicapi"
 import { ICoopNet } from "./net";
-import { LocalOpItem as OpItem } from "./localcmd";
 import { uuid } from "../../basic/uuid";
 
 const POST_TIMEOUT = 5000; // 5s
@@ -399,9 +398,7 @@ export class CmdRepo {
                 nuf = [];
                 needUpdateFrame.set(k, nuf);
             }
-
-            if (posted) node.undoPosted(v, nuf, newCmd!);
-            else node.undoLocal(v, nuf);
+            node.undo(v, nuf, newCmd);
         }
         // update frame
         for (let [k, v] of needUpdateFrame) {
@@ -414,6 +411,7 @@ export class CmdRepo {
             // posted
             // need commit new command
             this._commit2(newCmd!)
+            this.localcmds.splice(this.localindex - 1, 1, newCmd!);
         }
 
         --this.localindex;
@@ -453,9 +451,7 @@ export class CmdRepo {
                 nuf = [];
                 needUpdateFrame.set(k, nuf);
             }
-
-            if (posted) node.redoPosted(v, nuf, newCmd!);
-            else node.redoLocal(v, nuf);
+            node.redo(v, nuf, newCmd);
         }
         // update frame
         for (let [k, v] of needUpdateFrame) {
@@ -468,6 +464,7 @@ export class CmdRepo {
             // posted
             // need commit new command
             this._commit2(newCmd!)
+            this.localcmds.splice(this.localindex, 1, newCmd!);
         }
 
         ++this.localindex;

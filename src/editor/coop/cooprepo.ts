@@ -15,7 +15,7 @@ export class CoopRepository {
 
     constructor(document: Document, repo: Repository, net: ICoopNet, cmds: Cmd[] = [], localcmds: LocalCmd[] = []) {
         this.__repo = repo;
-        repo.transactCtx.settrap = true; // todo
+        // repo.transactCtx.settrap = true; // todo
         this.__api = Api.create(repo);
         this.__cmdrepo = new CmdRepo(document, cmds, localcmds, net)
 
@@ -47,11 +47,25 @@ export class CoopRepository {
     }
 
     undo() {
-        this.__cmdrepo.redo();
+        this.__repo.start("undo", {});
+        try {
+            this.__cmdrepo.redo();
+            this.__repo.commit();
+        } catch(e) {
+            this.__repo.rollback();
+            throw e;
+        }
     }
 
     redo() {
-        this.__cmdrepo.redo();
+        this.__repo.start("redo", {});
+        try {
+            this.__cmdrepo.redo();
+            this.__repo.commit();
+        } catch(e) {
+            this.__repo.rollback();
+            throw e;
+        }
     }
     canUndo() {
         return this.__cmdrepo.canUndo();

@@ -3,10 +3,10 @@ import { OpType } from "../../../coop/common/op";
 import { Basic } from "../../../data/basic";
 import { Shape } from "../../../data/shape";
 import { IdSetOp, IdSetOpRecord } from "../../../coop/client/crdt";
-import { LocalOpItem as OpItem } from "../localcmd";
 import { RepoNode } from "./base";
+import { Cmd, OpItem } from "../../../coop/common/repo";
 
-function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]) {
+function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]): IdSetOpRecord {
     let value = op.data;
     if (typeof op.data === 'object') switch (op.data.typeId) {
         // todo 需要import ? 需要
@@ -14,7 +14,16 @@ function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]) {
         // throw new Error("not implemented")
     }
     if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + op.data.typeId);
+    const origin = (target as any)[op.id];
     (target as any)[op.id] = value;
+    return {
+        data: value,
+        id: "", // 这个跟随cmd id 的？
+        type: op.type,
+        path: op.path,
+        order: Number.MAX_SAFE_INTEGER,
+        origin: origin
+    }
 }
 
 // todo import, updateframe
@@ -58,7 +67,7 @@ export class CrdtIdRepoNode extends RepoNode {
             const op2 = this.localops.shift();
             // check
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
-            this.ops.push(op);
+            this.ops.push(op2);
         }
     }
     commit(ops: OpItem[]) {
@@ -75,29 +84,45 @@ export class CrdtIdRepoNode extends RepoNode {
             if (op.cmd !== op2?.cmd) throw new Error("op not match");
         }
     }
-    undo(ops: OpItem[], needUpdateFrame: Shape[]) {
+    dropOps(ops: OpItem[]): void {
+    }
+    undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         if (ops.length === 0) throw new Error();
         const target = this.page.getOpTarget(ops[0].op.path);
         if (!target) {
+            if (!receiver) this.popLocal(ops);
             return;
         }
         const op = ops[0].op as IdSetOpRecord;
-        apply(target, {
+        const record = apply(target, {
             data: op.origin,
             id: op.id,
             type: op.type,
             path: op.path,
             order: op.order
         }, needUpdateFrame)
+        if (receiver) {
+            receiver.ops.push(record);
+            this.commit([{ cmd: receiver, op: record }]);
+        } else {
+            this.popLocal(ops);
+        }
     }
-    redo(ops: OpItem[], needUpdateFrame: Shape[]) {
+    redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         if (ops.length === 0) throw new Error();
         const target = this.page.getOpTarget(ops[0].op.path);
         if (!target) {
+            if (!receiver) this.popLocal(ops);
             return;
         }
         const op = ops[ops.length - 1].op as IdSetOpRecord;
-        apply(target, op, needUpdateFrame);
+        const record = apply(target, op, needUpdateFrame);
+        if (receiver) {
+            receiver.ops.push(record);
+            this.commit([{ cmd: receiver, op: record }]);
+        } else {
+            this.popLocal(ops);
+        }
     }
     roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]) {
         if (baseVer > version) throw new Error();

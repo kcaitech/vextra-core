@@ -6,7 +6,7 @@ import { Page } from "../../../data/page";
 import { ArrayOp, ArrayOpType } from "../../../coop/common/arrayop";
 import { TextOpAttr, TextOpAttrRecord, TextOpInsert, TextOpInsertRecord, TextOpRemove, TextOpRemoveRecord } from "../../../coop/client/textop";
 import { Shape } from "../../../data/shape";
-import { LocalOpItem as OpItem } from "../localcmd";
+import { Cmd, OpItem } from "../../../coop/common/repo";
 
 // todo 考虑text是string?
 function apply(text: Text, op: ArrayOp) {
@@ -126,6 +126,9 @@ export class TextRepoNode extends RepoNode {
 
     private page: Page;
 
+    // 需要参与变换
+    popedOps: OpItem[] = [];
+
     constructor(page: Page) {
         super(OpType.Array);
         this.page = page;
@@ -193,7 +196,7 @@ export class TextRepoNode extends RepoNode {
 
         // transform local
         const remote = ops.map(op => op.op as ArrayOp);
-        const local = this.localops.map(op => op.op as ArrayOp);
+        const local = this.localops.concat(this.popedOps).map(op => op.op as ArrayOp);
         const { lhs, rhs } = transform(remote, local);
         // replace local
         for (let i = 0; i < this.localops.length; i++) {
@@ -202,7 +205,16 @@ export class TextRepoNode extends RepoNode {
             const origin = item.op;
             item.op = rhs[i];
             const index = cmd.ops.indexOf(origin);
-            cmd.ops.splice(index, 1, rhs[i]); // replace
+            cmd.ops.splice(index, 1, item.op); // replace
+        }
+        // replace poped
+        for (let i = 0; i < this.popedOps.length; i++) {
+            const item = this.popedOps[i];
+            const cmd = item.cmd;
+            const origin = item.op;
+            item.op = rhs[i + this.localops.length];
+            const index = cmd.ops.indexOf(origin);
+            cmd.ops.splice(index, 1, item.op); // replace
         }
 
         // redo
@@ -227,7 +239,7 @@ export class TextRepoNode extends RepoNode {
             const op2 = this.localops.shift();
             // check
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
-            this.ops.push(op);
+            this.ops.push(op2);
         }
     }
     commit(ops: OpItem[]) {
@@ -241,15 +253,28 @@ export class TextRepoNode extends RepoNode {
             const op2 = this.localops.pop();
             // check
             if (op.cmd !== op2?.cmd) throw new Error("op not match");
+            this.popedOps.push(op2);
         }
     }
-    undo(ops: OpItem[], needUpdateFrame: Shape[]) { // 自己popLocal & 自己commit ?
+    dropOps(ops: OpItem[]): void {
+        // 将undoops丢掉
+        if (this.popedOps.length !== ops.length) throw new Error();
+        for (let i = ops.length - 1; i >= 0; i--) {
+            const op = ops[i];
+            const op2 = this.popedOps.pop();
+            // check
+            if (op.cmd !== op2?.cmd) throw new Error("op not match");
+        }
+    }
+
+    _undo(ops: OpItem[]) {
         if (ops.length === 0) throw new Error();
         // check 一次只有一个cmd
         for (let i = 1; i < ops.length; i++) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
         }
-        const curops = this.ops.concat(...this.localops);
+
+        const curops: OpItem[] = this.ops.concat(...this.localops);
         if (curops.length === 0) throw new Error();
         if (curops.length < ops.length) throw new Error();
 
@@ -257,7 +282,7 @@ export class TextRepoNode extends RepoNode {
         // 如果在最后，直接undo
 
         // 需要变换
-        const index = curops.findLastIndex((v) => v.cmd.id === ops[0].cmd.id) - ops.length + 1;
+        const index = ((curops as any/* 这里神奇的编译报错 */).findLastIndex((v: OpItem) => (v.cmd.id === ops[0].cmd.id))) - ops.length + 1;
         if (index < 0) throw new Error("not find ops");
         // check
         for (let i = 0; i < ops.length; i++) {
@@ -275,12 +300,51 @@ export class TextRepoNode extends RepoNode {
             revertops = rhs;
         }
         const record = text ? revertops.map((op) => apply(text, op) || op) : revertops;
-        // update to ops
-
         return record;
     }
-    redo(ops: OpItem[], needUpdateFrame: Shape[]) {
-        return this.undo(ops.reverse(), needUpdateFrame);
+
+    undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) { // 自己popLocal & 自己commit ?
+        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
+        const record = this._undo(ops);
+        // update to ops
+        if (receiver) {
+            receiver.ops.push(...record);
+            this.commit(record.map(op => ({ cmd: receiver, op })))
+        } else {
+            this.popLocal(ops);
+            // replace op
+            for (let i = 0; i < ops.length; i++) {
+                const op = ops[i];
+                const saveop = saveops![i];
+                const idx = op.cmd.ops.indexOf(saveop);
+                if (idx < 0) throw new Error();
+                op.cmd.ops.splice(idx, 1);
+            }
+            ops[0].cmd.ops.push(...record);
+        }
+    }
+    redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
+
+        ops.reverse();
+        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
+
+        const record = this._undo(ops);
+        // update to ops
+        if (receiver) {
+            receiver.ops.push(...record);
+            this.commit(record.map(op => ({ cmd: receiver, op })))
+        } else {
+            // replace op
+            for (let i = 0; i < ops.length; i++) {
+                const op = ops[i];
+                const saveop = saveops![i];
+                const idx = op.cmd.ops.indexOf(saveop);
+                if (idx < 0) throw new Error();
+                op.cmd.ops.splice(idx, 1);
+            }
+            ops[0].cmd.ops.push(...record);
+            this.commit(record.map(op => ({ cmd: ops[0].cmd, op })))
+        }
     }
     roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]) {
         if (baseVer > version) throw new Error();
