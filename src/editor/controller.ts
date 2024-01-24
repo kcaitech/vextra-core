@@ -143,7 +143,7 @@ export interface AsyncTransfer {
     getEnvs: () => Map<string, { shape: ShapeView, index: number }[]>;
     setExceptEnvs: (except: ShapeView[]) => void;
     getExceptEnvs: () => ShapeView[];
-    backToStartEnv: (dlt: string) => void;
+    backToStartEnv: (emit_by: Shape, dlt: string) => void;
     setCurrentEnv: (cv: Shape | Page) => void;
     close: () => undefined;
     abort: () => void;
@@ -700,43 +700,59 @@ export class Controller {
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
         let origin_envs = new Map<string, { shape: ShapeView, index: number }[]>(); // 记录图层的原环境
         let except_envs: ShapeView[] = [];
-        let no_need_to_back: boolean = true;
         let current_env: Shape | Page = page;
 
         const api = this.__repo.start("transfer", {});
         let status: Status = Status.Pending;
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             try {
-                status = Status.Pending;
-
-                const parents: Shape[] = [];
-                let ohflip = false;
-                let ovflip = false;
-                let p: Shape | undefined = targetParent;
-                while (p) {
-                    parents.push(p);
-                    if (p.isFlippedHorizontal) {
-                        ohflip = !ohflip;
-                    }
-                    if (p.isFlippedVertical) {
-                        ovflip = !ovflip;
-                    }
-                    p = p.parent;
+                if (targetParent.id === current_env.id) {
+                    return;
                 }
 
-                const pm = targetParent.matrix2Root();
-                const pminverse = pm.inverse;
+                status = Status.Pending;
+                const env_transform = __get_env_transform_for_migrate(targetParent);
 
                 let index = targetParent.childs.length;
                 for (let i = 0, len = sortedShapes.length; i < len; i++) {
-                    __migrate(api, page, targetParent, sortedShapes[i], dlt, index, { pminverse, ohflip, ovflip });
+                    __migrate(api, page, targetParent, sortedShapes[i], dlt, index, env_transform);
                     index++;
                 }
-                no_need_to_back = false;
+                setCurrentEnv(targetParent);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const backToStartEnv = (emit_by: Shape, dlt: string) => { // 特殊的migrate，让所有图层回到原环境
+            try {
+                console.log('try to backToStartEnv');
+                if (emit_by.id === current_env.id) {
+                    return;
+                }
+
+                status = Status.Pending;
+                origin_envs.forEach((v, k) => {
+                    const op = page.getShape(k) as GroupShape | undefined;
+                    if (!op) {
+                        return;
+                    }
+
+                    const env_transform = __get_env_transform_for_migrate(op);
+
+                    for (let i = 0, l = v.length; i < l; i++) {
+                        const _v = v[i];
+                        __migrate(api, page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index, env_transform);
+                    }
+
+                });
+                this.__repo.transactCtx.fireNotify();
+                setCurrentEnv(emit_by);
+                status = Status.Fulfilled;
+            } catch (error) {
+                console.error(error);
                 status = Status.Exception;
             }
         }
@@ -821,50 +837,6 @@ export class Controller {
         }
         const getExceptEnvs = () => {
             return except_envs;
-        }
-        const backToStartEnv = (dlt: string) => { // 让所有图层回到原环境
-            try {
-                console.log('try to backToStartEnv');
-
-                status = Status.Pending;
-                if (no_need_to_back) {
-                    console.log('is_o_envs');
-                    return;
-                }
-                origin_envs.forEach((v, k) => {
-                    const op = page.getShape(k);
-                    if (!op) {
-                        return;
-                    }
-
-                    let ohflip = false;
-                    let ovflip = false;
-                    let p: Shape | undefined = op;
-                    while (p) {
-                        if (p.isFlippedHorizontal) {
-                            ohflip = !ohflip;
-                        }
-                        if (p.isFlippedVertical) {
-                            ovflip = !ovflip;
-                        }
-                        p = p.parent;
-                    }
-
-                    const pm = op.matrix2Root();
-                    const pminverse = pm.inverse;
-
-                    for (let i = 0, l = v.length; i < l; i++) {
-                        const _v = v[i];
-                        __migrate(api, page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index, { pminverse, ohflip, ovflip });
-                    }
-                });
-                no_need_to_back = true;
-                this.__repo.transactCtx.fireNotify();
-                status = Status.Fulfilled;
-            } catch (error) {
-                console.error(error);
-                status = Status.Exception;
-            }
         }
         const setCurrentEnv = (cv: Shape | Page) => {
             current_env = cv;
@@ -1288,7 +1260,10 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
     }
 }
 
-function __migrate(api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number, transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }) {
+function __migrate(
+    api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
+    transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }
+) {
     const error = unable_to_migrate(targetParent, shape);
     if (error) {
         console.log('migrate error:', error);
@@ -1354,4 +1329,24 @@ function __migrate(api: Api, page: Page, targetParent: GroupShape, shape: Shape,
 
     translateTo(api, page, shape, x, y);
     after_migrate(page, api, origin);
+}
+function __get_env_transform_for_migrate(target_env: GroupShape) {
+    let ohflip = false;
+    let ovflip = false;
+    let p: Shape | undefined = target_env;
+
+    while (p) {
+        if (p.isFlippedHorizontal) {
+            ohflip = !ohflip;
+        }
+        if (p.isFlippedVertical) {
+            ovflip = !ovflip;
+        }
+        p = p.parent;
+    }
+
+    const pm = target_env.matrix2Root();
+    const pminverse = pm.inverse;
+
+    return { ohflip, ovflip, pminverse };
 }
