@@ -15,6 +15,9 @@ export class resizingConstraintEditor {
         this.__document = document;
     }
 
+    /**
+     * @description 目标图层是否禁止修改约束状态
+     */
     disabled(shape: Shape) {
         return shape.isVirtualShape // 图形是实例子元素
             || ( // 图形不是以下类型图层的子元素
