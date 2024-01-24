@@ -1,6 +1,7 @@
 import { Shape } from "../../../data/shape";
 import { Op, OpType } from "../../../coop/common/op";
 import { LocalOpItem as OpItem } from "../localcmd";
+import { Cmd } from "../../../coop/common/repo";
 
 
 export abstract class RepoNode {
@@ -9,11 +10,6 @@ export abstract class RepoNode {
     ops: OpItem[] = []; // 与服务端保持一致的op
     localops: OpItem[] = []; // 本地op, 本地op的order一定是在ops之后的
 
-    // text才需要
-    // localallops: OpItem[] = []; // 本地所有有效ops，用于undo、redo
-    // localindex: number = 0; // undo, redo的index
-    // localotindex: number = 0; // undo后需要参与变换的index
-
     constructor(type: OpType) {
         this.type = type;
     }
@@ -21,12 +17,15 @@ export abstract class RepoNode {
     abstract receive(ops: OpItem[], needUpdateFrame: Shape[]): void;
     abstract receiveLocal(ops: OpItem[]): void;
     abstract commit(ops: OpItem[]): void;
-    abstract popLocal(ops: OpItem[]): void;
-    abstract undo(ops: OpItem[], needUpdateFrame: Shape[]): void | Op[];
-    abstract redo(ops: OpItem[], needUpdateFrame: Shape[]): void | Op[];
+
+    abstract undoLocal(ops: OpItem[], needUpdateFrame: Shape[]): void | Op[];
+    abstract undoPosted(ops: OpItem[], needUpdateFrame: Shape[], newCmd: Cmd): void | Op[];
+    abstract redoLocal(ops: OpItem[], needUpdateFrame: Shape[]): void | Op[];
+    abstract redoPosted(ops: OpItem[], needUpdateFrame: Shape[], newCmd: Cmd): void | Op[];
+    abstract dropOps(ops: OpItem[]): void;
+
     abstract roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]): void;
 }
-
 
 export class RepoNodePath {
 

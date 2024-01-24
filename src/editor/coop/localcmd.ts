@@ -14,5 +14,4 @@ export interface LocalCmd extends Cmd {
 }
 
 export interface LocalOpItem extends OpItem {
-    applyed: boolean;
 }

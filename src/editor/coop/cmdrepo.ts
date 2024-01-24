@@ -8,6 +8,7 @@ import { updateShapesFrame } from "./utils";
 import * as basicapi from "../basicapi"
 import { ICoopNet } from "./net";
 import { LocalOpItem as OpItem } from "./localcmd";
+import { uuid } from "../../basic/uuid";
 
 const POST_TIMEOUT = 5000; // 5s
 
@@ -32,7 +33,7 @@ function classifyOps(cmds: Cmd[]) {
                 arr = [];
                 subrepos.set(oppath, arr);
             }
-            arr.push({ op, cmd, applyed: false });
+            arr.push({ op, cmd });
         }
     }
     return subrepos;
@@ -207,27 +208,55 @@ export class CmdRepo {
             // apply op
             node.commit(v);
         }
+
+        // need process
+        this.processCmds();
+    }
+
+    private _commit2(cmd: LocalCmd) { // 不需要应用的
+        // todo check merge?
+        this.nopostcmds.push(cmd); // 本地cmd也要应用到nodetree
+        // 处理本地提交后返回的cmds
+
+        // need process
+        this.processCmds();
     }
 
     // 本地cmd
     // 区分需要应用的与不需要应用的
     commit(cmd: LocalCmd) {
-        // todo check merge
-        // 文本输入
-        // 键盘移动
-        // 
-        // if (this.__localcmds.length > 0 && this.__cmdrepo.nopostcmds.length > 0) {
-        //     const now = Date.now();
-        //     const last = this.__localcmds[this.__localcmds.length - 1];
-        //     if (now - last.time < 1000) {
-        //         // 考虑合并
-        //         // 需要个cmdtype
-        //     }
-        // }
+        // 有丢弃掉的cmd，要通知到textnode
+        if (this.localcmds.length > this.localindex) {
+            const droped = this.localcmds.splice(this.localindex);
+            const subrepos = classifyOps(droped);
+            for (let [k, v] of subrepos.entries()) {
+                // 建立repotree
+                const op0 = v[0].op;
+                const blockId = op0.path[0];
+                const repotree = this.repotrees.get(blockId);
+                const node = repotree && repotree.get(op0.path);
+                if (!node) throw new Error("op not found");
+                node.dropOps(v);
+            }
+        } else {
+            // todo check merge
+            // 文本输入
+            // 键盘移动
+            // 
+            // if (this.__localcmds.length > 0 && this.__cmdrepo.nopostcmds.length > 0) {
+            //     const now = Date.now();
+            //     const last = this.__localcmds[this.__localcmds.length - 1];
+            //     if (now - last.time < 1000) {
+            //         // 考虑合并
+            //         // 需要个cmdtype
+            //     }
+            // }
+        }
+
+        this.localcmds.push(cmd);
+        ++this.localindex;
 
         this._commit(cmd);
-        // need process
-        this.processCmds();
     }
 
     // 收到远程cmd
@@ -338,6 +367,22 @@ export class CmdRepo {
     undo() {
         if (!this.canUndo()) return;
         const cmd = this.localcmds[this.localindex - 1];
+        const posted = cmd.posttime > 0;
+
+        const newCmd = posted ? {
+            id: uuid(),
+            // mergeable: true,
+            mergetype: cmd.mergetype,
+            delay: 500,
+            version: Number.MAX_SAFE_INTEGER,
+            baseVer: 0,
+            ops: [],
+            isUndo: true,
+            blockId: cmd.blockId,
+            description: cmd.description,
+            time: Date.now(),
+            posttime: 0
+        } : undefined;
 
         const needUpdateFrame: Map<string, Shape[]> = new Map();
         const subrepos = classifyOps([cmd]);
@@ -354,7 +399,9 @@ export class CmdRepo {
                 nuf = [];
                 needUpdateFrame.set(k, nuf);
             }
-            node.undo(v, nuf);
+
+            if (posted) node.undoPosted(v, nuf, newCmd!);
+            else node.undoLocal(v, nuf);
         }
         // update frame
         for (let [k, v] of needUpdateFrame) {
@@ -362,9 +409,68 @@ export class CmdRepo {
             if (!page) continue;
             updateShapesFrame(page, v, basicapi);
         }
+
+        if (posted) {
+            // posted
+            // need commit new command
+            this._commit2(newCmd!)
+        }
+
+        --this.localindex;
     }
     redo() {
         if (!this.canRedo()) return;
+        const cmd = this.localcmds[this.localindex];
+        const posted = cmd.posttime > 0;
+
+        const newCmd = posted ? {
+            id: uuid(),
+            // mergeable: true,
+            mergetype: cmd.mergetype,
+            delay: 500,
+            version: Number.MAX_SAFE_INTEGER,
+            baseVer: 0,
+            ops: [],
+            isUndo: true,
+            blockId: cmd.blockId,
+            description: cmd.description,
+            time: Date.now(),
+            posttime: 0
+        } : undefined;
+
+        const needUpdateFrame: Map<string, Shape[]> = new Map();
+        const subrepos = classifyOps([cmd]);
+        for (let [k, v] of subrepos.entries()) {
+            // 建立repotree
+            const op0 = v[0].op;
+            const blockId = op0.path[0];
+            const repotree = this.repotrees.get(blockId);
+            const node = repotree && repotree.get(op0.path);
+            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
+            // apply op
+            let nuf = needUpdateFrame.get(k);
+            if (!nuf) {
+                nuf = [];
+                needUpdateFrame.set(k, nuf);
+            }
+
+            if (posted) node.redoPosted(v, nuf, newCmd!);
+            else node.redoLocal(v, nuf);
+        }
+        // update frame
+        for (let [k, v] of needUpdateFrame) {
+            const page = this.document.pagesMgr.getSync(k);
+            if (!page) continue;
+            updateShapesFrame(page, v, basicapi);
+        }
+
+        if (posted) {
+            // posted
+            // need commit new command
+            this._commit2(newCmd!)
+        }
+
+        ++this.localindex;
 
         // todo 选区
         // todo restore selection

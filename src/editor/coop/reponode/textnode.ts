@@ -243,7 +243,7 @@ export class TextRepoNode extends RepoNode {
             if (op.cmd !== op2?.cmd) throw new Error("op not match");
         }
     }
-    undo(ops: OpItem[], needUpdateFrame: Shape[]) {
+    undo(ops: OpItem[], needUpdateFrame: Shape[]) { // 自己popLocal & 自己commit ?
         if (ops.length === 0) throw new Error();
         // check 一次只有一个cmd
         for (let i = 1; i < ops.length; i++) {
