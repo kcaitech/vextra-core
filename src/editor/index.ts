@@ -11,6 +11,7 @@ import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
 import { TableShape } from "../data/table";
 import { Text } from "../data/text"
+import { resizingConstraintEditor } from "./resizingConstraint";
 
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";
@@ -71,6 +72,9 @@ export class Editor {
     controller(): Controller {
         const e = new Controller(this.m_repo, this.data);
         return e;
+    }
+    editor4ResizingConstraint(page: Page) {
+        return new resizingConstraintEditor(page, this.m_repo, this.data);
     }
 
     get data() {
