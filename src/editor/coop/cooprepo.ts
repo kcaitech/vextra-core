@@ -8,12 +8,28 @@ import { CmdRepo } from "./cmdrepo";
 import { Cmd } from "../../coop/common/repo";
 import { ICoopNet } from "./net";
 
+
+class MockNet implements ICoopNet {
+    hasConnected(): boolean {
+        throw new Error("Method not implemented.");
+    }
+    pullCmds(from: number, to: number): void {
+        throw new Error("Method not implemented.");
+    }
+    postCmds(cmds: Cmd[]): void {
+        throw new Error("Method not implemented.");
+    }
+    watchCmds(watcher: (cmds: Cmd[]) => void): void {
+        throw new Error("Method not implemented.");
+    }
+}
+
 export class CoopRepository {
     private __repo: Repository;
     private __cmdrepo: CmdRepo;
     private __api: Api;
 
-    constructor(document: Document, repo: Repository, net: ICoopNet, cmds: Cmd[] = [], localcmds: LocalCmd[] = []) {
+    constructor(document: Document, repo: Repository, net: ICoopNet = new MockNet(), cmds: Cmd[] = [], localcmds: LocalCmd[] = []) {
         this.__repo = repo;
         // repo.transactCtx.settrap = true; // todo
         this.__api = Api.create(repo);
@@ -48,23 +64,31 @@ export class CoopRepository {
 
     undo() {
         this.__repo.start("undo", {});
+        const save = this.__repo.transactCtx.settrap;
         try {
-            this.__cmdrepo.redo();
+            this.__repo.transactCtx.settrap = false;
+            this.__cmdrepo.undo();
             this.__repo.commit();
         } catch(e) {
             this.__repo.rollback();
             throw e;
+        } finally {
+            this.__repo.transactCtx.settrap = save;
         }
     }
 
     redo() {
         this.__repo.start("redo", {});
+        const save = this.__repo.transactCtx.settrap;
         try {
+            this.__repo.transactCtx.settrap = false;
             this.__cmdrepo.redo();
             this.__repo.commit();
         } catch(e) {
             this.__repo.rollback();
             throw e;
+        } finally {
+            this.__repo.transactCtx.settrap = save;
         }
     }
     canUndo() {

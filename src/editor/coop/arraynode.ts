@@ -1,9 +1,9 @@
-import { Page } from "../../../data/page";
-import { Op, OpType } from "../../../coop/common/op";
-import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, crdtArrayMove, undoArrayMove } from "../../../coop/client/crdt";
-import { Shape } from "../../../data/shape";
+import { Page } from "../../data/page";
+import { Op, OpType } from "../../coop/common/op";
+import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, crdtArrayMove, undoArrayMove } from "../../coop/client/crdt";
+import { Shape } from "../../data/shape";
 import { RepoNode } from "./base";
-import { Cmd, OpItem } from "../../../coop/common/repo";
+import { Cmd, OpItem } from "../../coop/common/repo";
 
 function apply(target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord {
     return crdtArrayMove(target, op);

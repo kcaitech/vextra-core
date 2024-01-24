@@ -1,10 +1,10 @@
-import { Page } from "../../../data/page";
-import { OpType } from "../../../coop/common/op";
-import { Basic } from "../../../data/basic";
-import { Shape } from "../../../data/shape";
-import { IdSetOp, IdSetOpRecord } from "../../../coop/client/crdt";
+import { Page } from "../../data/page";
+import { OpType } from "../../coop/common/op";
+import { Basic } from "../../data/basic";
+import { Shape } from "../../data/shape";
+import { IdSetOp, IdSetOpRecord } from "../../coop/client/crdt";
 import { RepoNode } from "./base";
-import { Cmd, OpItem } from "../../../coop/common/repo";
+import { Cmd, OpItem } from "../../coop/common/repo";
 
 function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]): IdSetOpRecord {
     let value = op.data;
@@ -106,6 +106,10 @@ export class CrdtIdRepoNode extends RepoNode {
             this.commit([{ cmd: receiver, op: record }]);
         } else {
             this.popLocal(ops);
+            // replace op
+            const idx = ops[0].cmd.ops.indexOf(op);
+            if (idx < 0) throw new Error();
+            ops[0].cmd.ops.splice(idx, 1, record);
         }
     }
     redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
@@ -121,7 +125,11 @@ export class CrdtIdRepoNode extends RepoNode {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
         } else {
-            this.popLocal(ops);
+            this.commit([{ cmd: ops[0].cmd, op: record }]);
+            // replace op
+            const idx = ops[0].cmd.ops.indexOf(op);
+            if (idx < 0) throw new Error();
+            ops[0].cmd.ops.splice(idx, 1, record);
         }
     }
     roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]) {

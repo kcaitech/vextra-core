@@ -1,11 +1,11 @@
-import { Op, OpType } from "../../../coop/common/op";
-import { Page } from "../../../data/page";
-import { TreeMoveOp, TreeMoveOpRecord, crdtTreeMove, undoTreeMove } from "../../../coop/client/crdt";
-import { Shape } from "../../../data/shape";
-import { importShape } from "../utils";
-import { Document } from "../../../data/document";
+import { Op, OpType } from "../../coop/common/op";
+import { Page } from "../../data/page";
+import { TreeMoveOp, TreeMoveOpRecord, crdtTreeMove, undoTreeMove } from "../../coop/client/crdt";
+import { Shape } from "../../data/shape";
+import { importShape } from "./utils";
+import { Document } from "../../data/document";
 import { RepoNode } from "./base";
-import { Cmd, OpItem } from "../../../coop/common/repo";
+import { Cmd, OpItem } from "../../coop/common/repo";
 
 function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
 

@@ -1,5 +1,5 @@
-import { Op, OpType } from "../../../coop/common/op";
-import { Document } from "../../../data/document";
+import { Op, OpType } from "../../coop/common/op";
+import { Document } from "../../data/document";
 import { CrdtArrayReopNode } from "./arraynode";
 import { CrdtIdRepoNode } from "./idsetnode";
 import { CrdtShapeRepoNode } from "./shapenode";

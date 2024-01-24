@@ -1,12 +1,12 @@
 import { RepoNode } from "./base";
-import { Op, OpType } from "../../../coop/common/op";
-import { Text } from "../../../data/text";
-import { transform } from "../../../coop/common/arrayoptransform";
-import { Page } from "../../../data/page";
-import { ArrayOp, ArrayOpType } from "../../../coop/common/arrayop";
-import { TextOpAttr, TextOpAttrRecord, TextOpInsert, TextOpInsertRecord, TextOpRemove, TextOpRemoveRecord } from "../../../coop/client/textop";
-import { Shape } from "../../../data/shape";
-import { Cmd, OpItem } from "../../../coop/common/repo";
+import { Op, OpType } from "../../coop/common/op";
+import { Text } from "../../data/text";
+import { transform } from "../../coop/common/arrayoptransform";
+import { Page } from "../../data/page";
+import { ArrayOp, ArrayOpType } from "../../coop/common/arrayop";
+import { TextOpAttr, TextOpAttrRecord, TextOpInsert, TextOpInsertRecord, TextOpRemove, TextOpRemoveRecord } from "../../coop/client/textop";
+import { Shape } from "../../data/shape";
+import { Cmd, OpItem } from "../../coop/common/repo";
 
 // todo 考虑text是string?
 function apply(text: Text, op: ArrayOp) {

@@ -1,4 +1,4 @@
-import { Cmd, OpItem } from "../../coop/common/repo";
+import { Cmd } from "../../coop/common/repo";
 
 export enum CmdMergeType {
     TextInsert,

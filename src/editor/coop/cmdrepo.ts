@@ -2,12 +2,13 @@ import { Shape } from "../../data/shape";
 import { Op } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { LocalCmd } from "./localcmd";
-import { RepoNode, RepoNodePath, nodecreator } from "./reponode";
 import { Document } from "../../data/document";
 import { updateShapesFrame } from "./utils";
 import * as basicapi from "../basicapi"
 import { ICoopNet } from "./net";
 import { uuid } from "../../basic/uuid";
+import { RepoNode, RepoNodePath } from "./base";
+import { nodecreator } from "./creator";
 
 const POST_TIMEOUT = 5000; // 5s
 

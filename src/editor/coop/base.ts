@@ -1,6 +1,6 @@
-import { Shape } from "../../../data/shape";
-import { Op, OpType } from "../../../coop/common/op";
-import { Cmd, OpItem } from "../../../coop/common/repo";
+import { Shape } from "../../data/shape";
+import { Op, OpType } from "../../coop/common/op";
+import { Cmd, OpItem } from "../../coop/common/repo";
 
 
 export abstract class RepoNode {
