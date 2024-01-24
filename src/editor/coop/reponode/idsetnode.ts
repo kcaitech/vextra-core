@@ -1,41 +1,137 @@
 import { Page } from "../../../data/page";
-import { RepoNode } from "./reponode";
 import { OpType } from "../../../coop/common/op";
 import { Basic } from "../../../data/basic";
 import { Shape } from "../../../data/shape";
-import { IdSetOp } from "../../../coop/client/crdt";
+import { IdSetOp, IdSetOpRecord } from "../../../coop/client/crdt";
 import { LocalOpItem as OpItem } from "../localcmd";
+import { RepoNode } from "./base";
 
-function apply(target: Object, op: IdSetOp) {
-    // todo 需要import ? 需要
+function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]) {
     let value = op.data;
     if (typeof op.data === 'object') switch (op.data.typeId) {
+        // todo 需要import ? 需要
         // import
+        // throw new Error("not implemented")
     }
     if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + op.data.typeId);
     (target as any)[op.id] = value;
 }
 
+// todo import, updateframe
+
 export class CrdtIdRepoNode extends RepoNode {
     private page: Page;
-
+    private savedOrigin: boolean = false;
+    private origin: any; // baseVer的状态
     constructor(page: Page) {
         super(OpType.Idset);
         this.page = page;
     }
 
-    processRemote(ops: OpItem[], needUpdateFrame: Shape[]): void {
+    private saveOrigin(target: any, ops: OpItem[]) {
+        if (this.savedOrigin) return;
+        if (!target) return;
+        if (this.localops.length === 0) {
+            this.origin = (target as any)[ops[0].op.id];
+        } else {
+            this.origin = (this.localops[0].op as IdSetOpRecord).origin;
+        }
+        this.savedOrigin = true;
+    }
 
+    receive(ops: OpItem[], needUpdateFrame: Shape[]) {
+        if (ops.length === 0) throw new Error();
+        const target = this.page.getOpTarget(ops[0].op.path);
+        // save origin
+        this.saveOrigin(target, ops);
+        this.ops.push(...ops);
+        if (this.localops.length === 0 && target) {
+            apply(target, this.ops[this.ops.length - 1].op as IdSetOp, needUpdateFrame)
+        }
+    }
+    receiveLocal(ops: OpItem[]) {
+        // local back
+        if (ops.length === 0) throw new Error();
+        if (ops.length > this.localops.length) throw new Error();
+        for (let i = 0; i < ops.length; i++) {
+            const op = ops[i];
+            const op2 = this.localops.shift();
+            // check
+            if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
+            this.ops.push(op);
+        }
+    }
+    commit(ops: OpItem[]) {
+        if (ops.length === 0) throw new Error();
+        this.localops.push(...ops);
+    }
+    popLocal(ops: OpItem[]) {
+        // check
+        if (this.localops.length < ops.length) throw new Error();
+        for (let i = ops.length - 1; i >= 0; i--) {
+            const op = ops[i];
+            const op2 = this.localops.pop();
+            // check
+            if (op.cmd !== op2?.cmd) throw new Error("op not match");
+        }
+    }
+    undo(ops: OpItem[], needUpdateFrame: Shape[]) {
+        if (ops.length === 0) throw new Error();
+        const target = this.page.getOpTarget(ops[0].op.path);
+        if (!target) {
+            return;
+        }
+        const op = ops[0].op as IdSetOpRecord;
+        apply(target, {
+            data: op.origin,
+            id: op.id,
+            type: op.type,
+            path: op.path,
+            order: op.order
+        }, needUpdateFrame)
+    }
+    redo(ops: OpItem[], needUpdateFrame: Shape[]) {
+        if (ops.length === 0) throw new Error();
+        const target = this.page.getOpTarget(ops[0].op.path);
+        if (!target) {
+            return;
+        }
+        const op = ops[ops.length - 1].op as IdSetOpRecord;
+        apply(target, op, needUpdateFrame);
+    }
+    roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]) {
+        if (baseVer > version) throw new Error();
+        // search and apply
+        const ops = this.ops.concat(...this.localops);
         if (ops.length === 0) return;
 
-        this.ops.push(...ops);
-        
-        if (this.localops.length === 0) {
-            // 应用最后一个
-            const lastop = ops[ops.length - 1];
-            const target = this.page.getOpTarget(lastop.op.path);
-            // apply lastop
-            if (target) apply(target, lastop.op as IdSetOp);
+        const target = this.page.getOpTarget(ops[0].op.path);
+        if (!target) return;
+
+        // let baseIdx = ops.findIndex((op) => op.cmd.version > baseVer);
+        let verIdx = ops.findIndex((op) => op.cmd.version > version);
+
+        // if (baseIdx < 0) baseIdx = 0;
+        if (verIdx < 0) verIdx = ops.length;
+        if (verIdx === 0) {
+            const op = ops[verIdx].op as IdSetOpRecord;
+            let origin;
+            if (this.savedOrigin) {
+                origin = this.origin;
+            } else {
+                origin = op.origin; // 没有save的话，那么op只能是本地op
+            }
+            apply(target, {
+                data: origin,
+                id: op.id,
+                type: op.type,
+                path: op.path,
+                order: op.order
+            }, needUpdateFrame);
+        } else {
+            const op = ops[verIdx - 1];
+            if (!op) throw new Error("not found");
+            apply(target, op.op as IdSetOp, needUpdateFrame);
         }
     }
 

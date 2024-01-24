@@ -29,6 +29,7 @@ import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
 import { LocalCmd as Cmd, CmdMergeType } from "./localcmd";
 import { IdOpRecord } from "../../coop/client/crdt";
+import { Repository } from "../../data/transact";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -45,7 +46,34 @@ function checkShapeAtPage(page: Page, obj: Shape | Variable) {
     if (!page.getShape(shapeid[0] as string)) throw new Error("shape not inside page")
 }
 
+class TrapHdl { // wap api's function
+    private repo: Repository;
+    constructor(repo: Repository) {
+        this.repo = repo;
+    }
+    get(target: object, propertyKey: PropertyKey, receiver?: any) {
+        const ret = Reflect.get(target, propertyKey, receiver);
+        if (typeof ret !== "function") return ret;
+        return (...args: any[]) => {
+            const save = this.repo.transactCtx.settrap;
+            this.repo.transactCtx.settrap = false;
+            try {
+                return ret.apply(target, args);
+            }
+            finally {
+                this.repo.transactCtx.settrap = save;
+            }
+        }
+    }
+}
+
 export class Api {
+    private constructor() { // 仅能从createApi创建
+    }
+    static create(repo: Repository): Api {
+        return new Proxy<Api>(new Api(), new TrapHdl(repo));
+    }
+
     private cmd: Cmd | undefined;
     private needUpdateFrame: { shape: Shape, page: Page }[] = [];
 
@@ -117,7 +145,6 @@ export class Api {
                 cmd.ops = ops;
             }
         }
-
         return cmd;
     }
 

@@ -2,7 +2,7 @@ import { Shape } from "../../data/shape";
 import { Op } from "../../coop/common/op";
 import { Cmd } from "../../coop/common/repo";
 import { LocalCmd } from "./localcmd";
-import { RepoNode, RepoNodePath } from "./reponode/reponode";
+import { RepoNode, RepoNodePath, nodecreator } from "./reponode";
 import { Document } from "../../data/document";
 import { updateShapesFrame } from "./utils";
 import * as basicapi from "../basicapi"
@@ -45,46 +45,69 @@ export class CmdRepo {
 
     private nodecreator: (op: Op) => RepoNode
     private net: ICoopNet;
-    constructor(document: Document, cmds: Cmd[], localcmds: LocalCmd[], creator: (op: Op) => RepoNode, net: ICoopNet) {
+    constructor(document: Document, cmds: Cmd[], localcmds: LocalCmd[], net: ICoopNet) {
         this.document = document;
         // 用于加载本地的cmds
         this.cmds = cmds;
-        this.localcmds = localcmds;
-        this.nodecreator = creator;
+        this.nopostcmds = localcmds;
+        this.nodecreator = nodecreator(document);
         this.net = net;
+
+        // todo 只有本地编辑undo时，需要往回回退版本。初始化时的cmd是不能回退回去的。可以考虑不以undo-do-redo的方式来restore!
+        // 比如离线编辑，有比较多的本地cmd需要同步时，太多的undo比较费时。
+        // restore
+        if (cmds.length > 0 || this.localcmds.length > 0) {
+            const needUpdateFrame: Map<string, Shape[]> = new Map();
+            if (cmds.length > 0) {
+                this._receive(cmds, needUpdateFrame);
+            }
+            if (this.localcmds.length > 0) {
+                localcmds.forEach(item => this._commit(item));
+            }
+            // update frame
+            for (let [k, v] of needUpdateFrame) {
+                const page = document.pagesMgr.getSync(k);
+                if (!page) continue;
+                updateShapesFrame(page, v, basicapi);
+            }
+        }
     }
 
     document: Document;
 
     baseVer: number = 0;
     cmds: Cmd[];
-    pendingcmds: Cmd[] = []; // 远程过来还未应用的cmd
+    pendingcmds: Cmd[] = []; // 远程过来还未应用的cmd // 在需要拉取更早的版本时，远程的cmd也需要暂存不应用
 
     posttime: number = 0; // 提交cmd的时间
     postingcmds: Cmd[] = []; // 已提交未返回cmd
-    localcmds: LocalCmd[]; // 本地未提交cmd
+    nopostcmds: LocalCmd[]; // 本地未提交cmd
 
-    undocmds: LocalCmd[] = [];
-    freshlocalcmdcount: number = 0;
+    localcmds: LocalCmd[] = []; // 本地用户的所有cmd
+    localindex: number = 0;
 
     // 不同bolck（page、document，不同repotree）
-    // todo 怎么隔离不同page的repo
     repotrees: Map<string, RepoNodePath> = new Map();
-    // repotree: RepoNode = new RepoNode(OpType.None);
 
-    private processRemoteCmds(cmds: Cmd[], needUpdateFrame: Map<string, Shape[]>) {
+    private getRepoTree(blockId: string) { // 开始就创建，要跟踪变换op
+        let repotree = this.repotrees.get(blockId);
+        if (!repotree) {
+            repotree = new RepoNodePath();
+            this.repotrees.set(blockId, repotree);
+        }
+        return repotree;
+    }
+
+    private _receive(cmds: Cmd[], needUpdateFrame: Map<string, Shape[]>) {
         // 处理远程过来的cmds
         // 可能的情况是，本地有cmd, 需要做变换
-        this.freshlocalcmdcount = 0;
         // 1. 分类op
         const subrepos = classifyOps(cmds);
-
         for (let [k, v] of subrepos.entries()) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
-            let repotree = this.repotrees.get(blockId);
-            if (!repotree) continue;
+            let repotree = this.getRepoTree(blockId);
             const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
             // apply op
             let nuf = needUpdateFrame.get(k);
@@ -92,25 +115,22 @@ export class CmdRepo {
                 nuf = [];
                 needUpdateFrame.set(k, nuf);
             }
-            node.processRemote(v, nuf);
+            node.receive(v, nuf);
         }
     }
 
-    private processPostedCmds(cmds: Cmd[]) {
+    private _receiveLocal(cmds: Cmd[]) {
         // 处理本地提交后返回的cmds
-
         // 1. 分类op
         const subrepos = classifyOps(cmds);
-
         for (let [k, v] of subrepos.entries()) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
-            const repotree = this.repotrees.get(blockId);
-            if (!repotree) continue;
+            const repotree = this.getRepoTree(blockId);
             const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
             // apply op
-            node.processPosted(v);
+            node.receiveLocal(v);
         }
     }
 
@@ -136,14 +156,14 @@ export class CmdRepo {
             // 1. 先处理index之前的cmds
             if (index > 0) {
                 const pcmds = this.pendingcmds.slice(0, index);
-                this.processRemoteCmds(pcmds, needUpdateFrame);
+                this._receive(pcmds, needUpdateFrame);
             }
             // 2. 再处理postingcmds, 与服务端对齐
-            this.processPostedCmds(this.pendingcmds.slice(index, index + this.postingcmds.length));
+            this._receiveLocal(this.pendingcmds.slice(index, index + this.postingcmds.length));
             // 3. 再处理index之后的cmds
             if (this.pendingcmds.length > index + this.postingcmds.length) {
                 const pcmds = this.pendingcmds.slice(index + this.postingcmds.length);
-                this.processRemoteCmds(pcmds, needUpdateFrame);
+                this._receive(pcmds, needUpdateFrame);
             }
 
             this.postingcmds.length = 0;
@@ -154,7 +174,7 @@ export class CmdRepo {
         // apply pending and transform local // 仅remote
         if (this.pendingcmds.length > 0) {
             // 先处理pending
-            this.processRemoteCmds(this.pendingcmds, needUpdateFrame);
+            this._receive(this.pendingcmds, needUpdateFrame);
             this.pendingcmds.length = 0;
         }
 
@@ -165,19 +185,15 @@ export class CmdRepo {
             updateShapesFrame(page, v, basicapi);
         }
 
-        this._postCmds();
+        this._postcmds();
     }
 
-    private pushLocalCmd(cmd: LocalCmd) { // 不需要应用的
-        ++this.freshlocalcmdcount;
+    private _commit(cmd: LocalCmd) { // 不需要应用的
         // todo check merge?
-        this.localcmds.push(cmd); // 本地cmd也要应用到nodetree
-
+        this.nopostcmds.push(cmd); // 本地cmd也要应用到nodetree
         // 处理本地提交后返回的cmds
-
         // 1. 分类op
         const subrepos = classifyOps([cmd]);
-
         for (let [k, v] of subrepos.entries()) {
             // check
             if (v.length > 1) {
@@ -186,19 +202,30 @@ export class CmdRepo {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
-            const repotree = this.repotrees.get(blockId);
-            if (!repotree) continue;
+            const repotree = this.getRepoTree(blockId);
             const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
             // apply op
-            node.processLocal(v, false, []);
+            node.commit(v);
         }
     }
 
     // 本地cmd
     // 区分需要应用的与不需要应用的
-    post(cmd: LocalCmd) {
-        this.undocmds.length = 0; // 有新编辑,undo cmd 丢弃
-        this.pushLocalCmd(cmd);
+    commit(cmd: LocalCmd) {
+        // todo check merge
+        // 文本输入
+        // 键盘移动
+        // 
+        // if (this.__localcmds.length > 0 && this.__cmdrepo.nopostcmds.length > 0) {
+        //     const now = Date.now();
+        //     const last = this.__localcmds[this.__localcmds.length - 1];
+        //     if (now - last.time < 1000) {
+        //         // 考虑合并
+        //         // 需要个cmdtype
+        //     }
+        // }
+
+        this._commit(cmd);
         // need process
         this.processCmds();
     }
@@ -229,7 +256,7 @@ export class CmdRepo {
     // ================ cmd 上传、下拉 ==========================
     // todo
     // todo 数据序列化
-    private _postCmds() {
+    private _postcmds() {
         if (this.postingcmds.length > 0) {
             const now = Date.now();
             if (now - this.posttime > POST_TIMEOUT) {
@@ -242,14 +269,14 @@ export class CmdRepo {
 
         const baseVer = this.cmds.length > 0 ? this.cmds[this.cmds.length - 1].version : this.baseVer;
 
-        if (this.localcmds.length > 0) {
+        if (this.nopostcmds.length > 0) {
             // check
             // post local (根据cmd提交时间是否保留最后个cmd用于合并)
             // 所有cmd延迟1s提交？cmd应该能设置delay & mergeable
             const now = Date.now();
-            const len = this.localcmds.length;
+            const len = this.nopostcmds.length;
             for (let i = 0; i < len; i++) {
-                const cmd = this.localcmds[i];
+                const cmd = this.nopostcmds[i];
                 cmd.baseVer = baseVer;
                 if ((i < len - 1) || (now - cmd.time > cmd.delay)) {
                     this.postingcmds.push(cmd);
@@ -261,8 +288,8 @@ export class CmdRepo {
 
             if (this.postingcmds.length > 0) {
                 this.posttime = now;
-                if (this.localcmds.length === this.postingcmds.length) this.localcmds.length = 0;
-                else this.localcmds.splice(0, this.postingcmds.length);
+                if (this.nopostcmds.length === this.postingcmds.length) this.nopostcmds.length = 0;
+                else this.nopostcmds.splice(0, this.postingcmds.length);
                 // todo post
             }
         }
@@ -270,72 +297,25 @@ export class CmdRepo {
 
     // ================ 打开文档恢复、延迟加载数据更新 =========================
 
-    updateBlockData(_blockIds: string[]) {
-
-        const needUpdateFrame: Map<string, Shape[]> = new Map();
-
+    roll2NewVersion(_blockIds: string[]) {
         // create repotree
         // check
+        const set = new Set<string>();
+        const needUpdateFrame: Map<string, Shape[]> = new Map();
+        // update
         for (let i = 0; i < _blockIds.length; i++) {
             const _blockId = _blockIds[i];
-            if (this.repotrees.has(_blockId)) throw new Error("blockId already exists");
-            const repotree = new RepoNodePath();
-            this.repotrees.set(_blockId, repotree);
-        }
+            // check
+            if (set.has(_blockId)) throw new Error("duplicate blockId");
+            set.add(_blockId);
 
-        // 1 remote
-        // cmds: Cmd[] = [];
-        {
-            const subrepos = classifyOps(this.cmds.filter(cmd => {
-                for (let i = 0; i < cmd.blockId.length; ++i) {
-                    if (_blockIds.includes(cmd.blockId[i])) return true;
-                }
-                return false;
-            }));
-            for (let [k, v] of subrepos.entries()) {
-                // 建立repotree
-                const op0 = v[0].op;
-                const blockId = op0.path[0];
-                if (!_blockIds.includes(blockId)) continue;
-                const repotree = this.repotrees.get(blockId);
-                if (!repotree) throw new Error();
-                const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
-                // apply op
-                let nuf = needUpdateFrame.get(k);
-                if (!nuf) {
-                    nuf = [];
-                    needUpdateFrame.set(k, nuf);
-                }
-                node.processRemote(v, nuf);
-            }
-        }
+            const repotree = this.repotrees.get(_blockId);
+            if (!repotree) return; // 无需更新
 
-        // 2 local
-        // postingcmds: Cmd[] = []; // 已提交未返回cmd
-        // localcmds: Cmd[] = []; // 本地未提交cmd
-        {
-            const subrepos = classifyOps(this.postingcmds.concat(...this.localcmds).filter(cmd => {
-                for (let i = 0; i < cmd.blockId.length; ++i) {
-                    if (_blockIds.includes(cmd.blockId[i])) return true;
-                }
-                return false;
-            }));
-            for (let [k, v] of subrepos.entries()) {
-                // 建立repotree
-                const op0 = v[0].op;
-                const blockId = op0.path[0];
-                if (!_blockIds.includes(blockId)) continue;
-                const repotree = this.repotrees.get(blockId);
-                if (!repotree) throw new Error();
-                const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
-                // apply op
-                let nuf = needUpdateFrame.get(k);
-                if (!nuf) {
-                    nuf = [];
-                    needUpdateFrame.set(k, nuf);
-                }
-                node.processLocal(v, true, nuf);
-            }
+            const nuf: Shape[] = [];
+            needUpdateFrame.set(_blockId, nuf);
+
+            repotree.roll2Version([_blockId], this.baseVer, Number.MAX_SAFE_INTEGER, nuf)
         }
 
         for (let [k, v] of needUpdateFrame) {
@@ -349,73 +329,33 @@ export class CmdRepo {
 
     // 可由transact 直接undo的cmd数量
     // 一旦有远程命令过来，只能走undo op
-    canTransactUndo() {
-        const count = this.freshlocalcmdcount - this.undocmds.length;
-        return count > 0;
+    canUndo() { // todo 这个判断不对。没提交的是可以直接undo掉。但这个undo要判断是不是可以走transact，
+        return this.localindex > 0;
     }
-    canTransactRedo() {
-        return this.undocmds.length > 0 && this.freshlocalcmdcount > 0;
+    canRedo() {
+        return this.localindex < this.localcmds.length;
     }
+    undo() {
+        if (!this.canUndo()) return;
+        const cmd = this.localcmds[this.localindex - 1];
 
-    canUndoLocal() { // todo 这个判断不对。没提交的是可以直接undo掉。但这个undo要判断是不是可以走transact，
-        return this.localcmds.length > 0;
-    }
-
-    canRedoLocal() {
-        return this.undocmds.length > 0;
-    }
-
-    /**
-     * 
-     * @param needApply 如果是在transact中已经还原数据了，就不需要apply
-     */
-    undoLocal(needApply: boolean) {
-        if (this.localcmds.length === 0) return;
-        const cmd = this.localcmds.pop();
-        if (!cmd) throw new Error("no local cmd to undo");
-        this.undocmds.push(cmd);
         const needUpdateFrame: Map<string, Shape[]> = new Map();
-        this.processUndoLocal([cmd], needApply, needUpdateFrame);
-        // update frame
-        for (let [k, v] of needUpdateFrame) {
-            const page = this.document.pagesMgr.getSync(k);
-            if (!page) continue;
-            updateShapesFrame(page, v, basicapi);
-        }
-    }
-
-    // undo 一个本地cmd
-    private processUndoLocal(cmds: Cmd[], needApply: boolean, needUpdateFrame: Map<string, Shape[]>) {
-        // 1. 分类op
-        const subrepos = classifyOps(cmds);
-
+        const subrepos = classifyOps([cmd]);
         for (let [k, v] of subrepos.entries()) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
             const repotree = this.repotrees.get(blockId);
-            if (!repotree) continue;
-            const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+            const node = repotree && repotree.get(op0.path);
+            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
             // apply op
             let nuf = needUpdateFrame.get(k);
             if (!nuf) {
                 nuf = [];
                 needUpdateFrame.set(k, nuf);
             }
-            node.processUndoLocal(v, needApply, nuf);
+            node.undo(v, nuf);
         }
-    }
-
-    // todo redo, text的op需要变换
-    redoLocal(needApply: boolean) {
-        // 
-        // cmd.version
-        if (this.undocmds.length === 0) return;
-        const cmd = this.undocmds.shift();
-        if (!cmd) throw new Error("no local cmd to redo");
-        this.localcmds.push(cmd);
-        const needUpdateFrame: Map<string, Shape[]> = new Map();
-        this.processRedoLocal([cmd], needApply, needUpdateFrame);
         // update frame
         for (let [k, v] of needUpdateFrame) {
             const page = this.document.pagesMgr.getSync(k);
@@ -423,35 +363,13 @@ export class CmdRepo {
             updateShapesFrame(page, v, basicapi);
         }
     }
+    redo() {
+        if (!this.canRedo()) return;
 
-    private processRedoLocal(cmds: Cmd[], needApply: boolean, needUpdateFrame: Map<string, Shape[]>) {
-        // 1. 分类op
-        // const subrepos = classifyOps(cmds);
-
-        // for (let [k, v] of subrepos.entries()) {
-        //     // 建立repotree
-        //     const op0 = v[0].op;
-        //     const blockId = op0.path[0];
-        //     const repotree = this.repotrees.get(blockId);
-        //     if (!repotree) continue;
-        //     const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
-        //     // apply op
-        //     let nuf = needUpdateFrame.get(k);
-        //     if (!nuf) {
-        //         nuf = [];
-        //         needUpdateFrame.set(k, nuf);
-        //     }
-        //     node.processRedoLocal(v, needApply, nuf);
-        // }
-    }
-
-    // todo
-    // undo redo
-    undo(cmd: LocalCmd) {
-        // 已经提交的cmd需要undo
-        // 还是交由各节点处理
-    }
-    redo(cmd: LocalCmd) {
-
+        // todo 选区
+        // todo restore selection
+        // shape 记录id即可
+        // table 选中单元格时记录行列的crdtidx（还原时取最大框选），选中表格或者文本，记录shapeid
+        // 文本记录选区，需要变换。selection op记录到cmd.ops（第一个？），上传时过滤掉
     }
 }
