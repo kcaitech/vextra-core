@@ -11,23 +11,23 @@ interface MapRec {
 export class TContext {
     public transact?: Transact;
     public cache: Map<number, Set<PropertyKey>> = new Map();
-    private __notifys: Map<number, Notifiable> = new Map();
+    private __notifys: Map<number, { target: Notifiable, key: PropertyKey }> = new Map();
     public optiNotify: boolean = true;
     settrap: boolean = true;
-    addNotify(target: Notifiable | undefined) {
+    addNotify(target: Notifiable | undefined, key: PropertyKey) {
         if (!target) {
             //
         }
         else if (this.optiNotify) {
-            this.__notifys.set(objectId(target), target)
+            this.__notifys.set(objectId(target), { target, key })
         }
         else {
-            target.notify();
+            target.notify(key);
         }
     }
     fireNotify() {
-        this.__notifys.forEach((target) => {
-            target.notify();
+        this.__notifys.forEach((n) => {
+            n.target.notify(n.key);
         })
         this.__notifys.clear();
     }
@@ -109,7 +109,7 @@ class ProxyHandler {
 
                 const ret = Reflect.set(target, propertyKey, value, receiver);
 
-                this.__context.addNotify(castNotifiable(target));
+                this.__context.addNotify(castNotifiable(target), propertyKey);
 
                 // length, 设置完数据后array会自动增长长度，绕过了proxy
                 if (saveLen !== target.length) {
@@ -127,7 +127,7 @@ class ProxyHandler {
 
         const ret = Reflect.set(target, propertyKey, value, receiver);
         if (needNotify) {
-            this.__context.addNotify(castNotifiable(target));
+            this.__context.addNotify(castNotifiable(target), propertyKey);
         }
         return ret;
     }
@@ -146,7 +146,7 @@ class ProxyHandler {
             this.__context.transact.push(r);
         }
         const result = Reflect.deleteProperty(target, propertyKey);
-        this.__context.addNotify(castNotifiable(target));
+        this.__context.addNotify(castNotifiable(target), propertyKey);
         return result;
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
@@ -207,7 +207,7 @@ class ProxyHandler {
                 const map_rec: MapRec = { isContentExist: true, content: value, key };
                 const r = new Rec(target, 'set', map_rec);
                 _con.transact?.push(r);
-                _con.addNotify(castNotifiable(target));
+                _con.addNotify(castNotifiable(target), key);
             },
             delete(key: any) {
                 const get = Map.prototype.get.bind(target);
@@ -217,7 +217,7 @@ class ProxyHandler {
                 const map_rec: MapRec = { isContentExist: false, content: ori, key };
                 const r = new Rec(target, 'delete', map_rec);
                 _con.transact?.push(r);
-                _con.addNotify(castNotifiable(target));
+                _con.addNotify(castNotifiable(target), key);
             }
         };
     }
@@ -270,7 +270,7 @@ class Rec {
             }
             this.__value = v;
         }
-        ctx.addNotify(castNotifiable(this.__target));
+        ctx.addNotify(castNotifiable(this.__target), this.__propertyKey);
     }
     get target() {
         return this.__target;
