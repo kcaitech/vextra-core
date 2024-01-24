@@ -144,7 +144,18 @@ export class Shape extends Basic implements classes.Shape {
      * for command
      */
     getOpTarget(path: string[]): any {
-        return this;
+        let target = this as any;
+        for (let i = 0; i < path.length && target; i++) {
+            const k = path[i];
+            if (target instanceof Map) {
+                target = target.get(k);
+            } else if (target instanceof Array) {
+                target = target.find((v) => v.id === k);
+            } else {
+                target = target[k];
+            }
+        }
+        return target;
     }
 
     get naviChilds(): Shape[] | undefined {
