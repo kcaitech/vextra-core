@@ -4,7 +4,7 @@ import { GroupShape, Shape, Variable } from "../../data/shape";
 import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
 import { OpType } from "../../coop/common/op";
 import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text";
-import { uuid } from "../../basic/uuid";
+// import { uuid } from "../../basic/uuid";
 import { Page } from "../../data/page";
 
 // 对象树操作
@@ -82,7 +82,7 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
     return {
         id: key,
         type: OpType.Idset,
-        path: obj.getCrdtPath().concat(key),
+        path: obj.getCrdtPath().concat(key), // 用于路径能找到唯一的reponode
         order: Number.MAX_SAFE_INTEGER,
         data: value,
         origin
@@ -108,14 +108,14 @@ export function otTextInsert(parent: Shape | Variable, text: Text | string, inde
     const type = typeof str === 'string' ? 'simple' : 'complex';
     if (type === 'simple') {
         text.insertText(str as string, index, props)
-        return new TextOpInsertRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
+        return new TextOpInsertRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
             type: 'simple',
             text: str as string,
             props,
         })
     } else {
         text.insertFormatText(str as Text, index);
-        return new TextOpInsertRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
+        return new TextOpInsertRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
             type: 'complex',
             text: str as Text
         })
@@ -128,7 +128,7 @@ export function otTextRemove(parent: Shape | Variable, text: Text | string, inde
         parent.value = text;
     }
     const del = text.deleteText(index, length);
-    return del && new TextOpRemoveRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, del);
+    return del && new TextOpRemoveRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, del);
 }
 export function otTextSetAttr(parent: Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
     if (typeof text === "string") {
@@ -137,7 +137,7 @@ export function otTextSetAttr(parent: Shape | Variable, text: Text | string, ind
         parent.value = text;
     }
     const ret = text.formatText(index, length, key, value);
-    return new TextOpAttrRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "span", key, value }, ret);
+    return new TextOpAttrRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "span", key, value }, ret);
 }
 
 export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
@@ -162,7 +162,7 @@ export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string,
     else {
         ret = text.formatPara(index, length, key, value);
     }
-    return new TextOpAttrRecord(uuid(), text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "para", key, value }, ret);
+    return new TextOpAttrRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "para", key, value }, ret);
 }
 
 // 数据操作
@@ -180,7 +180,6 @@ export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: 
         order: Number.MAX_SAFE_INTEGER,
         data: item,
         from: oldidx,
-        isRemove: false,
         to: newidx
     }
 }
@@ -198,7 +197,6 @@ export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): Array
         order: Number.MAX_SAFE_INTEGER,
         data: item,
         from: oldidx,
-        isRemove: true,
         to: undefined
     }
 }
@@ -227,7 +225,6 @@ export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: numbe
         order: Number.MAX_SAFE_INTEGER,
         data: item,
         from: oldidx,
-        isRemove: false,
         to: newidx
     }
 }

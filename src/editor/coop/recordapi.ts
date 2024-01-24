@@ -108,10 +108,11 @@ export class Api {
         cmd.id = uuid();
         cmd.time = Date.now();
         if (this.needUpdateFrame.length > 0) {
+            // todo 不同page
             const update = this.needUpdateFrame.slice(0);
             const page = update[0].page;
             const shapes = update.map((v) => v.shape);
-            updateShapesFrame(page, shapes, basicapi) // 不需要生成op
+            updateShapesFrame(page, shapes, this) // 需要生成op
         }
         this.needUpdateFrame.length = 0;
         this.cmd = undefined;

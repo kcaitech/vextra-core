@@ -57,6 +57,7 @@ export class CmdRepo {
         // todo 只有本地编辑undo时，需要往回回退版本。初始化时的cmd是不能回退回去的。可以考虑不以undo-do-redo的方式来restore!
         // 比如离线编辑，有比较多的本地cmd需要同步时，太多的undo比较费时。
         // restore
+        // todo 没在事务中
         if (cmds.length > 0 || this.localcmds.length > 0) {
             const needUpdateFrame: Map<string, Shape[]> = new Map();
             if (cmds.length > 0) {
@@ -135,6 +136,7 @@ export class CmdRepo {
         }
     }
 
+    // todo 需要在事务中
     // debounce or add to render loop
     processCmds() {
         const needUpdateFrame: Map<string, Shape[]> = new Map();

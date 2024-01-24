@@ -18,7 +18,7 @@ function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]): IdSetOpRe
     (target as any)[op.id] = value;
     return {
         data: value,
-        id: "", // 这个跟随cmd id 的？
+        id: op.id, // 这个跟随cmd id 的？
         type: op.type,
         path: op.path,
         order: Number.MAX_SAFE_INTEGER,
@@ -50,7 +50,8 @@ export class CrdtIdRepoNode extends RepoNode {
 
     receive(ops: OpItem[], needUpdateFrame: Shape[]) {
         if (ops.length === 0) throw new Error();
-        const target = this.page.getOpTarget(ops[0].op.path);
+        const op0 = ops[0].op;
+        const target = this.page.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         // save origin
         this.saveOrigin(target, ops);
         this.ops.push(...ops);
@@ -88,7 +89,8 @@ export class CrdtIdRepoNode extends RepoNode {
     }
     undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         if (ops.length === 0) throw new Error();
-        const target = this.page.getOpTarget(ops[0].op.path);
+        const op0 = ops[0].op;
+        const target = this.page.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         if (!target) {
             if (!receiver) this.popLocal(ops);
             return;
@@ -114,7 +116,8 @@ export class CrdtIdRepoNode extends RepoNode {
     }
     redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         if (ops.length === 0) throw new Error();
-        const target = this.page.getOpTarget(ops[0].op.path);
+        const op0 = ops[0].op;
+        const target = this.page.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         if (!target) {
             if (!receiver) this.popLocal(ops);
             return;
@@ -138,7 +141,8 @@ export class CrdtIdRepoNode extends RepoNode {
         const ops = this.ops.concat(...this.localops);
         if (ops.length === 0) return;
 
-        const target = this.page.getOpTarget(ops[0].op.path);
+        const op0 = ops[0].op;
+        const target = this.page.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         if (!target) return;
 
         // let baseIdx = ops.findIndex((op) => op.cmd.version > baseVer);
