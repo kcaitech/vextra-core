@@ -15,7 +15,7 @@ function renderStop(h: Function, d: Stop): any {
     return n;
 }
 
-export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:string, style:string|undefined, node:any} {
+export function render(h: Function, value: Gradient, frame: ShapeFrame): { id: string, style: string | undefined, node: any } {
     const id = "gradient" + objectId(value);
     let style;
     let node: any;
@@ -41,8 +41,8 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
             const s = value.stops[i];
             childs.push(renderStop(h, s));
         }
-        const scaleX = frame.width > frame.height ? frame.height / frame.width : 1.0;
-        const scaleY = frame.width < frame.height ? frame.width / frame.height : 1.0;
+        const scaleX = 1;
+        const scaleY = 1;
         node = h("radialGradient", {
             id,
             cx: value.from.x,
@@ -52,8 +52,8 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
             fy: value.from.y,
             gradientTransform: "translate(" + value.from.x + "," + value.from.y + ")," +
                 // "scale(0.955224, 1.0)," + // todo
-                "rotate(" + Math.atan((value.to.y - value.from.y) / (value.to.x - value.from.x)) / Math.PI * 180 + ")," +
-                "scale(" + scaleX + " " + scaleY +")," +
+                "rotate(" + Math.atan2((value.to.y - value.from.y), (value.to.x - value.from.x)) / Math.PI * 180 + ")," +
+                "scale(" + scaleX + " " + scaleY + ")," +
                 "translate(" + (-value.from.x) + "," + (-value.from.y) + ")",
         },
             childs);
@@ -102,11 +102,11 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
             "background: conic-gradient(" + gradient + ");" +
             "height:-webkit-fill-available;" +
             "width:-webkit-fill-available;"
-            // "transform: rotate(90deg);" +
-            // "transform-origin: left top;" +
-            // "rotation:90deg" +
-            // "rotation-point:0% 0%;" +
-            // "}"));
+        // "transform: rotate(90deg);" +
+        // "transform-origin: left top;" +
+        // "rotation:90deg" +
+        // "rotation-point:0% 0%;" +
+        // "}"));
     }
-    return {id, style, node};
+    return { id, style, node };
 }
