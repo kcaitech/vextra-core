@@ -1697,7 +1697,7 @@ export class PageEditor {
                     }
                     if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
                         const frame = target.frame;
-                        new_gradient.elipseLength = ((frame.width / 2) / (frame.height / 2));
+                        new_gradient.elipseLength = 1;
                     } else if (value === GradientType.Angular && new_gradient.elipseLength === undefined) {
                         new_gradient.elipseLength = 1;
                     }
@@ -1710,10 +1710,10 @@ export class PageEditor {
                     stops.push(new Stop(0, new Color(alpha, red, green, blue), uuid()), new Stop(1, new Color(0, red, green, blue), uuid()))
                     const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
                     const to = { x: 0.5, y: 1 };
-                    let elipseLength = 0;
+                    let elipseLength = undefined;
                     if (value === GradientType.Radial) {
                         const frame = target.frame;
-                        elipseLength = ((frame.width / 2) / (frame.height / 2));
+                        elipseLength = 1;
                     } else if (value === GradientType.Angular) {
                         elipseLength = 1;
                     }
