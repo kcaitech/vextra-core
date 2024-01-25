@@ -82,7 +82,12 @@ export class CrdtIdRepoNode extends RepoNode {
             const op = ops[i];
             const op2 = this.localops.pop();
             // check
-            if (op.cmd !== op2?.cmd) throw new Error("op not match");
+            if (op.cmd !== op2?.cmd) {
+                console.log("ops", ops);
+                console.log("op2", op2, i);
+                console.log("localops", this.localops);
+                throw new Error("op not match");
+            }
         }
     }
     dropOps(ops: OpItem[]): void {
@@ -119,11 +124,34 @@ export class CrdtIdRepoNode extends RepoNode {
         const op0 = ops[0].op;
         const target = this.page.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         if (!target) {
-            if (!receiver) this.popLocal(ops);
+            // wrong?
+            console.log("idset wrong?")
+            if (!receiver) this.commit(ops.map(item => {
+                const op = item.op as IdSetOpRecord;
+                const cmd = item.cmd;
+                const idx = cmd.ops.indexOf(op);
+                if (idx < 0) throw new Error();
+                const revert = {
+                    data: op.origin,
+                    id: op.id,
+                    type: op.type,
+                    path: op.path,
+                    order: op.order,
+                    origin: op.data
+                }
+                cmd.ops.splice(idx, 1, revert);
+                return { cmd, op: revert }
+            }));
             return;
         }
         const op = ops[ops.length - 1].op as IdSetOpRecord;
-        const record = apply(target, op, needUpdateFrame);
+        const record = apply(target, {
+            data: op.origin,
+            id: op.id,
+            type: op.type,
+            path: op.path,
+            order: op.order
+        }, needUpdateFrame);
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);

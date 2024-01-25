@@ -36,7 +36,8 @@ function classifyOps(cmds: Cmd[]) {
             arr.push({ op, cmd });
         }
     }
-    return subrepos;
+    // sort: 按路径长度从短的开始，即从对象树的根往下更新
+    return Array.from(subrepos.entries()).sort((a, b) => a[0].length - b[0].length);
 }
 
 // 一个page一个curversion，不可见page，cmd仅暂存
@@ -104,18 +105,19 @@ export class CmdRepo {
         // 处理远程过来的cmds
         // 可能的情况是，本地有cmd, 需要做变换
         // 1. 分类op
+
         const subrepos = classifyOps(cmds);
-        for (let [k, v] of subrepos.entries()) {
+        for (let [k, v] of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
             let repotree = this.getRepoTree(blockId);
             const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
             // apply op
-            let nuf = needUpdateFrame.get(k);
+            let nuf = needUpdateFrame.get(blockId);
             if (!nuf) {
                 nuf = [];
-                needUpdateFrame.set(k, nuf);
+                needUpdateFrame.set(blockId, nuf);
             }
             node.receive(v, nuf);
         }
@@ -125,7 +127,7 @@ export class CmdRepo {
         // 处理本地提交后返回的cmds
         // 1. 分类op
         const subrepos = classifyOps(cmds);
-        for (let [k, v] of subrepos.entries()) {
+        for (let [k, v] of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
@@ -192,12 +194,11 @@ export class CmdRepo {
     }
 
     private _commit(cmd: LocalCmd) { // 不需要应用的
-        // todo check merge?
         this.nopostcmds.push(cmd); // 本地cmd也要应用到nodetree
         // 处理本地提交后返回的cmds
         // 1. 分类op
         const subrepos = classifyOps([cmd]);
-        for (let [k, v] of subrepos.entries()) {
+        for (let [k, v] of subrepos) {
             // check
             if (v.length > 1) {
                 console.warn("op can merge?? ", v)
@@ -216,11 +217,7 @@ export class CmdRepo {
     }
 
     private _commit2(cmd: LocalCmd) { // 不需要应用的
-        // todo check merge?
-        this.nopostcmds.push(cmd); // 本地cmd也要应用到nodetree
-        // 处理本地提交后返回的cmds
-
-        // need process
+        this.nopostcmds.push(cmd);
         this.processCmds();
     }
 
@@ -231,7 +228,7 @@ export class CmdRepo {
         if (this.localcmds.length > this.localindex) {
             const droped = this.localcmds.splice(this.localindex);
             const subrepos = classifyOps(droped);
-            for (let [k, v] of subrepos.entries()) {
+            for (let [k, v] of subrepos) {
                 // 建立repotree
                 const op0 = v[0].op;
                 const blockId = op0.path[0];
@@ -254,7 +251,7 @@ export class CmdRepo {
             //     }
             // }
         }
-
+        console.log("commit localcmd: ", cmd);
         this.localcmds.push(cmd);
         ++this.localindex;
 
@@ -356,11 +353,7 @@ export class CmdRepo {
         }
     }
 
-    // ================ undo redo ==================================
-
-    // 可由transact 直接undo的cmd数量
-    // 一旦有远程命令过来，只能走undo op
-    canUndo() { // todo 这个判断不对。没提交的是可以直接undo掉。但这个undo要判断是不是可以走transact，
+    canUndo() {
         return this.localindex > 0;
     }
     canRedo() {
@@ -388,7 +381,7 @@ export class CmdRepo {
 
         const needUpdateFrame: Map<string, Shape[]> = new Map();
         const subrepos = classifyOps([cmd]);
-        for (let [k, v] of subrepos.entries()) {
+        for (let [k, v] of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
@@ -396,10 +389,10 @@ export class CmdRepo {
             const node = repotree && repotree.get(op0.path);
             if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
             // apply op
-            let nuf = needUpdateFrame.get(k);
+            let nuf = needUpdateFrame.get(blockId);
             if (!nuf) {
                 nuf = [];
-                needUpdateFrame.set(k, nuf);
+                needUpdateFrame.set(blockId, nuf);
             }
             node.undo(v, nuf, newCmd);
         }
@@ -418,6 +411,7 @@ export class CmdRepo {
         }
 
         --this.localindex;
+        console.log("undo", cmd);
     }
     redo() {
         if (!this.canRedo()) return;
@@ -440,8 +434,8 @@ export class CmdRepo {
         } : undefined;
 
         const needUpdateFrame: Map<string, Shape[]> = new Map();
-        const subrepos = classifyOps([cmd]);
-        for (let [k, v] of subrepos.entries()) {
+        const subrepos = classifyOps([cmd]); // 这个得有顺序
+        for (let [k, v] of subrepos) {
             // 建立repotree
             const op0 = v[0].op;
             const blockId = op0.path[0];
@@ -449,10 +443,10 @@ export class CmdRepo {
             const node = repotree && repotree.get(op0.path);
             if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
             // apply op
-            let nuf = needUpdateFrame.get(k);
+            let nuf = needUpdateFrame.get(blockId);
             if (!nuf) {
                 nuf = [];
-                needUpdateFrame.set(k, nuf);
+                needUpdateFrame.set(blockId, nuf);
             }
             node.redo(v, nuf, newCmd);
         }
@@ -471,7 +465,7 @@ export class CmdRepo {
         }
 
         ++this.localindex;
-
+        console.log("undo", cmd);
         // todo 选区
         // todo restore selection
         // shape 记录id即可

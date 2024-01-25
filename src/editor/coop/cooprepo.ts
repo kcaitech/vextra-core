@@ -31,7 +31,6 @@ export class CoopRepository {
 
     constructor(document: Document, repo: Repository, net: ICoopNet = new MockNet(), cmds: Cmd[] = [], localcmds: LocalCmd[] = []) {
         this.__repo = repo;
-        // repo.transactCtx.settrap = true; // todo
         this.__api = Api.create(repo);
         this.__cmdrepo = new CmdRepo(document, cmds, localcmds, net)
 
