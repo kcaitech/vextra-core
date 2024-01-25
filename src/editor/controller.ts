@@ -701,7 +701,6 @@ export class Controller {
         let origin_envs = new Map<string, { shape: ShapeView, index: number }[]>(); // 记录图层的原环境
         let except_envs: ShapeView[] = [];
         let current_env_id: string = '';
-        let shapes_set: Set<string> = new Set();
 
         const api = this.__repo.start("transfer", {});
         let status: Status = Status.Pending;
