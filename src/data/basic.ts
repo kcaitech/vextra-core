@@ -141,11 +141,16 @@ export class ResourceMgr<T> extends WatchableObject {
         resolves: ((v: T | undefined) => void)[],
         rejects: ((e?: any) => void)[]
     }> = new Map();
+    private __crdtpath: string[];
 
-    constructor(guard?: IDataGuard) {
+    constructor(crdtpath: string[], guard?: IDataGuard) {
         super();
         // this.__loader = loader;
         this.__guard = guard;
+        this.__crdtpath = crdtpath;
+    }
+    getCrdtPath(): string[] {
+        return this.__crdtpath;
     }
     get size() {
         return this.__resource.size;
