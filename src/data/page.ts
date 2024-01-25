@@ -46,16 +46,11 @@ export class Page extends GroupShape implements classes.Page {
     }
 
     getOpTarget(path: string[]): any {
-        if (path.length > 0) {
-            const shapeId = path[0] as string;
-            const shape = this.getShape(shapeId);
-            if (!shape) {
-                console.log("shape not find", shapeId)
-                return;
-            }
-            return shape.getOpTarget(path.slice(1));
-        }
-        return this;
+        if (path.length === 0) return this;
+        const path0 = path[0];
+        const shape = this.getShape(path0);
+        if (shape) return shape.getOpTarget(path.slice(1));
+        return super.getOpTarget(path);
     }
 
     onAddShape(shape: Shape, recursive: boolean = true) {
