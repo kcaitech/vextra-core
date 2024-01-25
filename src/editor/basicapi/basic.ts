@@ -1,4 +1,4 @@
-import { Basic, BasicArray, BasicMap } from "../../data/basic";
+import { Basic, BasicArray, BasicMap, ResourceMgr } from "../../data/basic";
 import { ArrayMoveOpRecord, CrdtItem, IdOpRecord, TreeMoveOpRecord, crdtGetArrIndex } from "../../coop/client/crdt";
 import { GroupShape, Shape, Variable } from "../../data/shape";
 import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
@@ -75,6 +75,9 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
         origin = obj.get(key);
         if (value) obj.set(key, value);
         else obj.delete(key);
+    } else if (obj instanceof ResourceMgr) {
+        origin = obj.getSync(key);
+        if (value) obj.add(key, value);
     } else {
         origin = (obj as any)[key];
         (obj as any)[key] = value;
@@ -170,7 +173,6 @@ export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: 
     // check index
     if (index < 0 || index > arr.length) throw new Error("index out of range");
     const newidx = crdtGetArrIndex(arr, index);
-    const oldidx = item.crdtidx;
     item.crdtidx = newidx;
     arr.splice(index, 0, item);
     return {
@@ -179,7 +181,7 @@ export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: 
         path: arr.getCrdtPath(),
         order: Number.MAX_SAFE_INTEGER,
         data: item,
-        from: oldidx,
+        from: undefined,
         to: newidx
     }
 }

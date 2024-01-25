@@ -4,6 +4,7 @@ import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, crdtArrayMove, undoArrayMove 
 import { Shape } from "../../data/shape";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
+import { Document } from "../../data/document";
 
 function apply(target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord {
     return crdtArrayMove(target, op);
@@ -17,9 +18,9 @@ function unapply(target: Array<CrdtItem>, op: ArrayMoveOpRecord): ArrayMoveOpRec
 // 不需要变换及执行顺序可交换
 // 但为了版本可以前进后退，需要undo-do-redo
 export class CrdtArrayReopNode extends RepoNode {
-    private page: Page;
+    private page: Page | Document;
 
-    constructor(page: Page) {
+    constructor(page: Page | Document) {
         super(OpType.CrdtArr);
         this.page = page;
     }

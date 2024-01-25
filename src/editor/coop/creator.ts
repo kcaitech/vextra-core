@@ -7,9 +7,22 @@ import { TextRepoNode } from "./textnode";
 
 export function nodecreator(document: Document) {
     return (op: Op) => {
-        const pageId = op.path[0];
-        const page = document.pagesMgr.getSync(pageId);
-        if (!page) throw new Error("page not valid: " + pageId);
+        const path0 = op.path[0];
+        if (path0 === document.id) {
+            switch (op.type) {
+                case OpType.CrdtArr:
+                    return new CrdtArrayReopNode(document);
+                case OpType.Idset:
+                    return new CrdtIdRepoNode(document);
+                case OpType.Array:
+                case OpType.CrdtTree:
+                case OpType.None:
+                    throw new Error("op wrong?");
+            }
+        }
+
+        const page = document.pagesMgr.getSync(path0);
+        if (!page) throw new Error("page not valid: " + op.path.join(','));
         switch (op.type) {
             case OpType.Array:
                 // text

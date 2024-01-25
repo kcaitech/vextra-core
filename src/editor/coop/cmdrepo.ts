@@ -465,7 +465,7 @@ export class CmdRepo {
         }
 
         ++this.localindex;
-        console.log("undo", cmd);
+        console.log("redo", cmd);
         // todo 选区
         // todo restore selection
         // shape 记录id即可

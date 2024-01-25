@@ -1,10 +1,11 @@
 import { Page } from "../../data/page";
 import { OpType } from "../../coop/common/op";
-import { Basic } from "../../data/basic";
+import { Basic, ResourceMgr } from "../../data/basic";
 import { Shape } from "../../data/shape";
 import { IdSetOp, IdSetOpRecord } from "../../coop/client/crdt";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
+import { Document } from "../../data/document";
 
 function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]): IdSetOpRecord {
     let value = op.data;
@@ -14,8 +15,18 @@ function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]): IdSetOpRe
         // throw new Error("not implemented")
     }
     if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + op.data.typeId);
-    const origin = (target as any)[op.id];
-    (target as any)[op.id] = value;
+    let origin;
+    if (target instanceof Map) {
+        origin = target.get(op.id);
+        if (value) target.set(op.id, value);
+        else target.delete(op.id);
+    } else if (target instanceof ResourceMgr) {
+        origin = target.getSync(op.id);
+        if (value) target.add(op.id, value);
+    } else {
+        origin = (target as any)[op.id];
+        (target as any)[op.id] = value;
+    }
     return {
         data: value,
         id: op.id, // 这个跟随cmd id 的？
@@ -29,10 +40,10 @@ function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]): IdSetOpRe
 // todo import, updateframe
 
 export class CrdtIdRepoNode extends RepoNode {
-    private page: Page;
+    private page: Page | Document;
     private savedOrigin: boolean = false;
     private origin: any; // baseVer的状态
-    constructor(page: Page) {
+    constructor(page: Page | Document) {
         super(OpType.Idset);
         this.page = page;
     }
