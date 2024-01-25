@@ -126,8 +126,8 @@ export class TextRepoNode extends RepoNode {
 
     private page: Page;
 
-    // 需要参与变换
-    popedOps: OpItem[] = [];
+    // undo时缓存的本地未上传的op
+    popedOps: { cmd: Cmd, ops: ArrayOp[], otpath: OpItem[], refIdx: number }[] = [];
 
     constructor(page: Page) {
         super(OpType.Array);
@@ -135,23 +135,24 @@ export class TextRepoNode extends RepoNode {
     }
 
     // 与ops变换
-    private otReceive(ops: OpItem[]) {
+    private _otreceive(ops: OpItem[]) {
         // 相同版本的进行分段
-        const segs: OpItem[][] = [];
+        const segs: OpItem[][] = []; // 一个批次一个批次的变换
         for (let i = 0; i < ops.length;) {
             const s: OpItem[] = [];
             segs.push(s);
-            const ver = ops[i].cmd.baseVer;
+            const ver = ops[i].cmd.batchNum;
             s.push(ops[i]);
             ++i;
             for (; i < ops.length; ++i) {
-                if (ops[i].cmd.baseVer !== ver) break;
+                if (ops[i].cmd.batchNum !== ver) break;
                 s.push(ops[i]);
             }
         }
+
         for (let i = 0; i < segs.length; ++i) {
             const s = segs[i];
-            const baseVer = s[0].cmd.baseVer;
+            const baseVer = s[0].cmd.baseVer; // 同一批次的baseVer是一样的
             const index = this.ops.findIndex((item) => item.cmd.version > baseVer);
             if (index < 0) continue;
             const lhs = this.ops.slice(index).map((item) => item.op as ArrayOp);
@@ -160,7 +161,14 @@ export class TextRepoNode extends RepoNode {
             // replace op
             const _rhs = trans.rhs;
             for (let j = 0; j < _rhs.length; j++) {
-                s[j].op = _rhs[j];
+                const originop = s[j].op;
+                const cmd = s[j].cmd;
+                const op = _rhs[j];
+                s[j].op = op;
+                this.ops.push({ cmd, op });
+                const idx = cmd.ops.indexOf(originop);
+                if (idx < 0) throw new Error();
+                cmd.ops.splice(idx, 1, op);
             }
         }
     }
@@ -170,7 +178,7 @@ export class TextRepoNode extends RepoNode {
         if (ops.length === 0) return;
 
         // 服务端过来的先进行本地变换
-        this.otReceive(ops);
+        this._otreceive(ops);
 
         const target = this.page.getOpTarget(ops[0].op.path);
         // undo-do-redo
@@ -192,11 +200,10 @@ export class TextRepoNode extends RepoNode {
                 op.cmd.ops.splice(idx, 1, record);
             }
         }
-        this.ops.push(...ops);
 
         // transform local
         const remote = ops.map(op => op.op as ArrayOp);
-        const local = this.localops.concat(this.popedOps).map(op => op.op as ArrayOp);
+        const local = this.localops.map(op => op.op as ArrayOp);
         const { lhs, rhs } = transform(remote, local);
         // replace local
         for (let i = 0; i < this.localops.length; i++) {
@@ -204,15 +211,6 @@ export class TextRepoNode extends RepoNode {
             const cmd = item.cmd;
             const origin = item.op;
             item.op = rhs[i];
-            const index = cmd.ops.indexOf(origin);
-            cmd.ops.splice(index, 1, item.op); // replace
-        }
-        // replace poped
-        for (let i = 0; i < this.popedOps.length; i++) {
-            const item = this.popedOps[i];
-            const cmd = item.cmd;
-            const origin = item.op;
-            item.op = rhs[i + this.localops.length];
             const index = cmd.ops.indexOf(origin);
             cmd.ops.splice(index, 1, item.op); // replace
         }
@@ -245,34 +243,34 @@ export class TextRepoNode extends RepoNode {
     commit(ops: OpItem[]) {
         this.localops.push(...ops);
     }
-    popLocal(ops: OpItem[]) { // todo 这些也是要参与变换的，在redo的时候才不会错
+    _popLocal(ops: OpItem[]) { // todo 这些也是要参与变换的，在redo的时候才不会错
         // check
         if (this.localops.length < ops.length) throw new Error();
+        const cmd = ops[0].cmd;
+        const item: { cmd: Cmd, ops: ArrayOp[], otpath: OpItem[], refIdx: number } = { cmd, ops: [], otpath: [], refIdx: this.ops.length - 1 }
         for (let i = ops.length - 1; i >= 0; i--) {
             const op = ops[i];
             const op2 = this.localops.pop();
             // check
             if (op.cmd !== op2?.cmd) throw new Error("op not match");
-            this.popedOps.push(op2);
+            item.ops.unshift(op2.op as ArrayOp);
         }
+        item.otpath = this.localops.slice(0);
+        this.popedOps.push(item);
     }
     dropOps(ops: OpItem[]): void {
+        // 这里的ops也有可能是新的需要上传的ops
         // 将undoops丢掉
-        if (this.popedOps.length !== ops.length) throw new Error();
-        for (let i = ops.length - 1; i >= 0; i--) {
-            const op = ops[i];
-            const op2 = this.popedOps.pop();
-            // check
-            if (op.cmd !== op2?.cmd) throw new Error("op not match");
-        }
+        this.popedOps.length = 0;
     }
 
-    _undo(ops: OpItem[]) {
+    undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) { // 自己popLocal & 自己commit ?
         if (ops.length === 0) throw new Error();
         // check 一次只有一个cmd
         for (let i = 1; i < ops.length; i++) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
         }
+        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
 
         const curops: OpItem[] = this.ops.concat(...this.localops);
         if (curops.length === 0) throw new Error();
@@ -290,7 +288,7 @@ export class TextRepoNode extends RepoNode {
         }
         // revert
         let revertops = ops.map(revert).reverse().reduce((res, op) => {
-            if (Array.isArray(op)) res.push(...op);
+            if (Array.isArray(op)) res.push(...op.slice(0).reverse());
             else res.push(op);
             return res;
         }, [] as ArrayOp[]);
@@ -300,51 +298,103 @@ export class TextRepoNode extends RepoNode {
             revertops = rhs;
         }
         const record = text ? revertops.map((op) => apply(text, op) || op) : revertops;
-        return record;
-    }
-
-    undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) { // 自己popLocal & 自己commit ?
-        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
-        const record = this._undo(ops);
         // update to ops
         if (receiver) {
+            // todo transform popedops
             receiver.ops.push(...record);
             this.commit(record.map(op => ({ cmd: receiver, op })))
         } else {
-            this.popLocal(ops);
+            // todo 需要记录ot path
+            this._popLocal(ops);
             // replace op
-            for (let i = 0; i < ops.length; i++) {
-                const op = ops[i];
-                const saveop = saveops![i];
-                const idx = op.cmd.ops.indexOf(saveop);
-                if (idx < 0) throw new Error();
-                op.cmd.ops.splice(idx, 1);
-            }
-            ops[0].cmd.ops.push(...record);
+            // for (let i = 0; i < ops.length; i++) {
+            //     const op = ops[i];
+            //     const saveop = saveops![i];
+            //     const idx = op.cmd.ops.indexOf(saveop);
+            //     if (idx < 0) throw new Error();
+            //     op.cmd.ops.splice(idx, 1);
+            // }
+            // ops[0].cmd.ops.push(...record);
         }
     }
     redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
 
-        ops.reverse();
-        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
+        // 两种情况
+        // 1. undo时新提交的ops，则直接变换后undo，
+        // 2. undo时pop出去的ops，根据otpath进行变换后应用
 
-        const record = this._undo(ops);
-        // update to ops
-        if (receiver) {
-            receiver.ops.push(...record);
-            this.commit(record.map(op => ({ cmd: receiver, op })))
-        } else {
-            // replace op
-            for (let i = 0; i < ops.length; i++) {
-                const op = ops[i];
-                const saveop = saveops![i];
-                const idx = op.cmd.ops.indexOf(saveop);
-                if (idx < 0) throw new Error();
-                op.cmd.ops.splice(idx, 1);
-            }
-            ops[0].cmd.ops.push(...record);
-            this.commit(record.map(op => ({ cmd: ops[0].cmd, op })))
+        // 情况1 ops在localops中 或者 cmd 已经提交
+        if (receiver || this.localops.length > 0 && ops[0].cmd === this.localops[this.localops.length - 1].cmd) {
+            return this.undo(ops, needUpdateFrame, receiver);
         }
+
+        if (ops.length === 0) throw new Error();
+        // check 一次只有一个cmd
+        for (let i = 1; i < ops.length; i++) {
+            if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
+        }
+
+        // 情况2 ops在popedOps中
+        // 需要根据otpath进行变换
+        if (this.popedOps.length === 0) throw new Error();
+        const cmd = ops[0].cmd;
+        const item = this.popedOps.find((v) => v.cmd === cmd);
+        if (!item) throw new Error("not find ops");
+
+        // ops.reverse();
+        const saveops = ops.map(op => op.op as ArrayOp);
+
+        // let revertops = ops.map(revert).reduce((res, op) => {
+        //     if (Array.isArray(op)) res.push(...op.slice(0).reverse());
+        //     else res.push(op);
+        //     return res;
+        // }, [] as ArrayOp[]);
+
+        // 开始变换
+        const curops: OpItem[] = this.ops.slice(item.refIdx + 1).concat(...this.localops);
+        const otpath = item.otpath;
+        let lhs = otpath.map(item => item.op as ArrayOp).concat(...saveops);
+        for (let i = 0; i < otpath.length; i++) {
+            const c = otpath[i].cmd;
+            const idx = curops.findIndex((v) => v.cmd === c);
+            if (idx < 0) throw new Error();
+
+            const rhs = curops.slice(0, idx).map((v) => v.op as ArrayOp);
+            const t = transform(lhs, rhs);
+
+            let count = 1;
+            for (; i < otpath.length - 1 && otpath[i + 1].cmd === c;) {
+                if (curops[idx + count].cmd !== c) throw new Error();
+                ++count;
+                ++i;
+            }
+
+            curops.splice(0, idx + count);
+
+            lhs = t.lhs;
+            lhs.splice(0, count);
+        }
+        // 还要变换一次
+        if (curops.length > 0) {
+            const t = transform(lhs, curops.map((v) => v.op as ArrayOp));
+            lhs = t.lhs;
+        }
+
+        if (lhs.length !== ops.length) throw new Error();
+        const text: Text = this.page.getOpTarget(ops[0].op.path); // todo text 是string的情况？
+        const record = text ? lhs.map((op) => apply(text, op) || op) : lhs;
+        // update to ops
+
+        // replace op
+        for (let i = 0; i < ops.length; i++) {
+            const op = ops[i];
+            const saveop = saveops![i];
+            const idx = op.cmd.ops.indexOf(saveop);
+            if (idx < 0) throw new Error();
+            op.cmd.ops.splice(idx, 1);
+        }
+        ops[0].cmd.ops.push(...record);
+        this.commit(record.map(op => ({ cmd: ops[0].cmd, op })))
     }
     roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]) {
         if (baseVer > version) throw new Error();

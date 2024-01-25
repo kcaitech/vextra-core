@@ -9,12 +9,13 @@ import { Cmd, OpItem } from "../../coop/common/repo";
 
 function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
 
-    if (op.data) { // todo 不管是不是shape都重新生成个新的？// 这有个问题，如果id没变，上层的监听一直在旧shape上
+    // todo
+    if (op.data && !(op.data instanceof Shape)) { // todo 不管是不是shape都重新生成个新的？// 这有个问题，如果id没变，上层的监听一直在旧shape上
         op.data = importShape(op.data, document);
     }
 
     let shape = page.getShape(op.id);
-    if (shape && shape.parent) { // 旧
+    if (shape && shape.parent) { // 旧?
         needUpdateFrame.push(shape.parent);
     }
 

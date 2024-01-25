@@ -239,6 +239,7 @@ export class CmdRepo {
             }
         } else {
             // todo check merge
+            // 要此cmd前没有插入其他用户的cmd
             // 文本输入
             // 键盘移动
             // 
@@ -371,6 +372,7 @@ export class CmdRepo {
             delay: 500,
             version: Number.MAX_SAFE_INTEGER,
             baseVer: 0,
+            batchNum: 0,
             ops: [],
             isUndo: true,
             blockId: cmd.blockId,
@@ -424,6 +426,7 @@ export class CmdRepo {
             mergetype: cmd.mergetype,
             delay: 500,
             version: Number.MAX_SAFE_INTEGER,
+            batchNum: 0,
             baseVer: 0,
             ops: [],
             isUndo: true,
@@ -462,6 +465,8 @@ export class CmdRepo {
             // need commit new command
             this._commit2(newCmd!)
             this.localcmds.splice(this.localindex, 1, newCmd!);
+        } else {
+            this._commit2(cmd);
         }
 
         ++this.localindex;
