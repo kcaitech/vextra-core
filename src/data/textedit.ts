@@ -318,6 +318,7 @@ export function formatText(shapetext: Text, index: number, length: number, key: 
     const ret: { index: number, len: number, value: any }[] = [];
     let offset = index;
     _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
+        offset -= index;
         ret.push(..._formatTextSpan(para.spans, index, length, key, value, offset));
         offset += para.length;
     })
@@ -328,6 +329,7 @@ export function formatPara(shapetext: Text, index: number, length: number, key: 
     const ret: { index: number, len: number, value: any }[] = [];
     let offset = index;
     _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
+        offset -= index;
         const end = Math.min(para.length, index + length);
         ret.push({ index: index + offset, len: end - index, value: (para.attr ? (para.attr as any)[key] : undefined) });
         if (!para.attr) para.attr = new ParaAttr();
