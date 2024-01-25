@@ -1,6 +1,6 @@
 import { Style } from "./style";
 import * as classes from "./baseclasses"
-import { BasicArray, ResourceMgr } from "./basic";
+import { BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
 import { Shape, Variable } from "./shape";
 import { Path } from "./path";
@@ -9,14 +9,13 @@ import { TextLayout } from "./textlayout";
 import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
-import { CrdtNumber, CrdtIndex, CrdtPoint } from "./crdt";
+import { CrdtNumber, CrdtIndex } from "./crdt";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
 export class TableCell extends Shape implements classes.TableCell {
 
     typeId = 'table-cell'
-    crdtpoint: CrdtPoint
     cellType?: TableCellType
     text?: Text
     imageRef?: string
@@ -31,8 +30,7 @@ export class TableCell extends Shape implements classes.TableCell {
         name: string,
         type: ShapeType,
         frame: ShapeFrame, // cell里的frame是无用的，真实的位置大小通过行高列宽计算
-        style: Style,
-        crdtpoint: CrdtPoint
+        style: Style
     ) {
         super(
             crdtidx,
@@ -42,7 +40,12 @@ export class TableCell extends Shape implements classes.TableCell {
             frame,
             style
         )
-        this.crdtpoint = crdtpoint
+    }
+
+    getCrdtPath(): string[] {
+        const cells = this.__parent;
+        if (!cells) throw new Error("cell not inside table?");
+        return cells.getCrdtPath().concat(this.id);
     }
 
     get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
@@ -200,14 +203,13 @@ export class TableShape extends Shape implements classes.TableShape {
     static MaxColCount = 50;
 
     typeId = 'table-shape'
-    childs: BasicArray<TableCell>
+    cells: BasicMap<string, TableCell>
     rowHeights: BasicArray<CrdtNumber>
     colWidths: BasicArray<CrdtNumber>
     textAttr?: TextAttr // 文本默认属性
 
     __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
     private __layout?: TableLayout;
-    private __cellIndexs: Map<string, number> = new Map();
     private __heightTotalWeights: number;
     private __widthTotalWeights: number;
 
@@ -218,7 +220,7 @@ export class TableShape extends Shape implements classes.TableShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<TableCell>,
+        cells: BasicMap<string, TableCell>,
         rowHeights: BasicArray<CrdtNumber>,
         colWidths: BasicArray<CrdtNumber>
     ) {
@@ -232,19 +234,22 @@ export class TableShape extends Shape implements classes.TableShape {
         )
         this.rowHeights = rowHeights
         this.colWidths = colWidths
-        this.childs = childs;
+        this.cells = cells;
         this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur.value, 0);
         this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur.value, 0);
     }
 
     getOpTarget(path: string[]): any {
-        // if (path.length > 0 && typeof path[0] !== 'string') {
-        //     const index = path[0];
-        //     const cell = this.getCellAt(index.rowIdx, index.colIdx, true);
-        //     if (!cell) throw new Error("table cell not find")
-        //     return cell.getOpTarget(path.slice(1))
-        // }
-        return this;
+        const path0 = path[0];
+        if (path0 === "cells" && path.length > 1) {
+            const cellId = path[1];
+            let cell = this.cells.get(cellId);
+            if (!cell) {
+                cell = this._initCell(cellId);
+            }
+            return cell.getOpTarget(path.slice(2));
+        }
+        return super.getOpTarget(path);
     }
 
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
@@ -259,7 +264,12 @@ export class TableShape extends Shape implements classes.TableShape {
      * @deprecated
      */
     get datas() {
-        return this.childs;
+        return this.cells;
+    }
+
+    updateTotalWeights() {
+        this.__heightTotalWeights = this.rowHeights.reduce((pre, cur) => pre + cur.value, 0);
+        this.__widthTotalWeights = this.colWidths.reduce((pre, cur) => pre + cur.value, 0);
     }
 
     get widthTotalWeights() {
@@ -372,7 +382,6 @@ export class TableShape extends Shape implements classes.TableShape {
         this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
         this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
         this.__layout = undefined;
-        this.__cellIndexs.clear();
     }
 
     locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
@@ -398,33 +407,21 @@ export class TableShape extends Shape implements classes.TableShape {
         }
     }
 
-    private getCellIndexs() {
-        if (this.__cellIndexs.size === 0) {
-            this.childs.forEach((c, i) => {
-                this.__cellIndexs.set(c.id, i);
-            })
-        }
-        return this.__cellIndexs;
-    }
-
     indexOfCell2(cell: TableCell): { rowIdx: number, colIdx: number } | undefined {
         // cell indexs
-        const cellIndexs = this.getCellIndexs();
-        const index = cellIndexs.get(cell.id) ?? -1;
-        if (index < 0) return;
-        const rowIdx = Math.floor(index / this.colCount);
-        const colIdx = index % this.colCount;
+        const ids = cell.id.split(',');
+        if (ids.length !== 2) throw new Error("cell index error");
+        const rowIdx = this.rowHeights.findIndex(v => v.id === ids[0]);
+        const colIdx = this.colWidths.findIndex(v => v.id === ids[1]);
+        if (rowIdx < 0 || colIdx < 0) return;
         return { rowIdx, colIdx }
     }
 
     indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
         // cell indexs
-        const cellIndexs = this.getCellIndexs();
-        const index = cellIndexs.get(cell.id) ?? -1;
-        if (index < 0) return;
-        const rowIdx = Math.floor(index / this.colCount);
-        const colIdx = index % this.colCount;
-
+        const cellIdx = this.indexOfCell2(cell);
+        if (!cellIdx) return;
+        const { rowIdx, colIdx } = cellIdx;
         const layout = this.getLayout();
         const item = layout.grid.get(rowIdx, colIdx);
         const visible = item.index.row === rowIdx && item.index.col === colIdx;
@@ -444,30 +441,28 @@ export class TableShape extends Shape implements classes.TableShape {
         return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
     }
 
+    _initCell(cellId: string) {
+        const cell = new TableCell(new CrdtIndex([], 0),
+            cellId,
+            "",
+            ShapeType.TableCell,
+            new ShapeFrame(0, 0, 0, 0),
+            new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+        this.cells.set(cellId, cell);
+        return cell;
+    }
+
     getCellAt(rowIdx: number, colIdx: number, initCell: boolean = false): (TableCell | undefined) {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
-        const index = rowIdx * this.colWidths.length + colIdx;
-        const cell = this.childs[index];
+        const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
+        let cell = this.cells.get(cellId);
         if (!cell && initCell) {
-            // return this.initCell(index);
-            // todo 待处理
-            throw new Error("not implemented")
+            cell = this._initCell(cellId);
         }
         return cell;
     }
-
-    // private initCell(index: number) {
-    //     this.datas[index] = newCell();
-    //     // add to index
-    //     const cell = this.datas[index];
-    //     // this.getCellIndexs().set(cell!.id, index);
-    //     if (this.__cellIndexs.size > 0) {
-    //         this.__cellIndexs.set(cell!.id, index)
-    //     }
-    //     return cell;
-    // }
 
     /**
      * 获取未被覆盖的单元格

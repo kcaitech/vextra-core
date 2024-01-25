@@ -2,9 +2,6 @@
     "description": "table cell",
     "type": "object",
     "properties": {
-        "crdtpoint": {
-            "$ref": "./crdt-point.json"
-        },
         "cellType": {
             "$ref": "./table-cell-type.json"
         },
@@ -24,9 +21,7 @@
             "default": 1
         }
     },
-    "required": [
-        "crdtpoint"
-    ],
+    "required": [],
     "allOf": [
         {
             "$ref": "./shape.json"

@@ -15,7 +15,7 @@ export type TableLayout = {
 export function layoutTable(table: TableShape): TableLayout {
     const frame = table.frame;
     const grid: Grid<TableGridItem> = new Grid<TableGridItem>(table.rowHeights.length, table.colWidths.length);
-    const cells = table.childs;
+    const cells = table.cells;
 
     const width = frame.width;
     const height = frame.height;
@@ -30,7 +30,8 @@ export function layoutTable(table: TableShape): TableLayout {
         const rowHeight = rowHeights[ri].value / rowHBase * height;
 
         for (let ci = 0, colLen = colWidths.length, colX = 0; ci < colLen; ++ci, ++celli) {
-            const cell = cells[celli];
+            const cellid = rowHeights[ri].id + ',' + colWidths[ci].id;
+            const cell = cells.get(cellid);
             const visible = !grid.get(ri, ci);
 
             const colWidth = colWidths[ci].value / colWBase * width;

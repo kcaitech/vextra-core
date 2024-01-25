@@ -559,14 +559,6 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
 export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): impl.CurveMode {
     return source
 }
-/* crdt table index */
-export function importCrdtPoint(source: types.CrdtPoint, ctx?: IImportContext): impl.CrdtPoint {
-    const ret: impl.CrdtPoint = new impl.CrdtPoint (
-        importCrdtIndex(source.x, ctx),
-        importCrdtIndex(source.y, ctx)
-    )
-    return ret
-}
 /* crdt number */
 export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext): impl.CrdtNumber {
     const ret: impl.CrdtNumber = new impl.CrdtNumber (
@@ -789,7 +781,8 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
 export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
     // inject code
     // 兼容旧数据
-    if ((source as any).datas) source.childs = (source as any).datas;
+    // todo
+    // if ((source as any).datas) source.childs = (source as any).datas;
     const ret: impl.TableShape = new impl.TableShape (
         importCrdtIndex(source.crdtidx, ctx),
         source.id,
@@ -798,11 +791,12 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<impl.TableCell>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = importTableCell(source.childs[i], ctx)
-                if (r) ret.push(r)
-            }
+            const ret = new BasicMap<string, impl.TableCell>()
+            const val = source.cells as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+            Object.keys(val).forEach((k) => {
+                const v = val[k];
+                ret.set(k, importTableCell(v, ctx))
+            });
             return ret
         })(),
         (() => {
@@ -859,8 +853,7 @@ export function importTableCell(source: types.TableCell, ctx?: IImportContext): 
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        importCrdtPoint(source.crdtpoint, ctx)
+        importStyle(source.style, ctx)
     )
     if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
     if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport

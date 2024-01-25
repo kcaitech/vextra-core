@@ -63,7 +63,8 @@ inject['TableShape'] = {};
 inject['TableShape']['before'] = `\
     // inject code
     // 兼容旧数据
-    if ((source as any).datas) source.childs = (source as any).datas;
+    // todo
+    // if ((source as any).datas) source.childs = (source as any).datas;
 `
 inject['TableShape']['after'] = `\
     // inject code

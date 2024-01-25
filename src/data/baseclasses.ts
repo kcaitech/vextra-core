@@ -609,22 +609,6 @@ export class CurvePoint extends Basic {
     }
 }
 /**
- * crdt table index 
- */
-export class CrdtPoint extends Basic {
-    typeId = 'crdt-point'
-    x: CrdtIndex
-    y: CrdtIndex
-    constructor(
-        x: CrdtIndex,
-        y: CrdtIndex
-    ) {
-        super()
-        this.x = x
-        this.y = y
-    }
-}
-/**
  * crdt number 
  */
 export class CrdtNumber extends Basic {
@@ -951,7 +935,7 @@ export class TextShape extends Shape {
  */
 export class TableShape extends Shape {
     typeId = 'table-shape'
-    childs: BasicArray<TableCell >
+    cells: BasicMap<string, TableCell>
     rowHeights: BasicArray<CrdtNumber >
     colWidths: BasicArray<CrdtNumber >
     textAttr?: TextAttr
@@ -962,7 +946,7 @@ export class TableShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<TableCell >,
+        cells: BasicMap<string, TableCell>,
         rowHeights: BasicArray<CrdtNumber >,
         colWidths: BasicArray<CrdtNumber >
     ) {
@@ -974,7 +958,7 @@ export class TableShape extends Shape {
             frame,
             style
         )
-        this.childs = childs
+        this.cells = cells
         this.rowHeights = rowHeights
         this.colWidths = colWidths
     }
@@ -984,7 +968,6 @@ export class TableShape extends Shape {
  */
 export class TableCell extends Shape {
     typeId = 'table-cell'
-    crdtpoint: CrdtPoint
     cellType?: TableCellType
     text?: Text
     imageRef?: string
@@ -996,8 +979,7 @@ export class TableCell extends Shape {
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
-        style: Style,
-        crdtpoint: CrdtPoint
+        style: Style
     ) {
         super(
             crdtidx,
@@ -1007,7 +989,6 @@ export class TableCell extends Shape {
             frame,
             style
         )
-        this.crdtpoint = crdtpoint
     }
 }
 /**

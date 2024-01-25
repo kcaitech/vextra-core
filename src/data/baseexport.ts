@@ -547,14 +547,6 @@ export function exportCurvePoint(source: types.CurvePoint, ctx?: IExportContext)
 export function exportCurveMode(source: types.CurveMode, ctx?: IExportContext): types.CurveMode {
     return source
 }
-/* crdt table index */
-export function exportCrdtPoint(source: types.CrdtPoint, ctx?: IExportContext): types.CrdtPoint {
-    const ret = {
-        x: exportCrdtIndex(source.x, ctx),
-        y: exportCrdtIndex(source.y, ctx),
-    }
-    return ret
-}
 /* crdt number */
 export function exportCrdtNumber(source: types.CrdtNumber, ctx?: IExportContext): types.CrdtNumber {
     const ret = {
@@ -808,13 +800,13 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
                 });
                 return ret;
             })(),
-        childs: (() => {
-            const ret = []
-            for (let i = 0, len = source.childs.length; i < len; i++) {
-                const r = exportTableCell(source.childs[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
+        cells: (() => {
+            const val = source.cells;
+            const ret: any = {};
+            val.forEach((v, k) => {
+                ret[k] = exportTableCell(v, ctx)
+            });
+            return ret;
         })(),
         rowHeights: (() => {
             const ret = []
@@ -869,7 +861,6 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
                 });
                 return ret;
             })(),
-        crdtpoint: exportCrdtPoint(source.crdtpoint, ctx),
         cellType: source.cellType && exportTableCellType(source.cellType, ctx),
         text: source.text && exportText(source.text, ctx),
         imageRef: source.imageRef,

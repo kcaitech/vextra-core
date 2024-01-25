@@ -31,8 +31,9 @@ function getTextFromGroupShape(shape: GroupShape | undefined): string {
         } else if (child instanceof GroupShape) {
             result += getTextFromGroupShape(child);
         } else if (child instanceof TableShape) {
-            result += (child.childs.filter(cell => !!cell) as BasicArray<(TableCell)>)
-                .reduce((previousValue, currentValue) => previousValue + currentValue.text?.toString() ?? "", "");
+            child.cells.forEach(cell => {
+                if (cell.text) result += cell.text.toString();
+            });
         } else if (child instanceof TextShape) {
             result += child.text.toString();
         }

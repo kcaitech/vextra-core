@@ -401,11 +401,6 @@ export enum CurveMode {
     Asymmetric = 'asymmetric',
     Disconnected = 'disconnected',
 }
-/* crdt table index */
-export type CrdtPoint = {
-    x: CrdtIndex
-    y: CrdtIndex
-}
 /* crdt number */
 export type CrdtNumber = {
     id: string
@@ -579,14 +574,13 @@ export type TextShape = Shape & {
 }
 /* table shape */
 export type TableShape = Shape & {
-    childs: TableCell[]
+    cells: Map<string, TableCell>
     rowHeights: CrdtNumber[]
     colWidths: CrdtNumber[]
     textAttr?: TextAttr
 }
 /* table cell */
 export type TableCell = Shape & {
-    crdtpoint: CrdtPoint
     cellType?: TableCellType
     text?: Text
     imageRef?: string

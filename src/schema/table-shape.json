@@ -2,9 +2,12 @@
     "description": "table shape",
     "type": "object",
     "properties": {
-        "childs": {
-            "type": "array",
-            "items": {
+        "cells": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
                 "$ref": "./table-cell.json"
             }
         },
@@ -25,7 +28,7 @@
         }
     },
     "required": [
-        "childs",
+        "cells",
         "rowHeights",
         "colWidths"
     ],
