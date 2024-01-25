@@ -32,7 +32,6 @@ import template_group_shape from "./template/group-shape.json";
 import templage_page from "./template/page.json";
 import template_artboard from "./template/artboard.json"
 import template_text_shape from "./template/text-shape.json"
-import template_table_shape from "./template/table-shape.json"
 import {
     Border,
     Color,
@@ -66,7 +65,7 @@ import { TableShape } from "../data/table";
 export { newText, newText2 } from "../data/textutils";
 import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
-import { ContactForm } from "../data/baseclasses";
+import { ContactForm, CrdtNumber } from "../data/baseclasses";
 import { Matrix } from "../basic/matrix";
 
 export function addCommonAttr(shape: Shape) {
@@ -334,20 +333,39 @@ export function newTable(name: string, frame: ShapeFrame, rowCount: number, colu
     buff: Uint8Array,
     base64: string
 }>): TableShape {
-    template_table_shape.id = uuid();
-    template_table_shape.name = name // i18n
-    template_table_shape.rowHeights.length = 0;
-    template_table_shape.colWidths.length = 0;
+    // template_table_shape.id = uuid();
+    // template_table_shape.name = name // i18n
+    // template_table_shape.rowHeights.length = 0;
+    // template_table_shape.colWidths.length = 0;
+
+    const table = new TableShape(
+        new CrdtIndex([], 0),
+        uuid(),
+        name,
+        types.ShapeType.Table,
+        frame,
+        newStyle(),
+        new BasicMap(),
+        new BasicArray(),
+        new BasicArray());// importTableShape(template_table_shape as types.TableShape);
     // 行高
     for (let ri = 0; ri < rowCount; ri++) {
-        template_table_shape.rowHeights.push(1 as never);
+        table.rowHeights.push(new CrdtNumber(uuid(), new CrdtIndex([ri], 0), 1));
     }
     // 列宽
     for (let ci = 0; ci < columCount; ci++) {
-        template_table_shape.colWidths.push(1 as never);
+        table.colWidths.push(new CrdtNumber(uuid(), new CrdtIndex([ci], 0), 1));
     }
-    const table = importTableShape(template_table_shape as types.TableShape);
+    table.updateTotalWeights();
     table.frame = frame;
+    table.style.borders.push(new Border(new CrdtIndex([0], 0),
+        uuid(),
+        true,
+        FillType.SolidColor,
+        new Color(0.5, 0, 0, 0),
+        types.BorderPosition.Center,
+        1,
+        new BorderStyle(0, 0)));
     addCommonAttr(table)
     const fillColor = new Color(1, 255, 255, 255);
     const fill = new Fill(new CrdtIndex([0], 0), uuid(), true, FillType.SolidColor, fillColor);
@@ -418,7 +436,7 @@ export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): 
 export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnionShape {
     const style = newflatStyle();
     const union = new SymbolUnionShape(
-        new CrdtIndex([], 0), 
+        new CrdtIndex([], 0),
         uuid(),
         name,
         types.ShapeType.SymbolUnion,
