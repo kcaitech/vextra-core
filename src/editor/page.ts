@@ -445,7 +445,7 @@ export class PageEditor {
             const frame = importShapeFrame((exportShapeFrame(shape0.frame)));
             if (shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius) {
                 const style = importStyle(exportStyle(shape0.style));
-                const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
+                const symbolShape = newSymbolShape(shape0.name, frame, style);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 sym = api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
                 const children = shape0.childs;

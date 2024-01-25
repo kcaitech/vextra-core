@@ -198,7 +198,12 @@ export class TableEditor extends ShapeEditor {
                 }
                 else if (c.cell.cellType === TableCellType.Text) {
                     if ((cell.cell?.cellType ?? TableCellType.None) === TableCellType.None) {
+                        // api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.Text);
+                        const _text = newText(this.shape.textAttr);
+                        _text.setTextBehaviour(TextBehaviour.Fixed);
+                        _text.setPadding(5, 0, 3, 0);
                         api.tableSetCellContentType(this.__page, this.shape, cell.rowIdx, cell.colIdx, TableCellType.Text);
+                        api.tableSetCellContentText(this.__page, this.shape, cell.rowIdx, cell.colIdx, _text);
                     }
                     if (cell.cell?.cellType === TableCellType.Text) {
                         if (c.cell.text) {
@@ -299,12 +304,37 @@ export class TableEditor extends ShapeEditor {
             this.__repo.rollback();
         }
     }
+    resetTextCells(rs: number, re: number, cs: number, ce: number) {
+        const api = this.__repo.start('resetCells', {});
+        try {
+            this._resetTextCells(rs, re, cs, ce, api);
+            this.__repo.commit();
+        } catch (error) {
+            console.error(error);
+            this.__repo.rollback();
+        }
+    }
 
     private _resetCells(rs: number, re: number, cs: number, ce: number, api: Api) {
         for (let r = rs; r <= re; r++) {
             for (let c = cs; c <= ce; c++) {
                 const cell = this.shape.getCellAt(r, c);
                 if (!cell) continue;
+                const _text = newText(this.shape.textAttr);
+                _text.setTextBehaviour(TextBehaviour.Fixed);
+                _text.setPadding(5, 0, 3, 0);
+                api.tableSetCellContentType(this.__page, this.shape, r, c, TableCellType.Text);
+                api.tableSetCellContentText(this.__page, this.shape, r, c, _text);
+                // api.tableSetCellContentImage(this.__page, this.shape, r, c, undefined);
+            }
+        }
+    }
+
+    private _resetTextCells(rs: number, re: number, cs: number, ce: number, api: Api) {
+        for (let r = rs; r <= re; r++) {
+            for (let c = cs; c <= ce; c++) {
+                const cell = this.shape.getCellAt(r, c);
+                if (!cell || cell.cellType === TableCellType.Image) continue;
                 const _text = newText(this.shape.textAttr);
                 _text.setTextBehaviour(TextBehaviour.Fixed);
                 _text.setPadding(5, 0, 3, 0);

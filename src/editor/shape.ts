@@ -34,7 +34,7 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, shape4shadow } from "./utils/symbol";
+import { _override_variable_for_symbolref, is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, shape4shadow } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
 import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
@@ -204,77 +204,7 @@ export class ShapeEditor {
      * @param api
      */
     modifyVariable2(_var: Variable, value: any, api: Api) {
-        const p = varParent(_var);
-        if (!p) {
-            console.log('!p');
-            return;
-        }
-
-        const vars = this.__shape.varsContainer;
-
-        if (!vars) {
-            if (this.__shape.isVirtualShape) {
-                throw new Error();
-            } else {
-                let sym: undefined | Shape = this.__shape;
-
-                while (sym && !(sym instanceof SymbolShape)) {
-                    sym = sym.parent;
-                }
-
-
-                if (this.__shape instanceof SymbolRefShape && p.id !== sym?.id) {
-                    this._overrideVariable(_var, value, api);
-                } else {
-                    api.shapeModifyVariable(this.__page, _var, value);
-                }
-            }
-            console.log('!vars');
-            return;
-        }
-
-        let first_symbolref_index = -1;
-        let p_index = -1;
-
-        for (let i = vars.length - 1; i > -1; i--) {
-            const item = vars[i];
-
-            if (item.type === ShapeType.SymbolRef) {
-                first_symbolref_index = i
-            }
-
-            if (item.id === p.id) {
-                p_index = i;
-            }
-        }
-
-        if (first_symbolref_index === -1) {
-            let sym: undefined | Shape = this.__shape;
-
-            while (sym && !(sym instanceof SymbolShape)) {
-                sym = sym.parent;
-            }
-
-            if (this.__shape instanceof SymbolRefShape && p.id !== sym?.id) {
-                this._overrideVariable(_var, value, api);
-            } else {
-                api.shapeModifyVariable(this.__page, _var, value);
-            }
-
-            return;
-        }
-
-        if (p_index === -1) {
-            this._overrideVariable(_var, value, api);
-            console.log('p_index === -1');
-            return;
-        }
-
-        if (first_symbolref_index < p_index) {
-            this._overrideVariable(_var, value, api);
-        } else {
-            api.shapeModifyVariable(this.__page, _var, value);
-        }
+        modify_variable(this.__page, this.__shape, _var, value, api);
     }
 
     /**
@@ -297,9 +227,19 @@ export class ShapeEditor {
      * @description 重置实例属性
      */
     resetSymbolRefVariable() {
-        const variables = (this.__shape as SymbolRefShape).variables;
-        const overrides = (this.__shape as SymbolRefShape).overrides;
-        const symData = (this.__shape as SymbolRefShape).symData;
+        let shape = this.__shape as SymbolRefShape;
+
+        let p: Shape | undefined = shape;
+        while (p) {
+            if (p instanceof SymbolRefShape) {
+                shape = p;
+            }
+            p = p.parent;
+        }
+
+        const variables = (shape as SymbolRefShape).variables;
+        const overrides = (shape as SymbolRefShape).overrides;
+        const symData = (shape as SymbolRefShape).symData;
         // const symParent = symData?.parent;
         // const root_data = (symParent instanceof SymbolUnionShape ? symParent : symData);
 
@@ -316,19 +256,19 @@ export class ShapeEditor {
                 overrides.forEach((v, k) => {
                     const variable = variables.get(v);
                     if (!variable) return;
-                    api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, k, variable.id, variable.type);
+                    api.shapeRemoveVirbindsEx(this.__page, shape as SymbolRefShape, k, variable.id, variable.type);
                 })
                 variables.forEach((_, k) => {
-                    api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
+                    api.shapeRemoveVariable(this.__page, shape as SymbolRefShape, k);
                 });
             } else {
                 variables.forEach((v, k) => {
                     if (v.type === VariableType.Status) return;
-                    api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
+                    api.shapeRemoveVariable(this.__page, shape as SymbolRefShape, k);
                 });
                 root_variables.forEach((v, k) => {
                     if (v.type === VariableType.Status || !overrides.has(k)) return;
-                    api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, k, v.id, v.type);
+                    api.shapeRemoveVirbindsEx(this.__page, shape as SymbolRefShape, k, v.id, v.type);
                 })
             }
             this.__repo.commit();
@@ -572,7 +512,7 @@ export class ShapeEditor {
         // 先查varbinds
         if (shape.varbinds && shape.varbinds.has(overrideType)) {
             const _vars: Variable[] = [];
-            const vars_path: Shape[] = [];
+            // const vars_path: Shape[] = shape.varsContainer;
             shape.findVar(shape.varbinds.get(overrideType)!, _vars);
             // if (_vars.length !== vars_path.length) throw new Error();
             const _var = _vars[_vars.length - 1];
@@ -580,6 +520,13 @@ export class ShapeEditor {
 
                 let p = varParent(_var);
                 if (!p) throw new Error();
+
+                // if (vars_path.length) {
+                //     const f = vars_path[0];
+                //     if (p instanceof SymbolRefShape && p.id !== f.id) {
+                //         return _override_variable_for_symbolref(this.__page, f as any, _var, _var.value, api);
+                //     }
+                // }
 
                 if (p.isVirtualShape || p instanceof SymbolShape) {
                     // override variable

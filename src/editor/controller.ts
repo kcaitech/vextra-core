@@ -631,8 +631,12 @@ export class Controller {
                     const s = shapes[i];
                     const p = s.parent;
                     if (!p) continue;
-                    if (!s.rotation) set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
-                    else if (s instanceof GroupShape && s.type === ShapeType.Group) adjust_group_rotate_frame(api, page, s, sx, sy);
+                    if (!s.rotation) {
+                        set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
+                    }
+                    else if (s instanceof GroupShape && s.type === ShapeType.Group) {
+                        adjust_group_rotate_frame(api, page, s, sx, sy);
+                    }
                     else if (s instanceof PathShape) {
                         adjust_pathshape_rotate_frame(api, page, s);
                         set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
@@ -1348,19 +1352,26 @@ function adjust_pathshape_rotate_frame(api: Api, page: Page, s: PathShape) {
     }
 }
 
-function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>, origin1: {
-    x: number,
-    y: number
-}, origin2: { x: number, y: number }, sx: number, sy: number) {
+function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>,
+    origin1: { x: number, y: number },
+    origin2: { x: number, y: number },
+    sx: number, sy: number) {
     const p = s.parent;
-    if (!p) return;
+    if (!p) {
+        return;
+    }
     const m = s.matrix2Root();
     const lt = m.computeCoord2(0, 0);
+
     const r_o_lt = { x: lt.x - origin1.x, y: lt.y - origin1.y };
     const target_xy = { x: origin2.x + sx * r_o_lt.x, y: origin2.y + sy * r_o_lt.y };
+
     let np = new Matrix();
+
     const ex = pMap.get(p.id);
-    if (ex) np = ex;
+    if (ex) {
+        np = ex;
+    }
     else {
         np = new Matrix(p.matrix2Root().inverse);
         pMap.set(p.id, np);
@@ -1376,9 +1387,13 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
     }
     const saveW = s.frame.width;
     const saveH = s.frame.height;
+
     if (s.isFlippedHorizontal || s.isFlippedVertical) {
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
-        const self = s.matrix2Parent().computeCoord2(0, 0);
+        const self = s
+            .matrix2Parent()
+            .computeCoord2(0, 0);
+
         const delta = { x: xy.x - self.x, y: xy.y - self.y };
         api.shapeModifyX(page, s, s.frame.x + delta.x);
         api.shapeModifyY(page, s, s.frame.y + delta.y);
@@ -1387,5 +1402,8 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         api.shapeModifyY(page, s, xy.y);
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
     }
-    if (s instanceof GroupShape && s.type === ShapeType.Group) afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH));
+
+    if (s instanceof GroupShape && s.type === ShapeType.Group) {
+        afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH));
+    }
 }
