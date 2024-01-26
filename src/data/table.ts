@@ -244,10 +244,10 @@ export class TableShape extends Shape implements classes.TableShape {
         if (path0 === "cells" && path.length > 1) {
             const cellId = path[1];
             let cell = this.cells.get(cellId);
-            if (!cell) {
-                cell = this._initCell(cellId);
-            }
-            return cell.getOpTarget(path.slice(2));
+            // if (!cell) {
+            //     cell = this._initCell(cellId);
+            // }
+            return cell?.getOpTarget(path.slice(2));
         }
         return super.getOpTarget(path);
     }
@@ -441,26 +441,27 @@ export class TableShape extends Shape implements classes.TableShape {
         return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
     }
 
-    _initCell(cellId: string) {
-        const cell = new TableCell(new CrdtIndex([], 0),
-            cellId,
-            "",
-            ShapeType.TableCell,
-            new ShapeFrame(0, 0, 0, 0),
-            new Style(new BasicArray(), new BasicArray(), new BasicArray()));
-        this.cells.set(cellId, cell);
-        return cell;
-    }
+    // todo 错的。不可以，除非cell是不可删除的才可以。这里也要跟shape一样的undo、redo
+    // _initCell(cellId: string) {
+    //     const cell = new TableCell(new CrdtIndex([], 0),
+    //         cellId,
+    //         "",
+    //         ShapeType.TableCell,
+    //         new ShapeFrame(0, 0, 0, 0),
+    //         new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+    //     this.cells.set(cellId, cell);
+    //     return cell;
+    // }
 
-    getCellAt(rowIdx: number, colIdx: number, initCell: boolean = false): (TableCell | undefined) {
+    getCellAt(rowIdx: number, colIdx: number): (TableCell | undefined) {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
         const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
         let cell = this.cells.get(cellId);
-        if (!cell && initCell) {
-            cell = this._initCell(cellId);
-        }
+        // if (!cell && initCell) {
+        //     cell = this._initCell(cellId);
+        // }
         return cell;
     }
 
