@@ -46,6 +46,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             points,
             isClosed
         )
+        this.crdtidx = crdtidx;
         this.isEdited = isEdited; // 路径是否已被编辑
         this.text = text;
         this.mark = mark;
