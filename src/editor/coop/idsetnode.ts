@@ -37,15 +37,32 @@ function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]): IdSetOpRe
     }
 }
 
+function revert(op: IdSetOpRecord): IdSetOpRecord {
+    return {
+        data: op.origin,
+        id: op.id,
+        type: op.type,
+        path: op.path,
+        order: Number.MAX_SAFE_INTEGER,
+        origin: op.data
+    }
+}
+
 // todo import, updateframe
 
 export class CrdtIdRepoNode extends RepoNode {
-    private page: Page | Document;
+    private document: Document;
     private savedOrigin: boolean = false;
     private origin: any; // baseVer的状态
-    constructor(page: Page | Document) {
+    constructor(document: Document) {
         super(OpType.Idset);
-        this.page = page;
+        this.document = document;
+    }
+
+    getOpTarget(path: string[]) {
+        if (path[0] === this.document.id) return this.document.getOpTarget(path);
+        const page = this.document.pagesMgr.getSync(path[0]);
+        if (page) return page.getOpTarget(path);
     }
 
     private saveOrigin(target: any, ops: OpItem[]) {
@@ -62,7 +79,7 @@ export class CrdtIdRepoNode extends RepoNode {
     receive(ops: OpItem[], needUpdateFrame: Shape[]) {
         if (ops.length === 0) throw new Error();
         const op0 = ops[0].op;
-        const target = this.page.getOpTarget(op0.path.slice(0, op0.path.length - 1));
+        const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         // save origin
         this.saveOrigin(target, ops);
         this.ops.push(...ops);
@@ -106,19 +123,10 @@ export class CrdtIdRepoNode extends RepoNode {
     undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         if (ops.length === 0) throw new Error();
         const op0 = ops[0].op;
-        const target = this.page.getOpTarget(op0.path.slice(0, op0.path.length - 1));
-        if (!target) {
-            if (!receiver) this.popLocal(ops);
-            return;
-        }
+        const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const op = ops[0].op as IdSetOpRecord;
-        const record = apply(target, {
-            data: op.origin,
-            id: op.id,
-            type: op.type,
-            path: op.path,
-            order: op.order
-        }, needUpdateFrame)
+        const rop = revert(op);
+        const record = target && apply(target, rop, needUpdateFrame) || rop
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
@@ -133,36 +141,11 @@ export class CrdtIdRepoNode extends RepoNode {
     redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         if (ops.length === 0) throw new Error();
         const op0 = ops[0].op;
-        const target = this.page.getOpTarget(op0.path.slice(0, op0.path.length - 1));
-        if (!target) {
-            // wrong?
-            console.log("idset wrong?")
-            if (!receiver) this.commit(ops.map(item => {
-                const op = item.op as IdSetOpRecord;
-                const cmd = item.cmd;
-                const idx = cmd.ops.indexOf(op);
-                if (idx < 0) throw new Error();
-                const revert = {
-                    data: op.origin,
-                    id: op.id,
-                    type: op.type,
-                    path: op.path,
-                    order: op.order,
-                    origin: op.data
-                }
-                cmd.ops.splice(idx, 1, revert);
-                return { cmd, op: revert }
-            }));
-            return;
-        }
+        // 没有target也要保证op正确
+        const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const op = ops[ops.length - 1].op as IdSetOpRecord;
-        const record = apply(target, {
-            data: op.origin,
-            id: op.id,
-            type: op.type,
-            path: op.path,
-            order: op.order
-        }, needUpdateFrame);
+        const rop = revert(op);
+        const record = target && apply(target, rop, needUpdateFrame) || rop;
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
@@ -181,7 +164,7 @@ export class CrdtIdRepoNode extends RepoNode {
         if (ops.length === 0) return;
 
         const op0 = ops[0].op;
-        const target = this.page.getOpTarget(op0.path.slice(0, op0.path.length - 1));
+        const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         if (!target) return;
 
         // let baseIdx = ops.findIndex((op) => op.cmd.version > baseVer);

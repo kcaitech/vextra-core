@@ -123,6 +123,7 @@ export class Api {
             // shapemove？
             // arraymove？
             // text?
+            // todo 这里是否也要保持原来的顺序？
             const ops = [];
             const idsetops = new Map<string, Op>();
             for (let i = 0; i < cmd.ops.length; i++) {

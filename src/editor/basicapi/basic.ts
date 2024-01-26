@@ -18,7 +18,7 @@ export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, in
         order: Number.MAX_SAFE_INTEGER,
         data: shape,
         from: undefined,
-        isRemove: false,
+        // isRemove: false,
         to: { id: parent.id, index: shape.crdtidx.index, order: Number.MAX_SAFE_INTEGER }
     };
 }
@@ -31,7 +31,7 @@ export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): 
         order: Number.MAX_SAFE_INTEGER,
         data: shape,
         from: { id: parent.id, index: shape.crdtidx.index, order: shape.crdtidx.order },
-        isRemove: true,
+        // isRemove: true,
         to: undefined
     };
 }
@@ -63,7 +63,7 @@ export function crdtShapeMove(page: Page, parent: GroupShape, index: number, par
         order: Number.MAX_SAFE_INTEGER,
         data: shape,
         from: { id: parent.id, index: oldidx.index, order: oldidx.order },
-        isRemove: true,
+        // isRemove: true,
         to: { id: parent2.id, index: newidx.index, order: Number.MAX_SAFE_INTEGER }
     };
 }

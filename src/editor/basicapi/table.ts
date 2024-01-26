@@ -5,6 +5,7 @@ import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr, newText } from "./basic"
 import { deleteText, insertComplexText } from "./text";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
+import { Op } from "../../coop/common/op";
 
 export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number) {
     const cellId = table.rowHeights[rowIdx].id + "," + table.colWidths[colIdx].id;
@@ -58,7 +59,16 @@ export function tableInsertRow(table: TableShape, idx: number, height: number) {
 }
 
 export function tableRemoveRow(table: TableShape, idx: number) {
-    return crdtArrayRemove(table.rowHeights, idx);
+    // remove cells
+    const rowId = table.rowHeights[idx].id;
+    const cellIds: string[] = [];
+    table.cells.forEach((_, cellId) => {
+        if (cellId.startsWith(rowId)) cellIds.push(cellId);
+    });
+    const ops: Op[] = cellIds.map(cellId => crdtSetAttr(table.cells, cellId, undefined));
+    const op = crdtArrayRemove(table.rowHeights, idx);
+    if (op) ops.push(op);
+    return ops;
 }
 
 export function tableInsertCol(table: TableShape, idx: number, width: number) {
@@ -66,7 +76,16 @@ export function tableInsertCol(table: TableShape, idx: number, width: number) {
 }
 
 export function tableRemoveCol(table: TableShape, idx: number) {
-    return crdtArrayRemove(table.colWidths, idx);
+    // remove cells
+    const colId = table.colWidths[idx].id;
+    const cellIds: string[] = [];
+    table.cells.forEach((_, cellId) => {
+        if (cellId.endsWith(colId)) cellIds.push(cellId);
+    });
+    const ops: Op[] = cellIds.map(cellId => crdtSetAttr(table.cells, cellId, undefined));
+    const op = crdtArrayRemove(table.colWidths, idx);
+    if (op) ops.push(op);
+    return ops;
 }
 
 export function tableModifyCellSpan(cell: TableCell, rowSpan: number | undefined, colSpan: number | undefined) {

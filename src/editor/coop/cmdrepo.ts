@@ -18,6 +18,7 @@ const POST_TIMEOUT = 5000; // 5s
  * @returns 
  */
 function classifyOps(cmds: Cmd[]) {
+    // todo 需要按顺序执行??
     const subrepos: Map<string, OpItem[]> = new Map();
     for (let i = 0; i < cmds.length; i++) {
         const cmd = cmds[i];

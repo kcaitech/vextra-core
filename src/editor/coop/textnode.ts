@@ -2,11 +2,11 @@ import { RepoNode } from "./base";
 import { Op, OpType } from "../../coop/common/op";
 import { Text } from "../../data/text";
 import { transform } from "../../coop/client/arrayoptransform";
-import { Page } from "../../data/page";
 import { ArrayOp, ArrayOpType } from "../../coop/client/arrayop";
 import { TextOpAttr, TextOpAttrRecord, TextOpInsert, TextOpInsertRecord, TextOpRemove, TextOpRemoveRecord } from "../../coop/client/textop";
 import { Shape } from "../../data/shape";
 import { Cmd, OpItem } from "../../coop/common/repo";
+import { Document } from "../../data/document";
 
 // todo 考虑text是string?
 function apply(text: Text, op: ArrayOp) {
@@ -124,14 +124,19 @@ function unapply(text: Text, op: ArrayOp) {
 // 也是走undo-do-redo，与服务端数据对齐（目前完备的可以前进后退版本的方式）
 export class TextRepoNode extends RepoNode {
 
-    private page: Page;
+    private document: Document;
 
     // undo时缓存的本地未上传的op
     popedOps: { cmd: Cmd, ops: ArrayOp[], otpath: OpItem[], refIdx: number }[] = [];
 
-    constructor(page: Page) {
+    constructor(document: Document) {
         super(OpType.Array);
-        this.page = page;
+        this.document = document;
+    }
+
+    getOpTarget(path: string[]) {
+        const page = this.document.pagesMgr.getSync(path[0]);
+        if (page) return page.getOpTarget(path);
     }
 
     // 与ops变换
@@ -180,7 +185,7 @@ export class TextRepoNode extends RepoNode {
         // 服务端过来的先进行本地变换
         this._otreceive(ops);
 
-        const target = this.page.getOpTarget(ops[0].op.path);
+        const target = this.getOpTarget(ops[0].op.path);
         // undo-do-redo
         // undo
         if (target) for (let i = this.localops.length - 1; i >= 0; i--) {
@@ -276,7 +281,7 @@ export class TextRepoNode extends RepoNode {
         if (curops.length === 0) throw new Error();
         if (curops.length < ops.length) throw new Error();
 
-        const text: Text = this.page.getOpTarget(ops[0].op.path); // todo text 是string的情况？
+        const text: Text = this.getOpTarget(ops[0].op.path); // todo text 是string的情况？
         // 如果在最后，直接undo
 
         // 需要变换
@@ -383,7 +388,7 @@ export class TextRepoNode extends RepoNode {
         }
 
         if (lhs.length !== ops.length) throw new Error();
-        const text: Text = this.page.getOpTarget(ops[0].op.path); // todo text 是string的情况？
+        const text: Text = this.getOpTarget(ops[0].op.path); // todo text 是string的情况？
         const record = text ? lhs.map((op) => apply(text, op) || op) : lhs;
         // update to ops
 
@@ -404,7 +409,7 @@ export class TextRepoNode extends RepoNode {
         const ops = this.ops.concat(...this.localops);
         if (ops.length === 0) return;
 
-        const target = this.page.getOpTarget(ops[0].op.path);
+        const target = this.getOpTarget(ops[0].op.path);
         if (!target) return;
 
         let baseIdx = ops.findIndex((op) => op.cmd.version > baseVer);
