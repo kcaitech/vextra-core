@@ -1567,7 +1567,7 @@ export class PageEditor {
                 }
                 const ng = importGradient(exportGradient(gradient));
                 ng.stops = new_stops;
-                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                 f(this.__page, target, index, ng);
             }
             this.__repo.commit();
@@ -1621,7 +1621,7 @@ export class PageEditor {
                     })
                 }
                 // todo 旋转渐变
-                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
                 f(this.__page, shape, index, gradient);
             }
@@ -1659,7 +1659,7 @@ export class PageEditor {
                         return -1;
                     }
                 })
-                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
                 f(this.__page, shape, index, new_gradient);
             }
@@ -1685,7 +1685,7 @@ export class PageEditor {
                 const gradient = gradient_container.gradient;
                 const s = shape4fill(api, this.__page, target);
                 if (gradient_container.fillType !== FillType.Gradient) {
-                    api.setFillType(this.__page, s, index, FillType.Gradient);
+                    type === 'fills' ? api.setFillType(this.__page, s, index, FillType.Gradient) : api.setBorderType(this.__page, s, index, FillType.Gradient);;
                 }
                 if (gradient) {
                     const new_gradient = importGradient(exportGradient(gradient));
@@ -1697,12 +1697,12 @@ export class PageEditor {
                     }
                     if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
                         const frame = target.frame;
-                        new_gradient.elipseLength = 1;
+                        new_gradient.elipseLength = ((frame.width / 2) / (frame.height / 2));
                     } else if (value === GradientType.Angular && new_gradient.elipseLength === undefined) {
                         new_gradient.elipseLength = 1;
                     }
                     new_gradient.stops[0].color = gradient_container.color;
-                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                     f(this.__page, s, index, new_gradient);
                 } else {
                     const stops = new BasicArray<Stop>();
@@ -1713,12 +1713,12 @@ export class PageEditor {
                     let elipseLength = undefined;
                     if (value === GradientType.Radial) {
                         const frame = target.frame;
-                        elipseLength = 1;
+                        elipseLength = ((frame.width / 2) / (frame.height / 2));
                     } else if (value === GradientType.Angular) {
                         elipseLength = 1;
                     }
                     const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
-                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                     f(this.__page, s, index, new_gradient);
                 }
             }
@@ -1749,7 +1749,7 @@ export class PageEditor {
                 const { color, stop_i } = value;
                 const new_gradient = importGradient(exportGradient(gradient));
                 new_gradient.stops[stop_i].color = color;
-                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
                 if (type === 'fills') {
                     api.setFillColor(this.__page, shape, index, new_gradient.stops[0].color as Color);
@@ -1782,7 +1782,7 @@ export class PageEditor {
                 }
                 const new_gradient = importGradient(exportGradient(gradient));
                 new_gradient.stops.splice(value, 1);
-                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
                 f(this.__page, shape, index, new_gradient);
             }
@@ -1822,7 +1822,7 @@ export class PageEditor {
                         return -1;
                     }
                 })
-                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
                 f(this.__page, shape, index, new_gradient);
             }
@@ -1949,6 +1949,20 @@ export class PageEditor {
         }
     }
 
+    setShapesBorderType(actions: BatchAction[]) {
+        const api = this.__repo.start('setShapesBorderType', {});
+        try {
+            for (let i = 0; i < actions.length; i++) {
+                const { target, index, value } = actions[i];
+                const s = shape4border(api, this.__page, target);
+                api.setBorderType(this.__page, s, index, value);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+        }
+    }
+
     shapesAddBorder(actions: BatchAction2[]) {
         const api = this.__repo.start('shapesAddBorder', {});
         try {
@@ -1999,6 +2013,7 @@ export class PageEditor {
         try {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
+                if (target.type === ShapeType.Table) continue;
                 const s = shape4border(api, this.__page, target);
                 api.setBorderPosition(this.__page, s, index, value);
             }

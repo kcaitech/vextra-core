@@ -1,4 +1,4 @@
-import { Border, BorderPosition, BorderStyle } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, FillType } from "../../data/style";
 import { Color } from "../../data/color";
 // 边框
 export function setBorderColor(
@@ -27,6 +27,10 @@ export function setBorderStyle(border: Border, borderStyle: BorderStyle) {
 
 export function deleteBorderAt(borders: Border[], idx: number) {
     return borders.splice(idx, 1)[0];
+}
+export function setBorderType(border: Border, fillType: FillType) {
+    // const fill: Fill = fills[idx];
+    if (border) border.fillType = fillType;
 }
 /**
  * @param idx 开始删的位置

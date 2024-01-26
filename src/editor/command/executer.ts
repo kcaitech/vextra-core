@@ -451,6 +451,15 @@ export class CMDExecuter {
                     const style = importBorderStyle(JSON.parse(value));
                     api.setBorderStyle(border, style)
                 }
+            } else if (opId === BORDER_ATTR_ID.fillType) {
+                if (value) {
+                    api.setBorderType(border, value as types.FillType);
+                }
+            } else if (opId === BORDER_ATTR_ID.gradient) {
+                if (value) {
+                    const gradient = importGradient(JSON.parse(value));
+                    border.gradient = gradient;
+                }
             }
             // todo
             else {

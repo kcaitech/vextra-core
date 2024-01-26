@@ -812,6 +812,18 @@ export class Api {
         })
 
     }
+    setBorderType(page: Page, shape: Shape | Variable, idx: number, fillType: FillType) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        if (!borders[idx]) return;
+        this.__trap(() => {
+            const border = borders[idx];
+            const save = border.fillType;
+            basicapi.setBorderType(border, fillType);
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.fillType, fillType, save));
+        })
+
+    }
     setBorderColor(page: Page, shape: Shape | Variable, idx: number, color: Color) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
@@ -1939,6 +1951,19 @@ export class Api {
             const save = fill.gradient ? exportGradient(fill.gradient) : undefined;
             fill.gradient = gradient;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), FILLS_ID, fill.id, FILLS_ATTR_ID.gradient, exportGradient(gradient), save));
+        })
+    }
+    modifyBorderGradient(page: Page, shape: Shape | Variable, idx: number, gradient: Gradient) {
+        checkShapeAtPage(page, shape);
+        const borders = shape instanceof Shape ? shape.style.borders : shape.value;
+        if (!borders[idx]) {
+            return;
+        }
+        this.__trap(() => {
+            const border = borders[idx];
+            const save = border.gradient ? exportGradient(border.gradient) : undefined;
+            border.gradient = gradient;
+            this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.gradient, exportGradient(gradient), save));
         })
     }
 }

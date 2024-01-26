@@ -103,7 +103,8 @@ export const BORDER_ATTR_ID = {
     thickness: "thickness",
     position: "position",
     borderStyle: "borderStyle",
-    gradient: "gradient"
+    gradient: "gradient",
+    fillType: "fillType"
 }
 export const SHADOW_ATTR_ID = {
     enable: "enable",
