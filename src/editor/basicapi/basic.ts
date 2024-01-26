@@ -41,15 +41,12 @@ export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): 
  * @param parent 
  * @param index 
  * @param parent2 
- * @param index2 移动前的index
+ * @param index2 移动后的index
  * @param needUpdateFrame 
  * @returns 
  */
 export function crdtShapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number): TreeMoveOpRecord | undefined {
-    if (parent.id === parent2.id) {
-        if (Math.abs(index - index2) <= 1) return;
-        if (index2 > index) index2--;
-    }
+    if (index === index2 && parent.id === parent2.id) return;
     const shape = parent.childs.splice(index, 1)[0]
     if (!shape) return;
     const newidx = crdtGetArrIndex(parent2.childs, index2);

@@ -69,6 +69,16 @@ export function shapeDelete(page: Page, parent: GroupShape, index: number, needU
     }
     return op;
 }
+/**
+ * 
+ * @param page 
+ * @param parent 
+ * @param index 
+ * @param parent2 
+ * @param index2 移动后的index
+ * @param needUpdateFrame 
+ * @returns 
+ */
 export function shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
     const op = crdtShapeMove(page, parent, index, parent2, index2);
     if (op) {
