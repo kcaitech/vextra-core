@@ -37,6 +37,7 @@ export * from "./service/symbollist"
 
 // coop
 // export * from "./coop"
+export { Cmd } from "./coop/common/repo"
 
 // render
 export * from "./render"
