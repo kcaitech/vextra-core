@@ -394,7 +394,9 @@ export class Controller {
                 status = Status.Pending;
                 const origin: GroupShape = newShape.parent as GroupShape;
                 const { x, y } = newShape.frame2Root();
-                api.shapeMove(savepage, origin, origin.indexOfChild(newShape), targetParent, targetParent.childs.length);
+                let toIdx = targetParent.childs.length;
+                if (origin.id === targetParent.id) --toIdx;
+                api.shapeMove(savepage, origin, origin.indexOfChild(newShape), targetParent, toIdx);
                 translateTo(api, savepage, newShape, x, y);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
