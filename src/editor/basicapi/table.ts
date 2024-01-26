@@ -8,7 +8,7 @@ import { BasicArray } from "../../data/basic";
 
 export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number) {
     const cellId = table.rowHeights[rowIdx].id + "," + table.colWidths[colIdx].id;
-    if (!table.cells.has(cellId)) return;
+    if (table.cells.has(cellId)) return;
     const cell = new TableCell(new CrdtIndex([], 0),
         cellId,
         "",
