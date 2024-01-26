@@ -41,18 +41,21 @@ export function render(h: Function, value: Gradient, frame: ShapeFrame): { id: s
             const s = value.stops[i];
             childs.push(renderStop(h, s));
         }
+        const r = Math.sqrt((value.to.y - value.from.y) ** 2 + (value.to.x - value.from.x) ** 2);
         const scaleX = 1;
-        const scaleY = 1;
+        const scaleY = value.elipseLength ? value.elipseLength * r  : 0;
+        const rotate = Math.atan2((value.from.y - value.to.y), (value.from.x - value.to.x)) / Math.PI * 180;
+
         node = h("radialGradient", {
             id,
             cx: value.from.x,
             cy: value.from.y,
-            r: Math.sqrt((value.to.y - value.from.y) ** 2 + (value.to.x - value.from.x) ** 2),
+            r: r,
             fx: value.from.x,
             fy: value.from.y,
             gradientTransform: "translate(" + value.from.x + "," + value.from.y + ")," +
                 // "scale(0.955224, 1.0)," + // todo
-                "rotate(" + Math.atan2((value.to.y - value.from.y), (value.to.x - value.from.x)) / Math.PI * 180 + ")," +
+                "rotate(" + rotate + ")," +
                 "scale(" + scaleX + " " + scaleY + ")," +
                 "translate(" + (-value.from.x) + "," + (-value.from.y) + ")",
         },
