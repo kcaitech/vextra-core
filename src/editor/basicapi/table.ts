@@ -1,9 +1,22 @@
 import { Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
-import { Color, CrdtIndex, CrdtNumber, Page, StrikethroughType, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
+import { Color, CrdtIndex, CrdtNumber, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr, newText } from "./basic";
 import { deleteText, insertComplexText } from "./text";
 import { uuid } from "../../basic/uuid";
+import { BasicArray } from "../../data/basic";
+
+export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number) {
+    const cellId = table.rowHeights[rowIdx].id + "," + table.colWidths[colIdx].id;
+    if (!table.cells.has(cellId)) return;
+    const cell = new TableCell(new CrdtIndex([], 0),
+        cellId,
+        "",
+        ShapeType.TableCell,
+        new ShapeFrame(0, 0, 0, 0),
+        new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+    return crdtSetAttr(table.cells, cellId, cell);
+}
 
 export function tableSetCellContentType(cell: TableCell, contentType: TableCellType | undefined) {
     contentType = contentType === TableCellType.None ? undefined : contentType;
@@ -60,7 +73,7 @@ export function tableModifyCellSpan(cell: TableCell, rowSpan: number | undefined
     // cell!.setCellSpan(rowSpan, colSpan);
     rowSpan = rowSpan && rowSpan <= 1 ? undefined : rowSpan;
     colSpan = colSpan && colSpan <= 1 ? undefined : colSpan;
-    return [ crdtSetAttr(cell, "rowSpan", rowSpan), crdtSetAttr(cell, "colSpan", colSpan) ]
+    return [crdtSetAttr(cell, "rowSpan", rowSpan), crdtSetAttr(cell, "colSpan", colSpan)]
 }
 
 // text

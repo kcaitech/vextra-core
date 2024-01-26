@@ -102,7 +102,6 @@ export function textModifyItalic(parent: Shape | Variable, shapetext: Text, ital
     return otTextSetAttr(parent, shapetext, index, len, "italic", italic);
 }
 
-// todo
 export function textModifyBulletNumbersType(parent: Shape | Variable, shapetext: Text, type: BulletNumbersType, index: number, len: number) {
     return otTextSetParaAttr(parent, shapetext, index, len, "bulletNumbersType", type);
 }

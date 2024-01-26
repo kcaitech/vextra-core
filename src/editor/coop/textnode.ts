@@ -338,7 +338,9 @@ export class TextRepoNode extends RepoNode {
         // 需要根据otpath进行变换
         if (this.popedOps.length === 0) throw new Error();
         const cmd = ops[0].cmd;
-        const item = this.popedOps.find((v) => v.cmd === cmd);
+        const itemIdx = this.popedOps.findIndex((v) => v.cmd === cmd);
+        if (itemIdx < 0) throw new Error("not find ops");
+        const item = this.popedOps.splice(itemIdx, 1)[0];
         if (!item) throw new Error("not find ops");
 
         // ops.reverse();

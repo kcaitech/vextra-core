@@ -877,20 +877,22 @@ export class Api {
     // table
     tableSetCellContentType(page: Page, table: TableShape, rowIdx: number, colIdx: number, contentType: TableCellType | undefined) {
         checkShapeAtPage(page, table);
-        // todo 这不对
-        const cell = table.getCellAt(rowIdx, colIdx, true);
+        this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        const cell = table.getCellAt(rowIdx, colIdx);
         if (cell) this.addOp(basicapi.tableSetCellContentType(cell, contentType));
     }
 
     tableSetCellContentText(page: Page, table: TableShape, rowIdx: number, colIdx: number, text: Text | undefined) {
         checkShapeAtPage(page, table);
-        const cell = table.getCellAt(rowIdx, colIdx, true)!;
+        this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        const cell = table.getCellAt(rowIdx, colIdx);
         if (cell) this.addOp(basicapi.tableSetCellContentText(cell, text));
     }
 
     tableSetCellContentImage(page: Page, table: TableShape, rowIdx: number, colIdx: number, ref: string | undefined) {
         checkShapeAtPage(page, table);
-        const cell = table.getCellAt(rowIdx, colIdx, true)!;
+        this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        const cell = table.getCellAt(rowIdx, colIdx)!;
         const origin = cell.imageRef;
         if (origin !== ref) {
             this.addOp(basicapi.tableSetCellContentImage(cell, ref));
@@ -931,7 +933,8 @@ export class Api {
 
     tableModifyCellSpan(page: Page, table: TableShape, rowIdx: number, colIdx: number, rowSpan: number, colSpan: number) {
         checkShapeAtPage(page, table);
-        const cell = table.getCellAt(rowIdx, colIdx, true)!;
+        this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        const cell = table.getCellAt(rowIdx, colIdx)!;
         const origin = { rowSpan: cell?.rowSpan, colSpan: cell?.colSpan };
         if ((origin.rowSpan ?? 1) !== rowSpan || (origin.colSpan ?? 1) !== colSpan) {
             this.addOp(basicapi.tableModifyCellSpan(cell, rowSpan, colSpan));
