@@ -24,7 +24,6 @@ import {
     importArtboard,
     importGroupShape,
     importPage,
-    importTableShape,
     importText,
     importShapeFrame, importTextShape
 } from "../data/baseimport";
@@ -44,7 +43,6 @@ import {
     Para,
     ParaAttr,
     Path,
-    Point2D,
     ShapeFrame,
     Span,
     Style,

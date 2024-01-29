@@ -46,13 +46,13 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
         case TextBehaviour.FixWidthAndHeight:
             break;
         case TextBehaviour.Fixed: {
-            const layout = shape.text.getLayout();
+            const layout = shape.getLayout();
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             api.shapeModifyWH(page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
             break;
         }
         case TextBehaviour.Flexible: {
-            const layout = shape.text.getLayout();
+            const layout = shape.getLayout();
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             api.shapeModifyWH(page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             break;
@@ -80,8 +80,10 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
 
     const width = widthWeight / table.widthTotalWeights * table.frame.width;
     const height = heightWeight / table.heightTotalWeights * table.frame.height;
-    shape.text.updateSize(width, height);
-    const layout = shape.text.getLayout();
+    // shape.text.updateSize(width, height);
+    const layout1 = shape.text.getLayout3(width, height, shape.id, undefined);
+    shape.text.dropLayout(layout1.token, shape.id);
+    const layout = layout1.layout;
     if (layout.contentHeight > (height + float_accuracy)) {
         // set row height
         const rowIdx = indexCell.rowIdx + rowSpan - 1;
