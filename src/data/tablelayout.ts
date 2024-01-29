@@ -12,6 +12,29 @@ export type TableLayout = {
     colWidths: number[],
 }
 
+export class LayoutItem {
+    layout: TableLayout | undefined;
+
+    width: number = 0;
+    height: number = 0;
+    tatalWidth: number = 0;
+    totalHeight: number = 0;
+
+    update(table: TableShape) {
+        const frame = table.frame;
+        table.updateTotalWeights();
+        if (frame.width !== this.width || frame.height !== this.height) {
+            this.layout = undefined;
+        } else if (table.widthTotalWeights !== this.tatalWidth || table.heightTotalWeights !== this.totalHeight) {
+            this.layout = undefined;
+        }
+        this.width = frame.width;
+        this.height = frame.height;
+        this.tatalWidth = table.widthTotalWeights;
+        this.totalHeight = table.heightTotalWeights;
+    }
+}
+
 export function layoutTable(table: TableShape): TableLayout {
     const frame = table.frame;
     const grid: Grid<TableGridItem> = new Grid<TableGridItem>(table.rowHeights.length, table.colWidths.length);

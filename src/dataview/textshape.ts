@@ -74,12 +74,12 @@ export class TextShapeView extends ShapeView {
         super.onDataChange(...args);
         // if (args.includes('variable')) this.m_layout = undefined; // 不确定是不是text变量？
 
-        if (args.includes('text')) { // todo 文本要支持局部重排
-            this.clearCache();
-        }
-        else if (args.includes('shape-frame')) {
-            this.clearCache();
-        }
+        // if (args.includes('text')) { // todo 文本要支持局部重排
+        //     this.clearCache();
+        // }
+        // else if (args.includes('shape-frame')) {
+        //     this.clearCache();
+        // }
     }
 
     renderContents(): EL[] {
@@ -119,9 +119,14 @@ export class TextShapeView extends ShapeView {
         }
     }
 
-    clearCache() {
-        this.m_layout = undefined;
-        // this.m_layoutText = undefined;
-        this.m_textpath = undefined;
+    // clearCache() {
+    //     this.m_layout = undefined;
+    //     // this.m_layoutText = undefined;
+    //     this.m_textpath = undefined;
+    // }
+
+    onDestory(): void {
+        super.onDestory();
+        if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id); 
     }
 }

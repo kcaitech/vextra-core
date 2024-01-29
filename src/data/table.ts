@@ -6,7 +6,7 @@ import { Shape, Variable } from "./shape";
 import { Path } from "./path";
 import { Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
-import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
+import { LayoutItem, TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 import { CrdtNumber, CrdtIndex } from "./crdt";
@@ -232,7 +232,7 @@ export class TableShape extends Shape implements classes.TableShape {
     textAttr?: TextAttr // 文本默认属性
 
     __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
-    private __layout?: TableLayout;
+    private __layout: LayoutItem = new LayoutItem();
     private __heightTotalWeights: number;
     private __widthTotalWeights: number;
 
@@ -321,8 +321,9 @@ export class TableShape extends Shape implements classes.TableShape {
         return new Path(path);
     }
     getLayout(): TableLayout {
-        if (!this.__layout) this.__layout = layoutTable(this);
-        return this.__layout;
+        this.__layout.update(this);
+        if (!this.__layout.layout) this.__layout.layout = layoutTable(this);
+        return this.__layout.layout;
     }
     getColWidths() {
         const frame = this.frame;
@@ -362,29 +363,26 @@ export class TableShape extends Shape implements classes.TableShape {
     //     this.reLayout();
     //     return ret;
     // }
-
-    setColWidth(idx: number, weight: number) {
-        const colWidths = this.colWidths;
-        const origin = colWidths[idx].value;
-        colWidths[idx].value = weight;
-        this.__widthTotalWeights -= origin;
-        this.__widthTotalWeights += weight;
-        this.reLayout();
-    }
-
-    setRowHeight(idx: number, weight: number) {
-        const rowHeights = this.rowHeights;
-        const origin = rowHeights[idx].value;
-        rowHeights[idx].value = weight;
-        this.__heightTotalWeights -= origin;
-        this.__heightTotalWeights += weight;
-        this.reLayout();
-    }
-
-    setFrameSize(w: number, h: number) {
-        super.setFrameSize(w, h);
-        this.reLayout();
-    }
+    // setColWidth(idx: number, weight: number) {
+    //     const colWidths = this.colWidths;
+    //     const origin = colWidths[idx].value;
+    //     colWidths[idx].value = weight;
+    //     this.__widthTotalWeights -= origin;
+    //     this.__widthTotalWeights += weight;
+    //     this.reLayout();
+    // }
+    // setRowHeight(idx: number, weight: number) {
+    //     const rowHeights = this.rowHeights;
+    //     const origin = rowHeights[idx].value;
+    //     rowHeights[idx].value = weight;
+    //     this.__heightTotalWeights -= origin;
+    //     this.__heightTotalWeights += weight;
+    //     this.reLayout();
+    // }
+    // setFrameSize(w: number, h: number) {
+    //     super.setFrameSize(w, h);
+    //     this.reLayout();
+    // }
 
     onRollback(from: string): void {
         if (from !== "composingInput") {
@@ -397,14 +395,14 @@ export class TableShape extends Shape implements classes.TableShape {
             this.__heightTotalWeights !== heightTotalWeights) {
             this.__widthTotalWeights = widthTotalWeights;
             this.__heightTotalWeights = heightTotalWeights;
-            this.__layout = undefined;
+            this.__layout.layout = undefined;
         }
     }
 
     reLayout() {
         this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
         this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
-        this.__layout = undefined;
+        this.__layout.layout = undefined;
     }
 
     locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
