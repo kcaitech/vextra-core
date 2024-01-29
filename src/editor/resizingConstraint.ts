@@ -2,7 +2,7 @@ import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { Document, GroupShape, Shape } from "../data/classes";
 import { ResizingConstraints } from "../data/consts";
-import { Artboard, SymbolShape } from "data/baseclasses";
+import { Artboard, SymbolShape } from "../data/baseclasses";
 
 export class resizingConstraintEditor {
     protected __repo: CoopRepository;
@@ -27,6 +27,32 @@ export class resizingConstraintEditor {
             )
     }
 
+    isCheckHorizontal(value: number) {
+        if (ResizingConstraints.hasLeft(value)) {
+            return ResizingConstraints.setLeft(value, false)
+        }
+        if (ResizingConstraints.hasRight(value)) {
+            return ResizingConstraints.setRight(value, false)
+        }
+        if (ResizingConstraints.hasWidth(value)) {
+            return ResizingConstraints.setWidth(value, false)
+        }
+        return value
+    }
+
+    isCheckVertical(value: number) {
+        if (ResizingConstraints.hasTop(value)) {
+            return ResizingConstraints.setTop(value, false)
+        }
+        if (ResizingConstraints.hasBottom(value)) {
+            return ResizingConstraints.setBottom(value, false)
+        }
+        if (ResizingConstraints.hasHeight(value)) {
+            return ResizingConstraints.setHeight(value, false)
+        }
+        return value
+    }
+
     /**
      * @description 设置选中的图层是否表现靠左固定的约束状态
      * @param { Shape[] } shapes 选中的图层
@@ -44,9 +70,11 @@ export class resizingConstraintEditor {
                     continue;
                 }
 
-                const old_rc = shape.resizingConstraint || ResizingConstraints.Unset; // 默认值是Unset
-                const new_rc = ResizingConstraints.setLeft(old_rc, value);
+                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask; // 默认值是Unset
+                this.isCheckHorizontal(old_rc)
 
+                const new_rc = ResizingConstraints.setLeft(this.isCheckHorizontal(old_rc), value);
+                console.log(new_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc); // modify 修改数据
             }
 
@@ -54,6 +82,185 @@ export class resizingConstraintEditor {
         } catch (error) {
             console.log(error);
             this.__repo.rollback(); // 回滚：在修改数据的过程中产生了错误，需要把数据回滚到start之前的状态
+        }
+    }
+
+    fixedToRight(shapes: Shape[], value: boolean) {
+        try {
+            const api = this.__repo.start("fixedToRight", {});
+
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                if (this.disabled(shape)) {
+                    continue;
+                }
+                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
+                this.isCheckHorizontal(old_rc)
+                const new_rc = ResizingConstraints.setRight(this.isCheckHorizontal(old_rc), value);
+                console.log(new_rc);
+
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    fixedToLR(shapes: Shape[], value: boolean) {
+        try {
+            const api = this.__repo.start("fixedToLR", {});
+
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                if (this.disabled(shape)) {
+                    continue;
+                }
+                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
+                this.isCheckHorizontal(old_rc)
+                const new_rc = ResizingConstraints.setLR(this.isCheckHorizontal(old_rc), value);
+                console.log(new_rc);
+
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    fixedToWidth(shapes: Shape[], value: boolean) {
+        try {
+            const api = this.__repo.start("fixedToWidth", {});
+
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+
+
+                if (this.disabled(shape)) {
+                    continue;
+                }
+
+                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
+                this.isCheckHorizontal(old_rc)
+                const new_rc = ResizingConstraints.setWidth(this.isCheckHorizontal(old_rc), value);
+                console.log(new_rc);
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    fixedToTop(shapes: Shape[], value: boolean) {
+        try {
+            const api = this.__repo.start("fixedToTop", {});
+
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+
+
+                if (this.disabled(shape)) {
+                    continue;
+                }
+
+                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
+                this.isCheckVertical(old_rc)
+                const new_rc = ResizingConstraints.setTop(this.isCheckVertical(old_rc), value);
+                console.log(new_rc);
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    fixedToBottom(shapes: Shape[], value: boolean) {
+        try {
+            const api = this.__repo.start("fixedToBottom", {});
+
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+
+
+                if (this.disabled(shape)) {
+                    continue;
+                }
+               
+                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
+                this.isCheckVertical(old_rc)
+                
+                const new_rc = ResizingConstraints.setBottom(this.isCheckVertical(old_rc), value);
+                console.log(new_rc);
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    fixedToTB(shapes: Shape[], value: boolean) {
+        try {
+            const api = this.__repo.start("fixedToTB", {});
+
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+
+
+                if (this.disabled(shape)) {
+                    continue;
+                }
+               
+                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
+                this.isCheckVertical(old_rc)
+                
+                const new_rc = ResizingConstraints.setTB(this.isCheckVertical(old_rc), value);
+                console.log(new_rc);
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    fixedTHeight(shapes: Shape[], value: boolean) {
+        try {
+            const api = this.__repo.start("fixedTHeight", {});
+
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+
+
+                if (this.disabled(shape)) {
+                    continue;
+                }
+                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
+                this.isCheckVertical(old_rc)
+                const new_rc = ResizingConstraints.setHeight(this.isCheckVertical(old_rc), value);
+                console.log(new_rc);
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
         }
     }
 
