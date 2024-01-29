@@ -1,14 +1,12 @@
 import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
-import { Artboard } from "./artboard";
-import { BasicArray, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
+import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
 import { Style } from "./style";
 import { GroupShape, SymbolShape, TextShape } from "./shape";
-import { TableCell, TableShape } from "./table";
+import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 
 export { DocumentMeta, PageListItem } from "./baseclasses";
-export { DocumentSyms } from "./documentsyms";
 
 export enum LibType {
     Symbol = 'symbol-lib',
@@ -81,8 +79,8 @@ export class Document extends (DocumentMeta) {
         let i = 2;
         if (path1 === 'pages') {
             target = this.__pages;
-        } else if (path1 === 'artboards') {
-            target = this.__artboards;
+            // } else if (path1 === 'artboards') {
+            //     target = this.__artboards;
         } else if (path1 === 'symbols') {
             target = this.__symbols;
         } else if (path1 === 'styles') {
@@ -110,7 +108,7 @@ export class Document extends (DocumentMeta) {
     }
 
     private __pages: ResourceMgr<Page>;
-    private __artboards: ResourceMgr<Artboard>;
+    // private __artboards: ResourceMgr<Artboard>;
     private __symbols: ResourceMgr<SymbolShape>
     private __styles: ResourceMgr<Style>
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
@@ -124,16 +122,21 @@ export class Document extends (DocumentMeta) {
         id: string,
         versionId: string, // 版本id
         lastCmdId: string, // 此版本最后一个cmd的id
+        symbolregist: BasicMap<string, string>,
         name: string,
         pagesList: BasicArray<PageListItem>,
         guard: IDataGuard
     ) {
-        super(id, name, pagesList ?? new BasicArray(), lastCmdId)
+        super(id, name, pagesList ?? new BasicArray(), lastCmdId, symbolregist)
         this.__versionId = versionId;
         this.__name = name;
-        this.__pages = new ResourceMgr<Page>([id, 'pages'], guard);
-        this.__artboards = new ResourceMgr<Artboard>([id, 'artboards'], guard);
-        this.__symbols = new ResourceMgr<SymbolShape>([id, 'symbols'], guard);
+        this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));
+        // this.__artboards = new ResourceMgr<Artboard>([id, 'artboards'], (data: Artboard) => guard.guard(data));
+        this.__symbols = new ResourceMgr<SymbolShape>([id, 'symbols'],
+            (data: SymbolShape) => {
+                // check ?
+                return guard.guard(data);
+            });
         this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
         this.__styles = new ResourceMgr<Style>([id, 'styles']);
         this.__correspondent = new SpecialActionCorrespondent();
@@ -148,9 +151,9 @@ export class Document extends (DocumentMeta) {
         return this.__pages;
     }
 
-    get artboardMgr() {
-        return this.__artboards;
-    }
+    // get artboardMgr() {
+    //     return this.__artboards;
+    // }
 
     get symbolsMgr() {
         return this.__symbols;

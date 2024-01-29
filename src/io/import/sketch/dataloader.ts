@@ -2,7 +2,7 @@ import { Document, Page, Shape, SymbolShape } from "../../../data/classes";
 import { IJSON, LzData } from "./lzdata";
 import { LoadContext } from "./basic";
 import { importArtboard, importGroupShape, importImage, importPage, importPathShape, importRectShape, importShapeGroupShape, importSymbol, importSymbolRef, importTextShape } from "./shapeio";
-import {base64Encode} from "../../../basic/utils";
+import { base64Encode } from "../../../basic/utils";
 
 
 function updatePageFrame(p: Page) {
@@ -51,7 +51,7 @@ function updatePageFrame(p: Page) {
 export class DataLoader {
     private __remote: LzData;
     private __document: Document;
-    private __handler: {[ket: string]: (ctx: LoadContext, data: IJSON, i: number)=> Shape} = {}
+    private __handler: { [ket: string]: (ctx: LoadContext, data: IJSON, i: number) => Shape } = {}
     constructor(lzdata: LzData, document: Document) {
         this.__remote = lzdata;
         this.__document = document;
@@ -94,6 +94,7 @@ export class DataLoader {
             const page = await this.loadPage(ctx, id)
             // document.pagesMgr.add(page.id, page) // 在pagesMgr里也会add
             symbolsSet.forEach((v, k) => {
+                document.symbolregist.set(k, id);
                 document.symbolsMgr.add(k, v);
             })
             symbolsSet.clear();

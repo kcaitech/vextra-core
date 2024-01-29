@@ -22,9 +22,6 @@
             "$ref": "./symbol-ref-shape.json"
           },
           {
-            "$ref": "./symbol-slot-shape.json"
-          },
-          {
             "$ref": "./symbol-shape.json"
           },
           {

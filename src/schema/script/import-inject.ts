@@ -87,11 +87,6 @@ inject['SymbolRefShape']['after'] = `\
         ret.setImageMgr(ctx.document.mediasMgr);
     }
 `
-inject['Artboard'] = {};
-inject['Artboard']['after'] = `\
-    // inject code
-    if (ctx?.document) ctx.document.artboardMgr.add(ret.id, ret);
-`
 
 inject['FlattenShape'] = {};
 inject['FlattenShape']['content'] = `\
@@ -114,7 +109,11 @@ inject['SymbolShape']['before'] = `\
 `
 inject['SymbolShape']['after'] = `\
     // inject code
-    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    if (ctx?.document) {
+        if (ctx.document.symbolregist.get(ret.id) === ctx.curPage) {
+            ctx.document.symbolsMgr.add(ret.id, ret);
+        }
+    }
 `
 
 inject['CurvePoint'] = {};

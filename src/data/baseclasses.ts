@@ -542,19 +542,6 @@ export class Ellipse extends Basic {
     }
 }
 /**
- * document syms 
- */
-export class DocumentSyms extends Basic {
-    typeId = 'document-syms'
-    symbols: BasicMap<string, (SymbolUnionShape | SymbolShape)>
-    constructor(
-        symbols: BasicMap<string, (SymbolUnionShape | SymbolShape)>
-    ) {
-        super()
-        this.symbols = symbols
-    }
-}
-/**
  * document meta 
  */
 export class DocumentMeta extends Basic {
@@ -563,17 +550,20 @@ export class DocumentMeta extends Basic {
     name: string
     pagesList: BasicArray<PageListItem >
     lastCmdId: string
+    symbolregist: BasicMap<string, string>
     constructor(
         id: string,
         name: string,
         pagesList: BasicArray<PageListItem >,
-        lastCmdId: string
+        lastCmdId: string,
+        symbolregist: BasicMap<string, string>
     ) {
         super()
         this.id = id
         this.name = name
         this.pagesList = pagesList
         this.lastCmdId = lastCmdId
+        this.symbolregist = symbolregist
     }
 }
 /**
@@ -992,30 +982,6 @@ export class TableCell extends Shape {
     }
 }
 /**
- * symbol slot shape 
- */
-export class SymbolSlotShape extends Shape {
-    typeId = 'symbol-slot-shape'
-    refId?: string
-    constructor(
-        crdtidx: CrdtIndex,
-        id: string,
-        name: string,
-        type: ShapeType,
-        frame: ShapeFrame,
-        style: Style
-    ) {
-        super(
-            crdtidx,
-            id,
-            name,
-            type,
-            frame,
-            style
-        )
-    }
-}
-/**
  * symbol ref shape 
  */
 export class SymbolRefShape extends Shape {
@@ -1266,7 +1232,7 @@ export class ImageShape extends PathShape {
  */
 export class GroupShape extends Shape {
     typeId = 'group-shape'
-    childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolSlotShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >
+    childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >
     isBoolOpShape?: boolean
     fixedRadius?: number
     constructor(
@@ -1276,7 +1242,7 @@ export class GroupShape extends Shape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolSlotShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >
     ) {
         super(
             crdtidx,
@@ -1305,7 +1271,7 @@ export class SymbolShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolSlotShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >,
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >,
         crdtId: CrdtId,
         variables: BasicMap<string, Variable>
     ) {
@@ -1334,7 +1300,7 @@ export class SymbolUnionShape extends SymbolShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolSlotShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >,
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >,
         crdtId: CrdtId,
         variables: BasicMap<string, Variable>
     ) {
@@ -1364,7 +1330,7 @@ export class Page extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolSlotShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >
     ) {
         super(
             crdtidx,
@@ -1389,7 +1355,7 @@ export class FlattenShape extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolSlotShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >
     ) {
         super(
             crdtidx,
@@ -1485,7 +1451,7 @@ export class Artboard extends GroupShape {
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolSlotShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >
+        childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >
     ) {
         super(
             crdtidx,

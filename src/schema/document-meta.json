@@ -21,13 +21,23 @@
         "lastCmdId": {
             "type": "string",
             "default": ""
+        },
+        "symbolregist": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            }
         }
     },
     "required": [
         "id",
         "name",
         "pagesList",
-        "lastCmdId"
+        "lastCmdId",
+        "symbolregist"
     ],
     "additionalProperties": false
 }

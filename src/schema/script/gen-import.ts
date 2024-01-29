@@ -397,6 +397,7 @@ export function genimport(schemadir: string, outfile: string, implpath: string, 
         `
 export interface IImportContext {
     document: impl.Document
+    curPage: string
 }
 `)
     order.sort((a, b) => a.order - b.order)

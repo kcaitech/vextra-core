@@ -9,7 +9,7 @@ import * as types from "./typesdefine"
 export interface IExportContext {
     symbols?:Set<string>
     medias?:Set<string>
-    referenced?:Set<string>
+    refsymbols?:Set<string>
 }
 /* winding rule */
 export function exportWindingRule(source: types.WindingRule, ctx?: IExportContext): types.WindingRule {
@@ -480,34 +480,6 @@ export function exportEllipse(source: types.Ellipse, ctx?: IExportContext): type
     }
     return ret
 }
-/* document syms */
-export function exportDocumentSyms(source: types.DocumentSyms, ctx?: IExportContext): types.DocumentSyms {
-    const ret = {
-        symbols: (() => {
-            const val = source.symbols;
-            const ret: any = {};
-            val.forEach((v, k) => {
-                ret[k] = (() => {
-                    const val = v;
-                    if (typeof val != 'object') {
-                        return val
-                    }
-                    if (val.typeId == 'symbol-union-shape') {
-                        return exportSymbolUnionShape(val as types.SymbolUnionShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-shape') {
-                        return exportSymbolShape(val as types.SymbolShape, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-            });
-            return ret;
-        })(),
-    }
-    return ret
-}
 /* document meta */
 export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportContext): types.DocumentMeta {
     const ret = {
@@ -522,6 +494,14 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
             return ret
         })(),
         lastCmdId: source.lastCmdId,
+        symbolregist: (() => {
+            const val = source.symbolregist;
+            const ret: any = {};
+            val.forEach((v, k) => {
+                ret[k] = v
+            });
+            return ret;
+        })(),
     }
     return ret
 }
@@ -871,43 +851,6 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
     return ret
 }
-/* symbol slot shape */
-export function exportSymbolSlotShape(source: types.SymbolSlotShape, ctx?: IExportContext): types.SymbolSlotShape {
-    const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
-        typeId: source.typeId,
-        id: source.id,
-        name: source.name,
-        type: exportShapeType(source.type, ctx),
-        frame: exportShapeFrame(source.frame, ctx),
-        style: exportStyle(source.style, ctx),
-        boolOp: source.boolOp && exportBoolOp(source.boolOp, ctx),
-        isFixedToViewport: source.isFixedToViewport,
-        isFlippedHorizontal: source.isFlippedHorizontal,
-        isFlippedVertical: source.isFlippedVertical,
-        isLocked: source.isLocked,
-        isVisible: source.isVisible,
-        exportOptions: source.exportOptions && exportExportOptions(source.exportOptions, ctx),
-        nameIsFixed: source.nameIsFixed,
-        resizingConstraint: source.resizingConstraint,
-        resizingType: source.resizingType && exportResizeType(source.resizingType, ctx),
-        rotation: source.rotation,
-        constrainerProportions: source.constrainerProportions,
-        clippingMaskMode: source.clippingMaskMode,
-        hasClippingMask: source.hasClippingMask,
-        shouldBreakMaskChain: source.shouldBreakMaskChain,
-        varbinds: source.varbinds && (() => {
-                const val = source.varbinds;
-                const ret: any = {};
-                val.forEach((v, k) => {
-                    ret[k] = v
-                });
-                return ret;
-            })(),
-        refId: source.refId,
-    }
-    return ret
-}
 /* symbol ref shape */
 export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExportContext): types.SymbolRefShape {
     const ret = {
@@ -960,7 +903,7 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         })(),
     }
     // inject code
-    if (ctx?.referenced) ctx.referenced.add(ret.refId);
+    if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
     return ret
 }
 /* span attr */
@@ -1367,9 +1310,6 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
                     if (val.typeId == 'symbol-ref-shape') {
                         return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
-                    if (val.typeId == 'symbol-slot-shape') {
-                        return exportSymbolSlotShape(val as types.SymbolSlotShape, ctx)
-                    }
                     if (val.typeId == 'symbol-shape') {
                         return exportSymbolShape(val as types.SymbolShape, ctx)
                     }
@@ -1448,9 +1388,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                         }
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
-                        }
-                        if (val.typeId == 'symbol-slot-shape') {
-                            return exportSymbolSlotShape(val as types.SymbolSlotShape, ctx)
                         }
                         if (val.typeId == 'symbol-shape') {
                             return exportSymbolShape(val as types.SymbolShape, ctx)
@@ -1581,9 +1518,6 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
-                        if (val.typeId == 'symbol-slot-shape') {
-                            return exportSymbolSlotShape(val as types.SymbolSlotShape, ctx)
-                        }
                         if (val.typeId == 'symbol-shape') {
                             return exportSymbolShape(val as types.SymbolShape, ctx)
                         }
@@ -1711,9 +1645,6 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
                         }
-                        if (val.typeId == 'symbol-slot-shape') {
-                            return exportSymbolSlotShape(val as types.SymbolSlotShape, ctx)
-                        }
                         if (val.typeId == 'symbol-shape') {
                             return exportSymbolShape(val as types.SymbolShape, ctx)
                         }
@@ -1816,9 +1747,6 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
                         }
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
-                        }
-                        if (val.typeId == 'symbol-slot-shape') {
-                            return exportSymbolSlotShape(val as types.SymbolSlotShape, ctx)
                         }
                         if (val.typeId == 'symbol-shape') {
                             return exportSymbolShape(val as types.SymbolShape, ctx)
@@ -2019,9 +1947,6 @@ export function exportArtboard(source: types.Artboard, ctx?: IExportContext): ty
                         }
                         if (val.typeId == 'symbol-ref-shape') {
                             return exportSymbolRefShape(val as types.SymbolRefShape, ctx)
-                        }
-                        if (val.typeId == 'symbol-slot-shape') {
-                            return exportSymbolSlotShape(val as types.SymbolSlotShape, ctx)
                         }
                         if (val.typeId == 'symbol-shape') {
                             return exportSymbolShape(val as types.SymbolShape, ctx)

@@ -8,7 +8,7 @@ inject['SymbolShape']['after'] = `\
 inject['SymbolRefShape'] = {};
 inject['SymbolRefShape']['after'] = `\
     // inject code
-    if (ctx?.referenced) ctx.referenced.add(ret.refId);
+    if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 `
 
 inject['ImageShape'] = {};

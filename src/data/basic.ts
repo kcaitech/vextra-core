@@ -156,7 +156,7 @@ export class ResourceMgr<T> extends WatchableObject {
     private __resource = new Map<string, T>()
     private __loader?: (id: string) => Promise<T>
     private __updater?: (data: T) => void;
-    private __guard?: IDataGuard;
+    private __guard?: (data: T) => T;
     private __loading: Map<string, {
         id: string,
         timeout: number,
@@ -165,7 +165,7 @@ export class ResourceMgr<T> extends WatchableObject {
     }> = new Map();
     private __crdtpath: string[];
 
-    constructor(crdtpath: string[], guard?: IDataGuard) {
+    constructor(crdtpath: string[], guard?: (data: T) => T) {
         super();
         // this.__loader = loader;
         this.__guard = guard;
@@ -226,7 +226,7 @@ export class ResourceMgr<T> extends WatchableObject {
         return this.__resource.get(id)
     }
     add(id: string, r: T) {
-        r = this.__guard && this.__guard.guard(r) || r
+        r = this.__guard && this.__guard(r) || r
         this.__resource.set(id, r);
         if (this.__updater) this.__updater(r);
         this.notify();

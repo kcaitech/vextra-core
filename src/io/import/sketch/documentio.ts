@@ -1,6 +1,6 @@
 
 import { uuid } from "../../../basic/uuid";
-import { BasicArray, IDataGuard } from "../../../data/basic";
+import { BasicArray, BasicMap, IDataGuard } from "../../../data/basic";
 import {Document, PageListItem} from "../../../data/document";
 import { LzData } from "./lzdata";
 import { IJSON } from "./basic";
@@ -40,7 +40,7 @@ export async function importDocument(name: string, lzData: LzData, gurad: IDataG
     const pageList = await importPageList(lzData, pageIds);
     let id = data["do_objectID"];
     if (!id || id.length === 0) id = uuid();
-    const document = new Document(id, "", "", name, pageList, gurad);
+    const document = new Document(id, "", "", new BasicMap(), name, pageList, gurad);
     
     new DataLoader(lzData, document);
 

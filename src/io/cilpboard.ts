@@ -176,9 +176,10 @@ function match_for_contact(source: Shape[]) {
 }
 
 // 从剪切板导入图形
-export function import_shape_from_clipboard(document: Document, source: Shape[], medias?: any) {
+export function import_shape_from_clipboard(document: Document, page: Page, source: Shape[], medias?: any) {
     const ctx: IImportContext = new class implements IImportContext {
         document: Document = document;
+        curPage: string = page.id;
     };
     const result: Shape[] = [];
 
@@ -265,8 +266,8 @@ export function import_shape_from_clipboard(document: Document, source: Shape[],
  * @param src 原对象
  * @returns
  */
-export function transform_data(document: Document, src: Shape[]): Shape[] {
-    return import_shape_from_clipboard(document, export_shape(src));
+export function transform_data(document: Document, page: Page, src: Shape[]): Shape[] {
+    return import_shape_from_clipboard(document, page, export_shape(src));
 }
 
 /**

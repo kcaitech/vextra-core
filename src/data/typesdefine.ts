@@ -367,16 +367,13 @@ export type Ellipse = {
     rx: number
     ry: number
 }
-/* document syms */
-export type DocumentSyms = {
-    symbols: Map<string, (SymbolUnionShape | SymbolShape)>
-}
 /* document meta */
 export type DocumentMeta = {
     id: string
     name: string
     pagesList: PageListItem[]
     lastCmdId: string
+    symbolregist: Map<string, string>
 }
 /* curve point */
 export type CurvePoint = {
@@ -587,10 +584,6 @@ export type TableCell = Shape & {
     rowSpan?: number
     colSpan?: number
 }
-/* symbol slot shape */
-export type SymbolSlotShape = Shape & {
-    refId?: string
-}
 /* symbol ref shape */
 export type SymbolRefShape = Shape & {
     refId: string
@@ -643,7 +636,7 @@ export type ImageShape = PathShape & {
 }
 /* group shape */
 export type GroupShape = Shape & {
-    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolSlotShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape)[]
+    childs: (GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape)[]
     isBoolOpShape?: boolean
     fixedRadius?: number
 }
