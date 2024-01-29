@@ -1,4 +1,3 @@
-import { Page } from "../../data/page";
 import { Op, OpType } from "../../coop/common/op";
 import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, crdtArrayMove, undoArrayMove } from "../../coop/client/crdt";
 import { Shape } from "../../data/shape";

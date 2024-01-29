@@ -174,6 +174,9 @@ export class Api {
     pageMove(document: Document, pageId: string, fromIdx: number, toIdx: number) {
         this.addOp(basicapi.pageMove(document, fromIdx, toIdx));
     }
+    registSymbol(document: Document, symbolId: string, pageId: string) {
+        this.addOp(basicapi.registSymbol(document, symbolId, pageId));
+    }
     shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number) {
         this.addOp(basicapi.shapeInsert(page, parent, shape, index, this.needUpdateFrame));
         return page.getShape(shape.id) as Shape;

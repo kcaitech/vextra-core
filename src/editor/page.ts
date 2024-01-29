@@ -53,8 +53,7 @@ import {
     importArtboard,
     importBorder, importShapeFrame,
     importStyle,
-    importSymbolShape,
-    importVariable
+    importSymbolShape
 } from "../data/baseimport";
 import { gPal } from "../basic/pal";
 import { findUsableBorderStyle, findUsableFillStyle } from "../render/boolgroup";
@@ -67,7 +66,7 @@ import {
     clear_binds_effect,
     find_state_space,
     get_symbol_by_layer,
-    init_state, is_symbol_but_not_union,
+    init_state,
     make_union,
     modify_frame_after_inset_state,
     modify_index,
@@ -471,6 +470,7 @@ export class PageEditor {
                 const style = importStyle(exportStyle(shape0.style));
                 const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
+                api.registSymbol(document, symbolShape.id, this.__page.id);
                 sym = api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
                 const children = shape0.childs;
                 for (let i = 0, len = children.length; i < len; ++i) {
@@ -480,6 +480,7 @@ export class PageEditor {
             } else {
                 const symbolShape = newSymbolShape(name ?? shape0.name, frame);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
+                api.registSymbol(document, symbolShape.id, this.__page.id);
                 sym = group(this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
             }
             if (sym) {
@@ -566,10 +567,12 @@ export class PageEditor {
             }
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
-                document: Document = _this.__document
+                document: Document = _this.__document;
+                curPage: string = _this.__page.id
             };
-            const copy = importSymbolShape(source, ctx); // 需要设置ctx
             const api = this.__repo.start("makeStateAt", {});
+            api.registSymbol(this.__document, source.id, this.__page.id); // 先设置上, import好加入symmgr
+            const copy = importSymbolShape(source, ctx); // 需要设置ctx
             const new_state = api.shapeInsert(this.__page, union, copy, idx + 1);
             modify_frame_after_inset_state(this.__page, api, union);
             init_state(api, this.__page, new_state as SymbolShape, dlt);
@@ -686,7 +689,8 @@ export class PageEditor {
             let style: any = sym.style;
             const _this = this;
             const ctx: IImportContext = new class implements IImportContext {
-                document: Document = _this.__document
+                document: Document = _this.__document;
+                curPage: string = _this.__page.id
             };
             if (style) {
                 style = importStyle(exportStyle(style), ctx);
@@ -740,7 +744,8 @@ export class PageEditor {
     private cloneStyle(style: Style): Style {
         const _this = this;
         const ctx: IImportContext = new class implements IImportContext {
-            document: Document = _this.__document
+            document: Document = _this.__document;
+            curPage: string = _this.__page.id
         };
         return importStyle(style, ctx);
     }
@@ -1354,7 +1359,7 @@ export class PageEditor {
                 if (!del_res) throw new Error('delete failed');
 
                 // replacement的原版数据只能使用一次，使用一次之后的替换应该使用replacement的副本数据，并确保每一份副本数据中不存在共同对象引用
-                const copy: Shape[] = i < 1 ? replacement : transform_data(document, replacement);
+                const copy: Shape[] = i < 1 ? replacement : transform_data(document, this.__page, replacement);
                 for (let r_i = 0; r_i < len; r_i++) { // 逐个插入replacement中的图形
                     let r = copy[r_i];
                     r.id = uuid();

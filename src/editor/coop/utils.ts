@@ -203,9 +203,9 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
     page.__collect.notify('collect'); // 收集辅助线采用的关键点位
 }
 
-export function importShape(data: string | Object , document: Document) {
+export function importShape(data: string | Object , document: Document, page: Page) {
     const source: { [key: string]: any } = typeof data === 'string' ? JSON.parse(data) : data;
-    const ctx: IImportContext = new class implements IImportContext { document: Document = document };
+    const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = page.id };
     // if (source.typeId == 'shape') {
     //     return importShape(source as types.Shape, ctx)
     // }

@@ -1,4 +1,3 @@
-import { Page } from "../../data/page";
 import { OpType } from "../../coop/common/op";
 import { Basic, ResourceMgr } from "../../data/basic";
 import { Shape } from "../../data/shape";

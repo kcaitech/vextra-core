@@ -77,7 +77,7 @@ export function addCommonAttr(shape: Shape) {
 export function newDocument(documentName: string, repo: Repository): Document {
     const dId = uuid();
     const pageList = new BasicArray<PageListItem>();
-    return new Document(dId, "", "", documentName, pageList, repo);
+    return new Document(dId, "", "", new BasicMap(), documentName, pageList, repo);
 }
 
 export function newPage(name: string): Page {

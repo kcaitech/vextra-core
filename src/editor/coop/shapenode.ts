@@ -11,7 +11,7 @@ function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: 
 
     // todo
     if (op.to && op.data && !(op.data instanceof Shape)) { // todo 不管是不是shape都重新生成个新的？// 这有个问题，如果id没变，上层的监听一直在旧shape上
-        op.data = importShape(op.data, document);
+        op.data = importShape(op.data, document, page);
     }
 
     let shape = page.getShape(op.id);

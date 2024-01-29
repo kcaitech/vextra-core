@@ -4,6 +4,7 @@ import { Op } from "../../coop/common/op";
 import { CrdtIndex } from "../../data/crdt";
 import { crdtArrayInsert, crdtArrayMove, crdtArrayRemove, crdtSetAttr, crdtShapeInsert, crdtShapeMove, crdtShapeRemove } from "./basic";
 import { GroupShape, Shape } from "../../data/shape";
+import { BasicMap } from "../../data/basic";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     if (index < 0) return;
@@ -42,6 +43,11 @@ export function pageModifyName(document: Document, pageId: string, name: string)
     const item = document.pagesList.find(p => p.id === pageId);
     return item && crdtSetAttr(item, "name", name);
 }
+
+export function registSymbol(document: Document, symbolId: string, pageId: string) {
+    return crdtSetAttr(document.symbolregist, symbolId, pageId);
+}
+
 /**
  * 
  * @param document 
