@@ -81,7 +81,7 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
     const width = widthWeight / table.widthTotalWeights * table.frame.width;
     const height = heightWeight / table.heightTotalWeights * table.frame.height;
     // shape.text.updateSize(width, height);
-    const layout1 = shape.text.getLayout3(width, height, shape.id, undefined);
+    const layout1 = shape.text.getLayout3(width, height, shape.id, undefined); // 按理这里应该取的是个已有的layout
     shape.text.dropLayout(layout1.token, shape.id);
     const layout = layout1.layout;
     if (layout.contentHeight > (height + float_accuracy)) {
