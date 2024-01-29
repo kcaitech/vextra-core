@@ -4,7 +4,7 @@ function hasSetBit(val: number, mask: number): boolean {
     return !!(val & mask);
 }
 function setBit(val: number, mask: number, b: boolean): number {
-    return b ? (val | mask) : (val & (~mask));
+    return b ? (val ^ mask) : (val ^ (~~mask));
 }
 
 export const ResizingConstraints = {
@@ -49,6 +49,9 @@ export const ResizingConstraints = {
     setLeft(val: number, b: boolean): number {
         return setBit(val, this.Left, b);
     },
+    setLR(val: number, b: boolean): number {
+        return this.setRight(val, b) & this.setLeft(val, b)
+    },
     setBottom(val: number, b: boolean): number {
         return setBit(val, this.Bottom, b);
     },
@@ -57,6 +60,9 @@ export const ResizingConstraints = {
     },
     setTop(val: number, b: boolean): number {
         return setBit(val, this.Top, b);
+    },
+    setTB(val: number, b: boolean): number {
+        return this.setTop(val, b) & this.setBottom(val, b)
     },
 }
 
