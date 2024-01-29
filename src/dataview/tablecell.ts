@@ -23,11 +23,11 @@ export class TableCellView extends ShapeView {
     }
 
     protected afterInit(): void {
-        const frame = this.frame;
-        if (!this.isVirtualShape && this.cellType === TableCellType.Text) {
-            const text = this.getText();
-            text.updateSize(frame.width, frame.height);
-        }
+        // const frame = this.frame;
+        // if (!this.isVirtualShape && this.cellType === TableCellType.Text) {
+        //     const text = this.getText();
+        //     text.updateSize(frame.width, frame.height);
+        // }
     }
 
     get data(): TableCell {
@@ -43,10 +43,10 @@ export class TableCellView extends ShapeView {
             this.updateLayoutArgs(frame, undefined, undefined, undefined, undefined);
             this.m_textpath = undefined;
             this.m_layout = undefined; // todo
-            if (!this.m_isVirtual) {
-                const shape = this.m_data as TableCell;
-                shape.text?.updateSize(frame.width, frame.height);
-            }
+            // if (!this.m_isVirtual) {
+            //     const shape = this.m_data as TableCell;
+            //     shape.text?.updateSize(frame.width, frame.height);
+            // }
             this.m_ctx.setDirty(this);
         }
     }
@@ -66,16 +66,28 @@ export class TableCellView extends ShapeView {
         return this.data.cellType;
     }
 
+    private m_layout?: TextLayout;
+    private m_textpath?: Path;
+
+    __layoutToken: string | undefined;
+    __preText: Text | undefined;
     getLayout() {
         const text = this.getText();
-        if (this.isVirtualShape) {
-            const frame = this.frame;
-            if (!this.m_layout) this.m_layout = text.getLayout2(frame.width, frame.height);
-            return this.m_layout;
+        if (this.__preText !== text && this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id); 
+        const frame = this.frame;
+        const layout = text.getLayout3(frame.width, frame.height, this.id, this.__layoutToken);
+        this.__layoutToken = layout.token;
+        this.__preText = text;
+
+        if (this.m_layout !== layout.layout) {
+            this.m_textpath = undefined;
         }
-        else {
-            return text.getLayout();
-        }
+
+        this.m_layout = layout.layout;
+        // if (this.isVirtualShape) {
+        //     this.updateFrameByLayout();
+        // }
+        return layout.layout;
     }
 
     locateText(x: number, y: number): TextLocate {
@@ -102,8 +114,8 @@ export class TableCellView extends ShapeView {
         return true;
     }
 
-    private m_layout?: TextLayout;
-    private m_textpath?: Path;
+    // private m_layout?: TextLayout;
+    // private m_textpath?: Path;
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);

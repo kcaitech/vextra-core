@@ -53,6 +53,28 @@ export class Basic {
         }
         return this.__parent.getCrdtPath().concat(this.__propKey!);
     }
+
+    /**
+     * for command
+     */
+    getOpTarget(path: string[]): any {
+        let target = this as any;
+        for (let i = 0; i < path.length; i++) {
+            const k = path[i];
+            if (target instanceof Map) {
+                target = target.get(k);
+            } else if (target instanceof Array) {
+                target = target.find((v) => v.id === k);
+            } else {
+                target = target[k];
+            }
+            if (!target) {
+                console.warn("not find target " + k, "path :" + path.join(','))
+                return;
+            }
+        }
+        return target;
+    }
 }
 
 export class BasicArray<T> extends Array<T> {

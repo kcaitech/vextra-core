@@ -140,28 +140,6 @@ export class Shape extends Basic implements classes.Shape {
         this.parent?.bubblenotify(...args);
     }
 
-    /**
-     * for command
-     */
-    getOpTarget(path: string[]): any {
-        let target = this as any;
-        for (let i = 0; i < path.length; i++) {
-            const k = path[i];
-            if (target instanceof Map) {
-                target = target.get(k);
-            } else if (target instanceof Array) {
-                target = target.find((v) => v.id === k);
-            } else {
-                target = target[k];
-            }
-            if (!target) {
-                console.warn("not find target " + k, "path :" + path.join(','))
-                return;
-            }
-        }
-        return target;
-    }
-
     get naviChilds(): Shape[] | undefined {
         return undefined;
     }
@@ -1145,7 +1123,13 @@ export class TextShape extends Shape implements classes.TextShape {
             style
         )
         this.text = text
-        text.updateSize(frame.width, frame.height);
+        // text.updateSize(frame.width, frame.height);
+    }
+
+    getOpTarget(path: string[]) {
+        if (path.length === 0) return this;
+        if (path[0] === 'text') return this.text.getOpTarget(path.slice(1));
+        return super.getOpTarget(path);
     }
 
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
@@ -1169,17 +1153,24 @@ export class TextShape extends Shape implements classes.TextShape {
         return new Path(path);
     }
 
-    setFrameSize(w: number, h: number) {
-        super.setFrameSize(w, h);
-        this.text.updateSize(this.frame.width, this.frame.height)
+    // setFrameSize(w: number, h: number) {
+    //     super.setFrameSize(w, h);
+    //     this.text.updateSize(this.frame.width, this.frame.height)
+    // }
+
+    dropLayout(token: string, owner: string) {
+        this.text.dropLayout(token, owner);
+    }
+
+    getLayout3(width: number, height: number, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
+        return this.text.getLayout3(width, height, owner, token);
     }
 
     getLayout(): TextLayout {
-        return this.text.getLayout();
-    }
-
-    getLayout2(width: number, height: number): TextLayout {
-        return this.text.getLayout2(width, height);
+        const frame = this.frame;
+        const layout = this.getLayout3(frame.width, frame.height, this.id, undefined);
+        this.dropLayout(layout.token, this.id);
+        return layout.layout;
     }
 
     getText(): Text {

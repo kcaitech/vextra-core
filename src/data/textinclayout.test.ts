@@ -30,7 +30,7 @@ test("inc layout insert", () => {
     // init pal
     gPal.text.textMeasure = textMeasure;
     const text: Text = newText("abc");
-    let layout = text.getLayout();
+    // let layout = text.getLayout(100, 100, "owner", undefined);
 
     text.insertText("\n", 1);
     chai.assert.equal(text.getText(0, Number.MAX_VALUE), "a\nbc\n");

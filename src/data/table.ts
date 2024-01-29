@@ -10,6 +10,7 @@ import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 import { CrdtNumber, CrdtIndex } from "./crdt";
+import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 
@@ -40,6 +41,12 @@ export class TableCell extends Shape implements classes.TableCell {
             frame,
             style
         )
+    }
+
+    getOpTarget(path: string[]) {
+        if (path.length === 0) return this;
+        if (path[0] === 'text') return this.text?.getOpTarget(path.slice(1));
+        return super.getOpTarget(path);
     }
 
     getCrdtPath(): string[] {
@@ -122,15 +129,18 @@ export class TableCell extends Shape implements classes.TableCell {
     }
 
     // text
-    setFrameSize(w: number, h: number) {
-        super.setFrameSize(w, h);
-        if (this.text) this.text.updateSize(this.frame.width, this.frame.height)
-    }
+    // setFrameSize(w: number, h: number) {
+    //     super.setFrameSize(w, h);
+    //     if (this.text) this.text.updateSize(this.frame.width, this.frame.height)
+    // }
 
     getText(): Text {
         if (!this.text) throw new Error("");
         return this.text;
     }
+
+    // todo
+    __layoutToken: string | undefined;
 
     getLayout(): TextLayout | undefined {
         if (!this.text) return;
@@ -152,9 +162,22 @@ export class TableCell extends Shape implements classes.TableCell {
 
         const width = widthWeight / table.widthTotalWeights * table.frame.width;
         const height = heightWeight / table.heightTotalWeights * table.frame.height;
-        this.text.updateSize(width, height);
+        // this.text.updateSize(width, height);
 
-        return this.text.getLayout();
+        const layout = this.text.getLayout3(width, height, this.id, this.__layoutToken);
+
+        this.__layoutToken = layout.token;
+        return layout.layout;
+    }
+
+    locateText(x: number, y: number): TextLocate {
+        return locateText(this.getLayout()!, x, y);
+    }
+    locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
+        return locateCursor(this.getLayout()!, index, cursorAtBefore);
+    }
+    locateRange(start: number, end: number): { x: number, y: number }[] {
+        return locateRange(this.getLayout()!, start, end);
     }
 
     setContentType(contentType: TableCellType | undefined) {
