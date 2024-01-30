@@ -139,7 +139,12 @@ export interface AsyncTransfer {
     stick: (dx: number, dy: number) => void;
     transByWheel: (dx: number, dy: number) => void;
     shortPaste: (shapes: Shape[], actions: { parent: GroupShape, index: number }[]) => false | Shape[];
-
+    setEnvs: (envs: Map<string, { shape: ShapeView, index: number }[]>) => void;
+    getEnvs: () => Map<string, { shape: ShapeView, index: number }[]>;
+    setExceptEnvs: (except: ShapeView[]) => void;
+    getExceptEnvs: () => ShapeView[];
+    backToStartEnv: (emit_by: Shape, dlt: string) => void;
+    setCurrentEnv: (cv: Shape | Page) => void;
     close: () => undefined;
     abort: () => void;
 }
@@ -691,100 +696,65 @@ export class Controller {
 
     // 图形位置移动
     public asyncTransfer(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncTransfer {
-        let shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
+        let shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
+        let origin_envs = new Map<string, { shape: ShapeView, index: number }[]>(); // 记录图层的原环境
+        let except_envs: ShapeView[] = [];
+        let current_env_id: string = '';
 
         const api = this.__repo.start("transfer", {});
         let status: Status = Status.Pending;
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             try {
-                status = Status.Pending;
-
-                const parents: Shape[] = [];
-                let ohflip = false;
-                let ovflip = false;
-                let p: Shape | undefined = targetParent;
-                while (p) {
-                    parents.push(p);
-                    if (p.isFlippedHorizontal) {
-                        ohflip = !ohflip;
-                    }
-                    if (p.isFlippedVertical) {
-                        ovflip = !ovflip;
-                    }
-                    p = p.parent;
+                if (targetParent.id === current_env_id) {
+                    // console.log('targetParent.id === current_env_id');
+                    return;
                 }
 
-                const pm = targetParent.matrix2Root();
-                const pminverse = pm.inverse;
+                status = Status.Pending;
+                const env_transform = __get_env_transform_for_migrate(targetParent);
 
                 let index = targetParent.childs.length;
                 for (let i = 0, len = sortedShapes.length; i < len; i++) {
-                    const shape = sortedShapes[i];
-                    const error = unable_to_migrate(targetParent, shape);
-                    if (error) {
-                        console.log('migrate error:', error);
-                        continue;
-                    }
-                    const origin: GroupShape = shape.parent as GroupShape;
-                    if (is_state(shape)) {
-                        const name = get_state_name(shape as any, dlt);
-                        api.shapeModifyName(page, shape, `${origin.name}/${name}`);
-                    }
-
-                    // origin
-                    let hflip = false;
-                    let vflip = false;
-                    let p0: Shape | undefined = shape.parent;
-                    while (p0) {
-                        if (p0.isFlippedHorizontal) {
-                            hflip = !hflip;
-                        }
-                        if (p0.isFlippedVertical) {
-                            vflip = !vflip;
-                        }
-                        p0 = p0.parent;
-                    }
-
-                    const m = shape.matrix2Root();
-                    const { x, y } = m.computeCoord(0, 0);
-                    api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
-
-                    if (hflip !== ohflip) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
-                    if (vflip !== ovflip) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
-
-                    m.multiAtLeft(pminverse);
-                    let sina = m.m10;
-                    let cosa = m.m00;
-                    if (shape.isFlippedVertical) sina = -sina;
-                    if (shape.isFlippedHorizontal) cosa = -cosa;
-                    let rotate = Math.asin(sina); // 奇函数
-
-                    // 确定角度所在象限
-                    // sin(π-a) = sin(a)
-                    // sin(-π-a) = sin(a)
-                    // asin 返回值范围 -π/2 ~ π/2, 第1、4象限
-                    if (cosa < 0) {
-                        if (sina > 0) rotate = Math.PI - rotate;
-                        else if (sina < 0) rotate = -Math.PI - rotate;
-                        else rotate = Math.PI;
-                    }
-
-                    if (!Number.isNaN(rotate)) {
-                        const r = (rotate / (2 * Math.PI) * 360) % 360;
-                        if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
-                    }
-                    else {
-                        console.log('rotate is NaN', rotate);
-                    }
-
-                    translateTo(api, page, shape, x, y);
-                    after_migrate(page, api, origin);
+                    __migrate(api, page, targetParent, sortedShapes[i], dlt, index, env_transform);
+                    index++;
                 }
+
+                setCurrentEnv(targetParent);
+
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const backToStartEnv = (emit_by: Shape, dlt: string) => { // 特殊的migrate，让所有图层回到原环境
+            try {
+                if (emit_by.id === current_env_id) {
+                    // console.log('emit_by.id === current_env_id');
+                    return;
+                }
+
+                status = Status.Pending;
+                origin_envs.forEach((v, k) => {
+                    const op = page.getShape(k) as GroupShape | undefined;
+                    if (!op) {
+                        return;
+                    }
+
+                    const env_transform = __get_env_transform_for_migrate(op);
+
+                    for (let i = 0, l = v.length; i < l; i++) {
+                        const _v = v[i];
+                        __migrate(api, page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index, env_transform);
+                    }
+                });
+                this.__repo.transactCtx.fireNotify();
+                setCurrentEnv(emit_by);
+                status = Status.Fulfilled;
+            } catch (error) {
+                console.error(error);
                 status = Status.Exception;
             }
         }
@@ -858,7 +828,29 @@ export class Controller {
         const abort = () => {
             this.__repo.rollback();
         }
-        return { migrate, trans, stick, transByWheel, shortPaste, abort, close }
+        const setEnvs = (envs: Map<string, { shape: ShapeView, index: number }[]>) => {
+            origin_envs = envs;
+        }
+        const getEnvs = () => {
+            return origin_envs;
+        }
+        const setExceptEnvs = (except: ShapeView[]) => {
+            except_envs = except;
+        }
+        const getExceptEnvs = () => {
+            return except_envs;
+        }
+        const setCurrentEnv = (cv: Shape | Page) => {
+            current_env_id = cv.id;
+        }
+        return {
+            migrate, trans, stick, transByWheel, shortPaste,
+            setEnvs, getEnvs,
+            setExceptEnvs, getExceptEnvs,
+            backToStartEnv,
+            setCurrentEnv,
+            abort, close
+        }
     }
 
     public asyncPathEditor(_shape: PathShape | PathShapeView, _page: Page | PageView): AsyncPathEditor {
@@ -1268,4 +1260,95 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
     if (s instanceof GroupShape && s.type === ShapeType.Group) {
         afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH));
     }
+}
+
+function __migrate(
+    api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
+    transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }
+) {
+    const error = unable_to_migrate(targetParent, shape);
+    if (error) {
+        console.log('migrate error:', error);
+        return;
+    }
+    const origin: GroupShape = shape.parent as GroupShape;
+
+    if (origin.id === targetParent.id) {
+        console.log('origin.id === targetParent.id');
+        return;
+    }
+
+    if (is_state(shape)) {
+        const name = get_state_name(shape as any, dlt);
+        api.shapeModifyName(page, shape, `${origin.name}/${name}`);
+    }
+
+    // origin
+    let hflip = false;
+    let vflip = false;
+    let p0: Shape | undefined = shape.parent;
+    while (p0) {
+        if (p0.isFlippedHorizontal) {
+            hflip = !hflip;
+        }
+        if (p0.isFlippedVertical) {
+            vflip = !vflip;
+        }
+        p0 = p0.parent;
+    }
+
+    const m = shape.matrix2Root();
+    const { x, y } = m.computeCoord(0, 0);
+    api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
+
+    if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
+    if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+
+    m.multiAtLeft(transform.pminverse);
+    let sina = m.m10;
+    let cosa = m.m00;
+    if (shape.isFlippedVertical) sina = -sina;
+    if (shape.isFlippedHorizontal) cosa = -cosa;
+    let rotate = Math.asin(sina); // 奇函数
+
+    // 确定角度所在象限
+    // sin(π-a) = sin(a)
+    // sin(-π-a) = sin(a)
+    // asin 返回值范围 -π/2 ~ π/2, 第1、4象限
+    if (cosa < 0) {
+        if (sina > 0) rotate = Math.PI - rotate;
+        else if (sina < 0) rotate = -Math.PI - rotate;
+        else rotate = Math.PI;
+    }
+
+    if (!Number.isNaN(rotate)) {
+        const r = (rotate / (2 * Math.PI) * 360) % 360;
+        if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
+    }
+    else {
+        console.log('rotate is NaN', rotate);
+    }
+
+    translateTo(api, page, shape, x, y);
+    after_migrate(page, api, origin);
+}
+function __get_env_transform_for_migrate(target_env: GroupShape) {
+    let ohflip = false;
+    let ovflip = false;
+    let p: Shape | undefined = target_env;
+
+    while (p) {
+        if (p.isFlippedHorizontal) {
+            ohflip = !ohflip;
+        }
+        if (p.isFlippedVertical) {
+            ovflip = !ovflip;
+        }
+        p = p.parent;
+    }
+
+    const pm = target_env.matrix2Root();
+    const pminverse = pm.inverse;
+
+    return { ohflip, ovflip, pminverse };
 }
