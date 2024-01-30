@@ -28,16 +28,15 @@ export class resizingConstraintEditor {
     }
 
     isCheckHorizontal(value: number) {
-        if (ResizingConstraints.hasLeft(value)) {
-            return ResizingConstraints.setLeft(value, false)
+        let newvalue = value
+        if (ResizingConstraints.hasLeft(newvalue)) {
+            newvalue = ResizingConstraints.setLeft(newvalue, false)
         }
-        if (ResizingConstraints.hasRight(value)) {
-            return ResizingConstraints.setRight(value, false)
+        if (ResizingConstraints.hasRight(newvalue)) {
+            newvalue = ResizingConstraints.setRight(newvalue, false)
         }
-        if (ResizingConstraints.hasWidth(value)) {
-            return ResizingConstraints.setWidth(value, false)
-        }
-        return value
+
+        return newvalue
     }
 
     isCheckVertical(value: number) {
@@ -47,10 +46,23 @@ export class resizingConstraintEditor {
         if (ResizingConstraints.hasBottom(value)) {
             return ResizingConstraints.setBottom(value, false)
         }
+
+        return value
+    }
+
+    isCheckWidth(value: number) {
+        let newvalue = value
+        if (ResizingConstraints.hasWidth(newvalue)) {
+            newvalue = ResizingConstraints.setTop(newvalue, false)
+        }
+        return newvalue
+    }
+
+    isCheckHeight(value: number) {
+
         if (ResizingConstraints.hasHeight(value)) {
             return ResizingConstraints.setHeight(value, false)
         }
-        return value
     }
 
     /**
@@ -69,13 +81,10 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) { // 在不影响太多性能的前提下修改数据前应该设置一些防线，尽管view层已有防线
                     continue;
                 }
-
                 const old_rc = shape.resizingConstraint || ResizingConstraints.Mask; // 默认值是Unset
-                this.isCheckHorizontal(old_rc)
-
                 const new_rc = ResizingConstraints.setLeft(this.isCheckHorizontal(old_rc), value);
-                console.log(new_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc); // modify 修改数据
+
             }
 
             this.__repo.commit(); // success 修改数据成功；start和success正常情况下一定是成对出现
@@ -95,10 +104,7 @@ export class resizingConstraintEditor {
                     continue;
                 }
                 const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
-                this.isCheckHorizontal(old_rc)
-                const new_rc = ResizingConstraints.setRight(this.isCheckHorizontal(old_rc), value);
-                console.log(new_rc);
-
+                const new_rc = ResizingConstraints.setRight(this.isCheckWidth(old_rc), value);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -119,10 +125,7 @@ export class resizingConstraintEditor {
                     continue;
                 }
                 const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
-                this.isCheckHorizontal(old_rc)
                 const new_rc = ResizingConstraints.setLR(this.isCheckHorizontal(old_rc), value);
-                console.log(new_rc);
-
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -144,11 +147,8 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-
                 const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
-                this.isCheckHorizontal(old_rc)
                 const new_rc = ResizingConstraints.setWidth(this.isCheckHorizontal(old_rc), value);
-                console.log(new_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -196,10 +196,10 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-               
+
                 const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
                 this.isCheckVertical(old_rc)
-                
+
                 const new_rc = ResizingConstraints.setBottom(this.isCheckVertical(old_rc), value);
                 console.log(new_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
@@ -223,10 +223,10 @@ export class resizingConstraintEditor {
                 if (this.disabled(shape)) {
                     continue;
                 }
-               
+
                 const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
                 this.isCheckVertical(old_rc)
-                
+
                 const new_rc = ResizingConstraints.setTB(this.isCheckVertical(old_rc), value);
                 console.log(new_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
