@@ -81,6 +81,8 @@ import { CmdGroup } from "../../coop/data/cmdgroup";
 import { CMDHandler } from "./handler";
 import { shapeModifyCurveMode } from "../basicapi";
 
+const myGlobal: any = typeof window !== "undefined" ? window : global;
+
 export class CMDExecuter {
     private __document: Document;
     private __repo: Repository;
@@ -107,8 +109,14 @@ export class CMDExecuter {
             this.__repo.commit();
             return true;
         } catch (e) {
-            console.error("exec error:", e)
-            console.error("error cmd:", cmd)
+            const execErrorHandle = typeof myGlobal.CMDExecuterExecErrorHandle === "function" ? myGlobal.CMDExecuterExecErrorHandle : undefined;
+            if (execErrorHandle) {
+                execErrorHandle(e, cmd);
+            }
+            else {
+                console.error("exec error:", e)
+                console.error("error cmd:", cmd)
+            }
             this.__repo.rollback();
             return false;
         } finally {
