@@ -1,7 +1,7 @@
 import { CurveMode, CurvePoint, Point2D } from "./baseclasses";
 
 function hasSetBit(val: number, mask: number): boolean {
-    return !!(val & mask);
+    return !(val & mask);
 }
 function setBit(val: number, mask: number, b: boolean): number {
     return b ? (val ^ mask) : (val ^ (~~mask));
@@ -38,6 +38,9 @@ export const ResizingConstraints = {
     },
     hasTop(val: number): boolean {
         return hasSetBit(val, this.Top);
+    },
+    hasLR(val: number): boolean {
+        return this.hasLeft(val) && this.hasRight(val)
     },
 
     setRight(val: number, b: boolean): number {
