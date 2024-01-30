@@ -195,6 +195,7 @@ export function importStrikethroughType(source: types.StrikethroughType, ctx?: I
 export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
     const ret: impl.Stop = new impl.Stop (
         importCrdtIndex(source.crdtidx, ctx),
+        source.id,
         source.position
     )
     if (source.color !== undefined) ret.color = importColor(source.color, ctx)

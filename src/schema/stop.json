@@ -5,6 +5,9 @@
         "crdtidx": {
             "$ref": "./crdt-index.json"
         },
+        "id": {
+            "type": "string"
+        },
         "position": {
             "type": "number",
             "default": 0
@@ -15,6 +18,7 @@
     },
     "required": [
         "crdtidx",
+        "id",
         "position"
     ],
     "additionalProperties": false

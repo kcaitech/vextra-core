@@ -113,6 +113,7 @@ export enum StrikethroughType {
 /* stop */
 export type Stop = {
     crdtidx: CrdtIndex
+    id: string
     position: number
     color?: Color
 }
