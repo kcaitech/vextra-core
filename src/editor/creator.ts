@@ -140,10 +140,6 @@ export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Art
 
     if (style) {
         artboard.style = style;
-    } else {
-        const fillColor = new Color(1, 255, 255, 255);
-        const fill = new Fill(uuid(), true, FillType.SolidColor, fillColor);
-        artboard.style.fills.push(fill);
     }
 
     addCommonAttr(artboard);
