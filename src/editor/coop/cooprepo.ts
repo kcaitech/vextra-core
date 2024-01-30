@@ -17,7 +17,7 @@ class MockNet implements ICoopNet {
         throw new Error("Method not implemented.");
     }
     postCmds(cmds: Cmd[]): void {
-        throw new Error("Method not implemented.");
+        // throw new Error("Method not implemented.");
     }
     watchCmds(watcher: (cmds: Cmd[]) => void): void {
         throw new Error("Method not implemented.");

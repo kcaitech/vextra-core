@@ -5,14 +5,26 @@ import { IdSetOp, IdSetOpRecord } from "../../coop/client/crdt";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
+import { IImportContext, importTableCell, importVariable } from "../../data/baseimport";
 
-function apply(target: Object, op: IdSetOp, needUpdateFrame: Shape[]): IdSetOpRecord {
-    let value = op.data;
-    if (typeof op.data === 'object') switch (op.data.typeId) {
-        // todo 需要import ? 需要
-        // import
-        // throw new Error("not implemented")
+function apply(document: Document, target: Object, op: IdSetOp, needUpdateFrame: Shape[]): IdSetOpRecord {
+    if (typeof op.data === 'string') {
+        // import data
+        const ctx: IImportContext = new class implements IImportContext {
+            document: Document = document;
+            curPage: string = "" // 这个用于判断symbol 可以不设置
+        };
+        const data = JSON.parse(op.data);
+        const typeId = data.typeId;
+        if (typeId === 'table-cell') {
+            op.data = importTableCell(data, ctx);
+        } else if (typeId === 'variable') {
+            op.data = importVariable(data, ctx);
+        } else {
+            throw new Error('need import ' + typeId)
+        }
     }
+    let value = op.data;
     if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + op.data.typeId);
     let origin;
     if (target instanceof Map) {
@@ -83,7 +95,7 @@ export class CrdtIdRepoNode extends RepoNode {
         this.saveOrigin(target, ops);
         this.ops.push(...ops);
         if (this.localops.length === 0 && target) {
-            apply(target, this.ops[this.ops.length - 1].op as IdSetOp, needUpdateFrame)
+            apply(this.document, target, this.ops[this.ops.length - 1].op as IdSetOp, needUpdateFrame)
         }
     }
     receiveLocal(ops: OpItem[]) {
@@ -125,7 +137,7 @@ export class CrdtIdRepoNode extends RepoNode {
         const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const op = ops[0].op as IdSetOpRecord;
         const rop = revert(op);
-        const record = target && apply(target, rop, needUpdateFrame) || rop
+        const record = target && apply(this.document, target, rop, needUpdateFrame) || rop
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
@@ -144,7 +156,7 @@ export class CrdtIdRepoNode extends RepoNode {
         const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const op = ops[ops.length - 1].op as IdSetOpRecord;
         const rop = revert(op);
-        const record = target && apply(target, rop, needUpdateFrame) || rop;
+        const record = target && apply(this.document, target, rop, needUpdateFrame) || rop;
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
@@ -179,7 +191,8 @@ export class CrdtIdRepoNode extends RepoNode {
             } else {
                 origin = op.origin; // 没有save的话，那么op只能是本地op
             }
-            apply(target, {
+            apply(this.document, 
+                target, {
                 data: origin,
                 id: op.id,
                 type: op.type,
@@ -189,7 +202,7 @@ export class CrdtIdRepoNode extends RepoNode {
         } else {
             const op = ops[verIdx - 1];
             if (!op) throw new Error("not found");
-            apply(target, op.op as IdSetOp, needUpdateFrame);
+            apply(this.document, target, op.op as IdSetOp, needUpdateFrame);
         }
     }
 

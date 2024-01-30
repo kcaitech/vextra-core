@@ -1,16 +1,57 @@
 import { Op, OpType } from "../../coop/common/op";
-import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, crdtArrayMove, undoArrayMove } from "../../coop/client/crdt";
+import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, crdtArrayMove } from "../../coop/client/crdt";
 import { Shape } from "../../data/shape";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
+import {
+    IImportContext,
+    importBorder,
+    importContactRole,
+    importCrdtNumber,
+    importCurvePoint,
+    importExportFormat,
+    importFill,
+    importPageListItem,
+    importPathSegment,
+    importShadow,
+    importStop
+} from "../../data/baseimport";
 
-function apply(target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord {
+const importh: { [key: string]: (data: any, ctx: IImportContext) => any } = {};
+importh['fill'] = importFill;
+importh['border'] = importBorder;
+importh['shadow'] = importShadow;
+importh['export-format'] = importExportFormat;
+importh['curve-point'] = importCurvePoint;
+importh['stop'] = importStop;
+importh['contact-role'] = importContactRole;
+importh['crdt-number'] = importCrdtNumber;
+importh['path-segment'] = importPathSegment;
+importh['page-list-item'] = importPageListItem;
+
+function apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord | undefined {
+    // todo import op.data
+    if (typeof op.data === 'string') {
+        const ctx: IImportContext = new class implements IImportContext {
+            document: Document = document;
+            curPage: string = "" // 这个用于判断symbol 可以不设置
+        };
+
+        const data = JSON.parse(op.data);
+        const typeId = data.typeId;
+        const h = importh[typeId];
+        if (h) {
+            op.data = h(data, ctx);
+        } else {
+            throw new Error('need import ' + typeId)
+        }
+    }
     return crdtArrayMove(target, op);
 }
 
-function unapply(target: Array<CrdtItem>, op: ArrayMoveOpRecord): ArrayMoveOpRecord {
-    return undoArrayMove(target, op);
+function unapply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOpRecord): ArrayMoveOpRecord | undefined {
+    return apply(document, target, revert(op));
 }
 
 function revert(op: ArrayMoveOpRecord): ArrayMoveOpRecord {
@@ -18,10 +59,11 @@ function revert(op: ArrayMoveOpRecord): ArrayMoveOpRecord {
         from: op.to,
         to: op.from,
         type: op.type,
-        data: op.data,
+        data: op.origin,
         order: Number.MAX_SAFE_INTEGER,
         id: op.id,
-        path: op.path
+        path: op.path,
+        origin: op.data
     }
 }
 
@@ -53,13 +95,13 @@ export class CrdtArrayReopNode extends RepoNode {
         // undo
         for (let i = this.localops.length - 1; i >= 0; i--) {
             const op = this.localops[i];
-            unapply(target, op.op as ArrayMoveOpRecord);
+            unapply(this.document, target, op.op as ArrayMoveOpRecord);
         }
 
         // do
         for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
-            const record = apply(target, op.op as ArrayMoveOp);
+            const record = apply(this.document, target, op.op as ArrayMoveOp);
             if (record) {
                 // replace op
                 op.op = record;
@@ -73,7 +115,7 @@ export class CrdtArrayReopNode extends RepoNode {
         // redo
         for (let i = 0; i < this.localops.length; i++) {
             const op = this.localops[i];
-            const record = apply(target, op.op as ArrayMoveOpRecord);
+            const record = apply(this.document, target, op.op as ArrayMoveOpRecord);
             if (record) {
                 // replace op
                 op.op = record;
@@ -122,7 +164,7 @@ export class CrdtArrayReopNode extends RepoNode {
         const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
         for (let i = ops.length - 1; i >= 0; i--) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
-            const record: ArrayMoveOpRecord | undefined = target && unapply(target, ops[i].op as ArrayMoveOpRecord);
+            const record: ArrayMoveOpRecord | undefined = target && unapply(this.document, target, ops[i].op as ArrayMoveOpRecord);
             if (record) ops[i].op = record;
             else ops[i].op = revert(ops[i].op as ArrayMoveOpRecord);
         }
@@ -154,7 +196,7 @@ export class CrdtArrayReopNode extends RepoNode {
         const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
         for (let i = ops.length - 1; i >= 0; i--) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
-            const record: ArrayMoveOpRecord | undefined = target && unapply(target, ops[i].op as ArrayMoveOpRecord);
+            const record: ArrayMoveOpRecord | undefined = target && unapply(this.document, target, ops[i].op as ArrayMoveOpRecord);
             if (record) ops[i].op = record;
             else ops[i].op = revert(ops[i].op as ArrayMoveOpRecord);
         }
@@ -193,7 +235,7 @@ export class CrdtArrayReopNode extends RepoNode {
         if (verIdx < 0) verIdx = ops.length;
         for (let i = baseIdx; i < verIdx; i++) {
             const op = ops[i];
-            const record = apply(target, op.op as ArrayMoveOp);
+            const record = apply(this.document, target, op.op as ArrayMoveOp);
             if (record) {
                 // replace op
                 op.op = record;

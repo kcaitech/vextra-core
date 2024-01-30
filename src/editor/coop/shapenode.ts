@@ -9,9 +9,10 @@ import { Cmd, OpItem } from "../../coop/common/repo";
 
 function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
 
-    // todo
-    if (op.to && op.data && !(op.data instanceof Shape)) { // todo 不管是不是shape都重新生成个新的？// 这有个问题，如果id没变，上层的监听一直在旧shape上
-        op.data = importShape(op.data, document, page);
+    if (typeof op.data === 'string') {
+        // import data
+        const data = JSON.parse(op.data);
+        op.data = importShape(data, document, page);
     }
 
     let shape = page.getShape(op.id);
@@ -20,8 +21,10 @@ function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: 
     }
 
     const ret = crdtTreeMove(page, op);
-
-    if (shape && !ret.to) {
+    if (!ret) {
+        // 
+    }
+    else if (shape && !ret.to) {
         page.onRemoveShape(shape);
     }
     else if (!shape && ret.to && ret.data) {
@@ -29,7 +32,7 @@ function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: 
         page.onAddShape(shape);
     }
 
-    if (shape) {
+    if (ret && shape) {
         needUpdateFrame.push(shape);
     }
 
@@ -47,10 +50,11 @@ function revert(op: TreeMoveOpRecord): TreeMoveOpRecord {
         id: op.id,
         type: op.type,
         path: op.path,
-        data: op.data,
+        data: op.origin,
         from: op.to,
         to: op.from,
         order: Number.MAX_SAFE_INTEGER,
+        origin: op.data
     }
 }
 

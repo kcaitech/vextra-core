@@ -4,9 +4,7 @@ import { GroupShape, Shape, Variable } from "../../data/shape";
 import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
 import { OpType } from "../../coop/common/op";
 import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text";
-// import { uuid } from "../../basic/uuid";
 import { Page } from "../../data/page";
-
 // 对象树操作
 export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord {
     shape.crdtidx = crdtGetArrIndex(parent.childs, index);
@@ -16,10 +14,10 @@ export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, in
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
         order: Number.MAX_SAFE_INTEGER,
-        data: shape,
+        data: JSON.stringify(shape, (k, v) => k.startsWith('__') ? undefined : v),
         from: undefined,
-        // isRemove: false,
-        to: { id: parent.id, index: shape.crdtidx.index, order: Number.MAX_SAFE_INTEGER }
+        to: { id: parent.id, index: shape.crdtidx.index, order: Number.MAX_SAFE_INTEGER },
+        origin: undefined
     };
 }
 export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): TreeMoveOpRecord | undefined {
@@ -29,10 +27,10 @@ export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): 
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
         order: Number.MAX_SAFE_INTEGER,
-        data: shape,
+        data: undefined,
         from: { id: parent.id, index: shape.crdtidx.index, order: shape.crdtidx.order },
-        // isRemove: true,
-        to: undefined
+        to: undefined,
+        origin: shape
     };
 }
 /**
@@ -58,10 +56,10 @@ export function crdtShapeMove(page: Page, parent: GroupShape, index: number, par
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
         order: Number.MAX_SAFE_INTEGER,
-        data: shape,
+        data: undefined,
         from: { id: parent.id, index: oldidx.index, order: oldidx.order },
-        // isRemove: true,
-        to: { id: parent2.id, index: newidx.index, order: Number.MAX_SAFE_INTEGER }
+        to: { id: parent2.id, index: newidx.index, order: Number.MAX_SAFE_INTEGER },
+        origin: undefined
     };
 }
 
@@ -84,7 +82,7 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
         type: OpType.Idset,
         path: obj.getCrdtPath().concat(key), // 用于路径能找到唯一的reponode
         order: Number.MAX_SAFE_INTEGER,
-        data: value,
+        data: typeof value === 'object' ? JSON.stringify(value, (k, v) => k.startsWith('__') ? undefined : v) : value,
         origin
     }
 }
@@ -177,9 +175,10 @@ export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: 
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
         order: Number.MAX_SAFE_INTEGER,
-        data: item,
+        data: typeof item === 'object' ? JSON.stringify(item, (k, v) => k.startsWith('__') ? undefined : v) : item,
         from: undefined,
-        to: newidx
+        to: newidx,
+        origin: undefined
     }
 }
 
@@ -194,9 +193,10 @@ export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): Array
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
         order: Number.MAX_SAFE_INTEGER,
-        data: item,
+        data: undefined,
         from: oldidx,
-        to: undefined
+        to: undefined,
+        origin: item
     }
 }
 
@@ -222,8 +222,9 @@ export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: numbe
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
         order: Number.MAX_SAFE_INTEGER,
-        data: item,
+        data: undefined,
         from: oldidx,
-        to: newidx
+        to: newidx,
+        origin: undefined
     }
 }
