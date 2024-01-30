@@ -146,11 +146,11 @@ export class TextRepoNode extends RepoNode {
         for (let i = 0; i < ops.length;) {
             const s: OpItem[] = [];
             segs.push(s);
-            const ver = ops[i].cmd.batchNum;
+            const ver = ops[i].cmd.batchId;
             s.push(ops[i]);
             ++i;
             for (; i < ops.length; ++i) {
-                if (ops[i].cmd.batchNum !== ver) break;
+                if (ops[i].cmd.batchId !== ver) break;
                 s.push(ops[i]);
             }
         }

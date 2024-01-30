@@ -286,19 +286,28 @@ export class CmdRepo {
     // ================ cmd 上传、下拉 ==========================
     // todo
     // todo 数据序列化
+    private __timeOutToken: any;
     private _postcmds() {
         if (this.postingcmds.length > 0) {
             const now = Date.now();
             if (now - this.posttime > POST_TIMEOUT) {
                 // 超时了
-                // todo post
+                // repost
+                this.net.postCmds(this.postingcmds);
+                this.posttime = now;
             }
-            // todo check超时
+            // set timeout
+            const delay = POST_TIMEOUT;
+            if (this.__timeOutToken) clearTimeout(this.__timeOutToken);
+            this.__timeOutToken = setTimeout(() => {
+                this.__timeOutToken = undefined;
+                this._postcmds();
+            }, delay);
             return; // 等返回
         }
 
         const baseVer = this.cmds.length > 0 ? this.cmds[this.cmds.length - 1].version : this.baseVer;
-
+        let delay = POST_TIMEOUT;
         if (this.nopostcmds.length > 0) {
             // check
             // post local (根据cmd提交时间是否保留最后个cmd用于合并)
@@ -311,7 +320,9 @@ export class CmdRepo {
                 if ((i < len - 1) || (now - cmd.time > cmd.delay)) {
                     this.postingcmds.push(cmd);
                     cmd.posttime = now;
+                    cmd.batchId = this.postingcmds[0].id;
                 } else {
+                    delay = cmd.delay;
                     break;
                 }
             }
@@ -320,8 +331,22 @@ export class CmdRepo {
                 this.posttime = now;
                 if (this.nopostcmds.length === this.postingcmds.length) this.nopostcmds.length = 0;
                 else this.nopostcmds.splice(0, this.postingcmds.length);
-                // todo post
+                // post
+                this.net.postCmds(this.postingcmds);
             }
+            // set timeout
+            if (this.__timeOutToken) clearTimeout(this.__timeOutToken);
+            this.__timeOutToken = setTimeout(() => {
+                this.__timeOutToken = undefined;
+                this._postcmds();
+            }, delay);
+            return;
+        }
+
+        // no cmd need post, remove timeout
+        if (this.__timeOutToken) {
+            clearTimeout(this.__timeOutToken);
+            this.__timeOutToken = undefined;
         }
     }
 
@@ -366,17 +391,15 @@ export class CmdRepo {
         const cmd = this.localcmds[this.localindex - 1];
         const posted = cmd.posttime > 0;
 
-        const newCmd = posted ? {
+        const newCmd: LocalCmd | undefined = posted ? {
             id: uuid(),
-            // mergeable: true,
             mergetype: cmd.mergetype,
             delay: 500,
             version: Number.MAX_SAFE_INTEGER,
             baseVer: 0,
-            batchNum: "",
+            batchId: "",
             ops: [],
             isUndo: true,
-            blockId: cmd.blockId,
             description: cmd.description,
             time: Date.now(),
             posttime: 0
@@ -421,17 +444,15 @@ export class CmdRepo {
         const cmd = this.localcmds[this.localindex];
         const posted = cmd.posttime > 0;
 
-        const newCmd = posted ? {
+        const newCmd: LocalCmd | undefined = posted ? {
             id: uuid(),
-            // mergeable: true,
             mergetype: cmd.mergetype,
             delay: 500,
             version: Number.MAX_SAFE_INTEGER,
-            batchNum: "",
+            batchId: "",
             baseVer: 0,
             ops: [],
-            isUndo: true,
-            blockId: cmd.blockId,
+            isUndo: false,
             description: cmd.description,
             time: Date.now(),
             posttime: 0

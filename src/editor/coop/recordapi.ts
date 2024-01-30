@@ -86,10 +86,9 @@ export class Api {
             delay: 500,
             version: Number.MAX_SAFE_INTEGER,
             baseVer: 0,
-            batchNum: "",
+            batchId: "",
             ops: [],
             isUndo: false,
-            blockId: [],
             description,
             time: 0,
             posttime: 0
