@@ -30,8 +30,8 @@ importh['crdt-number'] = importCrdtNumber;
 importh['path-segment'] = importPathSegment;
 importh['page-list-item'] = importPageListItem;
 
-function apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord | undefined {
-    // todo import op.data
+function _apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord | undefined {
+    // import op.data
     if (typeof op.data === 'string') {
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;
@@ -50,8 +50,23 @@ function apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): Ar
     return crdtArrayMove(target, op);
 }
 
+function apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord | undefined {
+    const retop = _apply(document, target, op);
+    // 序列化
+    if (retop?.data) {
+        const value = retop.data;
+        retop.data = typeof value === 'object' ? JSON.stringify(value, (k, v) => k.startsWith('__') ? undefined : v) : value;
+    }
+    return retop;
+}
+
 function unapply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOpRecord): ArrayMoveOpRecord | undefined {
     return apply(document, target, revert(op));
+}
+
+// 不序列化化op
+function unapply2(document: Document, target: Array<CrdtItem>, op: ArrayMoveOpRecord): ArrayMoveOpRecord | undefined {
+    return _apply(document, target, revert(op));
 }
 
 function revert(op: ArrayMoveOpRecord): ArrayMoveOpRecord {
@@ -95,7 +110,7 @@ export class CrdtArrayReopNode extends RepoNode {
         // undo
         for (let i = this.localops.length - 1; i >= 0; i--) {
             const op = this.localops[i];
-            unapply(this.document, target, op.op as ArrayMoveOpRecord);
+            unapply2(this.document, target, op.op as ArrayMoveOpRecord);
         }
 
         // do

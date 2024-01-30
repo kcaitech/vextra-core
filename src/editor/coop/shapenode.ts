@@ -7,7 +7,7 @@ import { Document } from "../../data/document";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 
-function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
+function _apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
 
     if (typeof op.data === 'string') {
         // import data
@@ -24,10 +24,10 @@ function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: 
     if (!ret) {
         // 
     }
-    else if (shape && !ret.to) {
+    else if (shape && !ret.to) { // 删除
         page.onRemoveShape(shape);
     }
-    else if (!shape && ret.to && ret.data) {
+    else if (!shape && ret.to && ret.data) { // 插入
         shape = ret.data as Shape;
         page.onAddShape(shape);
     }
@@ -41,8 +41,23 @@ function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: 
     return ret;
 }
 
+function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
+    const ret = _apply(document, page, op, needUpdateFrame);
+    // 序列化
+    if (ret?.data) {
+        const value = ret.data;
+        ret.data = typeof value === 'object' ? JSON.stringify(value, (k, v) => k.startsWith('__') ? undefined : v) : value;
+    }
+    return ret;
+}
+
 function unapply(document: Document, page: Page, op: TreeMoveOpRecord, needUpdateFrame: Shape[]) {
     return apply(document, page, revert(op), needUpdateFrame);
+}
+
+// 不序列化化op
+function unapply2(document: Document, page: Page, op: TreeMoveOpRecord, needUpdateFrame: Shape[]) {
+    return _apply(document, page, revert(op), needUpdateFrame);
 }
 
 function revert(op: TreeMoveOpRecord): TreeMoveOpRecord {
@@ -82,7 +97,7 @@ export class CrdtShapeRepoNode extends RepoNode {
         // undo
         for (let i = this.localops.length - 1; i >= 0; i--) {
             const op = this.localops[i];
-            unapply(this.document, target, op.op as TreeMoveOpRecord, needUpdateFrame);
+            unapply2(this.document, target, op.op as TreeMoveOpRecord, needUpdateFrame);
         }
 
         // do

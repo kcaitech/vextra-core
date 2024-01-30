@@ -39,7 +39,7 @@ function apply(document: Document, target: Object, op: IdSetOp, needUpdateFrame:
         (target as any)[op.id] = value;
     }
     return {
-        data: value,
+        data: typeof value === 'object' ? JSON.stringify(value, (k, v) => k.startsWith('__') ? undefined : v) : value,
         id: op.id, // 这个跟随cmd id 的？
         type: op.type,
         path: op.path,
