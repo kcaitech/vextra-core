@@ -1,5 +1,5 @@
 import { Op, OpType } from "../../coop/common/op";
-import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, crdtArrayMove } from "../../coop/client/crdt";
+import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, arrLowerIndex, crdtArrayMove } from "../../coop/client/crdt";
 import { Shape } from "../../data/shape";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
@@ -145,12 +145,21 @@ export class CrdtArrayReopNode extends RepoNode {
         // check
         if (ops.length === 0) throw new Error();
         if (ops.length > this.localops.length) throw new Error();
+        const target = this.getOpTarget(ops[0].op.path);
         for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
             const op2 = this.localops.shift();
             // check
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
             this.ops.push(op2);
+
+            // 将order更新到crdtindex
+            const record = op2.op as ArrayMoveOp;
+            if (record.to && target) {
+                const toIdx = arrLowerIndex(target, record.to);
+                const item = target[toIdx] as CrdtItem;
+                if (item) item.crdtidx.order = op2.op.order;
+            }
         }
     }
 

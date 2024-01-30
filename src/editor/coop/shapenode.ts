@@ -130,12 +130,19 @@ export class CrdtShapeRepoNode extends RepoNode {
     receiveLocal(ops: OpItem[]) {
         if (ops.length === 0) throw new Error();
         if (ops.length > this.localops.length) throw new Error();
+        const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);
         for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
             const op2 = this.localops.shift();
             // check
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
             this.ops.push(op2);
+            // 将order更新到crdtindex
+            const record = op2.op as TreeMoveOp;
+            if (record.to && target) {
+                const item = target.getShape(record.id);
+                if (item) item.crdtidx.order = op2.op.order;
+            }
         }
     }
     commit(ops: OpItem[]) {
@@ -188,7 +195,7 @@ export class CrdtShapeRepoNode extends RepoNode {
         // check
         if (ops.length === 0) throw new Error();
         ops.reverse();
-        const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);;
+        const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);
         const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
         for (let i = ops.length - 1; i >= 0; i--) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
