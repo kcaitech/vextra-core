@@ -69,6 +69,123 @@ export const ResizingConstraints = {
     },
 }
 
+export const ResizingConstraints2 = {
+    Mask: 0b111111,
+    Right: 0b000001, // 1
+    Width: 0b000010, // 2
+    Left: 0b000100, // 4
+    Bottom: 0b001000, // 8
+    Height: 0b010000, // 16
+    Top: 0b100000, // 32
+
+    // horizontal
+    isFixedToLeft(val: number): boolean {
+        val = this.Mask ^ val;
+        return (val & this.Left) === this.Left && (val & this.Right) !== this.Right;
+    },
+
+    isFixedToRight(val: number): boolean {
+        val = this.Mask ^ val;
+        return (val & this.Left) !== this.Left && (val & this.Right) === this.Right;
+    },
+
+    isFixedLeftAndRight(val: number): boolean {
+        val = this.Mask ^ val;
+        return (val & this.Left) === this.Left && (val & this.Right) === this.Right;
+    },
+
+    isJustifyCenter(val: number): boolean {
+        val = this.Mask ^ val;
+        return (val & this.Left) !== this.Left && (val & this.Right) !== this.Right;
+    },
+
+    isFixedWidth(val: number): boolean {
+        if (this.isFixedLeftAndRight(val)) {
+            return false;
+        }
+
+        val = this.Mask ^ val;
+        return (val & this.Width) === this.Width;
+    },
+
+    setToFixedLeft(status: number) {
+        status = this.Mask ^ status;
+
+        if ((status & this.Right) === this.Right) {
+            status = status ^ this.Right;
+        }
+
+        status = status | this.Left;
+
+        return this.Mask ^ status;
+    },
+
+    setToFixedRight(status: number) {
+        status = this.Mask ^ status;
+
+        if ((status & this.Left) === this.Left) {
+            status = status ^ this.Left;
+        }
+
+        status = status | this.Right;
+
+        return this.Mask ^ status;
+    },
+
+    setToFixedLeftAndRight(status: number) {
+        status = this.Mask ^ status;
+
+        if ((status & this.Width) === this.Width) { // 左右固定与宽度固定互斥；
+            status = status ^ this.Width;
+        }
+
+        status = status | this.Right;
+        status = status | this.Left;
+
+        return this.Mask ^ status;
+    },
+
+    setToJustifyCenter(status: number) {
+        status = this.Mask ^ status;
+
+        if ((status & this.Left) === this.Left) {
+            status = status ^ this.Left;
+        }
+        if ((status & this.Right) === this.Right) {
+            status = status ^ this.Right;
+        }
+
+        return this.Mask ^ status;
+    },
+
+    setToWidthFixed(status: number) { // 宽度固定
+        status = this.Mask ^ status;
+
+        if ((status & this.Left) === this.Left) { // 宽度固定与左右固定互斥；
+            status = status ^ this.Left;
+        }
+        if ((status & this.Right) === this.Right) {
+            status = status ^ this.Right;
+        }
+
+        if ((status & this.Width) !== this.Width) {
+            status = status ^ this.Width;
+        }
+
+        return this.Mask ^ status;
+    },
+
+    setToWidthFlex(status: number) { // 跟随缩放，todo 这个选项有互斥对象吗？
+        if (((this.Mask ^ status) & this.Width) === this.Width) {
+            return this.Mask ^ this.Mask ^ status ^ this.Width;
+        } else {
+            return status;
+        }
+    },
+
+    //todo vertical
+}
+
 export const RECT_POINTS = (() => {
     const id1 = "f9bbacab-970e-4bb6-9df2-32b02ea26ccc"
     const id2 = "114f9903-1a14-4534-a7bf-ae10c77c39ff"
