@@ -73,6 +73,7 @@ export function addCommonAttr(shape: Shape) {
     shape.isLocked = false;
     shape.constrainerProportions = false;
     shape.nameIsFixed = false;
+    shape.resizingConstraint = 9;
 }
 
 export function newDocument(documentName: string, repo: Repository): Document {
