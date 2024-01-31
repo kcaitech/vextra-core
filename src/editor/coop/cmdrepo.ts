@@ -247,8 +247,8 @@ export class CmdRepo {
                 const receive = this.pendingcmds[index + i];
                 if (cmd.id !== receive.id) throw new Error("something wrong 1");
                 // 给pendingcmds更新order,
-                cmd.version = receive.version;
-                cmd.ops.forEach((op) => op.order = receive.version);
+                // cmd.version = receive.version;
+                // cmd.ops.forEach((op) => op.order = receive.version);
             }
             // 分3步
             // 1. 先处理index之前的cmds
@@ -263,7 +263,7 @@ export class CmdRepo {
                 const pcmds = this.pendingcmds.slice(index + this.postingcmds.length);
                 this._receive(pcmds, needUpdateFrame);
             }
-
+            this.cmds.push(...this.pendingcmds);
             this.postingcmds.length = 0;
             this.pendingcmds.length = 0;
         }
@@ -273,6 +273,7 @@ export class CmdRepo {
         if (this.pendingcmds.length > 0) {
             // 先处理pending
             this._receive(this.pendingcmds, needUpdateFrame);
+            this.cmds.push(...this.pendingcmds);
             this.pendingcmds.length = 0;
         }
 
@@ -369,6 +370,10 @@ export class CmdRepo {
         }
         // todo 检查cmd baseVer是否本地有,否则需要拉取远程cmds
 
+        // 更新op.order
+        cmds.forEach(cmd => {
+            cmd.ops.forEach((op) => op.order = cmd.version);
+        })
         // this.freshlocalcmdcount = 0;
         this.pendingcmds.push(...cmds);
         // need process
