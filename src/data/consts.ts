@@ -94,7 +94,7 @@ export const ResizingConstraints2 = {
         return (val & this.Left) === this.Left && (val & this.Right) === this.Right;
     },
 
-    isJustifyCenter(val: number): boolean {
+    isHorizontalJustifyCenter(val: number): boolean {
         val = this.Mask ^ val;
         return (val & this.Left) !== this.Left && (val & this.Right) !== this.Right;
     },
@@ -135,7 +135,7 @@ export const ResizingConstraints2 = {
     setToFixedLeftAndRight(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Width) === this.Width) { // 左右固定与宽度固定互斥；
+        if ((status & this.Width) === this.Width) { 
             status = status ^ this.Width;
         }
 
@@ -145,7 +145,7 @@ export const ResizingConstraints2 = {
         return this.Mask ^ status;
     },
 
-    setToJustifyCenter(status: number) {
+    setToHorizontalJustifyCenter(status: number) {
         status = this.Mask ^ status;
 
         if ((status & this.Left) === this.Left) {
@@ -158,15 +158,16 @@ export const ResizingConstraints2 = {
         return this.Mask ^ status;
     },
 
-    setToWidthFixed(status: number) { // 宽度固定
+    setToWidthFixed(status: number) { 
         status = this.Mask ^ status;
 
-        if ((status & this.Left) === this.Left) { // 宽度固定与左右固定互斥；
+        if ((status & this.Left) === this.Left && (status & this.Right) === this.Right) { 
             status = status ^ this.Left;
-        }
-        if ((status & this.Right) === this.Right) {
             status = status ^ this.Right;
         }
+        // if ((status & this.Right) === this.Right) {
+        //     status = status ^ this.Right;
+        // }
 
         if ((status & this.Width) !== this.Width) {
             status = status ^ this.Width;
@@ -175,7 +176,7 @@ export const ResizingConstraints2 = {
         return this.Mask ^ status;
     },
 
-    setToWidthFlex(status: number) { // 跟随缩放，todo 这个选项有互斥对象吗？
+    setToWidthFlex(status: number) { 
         if (((this.Mask ^ status) & this.Width) === this.Width) {
             return this.Mask ^ this.Mask ^ status ^ this.Width;
         } else {
@@ -183,7 +184,111 @@ export const ResizingConstraints2 = {
         }
     },
 
-    //todo vertical
+    // Vertical
+    isFixedToTop(val: number): boolean {
+        val = this.Mask ^ val;
+        return (val & this.Top) === this.Top && (val & this.Bottom) !== this.Bottom;
+    },
+
+    isFixedToBottom(val: number): boolean {
+        val = this.Mask ^ val;
+        return (val & this.Top) !== this.Top && (val & this.Bottom) === this.Bottom;
+    },
+
+    isFixedTopAndBottom(val: number): boolean {
+        val = this.Mask ^ val;
+        return (val & this.Top) === this.Top && (val & this.Bottom) === this.Bottom;
+    },
+
+    isVerticalJustifyCenter(val: number): boolean {
+        val = this.Mask ^ val;
+        return (val & this.Top) !== this.Top && (val & this.Bottom) !== this.Bottom;
+    },
+
+    isFixedHeight(val: number): boolean {
+        if (this.isFixedTopAndBottom(val)) {
+            return false;
+        }
+        val = this.Mask ^ val;
+        return (val & this.Height) === this.Height;
+    },
+
+    setToFixedTop(status: number) {
+        status = this.Mask ^ status;
+
+        if ((status & this.Bottom) === this.Bottom) {
+            status = status ^ this.Bottom;
+        }
+
+        status = status | this.Top;
+
+        return this.Mask ^ status;
+    },
+
+    setToFixedBottom(status: number) {
+        status = this.Mask ^ status;
+
+        if ((status & this.Top) === this.Top) {
+            status = status ^ this.Top;
+        }
+
+        status = status | this.Bottom;
+
+        return this.Mask ^ status;
+    },
+
+    setToFixedTopAndBottom(status: number) {
+        status = this.Mask ^ status;
+
+        if ((status & this.Height) === this.Height) { 
+            status = status ^ this.Height;
+        }
+
+        status = status | this.Top;
+        status = status | this.Bottom;
+
+        return this.Mask ^ status;
+    },
+
+    setToVerticalJustifyCenter(status: number) {
+        status = this.Mask ^ status;
+
+        if ((status & this.Top) === this.Top) {
+            status = status ^ this.Top;
+        }
+        if ((status & this.Bottom) === this.Bottom) {
+            status = status ^ this.Bottom;
+        }
+
+        return this.Mask ^ status;
+    },
+
+    setToHeightFixed(status: number) { 
+        status = this.Mask ^ status;
+
+        if ((status & this.Top) === this.Top && (status & this.Bottom) === this.Bottom) { 
+            status = status ^ this.Top;
+            status = status ^ this.Bottom;
+        }
+        // if ((status & this.Bottom) === this.Bottom) {
+        //     status = status ^ this.Bottom;
+        // }
+
+        if ((status & this.Height) !== this.Height) {
+            status = status ^ this.Height;
+        }
+
+        return this.Mask ^ status;
+    },
+
+    setToHeightFlex(status: number) { 
+        if (((this.Mask ^ status) & this.Height) === this.Height) {
+            return this.Mask ^ this.Mask ^ status ^ this.Height;
+        } else {
+            return status;
+        }
+    },
+
 }
 
 export const RECT_POINTS = (() => {
