@@ -22,6 +22,9 @@ export abstract class RepoNode {
     abstract dropOps(ops: OpItem[]): void;
 
     abstract roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]): void;
+
+    abstract undoLocals(): void;
+    abstract redoLocals(): void;
 }
 
 export class RepoNodePath {
@@ -49,6 +52,27 @@ export class RepoNodePath {
         if (path.length === 0) return this.node;
         const child = this.childs.get(path[0]);
         return child && child.get(path.slice(1));
+    }
+
+    get2(path: string[]): RepoNodePath | undefined {
+        if (path.length === 0) return this;
+        const child = this.childs.get(path[0]);
+        return child && child.get2(path.slice(1));
+    }
+
+    undoLocals() {
+        const roll = (node: RepoNodePath) => {
+            node.node?.undoLocals();
+            node.childs.forEach(roll);
+        }
+        roll(this);
+    }
+    redoLocals() {
+        const roll = (node: RepoNodePath) => {
+            node.node?.redoLocals();
+            node.childs.forEach(roll);
+        }
+        roll(this);
     }
 
     // 将数据回退或者前进到特定版本

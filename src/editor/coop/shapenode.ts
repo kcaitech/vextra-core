@@ -51,13 +51,13 @@ function apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: 
     return ret;
 }
 
-function unapply(document: Document, page: Page, op: TreeMoveOpRecord, needUpdateFrame: Shape[]) {
-    return apply(document, page, revert(op), needUpdateFrame);
+function unapply(document: Document, op: TreeMoveOpRecord, needUpdateFrame: Shape[]) {
+    return op.target && apply(document, op.target, revert(op), needUpdateFrame);
 }
 
 // 不序列化化op
-function unapply2(document: Document, page: Page, op: TreeMoveOpRecord, needUpdateFrame: Shape[]) {
-    return _apply(document, page, revert(op), needUpdateFrame);
+function unapply2(document: Document, op: TreeMoveOpRecord, needUpdateFrame: Shape[]) {
+    return op.target && _apply(document, op.target, revert(op), needUpdateFrame);
 }
 
 function revert(op: TreeMoveOpRecord): TreeMoveOpRecord {
@@ -69,7 +69,8 @@ function revert(op: TreeMoveOpRecord): TreeMoveOpRecord {
         from: op.to,
         to: op.from,
         order: Number.MAX_SAFE_INTEGER,
-        origin: op.data
+        origin: op.data,
+        target: undefined
     }
 }
 
@@ -83,25 +84,42 @@ export class CrdtShapeRepoNode extends RepoNode {
         // this.page = page;
     }
 
+    undoLocals(): void {
+        for (let i = this.localops.length - 1; i >= 0; i--) {
+            const op = this.localops[i];
+            unapply2(this.document, op.op as TreeMoveOpRecord, []);
+        }
+    }
+
+    redoLocals(): void {
+        if (this.localops.length === 0) return;
+        const target = this.document.pagesMgr.getSync(this.localops[0].op.path[0]);
+        if (target) for (let i = 0; i < this.localops.length; i++) {
+            const op = this.localops[i];
+            _apply(this.document, target, op.op as TreeMoveOpRecord, []);
+            // if (record) {
+            //     // replace op
+            //     op.op = record;
+            //     const idx = op.cmd.ops.indexOf(op.op);
+            //     if (idx < 0) throw new Error();
+            //     op.cmd.ops.splice(idx, 1, record);
+            // }
+        }
+    }
+
     receive(ops: OpItem[], needUpdateFrame: Shape[]) {
         if (ops.length === 0) throw new Error();
-
-        const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);
-
-        if (!target) {
-            this.ops.push(...ops);
-            return;
-        }
 
         // undo-do-redo
         // undo
         for (let i = this.localops.length - 1; i >= 0; i--) {
             const op = this.localops[i];
-            unapply2(this.document, target, op.op as TreeMoveOpRecord, needUpdateFrame);
+            unapply2(this.document, op.op as TreeMoveOpRecord, needUpdateFrame);
         }
 
+        const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);
         // do
-        for (let i = 0; i < ops.length; i++) {
+        if (target) for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
             const record = apply(this.document, target, op.op as TreeMoveOp, needUpdateFrame);
             if (record) {
@@ -115,15 +133,29 @@ export class CrdtShapeRepoNode extends RepoNode {
         this.ops.push(...ops);
 
         // redo
-        for (let i = 0; i < this.localops.length; i++) {
-            const op = this.localops[i];
-            const record = apply(this.document, target, op.op as TreeMoveOpRecord, needUpdateFrame);
-            if (record) {
-                // replace op
-                op.op = record;
-                const idx = op.cmd.ops.indexOf(op.op);
-                if (idx < 0) throw new Error();
-                op.cmd.ops.splice(idx, 1, record);
+        if (target) {
+            for (let i = 0; i < this.localops.length; i++) {
+                const op = this.localops[i];
+                const record = apply(this.document, target, op.op as TreeMoveOpRecord, needUpdateFrame);
+                if (record) {
+                    // replace op
+                    const idx = op.cmd.ops.indexOf(op.op);
+                    op.op = record;
+                    if (idx < 0) throw new Error();
+                    op.cmd.ops.splice(idx, 1, record);
+                }
+                else {
+                    const idx = op.cmd.ops.indexOf(op.op);
+                    if (idx < 0) throw new Error();
+                    op.cmd.ops.splice(idx, 1);
+                    this.localops.splice(i, 1);
+                    --i;
+                }
+            }
+        } else {
+            for (let i = 0; i < this.localops.length; i++) {
+                const op = this.localops[i];
+                (op.op as TreeMoveOpRecord).target = undefined; // 不可以再undo
             }
         }
     }
@@ -164,11 +196,11 @@ export class CrdtShapeRepoNode extends RepoNode {
     undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         // check
         if (ops.length === 0) throw new Error();
-        const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);;
+        // const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);;
         const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
         for (let i = ops.length - 1; i >= 0; i--) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
-            const record = target && unapply(this.document, target, ops[i].op as TreeMoveOpRecord, needUpdateFrame);
+            const record = unapply(this.document, ops[i].op as TreeMoveOpRecord, needUpdateFrame);
             if (record) ops[i].op = record;
             else ops[i].op = revert(ops[i].op as TreeMoveOpRecord);
         }
@@ -199,9 +231,10 @@ export class CrdtShapeRepoNode extends RepoNode {
         const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
         for (let i = ops.length - 1; i >= 0; i--) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
-            const record = target && unapply(this.document, target, ops[i].op as TreeMoveOpRecord, needUpdateFrame);
+            const rop = revert(ops[i].op as TreeMoveOpRecord);
+            const record = target && apply(this.document, target, rop, needUpdateFrame);
             if (record) ops[i].op = record;
-            else ops[i].op = revert(ops[i].op as TreeMoveOpRecord);
+            else ops[i].op = rop;
         }
 
         if (receiver) {

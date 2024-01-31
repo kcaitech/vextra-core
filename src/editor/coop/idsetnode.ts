@@ -1,13 +1,13 @@
 import { OpType } from "../../coop/common/op";
 import { Basic, ResourceMgr } from "../../data/basic";
 import { Shape } from "../../data/shape";
-import { IdSetOp, IdSetOpRecord } from "../../coop/client/crdt";
+import { IdOp, IdOpRecord } from "../../coop/client/crdt";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
 import { IImportContext, importTableCell, importVariable } from "../../data/baseimport";
 
-function apply(document: Document, target: Object, op: IdSetOp, needUpdateFrame: Shape[]): IdSetOpRecord {
+function apply(document: Document, target: Object, op: IdOp, needUpdateFrame: Shape[]): IdOpRecord {
     if (typeof op.data === 'string') {
         // import data
         const ctx: IImportContext = new class implements IImportContext {
@@ -44,18 +44,20 @@ function apply(document: Document, target: Object, op: IdSetOp, needUpdateFrame:
         type: op.type,
         path: op.path,
         order: Number.MAX_SAFE_INTEGER,
-        origin: origin
+        origin: origin,
+        target
     }
 }
 
-function revert(op: IdSetOpRecord): IdSetOpRecord {
+function revert(op: IdOpRecord): IdOpRecord {
     return {
         data: op.origin,
         id: op.id,
         type: op.type,
         path: op.path,
         order: Number.MAX_SAFE_INTEGER,
-        origin: op.data
+        origin: op.data,
+        target: undefined
     }
 }
 
@@ -82,20 +84,47 @@ export class CrdtIdRepoNode extends RepoNode {
         if (this.localops.length === 0) {
             this.origin = (target as any)[ops[0].op.id];
         } else {
-            this.origin = (this.localops[0].op as IdSetOpRecord).origin;
+            this.origin = (this.localops[0].op as IdOpRecord).origin;
         }
         this.savedOrigin = true;
     }
 
+    undoLocals(): void {
+        if (this.localops.length === 0) return;
+        const op0 = this.localops[0].op as IdOpRecord;
+        const target = op0.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
+        const rop = revert(op0);
+        target && apply(this.document, target, rop, []);
+    }
+    redoLocals(): void {
+        if (this.localops.length === 0) return;
+        // 找到最后个有target的
+        for (let i = this.localops.length - 1; i >= 0; --i) {
+            const op = this.localops[i].op as IdOpRecord;
+            const target = op.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
+            if (target) {
+                apply(this.document, target, op, []);
+                break;
+            }
+        }
+    }
+
     receive(ops: OpItem[], needUpdateFrame: Shape[]) {
         if (ops.length === 0) throw new Error();
+
         const op0 = ops[0].op;
         const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         // save origin
         this.saveOrigin(target, ops);
         this.ops.push(...ops);
-        if (this.localops.length === 0 && target) {
-            apply(this.document, target, this.ops[this.ops.length - 1].op as IdSetOp, needUpdateFrame)
+
+        if (!target) {
+            this.undoLocals();
+            this.localops.forEach(item => (item.op as IdOpRecord).target = undefined) // 不可再undo
+        } else {
+            if (this.localops.length === 0) {
+                apply(this.document, target, this.ops[this.ops.length - 1].op as IdOp, needUpdateFrame)
+            }
         }
     }
     receiveLocal(ops: OpItem[]) {
@@ -133,10 +162,9 @@ export class CrdtIdRepoNode extends RepoNode {
     }
     undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         if (ops.length === 0) throw new Error();
-        const op0 = ops[0].op;
-        const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
-        const op = ops[0].op as IdSetOpRecord;
-        const rop = revert(op);
+        const op0 = ops[0].op as IdOpRecord;
+        const target = op0.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
+        const rop = revert(op0);
         const record = target && apply(this.document, target, rop, needUpdateFrame) || rop
         if (receiver) {
             receiver.ops.push(record);
@@ -144,7 +172,7 @@ export class CrdtIdRepoNode extends RepoNode {
         } else {
             this.popLocal(ops);
             // replace op
-            const idx = ops[0].cmd.ops.indexOf(op);
+            const idx = ops[0].cmd.ops.indexOf(op0);
             if (idx < 0) throw new Error();
             ops[0].cmd.ops.splice(idx, 1, record);
         }
@@ -154,7 +182,7 @@ export class CrdtIdRepoNode extends RepoNode {
         const op0 = ops[0].op;
         // 没有target也要保证op正确
         const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
-        const op = ops[ops.length - 1].op as IdSetOpRecord;
+        const op = ops[ops.length - 1].op as IdOpRecord;
         const rop = revert(op);
         const record = target && apply(this.document, target, rop, needUpdateFrame) || rop;
         if (receiver) {
@@ -184,14 +212,14 @@ export class CrdtIdRepoNode extends RepoNode {
         // if (baseIdx < 0) baseIdx = 0;
         if (verIdx < 0) verIdx = ops.length;
         if (verIdx === 0) {
-            const op = ops[verIdx].op as IdSetOpRecord;
+            const op = ops[verIdx].op as IdOpRecord;
             let origin;
             if (this.savedOrigin) {
                 origin = this.origin;
             } else {
                 origin = op.origin; // 没有save的话，那么op只能是本地op
             }
-            apply(this.document, 
+            apply(this.document,
                 target, {
                 data: origin,
                 id: op.id,
@@ -202,7 +230,7 @@ export class CrdtIdRepoNode extends RepoNode {
         } else {
             const op = ops[verIdx - 1];
             if (!op) throw new Error("not found");
-            apply(this.document, target, op.op as IdSetOp, needUpdateFrame);
+            apply(this.document, target, op.op as IdOp, needUpdateFrame);
         }
     }
 

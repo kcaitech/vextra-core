@@ -1,5 +1,5 @@
 import { Shape } from "../../data/shape";
-import { Op } from "../../coop/common/op";
+import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { LocalCmd } from "./localcmd";
 import { Document } from "../../data/document";
@@ -9,6 +9,8 @@ import { ICoopNet } from "./net";
 import { uuid } from "../../basic/uuid";
 import { RepoNode, RepoNodePath } from "./base";
 import { nodecreator } from "./creator";
+import { ArrayOp } from "coop/client/arrayop";
+import { ArrayMoveOp, ArrayMoveOpRecord, IdOpRecord, TreeMoveOpRecord } from "coop/client/crdt";
 
 const POST_TIMEOUT = 5000; // 5s
 
@@ -39,6 +41,45 @@ function classifyOps(cmds: Cmd[]) {
     }
     // sort: 按路径长度从短的开始，即从对象树的根往下更新
     return Array.from(subrepos.entries()).sort((a, b) => a[0].length - b[0].length);
+}
+
+// 不是Recovery
+function quickRejectRecovery(cmd: LocalCmd) {
+    const ops = cmd.ops;
+    let isRecovery = false;
+    for (let i = 0; i < ops.length; ++i) {
+        const op = ops[i];
+        switch (op.type) {
+            case OpType.None:
+            case OpType.Array:
+                continue;
+            case OpType.CrdtArr:
+                {
+                    const record = op as ArrayMoveOpRecord;
+                    if (!record.from && record.to && (typeof record.data === 'string') && (record.data[0] === '{' || record.data[0] === '[')) {
+                        // 插入object
+                        isRecovery = true;
+                    }
+                }
+            case OpType.CrdtTree:
+                {
+                    const record = op as TreeMoveOpRecord;
+                    if (!record.from && record.to && record.data) {
+                        // 插入object
+                        isRecovery = true;
+                    }
+                }
+            case OpType.Idset:
+                {
+                    const record = op as IdOpRecord;
+                    if ((typeof record.data === 'string') && (record.data[0] === '{' || record.data[0] === '[')) {
+                        // 插入object
+                        isRecovery = true;
+                    }
+                }
+        }
+    }
+    return !isRecovery;
 }
 
 // 一个page一个curversion，不可见page，cmd仅暂存
@@ -106,6 +147,8 @@ export class CmdRepo {
         // 处理远程过来的cmds
         // 可能的情况是，本地有cmd, 需要做变换
         // 1. 分类op
+
+        // todo isRecovery的cmd需要处理
 
         const subrepos = classifyOps(cmds);
         for (let [k, v] of subrepos) {
@@ -316,9 +359,18 @@ export class CmdRepo {
             const len = this.nopostcmds.length;
             for (let i = 0; i < len; i++) {
                 const cmd = this.nopostcmds[i];
-                cmd.baseVer = baseVer;
                 if ((i < len - 1) || (now - cmd.time > cmd.delay)) {
+                    if (cmd.isRecovery) {
+                        if (quickRejectRecovery(cmd)) {
+                            cmd.isRecovery = false; // 可以不用recovery
+                        } else if (this.postingcmds.length > 0) {
+                            break; // 因为要设置准确的baseVer，它的前面不能有要提交的cmd。也可以保证之前的删除cmd已经提交回来了
+                        } else {
+                            this._alignDataVersion(cmd);
+                        }
+                    }
                     this.postingcmds.push(cmd);
+                    cmd.baseVer = baseVer;
                     cmd.posttime = now;
                     cmd.batchId = this.postingcmds[0].id;
                 } else {
@@ -347,6 +399,68 @@ export class CmdRepo {
         if (this.__timeOutToken) {
             clearTimeout(this.__timeOutToken);
             this.__timeOutToken = undefined;
+        }
+    }
+
+    _alignDataVersion(cmd: LocalCmd) { // recovery的cmd需要单独post？
+        // todo 对齐数据版本
+        // 需要判断op 类型
+        if (cmd !== this.nopostcmds[0]) throw new Error();
+        const ops = cmd.ops;
+        for (let i = 0; i < ops.length; ++i) {
+            const op = ops[i];
+            switch (op.type) {
+                case OpType.None:
+                case OpType.Array:
+                    continue;
+                case OpType.CrdtArr:
+                    {
+                        const record = op as ArrayMoveOpRecord;
+                        if (!record.from && record.to && (typeof record.data === 'string') && (record.data[0] === '{' || record.data[0] === '[')) {
+                            const target = record.target;
+                            if (!target) throw new Error();
+                            const blockId = record.path[0];
+                            const repotree = this.repotrees.get(blockId);
+                            const node = repotree && repotree.get2(record.path);
+                            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
+                            node.undoLocals();
+                            record.data = JSON.stringify(target, (k, v) => k.startsWith('__') ? undefined : v)
+                            node.redoLocals();
+                        }
+                    }
+                case OpType.CrdtTree:
+                    {
+                        const record = op as TreeMoveOpRecord;
+                        if (!record.from && record.to && record.data) {
+                            // 插入object
+                            const target = record.target;
+                            if (!target) throw new Error();
+                            const blockId = record.path[0];
+                            const repotree = this.repotrees.get(blockId);
+                            const node = repotree && repotree.get2(record.path);
+                            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
+                            node.undoLocals();
+                            record.data = JSON.stringify(target, (k, v) => k.startsWith('__') ? undefined : v)
+                            node.redoLocals();
+                        }
+                    }
+                case OpType.Idset:
+                    {
+                        const record = op as IdOpRecord;
+                        if ((typeof record.data === 'string') && (record.data[0] === '{' || record.data[0] === '[')) {
+                            // 插入object
+                            const target = record.target;
+                            if (!target) throw new Error();
+                            const blockId = record.path[0];
+                            const repotree = this.repotrees.get(blockId);
+                            const node = repotree && repotree.get2(record.path);
+                            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
+                            node.undoLocals();
+                            record.data = JSON.stringify(target, (k, v) => k.startsWith('__') ? undefined : v)
+                            node.redoLocals();
+                        }
+                    }
+            }
         }
     }
 
@@ -399,7 +513,7 @@ export class CmdRepo {
             baseVer: 0,
             batchId: "",
             ops: [],
-            isUndo: true,
+            isRecovery: true,
             description: cmd.description,
             time: Date.now(),
             posttime: 0
@@ -452,7 +566,7 @@ export class CmdRepo {
             batchId: "",
             baseVer: 0,
             ops: [],
-            isUndo: false,
+            isRecovery: true,
             description: cmd.description,
             time: Date.now(),
             posttime: 0

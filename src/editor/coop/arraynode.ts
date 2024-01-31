@@ -60,13 +60,13 @@ function apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): Ar
     return retop;
 }
 
-function unapply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOpRecord): ArrayMoveOpRecord | undefined {
-    return apply(document, target, revert(op));
+function unapply(document: Document, op: ArrayMoveOpRecord): ArrayMoveOpRecord | undefined {
+    return op.target && apply(document, op.target, revert(op));
 }
 
 // 不序列化化op
-function unapply2(document: Document, target: Array<CrdtItem>, op: ArrayMoveOpRecord): ArrayMoveOpRecord | undefined {
-    return _apply(document, target, revert(op));
+function unapply2(document: Document, op: ArrayMoveOpRecord): ArrayMoveOpRecord | undefined {
+    return op.target && _apply(document, op.target, revert(op));
 }
 
 function revert(op: ArrayMoveOpRecord): ArrayMoveOpRecord {
@@ -78,7 +78,8 @@ function revert(op: ArrayMoveOpRecord): ArrayMoveOpRecord {
         order: Number.MAX_SAFE_INTEGER,
         id: op.id,
         path: op.path,
-        origin: op.data
+        origin: op.data,
+        target: undefined
     }
 }
 
@@ -99,22 +100,42 @@ export class CrdtArrayReopNode extends RepoNode {
         if (page) return page.getOpTarget(path);
     }
 
+    undoLocals(): void {
+        for (let i = this.localops.length - 1; i >= 0; i--) {
+            const op = this.localops[i];
+            unapply2(this.document, op.op as ArrayMoveOpRecord);
+        }
+    }
+
+    redoLocals(): void {
+        if (this.localops.length === 0) return;
+        const target = this.getOpTarget(this.localops[0].op.path);
+        if (target) for (let i = 0; i < this.localops.length; i++) {
+            const op = this.localops[i];
+            _apply(this.document, target, op.op as ArrayMoveOpRecord);
+            // if (record) {
+            //     // replace op
+            //     op.op = record;
+            //     const idx = op.cmd.ops.indexOf(op.op);
+            //     if (idx < 0) throw new Error();
+            //     op.cmd.ops.splice(idx, 1, record);
+            // }
+        }
+    }
+
     receive(ops: OpItem[], needUpdateFrame: Shape[]) {
         if (ops.length === 0) throw new Error();
-        const target = this.getOpTarget(ops[0].op.path);
-        if (!target) {
-            this.ops.push(...ops);
-            return;
-        }
+
         // undo-do-redo
         // undo
         for (let i = this.localops.length - 1; i >= 0; i--) {
             const op = this.localops[i];
-            unapply2(this.document, target, op.op as ArrayMoveOpRecord);
+            unapply2(this.document, op.op as ArrayMoveOpRecord);
         }
 
         // do
-        for (let i = 0; i < ops.length; i++) {
+        const target = this.getOpTarget(ops[0].op.path);
+        if (target) for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
             const record = apply(this.document, target, op.op as ArrayMoveOp);
             if (record) {
@@ -128,15 +149,28 @@ export class CrdtArrayReopNode extends RepoNode {
         this.ops.push(...ops);
 
         // redo
-        for (let i = 0; i < this.localops.length; i++) {
-            const op = this.localops[i];
-            const record = apply(this.document, target, op.op as ArrayMoveOpRecord);
-            if (record) {
-                // replace op
-                op.op = record;
-                const idx = op.cmd.ops.indexOf(op.op);
-                if (idx < 0) throw new Error();
-                op.cmd.ops.splice(idx, 1, record);
+        if (target) {
+            for (let i = 0; i < this.localops.length; i++) {
+                const op = this.localops[i];
+                const record = apply(this.document, target, op.op as ArrayMoveOpRecord);
+                if (record) {
+                    // replace op
+                    const idx = op.cmd.ops.indexOf(op.op);
+                    op.op = record;
+                    if (idx < 0) throw new Error();
+                    op.cmd.ops.splice(idx, 1, record);
+                } else {
+                    const idx = op.cmd.ops.indexOf(op.op);
+                    if (idx < 0) throw new Error();
+                    op.cmd.ops.splice(idx, 1);
+                    this.localops.splice(i, 1);
+                    --i;
+                }
+            }
+        } else {
+            for (let i = 0; i < this.localops.length; i++) {
+                const op = this.localops[i];
+                (op.op as ArrayMoveOpRecord).target = undefined; // 不可以再undo
             }
         }
     }
@@ -184,11 +218,10 @@ export class CrdtArrayReopNode extends RepoNode {
     undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
         // check
         if (ops.length === 0) throw new Error();
-        const target = this.getOpTarget(ops[0].op.path);
         const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
         for (let i = ops.length - 1; i >= 0; i--) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
-            const record: ArrayMoveOpRecord | undefined = target && unapply(this.document, target, ops[i].op as ArrayMoveOpRecord);
+            const record: ArrayMoveOpRecord | undefined = unapply(this.document, ops[i].op as ArrayMoveOpRecord);
             if (record) ops[i].op = record;
             else ops[i].op = revert(ops[i].op as ArrayMoveOpRecord);
         }
@@ -220,9 +253,10 @@ export class CrdtArrayReopNode extends RepoNode {
         const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
         for (let i = ops.length - 1; i >= 0; i--) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
-            const record: ArrayMoveOpRecord | undefined = target && unapply(this.document, target, ops[i].op as ArrayMoveOpRecord);
+            const rop = revert(ops[i].op as ArrayMoveOpRecord);
+            const record: ArrayMoveOpRecord | undefined = target && apply(this.document, target, rop);
             if (record) ops[i].op = record;
-            else ops[i].op = revert(ops[i].op as ArrayMoveOpRecord);
+            else ops[i].op = rop;
         }
 
         if (receiver) {

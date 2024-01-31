@@ -26,10 +26,10 @@ function apply(text: Text, op: ArrayOp) {
             } else {
                 throw new Error("not valid text insert op");
             }
-            return new TextOpInsertRecord(op.id, op.path, op.order, op.start, op.length, op.text);
+            return new TextOpInsertRecord(op.id, op.path, op.order, op.start, op.length, op.text, text);
         case ArrayOpType.Remove:
             const del = text.deleteText(op.start, op.length);
-            if (del) return new TextOpRemoveRecord(op.id, op.path, op.order, op.start, op.length, del);
+            if (del) return new TextOpRemoveRecord(op.id, op.path, op.order, op.start, op.length, del, text);
             break;
         case ArrayOpType.Attr:
             if (!(op instanceof TextOpAttr)) throw new Error("not text attr op");
@@ -39,28 +39,28 @@ function apply(text: Text, op: ArrayOp) {
             const length = op.length;
             if (op.props.target === "span") {
                 const ret = text.formatText(index, length, key, value);
-                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret);
+                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret, text);
             }
             // para
             else if (key === "bulletNumbersType") {
                 const ret = text.setBulletNumbersType(value, index, length);
-                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret);
+                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret, text);
             }
             else if (key === "bulletNumbersStart") {
                 const ret = text.setBulletNumbersStart(value, index, length);
-                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret);
+                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret, text);
             }
             else if (key === "bulletNumbersBehavior") {
                 const ret = text.setBulletNumbersBehavior(value, index, length);
-                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret);
+                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret, text);
             }
             else if (key === "indent") {
                 const ret = text.setParaIndent(value, index, length);
-                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret);
+                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret, text);
             }
             else {
                 const ret = text.formatPara(index, length, key, value);
-                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret);
+                if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret, text);
             }
             break;
         case ArrayOpType.Selection:
@@ -84,7 +84,7 @@ function revertOp(op: ArrayOp) {
     switch (op.type1) {
         case ArrayOpType.None: return op;
         case ArrayOpType.Insert:
-            if (!(op instanceof TextOpInsert)) throw new Error("not text insert op");
+            if (!(op instanceof TextOpInsertRecord)) throw new Error("not text insert op");
             // 不用TextOpRemoveRecord，变换后不一定是原来的值
             return new TextOpRemove("", op.path, Number.MAX_SAFE_INTEGER, op.start, op.length);
         case ArrayOpType.Remove:
@@ -104,18 +104,38 @@ function revertOp(op: ArrayOp) {
     }
 }
 
-function unapply(text: Text, op: ArrayOp) {
-    const ret = [];
+function getOpTarget(op: ArrayOp) {
+    switch (op.type1) {
+        case ArrayOpType.None: return undefined;
+        case ArrayOpType.Insert:
+            if (!(op instanceof TextOpInsertRecord)) throw new Error("not text insert op");
+            // 不用TextOpRemoveRecord，变换后不一定是原来的值
+            return op.target;
+        case ArrayOpType.Remove:
+            if (!(op instanceof TextOpRemoveRecord)) throw new Error("not text remove op");
+            return op.target;
+        case ArrayOpType.Attr:
+            if (!(op instanceof TextOpAttrRecord)) throw new Error("not text attr op");
+            return op.target;
+        case ArrayOpType.Selection:
+            return undefined;
+    }
+}
+
+function unapply(op: ArrayOp) {
+    const ret: ArrayOp[] = [];
     const rop = revertOp(op);
     if (Array.isArray(rop)) {
+        const text = getOpTarget(op);
         for (let i = 0; i < rop.length; ++i) {
             const op = rop[i];
-            const r = apply(text, op);
+            const r = text && apply(text, op);
             if (!r) throw new Error();
             ret.push(r);
         }
     } else if (rop) {
-        const r = apply(text, rop);
+        const text = getOpTarget(op);
+        const r = text && apply(text, rop);
         if (!r) throw new Error();
         ret.push(r);
     }
@@ -178,6 +198,21 @@ export class TextRepoNode extends RepoNode {
         }
     }
 
+    undoLocals(): void {
+        for (let i = this.localops.length - 1; i >= 0; i--) {
+            const op = this.localops[i];
+            unapply(op.op as ArrayOp);
+        }
+    }
+
+    redoLocals(): void {
+        for (let i = 0; i < this.localops.length; i++) {
+            const op = this.localops[i];
+            const target = getOpTarget(op.op as ArrayOp);
+            target && apply(target, op.op as ArrayOp);
+        }
+    }
+
     // todo 上级要判断baseVer是存在的
     receive(ops: OpItem[], needUpdateFrame: Shape[]) {
         if (ops.length === 0) return;
@@ -185,14 +220,14 @@ export class TextRepoNode extends RepoNode {
         // 服务端过来的先进行本地变换
         this._otreceive(ops);
 
-        const target = this.getOpTarget(ops[0].op.path);
         // undo-do-redo
         // undo
-        if (target) for (let i = this.localops.length - 1; i >= 0; i--) {
+        for (let i = this.localops.length - 1; i >= 0; i--) {
             const op = this.localops[i];
-            unapply(target, op.op as ArrayOp);
+            unapply(op.op as ArrayOp);
         }
 
+        const target = this.getOpTarget(ops[0].op.path);
         // do
         if (target) for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
@@ -221,15 +256,29 @@ export class TextRepoNode extends RepoNode {
         }
 
         // redo
-        for (let i = 0; i < this.localops.length; i++) {
-            const op = this.localops[i];
-            const record = apply(target, op.op as ArrayOp);
-            if (record) {
-                // replace op
-                op.op = record;
-                const idx = op.cmd.ops.indexOf(op.op);
-                if (idx < 0) throw new Error();
-                op.cmd.ops.splice(idx, 1, record);
+        // todo
+        if (target) {
+            for (let i = 0; i < this.localops.length; i++) {
+                const op = this.localops[i];
+                const record = apply(target, op.op as ArrayOp);
+                if (record) {
+                    // replace op
+                    const idx = op.cmd.ops.indexOf(op.op);
+                    op.op = record;
+                    if (idx < 0) throw new Error();
+                    op.cmd.ops.splice(idx, 1, record);
+                } else {
+                    const idx = op.cmd.ops.indexOf(op.op);
+                    if (idx < 0) throw new Error();
+                    op.cmd.ops.splice(idx, 1);
+                    this.localops.splice(i, 1);
+                    --i;
+                }
+            }
+        } else {
+            for (let i = 0; i < this.localops.length; i++) {
+                const op = this.localops[i];
+                (op.op as any).target = undefined; // 不可再undo
             }
         }
     }

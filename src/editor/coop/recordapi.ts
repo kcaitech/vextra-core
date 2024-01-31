@@ -88,7 +88,7 @@ export class Api {
             baseVer: 0,
             batchId: "",
             ops: [],
-            isUndo: false,
+            isRecovery: false,
             description,
             time: 0,
             posttime: 0

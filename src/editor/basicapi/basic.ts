@@ -17,7 +17,8 @@ export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, in
         data: JSON.stringify(shape, (k, v) => k.startsWith('__') ? undefined : v),
         from: undefined,
         to: { id: parent.id, index: shape.crdtidx.index, order: Number.MAX_SAFE_INTEGER },
-        origin: undefined
+        origin: undefined,
+        target: page
     };
 }
 export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): TreeMoveOpRecord | undefined {
@@ -30,7 +31,8 @@ export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): 
         data: undefined,
         from: { id: parent.id, index: shape.crdtidx.index, order: shape.crdtidx.order },
         to: undefined,
-        origin: shape
+        origin: shape,
+        target: page
     };
 }
 /**
@@ -59,7 +61,8 @@ export function crdtShapeMove(page: Page, parent: GroupShape, index: number, par
         data: undefined,
         from: { id: parent.id, index: oldidx.index, order: oldidx.order },
         to: { id: parent2.id, index: newidx.index, order: Number.MAX_SAFE_INTEGER },
-        origin: undefined
+        origin: undefined,
+        target: page
     };
 }
 
@@ -68,11 +71,16 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
     let origin;
     if (obj instanceof Map) {
         origin = obj.get(key);
-        if (value) obj.set(key, value);
-        else obj.delete(key);
+        if (value) {
+            obj.set(key, value);
+        } else {
+            obj.delete(key);
+        }
     } else if (obj instanceof ResourceMgr) {
         origin = obj.getSync(key);
-        if (value) obj.add(key, value);
+        if (value) {
+            obj.add(key, value);
+        }
     } else {
         origin = (obj as any)[key];
         (obj as any)[key] = value;
@@ -83,7 +91,8 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
         path: obj.getCrdtPath().concat(key), // 用于路径能找到唯一的reponode
         order: Number.MAX_SAFE_INTEGER,
         data: typeof value === 'object' ? JSON.stringify(value, (k, v) => k.startsWith('__') ? undefined : v) : value,
-        origin
+        origin,
+        target: obj
     }
 }
 
@@ -110,13 +119,15 @@ export function otTextInsert(parent: Shape | Variable, text: Text | string, inde
             type: 'simple',
             text: str as string,
             props,
-        })
+        },
+        text)
     } else {
         text.insertFormatText(str as Text, index);
         return new TextOpInsertRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
             type: 'complex',
             text: str as Text
-        })
+        },
+        text)
     }
 }
 export function otTextRemove(parent: Shape | Variable, text: Text | string, index: number, length: number): TextOpRemoveRecord | undefined {
@@ -126,7 +137,7 @@ export function otTextRemove(parent: Shape | Variable, text: Text | string, inde
         parent.value = text;
     }
     const del = text.deleteText(index, length);
-    return del && new TextOpRemoveRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, del);
+    return del && new TextOpRemoveRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, del, text);
 }
 export function otTextSetAttr(parent: Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
     if (typeof text === "string") {
@@ -135,7 +146,7 @@ export function otTextSetAttr(parent: Shape | Variable, text: Text | string, ind
         parent.value = text;
     }
     const ret = text.formatText(index, length, key, value);
-    return new TextOpAttrRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "span", key, value }, ret);
+    return new TextOpAttrRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "span", key, value }, ret, text);
 }
 
 export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
@@ -160,7 +171,7 @@ export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string,
     else {
         ret = text.formatPara(index, length, key, value);
     }
-    return new TextOpAttrRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "para", key, value }, ret);
+    return new TextOpAttrRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "para", key, value }, ret, text);
 }
 
 // 数据操作
@@ -178,7 +189,8 @@ export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: 
         data: typeof item === 'object' ? JSON.stringify(item, (k, v) => k.startsWith('__') ? undefined : v) : item,
         from: undefined,
         to: newidx,
-        origin: undefined
+        origin: undefined,
+        target: arr
     }
 }
 
@@ -196,7 +208,8 @@ export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): Array
         data: undefined,
         from: oldidx,
         to: undefined,
-        origin: item
+        origin: item,
+        target: arr
     }
 }
 
@@ -225,6 +238,7 @@ export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: numbe
         data: undefined,
         from: oldidx,
         to: newidx,
-        origin: undefined
+        origin: undefined,
+        target: arr
     }
 }
