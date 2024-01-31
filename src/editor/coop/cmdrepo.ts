@@ -9,8 +9,7 @@ import { ICoopNet } from "./net";
 import { uuid } from "../../basic/uuid";
 import { RepoNode, RepoNodePath } from "./base";
 import { nodecreator } from "./creator";
-import { ArrayOp } from "coop/client/arrayop";
-import { ArrayMoveOp, ArrayMoveOpRecord, IdOpRecord, TreeMoveOpRecord } from "coop/client/crdt";
+import { ArrayMoveOpRecord, IdOpRecord, TreeMoveOpRecord } from "coop/client/crdt";
 
 const POST_TIMEOUT = 5000; // 5s
 
@@ -46,40 +45,32 @@ function classifyOps(cmds: Cmd[]) {
 // 不是Recovery
 function quickRejectRecovery(cmd: LocalCmd) {
     const ops = cmd.ops;
-    let isRecovery = false;
     for (let i = 0; i < ops.length; ++i) {
-        const op = ops[i];
+        const op = ops[i] as ArrayMoveOpRecord | TreeMoveOpRecord | IdOpRecord;
         switch (op.type) {
             case OpType.None:
             case OpType.Array:
-                continue;
+                break;
             case OpType.CrdtArr:
-                {
-                    const record = op as ArrayMoveOpRecord;
-                    if (!record.from && record.to && (typeof record.data === 'string') && (record.data[0] === '{' || record.data[0] === '[')) {
-                        // 插入object
-                        isRecovery = true;
-                    }
-                }
             case OpType.CrdtTree:
-                {
-                    const record = op as TreeMoveOpRecord;
-                    if (!record.from && record.to && record.data) {
-                        // 插入object
-                        isRecovery = true;
-                    }
+                const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
+                if (!record.from && record.to &&
+                    (typeof record.data === 'string') &&
+                    (record.data[0] === '{' || record.data[0] === '[')) {
+                    // 插入object
+                    return false;
                 }
+                break;
             case OpType.Idset:
-                {
-                    const record = op as IdOpRecord;
-                    if ((typeof record.data === 'string') && (record.data[0] === '{' || record.data[0] === '[')) {
-                        // 插入object
-                        isRecovery = true;
-                    }
+                if ((typeof op.data === 'string') &&
+                    (op.data[0] === '{' || op.data[0] === '[')) {
+                    // 插入object
+                    return false;
                 }
+                break;
         }
     }
-    return !isRecovery;
+    return true;
 }
 
 // 一个page一个curversion，不可见page，cmd仅暂存
@@ -143,13 +134,7 @@ export class CmdRepo {
         return repotree;
     }
 
-    private _receive(cmds: Cmd[], needUpdateFrame: Map<string, Shape[]>) {
-        // 处理远程过来的cmds
-        // 可能的情况是，本地有cmd, 需要做变换
-        // 1. 分类op
-
-        // todo isRecovery的cmd需要处理
-
+    private __receive(cmds: Cmd[], needUpdateFrame: Map<string, Shape[]>) {
         const subrepos = classifyOps(cmds);
         for (let [k, v] of subrepos) {
             // 建立repotree
@@ -164,6 +149,70 @@ export class CmdRepo {
                 needUpdateFrame.set(blockId, nuf);
             }
             node.receive(v, nuf);
+        }
+    }
+
+    private _receive(cmds: Cmd[], needUpdateFrame: Map<string, Shape[]>) {
+        // 处理远程过来的cmds
+        // 可能的情况是，本地有cmd, 需要做变换
+        // 1. 分类op
+
+        // todo isRecovery的cmd需要处理
+
+        for (; cmds.length > 0;) {
+            const idx = cmds.findIndex((cmd) => cmd.isRecovery);
+            if (idx < 0) {
+                this.__receive(cmds, needUpdateFrame);
+                break;
+            }
+
+            if (idx > 0) {
+                this.__receive(cmds.slice(0, idx), needUpdateFrame);
+            }
+            const recoveryCmd = cmds[idx];
+            cmds.splice(0, idx + 1);
+
+            const subrepos = classifyOps([recoveryCmd]);
+            for (let [k, v] of subrepos) {
+                // 建立repotree
+                const op0 = v[0].op;
+                const blockId = op0.path[0];
+                let repotree = this.getRepoTree(blockId);
+                const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+                // apply op
+                let nuf = needUpdateFrame.get(blockId);
+                if (!nuf) {
+                    nuf = [];
+                    needUpdateFrame.set(blockId, nuf);
+                }
+                node.receive(v, nuf);
+
+                const op = v[0].op; // 需要重新获取
+                switch (op.type) {
+                    case OpType.None:
+                    case OpType.Array:
+                        break;
+                    case OpType.CrdtArr:
+                    case OpType.CrdtTree:
+                        {
+                            const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
+                            const node = repotree.get2(record.path.concat(record.id));
+                            if (node) {
+                                node.roll2Version(recoveryCmd.baseVer, Number.MAX_SAFE_INTEGER, nuf)
+                            }
+                        }
+                        break;
+                    case OpType.Idset:
+                        {
+                            const record = op as IdOpRecord;
+                            const node = repotree.get2(record.path);
+                            if (node) {
+                                node.roll2Version(recoveryCmd.baseVer, Number.MAX_SAFE_INTEGER, nuf)
+                            }
+                        }
+                        break;
+                }
+            }
         }
     }
 
@@ -412,10 +461,11 @@ export class CmdRepo {
             switch (op.type) {
                 case OpType.None:
                 case OpType.Array:
-                    continue;
+                    break;
                 case OpType.CrdtArr:
+                case OpType.CrdtTree:
                     {
-                        const record = op as ArrayMoveOpRecord;
+                        const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
                         if (!record.from && record.to && (typeof record.data === 'string') && (record.data[0] === '{' || record.data[0] === '[')) {
                             if (!record.data2) throw new Error();
                             const blockId = record.path[0];
@@ -428,22 +478,7 @@ export class CmdRepo {
                             }
                         }
                     }
-                case OpType.CrdtTree:
-                    {
-                        const record = op as TreeMoveOpRecord;
-                        if (!record.from && record.to && record.data) {
-                            // 插入object
-                            if (!record.data2) throw new Error();
-                            const blockId = record.path[0];
-                            const repotree = this.repotrees.get(blockId);
-                            const node = repotree && repotree.get2(record.path.concat(record.id));
-                            if (node) {
-                                node.undoLocals();
-                                record.data = JSON.stringify(record.data2, (k, v) => k.startsWith('__') ? undefined : v)
-                                node.redoLocals();
-                            }
-                        }
-                    }
+                    break;
                 case OpType.Idset:
                     {
                         const record = op as IdOpRecord;
@@ -460,6 +495,7 @@ export class CmdRepo {
                             }
                         }
                     }
+                    break;
             }
         }
     }
@@ -484,7 +520,7 @@ export class CmdRepo {
             const nuf: Shape[] = [];
             needUpdateFrame.set(_blockId, nuf);
 
-            repotree.roll2Version([_blockId], this.baseVer, Number.MAX_SAFE_INTEGER, nuf)
+            repotree.roll2Version(this.baseVer, Number.MAX_SAFE_INTEGER, nuf)
         }
 
         for (let [k, v] of needUpdateFrame) {

@@ -76,15 +76,15 @@ export class RepoNodePath {
     }
 
     // 将数据回退或者前进到特定版本
-    roll2Version(path: string[], baseVer: number, version: number, needUpdateFrame: Shape[]) {
+    roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]) {
         // get
         let node: RepoNodePath = this;
-        while (path.length > 0) {
-            const n = node.childs.get(path[0]);
-            if (!n) return; // throw new Error("path not exist");
-            node = n;
-            path = path.slice(1);
-        }
+        // while (path.length > 0) {
+        //     const n = node.childs.get(path[0]);
+        //     if (!n) return; // throw new Error("path not exist");
+        //     node = n;
+        //     path = path.slice(1);
+        // }
         const roll = (node: RepoNodePath) => {
             node.node?.roll2Version(baseVer, version, needUpdateFrame);
             node.childs.forEach(roll);
