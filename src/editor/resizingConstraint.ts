@@ -28,7 +28,6 @@ export class resizingConstraintEditor {
         return shape.isVirtualShape // 图形是实例子元素
             || ( // 图形不是以下类型图层的子元素
                 !(shape.parent instanceof Artboard)
-                && !(shape.parent instanceof GroupShape)
                 && !(shape.parent instanceof SymbolShape)
             )
     }
@@ -36,7 +35,6 @@ export class resizingConstraintEditor {
     /**
      * @description 设置选中的图层是否表现靠左固定的约束状态
      * @param { Shape[] } shapes 选中的图层
-     * @param { boolean } value 期望状态
      */
     fixedToLeft(shapes: Shape[]) { // 调整选中图层靠左固定的值（靠左固定、取消靠左固定）
         try {
@@ -161,8 +159,7 @@ export class resizingConstraintEditor {
         }
     }
 
-    // todo vertical
-
+    // vertical
     fixedToTop(shapes: Shape[]) {
         try {
             const api = this.__repo.start("fixedToTop", {});
