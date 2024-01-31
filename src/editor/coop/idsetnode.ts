@@ -45,7 +45,8 @@ function apply(document: Document, target: Object, op: IdOp, needUpdateFrame: Sh
         path: op.path,
         order: Number.MAX_SAFE_INTEGER,
         origin: origin,
-        target
+        target,
+        data2: value
     }
 }
 
@@ -57,7 +58,8 @@ function revert(op: IdOpRecord): IdOpRecord {
         path: op.path,
         order: Number.MAX_SAFE_INTEGER,
         origin: op.data,
-        target: undefined
+        target: undefined,
+        data2: undefined
     }
 }
 

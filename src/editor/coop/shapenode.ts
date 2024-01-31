@@ -70,7 +70,8 @@ function revert(op: TreeMoveOpRecord): TreeMoveOpRecord {
         to: op.from,
         order: Number.MAX_SAFE_INTEGER,
         origin: op.data,
-        target: undefined
+        target: undefined,
+        data2: undefined
     }
 }
 

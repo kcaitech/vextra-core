@@ -18,7 +18,8 @@ export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, in
         from: undefined,
         to: { id: parent.id, index: shape.crdtidx.index, order: Number.MAX_SAFE_INTEGER },
         origin: undefined,
-        target: page
+        target: page,
+        data2: shape
     };
 }
 export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): TreeMoveOpRecord | undefined {
@@ -32,7 +33,8 @@ export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): 
         from: { id: parent.id, index: shape.crdtidx.index, order: shape.crdtidx.order },
         to: undefined,
         origin: shape,
-        target: page
+        target: page,
+        data2: undefined
     };
 }
 /**
@@ -62,7 +64,8 @@ export function crdtShapeMove(page: Page, parent: GroupShape, index: number, par
         from: { id: parent.id, index: oldidx.index, order: oldidx.order },
         to: { id: parent2.id, index: newidx.index, order: Number.MAX_SAFE_INTEGER },
         origin: undefined,
-        target: page
+        target: page,
+        data2: undefined
     };
 }
 
@@ -92,7 +95,8 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
         order: Number.MAX_SAFE_INTEGER,
         data: typeof value === 'object' ? JSON.stringify(value, (k, v) => k.startsWith('__') ? undefined : v) : value,
         origin,
-        target: obj
+        target: obj,
+        data2: value
     }
 }
 
@@ -190,7 +194,8 @@ export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: 
         from: undefined,
         to: newidx,
         origin: undefined,
-        target: arr
+        target: arr,
+        data2: item
     }
 }
 
@@ -209,7 +214,8 @@ export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): Array
         from: oldidx,
         to: undefined,
         origin: item,
-        target: arr
+        target: arr,
+        data2: undefined
     }
 }
 
@@ -239,6 +245,7 @@ export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: numbe
         from: oldidx,
         to: newidx,
         origin: undefined,
-        target: arr
+        target: arr,
+        data2: undefined
     }
 }

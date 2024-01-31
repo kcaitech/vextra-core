@@ -417,15 +417,15 @@ export class CmdRepo {
                     {
                         const record = op as ArrayMoveOpRecord;
                         if (!record.from && record.to && (typeof record.data === 'string') && (record.data[0] === '{' || record.data[0] === '[')) {
-                            const target = record.target;
-                            if (!target) throw new Error();
+                            if (!record.data2) throw new Error();
                             const blockId = record.path[0];
                             const repotree = this.repotrees.get(blockId);
-                            const node = repotree && repotree.get2(record.path);
-                            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
-                            node.undoLocals();
-                            record.data = JSON.stringify(target, (k, v) => k.startsWith('__') ? undefined : v)
-                            node.redoLocals();
+                            const node = repotree && repotree.get2(record.path.concat(record.id));
+                            if (node) {
+                                node.undoLocals();
+                                record.data = JSON.stringify(record.data2, (k, v) => k.startsWith('__') ? undefined : v)
+                                node.redoLocals();
+                            }
                         }
                     }
                 case OpType.CrdtTree:
@@ -433,15 +433,15 @@ export class CmdRepo {
                         const record = op as TreeMoveOpRecord;
                         if (!record.from && record.to && record.data) {
                             // 插入object
-                            const target = record.target;
-                            if (!target) throw new Error();
+                            if (!record.data2) throw new Error();
                             const blockId = record.path[0];
                             const repotree = this.repotrees.get(blockId);
-                            const node = repotree && repotree.get2(record.path);
-                            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
-                            node.undoLocals();
-                            record.data = JSON.stringify(target, (k, v) => k.startsWith('__') ? undefined : v)
-                            node.redoLocals();
+                            const node = repotree && repotree.get2(record.path.concat(record.id));
+                            if (node) {
+                                node.undoLocals();
+                                record.data = JSON.stringify(record.data2, (k, v) => k.startsWith('__') ? undefined : v)
+                                node.redoLocals();
+                            }
                         }
                     }
                 case OpType.Idset:
@@ -449,15 +449,15 @@ export class CmdRepo {
                         const record = op as IdOpRecord;
                         if ((typeof record.data === 'string') && (record.data[0] === '{' || record.data[0] === '[')) {
                             // 插入object
-                            const target = record.target;
-                            if (!target) throw new Error();
+                            if (!record.data2) throw new Error();
                             const blockId = record.path[0];
                             const repotree = this.repotrees.get(blockId);
                             const node = repotree && repotree.get2(record.path);
-                            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
-                            node.undoLocals();
-                            record.data = JSON.stringify(target, (k, v) => k.startsWith('__') ? undefined : v)
-                            node.redoLocals();
+                            if (node) {
+                                node.undoLocals();
+                                record.data = JSON.stringify(record.data2, (k, v) => k.startsWith('__') ? undefined : v)
+                                node.redoLocals();
+                            }
                         }
                     }
             }

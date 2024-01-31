@@ -79,7 +79,8 @@ function revert(op: ArrayMoveOpRecord): ArrayMoveOpRecord {
         id: op.id,
         path: op.path,
         origin: op.data,
-        target: undefined
+        target: undefined,
+        data2: undefined
     }
 }
 
