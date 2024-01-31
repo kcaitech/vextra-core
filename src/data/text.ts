@@ -31,10 +31,8 @@ import { deleteText, formatPara, formatText, insertComplexText, insertSimpleText
 import { LayoutItem, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
-import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 import { _travelTextPara } from "./texttravel";
 import { Padding } from "./baseclasses";
-
 import { Color } from "./color";
 
 /*
