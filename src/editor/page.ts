@@ -316,7 +316,7 @@ export class PageEditor {
             // 1、新建一个GroupShape
             let gshape = newGroupShape(groupname);
 
-            gshape = group(this.__page, shapes, gshape, savep, saveidx, api);
+            gshape = group(this.__document, this.__page, shapes, gshape, savep, saveidx, api);
 
             this.__repo.commit();
             return gshape;
@@ -335,7 +335,7 @@ export class PageEditor {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
                 if (!shape.parent) continue;
-                const childs = ungroup(this.__page, shape, api);
+                const childs = ungroup(this.__document, this.__page, shape, api);
                 childrens.push(...childs);
             }
             this.__repo.commit();
@@ -365,7 +365,7 @@ export class PageEditor {
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
             let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
-            artboard = group(this.__page, shapes, artboard, savep, saveidx, api) as Artboard;
+            artboard = group(this.__document, this.__page, shapes, artboard, savep, saveidx, api) as Artboard;
 
             this.__repo.commit();
             return artboard;
@@ -389,7 +389,7 @@ export class PageEditor {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
                 if (!shape.parent) continue;
-                const childs = ungroup(this.__page, shape, api);
+                const childs = ungroup(this.__document, this.__page, shape, api);
                 childrens.push(...childs);
             }
             this.__repo.commit();
@@ -441,7 +441,7 @@ export class PageEditor {
             // 1、新建一个GroupShape
             let gshape = newGroupShape(groupname, style);
             gshape.isBoolOpShape = true;
-            gshape = group(this.__page, shapes, gshape, savep, saveidx, api);
+            gshape = group(this.__document, this.__page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
 
             this.__repo.commit();
@@ -476,12 +476,12 @@ export class PageEditor {
                 for (let i = 0, len = children.length; i < len; ++i) {
                     api.shapeMove(this.__page, shape0, 0, symbolShape, i);
                 }
-                api.shapeDelete(this.__page, shape0.parent as GroupShape, index);
+                api.shapeDelete(document, this.__page, shape0.parent as GroupShape, index);
             } else {
                 const symbolShape = newSymbolShape(name ?? shape0.name, frame);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 api.registSymbol(document, symbolShape.id, this.__page.id);
-                sym = group(this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
+                sym = group(document, this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
             }
             if (sym) {
                 document.symbolsMgr.add(sym.id, sym as SymbolShape);
@@ -726,7 +726,7 @@ export class PageEditor {
             for (let i = 0, len = actions.length; i < len; i++) {
                 const { parent, self, insertIndex } = actions[i];
                 const ret = api.shapeInsert(this.__page, parent as GroupShape, self, insertIndex);
-                api.shapeDelete(this.__page, parent as GroupShape, insertIndex + 1);
+                api.shapeDelete(this.__document, this.__page, parent as GroupShape, insertIndex + 1);
                 results.push(ret);
             }
             this.__repo.commit();
@@ -815,9 +815,9 @@ export class PageEditor {
                 const s = shapes[i];
                 const p = s.parent as GroupShape;
                 const idx = p.indexOfChild(s);
-                api.shapeDelete(this.__page, p, idx);
+                api.shapeDelete(this.__document, this.__page, p, idx);
                 if (p.childs.length <= 0) {
-                    deleteEmptyGroupShape(this.__page, p, api)
+                    deleteEmptyGroupShape(this.__document, this.__page, p, api)
                 }
             }
             this.__repo.commit();
@@ -856,7 +856,7 @@ export class PageEditor {
             let pathShape = newPathShape(shape.name, frame, path, style);
             pathShape.fixedRadius = shape.fixedRadius;
             const index = parent.indexOfChild(shape);
-            api.shapeDelete(this.__page, parent, index);
+            api.shapeDelete(this.__document, this.__page, parent, index);
             pathShape = api.shapeInsert(this.__page, parent, pathShape, index) as PathShape;
 
             this.__repo.commit();
@@ -920,7 +920,7 @@ export class PageEditor {
                         break;
                     }
                 }
-                if (idx > -1) api.shapeDelete(page, p as GroupShape, idx);
+                if (idx > -1) api.shapeDelete(this.__document, page, p as GroupShape, idx);
             }
         }
     }
@@ -933,7 +933,7 @@ export class PageEditor {
         } else {
             this.removeContact(api, page, shape);
         }
-        api.shapeDelete(page, p, p.indexOfChild(shape));
+        api.shapeDelete(this.__document, page, p, p.indexOfChild(shape));
         if (p.childs.length <= 0 && p.type === ShapeType.Group) {
             this.delete_inner(page, p, api)
         }

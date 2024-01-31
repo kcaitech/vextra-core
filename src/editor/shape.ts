@@ -783,7 +783,7 @@ export class ShapeEditor {
         }
         try {
             const api = this.__repo.start("sortPathShapePoints", {});
-            const code = _clip(this.__page, api, this.__shape as PathShape, index, slice_name);
+            const code = _clip(this.__document, this.__page, api, this.__shape as PathShape, index, slice_name);
             this.__repo.commit();
             return code;
         } catch (error) {
@@ -1025,7 +1025,7 @@ export class ShapeEditor {
 
             if (this.__shape.points.length < 2 && p) {
                 const index = p.indexOfChild(this.__shape);
-                api.shapeDelete(this.__page, p, index)
+                api.shapeDelete(this.__document, this.__page, p, index)
                 result = 0;
             } else {
                 update_path_shape_frame(api, this.__page, [this.__shape as PathShape]);
@@ -1353,12 +1353,12 @@ export class ShapeEditor {
                     if (symbol) { // 将执行删除组件内部图层，需要清除内部图层对组件的影响
                         clear_binds_effect(this.__page, this.__shape, symbol, api);
                     }
-                    api.shapeDelete(this.__page, parent, index);
+                    api.shapeDelete(this.__document, this.__page, parent, index);
                     // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
                     if (after_remove(parent)) {
                         const _p = parent.parent;
                         const _idx = (_p as GroupShape).childs.findIndex(c => c.id === parent.id);
-                        api.shapeDelete(this.__page, (_p as GroupShape), _idx);
+                        api.shapeDelete(this.__document, this.__page, (_p as GroupShape), _idx);
                     }
                     if (this.__shape.type === ShapeType.Symbol) {
                         this.__document.__correspondent.notify('update-symbol-list');
@@ -1424,7 +1424,7 @@ export class ShapeEditor {
                         break;
                     }
                 }
-                if (idx > -1) api.shapeDelete(page, p as GroupShape, idx);
+                if (idx > -1) api.shapeDelete(this.__document, page, p as GroupShape, idx);
             }
         }
     }

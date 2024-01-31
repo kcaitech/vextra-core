@@ -28,7 +28,7 @@ function _apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame:
         page.onRemoveShape(shape);
     }
     else if (!shape && ret.to && ret.data) { // 插入
-        shape = ret.data as Shape;
+        shape = ret.data2 as Shape;
         page.onAddShape(shape);
     }
 

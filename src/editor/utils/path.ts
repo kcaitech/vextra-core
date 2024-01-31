@@ -15,6 +15,7 @@ import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
 import { translateTo } from "../../editor/frame";
 import { CrdtIndex } from "../../data/crdt";
+import { Document } from "../../data/document";
 interface XY {
     x: number
     y: number
@@ -572,7 +573,7 @@ function _sort_after_clip(path_shape: PathShape, index: number) {
     result.push(...points.slice(0, index + 1));
     return result;
 }
-function after_clip(page: Page, api: Api, path_shape: PathShape): number {
+function after_clip(document: Document, page: Page, api: Api, path_shape: PathShape): number {
     if (path_shape.points.length < 2) {
         const parent = path_shape.parent;
         if (!parent) {
@@ -584,7 +585,7 @@ function after_clip(page: Page, api: Api, path_shape: PathShape): number {
             console.log('index < 0');
             return 0;
         }
-        api.shapeDelete(page, parent as GroupShape, index);
+        api.shapeDelete(document, page, parent as GroupShape, index);
         return 1;
     }
     return 0;
@@ -667,7 +668,7 @@ function update_points_xy(page: Page, part: PathShape, points: CurvePoint[], api
     })
     api.addPoints(page, part, points);
 }
-function assemble(page: Page, parts: PathShape[], origin: PathShape, api: Api) {
+function assemble(document: Document, page: Page, parts: PathShape[], origin: PathShape, api: Api) {
     const parent = origin.parent as GroupShape;
     if (!parent) {
         console.log('assemble: !parent');
@@ -679,9 +680,9 @@ function assemble(page: Page, parts: PathShape[], origin: PathShape, api: Api) {
         return;
     }
     const gshape = newGroupShape('图形');
-    return group(page, parts, gshape, parent, index, api);
+    return group(document, page, parts, gshape, parent, index, api);
 }
-function delele_origin(page: Page, origin: PathShape, api: Api) {
+function delele_origin(document: Document, page: Page, origin: PathShape, api: Api) {
     const parent = origin.parent as GroupShape;
     if (!parent) {
         console.log('delele_origin: !parent');
@@ -692,9 +693,9 @@ function delele_origin(page: Page, origin: PathShape, api: Api) {
         console.log('delele_origin: index < 0');
         return;
     }
-    api.shapeDelete(page, parent, index);
+    api.shapeDelete(document, page, parent, index);
 }
-export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
+export function apart_path_shape(document: Document, page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
     // 将要拆分图形
 
     // 拆分结果
@@ -749,15 +750,15 @@ export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, in
     update_path_shape_frame(api, page, [part1, part2]);
 
     // 8.把生成的path组合
-    const g = assemble(page, [part1, part2], path_shape, api);
+    const g = assemble(document, page, [part1, part2], path_shape, api);
     data.ex = g;
 
     // 9.删除原先图形 done
-    delele_origin(page, path_shape, api);
+    delele_origin(document, page, path_shape, api);
 
     return data;
 }
-export function _clip(page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
+export function _clip(document: Document, page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
     let data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
     if (path_shape.isClosed) {
         api.setCloseStatus(page, path_shape, false);
@@ -769,15 +770,15 @@ export function _clip(page: Page, api: Api, path_shape: PathShape, index: number
     const points = path_shape.points;
     if (index === 0) {
         api.deletePoint(page, path_shape, index);
-        data.code = after_clip(page, api, path_shape);
+        data.code = after_clip(document, page, api, path_shape);
         return data;
     }
     if (index === points.length - 2) {
         api.deletePoint(page, path_shape, points.length - 1);
-        data.code = after_clip(page, api, path_shape);
+        data.code = after_clip(document, page, api, path_shape);
         return data;
     }
-    data = apart_path_shape(page, api, path_shape, index, slice_name);
+    data = apart_path_shape(document, page, api, path_shape, index, slice_name);
     return data;
 }
 export function update_path_shape_frame(api: Api, page: Page, shapes: PathShape[]) {

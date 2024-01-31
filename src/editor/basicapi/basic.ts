@@ -65,7 +65,7 @@ export function crdtShapeMove(page: Page, parent: GroupShape, index: number, par
         to: { id: parent2.id, index: newidx.index, order: Number.MAX_SAFE_INTEGER },
         origin: undefined,
         target: page,
-        data2: undefined
+        data2: shape
     };
 }
 

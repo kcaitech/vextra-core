@@ -180,8 +180,8 @@ export class Api {
         this.addOp(basicapi.shapeInsert(page, parent, shape, index, this.needUpdateFrame));
         return page.getShape(shape.id) as Shape;
     }
-    shapeDelete(page: Page, parent: GroupShape, index: number) {
-        this.addOp(basicapi.shapeDelete(page, parent, index, this.needUpdateFrame));
+    shapeDelete(document: Document, page: Page, parent: GroupShape, index: number) {
+        this.addOp(basicapi.shapeDelete(document, page, parent, index, this.needUpdateFrame));
     }
     shapeMove(page: Page, fromParent: GroupShape, fromIdx: number, toParent: GroupShape, toIdx: number) {
         this.addOp(basicapi.shapeMove(page, fromParent, fromIdx, toParent, toIdx, this.needUpdateFrame));

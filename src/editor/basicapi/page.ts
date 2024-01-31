@@ -3,8 +3,8 @@ import { Page } from "../../data/page";
 import { Op } from "../../coop/common/op";
 import { CrdtIndex } from "../../data/crdt";
 import { crdtArrayInsert, crdtArrayMove, crdtArrayRemove, crdtSetAttr, crdtShapeInsert, crdtShapeMove, crdtShapeRemove } from "./basic";
-import { GroupShape, Shape } from "../../data/shape";
-import { BasicMap } from "../../data/basic";
+import { GroupShape, Shape, SymbolShape } from "../../data/shape";
+import { SymbolUnionShape } from "../../data/baseclasses";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     if (index < 0) return;
@@ -61,19 +61,37 @@ export function pageMove(document: Document, fromIdx: number, toIdx: number) {
 
 export function shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
     const op = crdtShapeInsert(page, parent, shape, index);
-    page.onAddShape(shape);
+    page.onAddShape(op.data2 as Shape);
     needUpdateFrame.push({ shape, page });
     return op;
 }
-export function shapeDelete(page: Page, parent: GroupShape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
+export function shapeDelete(document: Document, page: Page, parent: GroupShape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
+    const ops = [];
     const op = crdtShapeRemove(page, parent, index);
     if (op) {
-        page.onRemoveShape(op.data as Shape);
+        ops.push(op);
+        const setfreesymbols = (shape: Shape) => {
+            if (!(shape instanceof GroupShape)) return;
+            if (shape instanceof SymbolShape) {
+                if (shape instanceof SymbolUnionShape) {
+                    shape.childs.forEach(s => {
+                        ops.push(registSymbol(document, s.id, "freesymbols"));
+                    })
+                } else {
+                    ops.push(registSymbol(document, shape.id, "freesymbols"));
+                }
+            } else {
+                shape.childs.forEach(c => setfreesymbols(c));
+            }
+        }
+        setfreesymbols(op.origin as Shape)
+
+        page.onRemoveShape(op.origin as Shape);
         if (parent.childs.length > 0) {
             needUpdateFrame.push({ shape: parent.childs[0], page })
         }
     }
-    return op;
+    return ops;
 }
 /**
  * 
@@ -88,7 +106,7 @@ export function shapeDelete(page: Page, parent: GroupShape, index: number, needU
 export function shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
     const op = crdtShapeMove(page, parent, index, parent2, index2);
     if (op) {
-        needUpdateFrame.push({ shape: op.data as Shape, page })
+        needUpdateFrame.push({ shape: op.data2 as Shape, page })
         if (parent.id !== parent2.id && parent.childs.length > 0) {
             needUpdateFrame.push({ shape: parent.childs[0], page })
         }

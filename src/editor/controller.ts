@@ -453,7 +453,7 @@ export class Controller {
                         const idx = p.indexOfChild(s);
                         api.shapeMove(page, p, idx, target, 0);
                         if (p.childs.length <= 0) {
-                            deleteEmptyGroupShape(page, s, api);
+                            deleteEmptyGroupShape(this.__document, page, s, api);
                         }
                     }
                     const realXY = shapes.map((s) => s.frame2Root());
@@ -778,7 +778,7 @@ export class Controller {
                     }
 
                     translateTo(api, page, shape, x, y);
-                    after_migrate(page, api, origin);
+                    after_migrate(this.__document, page, api, origin);
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -1140,12 +1140,12 @@ export class Controller {
     }
 }
 
-function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
+function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Api): boolean {
     const p = shape.parent as GroupShape;
     if (!p) return false;
-    api.shapeDelete(page, p, p.indexOfChild(shape))
+    api.shapeDelete(document, page, p, p.indexOfChild(shape))
     if (p.childs.length <= 0) {
-        deleteEmptyGroupShape(page, p, api)
+        deleteEmptyGroupShape(document, page, p, api)
     }
     return true;
 }
