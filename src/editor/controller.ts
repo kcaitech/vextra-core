@@ -1167,7 +1167,7 @@ export class Controller {
                     const new_gradient = importGradient(exportGradient(gradient));
                     new_gradient.from.x = from.x;
                     new_gradient.from.y = from.y;
-                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                     const s = shape4fill(api, page, shape);
                     f(page, s, index, new_gradient);
                 }
@@ -1193,7 +1193,7 @@ export class Controller {
                     const new_gradient = importGradient(exportGradient(gradient));
                     new_gradient.to.x = to.x;
                     new_gradient.to.y = to.y;
-                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                     const s = shape4fill(api, page, shape);
                     f(page, s, index, new_gradient);
                 }
@@ -1218,7 +1218,7 @@ export class Controller {
                     if (!gradient) return;
                     const new_gradient = importGradient(exportGradient(gradient));
                     new_gradient.elipseLength = length;
-                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                     const s = shape4fill(api, page, shape);
                     f(page, s, index, new_gradient);
                 }
@@ -1256,7 +1256,7 @@ export class Controller {
                             return -1;
                         }
                     })
-                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyFillGradient.bind(api);
+                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                     const s = shape4fill(api, page, shape);
                     f(page, s, index, new_gradient);
                 }

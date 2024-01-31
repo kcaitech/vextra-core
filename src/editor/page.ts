@@ -1695,11 +1695,9 @@ export class PageEditor {
                     } else {
                         new_gradient.from.y = 0.5;
                     }
-                    if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
+                    if (value !== GradientType.Linear && new_gradient.elipseLength === undefined) {
                         const frame = target.frame;
                         new_gradient.elipseLength = ((frame.width / 2) / (frame.height / 2));
-                    } else if (value === GradientType.Angular && new_gradient.elipseLength === undefined) {
-                        new_gradient.elipseLength = 1;
                     }
                     new_gradient.stops[0].color = gradient_container.color;
                     const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
@@ -1711,11 +1709,9 @@ export class PageEditor {
                     const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
                     const to = { x: 0.5, y: 1 };
                     let elipseLength = undefined;
-                    if (value === GradientType.Radial) {
+                    if (value !== GradientType.Linear) {
                         const frame = target.frame;
                         elipseLength = ((frame.width / 2) / (frame.height / 2));
-                    } else if (value === GradientType.Angular) {
-                        elipseLength = 1;
                     }
                     const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
                     const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
