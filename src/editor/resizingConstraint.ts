@@ -33,44 +33,6 @@ export class resizingConstraintEditor {
             )
     }
 
-    isCheckHorizontal(value: number) {
-        let newvalue = value
-        if (ResizingConstraints.hasLeft(newvalue)) {
-            newvalue = ResizingConstraints.setLeft(newvalue, false)
-        }
-        if (ResizingConstraints.hasRight(newvalue)) {
-            newvalue = ResizingConstraints.setRight(newvalue, false)
-        }
-
-        return newvalue
-    }
-
-    isCheckVertical(value: number) {
-        if (ResizingConstraints.hasTop(value)) {
-            return ResizingConstraints.setTop(value, false)
-        }
-        if (ResizingConstraints.hasBottom(value)) {
-            return ResizingConstraints.setBottom(value, false)
-        }
-
-        return value
-    }
-
-    isCheckWidth(value: number) {
-        let newvalue = value
-        if (ResizingConstraints.hasWidth(newvalue)) {
-            newvalue = ResizingConstraints.setTop(newvalue, false)
-        }
-        return newvalue
-    }
-
-    isCheckHeight(value: number) {
-
-        if (ResizingConstraints.hasHeight(value)) {
-            return ResizingConstraints.setHeight(value, false)
-        }
-    }
-
     /**
      * @description 设置选中的图层是否表现靠左固定的约束状态
      * @param { Shape[] } shapes 选中的图层
@@ -79,24 +41,15 @@ export class resizingConstraintEditor {
     fixedToLeft(shapes: Shape[]) { // 调整选中图层靠左固定的值（靠左固定、取消靠左固定）
         try {
             const api = this.__repo.start("fixedToLeft", {}); // start 修改数据必须通过api去修改
-
             for (let i = 0, l = shapes.length; i < l; i++) { // 对选中的图层挨个设置
                 const shape = shapes[i];
-
                 // 修改前的校验
                 if (this.disabled(shape)) { // 在不影响太多性能的前提下修改数据前应该设置一些防线，尽管view层已有防线
                     continue;
                 }
-                // const old_rc = shape.resizingConstraint || ResizingConstraints.Mask; // 默认值是Unset
-                // const new_rc = ResizingConstraints.setLeft(this.isCheckHorizontal(old_rc), value);
-
                 const old_rc = this.resizingConstaint(shape);
-                // this.isCheckHorizontal(old_rc)
-
                 const new_rc = ResizingConstraints2.setToFixedLeft(old_rc);
-                // console.log(new_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc); // modify 修改数据
-
             }
 
             this.__repo.commit(); // success 修改数据成功；start和success正常情况下一定是成对出现
@@ -109,18 +62,13 @@ export class resizingConstraintEditor {
     fixedToRight(shapes: Shape[]) {
         try {
             const api = this.__repo.start("fixedToRight", {});
-
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
                     continue;
                 }
-                // const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
-                // const new_rc = ResizingConstraints.setRight(this.isCheckWidth(old_rc), value);
-
                 const old_rc = this.resizingConstaint(shape);
                 const new_rc = ResizingConstraints2.setToFixedRight(old_rc);
-
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -134,19 +82,13 @@ export class resizingConstraintEditor {
     fixedToLR(shapes: Shape[]) {
         try {
             const api = this.__repo.start("fixedToLR", {});
-
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
                     continue;
                 }
-                // const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
-                // const new_rc = ResizingConstraints.setLR(this.isCheckHorizontal(old_rc), value);
                 const old_rc = this.resizingConstaint(shape);
-                // this.isCheckHorizontal(old_rc)
                 const new_rc = ResizingConstraints2.setToFixedLeftAndRight(old_rc);
-                // console.log(new_rc);
-
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -157,17 +99,16 @@ export class resizingConstraintEditor {
         }
     }
 
-    justifyCenter(shapes: Shape[]) {
+    HorizontaljustifyCenter(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("justifyCenter", {});
-
+            const api = this.__repo.start("HorizontaljustifyCenter", {});
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
                     continue;
                 }
                 const old_rc = this.resizingConstaint(shape);
-                const new_rc = ResizingConstraints2.setToJustifyCenter(old_rc);
+                const new_rc = ResizingConstraints2.setToHorizontalJustifyCenter(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -184,18 +125,11 @@ export class resizingConstraintEditor {
 
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
-
-
                 if (this.disabled(shape)) {
                     continue;
                 }
-                // const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
-                // const new_rc = ResizingConstraints.setWidth(this.isCheckHorizontal(old_rc), value);
-
                 const old_rc = this.resizingConstaint(shape);
-                // this.isCheckHorizontal(old_rc)
                 const new_rc = ResizingConstraints2.setToWidthFixed(old_rc);
-                // console.log(new_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -208,17 +142,14 @@ export class resizingConstraintEditor {
 
     flexWidth(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("fixedToWidth", {});
+            const api = this.__repo.start("flexWidth", {});
 
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
-
-
                 if (this.disabled(shape)) {
                     continue;
                 }
-
-                const old_rc = shape.resizingConstraint || ResizingConstraints2.Mask;
+                const old_rc = this.resizingConstaint(shape);
                 const new_rc = ResizingConstraints2.setToWidthFlex(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
@@ -232,22 +163,16 @@ export class resizingConstraintEditor {
 
     // todo vertical
 
-    fixedToTop(shapes: Shape[], value: boolean) {
+    fixedToTop(shapes: Shape[]) {
         try {
             const api = this.__repo.start("fixedToTop", {});
-
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
-
-
                 if (this.disabled(shape)) {
                     continue;
                 }
-
-                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
-                this.isCheckVertical(old_rc)
-                const new_rc = ResizingConstraints.setTop(this.isCheckVertical(old_rc), value);
-                console.log(new_rc);
+                const old_rc = this.resizingConstaint(shape);
+                const new_rc = ResizingConstraints2.setToFixedTop(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -258,23 +183,16 @@ export class resizingConstraintEditor {
         }
     }
 
-    fixedToBottom(shapes: Shape[], value: boolean) {
+    fixedToBottom(shapes: Shape[]) {
         try {
             const api = this.__repo.start("fixedToBottom", {});
-
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
-
-
                 if (this.disabled(shape)) {
                     continue;
                 }
-
-                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
-                this.isCheckVertical(old_rc)
-
-                const new_rc = ResizingConstraints.setBottom(this.isCheckVertical(old_rc), value);
-                console.log(new_rc);
+                const old_rc = this.resizingConstaint(shape);
+                const new_rc = ResizingConstraints2.setToFixedBottom(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -285,23 +203,16 @@ export class resizingConstraintEditor {
         }
     }
 
-    fixedToTB(shapes: Shape[], value: boolean) {
+    fixedToTB(shapes: Shape[]) {
         try {
             const api = this.__repo.start("fixedToTB", {});
-
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
-
-
                 if (this.disabled(shape)) {
                     continue;
                 }
-
-                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
-                this.isCheckVertical(old_rc)
-
-                const new_rc = ResizingConstraints.setTB(this.isCheckVertical(old_rc), value);
-                console.log(new_rc);
+                const old_rc = this.resizingConstaint(shape);
+                const new_rc = ResizingConstraints2.setToFixedTopAndBottom(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -312,21 +223,57 @@ export class resizingConstraintEditor {
         }
     }
 
-    fixedTHeight(shapes: Shape[], value: boolean) {
+    VerticaljustifyCenter(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("fixedTHeight", {});
-
+            const api = this.__repo.start("VerticaljustifyCenter", {});
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
-
-
                 if (this.disabled(shape)) {
                     continue;
                 }
-                const old_rc = shape.resizingConstraint || ResizingConstraints.Mask;
-                this.isCheckVertical(old_rc)
-                const new_rc = ResizingConstraints.setHeight(this.isCheckVertical(old_rc), value);
-                console.log(new_rc);
+                const old_rc = this.resizingConstaint(shape);
+                const new_rc = ResizingConstraints2.setToVerticalJustifyCenter(old_rc);
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    fixedToHeight(shapes: Shape[]) {
+        try {
+            const api = this.__repo.start("fixedToHeight", {});
+
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                if (this.disabled(shape)) {
+                    continue;
+                }
+                const old_rc = this.resizingConstaint(shape);
+                const new_rc = ResizingConstraints2.setToHeightFixed(old_rc);
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    flexHeight(shapes: Shape[]) {
+        try {
+            const api = this.__repo.start("flexHeight", {});
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                if (this.disabled(shape)) {
+                    continue;
+                }
+                const old_rc = this.resizingConstaint(shape);
+                const new_rc = ResizingConstraints2.setToHeightFlex(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
