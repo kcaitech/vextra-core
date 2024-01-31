@@ -31,7 +31,6 @@ export interface Api {
 const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
 export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame) {
-    if (shape.type === ShapeType.Artboard || shape.type === ShapeType.SymbolUnion) return; // 容器不需要调整子对象
     const childs = shape.childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const c = childs[i];
@@ -608,7 +607,7 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
 
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
-export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number) {    
+export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number) {
     const p = shape.parent;
     if (!p) return;
     // 需要满足左下(lt)不动
