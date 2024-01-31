@@ -2,7 +2,7 @@ import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
 import { Document, GroupShape, Shape } from "../data/classes";
 import { ResizingConstraints, ResizingConstraints2 } from "../data/consts";
-import { Artboard, SymbolShape } from "../data/baseclasses";
+import { Artboard, ShapeType, SymbolShape } from "../data/baseclasses";
 
 export class resizingConstraintEditor {
     protected __repo: CoopRepository;
@@ -27,8 +27,8 @@ export class resizingConstraintEditor {
     disabled(shape: Shape) {
         return shape.isVirtualShape // 图形是实例子元素
             || ( // 图形不是以下类型图层的子元素
-                !(shape.parent instanceof Artboard)
-                && !(shape.parent instanceof SymbolShape)
+                shape.parent?.type !== ShapeType.Artboard
+                && shape.parent?.type !== ShapeType.Symbol
             )
     }
 
