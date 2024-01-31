@@ -8,8 +8,9 @@
 import { Document } from "../data/document";
 import { Border, Fill, Page, Shadow, Style } from "../data/classes";
 import * as types from "../data/typesdefine"
-import { exportDocumentMeta, exportPage, IExportContext } from "../data/baseexport";
+import { exportDocumentMeta, exportPage, exportSymbolShape, exportSymbolUnionShape, IExportContext } from "../data/baseexport";
 import { BasicArray } from "../data/basic";
+import { SymbolUnionShape } from "../data/baseclasses";
 
 export function newStyle(): Style {
     const borders = new BasicArray<Border>();
@@ -49,9 +50,21 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
     for (let k of ctx.symbols) {
         ctx.refsymbols.delete(k);
     }
+    const freesymbolsSet = new Set<string>();
     for (let k of ctx.refsymbols) {
+        if (freesymbolsSet.has(k)) continue;
         // 未导出的symbol
-        // todo
+        const symbol = document.symbolsMgr.getSync(k);
+        if (!symbol) continue;
+
+        if (symbol.parent instanceof SymbolUnionShape) {
+            freesymbols.push(exportSymbolUnionShape(symbol.parent));
+            symbol.parent.childs.forEach(c => freesymbolsSet.add(c.id))
+            freesymbolsSet.add(symbol.id);
+        } else {
+            freesymbols.push(exportSymbolShape(symbol))
+            freesymbolsSet.add(symbol.id);
+        }
     }
 
     // medias

@@ -13,14 +13,9 @@ interface IJSON {
 
 interface IDataLoader {
     loadDocumentMeta(id: string): Promise<DocumentMeta>
-
-    // loadDocumentSyms(ctx: IImportContext, id: string): Promise<DocumentSyms[]>
-
     loadPage(ctx: IImportContext, id: string): Promise<Page>
-
-    // loadArtboard(ctx: IImportContext, id: string): Promise<Artboard>
-    // loadSymbol(ctx: IImportContext, id: string): Promise<SymbolShape>
     loadMedia(ctx: IImportContext, id: string): Promise<{ buff: Uint8Array, base64: string }>
+    loadFreeSymbols(ctx: IImportContext, id: string, versionId?: string): Promise<SymbolShape[]>
 }
 
 class RemoteLoader {
@@ -66,7 +61,7 @@ export class DataLoader implements IDataLoader {
         return importPage(json as types.Page, ctx)
     }
 
-    async loadFreeSymbols(ctx: IImportContext, id: string, versionId?: string): Promise<SymbolShape[]> {
+    async loadFreeSymbols(ctx: IImportContext, versionId?: string): Promise<SymbolShape[]> {
         const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/freesymbols.json`, versionId)
         const syms = json as types.SymbolShape[] || [];
         return syms.map((s) => {
@@ -125,7 +120,12 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     });
     document.mediasMgr.setLoader((id: string) => loader.loadMedia(ctx, id));
 
-    // todo free symbols
+    let hasLoadFreeSymbols = false;
+    document.__freesymbolsLoader = async () => {
+        if (hasLoadFreeSymbols) return undefined;
+        await loader.loadFreeSymbols(ctx, versionId);
+        hasLoadFreeSymbols = true;
+    }
 
     return document;
 }

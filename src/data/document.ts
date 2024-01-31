@@ -108,14 +108,12 @@ export class Document extends (DocumentMeta) {
     }
 
     private __pages: ResourceMgr<Page>;
-    // private __artboards: ResourceMgr<Artboard>;
     private __symbols: ResourceMgr<SymbolShape>
     private __styles: ResourceMgr<Style>
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
-    // private __loader: IDataLoader;
-    // private __guard?: IDataGruad;
     private __versionId: string;
     private __name: string;
+    __freesymbolsLoader?: () => Promise<any>;
     __correspondent: SpecialActionCorrespondent; // 额外动作通信
 
     constructor(
