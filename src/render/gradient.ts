@@ -41,23 +41,21 @@ export function render(h: Function, value: Gradient, frame: ShapeFrame): { id: s
             const s = value.stops[i];
             childs.push(renderStop(h, s));
         }
-        const r = Math.sqrt((value.to.y - value.from.y) ** 2 + (value.to.x - value.from.x) ** 2);
-        const scaleX = 1;
-        const scaleY = value.elipseLength ? value.elipseLength * r  : 0;
-        const rotate = Math.atan2((value.from.y - value.to.y), (value.from.x - value.to.x)) / Math.PI * 180;
+        const l = Math.sqrt((value.to.y * frame.height - value.from.y * frame.height) ** 2 + (value.to.x * frame.width - value.from.x * frame.width) ** 2);
+        const scaleX = l;
+        const scaleY = value.elipseLength ? (value.elipseLength * l) : 0;
+        const rotate = Math.atan2((value.to.y * frame.height - value.from.y * frame.height), (value.to.x * frame.width - value.from.x * frame.width)) / Math.PI * 180;
 
         node = h("radialGradient", {
             id,
-            cx: value.from.x,
-            cy: value.from.y,
-            r: r,
-            fx: value.from.x,
-            fy: value.from.y,
-            gradientTransform: "translate(" + value.from.x + "," + value.from.y + ")," +
+            cx: 0,
+            cy: 0,
+            r: 1,
+            gradientUnits: "userSpaceOnUse",
+            gradientTransform: "translate(" + frame.width / 2 + "," + frame.height / 2 + ") " +
                 // "scale(0.955224, 1.0)," + // todo
-                "rotate(" + rotate + ")," +
-                "scale(" + scaleX + " " + scaleY + ")," +
-                "translate(" + (-value.from.x) + "," + (-value.from.y) + ")",
+                "rotate(" + rotate + ") " +
+                "scale(" + scaleX + " " + scaleY + ")"
         },
             childs);
     }
