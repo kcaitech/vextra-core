@@ -1690,28 +1690,29 @@ export class PageEditor {
                 if (gradient) {
                     const new_gradient = importGradient(exportGradient(gradient));
                     new_gradient.gradientType = value;
-                    if (value === GradientType.Linear) {
-                        new_gradient.from.y = 0;
-                    } else {
-                        new_gradient.from.y = 0.5;
+                    if (value === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
+                        new_gradient.from.y = new_gradient.from.y - (new_gradient.to.y - new_gradient.from.y);
+                        new_gradient.from.x = new_gradient.from.x - (new_gradient.to.x - new_gradient.from.x);
+                    } else if (gradient.gradientType === GradientType.Linear && value !== GradientType.Linear) {
+                        new_gradient.from.y = new_gradient.from.y + (new_gradient.to.y - new_gradient.from.y) / 2;
+                        new_gradient.from.x = new_gradient.from.x + (new_gradient.to.x - new_gradient.from.x) / 2;
                     }
-                    if (value !== GradientType.Linear && new_gradient.elipseLength === undefined) {
-                        const frame = target.frame;
-                        new_gradient.elipseLength = ((frame.width / 2) / (frame.height / 2));
+                    if (value === GradientType.Radial && new_gradient.elipseLength === undefined) {
+                        new_gradient.elipseLength = 1;
                     }
                     new_gradient.stops[0].color = gradient_container.color;
                     const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                     f(this.__page, s, index, new_gradient);
                 } else {
                     const stops = new BasicArray<Stop>();
+                    const frame = target.frame;
                     const { alpha, red, green, blue } = gradient_container.color;
                     stops.push(new Stop(0, new Color(alpha, red, green, blue), uuid()), new Stop(1, new Color(0, red, green, blue), uuid()))
                     const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
                     const to = { x: 0.5, y: 1 };
                     let elipseLength = undefined;
-                    if (value !== GradientType.Linear) {
-                        const frame = target.frame;
-                        elipseLength = ((frame.width / 2) / (frame.height / 2));
+                    if (value === GradientType.Radial) {
+                        elipseLength = 1;
                     }
                     const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
                     const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
