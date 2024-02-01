@@ -1,8 +1,8 @@
 import { Page } from "../data/page";
 import { CoopRepository } from "./command/cooprepo";
-import { Document, GroupShape, Shape } from "../data/classes";
-import { ResizingConstraints, ResizingConstraints2 } from "../data/consts";
-import { Artboard, ShapeType, SymbolShape } from "../data/baseclasses";
+import { Document, Shape } from "../data/classes";
+import { ResizingConstraints2 } from "../data/consts";
+import { ShapeType } from "../data/baseclasses";
 
 export class resizingConstraintEditor {
     protected __repo: CoopRepository;

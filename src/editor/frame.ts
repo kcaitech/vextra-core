@@ -5,7 +5,7 @@ import { Text } from "../data/text";
 import { ContactType, Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
 import { TableShape } from "../data/table";
-import { ResizingConstraints } from "../data/consts";
+import { ResizingConstraints, ResizingConstraints2 } from "../data/consts";
 import { log } from "console";
 
 type TextShapeLike = Shape & { text: Text }
@@ -253,28 +253,30 @@ function fixConstrainFrame(page: Page, shape: Shape, x: number, y: number, w: nu
     }
     else {
         // 水平
-        const hasWidth = ResizingConstraints.hasWidth(resizingConstraint);
-        const hasLeft = ResizingConstraints.hasLeft(resizingConstraint);
-        const hasRight = ResizingConstraints.hasRight(resizingConstraint);
+        const isFixedWidth = ResizingConstraints2.isFixedWidth(resizingConstraint);
+        const isFixedToLeft = ResizingConstraints2.isFixedToLeft(resizingConstraint);
+        const isFixedToRight = ResizingConstraints2.isFixedToRight(resizingConstraint);
+        const isFixedToLeftAndRight = ResizingConstraints2.isFixedLeftAndRight(resizingConstraint);
+        const isHorCenter = ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint);
         // 计算width, x
         // 宽度与同时设置左右是互斥关系，万一数据出错，以哪个优先？先以左右吧
         let cw = w;
         let cx = x;
-        if (hasLeft && hasRight) {
-            if (!hasWidth) {
-
-                cx = cFrame.x;
-                const dis = originParentFrame.width - (cFrame.x + cFrame.width);
-                cw = curParentFrame.width - dis - cx;
-            }
+        if (isFixedToLeftAndRight) {
+            cx = cFrame.x;
+            const dis = originParentFrame.width - (cFrame.x + cFrame.width);
+            cw = Math.max(curParentFrame.width - dis - cx, 1);
         }
-        else if (hasLeft) {
+        else if (isFixedToLeft) {
             cx = cFrame.x;
         }
-        else if (hasRight) {
-            cx = x;
-            const dis = originParentFrame.width - (cFrame.x + cFrame.width);
-            cw = curParentFrame.width - dis - cx;
+        else if (isFixedToRight) {
+            const orx = originParentFrame.width - cFrame.x;
+            cx = curParentFrame.width - orx;
+        }
+        else if (isHorCenter) {
+            const ocx = originParentFrame.width / 2 - cFrame.x
+            cx = curParentFrame.width / 2 - ocx;
         }
         // else if (hasWidth) {
         //     // 居中
@@ -282,13 +284,19 @@ function fixConstrainFrame(page: Page, shape: Shape, x: number, y: number, w: nu
         // }
 
         // 垂直
+        const isFixedHeight = ResizingConstraints2.isFixedHeight(resizingConstraint);
+        const isFixedToTop = ResizingConstraints2.isFixedToTop(resizingConstraint);
+        const isFixedToBottom = ResizingConstraints2.isFixedToBottom(resizingConstraint);
+        const isFixedToTopAndBottom = ResizingConstraints2.isFixedTopAndBottom(resizingConstraint);
+        const isVerCenter = ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint);
         const hasHeight = ResizingConstraints.hasHeight(resizingConstraint);
         const hasTop = ResizingConstraints.hasTop(resizingConstraint);
         const hasBottom = ResizingConstraints.hasBottom(resizingConstraint);
         // 计算height, y
         let ch = h;
         let cy = y;
-        if (hasTop && hasBottom) {
+        if (isFixedToTopAndBottom) {
+
             if (!hasHeight) {
 
                 cy = cFrame.y;
@@ -296,13 +304,15 @@ function fixConstrainFrame(page: Page, shape: Shape, x: number, y: number, w: nu
                 ch = curParentFrame.height - dis - cy;
             }
         }
-        else if (hasTop) {
+        else if (isFixedToTop) {
             cy = cFrame.y;
         }
-        else if (hasBottom) {
-            cy = y;
-            const dis = originParentFrame.height - (cFrame.y + cFrame.height);
-            ch = curParentFrame.height - dis - cy;
+        else if (isFixedToBottom) {
+            const oby = originParentFrame.height - cFrame.y;
+            cy = curParentFrame.height - oby;
+        } else if (isVerCenter) {
+            const ocy = originParentFrame.height / 2 - cFrame.y
+            cy = curParentFrame.height / 2 - ocy;
         }
         // else if (hasHeight) {
         //     // 居中
