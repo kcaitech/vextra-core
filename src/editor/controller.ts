@@ -18,7 +18,7 @@ import {
 } from "./frame";
 import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, ShapeType } from "../data/typesdefine";
+import { ContactRoleType, CurveMode, FillType, ShapeType } from "../data/typesdefine";
 import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape, getTransformByEnv, modifyTransformByEnv } from "./creator";
 
 import { Page } from "../data/page";
@@ -39,6 +39,7 @@ import { get_state_name } from "./utils/symbol";
 import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
+import { Fill } from "../data/style";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -226,8 +227,9 @@ export class Controller {
                 api.shapeInsert(page, parent, shape, parent.childs.length);
 
                 newShape = parent.childs[parent.childs.length - 1];
-                if (newShape.type === ShapeType.Artboard) {
-                    api.setFillColor(page, newShape, 0, new Color(0, 0, 0, 0));
+
+                if (newShape.type === ShapeType.Artboard && parent instanceof Page) {
+                    api.addFillAt(page, newShape, new Fill(uuid(), true, FillType.SolidColor, new Color(0, 0, 0, 0)), 0);
                 }
 
                 translateTo(api, savepage, newShape, frame.x, frame.y);
@@ -471,7 +473,7 @@ export class Controller {
                         api.shapeModifyY(page, c, c.frame.y + target.y - cur.y - t_xy.y);
                     }
                 }
-                api.setFillColor(page, target, 0, new Color(1, 255, 255, 255));
+
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -482,9 +484,10 @@ export class Controller {
         const close = () => {
             if (status == Status.Fulfilled && newShape && this.__repo.isNeedCommit()) {
                 try {
-                    if (newShape.type === ShapeType.Artboard) {
+                    if (newShape.type === ShapeType.Artboard && newShape.parent instanceof Page) {
                         api.setFillColor(savepage!, newShape, 0, new Color(1, 255, 255, 255));
                     }
+
                     if (newShape.type === ShapeType.Contact) {
                         if ((newShape as ContactShape).from) {
                             const shape1 = savepage?.getShape((newShape as ContactShape).from!.shapeId);
@@ -499,6 +502,7 @@ export class Controller {
                             }
                         }
                     }
+
                     if (newShape.type === ShapeType.Line && savepage) {
                         update_frame_by_points(api, savepage, newShape as PathShape)
                     }
