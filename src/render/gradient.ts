@@ -43,7 +43,7 @@ export function render(h: Function, value: Gradient, frame: ShapeFrame): { id: s
         }
         const l = Math.sqrt((value.to.y * frame.height - value.from.y * frame.height) ** 2 + (value.to.x * frame.width - value.from.x * frame.width) ** 2);
         const scaleX = l;
-        const scaleY = value.elipseLength ? (value.elipseLength * l) : 0;
+        const scaleY = value.elipseLength ? (value.elipseLength * l * frame.width / frame.height) : 0;
         const rotate = Math.atan2((value.to.y * frame.height - value.from.y * frame.height), (value.to.x * frame.width - value.from.x * frame.width)) / Math.PI * 180;
 
         node = h("radialGradient", {
@@ -52,7 +52,7 @@ export function render(h: Function, value: Gradient, frame: ShapeFrame): { id: s
             cy: 0,
             r: 1,
             gradientUnits: "userSpaceOnUse",
-            gradientTransform: "translate(" + frame.width / 2 + "," + frame.height / 2 + ") " +
+            gradientTransform: "translate(" + value.from.x * frame.width + "," + value.from.y * frame.height + ") " +
                 // "scale(0.955224, 1.0)," + // todo
                 "rotate(" + rotate + ") " +
                 "scale(" + scaleX + " " + scaleY + ")"
@@ -99,11 +99,13 @@ export function render(h: Function, value: Gradient, frame: ShapeFrame): { id: s
             gradient = gradient + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
         }
         // defsChilds.push(h("style", {}, "." + id + "{" +
+        const rotate = Math.atan2((value.to.y * frame.height - value.from.y * frame.height), (value.to.x * frame.width - value.from.x * frame.width)) / Math.PI * 180 + 90;
+        const from = "from " + rotate + "deg at " + value.from.x * 100 + "% " + value.from.y * 100 + "%";
         style =
-            "background: conic-gradient(" + gradient + ");" +
+            "background: conic-gradient(" + from + "," + gradient + ");" +
             "height:-webkit-fill-available;" +
             "width:-webkit-fill-available;"
-        // "transform: rotate(90deg);" +
+            // "transform: rotate(90deg);"
         // "transform-origin: left top;" +
         // "rotation:90deg" +
         // "rotation-point:0% 0%;" +
