@@ -87,6 +87,7 @@ export class CmdRepo {
         this.nopostcmds = localcmds;
         this.nodecreator = nodecreator(document);
         this.net = net;
+        this.net.watchCmds(this.receive.bind(this));
 
         // todo 只有本地编辑undo时，需要往回回退版本。初始化时的cmd是不能回退回去的。可以考虑不以undo-do-redo的方式来restore!
         // 比如离线编辑，有比较多的本地cmd需要同步时，太多的undo比较费时。
@@ -111,6 +112,7 @@ export class CmdRepo {
 
     public setNet(net: ICoopNet) {
         this.net = net;
+        this.net.watchCmds(this.receive.bind(this));
     }
 
     document: Document;
