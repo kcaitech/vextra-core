@@ -105,13 +105,9 @@ export const ResizingConstraints2 = {
     },
 
     /**
-     * @deprecated 没有固定宽度这一说法，固定宽度是靠左、靠右、居中自带的
+     * @description 是否宽度被固定，固定宽度是靠左、靠右、居中自带的，并且与跟随缩放互斥
      */
     isFixedWidth(val: number): boolean {
-        if (this.isFixedLeftAndRight(val)) {
-            return false;
-        }
-
         val = this.Mask ^ val;
         return (val & this.Width) === this.Width;
     },
@@ -122,10 +118,7 @@ export const ResizingConstraints2 = {
     setToFixedLeft(status: number) {
         status = this.Mask ^ status;
 
-        // if ((status & this.Right) === this.Right) {
-        //     status = status ^ this.Right;
-        // }
-        status = status & ~this.Right; // 与上面三行注释代码写法不一样，但效果是一样的，即有靠右则取消靠右
+        status = status & ~this.Right; // 有靠右则取消靠右
 
         status = status | this.Left;
         status = status | this.Width; // 自带宽度固定
@@ -235,14 +228,7 @@ export const ResizingConstraints2 = {
         return (val & this.Top) !== this.Top && (val & this.Bottom) !== this.Bottom && (val & this.Height) !== this.Height
     },
 
-    /**
-     * 
-     * @deprecated
-     */
     isFixedHeight(val: number): boolean {
-        if (this.isFixedTopAndBottom(val)) {
-            return false;
-        }
         val = this.Mask ^ val;
         return (val & this.Height) === this.Height;
     },
