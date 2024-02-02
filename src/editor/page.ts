@@ -309,13 +309,18 @@ export class PageEditor {
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
+        // 1、新建一个GroupShape
+        let gshape = newGroupShape(groupname);
 
-        const api = this.__repo.start("group");
+        const api = this.__repo.start("group", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [gshape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
-            // 1、新建一个GroupShape
-            let gshape = newGroupShape(groupname);
 
             gshape = group(this.__document, this.__page, shapes, gshape, savep, saveidx, api);
 
@@ -329,9 +334,14 @@ export class PageEditor {
     }
 
     ungroup(shapes: GroupShape[]): false | Shape[] {
-        const api = this.__repo.start("");
+        const childrens: Shape[] = [];
+        const api = this.__repo.start("ungroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = childrens.map(s => s.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
-            let childrens: Shape[] = [];
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
@@ -359,13 +369,18 @@ export class PageEditor {
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
+        let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
 
-        const api = this.__repo.start("create_artboard");
+        const api = this.__repo.start("create_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [artboard.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
-            let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
             artboard = group(this.__document, this.__page, shapes, artboard, savep, saveidx, api) as Artboard;
 
             this.__repo.commit();
@@ -383,9 +398,14 @@ export class PageEditor {
      * @returns { false | Shape[] } 成功则返回被解除容器的所有子元素
      */
     dissolution_artboard(shapes: Artboard[]): false | Shape[] {
-        const api = this.__repo.start("dissolution_artboard");
+        const childrens: Shape[] = [];
+        const api = this.__repo.start("dissolution_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = childrens.map(c => c.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
-            let childrens: Shape[] = [];
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
@@ -434,13 +454,18 @@ export class PageEditor {
         if (borderStyle !== copyStyle) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
+        // 1、新建一个GroupShape
+        let gshape = newGroupShape(groupname, style);
 
-        const api = this.__repo.start("boolgroup");
+        const api = this.__repo.start("boolgroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [gshape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
-            // 1、新建一个GroupShape
-            let gshape = newGroupShape(groupname, style);
             gshape.isBoolOpShape = true;
             gshape = group(this.__document, this.__page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
@@ -460,16 +485,25 @@ export class PageEditor {
      */
     makeSymbol(document: Document, shapes: Shape[], name?: string) {
         if (shapes.length === 0) return;
-        const api = this.__repo.start("makeSymbol");
+        const shape0 = shapes[0];
+        const frame = importShapeFrame(shape0.frame);
+
+        const replace = shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius;
+
+        const style = replace ? importStyle((shape0.style)) : undefined;
+        const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
+        const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [symbolShape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
+
         try {
             const need_trans_data: Shape[] = [];
             adjust_selection_before_group(document, this.__page, shapes, api, need_trans_data);
             let sym: Shape;
-            const shape0 = shapes[0];
-            const frame = importShapeFrame((exportShapeFrame(shape0.frame)));
-            if (shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius) {
-                const style = importStyle(exportStyle(shape0.style));
-                const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
+            if (replace) {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 api.registSymbol(document, symbolShape.id, this.__page.id);
                 sym = api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
@@ -479,7 +513,6 @@ export class PageEditor {
                 }
                 api.shapeDelete(document, this.__page, shape0.parent as GroupShape, index);
             } else {
-                const symbolShape = newSymbolShape(name ?? shape0.name, frame);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 api.registSymbol(document, symbolShape.id, this.__page.id);
                 sym = group(document, this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
@@ -721,7 +754,12 @@ export class PageEditor {
             actions.push({ parent, self: newShape, insertIndex });
         }
         if (!actions.length) return shapes;
-        const api = this.__repo.start("extractSymbol");
+        const api = this.__repo.start("extractSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = actions.map(a => a.self.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             const results: Shape[] = [];
             for (let i = 0, len = actions.length; i < len; i++) {
@@ -767,49 +805,55 @@ export class PageEditor {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
-        const api = this.__repo.start("flattenShapes");
+        // bounds
+        // 计算frame
+        //   计算每个shape的绝对坐标
+        const boundsArr = shapes.map((s) => {
+            const box = s.boundingBox()
+            const p = s.parent!;
+            const m = p.matrix2Root();
+            const lt = m.computeCoord(box.x, box.y);
+            const rb = m.computeCoord(box.x + box.width, box.y + box.height);
+            return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
+        })
+        const firstXY = boundsArr[0]
+        const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
+
+        boundsArr.reduce((pre, cur) => {
+            expandBounds(pre, cur.x, cur.y);
+            expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
+            return pre;
+        }, bounds)
+
+        const m = new Matrix(savep.matrix2Root().inverse)
+        const xy = m.computeCoord(bounds.left, bounds.top)
+
+        const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);
+        let pathstr = "";
+        shapes.forEach((shape) => {
+            const shapem = shape.matrix2Root();
+            const shapepath = render2path(shape);
+            shapem.multiAtLeft(m);
+            shapepath.transform(shapem);
+
+            if (pathstr.length > 0) {
+                pathstr = gPal.boolop.union(pathstr, shapepath.toString())
+            } else {
+                pathstr = shapepath.toString();
+            }
+        })
+        const path = new Path(pathstr);
+        path.translate(-frame.x, -frame.y);
+
+        let pathShape = newPathShape(name, frame, path, style);
+
+        const api = this.__repo.start("flattenShapes", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [pathShape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
-            // bounds
-            // 计算frame
-            //   计算每个shape的绝对坐标
-            const boundsArr = shapes.map((s) => {
-                const box = s.boundingBox()
-                const p = s.parent!;
-                const m = p.matrix2Root();
-                const lt = m.computeCoord(box.x, box.y);
-                const rb = m.computeCoord(box.x + box.width, box.y + box.height);
-                return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
-            })
-            const firstXY = boundsArr[0]
-            const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
-
-            boundsArr.reduce((pre, cur) => {
-                expandBounds(pre, cur.x, cur.y);
-                expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
-                return pre;
-            }, bounds)
-
-            const m = new Matrix(savep.matrix2Root().inverse)
-            const xy = m.computeCoord(bounds.left, bounds.top)
-
-            const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);
-            let pathstr = "";
-            shapes.forEach((shape) => {
-                const shapem = shape.matrix2Root();
-                const shapepath = render2path(shape);
-                shapem.multiAtLeft(m);
-                shapepath.transform(shapem);
-
-                if (pathstr.length > 0) {
-                    pathstr = gPal.boolop.union(pathstr, shapepath.toString())
-                } else {
-                    pathstr = shapepath.toString();
-                }
-            })
-            const path = new Path(pathstr);
-            path.translate(-frame.x, -frame.y);
-
-            let pathShape = newPathShape(name, frame, path, style);
             pathShape = api.shapeInsert(this.__page, savep, pathShape, saveidx) as PathShape | PathShape2;
 
             for (let i = 0, len = shapes.length; i < len; i++) {
@@ -845,18 +889,23 @@ export class PageEditor {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
-        const api = this.__repo.start("flattenBoolShape");
-        try {
-            const gframe = shape.frame;
-            const boundingBox = path.calcBounds();
-            const w = boundingBox.maxX - boundingBox.minX;
-            const h = boundingBox.maxY - boundingBox.minY;
-            const frame = new ShapeFrame(gframe.x + boundingBox.minX, gframe.y + boundingBox.minY, w, h); // clone
-            path.translate(-boundingBox.minX, -boundingBox.minY);
+        const gframe = shape.frame;
+        const boundingBox = path.calcBounds();
+        const w = boundingBox.maxX - boundingBox.minX;
+        const h = boundingBox.maxY - boundingBox.minY;
+        const frame = new ShapeFrame(gframe.x + boundingBox.minX, gframe.y + boundingBox.minY, w, h); // clone
+        path.translate(-boundingBox.minX, -boundingBox.minY);
 
-            let pathShape = newPathShape(shape.name, frame, path, style);
-            pathShape.fixedRadius = shape.fixedRadius;
-            const index = parent.indexOfChild(shape);
+        let pathShape = newPathShape(shape.name, frame, path, style);
+        pathShape.fixedRadius = shape.fixedRadius;
+        const index = parent.indexOfChild(shape);
+        const api = this.__repo.start("flattenBoolShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [pathShape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
+        try {
             api.shapeDelete(this.__document, this.__page, parent, index);
             pathShape = api.shapeInsert(this.__page, parent, pathShape, index) as PathShape;
 
@@ -1093,7 +1142,12 @@ export class PageEditor {
      * @param actions.index 插入位置
      */
     pasteShapes2(shapes: Shape[], actions: { parent: GroupShape, index: number }[]): Shape[] | false {
-        const api = this.__repo.start("insertShapes2");
+        const api = this.__repo.start("insertShapes2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = shapes.map(s => s.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             const result: Shape[] = [];
             for (let i = 0, len = actions.length; i < len; i++) {
@@ -1341,7 +1395,15 @@ export class PageEditor {
      * @returns 如果成功替换则返回所有替代品
      */
     replace(document: Document, replacement: Shape[], src: Shape[]): false | Shape[] {
-        const api = this.__repo.start("replace");
+        // 收集被替换上去的元素
+        const src_replacement: Shape[] = [];
+
+        const api = this.__repo.start("replace", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = src_replacement.map(s => s.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             const len = replacement.length;
             // 寻找replacement的左上角(lt_point)，该点将和src中每个图形的左上角重合
@@ -1361,8 +1423,7 @@ export class PageEditor {
                 const dt = { x: rf.x - lt_point.x, y: rf.y - lt_point.y };
                 delta_xys.push(dt);
             }
-            // 收集被替换上去的元素
-            const src_replacement: Shape[] = [];
+
 
             // 开始替换
             for (let i = 0; i < src.length; i++) {

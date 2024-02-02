@@ -117,7 +117,7 @@ export class Api {
             const update = this.needUpdateFrame.slice(0);
             const page = update[0].page;
             const shapes = update.map((v) => v.shape);
-            updateShapesFrame(page, shapes, this) // 需要生成op
+            updateShapesFrame(page, shapes, basicapi);
         }
         this.needUpdateFrame.length = 0;
         this.cmd = undefined;

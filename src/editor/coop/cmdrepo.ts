@@ -611,7 +611,7 @@ export class CmdRepo {
         }
 
         --this.localindex;
-        console.log("undo", cmd);
+        console.log("undo", newCmd ?? cmd);
         return newCmd ?? cmd;
     }
     redo() {
@@ -677,7 +677,7 @@ export class CmdRepo {
         }
 
         ++this.localindex;
-        console.log("redo", cmd);
+        console.log("redo", newCmd ?? cmd);
         return newCmd ?? cmd;
     }
 }
