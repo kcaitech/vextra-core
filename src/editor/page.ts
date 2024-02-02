@@ -309,13 +309,18 @@ export class PageEditor {
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
+        // 1、新建一个GroupShape
+        let gshape = newGroupShape(groupname);
 
-        const api = this.__repo.start("group");
+        const api = this.__repo.start("group", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [gshape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
-            // 1、新建一个GroupShape
-            let gshape = newGroupShape(groupname);
 
             gshape = group(this.__document, this.__page, shapes, gshape, savep, saveidx, api);
 
@@ -329,9 +334,14 @@ export class PageEditor {
     }
 
     ungroup(shapes: GroupShape[]): false | Shape[] {
-        const api = this.__repo.start("");
+        const childrens: Shape[] = [];
+        const api = this.__repo.start("ungroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = childrens.map(s => s.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
-            let childrens: Shape[] = [];
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
@@ -359,13 +369,18 @@ export class PageEditor {
         if (shapes.find((v) => !v.parent)) return false;
         const fshape = shapes[0];
         const savep = fshape.parent as GroupShape;
+        let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
 
-        const api = this.__repo.start("create_artboard");
+        const api = this.__repo.start("create_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [artboard.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
             // 1、新建一个GroupShape
-            let artboard = newArtboard(artboardname, new ShapeFrame(0, 0, 100, 100));
             artboard = group(this.__document, this.__page, shapes, artboard, savep, saveidx, api) as Artboard;
 
             this.__repo.commit();
@@ -383,9 +398,14 @@ export class PageEditor {
      * @returns { false | Shape[] } 成功则返回被解除容器的所有子元素
      */
     dissolution_artboard(shapes: Artboard[]): false | Shape[] {
-        const api = this.__repo.start("dissolution_artboard");
+        const childrens: Shape[] = [];
+        const api = this.__repo.start("dissolution_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = childrens.map(c => c.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
-            let childrens: Shape[] = [];
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
@@ -434,13 +454,18 @@ export class PageEditor {
         if (borderStyle !== copyStyle) {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
+        // 1、新建一个GroupShape
+        let gshape = newGroupShape(groupname, style);
 
-        const api = this.__repo.start("boolgroup");
+        const api = this.__repo.start("boolgroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [gshape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             // 0、save shapes[0].parent？最外层shape？位置？  层级最高图形的parent
             const saveidx = savep.indexOfChild(shapes[0]);
-            // 1、新建一个GroupShape
-            let gshape = newGroupShape(groupname, style);
             gshape.isBoolOpShape = true;
             gshape = group(this.__document, this.__page, shapes, gshape, savep, saveidx, api);
             shapes.forEach((shape) => api.shapeModifyBoolOp(this.__page, shape, op))
@@ -460,16 +485,25 @@ export class PageEditor {
      */
     makeSymbol(document: Document, shapes: Shape[], name?: string) {
         if (shapes.length === 0) return;
-        const api = this.__repo.start("makeSymbol");
+        const shape0 = shapes[0];
+        const frame = importShapeFrame(shape0.frame);
+
+        const replace = shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius;
+
+        const style = replace ? importStyle((shape0.style)) : undefined;
+        const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
+        const api = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [symbolShape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
+
         try {
             const need_trans_data: Shape[] = [];
             adjust_selection_before_group(document, this.__page, shapes, api, need_trans_data);
             let sym: Shape;
-            const shape0 = shapes[0];
-            const frame = importShapeFrame((exportShapeFrame(shape0.frame)));
-            if (shapes.length === 1 && (shape0 instanceof GroupShape || shape0 instanceof Artboard) && !shape0.fixedRadius) {
-                const style = importStyle(exportStyle(shape0.style));
-                const symbolShape = newSymbolShape(name ?? shape0.name, frame, style);
+            if (replace) {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 api.registSymbol(document, symbolShape.id, this.__page.id);
                 sym = api.shapeInsert(this.__page, shape0.parent as GroupShape, symbolShape, index + 1);
@@ -479,7 +513,6 @@ export class PageEditor {
                 }
                 api.shapeDelete(document, this.__page, shape0.parent as GroupShape, index);
             } else {
-                const symbolShape = newSymbolShape(name ?? shape0.name, frame);
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 api.registSymbol(document, symbolShape.id, this.__page.id);
                 sym = group(document, this.__page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
