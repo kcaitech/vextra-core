@@ -33,6 +33,10 @@ const float_accuracy = 1e-7;
 function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
     const p: GroupShape | undefined = shape.parent as GroupShape;
     if (!p || (p.type === ShapeType.Artboard || p.type === ShapeType.SymbolRef || p.type === ShapeType.Symbol || p.type === ShapeType.SymbolUnion)) return false;
+    // check
+    if (p.childs.length === 0) throw new Error();
+    const idx = p.childs.findIndex(s => s.id === shape.id);
+    if (idx < 0) throw new Error();
 
     const cf = shape.boundingBox();
     let xychanged = false;
@@ -72,14 +76,13 @@ function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
     let whchanged = false;
     for (; ;) {
         // // 更新parent的frame
-        const pg = p as GroupShape;
         const pf = p.frame;
-        const cc = pg.childs.length;
-        const cf = shape.boundingBox();
+        const cc = p.childs.length;
+        const cf = p.childs[0].boundingBox();
         let l = cf.x, t = cf.y, r = l + cf.width, b = t + cf.height;
-        if (cc > 1) for (let i = 0; i < cc; i++) {
-            const c = pg.childs[i];
-            if (c.id === shape.id) continue;
+        for (let i = 1; i < cc; i++) {
+            const c = p.childs[i];
+            // if (c.id === shape.id) continue;
             const cf = c.boundingBox();
             const cl = cf.x, ct = cf.y, cr = cl + cf.width, cb = ct + cf.height;
             l = Math.min(cl, l);
@@ -126,7 +129,7 @@ function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
 
         if (whchanged && (Math.abs(l) > float_accuracy || Math.abs(t) > float_accuracy)) { // 仅在对象被删除后要更新？
             for (let i = 0; i < cc; i++) {
-                const c = pg.childs[i];
+                const c = p.childs[i];
                 api.shapeModifyX(page, c, c.frame.x - l)
                 api.shapeModifyY(page, c, c.frame.y - t)
             }
