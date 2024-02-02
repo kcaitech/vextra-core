@@ -34,9 +34,9 @@ function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
     const p: GroupShape | undefined = shape.parent as GroupShape;
     if (!p || (p.type === ShapeType.Artboard || p.type === ShapeType.SymbolRef || p.type === ShapeType.Symbol || p.type === ShapeType.SymbolUnion)) return false;
     // check
-    if (p.childs.length === 0) throw new Error();
+    if (p.childs.length === 0) return false;
     const idx = p.childs.findIndex(s => s.id === shape.id);
-    if (idx < 0) throw new Error();
+    if (idx < 0) return false;
 
     const cf = shape.boundingBox();
     let xychanged = false;
