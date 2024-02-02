@@ -46,3 +46,6 @@ export { ArrayOpSelection } from "./coop/client/arrayop"
 // render
 export * from "./render"
 export * from "./renderStatic"
+
+// utils
+export * from "./utils"
