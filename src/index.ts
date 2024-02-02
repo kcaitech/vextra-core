@@ -21,6 +21,7 @@ export * from "./io/cilpboard"
 export * from "./io/export/svg"
 
 // editor
+export * from "./editor/coop/localcmd"
 export * from "./editor/coop/cooprepo"
 export * from "./editor/coop/net"
 export * from "./editor"
@@ -40,6 +41,7 @@ export * from "./service/symbollist"
 // export * from "./coop"
 export { Cmd } from "./coop/common/repo"
 export * from "./coop/client/serial"
+export { ArrayOpSelection } from "./coop/client/arrayop"
 
 // render
 export * from "./render"

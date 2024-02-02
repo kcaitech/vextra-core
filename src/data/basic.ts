@@ -142,11 +142,6 @@ export class WatchableObject extends Basic implements Notifiable {
     }
 }
 
-export interface ISave4Restore {
-    save(): any;
-    restore(saved: any): void;
-}
-
 export interface IDataGuard {
     guard(data: any): any
 }
