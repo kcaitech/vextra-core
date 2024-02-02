@@ -141,7 +141,6 @@ export class resizingConstraintEditor {
     flexWidth(shapes: Shape[]) {
         try {
             const api = this.__repo.start("flexWidth", {});
-
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
