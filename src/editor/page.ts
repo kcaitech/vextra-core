@@ -754,7 +754,12 @@ export class PageEditor {
             actions.push({ parent, self: newShape, insertIndex });
         }
         if (!actions.length) return shapes;
-        const api = this.__repo.start("extractSymbol");
+        const api = this.__repo.start("extractSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = actions.map(a => a.self.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             const results: Shape[] = [];
             for (let i = 0, len = actions.length; i < len; i++) {
@@ -800,49 +805,55 @@ export class PageEditor {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
-        const api = this.__repo.start("flattenShapes");
+        // bounds
+        // 计算frame
+        //   计算每个shape的绝对坐标
+        const boundsArr = shapes.map((s) => {
+            const box = s.boundingBox()
+            const p = s.parent!;
+            const m = p.matrix2Root();
+            const lt = m.computeCoord(box.x, box.y);
+            const rb = m.computeCoord(box.x + box.width, box.y + box.height);
+            return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
+        })
+        const firstXY = boundsArr[0]
+        const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
+
+        boundsArr.reduce((pre, cur) => {
+            expandBounds(pre, cur.x, cur.y);
+            expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
+            return pre;
+        }, bounds)
+
+        const m = new Matrix(savep.matrix2Root().inverse)
+        const xy = m.computeCoord(bounds.left, bounds.top)
+
+        const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);
+        let pathstr = "";
+        shapes.forEach((shape) => {
+            const shapem = shape.matrix2Root();
+            const shapepath = render2path(shape);
+            shapem.multiAtLeft(m);
+            shapepath.transform(shapem);
+
+            if (pathstr.length > 0) {
+                pathstr = gPal.boolop.union(pathstr, shapepath.toString())
+            } else {
+                pathstr = shapepath.toString();
+            }
+        })
+        const path = new Path(pathstr);
+        path.translate(-frame.x, -frame.y);
+
+        let pathShape = newPathShape(name, frame, path, style);
+
+        const api = this.__repo.start("flattenShapes", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [pathShape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
-            // bounds
-            // 计算frame
-            //   计算每个shape的绝对坐标
-            const boundsArr = shapes.map((s) => {
-                const box = s.boundingBox()
-                const p = s.parent!;
-                const m = p.matrix2Root();
-                const lt = m.computeCoord(box.x, box.y);
-                const rb = m.computeCoord(box.x + box.width, box.y + box.height);
-                return { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y }
-            })
-            const firstXY = boundsArr[0]
-            const bounds = { left: firstXY.x, top: firstXY.y, right: firstXY.x, bottom: firstXY.y };
-
-            boundsArr.reduce((pre, cur) => {
-                expandBounds(pre, cur.x, cur.y);
-                expandBounds(pre, cur.x + cur.width, cur.y + cur.height);
-                return pre;
-            }, bounds)
-
-            const m = new Matrix(savep.matrix2Root().inverse)
-            const xy = m.computeCoord(bounds.left, bounds.top)
-
-            const frame = new ShapeFrame(xy.x, xy.y, bounds.right - bounds.left, bounds.bottom - bounds.top);
-            let pathstr = "";
-            shapes.forEach((shape) => {
-                const shapem = shape.matrix2Root();
-                const shapepath = render2path(shape);
-                shapem.multiAtLeft(m);
-                shapepath.transform(shapem);
-
-                if (pathstr.length > 0) {
-                    pathstr = gPal.boolop.union(pathstr, shapepath.toString())
-                } else {
-                    pathstr = shapepath.toString();
-                }
-            })
-            const path = new Path(pathstr);
-            path.translate(-frame.x, -frame.y);
-
-            let pathShape = newPathShape(name, frame, path, style);
             pathShape = api.shapeInsert(this.__page, savep, pathShape, saveidx) as PathShape | PathShape2;
 
             for (let i = 0, len = shapes.length; i < len; i++) {
@@ -878,18 +889,23 @@ export class PageEditor {
             style.borders = new BasicArray<Border>(...borderStyle.borders.map((b) => importBorder(b)))
         }
 
-        const api = this.__repo.start("flattenBoolShape");
-        try {
-            const gframe = shape.frame;
-            const boundingBox = path.calcBounds();
-            const w = boundingBox.maxX - boundingBox.minX;
-            const h = boundingBox.maxY - boundingBox.minY;
-            const frame = new ShapeFrame(gframe.x + boundingBox.minX, gframe.y + boundingBox.minY, w, h); // clone
-            path.translate(-boundingBox.minX, -boundingBox.minY);
+        const gframe = shape.frame;
+        const boundingBox = path.calcBounds();
+        const w = boundingBox.maxX - boundingBox.minX;
+        const h = boundingBox.maxY - boundingBox.minY;
+        const frame = new ShapeFrame(gframe.x + boundingBox.minX, gframe.y + boundingBox.minY, w, h); // clone
+        path.translate(-boundingBox.minX, -boundingBox.minY);
 
-            let pathShape = newPathShape(shape.name, frame, path, style);
-            pathShape.fixedRadius = shape.fixedRadius;
-            const index = parent.indexOfChild(shape);
+        let pathShape = newPathShape(shape.name, frame, path, style);
+        pathShape.fixedRadius = shape.fixedRadius;
+        const index = parent.indexOfChild(shape);
+        const api = this.__repo.start("flattenBoolShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = [pathShape.id];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
+        try {
             api.shapeDelete(this.__document, this.__page, parent, index);
             pathShape = api.shapeInsert(this.__page, parent, pathShape, index) as PathShape;
 
@@ -1126,7 +1142,12 @@ export class PageEditor {
      * @param actions.index 插入位置
      */
     pasteShapes2(shapes: Shape[], actions: { parent: GroupShape, index: number }[]): Shape[] | false {
-        const api = this.__repo.start("insertShapes2");
+        const api = this.__repo.start("insertShapes2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = shapes.map(s => s.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             const result: Shape[] = [];
             for (let i = 0, len = actions.length; i < len; i++) {
@@ -1374,7 +1395,15 @@ export class PageEditor {
      * @returns 如果成功替换则返回所有替代品
      */
     replace(document: Document, replacement: Shape[], src: Shape[]): false | Shape[] {
-        const api = this.__repo.start("replace");
+        // 收集被替换上去的元素
+        const src_replacement: Shape[] = [];
+
+        const api = this.__repo.start("replace", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = src_replacement.map(s => s.id);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         try {
             const len = replacement.length;
             // 寻找replacement的左上角(lt_point)，该点将和src中每个图形的左上角重合
@@ -1394,8 +1423,7 @@ export class PageEditor {
                 const dt = { x: rf.x - lt_point.x, y: rf.y - lt_point.y };
                 delta_xys.push(dt);
             }
-            // 收集被替换上去的元素
-            const src_replacement: Shape[] = [];
+
 
             // 开始替换
             for (let i = 0; i < src.length; i++) {
