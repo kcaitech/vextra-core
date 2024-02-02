@@ -109,6 +109,10 @@ export class CmdRepo {
         }
     }
 
+    public setNet(net: ICoopNet) {
+        this.net = net;
+    }
+
     document: Document;
 
     baseVer: number = 0;

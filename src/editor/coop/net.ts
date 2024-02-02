@@ -12,20 +12,22 @@ export interface ICoopNet {
 
     /**
      * 
-     * @param from 起始版本号
-     * @param to 结束版本号（包含）
+     * @param from 起始id
+     * @param to 结束id（包含）
      */
-    pullCmds(from: number, to: number): void;
+    pullCmds(from: string, to: string): Promise<Cmd[]>;
 
     /**
      * 
      * @param cmds 要推送的命令
      */
-    postCmds(cmds: Cmd[]): void;
+    postCmds(cmds: Cmd[]): Promise<boolean>;
 
     /**
      * 监听远程cmd
      * @param watcher 
      */
     watchCmds(watcher: (cmds: Cmd[]) => void): void;
+
+    getWatcherList(): ((cmds: Cmd[]) => void)[];
 }

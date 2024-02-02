@@ -10,17 +10,23 @@ import { ICoopNet } from "./net";
 
 
 class MockNet implements ICoopNet {
+    private watcherList: ((cmds: Cmd[]) => void)[] = [];
+
     hasConnected(): boolean {
-        throw new Error("Method not implemented.");
+        return false;
     }
-    pullCmds(from: number, to: number): void {
-        throw new Error("Method not implemented.");
+    async pullCmds(from: string, to: string): Promise<Cmd[]> {
+        return [];
     }
-    postCmds(cmds: Cmd[]): void {
-        // throw new Error("Method not implemented.");
+    async postCmds(cmds: Cmd[]): Promise<boolean> {
+        return false;
     }
     watchCmds(watcher: (cmds: Cmd[]) => void): void {
-        throw new Error("Method not implemented.");
+        this.watcherList.push(watcher);
+    }
+
+    getWatcherList(): ((cmds: Cmd[]) => void)[] {
+        return this.watcherList;
     }
 }
 
@@ -29,10 +35,10 @@ export class CoopRepository {
     private __cmdrepo: CmdRepo;
     private __api: Api;
 
-    constructor(document: Document, repo: Repository, net: ICoopNet = new MockNet(), cmds: Cmd[] = [], localcmds: LocalCmd[] = []) {
+    constructor(document: Document, repo: Repository, cmds: Cmd[] = [], localcmds: LocalCmd[] = []) {
         this.__repo = repo;
         this.__api = Api.create(repo);
-        this.__cmdrepo = new CmdRepo(document, cmds, localcmds, net)
+        this.__cmdrepo = new CmdRepo(document, cmds, localcmds, new MockNet())
 
         if (cmds.length > 0 || localcmds.length > 0) {
             this.__cmdrepo.roll2NewVersion([document.id]);
@@ -41,6 +47,10 @@ export class CoopRepository {
         document.pagesMgr.setUpdater((data: Page) => {
             this.__cmdrepo.roll2NewVersion([data.id]);
         })
+    }
+
+    public setNet(net: ICoopNet) {
+        this.__cmdrepo.setNet(net);
     }
 
     /**
