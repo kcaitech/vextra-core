@@ -25,7 +25,7 @@ export class DocEditor {
         const pagesmgr = this.__document;
         const index = pagesmgr.indexOfPage(id);
         if (index < 0) return false;
-        const api = this.__repo.start('deletepage', {});
+        const api = this.__repo.start('deletepage');
         try {
             api.pageDelete(this.__document, index);
 
@@ -38,7 +38,7 @@ export class DocEditor {
     }
     // 插入页面
     insert(index: number, page: Page): boolean {
-        const api = this.__repo.start('insertpage', {});
+        const api = this.__repo.start('insertpage');
         try {
             api.pageInsert(this.__document, page, index);
             this.__repo.commit();
@@ -62,7 +62,7 @@ export class DocEditor {
     }
     // 移动页面
     move(page: PageListItem, to: number): boolean {
-        const api = this.__repo.start('pagemove', {});
+        const api = this.__repo.start('pagemove');
         try {
             // const pagesmgr = this.__document.pagesMgr;
             const idx = this.__document.getPageIndexById(page.id);
@@ -84,7 +84,7 @@ export class DocEditor {
         let hostIdx = pages.findIndex(i => i.id === hostId);
         if (wandererIdx < 0 || hostIdx < 0) return;
         try {
-            const api = this.__repo.start('pagemove', {});
+            const api = this.__repo.start('pagemove');
             hostIdx = offsetOverhalf ? hostIdx + 1 : hostIdx;
             if (wandererIdx <= hostIdx) hostIdx--;
             api.pageMove(this.__document, wandererId, wandererIdx, hostIdx);

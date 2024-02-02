@@ -2,7 +2,7 @@ import { RepoNode } from "./base";
 import { Op, OpType } from "../../coop/common/op";
 import { Text } from "../../data/text";
 import { transform } from "../../coop/client/arrayoptransform";
-import { ArrayOp, ArrayOpType } from "../../coop/client/arrayop";
+import { ArrayOp, ArrayOpSelection, ArrayOpType } from "../../coop/client/arrayop";
 import { TextOpAttr, TextOpAttrRecord, TextOpInsert, TextOpInsertRecord, TextOpRemove, TextOpRemoveRecord } from "../../coop/client/textop";
 import { Shape } from "../../data/shape";
 import { Cmd, OpItem } from "../../coop/common/repo";
@@ -100,7 +100,7 @@ function revertOp(op: ArrayOp) {
             })
             return ops;
         case ArrayOpType.Selection:
-            return op;
+            return (op as ArrayOpSelection).clone(); // 这个id要保留
     }
 }
 
@@ -260,6 +260,7 @@ export class TextRepoNode extends RepoNode {
         if (target) {
             for (let i = 0; i < this.localops.length; i++) {
                 const op = this.localops[i];
+                if ((op.op as ArrayOp).type1 === ArrayOpType.Selection) continue;// 选区不用执行
                 const record = apply(target, op.op as ArrayOp);
                 if (record) {
                     // replace op
@@ -324,14 +325,11 @@ export class TextRepoNode extends RepoNode {
         for (let i = 1; i < ops.length; i++) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
         }
-        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
+        // const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
 
         const curops: OpItem[] = this.ops.concat(...this.localops);
         if (curops.length === 0) throw new Error();
         if (curops.length < ops.length) throw new Error();
-
-        const text: Text = this.getOpTarget(ops[0].op.path); // todo text 是string的情况？
-        // 如果在最后，直接undo
 
         // 需要变换
         const index = ((curops as any/* 这里神奇的编译报错 */).findLastIndex((v: OpItem) => (v.cmd.id === ops[0].cmd.id))) - ops.length + 1;
@@ -341,7 +339,12 @@ export class TextRepoNode extends RepoNode {
             if (curops[index + i].cmd.id !== ops[0].cmd.id) throw new Error("cmd");
         }
         // revert
-        let revertops = ops.map(revert).reverse().reduce((res, op) => {
+        let revertops = ops.map((item) => {
+            const rop = revert(item);
+            if (Array.isArray(rop)) rop.forEach(op => (op as any).target = (item.op as any).target)
+            else (rop as any).target = (item.op as any).target;
+            return rop;
+        }).reverse().reduce((res, op) => {
             if (Array.isArray(op)) res.push(...op.slice(0).reverse());
             else res.push(op);
             return res;
@@ -351,11 +354,11 @@ export class TextRepoNode extends RepoNode {
             const { lhs, rhs } = transform(cur, revertops);
             revertops = rhs;
         }
-        const record = text ? revertops.map((op) => apply(text, op) || op) : revertops;
+        const record = revertops.map((op: ArrayOp) => (op as any).target ? apply((op as any).target, op) || op : op);
         // update to ops
         if (receiver) {
             // todo transform popedops
-            receiver.ops.push(...record);
+            receiver.ops.push(...record); // todo 这里op是reverse的,而原cmd不是
             this.commit(record.map(op => ({ cmd: receiver, op })))
         } else {
             // todo 需要记录ot path

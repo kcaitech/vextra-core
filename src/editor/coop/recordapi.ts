@@ -27,7 +27,7 @@ import { ContactForm, ContactRole, CurvePoint, ExportFormat } from "../../data/b
 import { ContactShape } from "../../data/contact"
 import { Color } from "../../data/classes";
 import { Op, OpType } from "../../coop/common/op";
-import { LocalCmd as Cmd, CmdMergeType } from "./localcmd";
+import { LocalCmd as Cmd, CmdMergeType, ISave4Restore, LocalCmd, SelectionState } from "./localcmd";
 import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 
@@ -77,7 +77,10 @@ export class Api {
     private cmd: Cmd | undefined;
     private needUpdateFrame: { shape: Shape, page: Page }[] = [];
 
-    start(description: string = "", mergetype: CmdMergeType = CmdMergeType.Others) {
+    start(saveselection: SelectionState | undefined, 
+        selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void, 
+        description: string = "", 
+        mergetype: CmdMergeType = CmdMergeType.Others) {
         // todo 添加selection op
         this.cmd = {
             id: "",
@@ -91,7 +94,9 @@ export class Api {
             isRecovery: false,
             description,
             time: 0,
-            posttime: 0
+            posttime: 0,
+            saveselection,
+            selectionupdater
         };
         this.needUpdateFrame.length = 0;
     }
@@ -104,7 +109,7 @@ export class Api {
     }
     commit(): Cmd | undefined {
         const cmd = this.cmd;
-        if (!cmd) return undefined;
+        if (!cmd || cmd.ops.length === 0) return undefined;
         cmd.id = uuid();
         cmd.time = Date.now();
         if (this.needUpdateFrame.length > 0) {
@@ -146,6 +151,9 @@ export class Api {
                 // has merge
                 cmd.ops = ops;
             }
+        }
+        if (cmd.saveselection?.text) { // 文本选区需要加入到op参与变换
+            cmd.ops.unshift(cmd.saveselection.text);
         }
         return cmd;
     }

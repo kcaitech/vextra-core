@@ -8,7 +8,7 @@ import { Document } from "../../data/document";
 import { IImportContext, importTableCell, importVariable } from "../../data/baseimport";
 
 function apply(document: Document, target: Object, op: IdOp, needUpdateFrame: Shape[]): IdOpRecord {
-    if (typeof op.data === 'string') {
+    if (typeof op.data === 'string' && (op.data[0] === '{' || op.data[0] === '[')) {
         // import data
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;

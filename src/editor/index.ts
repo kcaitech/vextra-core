@@ -1,7 +1,6 @@
 import { Document } from "../data/document";
 import { Page } from "../data/page";
 import { Shape } from "../data/shape";
-import { ISave4Restore } from "../data/basic";
 import { DocEditor } from "./document";
 import { PageEditor } from "./page";
 import { ShapeEditor } from "./shape";
@@ -11,6 +10,7 @@ import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
 import { TableShape } from "../data/table";
 import { Text } from "../data/text"
+import { ISave4Restore } from "./coop/localcmd";
 
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";

@@ -1,7 +1,7 @@
 import { Shape } from "../../data/shape";
 import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
-import { LocalCmd } from "./localcmd";
+import { LocalCmd, SelectionState, cloneSelectionState } from "./localcmd";
 import { Document } from "../../data/document";
 import { updateShapesFrame } from "./utils";
 import * as basicapi from "../basicapi"
@@ -561,7 +561,9 @@ export class CmdRepo {
             isRecovery: true,
             description: cmd.description,
             time: Date.now(),
-            posttime: 0
+            posttime: 0,
+            saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
+            selectionupdater: cmd.selectionupdater
         } : undefined;
 
         const needUpdateFrame: Map<string, Shape[]> = new Map();
@@ -588,15 +590,27 @@ export class CmdRepo {
             updateShapesFrame(page, v, basicapi);
         }
 
-        if (posted) {
+        if (posted && newCmd) {
+
+            if (newCmd.saveselection?.text) {
+                // 替换掉selection op
+                const sop = newCmd.saveselection.text;
+                const idx = newCmd.ops.findIndex(op => op.id === sop.id);
+                if (idx < 0) throw new Error();
+                newCmd.ops.splice(idx, 1, sop); // 不需要变换的可以直接替换
+            }
+
             // posted
             // need commit new command
-            this._commit2(newCmd!)
-            this.localcmds.splice(this.localindex - 1, 1, newCmd!);
+            this._commit2(newCmd)
+            this.localcmds.splice(this.localindex - 1, 1, newCmd);
+
+
         }
 
         --this.localindex;
         console.log("undo", cmd);
+        return newCmd ?? cmd;
     }
     redo() {
         if (!this.canRedo()) return;
@@ -614,7 +628,9 @@ export class CmdRepo {
             isRecovery: true,
             description: cmd.description,
             time: Date.now(),
-            posttime: 0
+            posttime: 0,
+            saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
+            selectionupdater: cmd.selectionupdater
         } : undefined;
 
         const needUpdateFrame: Map<string, Shape[]> = new Map();
@@ -641,21 +657,25 @@ export class CmdRepo {
             updateShapesFrame(page, v, basicapi);
         }
 
-        if (posted) {
+        if (posted && newCmd) {
+            if (newCmd.saveselection?.text) {
+                // 替换掉selection op
+                const sop = newCmd.saveselection.text;
+                const idx = newCmd.ops.findIndex(op => op.id === sop.id);
+                if (idx < 0) throw new Error();
+                newCmd.ops.splice(idx, 1, sop); // 不需要变换的可以直接替换
+            }
+
             // posted
             // need commit new command
-            this._commit2(newCmd!)
-            this.localcmds.splice(this.localindex, 1, newCmd!);
+            this._commit2(newCmd)
+            this.localcmds.splice(this.localindex, 1, newCmd);
         } else {
             this._commit2(cmd);
         }
 
         ++this.localindex;
         console.log("redo", cmd);
-        // todo 选区
-        // todo restore selection
-        // shape 记录id即可
-        // table 选中单元格时记录行列的crdtidx（还原时取最大框选），选中表格或者文本，记录shapeid
-        // 文本记录选区，需要变换。selection op记录到cmd.ops（第一个？），上传时过滤掉
+        return newCmd ?? cmd;
     }
 }

@@ -40,6 +40,7 @@ import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, up
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
 import { CrdtIndex } from "../data/crdt";
+import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -206,10 +207,15 @@ export class Controller {
     // 创建自定义frame的图形
     public asyncCreator(mousedownOnPage: PageXY): AsyncCreator {
         const anchor: PageXY = mousedownOnPage;
-        const api = this.__repo.start("createshape", {});
         let status: Status = Status.Pending;
         let newShape: Shape | undefined;
         let savepage: Page | undefined;
+        const api = this.__repo.start("createshape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = newShape ? [newShape.id] : [];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         const init = (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame): Shape | undefined => {
             try {
                 savepage = page;
@@ -519,7 +525,7 @@ export class Controller {
         const shape = _shape instanceof ShapeView ? adapt2Shape(_shape) : _shape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("action", {});
+        const api = this.__repo.start("action");
         let status: Status = Status.Pending;
         let need_update_frame = false;
         const executeRotate = (deg: number) => {
@@ -616,7 +622,7 @@ export class Controller {
         const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("action", {});
+        const api = this.__repo.start("action");
         let status: Status = Status.Pending;
         const pMap: Map<string, Matrix> = new Map();
         const executeScale = (origin1: PageXY, origin2: PageXY, sx: number, sy: number) => {
@@ -693,7 +699,7 @@ export class Controller {
         let shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("transfer", {});
+        const api = this.__repo.start("transfer");
         let status: Status = Status.Pending;
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             try {
@@ -864,7 +870,7 @@ export class Controller {
         const shape: PathShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as PathShape : _shape as PathShape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("asyncPathEditor", {});
+        const api = this.__repo.start("asyncPathEditor");
         let status: Status = Status.Pending;
         const w = shape.frame.width, h = shape.frame.height;
         let m = new Matrix(shape.matrix2Root());
@@ -931,7 +937,7 @@ export class Controller {
         const shape: ContactShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as ContactShape : _shape as ContactShape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("action", {});
+        const api = this.__repo.start("action");
         let status: Status = Status.Pending;
         const pre = () => {
             try {
@@ -1054,7 +1060,7 @@ export class Controller {
         const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("asyncOpacityEditor", {});
+        const api = this.__repo.start("asyncOpacityEditor");
         let status: Status = Status.Pending;
         const execute = (contextSettingOpacity: number) => {
             status = Status.Pending;
@@ -1088,7 +1094,7 @@ export class Controller {
         const curvePoint = shape.points[index];
         let mode = curvePoint.mode;
         let status: Status = Status.Pending;
-        const api = this.__repo.start("asyncPathHandle", {});
+        const api = this.__repo.start("asyncPathHandle");
         const pre = (index: number) => {
             try {
                 __pre_curve(page, api, shape, index);
