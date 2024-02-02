@@ -227,9 +227,18 @@ export const ResizingConstraints2 = {
 
     isVerticalJustifyCenter(val: number): boolean {
         val = this.Mask ^ val;
-        return (val & this.Top) !== this.Top && (val & this.Bottom) !== this.Bottom;
+        return (val & this.Top) !== this.Top && (val & this.Bottom) !== this.Bottom && (val & this.Height) === this.Height
     },
 
+    isFlexHeight(val: number) {
+        val = this.Mask ^ val
+        return (val & this.Top) !== this.Top && (val & this.Bottom) !== this.Bottom && (val & this.Height) !== this.Height
+    },
+
+    /**
+     * 
+     * @deprecated
+     */
     isFixedHeight(val: number): boolean {
         if (this.isFixedTopAndBottom(val)) {
             return false;
@@ -241,11 +250,10 @@ export const ResizingConstraints2 = {
     setToFixedTop(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Bottom) === this.Bottom) {
-            status = status ^ this.Bottom;
-        }
+        status = status & ~this.Bottom;
 
         status = status | this.Top;
+        status = status | this.Height;
 
         return this.Mask ^ status;
     },
@@ -253,11 +261,10 @@ export const ResizingConstraints2 = {
     setToFixedBottom(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Top) === this.Top) {
-            status = status ^ this.Top;
-        }
+        status = status & ~this.Top
 
-        status = status | this.Bottom;
+        status = status | this.Bottom
+        status = status | this.Height;
 
         return this.Mask ^ status;
     },
@@ -265,9 +272,7 @@ export const ResizingConstraints2 = {
     setToFixedTopAndBottom(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Height) === this.Height) {
-            status = status ^ this.Height;
-        }
+        status = status & ~this.Height
 
         status = status | this.Top;
         status = status | this.Bottom;
@@ -278,16 +283,28 @@ export const ResizingConstraints2 = {
     setToVerticalJustifyCenter(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Top) === this.Top) {
-            status = status ^ this.Top;
-        }
-        if ((status & this.Bottom) === this.Bottom) {
-            status = status ^ this.Bottom;
-        }
+        status = status & ~this.Top
+        status = status & ~this.Bottom
+
+        status = status | this.Height
 
         return this.Mask ^ status;
     },
 
+    setToHeightFlex(status: number) {
+        status = this.Mask ^ status
+
+        status = status & ~this.Top
+        status = status & ~this.Bottom
+        status = status & ~this.Height
+
+        return this.Mask ^ status
+    },
+
+    /**
+     * 
+     * @deprecated
+     */
     setToHeightFixed(status: number) {
         status = this.Mask ^ status;
 
@@ -304,14 +321,6 @@ export const ResizingConstraints2 = {
         }
 
         return this.Mask ^ status;
-    },
-
-    setToHeightFlex(status: number) {
-        if (((this.Mask ^ status) & this.Height) === this.Height) {
-            return this.Mask ^ this.Mask ^ status ^ this.Height;
-        } else {
-            return status;
-        }
     },
 
 }
