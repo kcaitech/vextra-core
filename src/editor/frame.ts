@@ -277,7 +277,8 @@ function fixConstrainFrame(page: Page, shape: Shape, x: number, y: number, w: nu
         else if (isHorCenter) {
             const ocx = originParentFrame.width / 2 - cFrame.x
             cx = curParentFrame.width / 2 - ocx;
-        }
+        } 
+
         // else if (hasWidth) {
         //     // 居中
         //     // cx += (w - cFrame.width) / 2;
