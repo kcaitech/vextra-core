@@ -79,26 +79,34 @@ export const ResizingConstraints2 = {
     Top: 0b100000, // 32
 
     // horizontal
-    isFixedToLeft(val: number): boolean {
+    isFixedToLeft(val: number): boolean { // 1. 只要是靠左但是不靠右，那一定是靠左固定，不需要考虑其他
         val = this.Mask ^ val;
         return (val & this.Left) === this.Left && (val & this.Right) !== this.Right;
     },
 
-    isFixedToRight(val: number): boolean {
+    isFixedToRight(val: number): boolean { // 2. 只要是靠右但不靠左，那一定是靠右固定，不需要考虑其他
         val = this.Mask ^ val;
         return (val & this.Left) !== this.Left && (val & this.Right) === this.Right;
     },
 
-    isFixedLeftAndRight(val: number): boolean {
+    isFixedLeftAndRight(val: number): boolean { // 3. 只要是既是靠左又是靠右，那一定是左右固定，不需要考虑其他
         val = this.Mask ^ val;
         return (val & this.Left) === this.Left && (val & this.Right) === this.Right;
     },
 
-    isHorizontalJustifyCenter(val: number): boolean {
+    isHorizontalJustifyCenter(val: number): boolean { // 4. 既不靠左、也不靠右，但是宽度固定，就是居中
         val = this.Mask ^ val;
-        return (val & this.Left) !== this.Left && (val & this.Right) !== this.Right;
+        return (val & this.Left) !== this.Left && (val & this.Right) !== this.Right && (val & this.Width) === this.Width;
     },
 
+    isFlexWidth(val: number): boolean { // 5. 既不靠左、也不靠右、而且宽度还不固定，就是跟随缩放
+        val = this.Mask ^ val;
+        return (val & this.Left) !== this.Left && (val & this.Right) !== this.Right && (val & this.Width) !== this.Width;
+    },
+
+    /**
+     * @deprecated 没有固定宽度这一说法，固定宽度是靠左、靠右、居中自带的
+     */
     isFixedWidth(val: number): boolean {
         if (this.isFixedLeftAndRight(val)) {
             return false;
@@ -108,36 +116,44 @@ export const ResizingConstraints2 = {
         return (val & this.Width) === this.Width;
     },
 
+    /**
+     * @description 1. 设置为靠右固定
+     */
     setToFixedLeft(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Right) === this.Right) {
-            status = status ^ this.Right;
-        }
+        // if ((status & this.Right) === this.Right) {
+        //     status = status ^ this.Right;
+        // }
+        status = status & ~this.Right; // 与上面三行注释代码写法不一样，但效果是一样的，即有靠右则取消靠右
 
         status = status | this.Left;
+        status = status | this.Width; // 自带宽度固定
 
         return this.Mask ^ status;
     },
 
+    /**
+     * @description 2. 设置为靠右固定
+     */
     setToFixedRight(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Left) === this.Left) {
-            status = status ^ this.Left;
-        }
+        status = status & ~this.Left;
 
         status = status | this.Right;
+        status = status | this.Width; // 自带宽度固定
 
         return this.Mask ^ status;
     },
 
+    /**
+     * @description 3. 设置为靠左靠右固定
+     */
     setToFixedLeftAndRight(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Width) === this.Width) { 
-            status = status ^ this.Width;
-        }
+        status = status & ~this.Width; // 与宽度固定互斥
 
         status = status | this.Right;
         status = status | this.Left;
@@ -145,23 +161,40 @@ export const ResizingConstraints2 = {
         return this.Mask ^ status;
     },
 
+    /**
+     * @description 4. 设置为水平居中
+     */
     setToHorizontalJustifyCenter(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Left) === this.Left) {
-            status = status ^ this.Left;
-        }
-        if ((status & this.Right) === this.Right) {
-            status = status ^ this.Right;
-        }
+        status = status & ~this.Left;
+        status = status & ~this.Right;
+
+        status = status | this.Width; // 一定要有宽度固定，不然就成了跟随缩放了
 
         return this.Mask ^ status;
     },
 
-    setToWidthFixed(status: number) { 
+    /**
+     * @description 5. 设置为水平跟随缩放
+     */
+    setToWidthFlex(status: number) { // 设置为水平方向上跟随缩放，即不左、不右、不定宽
         status = this.Mask ^ status;
 
-        if ((status & this.Left) === this.Left && (status & this.Right) === this.Right) { 
+        status = status & ~this.Width; // 水平上的值都不要有
+        status = status & ~this.Left;
+        status = status & ~this.Right;
+
+        return this.Mask ^ status;
+    },
+
+    /**
+     * @deprecated 固定宽度是和左、右、中同时存在并和左右互斥的，所以应该不能有固定宽度这个选项
+     */
+    setToWidthFixed(status: number) {
+        status = this.Mask ^ status;
+
+        if ((status & this.Left) === this.Left && (status & this.Right) === this.Right) {
             status = status ^ this.Left;
             status = status ^ this.Right;
         }
@@ -174,14 +207,6 @@ export const ResizingConstraints2 = {
         }
 
         return this.Mask ^ status;
-    },
-
-    setToWidthFlex(status: number) { 
-        if (((this.Mask ^ status) & this.Width) === this.Width) {
-            return this.Mask ^ this.Mask ^ status ^ this.Width;
-        } else {
-            return status;
-        }
     },
 
     // Vertical
@@ -240,7 +265,7 @@ export const ResizingConstraints2 = {
     setToFixedTopAndBottom(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Height) === this.Height) { 
+        if ((status & this.Height) === this.Height) {
             status = status ^ this.Height;
         }
 
@@ -263,10 +288,10 @@ export const ResizingConstraints2 = {
         return this.Mask ^ status;
     },
 
-    setToHeightFixed(status: number) { 
+    setToHeightFixed(status: number) {
         status = this.Mask ^ status;
 
-        if ((status & this.Top) === this.Top && (status & this.Bottom) === this.Bottom) { 
+        if ((status & this.Top) === this.Top && (status & this.Bottom) === this.Bottom) {
             status = status ^ this.Top;
             status = status ^ this.Bottom;
         }
@@ -281,7 +306,7 @@ export const ResizingConstraints2 = {
         return this.Mask ^ status;
     },
 
-    setToHeightFlex(status: number) { 
+    setToHeightFlex(status: number) {
         if (((this.Mask ^ status) & this.Height) === this.Height) {
             return this.Mask ^ this.Mask ^ status ^ this.Height;
         } else {
