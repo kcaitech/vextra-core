@@ -6,6 +6,7 @@ import { importShape } from "./utils";
 import { Document } from "../../data/document";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
+import { SNumber } from "../../coop/client/snumber";
 
 function _apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
 
@@ -69,7 +70,7 @@ function revert(op: TreeMoveOpRecord): TreeMoveOpRecord {
         data: op.origin,
         from: op.to,
         to: op.from,
-        order: Number.MAX_SAFE_INTEGER,
+        order: SNumber.MAX_SAFE_INTEGER,
         origin: op.data,
         target: undefined,
         data2: undefined
@@ -256,16 +257,16 @@ export class CrdtShapeRepoNode extends RepoNode {
             this.commit(ops);
         }
     }
-    roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]) {
-        if (baseVer > version) throw new Error();
+    roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]) {
+        if (SNumber.comp(baseVer, version) > 0) throw new Error();
         // search and apply
         const ops = this.ops.concat(...this.localops);
         if (ops.length === 0) return;
 
         const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);
         if (!target) return;
-        let baseIdx = ops.findIndex((op) => op.cmd.version > baseVer);
-        let verIdx = ops.findIndex((op) => op.cmd.version > version);
+        let baseIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, baseVer) > 0);
+        let verIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, version) > 0);
 
         if (baseIdx < 0) baseIdx = 0;
         if (verIdx < 0) verIdx = ops.length;

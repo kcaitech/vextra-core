@@ -30,6 +30,7 @@ import { Op, OpType } from "../../coop/common/op";
 import { LocalCmd as Cmd, CmdMergeType, ISave4Restore, LocalCmd, SelectionState } from "./localcmd";
 import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
+import { SNumber } from "../../coop/client/snumber";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -87,8 +88,8 @@ export class Api {
             // mergeable: true,
             mergetype,
             delay: 500,
-            version: Number.MAX_SAFE_INTEGER,
-            baseVer: 0,
+            version: SNumber.MAX_SAFE_INTEGER,
+            baseVer: "",
             batchId: "",
             ops: [],
             isRecovery: false,

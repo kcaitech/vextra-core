@@ -21,7 +21,7 @@ export abstract class RepoNode {
     abstract redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd): void;
     abstract dropOps(ops: OpItem[]): void;
 
-    abstract roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]): void;
+    abstract roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]): void;
 
     abstract undoLocals(): void;
     abstract redoLocals(): void;
@@ -76,7 +76,7 @@ export class RepoNodePath {
     }
 
     // 将数据回退或者前进到特定版本
-    roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]) {
+    roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]) {
         // get
         let node: RepoNodePath = this;
         // while (path.length > 0) {

@@ -7,6 +7,7 @@ import { TextOpAttr, TextOpAttrRecord, TextOpInsert, TextOpInsertRecord, TextOpR
 import { Shape } from "../../data/shape";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
+import { SNumber } from "../../coop/client/snumber";
 
 // todo 考虑text是string?
 function apply(text: Text, op: ArrayOp) {
@@ -86,17 +87,17 @@ function revertOp(op: ArrayOp) {
         case ArrayOpType.Insert:
             if (!(op instanceof TextOpInsertRecord)) throw new Error("not text insert op");
             // 不用TextOpRemoveRecord，变换后不一定是原来的值
-            return new TextOpRemove("", op.path, Number.MAX_SAFE_INTEGER, op.start, op.length);
+            return new TextOpRemove("", op.path, SNumber.MAX_SAFE_INTEGER, op.start, op.length);
         case ArrayOpType.Remove:
             if (!(op instanceof TextOpRemoveRecord)) throw new Error("not text remove op");
-            return new TextOpInsert("", op.path, Number.MAX_SAFE_INTEGER, op.start, op.length, { type: "complex", text: op.text });
+            return new TextOpInsert("", op.path, SNumber.MAX_SAFE_INTEGER, op.start, op.length, { type: "complex", text: op.text });
         case ArrayOpType.Attr:
             if (!(op instanceof TextOpAttrRecord)) throw new Error("not text attr op");
             const origin = op.origin;
             const key = op.props.key;
             const ops: TextOpAttr[] = [];
             origin.forEach((val) => {
-                ops.push(new TextOpAttr("", op.path, Number.MAX_SAFE_INTEGER, val.index, val.len, { target: op.props.target, key, value: val.value }))
+                ops.push(new TextOpAttr("", op.path, SNumber.MAX_SAFE_INTEGER, val.index, val.len, { target: op.props.target, key, value: val.value }))
             })
             return ops;
         case ArrayOpType.Selection:
@@ -455,8 +456,8 @@ export class TextRepoNode extends RepoNode {
         ops[0].cmd.ops.push(...record);
         this.commit(record.map(op => ({ cmd: ops[0].cmd, op })))
     }
-    roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]) {
-        if (baseVer > version) throw new Error();
+    roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]) {
+        if (SNumber.comp(baseVer, version) > 0) throw new Error();
         // search and apply
         const ops = this.ops.concat(...this.localops);
         if (ops.length === 0) return;
@@ -464,8 +465,8 @@ export class TextRepoNode extends RepoNode {
         const target = this.getOpTarget(ops[0].op.path);
         if (!target) return;
 
-        let baseIdx = ops.findIndex((op) => op.cmd.version > baseVer);
-        let verIdx = ops.findIndex((op) => op.cmd.version > version);
+        let baseIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, baseVer) > 0);
+        let verIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, version) > 0);
 
         if (baseIdx < 0) baseIdx = 0;
         if (verIdx < 0) verIdx = ops.length;

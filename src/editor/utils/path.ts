@@ -117,21 +117,21 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         const from = shape.from;
         if (!from) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint(new CrdtIndex([1], 0), v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint(new CrdtIndex([1]), v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const fromShape = page.getShape((from as ContactForm).shapeId);
         if (!fromShape) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint(new CrdtIndex([1], 0), v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint(new CrdtIndex([1]), v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const xy_result = get_box_pagexy(fromShape);
         if (!xy_result) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint(new CrdtIndex([1], 0), v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint(new CrdtIndex([1]), v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
@@ -139,7 +139,7 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         let p = get_nearest_border_point(fromShape, from.contactType, fromShape.matrix2Root(), xy1, xy2);
         if (!p) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint(new CrdtIndex([1], 0), v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint(new CrdtIndex([1]), v4(), p.x, p.y, CurveMode.Straight));
             return result
         }
 
@@ -149,8 +149,8 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         const m2 = new Matrix(m1.inverse);
 
         p = m2.computeCoord3(p);
-        const cp = new CurvePoint(new CrdtIndex([1], 0), v4(), p.x, p.y, CurveMode.Straight);
-        const cp2 = new CurvePoint(new CrdtIndex([2], 0), v4(), p.x, p.y, CurveMode.Straight);
+        const cp = new CurvePoint(new CrdtIndex([1]), v4(), p.x, p.y, CurveMode.Straight);
+        const cp2 = new CurvePoint(new CrdtIndex([2]), v4(), p.x, p.y, CurveMode.Straight);
         result.splice(1, 0, cp, cp2);
     }
     if (index === len - 2) { // 编辑的线为最后一根线；
@@ -158,21 +158,21 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         const to = shape.to;
         if (!to) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint(new CrdtIndex([len - 1], 0), v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint(new CrdtIndex([len - 1]), v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const toShape = page.getShape((to as ContactForm).shapeId);
         if (!toShape) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint(new CrdtIndex([len - 1], 0), v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint(new CrdtIndex([len - 1]), v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const xy_result = get_box_pagexy(toShape);
         if (!xy_result) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint(new CrdtIndex([len - 1], 0), v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint(new CrdtIndex([len - 1]), v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
@@ -180,7 +180,7 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         let p = get_nearest_border_point(toShape, to.contactType, toShape.matrix2Root(), xy1, xy2);
         if (!p) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint(new CrdtIndex([len - 1], 0), v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint(new CrdtIndex([len - 1]), v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
@@ -190,8 +190,8 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         const m2 = new Matrix(m1.inverse);
 
         p = m2.computeCoord3(p);
-        const cp = new CurvePoint(new CrdtIndex([len - 1], 0), v4(), p.x, p.y, CurveMode.Straight);
-        const cp2 = new CurvePoint(new CrdtIndex([len], 0), v4(), p.x, p.y, CurveMode.Straight);
+        const cp = new CurvePoint(new CrdtIndex([len - 1]), v4(), p.x, p.y, CurveMode.Straight);
+        const cp2 = new CurvePoint(new CrdtIndex([len]), v4(), p.x, p.y, CurveMode.Straight);
         result.splice(len - 1, 0, cp, cp2)
     }
     return result;
@@ -644,7 +644,7 @@ function get_frame_by_points(points: CurvePoint[]) {
 function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame, slice_name: string) {
     const __style = importStyle(exportStyle(origin.style));
     const __points = new BasicArray<CurvePoint>();
-    const __ps = new PathShape(new CrdtIndex([], 0), uuid(), slice_name, ShapeType.Path, frame, __style, __points, false);
+    const __ps = new PathShape(new CrdtIndex([]), uuid(), slice_name, ShapeType.Path, frame, __style, __points, false);
     addCommonAttr(__ps)
     return __ps;
 }

@@ -215,7 +215,7 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name
     
     const border_style = new BorderStyle(5, 5);
     const border = new Border(
-        new CrdtIndex([union.style.borders.length], 0),
+        new CrdtIndex([union.style.borders.length]),
         uuid(),
         true,
         types.FillType.SolidColor,

@@ -11,7 +11,7 @@ export function pageInsert(document: Document, page: Page, index: number) {
     const pagesList = document.pagesList;
     if (index >= pagesList.length) index = pagesList.length;
     const ops: Op[] = [];
-    const idx = new CrdtIndex([], 0);
+    const idx = new CrdtIndex();
     const item = new PageListItem(idx, page.id, page.name);
 
     let op;

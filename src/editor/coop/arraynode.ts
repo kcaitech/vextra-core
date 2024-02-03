@@ -17,6 +17,7 @@ import {
     importShadow,
     importStop
 } from "../../data/baseimport";
+import { SNumber } from "../../coop/client/snumber";
 
 const importh: { [key: string]: (data: any, ctx: IImportContext) => any } = {};
 importh['fill'] = importFill;
@@ -75,7 +76,7 @@ function revert(op: ArrayMoveOpRecord): ArrayMoveOpRecord {
         to: op.from,
         type: op.type,
         data: op.origin,
-        order: Number.MAX_SAFE_INTEGER,
+        order: SNumber.MAX_SAFE_INTEGER,
         id: op.id,
         path: op.path,
         origin: op.data,
@@ -278,8 +279,8 @@ export class CrdtArrayReopNode extends RepoNode {
         }
     }
 
-    roll2Version(baseVer: number, version: number, needUpdateFrame: Shape[]): void {
-        if (baseVer > version) throw new Error();
+    roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]): void {
+        if (SNumber.comp(baseVer, version) > 0) throw new Error();
         // search and apply
         const ops = this.ops.concat(...this.localops);
         if (ops.length === 0) return;
@@ -287,8 +288,8 @@ export class CrdtArrayReopNode extends RepoNode {
         const target = this.getOpTarget(ops[0].op.path);
         if (!target) return;
 
-        let baseIdx = ops.findIndex((op) => op.cmd.version > baseVer);
-        let verIdx = ops.findIndex((op) => op.cmd.version > version);
+        let baseIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, baseVer) > 0);
+        let verIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, version) > 0);
 
         if (baseIdx < 0) baseIdx = 0;
         if (verIdx < 0) verIdx = ops.length;

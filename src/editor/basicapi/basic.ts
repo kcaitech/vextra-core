@@ -5,6 +5,7 @@ import { TextOpAttrRecord, TextOpInsertRecord, TextOpRemoveRecord } from "../../
 import { OpType } from "../../coop/common/op";
 import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text";
 import { Page } from "../../data/page";
+import { SNumber } from "../../coop/client/snumber";
 // 对象树操作
 export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord {
     shape.crdtidx = crdtGetArrIndex(parent.childs, index);
@@ -13,10 +14,10 @@ export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, in
         id: shape.id,
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
-        order: Number.MAX_SAFE_INTEGER,
+        order: SNumber.MAX_SAFE_INTEGER,
         data: JSON.stringify(shape, (k, v) => k.startsWith('__') ? undefined : v),
         from: undefined,
-        to: { id: parent.id, index: shape.crdtidx.index, order: Number.MAX_SAFE_INTEGER },
+        to: { id: parent.id, index: shape.crdtidx.index, order: SNumber.MAX_SAFE_INTEGER },
         origin: undefined,
         target: page,
         data2: shape
@@ -28,7 +29,7 @@ export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): 
         id: shape.id,
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
-        order: Number.MAX_SAFE_INTEGER,
+        order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: { id: parent.id, index: shape.crdtidx.index, order: shape.crdtidx.order },
         to: undefined,
@@ -59,10 +60,10 @@ export function crdtShapeMove(page: Page, parent: GroupShape, index: number, par
         id: shape.id,
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
-        order: Number.MAX_SAFE_INTEGER,
+        order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: { id: parent.id, index: oldidx.index, order: oldidx.order },
-        to: { id: parent2.id, index: newidx.index, order: Number.MAX_SAFE_INTEGER },
+        to: { id: parent2.id, index: newidx.index, order: SNumber.MAX_SAFE_INTEGER },
         origin: undefined,
         target: page,
         data2: shape
@@ -92,7 +93,7 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
         id: key,
         type: OpType.Idset,
         path: obj.getCrdtPath().concat(key), // 用于路径能找到唯一的reponode
-        order: Number.MAX_SAFE_INTEGER,
+        order: SNumber.MAX_SAFE_INTEGER,
         data: typeof value === 'object' ? JSON.stringify(value, (k, v) => k.startsWith('__') ? undefined : v) : value,
         origin,
         target: obj,
@@ -119,7 +120,7 @@ export function otTextInsert(parent: Shape | Variable, text: Text | string, inde
     const type = typeof str === 'string' ? 'simple' : 'complex';
     if (type === 'simple') {
         text.insertText(str as string, index, props)
-        return new TextOpInsertRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
+        return new TextOpInsertRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, str.length, {
             type: 'simple',
             text: str as string,
             props,
@@ -127,7 +128,7 @@ export function otTextInsert(parent: Shape | Variable, text: Text | string, inde
         text)
     } else {
         text.insertFormatText(str as Text, index);
-        return new TextOpInsertRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, str.length, {
+        return new TextOpInsertRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, str.length, {
             type: 'complex',
             text: str as Text
         },
@@ -141,7 +142,7 @@ export function otTextRemove(parent: Shape | Variable, text: Text | string, inde
         parent.value = text;
     }
     const del = text.deleteText(index, length);
-    return del && new TextOpRemoveRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, del, text);
+    return del && new TextOpRemoveRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, length, del, text);
 }
 export function otTextSetAttr(parent: Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
     if (typeof text === "string") {
@@ -150,7 +151,7 @@ export function otTextSetAttr(parent: Shape | Variable, text: Text | string, ind
         parent.value = text;
     }
     const ret = text.formatText(index, length, key, value);
-    return new TextOpAttrRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "span", key, value }, ret, text);
+    return new TextOpAttrRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, length, { target: "span", key, value }, ret, text);
 }
 
 export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
@@ -175,7 +176,7 @@ export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string,
     else {
         ret = text.formatPara(index, length, key, value);
     }
-    return new TextOpAttrRecord("", text.getCrdtPath(), Number.MAX_SAFE_INTEGER, index, length, { target: "para", key, value }, ret, text);
+    return new TextOpAttrRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, length, { target: "para", key, value }, ret, text);
 }
 
 // 数据操作
@@ -189,7 +190,7 @@ export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: 
         id: item.id,
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
-        order: Number.MAX_SAFE_INTEGER,
+        order: SNumber.MAX_SAFE_INTEGER,
         data: typeof item === 'object' ? JSON.stringify(item, (k, v) => k.startsWith('__') ? undefined : v) : item,
         from: undefined,
         to: newidx,
@@ -209,7 +210,7 @@ export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): Array
         id: item.id,
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
-        order: Number.MAX_SAFE_INTEGER,
+        order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: oldidx,
         to: undefined,
@@ -240,7 +241,7 @@ export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: numbe
         id: item.id,
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
-        order: Number.MAX_SAFE_INTEGER,
+        order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: oldidx,
         to: newidx,

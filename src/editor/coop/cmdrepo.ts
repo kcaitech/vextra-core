@@ -10,6 +10,7 @@ import { uuid } from "../../basic/uuid";
 import { RepoNode, RepoNodePath } from "./base";
 import { nodecreator } from "./creator";
 import { ArrayMoveOpRecord, IdOpRecord, TreeMoveOpRecord } from "coop/client/crdt";
+import { SNumber } from "../../coop/client/snumber";
 
 const POST_TIMEOUT = 5000; // 5s
 
@@ -117,7 +118,7 @@ export class CmdRepo {
 
     document: Document;
 
-    baseVer: number = 0;
+    baseVer: string = "";
     cmds: Cmd[];
     pendingcmds: Cmd[] = []; // 远程过来还未应用的cmd // 在需要拉取更早的版本时，远程的cmd也需要暂存不应用
 
@@ -204,7 +205,7 @@ export class CmdRepo {
                             const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
                             const node = repotree.get2(record.path.concat(record.id));
                             if (node) {
-                                node.roll2Version(recoveryCmd.baseVer, Number.MAX_SAFE_INTEGER, nuf)
+                                node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER, nuf)
                             }
                         }
                         break;
@@ -213,7 +214,7 @@ export class CmdRepo {
                             const record = op as IdOpRecord;
                             const node = repotree.get2(record.path);
                             if (node) {
-                                node.roll2Version(recoveryCmd.baseVer, Number.MAX_SAFE_INTEGER, nuf)
+                                node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER, nuf)
                             }
                         }
                         break;
@@ -531,7 +532,7 @@ export class CmdRepo {
             const nuf: Shape[] = [];
             needUpdateFrame.set(_blockId, nuf);
 
-            repotree.roll2Version(this.baseVer, Number.MAX_SAFE_INTEGER, nuf)
+            repotree.roll2Version(this.baseVer, SNumber.MAX_SAFE_INTEGER, nuf)
         }
 
         for (let [k, v] of needUpdateFrame) {
@@ -556,8 +557,8 @@ export class CmdRepo {
             id: uuid(),
             mergetype: cmd.mergetype,
             delay: 500,
-            version: Number.MAX_SAFE_INTEGER,
-            baseVer: 0,
+            version: SNumber.MAX_SAFE_INTEGER,
+            baseVer: "",
             batchId: "",
             ops: [],
             isRecovery: true,
@@ -623,9 +624,9 @@ export class CmdRepo {
             id: uuid(),
             mergetype: cmd.mergetype,
             delay: 500,
-            version: Number.MAX_SAFE_INTEGER,
+            version: SNumber.MAX_SAFE_INTEGER,
             batchId: "",
-            baseVer: 0,
+            baseVer: "",
             ops: [],
             isRecovery: true,
             description: cmd.description,
