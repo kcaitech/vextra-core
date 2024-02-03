@@ -1250,7 +1250,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         const p1: types.CurvePoint = {
             crdtidx: {
                 index: [0],
-                order: 0
+                order: ""
             },
             id: id1,
             mode: types.CurveMode.Straight,
@@ -1260,7 +1260,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         {
             crdtidx: {
                 index: [1],
-                order: 0
+                order: ""
             },
             id: id2,
             mode: types.CurveMode.Straight,
@@ -1269,7 +1269,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         const p3: types.CurvePoint = {
             crdtidx: {
                 index: [2],
-                order: 0
+                order: ""
             },
             id: id3,
             mode: types.CurveMode.Straight,
@@ -1278,7 +1278,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         const p4: types.CurvePoint = {
             crdtidx: {
                 index: [3],
-                order: 0
+                order: ""
             },
             id: id4,
             mode: types.CurveMode.Straight,

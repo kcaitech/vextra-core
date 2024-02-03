@@ -12,7 +12,7 @@ inject['ImageShape']['before'] = `\
         const p1: types.CurvePoint = {
             crdtidx: {
                 index: [0],
-                order: 0
+                order: ""
             },
             id: id1,
             mode: types.CurveMode.Straight,
@@ -22,7 +22,7 @@ inject['ImageShape']['before'] = `\
         {
             crdtidx: {
                 index: [1],
-                order: 0
+                order: ""
             },
             id: id2,
             mode: types.CurveMode.Straight,
@@ -31,7 +31,7 @@ inject['ImageShape']['before'] = `\
         const p3: types.CurvePoint = {
             crdtidx: {
                 index: [2],
-                order: 0
+                order: ""
             },
             id: id3,
             mode: types.CurveMode.Straight,
@@ -40,7 +40,7 @@ inject['ImageShape']['before'] = `\
         const p4: types.CurvePoint = {
             crdtidx: {
                 index: [3],
-                order: 0
+                order: ""
             },
             id: id4,
             mode: types.CurveMode.Straight,

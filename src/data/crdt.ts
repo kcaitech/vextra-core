@@ -7,15 +7,19 @@ import { Basic, BasicArray } from "./basic"
  */
 export class CrdtIndex extends Basic implements classes.CrdtIndex {
     typeId = 'crdt-index'
-    index: BasicArray<number >
-    order: number
+    index: BasicArray<number>
+    order: string
     constructor(
-        index: number[],
-        order: number
+        index?: number[],
+        order?: string
     ) {
         super()
-        this.index = index as any;
-        this.order = order
+        this.index = index instanceof BasicArray ? index : (() => {
+            const arr = new BasicArray();
+            if (index) arr.push(...index);
+            return arr;
+        })();
+        this.order = order ?? ""
     }
 
     notify(...args: any[]): void {
@@ -45,14 +49,14 @@ export class CrdtNumber extends Basic implements classes.CrdtNumber {
 export class CrdtId extends Basic implements classes.CrdtId {
     typeId = 'crdt-id'
     id: string
-    order: number
+    order: string
     constructor(
         id: string,
-        order: number
+        order?: string
     ) {
         super()
         this.id = id
-        this.order = order
+        this.order = order ?? ""
     }
 }
 

@@ -408,12 +408,12 @@ export type CrdtNumber = {
 /* crdt array index */
 export type CrdtIndex = {
     index: number[]
-    order: number
+    order: string
 }
 /* crdt id */
 export type CrdtId = {
     id: string
-    order: number
+    order: string
 }
 /* context settings */
 export type ContextSettings = {

@@ -71,7 +71,7 @@ function importGradient(data: IJSON): Gradient {
         }
         position = Math.min(Math.max(0, position), 1);
         const color: Color = importColor(d['color']);
-        const stop = new Stop(new CrdtIndex([], 0), uuid(), position);
+        const stop = new Stop(new CrdtIndex([]), uuid(), position);
         stop.color = color;
         return stop;
     });
@@ -163,7 +163,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             return bs
         })(data['borderOptions'].dashPattern);
 
-        const border = new Border(new CrdtIndex([i], 0), uuid(), isEnabled, fillType, color, position, thickness, borderStyle);
+        const border = new Border(new CrdtIndex([i]), uuid(), isEnabled, fillType, color, position, thickness, borderStyle);
         border.gradient = gradient;
         border.contextSettings = contextSettings;
         return border;
@@ -218,7 +218,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             imageRef = ref.substring(ref.indexOf('/') + 1);
         }
 
-        const fill = new Fill(new CrdtIndex([i], 0), uuid(), isEnabled, fillType, color);
+        const fill = new Fill(new CrdtIndex([i]), uuid(), isEnabled, fillType, color);
         fill.gradient = gradient;
         fill.imageRef = imageRef;
         fill.contextSettings = contextSettings;
@@ -229,7 +229,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         const isEnabled: boolean = d['isEnabled'];
         const color: Color = importColor(d['color']);
         const blurRadius = d["blurRadius"], offsetX = d["offsetX"], offsetY = d["offsetY"], spread = d["spread"]
-        const shadow = new Shadow(new CrdtIndex([i], 0), uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread, ShadowPosition.Outer);
+        const shadow = new Shadow(new CrdtIndex([i]), uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread, ShadowPosition.Outer);
         return shadow;
     });
 

@@ -5,11 +5,11 @@
         "index": {
             "type": "array",
             "items": {
-                "type": "integer"
+                "type": "number"
             }
         },
         "order": {
-            "type": "integer"
+            "type": "string"
         }
     },
     "required": [
