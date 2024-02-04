@@ -52,7 +52,6 @@ import {
     BorderStyle,
     SymbolRefShape,
     CrdtIndex,
-    CrdtId
 } from "../data/classes";
 import { BasicArray, BasicMap } from "../data/basic";
 import { Repository } from "../data/transact";
@@ -425,7 +424,7 @@ export function newCutoutShape(name: string, frame: ShapeFrame): CutoutShape {
     return shape;
 }
 export function newSymbolShape(name: string, frame: ShapeFrame, style?: Style): SymbolShape {
-    const compo = new SymbolShape(new CrdtIndex([]), uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new CrdtId(""), new BasicMap());
+    const compo = new SymbolShape(new CrdtIndex([]), uuid(), name, types.ShapeType.Symbol, frame, newflatStyle(), new BasicArray(), new BasicMap());
     if (style) compo.style = style;
     addCommonAttr(compo);
     return compo;
@@ -441,7 +440,6 @@ export function newSymbolShapeUnion(name: string, frame: ShapeFrame): SymbolUnio
         frame,
         style,
         new BasicArray(),
-        new CrdtId(""),
         new BasicMap()
     );
     addCommonAttr(union);
