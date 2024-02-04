@@ -1,7 +1,7 @@
 import { Shape } from "../../data/shape";
 import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
-import { ISave4Restore, LocalCmd, SelectionState, cloneSelectionState } from "./localcmd";
+import { ISave4Restore, LocalCmd, cloneSelectionState } from "./localcmd";
 import { Document } from "../../data/document";
 import { updateShapesFrame } from "./utils";
 import * as basicapi from "../basicapi"
@@ -11,6 +11,7 @@ import { RepoNode, RepoNodePath } from "./base";
 import { nodecreator } from "./creator";
 import { ArrayMoveOpRecord, IdOpRecord, TreeMoveOpRecord } from "coop/client/crdt";
 import { SNumber } from "../../coop/client/snumber";
+import { Repository } from "../../data/transact";
 
 const POST_TIMEOUT = 5000; // 5s
 
@@ -78,24 +79,32 @@ function quickRejectRecovery(cmd: LocalCmd) {
 // symbols要同步更新
 // 一个文档一个总的repo
 export class CmdRepo {
-
+    private repo: Repository;
     // private selection: ISave4Restore | undefined;
     private nodecreator: (op: Op) => RepoNode
     private net: ICoopNet;
-    constructor(document: Document, cmds: Cmd[], localcmds: LocalCmd[], net: ICoopNet) {
+    constructor(document: Document, repo: Repository, net: ICoopNet) {
         this.document = document;
+        this.repo = repo;
         // 用于加载本地的cmds
-        this.cmds = cmds;
-        this.nopostcmds = localcmds;
+        // this.cmds = cmds;
+        // this.nopostcmds = localcmds;
         this.nodecreator = nodecreator(document, undefined);
         this.net = net;
         this.net.watchCmds(this.receive.bind(this));
+    }
 
+    restore(cmds: Cmd[], localcmds: LocalCmd[]) {
         // todo 只有本地编辑undo时，需要往回回退版本。初始化时的cmd是不能回退回去的。可以考虑不以undo-do-redo的方式来restore!
         // 比如离线编辑，有比较多的本地cmd需要同步时，太多的undo比较费时。
         // restore
-        // todo 没在事务中
-        if (cmds.length > 0 || this.localcmds.length > 0) {
+
+        if (cmds.length === 0 && this.localcmds.length === 0) return;
+
+        const repo = this.repo;
+        const document = this.document;
+        repo.start("init");
+        try {
             const needUpdateFrame: Map<string, Shape[]> = new Map();
             if (cmds.length > 0) {
                 this._receive(cmds, needUpdateFrame);
@@ -109,6 +118,9 @@ export class CmdRepo {
                 if (!page) continue;
                 updateShapesFrame(page, v, basicapi);
             }
+            repo.commit();
+        } catch (e) {
+            repo.rollback();
         }
     }
 
@@ -124,12 +136,12 @@ export class CmdRepo {
     document: Document;
 
     baseVer: string = "";
-    cmds: Cmd[];
+    cmds: Cmd[] = [];
     pendingcmds: Cmd[] = []; // 远程过来还未应用的cmd // 在需要拉取更早的版本时，远程的cmd也需要暂存不应用
 
     posttime: number = 0; // 提交cmd的时间
     postingcmds: Cmd[] = []; // 已提交未返回cmd
-    nopostcmds: LocalCmd[]; // 本地未提交cmd
+    nopostcmds: LocalCmd[] = []; // 本地未提交cmd
 
     localcmds: LocalCmd[] = []; // 本地用户的所有cmd
     localindex: number = 0;
@@ -243,9 +255,31 @@ export class CmdRepo {
         }
     }
 
-    // todo 需要在事务中
-    // debounce or add to render loop
+    __processTimeToken: any;
     processCmds() {
+        if (this.repo.isInTransact()) {
+            if (this.__processTimeToken) return;
+            this.__processTimeToken = setTimeout(() => {
+                this.__processTimeToken = undefined;
+                this.processCmds();
+            }, 1000); // 1s
+            return;
+        }
+        if (this.__processTimeToken) {
+            clearTimeout(this.__processTimeToken);
+            this.__processTimeToken = undefined;
+        }
+        this.repo.start("processCmds"); // todo 需要更细粒度的事务？
+        try {
+            this._processCmds();
+            this.repo.commit();
+        } catch(e) {
+            this.repo.rollback();
+        }
+    }
+
+    // debounce or add to render loop
+    _processCmds() {
         const needUpdateFrame: Map<string, Shape[]> = new Map();
         const p0id: string | undefined = this.postingcmds[0]?.id;
         const index = p0id ? this.pendingcmds.findIndex(p => p.id === p0id) : -1;
