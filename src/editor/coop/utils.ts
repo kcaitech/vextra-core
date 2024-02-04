@@ -6,8 +6,7 @@ import { TableCell, TableShape } from "../../data/table";
 import { ContactShape } from "../../data/contact";
 import { Page } from "../../data/page";
 import { SymbolRefShape } from "../../data/classes";
-import { IImportContext, importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape, importExportOptions, importCutoutShape } from "../../data/baseimport";
-import * as types from "../../data/typesdefine"
+import { IImportContext, importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape, importCutoutShape } from "../../data/baseimport";
 import { Document } from "../../data/document";
 
 export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
@@ -206,63 +205,29 @@ export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
     page.__collect.notify('collect'); // 收集辅助线采用的关键点位
 }
 
+const imhdl: {[key: string]: (source: any, ctx?: IImportContext) => any } = {};
+imhdl['flatten-shape'] = importFlattenShape;
+imhdl['group-shape'] = importGroupShape;
+imhdl['image-shape'] = importImageShape;
+imhdl['path-shape'] = importPathShape;
+imhdl['path-shape2'] = importPathShape2;
+imhdl['rect-shape'] = importRectShape;
+imhdl['symbol-ref-shape'] = importSymbolRefShape;
+imhdl['text-shape'] = importTextShape;
+imhdl['artboard'] = importArtboard;
+imhdl['line-shape'] = importLineShape;
+imhdl['oval-shape'] = importOvalShape;
+imhdl['table-shape'] = importTableShape;
+imhdl['table-cell'] = importTableCell;
+imhdl['contact-shape'] = importContactShape;
+imhdl['symbol-shape'] = importSymbolShape;
+imhdl['symbol-union-shape'] = importSymbolUnionShape;
+imhdl['cutout-shape'] = importCutoutShape;
 export function importShape(data: string | Object , document: Document, page: Page) {
     const source: { [key: string]: any } = typeof data === 'string' ? JSON.parse(data) : data;
     const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = page.id };
-    // if (source.typeId == 'shape') {
-    //     return importShape(source as types.Shape, ctx)
-    // }
-    if (source.typeId == 'flatten-shape') {
-        return importFlattenShape(source as types.FlattenShape, ctx)
-    }
-    if (source.typeId == 'group-shape') {
-        return importGroupShape(source as types.GroupShape, ctx)
-    }
-    if (source.typeId == 'image-shape') {
-        return importImageShape(source as types.ImageShape, ctx)
-    }
-    if (source.typeId == 'path-shape') {
-        return importPathShape(source as types.PathShape, ctx)
-    }
-    if (source.typeId == 'path-shape2') {
-        return importPathShape2(source as types.PathShape2, ctx)
-    }
-    if (source.typeId == 'rect-shape') {
-        return importRectShape(source as types.RectShape, ctx)
-    }
-    if (source.typeId == 'symbol-ref-shape') {
-        return importSymbolRefShape(source as types.SymbolRefShape, ctx)
-    }
-    if (source.typeId == 'text-shape') {
-        return importTextShape(source as types.TextShape, ctx)
-    }
-    if (source.typeId == 'artboard') {
-        return importArtboard(source as types.Artboard, ctx)
-    }
-    if (source.typeId == 'line-shape') {
-        return importLineShape(source as types.LineShape, ctx)
-    }
-    if (source.typeId == 'oval-shape') {
-        return importOvalShape(source as types.OvalShape, ctx)
-    }
-    if (source.typeId == 'table-shape') {
-        return importTableShape(source as types.TableShape, ctx)
-    }
-    if (source.typeId == 'table-cell') {
-        return importTableCell(source as types.TableCell, ctx)
-    }
-    if (source.typeId == 'contact-shape') {
-        return importContactShape(source as types.ContactShape, ctx)
-    }
-    if (source.typeId == 'symbol-shape') {
-        return importSymbolShape(source as types.SymbolShape, ctx);
-    }
-    if (source.typeId == 'symbol-union-shape') {
-        return importSymbolUnionShape(source as types.SymbolUnionShape, ctx);
-    }
-    if (source.typeId == 'cutout-shape') {
-        return importCutoutShape(source as types.CutoutShape, ctx);
-    }
+    const h = imhdl[source.typeId];
+    if (h) return h(source, ctx);
     throw new Error("unknow shape type: " + source.typeId)
 }
 
