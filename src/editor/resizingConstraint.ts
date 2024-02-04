@@ -148,6 +148,8 @@ export class resizingConstraintEditor {
                 }
                 const old_rc = this.resizingConstaint(shape);
                 const new_rc = ResizingConstraints2.setToWidthFlex(old_rc);
+                console.log(new_rc);
+                
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
