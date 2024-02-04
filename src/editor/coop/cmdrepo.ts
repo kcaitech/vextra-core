@@ -265,15 +265,34 @@ export class CmdRepo {
             }, 1000); // 1s
             return;
         }
+
+        // todo 检查cmd baseVer是否本地有,否则需要拉取远程cmds
+        if (this.pendingcmds.length > 0) {
+            const cmds = this.pendingcmds;
+            const minBaseVer = cmds.reduce((m, c) => (SNumber.comp(m, c.baseVer) > 0 ? c.baseVer : m), cmds[0].baseVer);
+            if (SNumber.comp(this.baseVer, minBaseVer) > 0) {
+                // todo
+                throw new Error("not implemented");
+                // this.net.pullCmds(minBaseVer, this.baseVer).then((cmds) => {
+                // })
+                // if (this.__processTimeToken) return;
+                // this.__processTimeToken = setTimeout(() => {
+                //     this.__processTimeToken = undefined;
+                //     this.processCmds();
+                // }, 1000); // 1s
+                // return;
+            }
+        }
         if (this.__processTimeToken) {
             clearTimeout(this.__processTimeToken);
             this.__processTimeToken = undefined;
         }
+
         this.repo.start("processCmds"); // todo 需要更细粒度的事务？
         try {
             this._processCmds();
             this.repo.commit();
-        } catch(e) {
+        } catch (e) {
             this.repo.rollback();
         }
     }
@@ -401,7 +420,6 @@ export class CmdRepo {
 
     // 收到远程cmd
     receive(cmds: Cmd[]) {
-        if (cmds.length === 0) return;
         // 检查版本号是否连续
         let lastVer = this.baseVer;
         if (this.pendingcmds.length > 0) {
@@ -409,18 +427,21 @@ export class CmdRepo {
         } else if (this.cmds.length > 0) {
             lastVer = this.cmds[this.cmds.length - 1].version;
         }
-        if (cmds[0].version !== lastVer + 1) {
-            // abort
-            console.log("abort received cmds: ", cmds);
-            return;
+        // check
+        for (let i = 0; i < cmds.length; ++i) {
+            const cmd = cmds[i];
+            if (cmd.previousVersion !== lastVer) {
+                const aborts = cmds.splice(i, cmds.length - i);
+                console.log("abort received cmds: ", aborts);
+                break;
+            }
+            lastVer = cmd.version;
         }
-        // todo 检查cmd baseVer是否本地有,否则需要拉取远程cmds
-
+        if (cmds.length === 0) return;
         // 更新op.order
         cmds.forEach(cmd => {
             cmd.ops.forEach((op) => op.order = cmd.version);
         })
-        // this.freshlocalcmdcount = 0;
         this.pendingcmds.push(...cmds);
         // need process
         this.processCmds();

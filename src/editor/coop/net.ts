@@ -13,7 +13,7 @@ export interface ICoopNet {
     /**
      * 
      * @param from 起始id
-     * @param to 结束id（包含）
+     * @param to 结束id（不包含）
      */
     pullCmds(from: string, to: string): Promise<Cmd[]>;
 
