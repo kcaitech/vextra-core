@@ -1789,9 +1789,9 @@ export class PageEditor {
             this.__repo.rollback();
         }
     }
-    setShapesGradientStopPosition(actions: BatchAction5[]) {
+    modifGradientStop(actions: BatchAction5[]) {
         try {
-            const api = this.__repo.start('setShapesGradientStopPosition', {});
+            const api = this.__repo.start('modifGradientStop', {});
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
                 const grad_type = target.style[type];
@@ -1803,29 +1803,51 @@ export class PageEditor {
                     continue;
                 }
                 const gradient = gradient_container.gradient;
-                const { position, id } = value;
                 const new_gradient = importGradient(exportGradient(gradient));
-                const stop_i = new_gradient.stops.findIndex((stop) => stop.id === id);
-                if (stop_i === -1) {
-                    console.warn(`gradient stop not found: ${id}`);
-                    continue;
+                new_gradient.to = new Point2D(0.5, 1);
+                if (gradient.gradientType === GradientType.Linear) {
+                    new_gradient.from = new Point2D(0.5, 0);
+                } else {
+                    new_gradient.from = new Point2D(0.5, 0.5);
                 }
-                new_gradient.stops[stop_i].position = position;
-                const s = new_gradient.stops;
-                s.sort((a, b) => {
-                    if (a.position > b.position) {
-                        return 1;
-                    } else {
-                        return -1;
-                    }
-                })
+                new_gradient.stops = new BasicArray<Stop>();
+                for (let i = 0; i < value.length; i++) {
+                    const stop = value[i];
+                    new_gradient.stops.push(new Stop(stop.position, stop.color, uuid()));
+                }
                 const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
                 f(this.__page, shape, index, new_gradient);
             }
             this.__repo.commit();
         } catch (error) {
-            console.log('setShapesGradientStopPosition:', error);
+            console.log('modifGradientStop:', error);
+            this.__repo.rollback();
+        }
+    }
+    setGradientOpacity(actions: BatchAction5[]) {
+        try {
+            const api = this.__repo.start('setGradientOpacity', {});
+            for (let i = 0, l = actions.length; i < l; i++) {
+                const { target, index, type, value } = actions[i];
+                const grad_type = target.style[type];
+                if (!grad_type?.length) {
+                    continue;
+                }
+                const gradient_container = grad_type[index];
+                if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) {
+                    continue;
+                }
+                const gradient = gradient_container.gradient;
+                const new_gradient = importGradient(exportGradient(gradient));
+                new_gradient.gradientOpacity = value;
+                const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
+                const shape = shape4fill(api, this.__page, target);
+                f(this.__page, shape, index, new_gradient);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            console.log('setGradientOpacity:', error);
             this.__repo.rollback();
         }
     }
