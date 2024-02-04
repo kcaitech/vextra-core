@@ -389,6 +389,7 @@ export function importGradient(source: types.Gradient, ctx?: IImportContext): im
         })()
     )
     if (source.elipseLength !== undefined) ret.elipseLength = source.elipseLength
+    if (source.gradientOpacity !== undefined) ret.gradientOpacity = source.gradientOpacity
     return ret
 }
 /* gradient type */

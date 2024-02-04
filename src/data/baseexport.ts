@@ -393,6 +393,7 @@ export function exportGradient(source: types.Gradient, ctx?: IExportContext): ty
             return ret
         })(),
         gradientType: exportGradientType(source.gradientType, ctx),
+        gradientOpacity: source.gradientOpacity,
     }
     return ret
 }

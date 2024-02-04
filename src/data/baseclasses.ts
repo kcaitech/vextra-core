@@ -404,6 +404,7 @@ export class Gradient extends Basic {
     to: Point2D
     stops: BasicArray<Stop >
     gradientType: GradientType
+    gradientOpacity?: number
     constructor(
         from: Point2D,
         to: Point2D,

@@ -290,6 +290,7 @@ export type Gradient = {
     to: Point2D
     stops: Stop[]
     gradientType: GradientType
+    gradientOpacity?: number
 }
 /* gradient type */
 export enum GradientType {

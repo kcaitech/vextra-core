@@ -24,6 +24,10 @@
         },
         "gradientType": {
             "$ref": "./gradient-type.json"
+        },
+        "gradientOpacity": {
+            "type": "number",
+            "default": 1
         }
     },
     "required": [

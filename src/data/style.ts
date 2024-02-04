@@ -73,19 +73,22 @@ export class Gradient extends Basic implements classes.Gradient {
     to: Point2D
     stops: BasicArray<Stop>
     gradientType: GradientType
+    gradientOpacity?: number;
     constructor(
         from: Point2D,
         to: Point2D,
         gradientType: GradientType,
         stops: BasicArray<Stop>,
-        elipseLength?: number
+        elipseLength?: number,
+        gradientOpacity?: number
     ) {
         super()
         this.from = from
         this.to = to
         this.gradientType = gradientType
         this.stops = stops
-        this.elipseLength = elipseLength;
+        this.elipseLength = elipseLength
+        this.gradientOpacity = gradientOpacity
     }
 }
 
