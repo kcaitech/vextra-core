@@ -104,14 +104,10 @@ export const ResizingConstraints2 = {
         return (val & this.Left) !== this.Left && (val & this.Right) !== this.Right && (val & this.Width) !== this.Width;
     },
 
-    /**
-     * @deprecated 没有固定宽度这一说法，固定宽度是靠左、靠右、居中自带的
-     */
+    // /**
+    //  * @deprecated 没有固定宽度这一说法，固定宽度是靠左、靠右、居中自带的
+    //  */
     isFixedWidth(val: number): boolean {
-        if (this.isFixedLeftAndRight(val)) {
-            return false;
-        }
-
         val = this.Mask ^ val;
         return (val & this.Width) === this.Width;
     },
@@ -128,7 +124,7 @@ export const ResizingConstraints2 = {
         status = status & ~this.Right; // 与上面三行注释代码写法不一样，但效果是一样的，即有靠右则取消靠右
 
         status = status | this.Left;
-        status = status | this.Width; // 自带宽度固定
+        // status = status | this.Width; // 自带宽度固定
 
         return this.Mask ^ status;
     },
@@ -142,7 +138,7 @@ export const ResizingConstraints2 = {
         status = status & ~this.Left;
 
         status = status | this.Right;
-        status = status | this.Width; // 自带宽度固定
+        // status = status | this.Width; // 自带宽度固定
 
         return this.Mask ^ status;
     },
@@ -155,8 +151,8 @@ export const ResizingConstraints2 = {
 
         status = status & ~this.Width; // 与宽度固定互斥
 
-        status = status | this.Right;
-        status = status | this.Left;
+        status = status | this.Right
+        status = status | this.Left
 
         return this.Mask ^ status;
     },
@@ -188,23 +184,27 @@ export const ResizingConstraints2 = {
         return this.Mask ^ status;
     },
 
-    /**
-     * @deprecated 固定宽度是和左、右、中同时存在并和左右互斥的，所以应该不能有固定宽度这个选项
-     */
+    // /**
+    //  * @deprecated 固定宽度是和左、右、中同时存在并和左右互斥的，所以应该不能有固定宽度这个选项
+    //  */
     setToWidthFixed(status: number) {
         status = this.Mask ^ status;
 
         if ((status & this.Left) === this.Left && (status & this.Right) === this.Right) {
-            status = status ^ this.Left;
-            status = status ^ this.Right;
+            status = status ^ ~this.Left;
+            status = status ^ ~this.Right;
         }
         // if ((status & this.Right) === this.Right) {
         //     status = status ^ this.Right;
         // }
 
-        if ((status & this.Width) !== this.Width) {
-            status = status ^ this.Width;
-        }
+            if ((status & this.Width) !== this.Width) {
+                status = status ^ this.Width;
+            }
+
+            if ((status & this.Width) === this.Width) {
+                status = status ^ ~this.Width;
+            }
 
         return this.Mask ^ status;
     },
@@ -235,14 +235,11 @@ export const ResizingConstraints2 = {
         return (val & this.Top) !== this.Top && (val & this.Bottom) !== this.Bottom && (val & this.Height) !== this.Height
     },
 
-    /**
-     * 
-     * @deprecated
-     */
+    // /**
+    //  * 
+    //  * @deprecated
+    //  */
     isFixedHeight(val: number): boolean {
-        if (this.isFixedTopAndBottom(val)) {
-            return false;
-        }
         val = this.Mask ^ val;
         return (val & this.Height) === this.Height;
     },
