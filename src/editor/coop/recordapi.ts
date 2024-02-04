@@ -89,6 +89,7 @@ export class Api {
             mergetype,
             delay: 500,
             version: SNumber.MAX_SAFE_INTEGER,
+            previousVersion: "",
             baseVer: "",
             batchId: "",
             ops: [],
