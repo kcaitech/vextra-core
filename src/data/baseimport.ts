@@ -911,6 +911,12 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
 }
 /* table cell */
 export function importTableCell(source: types.TableCell, ctx?: IImportContext): impl.TableCell {
+    // inject code
+    // 兼容旧数据
+    if (!(source as any).crdtidx) (source as any).crdtidx = {
+        index: [],
+        order: ""
+    }
     const ret: impl.TableCell = new impl.TableCell (
         importCrdtIndex(source.crdtidx, ctx),
         source.id,

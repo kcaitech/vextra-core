@@ -187,3 +187,13 @@ inject['Page']['before'] = `\
         order: ""
     }
 `
+
+inject['TableCell'] = {};
+inject['TableCell']['before'] = `\
+    // inject code
+    // 兼容旧数据
+    if (!(source as any).crdtidx) (source as any).crdtidx = {
+        index: [],
+        order: ""
+    }
+`
