@@ -70,13 +70,17 @@ export const ResizingConstraints = {
 }
 
 export const ResizingConstraints2 = {
-    Mask: 0b111111,
+    Mask: 0b11111111,
     Right: 0b000001, // 1
     Width: 0b000010, // 2
     Left: 0b000100, // 4
     Bottom: 0b001000, // 8
     Height: 0b010000, // 16
     Top: 0b100000, // 32
+
+    // extra
+    HCenter: 0b01000000, // 64
+    VCenter: 0b10000000, // 128
 
     // horizontal
     isFixedToLeft(val: number): boolean { // 1. 只要是靠左但是不靠右，那一定是靠左固定，不需要考虑其他
