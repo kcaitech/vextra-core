@@ -256,6 +256,7 @@ export class CmdRepo {
     }
 
     __processTimeToken: any;
+    __pullingCmdsTime: number = 0;
     processCmds() {
         if (this.repo.isInTransact()) {
             if (this.__processTimeToken) return;
@@ -271,6 +272,10 @@ export class CmdRepo {
             const cmds = this.pendingcmds;
             const minBaseVer = cmds.reduce((m, c) => (SNumber.comp(m, c.baseVer) > 0 ? c.baseVer : m), cmds[0].baseVer);
             if (SNumber.comp(this.baseVer, minBaseVer) > 0) {
+                const time = Date.now();
+                if (this.__pullingCmdsTime > 0) {
+
+                }
                 // todo
                 throw new Error("not implemented");
                 // this.net.pullCmds(minBaseVer, this.baseVer).then((cmds) => {
@@ -289,12 +294,19 @@ export class CmdRepo {
         }
 
         this.repo.start("processCmds"); // todo 需要更细粒度的事务？
+        const savetrap = this.repo.transactCtx.settrap;
         try {
+            this.repo.transactCtx.settrap = false;
             this._processCmds();
             this.repo.commit();
         } catch (e) {
+            console.error(e);
             this.repo.rollback();
+        } finally {
+            this.repo.transactCtx.settrap = savetrap;
         }
+
+        this._postcmds();
     }
 
     // debounce or add to render loop
@@ -348,8 +360,6 @@ export class CmdRepo {
             if (!page) continue;
             updateShapesFrame(page, v, basicapi);
         }
-
-        this._postcmds();
     }
 
     private _commit(cmd: LocalCmd) { // 不需要应用的
@@ -420,6 +430,7 @@ export class CmdRepo {
 
     // 收到远程cmd
     receive(cmds: Cmd[]) {
+        console.log("receive", cmds);
         // 检查版本号是否连续
         let lastVer = this.baseVer;
         if (this.pendingcmds.length > 0) {
@@ -430,7 +441,7 @@ export class CmdRepo {
         // check
         for (let i = 0; i < cmds.length; ++i) {
             const cmd = cmds[i];
-            if (cmd.previousVersion !== lastVer) {
+            if (SNumber.comp(cmd.previousVersion, lastVer) !== 0) {
                 const aborts = cmds.splice(i, cmds.length - i);
                 console.log("abort received cmds: ", aborts);
                 break;
@@ -469,6 +480,15 @@ export class CmdRepo {
             }, delay);
             return; // 等返回
         }
+
+        // if (!this.net.hasConnected()) {
+        //     const delay = POST_TIMEOUT;
+        //     if (!this.__timeOutToken) this.__timeOutToken = setTimeout(() => {
+        //         this.__timeOutToken = undefined;
+        //         this._postcmds();
+        //     }, delay);
+        //     return;
+        // }
 
         const baseVer = this.cmds.length > 0 ? this.cmds[this.cmds.length - 1].version : this.baseVer;
         let delay = POST_TIMEOUT;
