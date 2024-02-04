@@ -63,8 +63,39 @@ inject['TableShape'] = {};
 inject['TableShape']['before'] = `\
     // inject code
     // 兼容旧数据
-    // todo
-    // if ((source as any).datas) source.childs = (source as any).datas;
+    if ((source as any).datas || (source as any).childs) {
+        source.colWidths = ((source as any).colWidths as number[]).map((v, i) => ({
+            id: uuid(),
+            crdtidx: {
+                index: [i],
+                order: ""
+            },
+            value: v
+        } as types.CrdtNumber));
+        source.rowHeights = ((source as any).rowHeights as number[]).map((v, i) => ({
+            id: uuid(),
+            crdtidx: {
+                index: [i],
+                order: ""
+            },
+            value: v
+        } as types.CrdtNumber));
+
+        const colCount = source.colWidths.length;
+        const rowCount = source.rowHeights.length;
+        const datas: types.TableCell[] = (source as any).datas || (source as any).childs;
+        const cells: {[key: string]: types.TableCell} = {};
+        for (let i = 0; i < datas.length; ++i) {
+            const c = datas[i];
+            if (!c) continue;
+            const ri = Math.floor(i / colCount);
+            const ci = i % colCount;
+            if (ri >= rowCount) break;
+            const id = source.rowHeights[ri].id + ',' + source.colWidths[ci].id;
+            cells[id] = c;
+        }
+        source.cells = cells as any;
+    }
 `
 inject['TableShape']['after'] = `\
     // inject code

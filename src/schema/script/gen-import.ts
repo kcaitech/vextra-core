@@ -449,9 +449,11 @@ export function genimport(schemadir: string, outfile: string, implpath: string, 
     fs.appendFileSync(outfile, headTips);
     fs.appendFileSync(outfile, `import * as impl from "${implpath}"\n`);
     fs.appendFileSync(outfile, `import * as types from "${typedefs}"\n`);
-    if (arrayimpl) fs.appendFileSync(outfile, `import { BasicArray, BasicMap } from "${arrayimpl}"\n\n`);
+    if (arrayimpl) fs.appendFileSync(outfile, `import { BasicArray, BasicMap } from "${arrayimpl}"\n`);
     fs.appendFileSync(outfile,
         `
+import { uuid } from "../basic/uuid"
+
 export interface IImportContext {
     document: impl.Document
     curPage: string
