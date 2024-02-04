@@ -528,10 +528,7 @@ export function importEllipse(source: types.Ellipse, ctx?: IImportContext): impl
 /* document meta */
 export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
     // inject code
-    if (!(source as any).symbolregist) {
-        (source as any).__nosymbolregist = true;
-        (source as any).symbolregist = {};
-    }
+    if (!(source as any).symbolregist) (source as any).symbolregist = {};
     const ret: impl.DocumentMeta = new impl.DocumentMeta (
         source.id,
         source.name,
@@ -1805,11 +1802,8 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     })()
     // inject code
     if (ctx?.document) {
-        if (ctx.document.symbolregist.get(ret.id) === ctx.curPage) {
-            ctx.document.symbolsMgr.add(ret.id, ret);
-        } else if ((ctx.document as any).__nosymbolregist) {
-            // 兼容旧数据
-            ctx.document.symbolregist.set(ret.id, ctx.curPage);
+        const registed = ctx.document.symbolregist.get(ret.id);
+        if (!registed || registed === ctx.curPage) {
             ctx.document.symbolsMgr.add(ret.id, ret);
         }
     }
@@ -2009,11 +2003,9 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
 export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
     // inject code
     // 兼容旧数据
-    if (!(source as any).crdtidx) {
-        (source as any).crdtidx = {
-            index: [],
-            order: ""
-        }
+    if (!(source as any).crdtidx) (source as any).crdtidx = {
+        index: [],
+        order: ""
     }
     const ret: impl.Page = new impl.Page (
         importCrdtIndex(source.crdtidx, ctx),
