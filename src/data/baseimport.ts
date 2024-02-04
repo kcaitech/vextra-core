@@ -36,17 +36,11 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
                         const r = (() => {
                             const val = _val[i]
                             if (val.typeId == 'border') {
-                                if (!val.crdtidx) val.crdtidx = {
-                                    index: [i],
-                                    order: ""
-                                }
+                                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                                 return importBorder(val as types.Border, ctx)
                             }
                             if (val.typeId == 'fill') {
-                                if (!val.crdtidx) val.crdtidx = {
-                                    index: [i],
-                                    order: ""
-                                }
+                                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                                 return importFill(val as types.Fill, ctx)
                             }
                             {
@@ -140,10 +134,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
             const ret = new BasicArray<impl.Border>()
             for (let i = 0, len = source.borders && source.borders.length; i < len; i++) {
                 const val = source.borders[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importBorder(source.borders[i], ctx)
                 if (r) ret.push(r)
             }
@@ -153,10 +144,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
             const ret = new BasicArray<impl.Fill>()
             for (let i = 0, len = source.fills && source.fills.length; i < len; i++) {
                 const val = source.fills[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importFill(source.fills[i], ctx)
                 if (r) ret.push(r)
             }
@@ -166,10 +154,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
             const ret = new BasicArray<impl.Shadow>()
             for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
                 const val = source.shadows[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importShadow(source.shadows[i], ctx)
                 if (r) ret.push(r)
             }
@@ -186,10 +171,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         const ret = new BasicArray<impl.Shadow>()
         for (let i = 0, len = source.innerShadows && source.innerShadows.length; i < len; i++) {
             const val = source.innerShadows[i]
-            if (!val.crdtidx) val.crdtidx = {
-                index: [i],
-                order: ""
-            }
+            if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
             const r = importShadow(source.innerShadows[i], ctx)
             if (r) ret.push(r)
         }
@@ -199,10 +181,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         const ret = new BasicArray<impl.ContactRole>()
         for (let i = 0, len = source.contacts && source.contacts.length; i < len; i++) {
             const val = source.contacts[i]
-            if (!val.crdtidx) val.crdtidx = {
-                index: [i],
-                order: ""
-            }
+            if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
             const r = importContactRole(source.contacts[i], ctx)
             if (r) ret.push(r)
         }
@@ -345,10 +324,7 @@ export function importPathSegment(source: types.PathSegment, ctx?: IImportContex
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const val = source.points[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -429,10 +405,7 @@ export function importGradient(source: types.Gradient, ctx?: IImportContext): im
             const ret = new BasicArray<impl.Stop>()
             for (let i = 0, len = source.stops && source.stops.length; i < len; i++) {
                 const val = source.stops[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importStop(source.stops[i], ctx)
                 if (r) ret.push(r)
             }
@@ -476,10 +449,7 @@ export function importExportOptions(source: types.ExportOptions, ctx?: IImportCo
             const ret = new BasicArray<impl.ExportFormat>()
             for (let i = 0, len = source.exportFormats && source.exportFormats.length; i < len; i++) {
                 const val = source.exportFormats[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importExportFormat(source.exportFormats[i], ctx)
                 if (r) ret.push(r)
             }
@@ -536,10 +506,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
             const ret = new BasicArray<impl.PageListItem>()
             for (let i = 0, len = source.pagesList && source.pagesList.length; i < len; i++) {
                 const val = source.pagesList[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importPageListItem(source.pagesList[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1055,10 +1022,7 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
             const ret = new BasicArray<impl.PathSegment>()
             for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
                 const val = source.pathsegs[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1105,10 +1069,7 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const val = source.points[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1156,10 +1117,7 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const val = source.points[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1257,10 +1215,7 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const val = source.points[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1309,10 +1264,7 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const val = source.points[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1407,10 +1359,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const val = source.points[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1463,115 +1412,67 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importGroupShape(val as types.GroupShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importImageShape(val as types.ImageShape, ctx)
                     }
                     if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importPathShape(val as types.PathShape, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importRectShape(val as types.RectShape, ctx)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importTextShape(val as types.TextShape, ctx)
                     }
                     if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importArtboard(val as types.Artboard, ctx)
                     }
                     if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importLineShape(val as types.LineShape, ctx)
                     }
                     if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importOvalShape(val as types.OvalShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importTableShape(val as types.TableShape, ctx)
                     }
                     if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importContactShape(val as types.ContactShape, ctx)
                     }
                     if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importShape(val as types.Shape, ctx)
                     }
                     if (val.typeId == 'flatten-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importCutoutShape(val as types.CutoutShape, ctx)
                     }
                     {
@@ -1633,115 +1534,67 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importGroupShape(val as types.GroupShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importImageShape(val as types.ImageShape, ctx)
                     }
                     if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importPathShape(val as types.PathShape, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importRectShape(val as types.RectShape, ctx)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importTextShape(val as types.TextShape, ctx)
                     }
                     if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importArtboard(val as types.Artboard, ctx)
                     }
                     if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importLineShape(val as types.LineShape, ctx)
                     }
                     if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importOvalShape(val as types.OvalShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importTableShape(val as types.TableShape, ctx)
                     }
                     if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importContactShape(val as types.ContactShape, ctx)
                     }
                     if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importShape(val as types.Shape, ctx)
                     }
                     if (val.typeId == 'flatten-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importCutoutShape(val as types.CutoutShape, ctx)
                     }
                     {
@@ -1830,115 +1683,67 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importGroupShape(val as types.GroupShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importImageShape(val as types.ImageShape, ctx)
                     }
                     if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importPathShape(val as types.PathShape, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importRectShape(val as types.RectShape, ctx)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importTextShape(val as types.TextShape, ctx)
                     }
                     if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importArtboard(val as types.Artboard, ctx)
                     }
                     if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importLineShape(val as types.LineShape, ctx)
                     }
                     if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importOvalShape(val as types.OvalShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importTableShape(val as types.TableShape, ctx)
                     }
                     if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importContactShape(val as types.ContactShape, ctx)
                     }
                     if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importShape(val as types.Shape, ctx)
                     }
                     if (val.typeId == 'flatten-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importCutoutShape(val as types.CutoutShape, ctx)
                     }
                     {
@@ -2026,115 +1831,67 @@ export function importPage(source: types.Page, ctx?: IImportContext): impl.Page 
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importGroupShape(val as types.GroupShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importImageShape(val as types.ImageShape, ctx)
                     }
                     if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importPathShape(val as types.PathShape, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importRectShape(val as types.RectShape, ctx)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importTextShape(val as types.TextShape, ctx)
                     }
                     if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importArtboard(val as types.Artboard, ctx)
                     }
                     if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importLineShape(val as types.LineShape, ctx)
                     }
                     if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importOvalShape(val as types.OvalShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importTableShape(val as types.TableShape, ctx)
                     }
                     if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importContactShape(val as types.ContactShape, ctx)
                     }
                     if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importShape(val as types.Shape, ctx)
                     }
                     if (val.typeId == 'flatten-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importCutoutShape(val as types.CutoutShape, ctx)
                     }
                     {
@@ -2196,10 +1953,7 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const val = source.points[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -2248,10 +2002,7 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
                 const val = source.points[i]
-                if (!val.crdtidx) val.crdtidx = {
-                    index: [i],
-                    order: ""
-                }
+                if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -2306,115 +2057,67 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importGroupShape(val as types.GroupShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importImageShape(val as types.ImageShape, ctx)
                     }
                     if (val.typeId == 'path-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importPathShape(val as types.PathShape, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importRectShape(val as types.RectShape, ctx)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'symbol-union-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importTextShape(val as types.TextShape, ctx)
                     }
                     if (val.typeId == 'artboard') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importArtboard(val as types.Artboard, ctx)
                     }
                     if (val.typeId == 'line-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importLineShape(val as types.LineShape, ctx)
                     }
                     if (val.typeId == 'oval-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importOvalShape(val as types.OvalShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importTableShape(val as types.TableShape, ctx)
                     }
                     if (val.typeId == 'contact-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importContactShape(val as types.ContactShape, ctx)
                     }
                     if (val.typeId == 'shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importShape(val as types.Shape, ctx)
                     }
                     if (val.typeId == 'flatten-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'cutout-shape') {
-                        if (!val.crdtidx) val.crdtidx = {
-                            index: [i],
-                            order: ""
-                        }
+                        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }
                         return importCutoutShape(val as types.CutoutShape, ctx)
                     }
                     {

@@ -308,10 +308,7 @@ ${indent(level)}    }`
             let crdtidx = ""
             if (needCompatibleSet.has(filename)) {
                 crdtidx = `
-${indent(level)}        if (!val.crdtidx) val.crdtidx = {
-${indent(level)}            index: [i],
-${indent(level)}            order: ""
-${indent(level)}        }`
+${indent(level)}        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }`
             }
             ret += `
 ${indent(level)}    if (val.typeId == '${filename}') {${crdtidx}
@@ -384,10 +381,7 @@ handler['array'] = function (schema: any, className: string, attrname: string, l
         if (_fn && needCompatibleSet.has(_fn)) {
             crdtidx = `
 ${indent(level)}        const val = ${attrname + '[i]'}
-${indent(level)}        if (!val.crdtidx) val.crdtidx = {
-${indent(level)}            index: [i],
-${indent(level)}            order: ""
-${indent(level)}        }`
+${indent(level)}        if (!val.crdtidx) val.crdtidx = { index: [i], order: "" }`
         }
     }
     let ret = `(() => {
