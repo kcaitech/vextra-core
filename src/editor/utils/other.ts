@@ -27,7 +27,7 @@ import { BasicMap } from "../../data/basic";
 import { newSymbolRefShape, newSymbolShape, newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
-import { translateTo } from "../frame";
+import { expandTo, translateTo } from "../frame";
 import { exportStyle } from "../../data/baseexport";
 import { importStyle } from "../../data/baseimport";
 
@@ -47,6 +47,7 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
         case TextBehaviour.Fixed: {
             const layout = shape.text.getLayout();
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
+            // expandTo(api as Api, page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
             api.shapeModifyWH(page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
             break;
         }
@@ -54,6 +55,7 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
             const layout = shape.text.getLayout();
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             api.shapeModifyWH(page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
+            // expandTo(api as Api, page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             break;
         }
     }
@@ -209,7 +211,7 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name
     });
 
     union.fixedRadius = 4;
-    
+
     const border_style = new BorderStyle(5, 5);
     const border = new Border(
         uuid(),
