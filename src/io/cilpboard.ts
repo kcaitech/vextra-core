@@ -3,6 +3,7 @@ import {
     exportArtboard,
     exportContactShape,
     exportCutoutShape,
+    exportGradient,
     exportGroupShape,
     exportImageShape,
     exportLineShape,
@@ -21,6 +22,7 @@ import {
     importArtboard,
     importContactShape,
     importCutoutShape,
+    importGradient,
     importGroupShape,
     importImageShape,
     importLineShape,
@@ -389,4 +391,8 @@ export function after_paster_image(document: Document, shape: ImageShape, media:
     media[ref] = _media;
 
     document.mediasMgr.add(ref, _media);
+}
+
+export function cloneGradient(g:types.Gradient) {
+    return importGradient(exportGradient(g));
 }

@@ -130,6 +130,8 @@ export type SpanAttr = {
     kerning?: number
     transform?: TextTransformType
     placeholder?: boolean
+    fillType?: FillType
+    gradient?: Gradient
 }
 /* shape */
 export type Shape = {

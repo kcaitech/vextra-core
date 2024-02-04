@@ -218,6 +218,8 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
+        fillType: source.fillType && exportFillType(source.fillType, ctx),
+        gradient: source.gradient && exportGradient(source.gradient, ctx),
     }
     return ret
 }
@@ -903,6 +905,8 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
+        fillType: source.fillType && exportFillType(source.fillType, ctx),
+        gradient: source.gradient && exportGradient(source.gradient, ctx),
         length: source.length,
     }
     return ret
@@ -1056,6 +1060,8 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
+        fillType: source.fillType && exportFillType(source.fillType, ctx),
+        gradient: source.gradient && exportGradient(source.gradient, ctx),
         alignment: source.alignment && exportTextHorAlign(source.alignment, ctx),
         paraSpacing: source.paraSpacing,
         minimumLineHeight: source.minimumLineHeight,
@@ -1084,6 +1090,8 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
         kerning: source.kerning,
         transform: source.transform && exportTextTransformType(source.transform, ctx),
         placeholder: source.placeholder,
+        fillType: source.fillType && exportFillType(source.fillType, ctx),
+        gradient: source.gradient && exportGradient(source.gradient, ctx),
         verAlign: source.verAlign && exportTextVerAlign(source.verAlign, ctx),
         orientation: source.orientation && exportTextOrientation(source.orientation, ctx),
         textBehaviour: source.textBehaviour && exportTextBehaviour(source.textBehaviour, ctx),

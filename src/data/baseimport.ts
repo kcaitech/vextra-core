@@ -215,6 +215,8 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
     if (source.kerning !== undefined) ret.kerning = source.kerning
     if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
     if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
+    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     return ret
 }
 /* shape */
@@ -932,6 +934,8 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
     if (source.kerning !== undefined) ret.kerning = source.kerning
     if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
     if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
+    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     return ret
 }
 /* path shape */
@@ -1084,6 +1088,8 @@ export function importParaAttr(source: types.ParaAttr, ctx?: IImportContext): im
     if (source.kerning !== undefined) ret.kerning = source.kerning
     if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
     if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
+    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (source.alignment !== undefined) ret.alignment = importTextHorAlign(source.alignment, ctx)
     if (source.paraSpacing !== undefined) ret.paraSpacing = source.paraSpacing
     if (source.minimumLineHeight !== undefined) ret.minimumLineHeight = source.minimumLineHeight
@@ -1112,6 +1118,8 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     if (source.kerning !== undefined) ret.kerning = source.kerning
     if (source.transform !== undefined) ret.transform = importTextTransformType(source.transform, ctx)
     if (source.placeholder !== undefined) ret.placeholder = source.placeholder
+    if (source.fillType !== undefined) ret.fillType = importFillType(source.fillType, ctx)
+    if (source.gradient !== undefined) ret.gradient = importGradient(source.gradient, ctx)
     if (source.verAlign !== undefined) ret.verAlign = importTextVerAlign(source.verAlign, ctx)
     if (source.orientation !== undefined) ret.orientation = importTextOrientation(source.orientation, ctx)
     if (source.textBehaviour !== undefined) ret.textBehaviour = importTextBehaviour(source.textBehaviour, ctx)

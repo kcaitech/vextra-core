@@ -193,6 +193,8 @@ export class SpanAttr extends Basic {
     kerning?: number
     transform?: TextTransformType
     placeholder?: boolean
+    fillType?: FillType
+    gradient?: Gradient
     constructor(
     ) {
         super()
