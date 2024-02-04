@@ -15,7 +15,7 @@ export class ImageShapeView extends ShapeView {
     }
 
     protected isNoSupportDiamondScale(): boolean {
-        return true;
+        return this.m_data.isNoSupportDiamondScale;
     }
 
     renderContents(): EL[] {

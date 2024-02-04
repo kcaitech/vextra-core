@@ -497,4 +497,8 @@ export class TableShape extends Shape implements classes.TableShape {
     }[] {
         return getTableVisibleCells(this, this.getLayout(), rowStart, rowEnd, colStart, colEnd);
     }
+
+    get isNoSupportDiamondScale() {
+        return true;
+    }
 }

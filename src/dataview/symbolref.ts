@@ -45,7 +45,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     protected isNoSupportDiamondScale(): boolean {
-        return true;
+        return this.m_data.isNoSupportDiamondScale;
     }
 
     getDataChilds(): Shape[] {

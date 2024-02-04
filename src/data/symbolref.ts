@@ -377,6 +377,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
         return this.variables.delete(key);
     }
 
+    get isNoSupportDiamondScale() {
+        return true;
+    }
+
     // findVar(varId: string, ret: Variable[]) {            // todo subdata, proxy
     //     if (this.symData) {
     //         const override = this.symData.getOverrid(varId, OverrideType.Variable);

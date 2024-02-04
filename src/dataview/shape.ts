@@ -481,7 +481,7 @@ export class ShapeView extends DataView {
     }
 
     protected isNoSupportDiamondScale(): boolean {
-        return false;
+        return this.m_data.isNoSupportDiamondScale;
     }
 
     protected _layout(shape: Shape, transform: RenderTransform | undefined, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {

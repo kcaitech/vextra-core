@@ -10,7 +10,7 @@ export class TextShapeView extends ShapeView {
 
 
     protected isNoSupportDiamondScale(): boolean {
-        return true;
+        return this.m_data.isNoSupportDiamondScale;
     }
 
     getText(): Text {

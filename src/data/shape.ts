@@ -426,6 +426,10 @@ export class Shape extends Basic implements classes.Shape {
     getShadows() {
         return this.style.shadows;
     }
+
+    get isNoSupportDiamondScale() {  // 默认都支持压扁缩放
+        return false;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -535,6 +539,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
     setWideFrameSize(w: number, h: number) {
         this.wideframe.width = w;
         this.wideframe.height = h;
+    }
+
+    get isNoSupportDiamondScale() {
+        return true;
     }
 }
 
@@ -777,7 +785,7 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
     get isSymbolUnionShape() {
         return true;
     }
-    
+
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
         const w = frame.width;
         const h = frame.height;
@@ -1024,6 +1032,10 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         if (this.__cacheData) this.notify();
         return this.__cacheData && this.__cacheData.base64 || "";
     }
+
+    get isNoSupportDiamondScale() {
+        return true;
+    }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {
@@ -1152,6 +1164,10 @@ export class TextShape extends Shape implements classes.TextShape {
         }
         return this.text;
     }
+
+    get isNoSupportDiamondScale() {
+        return true;
+    }
 }
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
@@ -1177,5 +1193,9 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         )
         this.scalingStroke = scalingStroke;
         this.isClosed = isClosed;
+    }
+    
+    get isNoSupportDiamondScale() {
+        return true;
     }
 }
