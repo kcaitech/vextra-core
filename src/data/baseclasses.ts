@@ -637,22 +637,6 @@ export class CrdtIndex extends Basic {
     }
 }
 /**
- * crdt id 
- */
-export class CrdtId extends Basic {
-    typeId = 'crdt-id'
-    id: string
-    order: string
-    constructor(
-        id: string,
-        order: string
-    ) {
-        super()
-        this.id = id
-        this.order = order
-    }
-}
-/**
  * context settings 
  */
 export class ContextSettings extends Basic {
@@ -1263,7 +1247,6 @@ export class GroupShape extends Shape {
  */
 export class SymbolShape extends GroupShape {
     typeId = 'symbol-shape'
-    crdtId: CrdtId
     overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
     symtags?: BasicMap<string, string>
@@ -1275,7 +1258,6 @@ export class SymbolShape extends GroupShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >,
-        crdtId: CrdtId,
         variables: BasicMap<string, Variable>
     ) {
         super(
@@ -1287,7 +1269,6 @@ export class SymbolShape extends GroupShape {
             style,
             childs
         )
-        this.crdtId = crdtId
         this.variables = variables
     }
 }
@@ -1304,7 +1285,6 @@ export class SymbolUnionShape extends SymbolShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<(GroupShape | ImageShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | FlattenShape | CutoutShape) >,
-        crdtId: CrdtId,
         variables: BasicMap<string, Variable>
     ) {
         super(
@@ -1315,7 +1295,6 @@ export class SymbolUnionShape extends SymbolShape {
             frame,
             style,
             childs,
-            crdtId,
             variables
         )
     }

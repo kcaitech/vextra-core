@@ -16,7 +16,7 @@ import { Page } from "../../../data/page";
 import { importText } from "./textio";
 import { Artboard } from "../../../data/artboard";
 import { Text } from "../../../data/text";
-import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D, SymbolRefShape, Color, CrdtIndex, CrdtId } from "../../../data/classes"
+import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D, SymbolRefShape, Color, CrdtIndex } from "../../../data/classes"
 import { BasicArray, BasicMap } from "../../../data/basic";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
@@ -342,7 +342,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new SymbolShape(new CrdtIndex([i]), id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new CrdtId(""), new BasicMap());
+    const shape = new SymbolShape(new CrdtIndex([i]), id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicMap());
 
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);

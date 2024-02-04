@@ -2,9 +2,6 @@
     "description": "symbol shape",
     "type": "object",
     "properties": {
-        "crdtId": {
-            "$ref": "./crdt-id.json"
-        },
         "overrides": {
             "type": "map",
             "key": {
@@ -34,7 +31,6 @@
         }
     },
     "required": [
-        "crdtId",
         "variables"
     ],
     "allOf": [

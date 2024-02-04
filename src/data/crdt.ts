@@ -45,18 +45,3 @@ export class CrdtNumber extends Basic implements classes.CrdtNumber {
     notify(...args: any[]): void {
     }
 }
-
-export class CrdtId extends Basic implements classes.CrdtId {
-    typeId = 'crdt-id'
-    id: string
-    order: string
-    constructor(
-        id: string,
-        order?: string
-    ) {
-        super()
-        this.id = id
-        this.order = order ?? ""
-    }
-}
-

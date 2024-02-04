@@ -29,7 +29,7 @@ import { Variable } from "./variable";
 import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 import { _get_path } from "./utils";
-import { CrdtId, CrdtIndex } from "./crdt";
+import { CrdtIndex } from "./crdt";
 export { Variable } from "./variable";
 
 // todo
@@ -557,7 +557,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     static Default_State = "49751e86-9b2c-4d1b-81b0-36f19b5407d2"
 
     typeId = 'symbol-shape'
-    crdtId: CrdtId
     variables: BasicMap<string, Variable> // 怎么做关联
     symtags?: BasicMap<string, string>
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
@@ -570,7 +569,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<Shape>,
-        crdtId: CrdtId,
         variables: BasicMap<string, Variable>
     ) {
         super(
@@ -582,7 +580,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             style,
             childs
         )
-        this.crdtId = crdtId
         this.variables = variables;
     }
 
@@ -769,7 +766,6 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
         frame: ShapeFrame,
         style: Style,
         childs: BasicArray<Shape>,
-        crdtId: CrdtId,
         variables: BasicMap<string, Variable>
     ) {
         super(
@@ -780,7 +776,6 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
             frame,
             style,
             childs,
-            crdtId,
             variables
         )
     }

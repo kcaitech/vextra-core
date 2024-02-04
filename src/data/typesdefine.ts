@@ -410,11 +410,6 @@ export type CrdtIndex = {
     index: number[]
     order: string
 }
-/* crdt id */
-export type CrdtId = {
-    id: string
-    order: string
-}
 /* context settings */
 export type ContextSettings = {
     blenMode: BlendMode
@@ -643,7 +638,6 @@ export type GroupShape = Shape & {
 }
 /* symbol shape */
 export type SymbolShape = GroupShape & {
-    crdtId: CrdtId
     overrides?: Map<string, string>
     variables: Map<string, Variable>
     symtags?: Map<string, string>

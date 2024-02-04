@@ -552,14 +552,6 @@ export function exportCrdtIndex(source: types.CrdtIndex, ctx?: IExportContext): 
     }
     return ret
 }
-/* crdt id */
-export function exportCrdtId(source: types.CrdtId, ctx?: IExportContext): types.CrdtId {
-    const ret = {
-        id: source.id,
-        order: source.order,
-    }
-    return ret
-}
 /* context settings */
 export function exportContextSettings(source: types.ContextSettings, ctx?: IExportContext): types.ContextSettings {
     const ret = {
@@ -1456,7 +1448,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
                 });
                 return ret;
             })(),
-        crdtId: exportCrdtId(source.crdtId, ctx),
         overrides: source.overrides && (() => {
             const val = source.overrides;
             const ret: any = {};
@@ -1560,7 +1551,6 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
                 }
                 return ret
             })(),
-        crdtId: exportCrdtId(source.crdtId, ctx),
         variables: (() => {
                 const val = source.variables;
                 const ret: any = {};

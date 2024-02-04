@@ -143,6 +143,10 @@ inject['SymbolShape']['after'] = `\
     if (ctx?.document) {
         if (ctx.document.symbolregist.get(ret.id) === ctx.curPage) {
             ctx.document.symbolsMgr.add(ret.id, ret);
+        } else if ((ctx.document as any).__nosymbolregist) {
+            // 兼容旧数据
+            ctx.document.symbolregist.set(ret.id, ctx.curPage);
+            ctx.document.symbolsMgr.add(ret.id, ret);
         }
     }
 `
@@ -168,5 +172,26 @@ inject['CurvePoint']['before'] = `\
     }
     if (_source.curveMode) {
         _source.mode = _source.curveMode;
+    }
+`
+
+inject['DocumentMeta'] = {};
+inject['DocumentMeta']['before'] = `\
+    // inject code
+    if (!(source as any).symbolregist) {
+        (source as any).__nosymbolregist = true;
+        (source as any).symbolregist = {};
+    }
+`
+
+inject['Page'] = {};
+inject['Page']['before'] = `\
+    // inject code
+    // 兼容旧数据
+    if (!(source as any).crdtidx) {
+        (source as any).crdtidx = {
+            index: [],
+            order: ""
+        }
     }
 `
