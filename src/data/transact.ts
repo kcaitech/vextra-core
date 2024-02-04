@@ -11,7 +11,7 @@ interface MapRec {
 export class TContext {
     public transact?: Transact;
     public cache: Map<number, Set<PropertyKey>> = new Map();
-    private __notifys: Map<number, { target: Notifiable, keys: PropertyKey[] }> = new Map();
+    private __notifys: Map<number, { target: Notifiable, keys: Set<PropertyKey> }> = new Map();
     public optiNotify: boolean = true;
     settrap: boolean = true;
     addNotify(target: Notifiable | undefined, key: PropertyKey) {
@@ -22,9 +22,9 @@ export class TContext {
             const id = objectId(target);
             let item = this.__notifys.get(id);
             if (!item) {
-                this.__notifys.set(id, { target, keys: [key] })
+                this.__notifys.set(id, { target, keys: new Set([key]) })
             } else {
-                item.keys.push(key);
+                item.keys.add(key);
             }
         }
         else {
