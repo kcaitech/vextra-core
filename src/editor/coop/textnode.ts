@@ -8,6 +8,7 @@ import { Shape } from "../../data/shape";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
 import { SNumber } from "../../coop/client/snumber";
+import { ISave4Restore } from "./localcmd";
 
 // todo 考虑text是string?
 function apply(text: Text, op: ArrayOp) {
@@ -146,13 +147,15 @@ function unapply(op: ArrayOp) {
 export class TextRepoNode extends RepoNode {
 
     private document: Document;
+    private selection: ISave4Restore | undefined;
 
     // undo时缓存的本地未上传的op
     popedOps: { cmd: Cmd, ops: ArrayOp[], otpath: OpItem[], refIdx: number }[] = [];
 
-    constructor(document: Document) {
+    constructor(document: Document, selection: ISave4Restore | undefined) {
         super(OpType.Array);
         this.document = document;
+        this.selection = selection;
     }
 
     getOpTarget(path: string[]) {
@@ -242,10 +245,13 @@ export class TextRepoNode extends RepoNode {
             }
         }
 
+        let selectionOp = this.selection?.saveText(ops[0].op.path);
         // transform local
         const remote = ops.map(op => op.op as ArrayOp);
         const local = this.localops.map(op => op.op as ArrayOp);
+        if (selectionOp) local.push(selectionOp);
         const { lhs, rhs } = transform(remote, local);
+        if (selectionOp) selectionOp = local.pop() as ArrayOpSelection;
         // replace local
         for (let i = 0; i < this.localops.length; i++) {
             const item = this.localops[i];
@@ -283,6 +289,8 @@ export class TextRepoNode extends RepoNode {
                 (op.op as any).target = undefined; // 不可再undo
             }
         }
+
+        if (selectionOp) this.selection?.restoreText(selectionOp);
     }
     receiveLocal(ops: OpItem[]) {
         // check

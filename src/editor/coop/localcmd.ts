@@ -65,6 +65,8 @@ export function cloneSelectionState(selection: SelectionState): SelectionState {
 export interface ISave4Restore {
     save(): SelectionState;
     restore(saved: SelectionState): void;
+    saveText(path: string[]): ArrayOpSelection | undefined;
+    restoreText(op: ArrayOpSelection): void;
 }
 
 export interface LocalCmd extends Cmd {

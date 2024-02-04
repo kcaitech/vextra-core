@@ -2,15 +2,16 @@ import { Op, OpType } from "../../coop/common/op";
 import { Document } from "../../data/document";
 import { CrdtArrayReopNode } from "./arraynode";
 import { CrdtIdRepoNode } from "./idsetnode";
+import { ISave4Restore } from "./localcmd";
 import { CrdtShapeRepoNode } from "./shapenode";
 import { TextRepoNode } from "./textnode";
 
-export function nodecreator(document: Document) {
+export function nodecreator(document: Document, selection: ISave4Restore | undefined) {
     return (op: Op) => {
         switch (op.type) {
             case OpType.Array:
                 // text
-                return new TextRepoNode(document);
+                return new TextRepoNode(document, selection);
             case OpType.CrdtArr:
                 // array
                 return new CrdtArrayReopNode(document);

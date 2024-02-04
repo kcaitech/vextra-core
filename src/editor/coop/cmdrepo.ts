@@ -1,7 +1,7 @@
 import { Shape } from "../../data/shape";
 import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
-import { LocalCmd, SelectionState, cloneSelectionState } from "./localcmd";
+import { ISave4Restore, LocalCmd, SelectionState, cloneSelectionState } from "./localcmd";
 import { Document } from "../../data/document";
 import { updateShapesFrame } from "./utils";
 import * as basicapi from "../basicapi"
@@ -79,6 +79,7 @@ function quickRejectRecovery(cmd: LocalCmd) {
 // 一个文档一个总的repo
 export class CmdRepo {
 
+    // private selection: ISave4Restore | undefined;
     private nodecreator: (op: Op) => RepoNode
     private net: ICoopNet;
     constructor(document: Document, cmds: Cmd[], localcmds: LocalCmd[], net: ICoopNet) {
@@ -86,7 +87,7 @@ export class CmdRepo {
         // 用于加载本地的cmds
         this.cmds = cmds;
         this.nopostcmds = localcmds;
-        this.nodecreator = nodecreator(document);
+        this.nodecreator = nodecreator(document, undefined);
         this.net = net;
         this.net.watchCmds(this.receive.bind(this));
 
@@ -109,6 +110,10 @@ export class CmdRepo {
                 updateShapesFrame(page, v, basicapi);
             }
         }
+    }
+
+    setSelection(selection: ISave4Restore) {
+        this.nodecreator = nodecreator(this.document, selection);
     }
 
     public setNet(net: ICoopNet) {
