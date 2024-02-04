@@ -11,6 +11,35 @@ const schemaext = '.json'
 // const outdir = path.resolve('../io/')
 // const outfile = path.join(outdir, 'baseimport' + typesext)
 
+// 兼容非crdt数据
+const needCompatibleSet = new Set([
+    "stop",
+    "shadow",
+    "path-segment",
+    "page-list-item",
+    "fill",
+    "export-format",
+    "curve-point",
+    "contact-role",
+    "border",
+    'group-shape',
+    'image-shape',
+    'path-shape',
+    'rect-shape',
+    'symbol-ref-shape',
+    'symbol-shape',
+    'symbol-union-shape',
+    'text-shape',
+    'artboard',
+    'line-shape',
+    'oval-shape',
+    'table-shape',
+    'contact-shape',
+    'shape',
+    'flatten-shape',
+    'cutout-shape',
+]);
+
 
 const handler: {
     [key: string]: (schema: any, className: string, attrname: string, level: number, filename: string, allschemas: Map<string, {
@@ -276,8 +305,16 @@ ${indent(level)}    }`
             }
         }
         if (typename) {
+            let crdtidx = ""
+            if (needCompatibleSet.has(filename)) {
+                crdtidx = `
+${indent(level)}        if (!val.crdtidx) val.crdtidx = {
+${indent(level)}            index: [i],
+${indent(level)}            order: ""
+${indent(level)}        }`
+            }
             ret += `
-${indent(level)}    if (val.typeId == '${filename}') {
+${indent(level)}    if (val.typeId == '${filename}') {${crdtidx}
 ${indent(level)}        return import${typename}(val as types.${typename}, ctx)
 ${indent(level)}    }`
         }
@@ -333,9 +370,29 @@ handler['array'] = function (schema: any, className: string, attrname: string, l
     const items = schema.items
     let retobj = `new BasicArray<${extractType(items, className, 'impl.')}>()`
 
+    // schema['$ref']
+    let crdtidx = ""
+
+    if (items['$ref']) {
+        let _fn;
+        if (items['$ref'] == '#') {
+            _fn = filename;
+        }
+        else if (items['$ref'].endsWith(schemaext)) {
+            _fn = extractRefFileName(items['$ref'])
+        }
+        if (_fn && needCompatibleSet.has(_fn)) {
+            crdtidx = `
+${indent(level)}        const val = ${attrname + '[i]'}
+${indent(level)}        if (!val.crdtidx) val.crdtidx = {
+${indent(level)}            index: [i],
+${indent(level)}            order: ""
+${indent(level)}        }`
+        }
+    }
     let ret = `(() => {
 ${indent(level + 1)}const ret = ${retobj}
-${indent(level + 1)}for (let i = 0, len = ${attrname} && ${attrname}.length; i < len; i++) {
+${indent(level + 1)}for (let i = 0, len = ${attrname} && ${attrname}.length; i < len; i++) {${crdtidx}
 ${indent(level + 1)}    const r = ${handler['type'](items, className, attrname + '[i]', level + 2, filename, allschemas)}
 ${indent(level + 1)}    ${items.containUndefined ? '' : 'if (r) '}ret.push(r)
 ${indent(level + 1)}}
