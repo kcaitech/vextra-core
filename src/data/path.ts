@@ -101,7 +101,12 @@ transfromHandler['z'] = function (m: Matrix, item: any[]) {
  */
 function transformPath(matrix: Matrix) {
     return (item: any[]) => {
-        transfromHandler[item[0]](matrix, item)
+        const t = transfromHandler[item[0]];
+        if (!t) {
+            console.error(item);
+            throw new Error();
+        }
+        t(matrix, item)
         return item;
     }
 }
