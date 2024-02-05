@@ -637,7 +637,8 @@ export class ShapeView extends DataView {
         if (props) {
             // 
             if (props.data.id !== this.m_data.id) throw new Error('id not match');
-            if (objectId(props.data) !== objectId(this.m_data)) {
+            const dataChanged = objectId(props.data) !== objectId(this.m_data);
+            if (dataChanged) {
                 // data changed
                 this.setData(props.data);
             }
@@ -645,6 +646,7 @@ export class ShapeView extends DataView {
             const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
             const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
             if (!needLayout &&
+                !dataChanged &&
                 !diffTransform &&
                 !diffVars) {
                 return;
