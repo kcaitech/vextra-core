@@ -10,10 +10,11 @@ import { SNumber } from "../../coop/client/snumber";
 
 function _apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame: Shape[]) {
 
-    if (typeof op.data === 'string') {
+    let data = op.data;
+    if (typeof data === 'string') {
         // import data
-        const data = JSON.parse(op.data);
-        op.data = importShape(data, document, page);
+        const _data = JSON.parse(data);
+        data = importShape(_data, document, page);
     }
 
     let shape = page.getShape(op.id);
@@ -21,7 +22,7 @@ function _apply(document: Document, page: Page, op: TreeMoveOp, needUpdateFrame:
         needUpdateFrame.push(shape.parent);
     }
 
-    const ret = crdtTreeMove(page, op);
+    const ret = crdtTreeMove(page, op, data as Shape);
     if (!ret) {
         // 
     }
@@ -75,6 +76,11 @@ function revert(op: TreeMoveOpRecord): TreeMoveOpRecord {
         target: undefined,
         data2: undefined
     }
+}
+
+function stringifyData(op: TreeMoveOpRecord) {
+    if (typeof op.data === 'object') op.data = JSON.stringify(op.data, (k, v) => k.startsWith('__'));
+    return op;
 }
 
 export class CrdtShapeRepoNode extends RepoNode {
@@ -199,7 +205,7 @@ export class CrdtShapeRepoNode extends RepoNode {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
             const record = unapply(this.document, ops[i].op as TreeMoveOpRecord, needUpdateFrame);
             if (record) ops[i].op = record;
-            else ops[i].op = revert(ops[i].op as TreeMoveOpRecord);
+            else ops[i].op = stringifyData(revert(ops[i].op as TreeMoveOpRecord));
         }
 
         if (receiver) {
@@ -231,7 +237,7 @@ export class CrdtShapeRepoNode extends RepoNode {
             const rop = revert(ops[i].op as TreeMoveOpRecord);
             const record = target && apply(this.document, target, rop, needUpdateFrame);
             if (record) ops[i].op = record;
-            else ops[i].op = rop;
+            else ops[i].op = stringifyData(rop);
         }
 
         if (receiver) {

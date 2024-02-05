@@ -33,22 +33,23 @@ importh['page-list-item'] = importPageListItem;
 
 function _apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord | undefined {
     // import op.data
-    if (typeof op.data === 'string') {
+    let data = op.data;
+    if (typeof data === 'string') {
         const ctx: IImportContext = new class implements IImportContext {
             document: Document = document;
             curPage: string = "" // 这个用于判断symbol 可以不设置
         };
 
-        const data = JSON.parse(op.data);
-        const typeId = data.typeId;
+        const _data = JSON.parse(data);
+        const typeId = _data.typeId;
         const h = importh[typeId];
         if (h) {
-            op.data = h(data, ctx);
+            data = h(_data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }
     }
-    return crdtArrayMove(target, op);
+    return crdtArrayMove(target, op, data as CrdtItem);
 }
 
 function apply(document: Document, target: Array<CrdtItem>, op: ArrayMoveOp): ArrayMoveOpRecord | undefined {
@@ -83,6 +84,11 @@ function revert(op: ArrayMoveOpRecord): ArrayMoveOpRecord {
         target: undefined,
         data2: undefined
     }
+}
+
+function stringifyData(op: ArrayMoveOpRecord) {
+    if (typeof op.data === 'object') op.data = JSON.stringify(op.data, (k, v) => k.startsWith('__'));
+    return op;
 }
 
 // fills borders
@@ -217,7 +223,7 @@ export class CrdtArrayReopNode extends RepoNode {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
             const record: ArrayMoveOpRecord | undefined = unapply(this.document, ops[i].op as ArrayMoveOpRecord);
             if (record) ops[i].op = record;
-            else ops[i].op = revert(ops[i].op as ArrayMoveOpRecord);
+            else ops[i].op = stringifyData(revert(ops[i].op as ArrayMoveOpRecord));
         }
 
         if (receiver) {
@@ -250,7 +256,7 @@ export class CrdtArrayReopNode extends RepoNode {
             const rop = revert(ops[i].op as ArrayMoveOpRecord);
             const record: ArrayMoveOpRecord | undefined = target && apply(this.document, target, rop);
             if (record) ops[i].op = record;
-            else ops[i].op = rop;
+            else ops[i].op = stringifyData(rop);
         }
 
         if (receiver) {

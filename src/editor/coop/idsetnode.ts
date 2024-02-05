@@ -9,6 +9,7 @@ import { IImportContext, importColor, importPage, importTableCell, importVariabl
 import { SNumber } from "../../coop/client/snumber";
 
 function apply(document: Document, target: Object, op: IdOp, needUpdateFrame: Shape[]): IdOpRecord {
+    let value = op.data;
     if (typeof op.data === 'string' && (op.data[0] === '{' || op.data[0] === '[')) {
         // import data
         const ctx: IImportContext = new class implements IImportContext {
@@ -18,19 +19,19 @@ function apply(document: Document, target: Object, op: IdOp, needUpdateFrame: Sh
         const data = JSON.parse(op.data);
         const typeId = data.typeId;
         if (typeId === 'table-cell') {
-            op.data = importTableCell(data, ctx);
+            value = importTableCell(data, ctx);
         } else if (typeId === 'variable') {
-            op.data = importVariable(data, ctx);
+            value = importVariable(data, ctx);
         } else if (typeId === 'page') {
-            op.data = importPage(data, ctx);
+            value = importPage(data, ctx);
         } else if (typeId === 'color') {
-            op.data = importColor(data, ctx);
+            value = importColor(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }
     }
-    let value = op.data;
-    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + op.data.typeId);
+
+    if (typeof value === 'object' && (!(value instanceof Basic))) throw new Error("need import: " + value.typeId);
     let origin;
     if (target instanceof Map) {
         origin = target.get(op.id);
@@ -66,6 +67,11 @@ function revert(op: IdOpRecord): IdOpRecord {
         target: undefined,
         data2: undefined
     }
+}
+
+function stringifyData(op: IdOpRecord) {
+    if (typeof op.data === 'object') op.data = JSON.stringify(op.data, (k, v) => k.startsWith('__'));
+    return op;
 }
 
 // todo import, updateframe
@@ -172,7 +178,7 @@ export class CrdtIdRepoNode extends RepoNode {
         const op0 = ops[0].op as IdOpRecord;
         const target = op0.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const rop = revert(op0);
-        const record = target && apply(this.document, target, rop, needUpdateFrame) || rop
+        const record = target && apply(this.document, target, rop, needUpdateFrame) || stringifyData(rop)
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
@@ -191,7 +197,7 @@ export class CrdtIdRepoNode extends RepoNode {
         const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const op = ops[ops.length - 1].op as IdOpRecord;
         const rop = revert(op);
-        const record = target && apply(this.document, target, rop, needUpdateFrame) || rop;
+        const record = target && apply(this.document, target, rop, needUpdateFrame) || stringifyData(rop);
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
