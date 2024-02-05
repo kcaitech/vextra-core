@@ -120,6 +120,13 @@ export class BasicMap<T0, T1> extends Map<T0, T1> {
         if (this.__parent) return this.__parent.getCrdtPath().concat(this.__propKey!);
         else return [];
     }
+    toJSON() {
+        const ret: any = {}
+        for (let [k, v] of this) {
+            ret[k] = v;
+        }
+        return ret;
+    }
 }
 
 export class WatchableObject extends Basic implements Notifiable {

@@ -4,7 +4,7 @@ import { BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
 import { Shape, Variable } from "./shape";
 import { Path } from "./path";
-import { Text, TextAttr } from "./text"
+import { Para, Span, Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
 import { LayoutItem, TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { locateCell, locateCellIndex } from "./tablelocate";
@@ -13,6 +13,15 @@ import { CrdtNumber, CrdtIndex } from "./crdt";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
+
+export function newText(content: string): Text {
+    const text = new Text(new BasicArray());
+    const para = new Para(content + '\n', new BasicArray());
+    text.paras.push(para);
+    const span = new Span(para.length);
+    para.spans.push(span);
+    return text;
+}
 
 export class TableCell extends Shape implements classes.TableCell {
 
@@ -45,7 +54,10 @@ export class TableCell extends Shape implements classes.TableCell {
 
     getOpTarget(path: string[]) {
         if (path.length === 0) return this;
-        if (path[0] === 'text') return this.text?.getOpTarget(path.slice(1));
+        if (path[0] === 'text') {
+            if (!this.text) this.text = newText("");
+            return this.text?.getOpTarget(path.slice(1));
+        }
         return super.getOpTarget(path);
     }
 
