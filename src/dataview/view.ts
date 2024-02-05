@@ -105,6 +105,13 @@ export class DataView extends EventEL {
         this.m_ctx.setDirty(this);
     }
 
+    protected setData(data: Shape) {
+        const old = this.m_data;
+        old.unwatch(this._datawatcher);
+        data.watch(this._datawatcher);
+        this.m_data = data;
+    }
+
     protected get varsContainer() {
         return this.m_varsContainer;
     }

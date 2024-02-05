@@ -49,7 +49,7 @@ export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | unde
         return true;
     }
     for (let i = 0; i < lhs.length; i++) {
-        if (lhs[i].id !== rhs[i].id) {
+        if (lhs[i].id !== rhs[i].id || objectId(lhs[i]) !== objectId(rhs[i])) {
             return true;
         }
     }
@@ -637,6 +637,10 @@ export class ShapeView extends DataView {
         if (props) {
             // 
             if (props.data.id !== this.m_data.id) throw new Error('id not match');
+            if (objectId(props.data) !== objectId(this.m_data)) {
+                // data changed
+                this.setData(props.data);
+            }
             // check
             const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
             const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
