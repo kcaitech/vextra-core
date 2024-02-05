@@ -142,8 +142,8 @@ export class CrdtArrayReopNode extends RepoNode {
             const record = apply(this.document, target, op.op as ArrayMoveOp);
             if (record) {
                 // replace op
-                op.op = record;
                 const idx = op.cmd.ops.indexOf(op.op);
+                op.op = record;
                 if (idx < 0) throw new Error();
                 op.cmd.ops.splice(idx, 1, record);
             }
@@ -298,8 +298,8 @@ export class CrdtArrayReopNode extends RepoNode {
             const record = apply(this.document, target, op.op as ArrayMoveOp);
             if (record) {
                 // replace op
-                op.op = record;
                 const idx = op.cmd.ops.indexOf(op.op);
+                op.op = record;
                 if (idx < 0) throw new Error();
                 op.cmd.ops.splice(idx, 1, record);
             }

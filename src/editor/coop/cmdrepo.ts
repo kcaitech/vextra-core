@@ -113,11 +113,12 @@ export class CmdRepo {
                 localcmds.forEach(item => this._commit(item));
             }
             // update frame
-            for (let [k, v] of needUpdateFrame) {
-                const page = document.pagesMgr.getSync(k);
-                if (!page) continue;
-                updateShapesFrame(page, v, basicapi);
-            }
+            // todo
+            // for (let [k, v] of needUpdateFrame) {
+            //     const page = document.pagesMgr.getSync(k);
+            //     if (!page) continue;
+            //     updateShapesFrame(page, v, basicapi);
+            // }
             repo.commit();
         } catch (e) {
             repo.rollback();
@@ -355,11 +356,12 @@ export class CmdRepo {
         }
 
         // update frame
-        for (let [k, v] of needUpdateFrame) {
-            const page = this.document.pagesMgr.getSync(k);
-            if (!page) continue;
-            updateShapesFrame(page, v, basicapi);
-        }
+        // todo
+        // for (let [k, v] of needUpdateFrame) {
+        //     const page = this.document.pagesMgr.getSync(k);
+        //     if (!page) continue;
+        //     updateShapesFrame(page, v, basicapi);
+        // }
     }
 
     private _commit(cmd: LocalCmd) { // 不需要应用的
@@ -593,8 +595,7 @@ export class CmdRepo {
     }
 
     // ================ 打开文档恢复、延迟加载数据更新 =========================
-
-    roll2NewVersion(_blockIds: string[]) {
+    _roll2NewVersion(_blockIds: string[]) {
         // create repotree
         // check
         const set = new Set<string>();
@@ -615,10 +616,31 @@ export class CmdRepo {
             repotree.roll2Version(this.baseVer, SNumber.MAX_SAFE_INTEGER, nuf)
         }
 
-        for (let [k, v] of needUpdateFrame) {
-            const page = this.document.pagesMgr.getSync(k);
-            if (!page) continue;
-            updateShapesFrame(page, v, basicapi);
+        // todo
+        // for (let [k, v] of needUpdateFrame) {
+        //     const page = this.document.pagesMgr.getSync(k);
+        //     if (!page) continue;
+        //     updateShapesFrame(page, v, basicapi);
+        // }
+    }
+
+    roll2NewVersion(_blockIds: string[]) {
+        // todo 
+        if (this.repo.isInTransact()) {
+            this._roll2NewVersion(_blockIds);
+            return;
+        }
+        this.repo.start("roll2NewVersion"); // todo 需要更细粒度的事务？
+        const savetrap = this.repo.transactCtx.settrap;
+        try {
+            this.repo.transactCtx.settrap = false;
+            this._roll2NewVersion(_blockIds);
+            this.repo.commit();
+        } catch (e) {
+            console.error(e);
+            this.repo.rollback();
+        } finally {
+            this.repo.transactCtx.settrap = savetrap;
         }
     }
 
@@ -668,11 +690,12 @@ export class CmdRepo {
             node.undo(v, nuf, newCmd);
         }
         // update frame
-        for (let [k, v] of needUpdateFrame) {
-            const page = this.document.pagesMgr.getSync(k);
-            if (!page) continue;
-            updateShapesFrame(page, v, basicapi);
-        }
+        // todo
+        // for (let [k, v] of needUpdateFrame) {
+        //     const page = this.document.pagesMgr.getSync(k);
+        //     if (!page) continue;
+        //     updateShapesFrame(page, v, basicapi);
+        // }
 
         if (posted && newCmd) {
 
@@ -736,11 +759,12 @@ export class CmdRepo {
             node.redo(v, nuf, newCmd);
         }
         // update frame
-        for (let [k, v] of needUpdateFrame) {
-            const page = this.document.pagesMgr.getSync(k);
-            if (!page) continue;
-            updateShapesFrame(page, v, basicapi);
-        }
+        // todo
+        // for (let [k, v] of needUpdateFrame) {
+        //     const page = this.document.pagesMgr.getSync(k);
+        //     if (!page) continue;
+        //     updateShapesFrame(page, v, basicapi);
+        // }
 
         if (posted && newCmd) {
             if (newCmd.saveselection?.text) {

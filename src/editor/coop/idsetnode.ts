@@ -5,7 +5,7 @@ import { IdOp, IdOpRecord } from "../../coop/client/crdt";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
-import { IImportContext, importPage, importTableCell, importVariable } from "../../data/baseimport";
+import { IImportContext, importColor, importPage, importTableCell, importVariable } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 
 function apply(document: Document, target: Object, op: IdOp, needUpdateFrame: Shape[]): IdOpRecord {
@@ -23,6 +23,8 @@ function apply(document: Document, target: Object, op: IdOp, needUpdateFrame: Sh
             op.data = importVariable(data, ctx);
         } else if (typeId === 'page') {
             op.data = importPage(data, ctx);
+        } else if (typeId === 'color') {
+            op.data = importColor(data, ctx);
         } else {
             throw new Error('need import ' + typeId)
         }

@@ -238,8 +238,8 @@ export class TextRepoNode extends RepoNode {
             const record = apply(target, op.op as ArrayOp);
             if (record) {
                 // replace op
-                op.op = record;
                 const idx = op.cmd.ops.indexOf(op.op);
+                op.op = record;
                 if (idx < 0) throw new Error();
                 op.cmd.ops.splice(idx, 1, record);
             }
@@ -296,12 +296,15 @@ export class TextRepoNode extends RepoNode {
         // check
         if (ops.length === 0) throw new Error();
         if (ops.length > this.localops.length) throw new Error();
-        for (let i = 0; i < ops.length; i++) {
+        for (let i = 0; i < ops.length; ) {
             const op = ops[i];
             const op2 = this.localops.shift();
+            if (!op2) throw new Error();
             // check
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
             this.ops.push(op2);
+            if ((op2.op as ArrayOp).type1 === ArrayOpType.Selection) continue;
+            ++i;
         }
     }
     commit(ops: OpItem[]) {
@@ -483,8 +486,8 @@ export class TextRepoNode extends RepoNode {
             const record = apply(target, op.op as ArrayOp);
             if (record) {
                 // replace op
-                op.op = record;
                 const idx = op.cmd.ops.indexOf(op.op);
+                op.op = record;
                 if (idx < 0) throw new Error();
                 op.cmd.ops.splice(idx, 1, record);
             }
