@@ -117,6 +117,27 @@ export class resizingConstraintEditor {
         }
     }
 
+    scaleByWidth(shapes: Shape[]) {
+        try {
+            const api = this.__repo.start("scaleByWidth", {});
+
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                if (this.disabled(shape)) {
+                    continue;
+                }
+                const old_rc = this.resizingConstaint(shape);
+                const new_rc = ResizingConstraints2.setToScaleByWidth(old_rc);
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
     fixedToWidth(shapes: Shape[]) {
         try {
             const api = this.__repo.start("fixedToWidth", {});
@@ -148,8 +169,6 @@ export class resizingConstraintEditor {
                 }
                 const old_rc = this.resizingConstaint(shape);
                 const new_rc = ResizingConstraints2.setToWidthFlex(old_rc);
-                console.log(new_rc);
-                
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
@@ -231,6 +250,26 @@ export class resizingConstraintEditor {
                 }
                 const old_rc = this.resizingConstaint(shape);
                 const new_rc = ResizingConstraints2.setToVerticalJustifyCenter(old_rc);
+                api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
+            }
+
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+        }
+    }
+
+    scaleByHeight(shapes: Shape[]) {
+        try {
+            const api = this.__repo.start("VerticaljustifyCenter", {});
+            for (let i = 0, l = shapes.length; i < l; i++) {
+                const shape = shapes[i];
+                if (this.disabled(shape)) {
+                    continue;
+                }
+                const old_rc = this.resizingConstaint(shape);
+                const new_rc = ResizingConstraints2.setToScaleByHeight(old_rc);
                 api.shapeModifyResizingConstraint(this.__page, shape, new_rc);
             }
 
