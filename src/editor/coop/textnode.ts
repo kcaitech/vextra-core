@@ -297,7 +297,7 @@ export class TextRepoNode extends RepoNode {
         // check
         if (ops.length === 0) throw new Error();
         if (ops.length > this.localops.length) throw new Error();
-        for (let i = 0; i < ops.length; ) {
+        for (let i = 0; i < ops.length;) {
             const op = ops[i];
             const op2 = this.localops.shift();
             if (!op2) throw new Error();
@@ -474,13 +474,14 @@ export class TextRepoNode extends RepoNode {
         const ops = this.ops.concat(...this.localops);
         if (ops.length === 0) return;
 
+        const baseIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, baseVer) > 0);
+        if (baseIdx < 0) return; // 都比它小
+
         const target = this.getOpTarget(ops[0].op.path);
         if (!target) return;
 
-        let baseIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, baseVer) > 0);
         let verIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, version) > 0);
 
-        if (baseIdx < 0) baseIdx = 0;
         if (verIdx < 0) verIdx = ops.length;
         for (let i = baseIdx; i < verIdx; i++) {
             const op = ops[i];

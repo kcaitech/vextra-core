@@ -1,10 +1,12 @@
 import { Shape } from "../../data/shape";
 import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
+import { SNumber } from "../../coop/client/snumber";
 
 
 export abstract class RepoNode {
 
+    baseVer: string = ""; // 些节点创建时的version: 主要是insert？
     type: OpType; // 一个节点仅可能接收一种类型的op
     ops: OpItem[] = []; // 与服务端保持一致的op
     localops: OpItem[] = []; // 本地op, 本地op的order一定是在ops之后的
@@ -28,7 +30,6 @@ export abstract class RepoNode {
 }
 
 export class RepoNodePath {
-
     node: RepoNode | undefined;
     childs: Map<string, RepoNodePath> = new Map();
 
@@ -75,20 +76,15 @@ export class RepoNodePath {
         roll(this);
     }
 
-    // 将数据回退或者前进到特定版本
+    // 将数据前进到特定版本
     roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]) {
-        // get
-        let node: RepoNodePath = this;
-        // while (path.length > 0) {
-        //     const n = node.childs.get(path[0]);
-        //     if (!n) return; // throw new Error("path not exist");
-        //     node = n;
-        //     path = path.slice(1);
-        // }
-        const roll = (node: RepoNodePath) => {
-            node.node?.roll2Version(baseVer, version, needUpdateFrame);
-            node.childs.forEach(roll);
+        const roll = (node: RepoNodePath, baseVer: string) => {
+            if (node.node) {
+                baseVer = SNumber.comp(baseVer, node.node.baseVer) < 0 ? node.node.baseVer : baseVer;
+                node.node.roll2Version(baseVer, version, needUpdateFrame);
+            }
+            node.childs.forEach((n) => roll(n, baseVer));
         }
-        roll(node);
+        roll(this, baseVer);
     }
 }

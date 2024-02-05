@@ -128,15 +128,18 @@ export class CrdtShapeRepoNode extends RepoNode {
 
         const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);
         // do
-        if (target) for (let i = 0; i < ops.length; i++) {
+        for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
-            const record = apply(this.document, target, op.op as TreeMoveOp, needUpdateFrame);
+            const record = target && apply(this.document, target, op.op as TreeMoveOp, needUpdateFrame);
             if (record) {
                 // replace op
                 const idx = op.cmd.ops.indexOf(op.op);
                 op.op = record;
                 if (idx < 0) throw new Error();
                 op.cmd.ops.splice(idx, 1, record);
+            }
+            if (op.cmd.isRecovery) {
+                this.baseVer = op.cmd.baseVer;
             }
         }
         this.ops.push(...ops);
@@ -263,12 +266,13 @@ export class CrdtShapeRepoNode extends RepoNode {
         const ops = this.ops.concat(...this.localops);
         if (ops.length === 0) return;
 
+        const baseIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, baseVer) > 0);
+        if (baseIdx < 0) return; // 都比它小
+
         const target = this.document.pagesMgr.getSync(ops[0].op.path[0]);
         if (!target) return;
-        let baseIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, baseVer) > 0);
         let verIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, version) > 0);
 
-        if (baseIdx < 0) baseIdx = 0;
         if (verIdx < 0) verIdx = ops.length;
         for (let i = baseIdx; i < verIdx; i++) {
             const op = ops[i];

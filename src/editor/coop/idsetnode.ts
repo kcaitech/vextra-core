@@ -131,6 +131,13 @@ export class CrdtIdRepoNode extends RepoNode {
         this.saveOrigin(target, ops);
         this.ops.push(...ops);
 
+        for (let i = 0; i < ops.length; ++i) {
+            const op = ops[i];
+            if (op.cmd.isRecovery) {
+                this.baseVer = op.cmd.baseVer;
+            }
+        }
+
         if (!target) {
             this.undoLocals();
             this.localops.forEach(item => (item.op as IdOpRecord).target = undefined) // 不可再undo
@@ -214,6 +221,9 @@ export class CrdtIdRepoNode extends RepoNode {
         // search and apply
         const ops = this.ops.concat(...this.localops);
         if (ops.length === 0) return;
+
+        const baseIdx = ops.findIndex((op) => SNumber.comp(op.cmd.version, baseVer) > 0);
+        if (baseIdx < 0) return; // 都比它小
 
         const op0 = ops[0].op;
         const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
