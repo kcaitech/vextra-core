@@ -28,10 +28,11 @@ export function render(h: Function, value: Gradient, frame: ShapeFrame): { id: s
         }
         node = h("linearGradient", {
             id,
-            x1: value.from.x,
-            y1: value.from.y,
-            x2: value.to.x,
-            y2: value.to.y,
+            x1: value.from.x * frame.width,
+            y1: value.from.y * frame.height,
+            x2: value.to.x * frame.width,
+            y2: value.to.y * frame.height,
+            gradientUnits: "userSpaceOnUse",
         }, childs);
     }
     else if (value.gradientType == GradientType.Radial) {
