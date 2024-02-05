@@ -445,7 +445,7 @@ export class CmdRepo {
             const cmd = cmds[i];
             if (SNumber.comp(cmd.previousVersion, lastVer) !== 0) {
                 const aborts = cmds.splice(i, cmds.length - i);
-                console.log("abort received cmds: ", aborts);
+                console.log("abort received cmds: ", aborts, lastVer, this.cmds, this.pendingcmds);
                 break;
             }
             lastVer = cmd.version;

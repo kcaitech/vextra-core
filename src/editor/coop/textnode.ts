@@ -244,6 +244,7 @@ export class TextRepoNode extends RepoNode {
                 op.cmd.ops.splice(idx, 1, record);
             }
         }
+        this.ops.push(...ops);
 
         let selectionOp = this.selection?.saveText(ops[0].op.path);
         // transform local
