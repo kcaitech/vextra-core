@@ -1,18 +1,18 @@
 import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, BasicMap, ResourceMgr } from "./basic";
-import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
-import { Shape, Variable } from "./shape";
+import { ShapeType, ShapeFrame, TableCellType, CrdtNumber } from "./baseclasses"
+import { Shape } from "./shape";
 import { Path } from "./path";
 import { Para, Span, Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
 import { LayoutItem, TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
-import { CrdtNumber, CrdtIndex } from "./crdt";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
+export { CrdtNumber } from "./baseclasses";
 
 export function newText(content: string): Text {
     const text = new Text(new BasicArray());
@@ -35,7 +35,7 @@ export class TableCell extends Shape implements classes.TableCell {
     private __cacheData?: { buff: Uint8Array, base64: string };
 
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -249,7 +249,7 @@ export class TableShape extends Shape implements classes.TableShape {
     private __widthTotalWeights: number;
 
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -476,7 +476,7 @@ export class TableShape extends Shape implements classes.TableShape {
 
     // todo 错的。不可以，除非cell是不可删除的才可以。这里也要跟shape一样的undo、redo
     // _initCell(cellId: string) {
-    //     const cell = new TableCell(new CrdtIndex([], 0),
+    //     const cell = new TableCell(new BasicArray<number>([], 0),
     //         cellId,
     //         "",
     //         ShapeType.TableCell,

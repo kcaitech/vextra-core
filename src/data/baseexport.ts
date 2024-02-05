@@ -197,7 +197,14 @@ export function exportStrikethroughType(source: types.StrikethroughType, ctx?: I
 /* stop */
 export function exportStop(source: types.Stop, ctx?: IExportContext): types.Stop {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+            const ret = []
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         id: source.id,
         position: source.position,
         color: source.color && exportColor(source.color, ctx),
@@ -225,7 +232,14 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
 /* shape */
 export function exportShape(source: types.Shape, ctx?: IExportContext): types.Shape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+            const ret = []
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         typeId: source.typeId,
         id: source.id,
         type: exportShapeType(source.type, ctx),
@@ -277,7 +291,14 @@ export function exportShapeFrame(source: types.ShapeFrame, ctx?: IExportContext)
 /* shadow */
 export function exportShadow(source: types.Shadow, ctx?: IExportContext): types.Shadow {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+            const ret = []
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         id: source.id,
         isEnabled: source.isEnabled,
         blurRadius: source.blurRadius,
@@ -309,7 +330,14 @@ export function exportPoint2D(source: types.Point2D, ctx?: IExportContext): type
 /* path segment */
 export function exportPathSegment(source: types.PathSegment, ctx?: IExportContext): types.PathSegment {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+            const ret = []
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         points: (() => {
             const ret = []
             for (let i = 0, len = source.points.length; i < len; i++) {
@@ -341,7 +369,14 @@ export function exportPara(source: types.Para, ctx?: IExportContext): types.Para
 /* page list item */
 export function exportPageListItem(source: types.PageListItem, ctx?: IExportContext): types.PageListItem {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+            const ret = []
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         id: source.id,
         name: source.name,
         versionId: source.versionId,
@@ -408,7 +443,14 @@ export function exportGradientType(source: types.GradientType, ctx?: IExportCont
 /* fill */
 export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+            const ret = []
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         typeId: source.typeId,
         id: source.id,
         isEnabled: source.isEnabled,
@@ -452,7 +494,14 @@ export function exportExportOptions(source: types.ExportOptions, ctx?: IExportCo
 /* export format */
 export function exportExportFormat(source: types.ExportFormat, ctx?: IExportContext): types.ExportFormat {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+            const ret = []
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         id: source.id,
         absoluteSize: source.absoluteSize,
         fileFormat: exportExportFileFormat(source.fileFormat, ctx),
@@ -509,7 +558,14 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
 /* curve point */
 export function exportCurvePoint(source: types.CurvePoint, ctx?: IExportContext): types.CurvePoint {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+            const ret = []
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         id: source.id,
         radius: source.radius,
         fromX: source.fromX,
@@ -532,23 +588,15 @@ export function exportCurveMode(source: types.CurveMode, ctx?: IExportContext): 
 export function exportCrdtNumber(source: types.CrdtNumber, ctx?: IExportContext): types.CrdtNumber {
     const ret = {
         id: source.id,
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
-        value: source.value,
-    }
-    return ret
-}
-/* crdt array index */
-export function exportCrdtIndex(source: types.CrdtIndex, ctx?: IExportContext): types.CrdtIndex {
-    const ret = {
-        index: (() => {
+        crdtidx: (() => {
             const ret = []
-            for (let i = 0, len = source.index.length; i < len; i++) {
-                const r = source.index[i]
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        order: source.order,
+        value: source.value,
     }
     return ret
 }
@@ -567,7 +615,14 @@ export function exportContactType(source: types.ContactType, ctx?: IExportContex
 /* contactstyle */
 export function exportContactRole(source: types.ContactRole, ctx?: IExportContext): types.ContactRole {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+            const ret = []
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         id: source.id,
         roleType: exportContactRoleType(source.roleType, ctx),
         shapeId: source.shapeId,
@@ -643,7 +698,14 @@ export function exportBulletNumbersBehavior(source: types.BulletNumbersBehavior,
 /* border */
 export function exportBorder(source: types.Border, ctx?: IExportContext): types.Border {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+            const ret = []
+            for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         typeId: source.typeId,
         id: source.id,
         isEnabled: source.isEnabled,
@@ -705,7 +767,14 @@ export function exportBlendMode(source: types.BlendMode, ctx?: IExportContext): 
 /* text shape */
 export function exportTextShape(source: types.TextShape, ctx?: IExportContext): types.TextShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -743,7 +812,14 @@ export function exportTextShape(source: types.TextShape, ctx?: IExportContext): 
 /* table shape */
 export function exportTableShape(source: types.TableShape, ctx?: IExportContext): types.TableShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -804,7 +880,14 @@ export function exportTableShape(source: types.TableShape, ctx?: IExportContext)
 /* table cell */
 export function exportTableCell(source: types.TableCell, ctx?: IExportContext): types.TableCell {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -847,7 +930,14 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
 /* symbol ref shape */
 export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExportContext): types.SymbolRefShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -921,7 +1011,14 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
 /* path shape */
 export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext): types.PathShape2 {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -966,7 +1063,14 @@ export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext)
 /* path shape */
 export function exportPathShape(source: types.PathShape, ctx?: IExportContext): types.PathShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1012,7 +1116,14 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
 /* rect shape */
 export function exportRectShape(source: types.RectShape, ctx?: IExportContext): types.RectShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1108,7 +1219,14 @@ export function exportTextAttr(source: types.TextAttr, ctx?: IExportContext): ty
 /* oval shape */
 export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): types.OvalShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1155,7 +1273,14 @@ export function exportOvalShape(source: types.OvalShape, ctx?: IExportContext): 
 /* line shape */
 export function exportLineShape(source: types.LineShape, ctx?: IExportContext): types.LineShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1201,7 +1326,14 @@ export function exportLineShape(source: types.LineShape, ctx?: IExportContext): 
 /* image shape */
 export function exportImageShape(source: types.ImageShape, ctx?: IExportContext): types.ImageShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1250,7 +1382,14 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
 /* group shape */
 export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext): types.GroupShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1352,7 +1491,14 @@ export function exportGroupShape(source: types.GroupShape, ctx?: IExportContext)
 /* symbol shape */
 export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContext): types.SymbolShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1480,7 +1626,14 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
 /* symbol union shape */
 export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IExportContext): types.SymbolUnionShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1606,7 +1759,14 @@ export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IEx
 /* page */
 export function exportPage(source: types.Page, ctx?: IExportContext): types.Page {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1709,7 +1869,14 @@ export function exportPage(source: types.Page, ctx?: IExportContext): types.Page
 /* flatten shape */
 export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportContext): types.FlattenShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1811,7 +1978,14 @@ export function exportFlattenShape(source: types.FlattenShape, ctx?: IExportCont
 /* cutout shape */
 export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContext): types.CutoutShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1858,7 +2032,14 @@ export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContex
 /* contact shape */
 export function exportContactShape(source: types.ContactShape, ctx?: IExportContext): types.ContactShape {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,
@@ -1909,7 +2090,14 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
 /* artboard shape */
 export function exportArtboard(source: types.Artboard, ctx?: IExportContext): types.Artboard {
     const ret = {
-        crdtidx: exportCrdtIndex(source.crdtidx, ctx),
+        crdtidx: (() => {
+                const ret = []
+                for (let i = 0, len = source.crdtidx.length; i < len; i++) {
+                    const r = source.crdtidx[i]
+                    if (r) ret.push(r)
+                }
+                return ret
+            })(),
         typeId: source.typeId,
         id: source.id,
         name: source.name,

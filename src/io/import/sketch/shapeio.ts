@@ -16,7 +16,7 @@ import { Page } from "../../../data/page";
 import { importText } from "./textio";
 import { Artboard } from "../../../data/artboard";
 import { Text } from "../../../data/text";
-import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D, SymbolRefShape, Color, CrdtIndex } from "../../../data/classes"
+import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D, SymbolRefShape, Color } from "../../../data/classes"
 import { BasicArray, BasicMap } from "../../../data/basic";
 import { IJSON, ImportFun, LoadContext } from "./basic";
 import { uuid } from "../../../basic/uuid";
@@ -64,7 +64,7 @@ function importPoints(data: IJSON): CurvePoint[] {
         const hasCurveFrom: boolean = d['hasCurveFrom'];
         const hasCurveTo: boolean = d['hasCurveTo'];
         const point: Point2D = importXY(d['point']);
-        const p = new CurvePoint(new CrdtIndex([i]), uuid(), point.x, point.y, curveMode);
+        const p = new CurvePoint([i] as BasicArray<number>, uuid(), point.x, point.y, curveMode);
         if (hasCurveFrom) {
             p.hasFrom = true;
             p.fromX = curveFrom.x;
@@ -129,16 +129,16 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
 
     if (hasBackgroundColor && backgroundColor) {
-        const fill = new Fill(new CrdtIndex([0]), uuid(), true, FillType.SolidColor, backgroundColor);
+        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
         style.fills.length = 0;
         style.fills.push(fill);
     } else {
-        const fill = new Fill(new CrdtIndex([0]), uuid(), true, FillType.SolidColor, new Color(1, 255, 255, 255));
+        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 255, 255, 255));
         style.fills.length = 0;
         style.fills.push(fill);
     }
     const childs = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new Artboard(new CrdtIndex([i]), id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs));
+    const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame, style, new BasicArray<Shape>(...childs));
 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -165,7 +165,7 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun, i:
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new GroupShape(new CrdtIndex([i]), id, name, ShapeType.Group, frame, style, new BasicArray<Shape>(...childs));
+    const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame, style, new BasicArray<Shape>(...childs));
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -188,7 +188,7 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new GroupShape(new CrdtIndex([i]), id, name, ShapeType.Group, frame, style, new BasicArray<Shape>(...childs));
+    const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame, style, new BasicArray<Shape>(...childs));
     shape.isBoolOpShape = true;
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -214,12 +214,12 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: numb
     // const isClosed = data['isClosed'];
     // env.mediaMgr.addRef(imageRef);
     const curvePoint = new BasicArray<CurvePoint>();
-    const p1 = new CurvePoint(new CrdtIndex([0]), uuid(), 0, 0, CurveMode.Straight); // lt
-    const p2 = new CurvePoint(new CrdtIndex([1]), uuid(), 1, 0, CurveMode.Straight); // rt
-    const p3 = new CurvePoint(new CrdtIndex([2]), uuid(), 1, 1, CurveMode.Straight); // rb
-    const p4 = new CurvePoint(new CrdtIndex([3]), uuid(), 0, 1, CurveMode.Straight); // lb
+    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
     curvePoint.push(p1, p2, p3, p4);
-    const shape = new ImageShape(new CrdtIndex([i]), id, name, ShapeType.Image, frame, style, curvePoint, true, imageRef);
+    const shape = new ImageShape([i] as BasicArray<number>, id, name, ShapeType.Image, frame, style, curvePoint, true, imageRef);
     // shape.setImageMgr(env.mediaMgr);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -244,7 +244,7 @@ export function importPage(ctx: LoadContext, data: IJSON, f: ImportFun): Page {
     // const isClosed = data['isClosed'];
 
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new Page(new CrdtIndex([]), id, name, ShapeType.Page, frame, style, new BasicArray<Shape>(...childs));
+    const shape = new Page(new BasicArray<number>(), id, name, ShapeType.Page, frame, style, new BasicArray<Shape>(...childs));
     // shape.appendChilds(childs);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -268,7 +268,7 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const text = data['attributedString'] && importText(data['attributedString']);
     const isClosed = data['isClosed'];
 
-    const shape = new PathShape(new CrdtIndex([i]), id, name, ShapeType.Path, frame, style, new BasicArray<CurvePoint>(...points), isClosed);
+    const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame, style, new BasicArray<CurvePoint>(...points), isClosed);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -293,7 +293,7 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const isClosed = data['isClosed'];
     // const r = data['fixedRadius'] || 0;
     // const radius = new RectRadius(r, r, r, r);
-    const shape = new RectShape(new CrdtIndex([i]), id, name, ShapeType.Rectangle, frame, style, new BasicArray<CurvePoint>(...points), true);
+    const shape = new RectShape([i] as BasicArray<number>, id, name, ShapeType.Rectangle, frame, style, new BasicArray<CurvePoint>(...points), true);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -318,7 +318,7 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
     text.attr && (text.attr.textBehaviour = textBehaviour);
     // const isClosed = data['isClosed'];
-    const shape = new TextShape(new CrdtIndex([i]), id, name, ShapeType.Text, frame, style, text);
+    const shape = new TextShape([i] as BasicArray<number>, id, name, ShapeType.Text, frame, style, text);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -342,7 +342,7 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
     // const isClosed = data['isClosed'];
     const id = uniqueId(ctx, data['symbolID']);
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
-    const shape = new SymbolShape(new CrdtIndex([i]), id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicMap());
+    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame, style, new BasicArray<Shape>(...childs), new BasicMap());
 
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
@@ -367,7 +367,7 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    const shape = new SymbolRefShape(new CrdtIndex([i]), id, name, ShapeType.SymbolRef, frame, style, data['symbolID'], new BasicMap());
+    const shape = new SymbolRefShape([i] as BasicArray<number>, id, name, ShapeType.SymbolRef, frame, style, data['symbolID'], new BasicMap());
 
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
     importShapePropertys(shape, data);

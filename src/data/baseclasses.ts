@@ -162,12 +162,12 @@ export class Style extends Basic {
  */
 export class Stop extends Basic {
     typeId = 'stop'
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     id: string
     position: number
     color?: Color
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         position: number
     ) {
@@ -204,7 +204,7 @@ export class SpanAttr extends Basic {
  */
 export class Shape extends Basic {
     typeId = 'shape'
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     id: string
     type: ShapeType
     frame: ShapeFrame
@@ -227,7 +227,7 @@ export class Shape extends Basic {
     shouldBreakMaskChain?: boolean
     varbinds?: BasicMap<string, string>
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -272,7 +272,7 @@ export class ShapeFrame extends Basic {
  */
 export class Shadow extends Basic {
     typeId = 'shadow'
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     id: string
     isEnabled: boolean
     blurRadius: number
@@ -283,7 +283,7 @@ export class Shadow extends Basic {
     offsetY: number
     spread: number
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         isEnabled: boolean,
         blurRadius: number,
@@ -326,11 +326,11 @@ export class Point2D extends Basic {
  */
 export class PathSegment extends Basic {
     typeId = 'path-segment'
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     points: BasicArray<CurvePoint >
     isClosed: boolean
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         points: BasicArray<CurvePoint >,
         isClosed: boolean
     ) {
@@ -362,12 +362,12 @@ export class Para extends Basic {
  */
 export class PageListItem extends Basic {
     typeId = 'page-list-item'
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     id: string
     name: string
     versionId?: string
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string
     ) {
@@ -437,7 +437,7 @@ export class Gradient extends Basic {
  */
 export class Fill extends Basic {
     typeId = 'fill'
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     id: string
     isEnabled: boolean
     fillType: FillType
@@ -446,7 +446,7 @@ export class Fill extends Basic {
     gradient?: Gradient
     imageRef?: string
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         isEnabled: boolean,
         fillType: FillType,
@@ -493,7 +493,7 @@ export class ExportOptions extends Basic {
  */
 export class ExportFormat extends Basic {
     typeId = 'export-format'
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     id: string
     absoluteSize: number
     fileFormat: ExportFileFormat
@@ -502,7 +502,7 @@ export class ExportFormat extends Basic {
     scale: number
     visibleScaleType: ExportVisibleScaleType
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         absoluteSize: number,
         fileFormat: ExportFileFormat,
@@ -574,7 +574,7 @@ export class DocumentMeta extends Basic {
  */
 export class CurvePoint extends Basic {
     typeId = 'curve-point'
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     id: string
     radius?: number
     fromX?: number
@@ -587,7 +587,7 @@ export class CurvePoint extends Basic {
     x: number
     y: number
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         x: number,
         y: number,
@@ -607,33 +607,17 @@ export class CurvePoint extends Basic {
 export class CrdtNumber extends Basic {
     typeId = 'crdt-number'
     id: string
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     value: number
     constructor(
         id: string,
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         value: number
     ) {
         super()
         this.id = id
         this.crdtidx = crdtidx
         this.value = value
-    }
-}
-/**
- * crdt array index 
- */
-export class CrdtIndex extends Basic {
-    typeId = 'crdt-index'
-    index: BasicArray<number >
-    order: string
-    constructor(
-        index: BasicArray<number >,
-        order: string
-    ) {
-        super()
-        this.index = index
-        this.order = order
     }
 }
 /**
@@ -657,12 +641,12 @@ export class ContextSettings extends Basic {
  */
 export class ContactRole extends Basic {
     typeId = 'contact-role'
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     id: string
     roleType: ContactRoleType
     shapeId: string
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         roleType: ContactRoleType,
         shapeId: string
@@ -790,7 +774,7 @@ export class BulletNumbers extends Basic {
  */
 export class Border extends Basic {
     typeId = 'border'
-    crdtidx: CrdtIndex
+    crdtidx: BasicArray<number >
     id: string
     isEnabled: boolean
     fillType: FillType
@@ -801,7 +785,7 @@ export class Border extends Basic {
     gradient?: Gradient
     borderStyle: BorderStyle
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         isEnabled: boolean,
         fillType: FillType,
@@ -888,7 +872,7 @@ export class TextShape extends Shape {
     text: Text
     fixedRadius?: number
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -917,7 +901,7 @@ export class TableShape extends Shape {
     colWidths: BasicArray<CrdtNumber >
     textAttr?: TextAttr
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -951,7 +935,7 @@ export class TableCell extends Shape {
     rowSpan?: number
     colSpan?: number
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -977,7 +961,7 @@ export class SymbolRefShape extends Shape {
     overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1020,7 +1004,7 @@ export class PathShape2 extends Shape {
     pathsegs: BasicArray<PathSegment >
     fixedRadius?: number
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1048,7 +1032,7 @@ export class PathShape extends Shape {
     isClosed: boolean
     fixedRadius?: number
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1075,7 +1059,7 @@ export class PathShape extends Shape {
 export class RectShape extends PathShape {
     typeId = 'rect-shape'
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1134,7 +1118,7 @@ export class OvalShape extends PathShape {
     typeId = 'oval-shape'
     ellipse: Ellipse
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1163,7 +1147,7 @@ export class OvalShape extends PathShape {
 export class LineShape extends PathShape {
     typeId = 'line-shape'
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1191,7 +1175,7 @@ export class ImageShape extends PathShape {
     typeId = 'image-shape'
     imageRef: string
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1223,7 +1207,7 @@ export class GroupShape extends Shape {
     isBoolOpShape?: boolean
     fixedRadius?: number
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1251,7 +1235,7 @@ export class SymbolShape extends GroupShape {
     variables: BasicMap<string, Variable>
     symtags?: BasicMap<string, string>
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1278,7 +1262,7 @@ export class SymbolShape extends GroupShape {
 export class SymbolUnionShape extends SymbolShape {
     typeId = 'symbol-union-shape'
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1306,7 +1290,7 @@ export class Page extends GroupShape {
     typeId = 'page'
     backgroundColor?: Color
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1331,7 +1315,7 @@ export class Page extends GroupShape {
 export class FlattenShape extends GroupShape {
     typeId = 'flatten-shape'
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1357,7 +1341,7 @@ export class CutoutShape extends PathShape {
     typeId = 'cutout-shape'
     scalingStroke: boolean
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1394,7 +1378,7 @@ export class ContactShape extends Shape {
     text: Text
     fixedRadius?: number
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,
@@ -1427,7 +1411,7 @@ export class ContactShape extends Shape {
 export class Artboard extends GroupShape {
     typeId = 'artboard'
     constructor(
-        crdtidx: CrdtIndex,
+        crdtidx: BasicArray<number >,
         id: string,
         name: string,
         type: ShapeType,

@@ -1,8 +1,7 @@
-import { uuid } from "../basic/uuid";
 import { Matrix } from "../basic/matrix";
 import { CurveMode, CurvePoint } from "./baseclasses";
 import { float_accuracy } from "../basic/consts";
-import { CrdtIndex } from "./crdt";
+import { BasicArray } from "./basic";
 
 // ----------------------------------------------------------------------------------
 // transform
@@ -769,10 +768,10 @@ curvHandler['m'] = (ctx: CurvCtx, item: any[]) => {
 
 function curveHandleLine(seg: CurvSeg, x: number, y: number) {
     if (seg.points.length === 0) {
-        const point = new CurvePoint(new CrdtIndex([0]), "", seg.beginpoint.x, seg.beginpoint.y, CurveMode.Straight);
+        const point = new CurvePoint([0] as BasicArray<number>, "", seg.beginpoint.x, seg.beginpoint.y, CurveMode.Straight);
         seg.points.push(point);
     }
-    const point = new CurvePoint(new CrdtIndex([seg.points.length]), "", x, y, CurveMode.Straight);
+    const point = new CurvePoint([seg.points.length] as BasicArray<number>, "", x, y, CurveMode.Straight);
     seg.points.push(point);
 }
 
@@ -801,13 +800,13 @@ function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2:
         prePoint.fromY = y1;
     }
     else {
-        const point = new CurvePoint(new CrdtIndex([]), "", seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
+        const point = new CurvePoint(new BasicArray(), "", seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
         point.hasFrom = true;
         point.fromX = x1;
         point.fromY = y1;
         seg.points.push(point);
     }
-    const point = new CurvePoint(new CrdtIndex([]), "", x, y, CurveMode.Asymmetric);
+    const point = new CurvePoint(new BasicArray(), "", x, y, CurveMode.Asymmetric);
     point.hasTo = true;
     point.toX = x2;
     point.toY = y2;

@@ -6,7 +6,10 @@
             "type": "string"
         },
         "crdtidx": {
-            "$ref": "./crdt-index.json"
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
         },
         "value": {
             "type": "number"

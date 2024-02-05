@@ -112,7 +112,7 @@ export enum StrikethroughType {
 }
 /* stop */
 export type Stop = {
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     id: string
     position: number
     color?: Color
@@ -134,7 +134,7 @@ export type SpanAttr = {
 }
 /* shape */
 export type Shape = {
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     typeId: string
     id: string
     type: ShapeType
@@ -194,7 +194,7 @@ export type ShapeFrame = {
 }
 /* shadow */
 export type Shadow = {
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     id: string
     isEnabled: boolean
     blurRadius: number
@@ -224,7 +224,7 @@ export type Point2D = {
 }
 /* path segment */
 export type PathSegment = {
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     points: CurvePoint[]
     isClosed: boolean
 }
@@ -236,7 +236,7 @@ export type Para = {
 }
 /* page list item */
 export type PageListItem = {
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     id: string
     name: string
     versionId?: string
@@ -304,7 +304,7 @@ export enum GradientType {
 }
 /* fill */
 export type Fill = {
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     typeId: string
     id: string
     isEnabled: boolean
@@ -337,7 +337,7 @@ export type ExportOptions = {
 }
 /* export format */
 export type ExportFormat = {
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     id: string
     absoluteSize: number
     fileFormat: ExportFileFormat
@@ -378,7 +378,7 @@ export type DocumentMeta = {
 }
 /* curve point */
 export type CurvePoint = {
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     id: string
     radius?: number
     fromX?: number
@@ -402,13 +402,8 @@ export enum CurveMode {
 /* crdt number */
 export type CrdtNumber = {
     id: string
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     value: number
-}
-/* crdt array index */
-export type CrdtIndex = {
-    index: number[]
-    order: string
 }
 /* context settings */
 export type ContextSettings = {
@@ -424,7 +419,7 @@ export enum ContactType {
 }
 /* contactstyle */
 export type ContactRole = {
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     id: string
     roleType: ContactRoleType
     shapeId: string
@@ -486,7 +481,7 @@ export enum BulletNumbersBehavior {
 }
 /* border */
 export type Border = {
-    crdtidx: CrdtIndex
+    crdtidx: number[]
     typeId: string
     id: string
     isEnabled: boolean
