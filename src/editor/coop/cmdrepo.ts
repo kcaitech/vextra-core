@@ -350,7 +350,7 @@ export class CmdRepo {
         // apply pending and transform local // 仅remote
         if (this.pendingcmds.length > 0) {
             // 先处理pending
-            this._receive(this.pendingcmds, needUpdateFrame);
+            this._receive(this.pendingcmds.slice(0), needUpdateFrame);
             this.cmds.push(...this.pendingcmds);
             this.pendingcmds.length = 0;
         }
