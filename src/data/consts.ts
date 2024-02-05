@@ -70,257 +70,217 @@ export const ResizingConstraints = {
 }
 
 export const ResizingConstraints2 = {
-    Mask: 0b11111111,
-    Right: 0b000001, // 1
-    Width: 0b000010, // 2
-    Left: 0b000100, // 4
-    Bottom: 0b001000, // 8
-    Height: 0b010000, // 16
-    Top: 0b100000, // 32
+    Mask: 0b11111111, // 255
+
+    Right: 0b00000001, // 1
+    Width: 0b00000010, // 2
+    Left: 0b00000100, // 4
+
+    Bottom: 0b00001000, // 8
+    Height: 0b00010000, // 16
+    Top: 0b00100000, // 32
 
     // extra
     HCenter: 0b01000000, // 64
     VCenter: 0b10000000, // 128
 
     // horizontal
-    isFixedToLeft(val: number): boolean { // 1. 只要是靠左但是不靠右，那一定是靠左固定，不需要考虑其他
-        val = this.Mask ^ val;
-        return (val & this.Left) === this.Left && (val & this.Right) !== this.Right;
-    },
-
-    isFixedToRight(val: number): boolean { // 2. 只要是靠右但不靠左，那一定是靠右固定，不需要考虑其他
-        val = this.Mask ^ val;
-        return (val & this.Left) !== this.Left && (val & this.Right) === this.Right;
-    },
-
-    isFixedLeftAndRight(val: number): boolean { // 3. 只要是既是靠左又是靠右，那一定是左右固定，不需要考虑其他
-        val = this.Mask ^ val;
-        return (val & this.Left) === this.Left && (val & this.Right) === this.Right;
-    },
-
-    isHorizontalJustifyCenter(val: number): boolean { // 4. 既不靠左、也不靠右，但是宽度固定，就是居中
-        val = this.Mask ^ val;
-        return (val & this.Left) !== this.Left && (val & this.Right) !== this.Right && (val & this.Width) === this.Width;
-    },
-
-    isFlexWidth(val: number): boolean { // 5. 既不靠左、也不靠右、而且宽度还不固定，就是跟随缩放
-        val = this.Mask ^ val;
-        return (val & this.Left) !== this.Left && (val & this.Right) !== this.Right && (val & this.Width) !== this.Width;
-    },
-
-    // /**
-    //  * @deprecated 没有固定宽度这一说法，固定宽度是靠左、靠右、居中自带的
-    //  */
-    isFixedWidth(val: number): boolean {
-        val = this.Mask ^ val;
-        return (val & this.Width) === this.Width;
+    /**
+     * @description 靠左固定，为真的前提是：不靠右边、不居中
+     */
+    isFixedToLeft(val: number): boolean {
+        // val = this.Mask ^ val; // 不需要异或了，统一在导入的I/O中做了处理
+        return !!(val & this.Left) && !(val & this.Right) && !(val & this.HCenter);
     },
 
     /**
-     * @description 1. 设置为靠右固定
+     * @description 靠右固定，为真的前提是：不靠左边、不居中
+     */
+    isFixedToRight(val: number): boolean {
+        return !!(val & this.Right) && !(val & this.Left) && !(val & this.HCenter);
+    },
+
+    /**
+     * @description 靠左靠右固定，为真的前提是：靠左、靠右、不居中
+     */
+    isFixedLeftAndRight(val: number): boolean {
+        return !!(val & this.Left) && !!(val & this.Right) && !(val & this.HCenter);
+    },
+
+    /**
+     * @description 居中，为真的前提是：居中，不靠左、不靠右
+     */
+    isHorizontalJustifyCenter(val: number): boolean {
+        return !!(val & this.HCenter) && !(val & this.Left) && !(val & this.Right);
+    },
+
+    /**
+     * @description 水平跟随缩放
+     */
+    isHorizontalScale(val: number): boolean {
+        return !(val & this.Left) && !(val & this.Right) && !(val & this.HCenter);
+    },
+
+    /**
+     * @description 宽度不固定，为真的前提是：!Width
+     */
+    isFlexWidth(val: number): boolean {
+        return !(val & this.Width);
+    },
+
+    /**
+     * @description 宽度固定，为真的前提是：Width
+     */
+    isFixedWidth(val: number): boolean {
+        return !!(val & this.Width);
+    },
+
+    /**
+     * @description 1. 设置为靠左固定
      */
     setToFixedLeft(status: number) {
-        status = this.Mask ^ status;
-
         status = status & ~this.Right; // 有靠右则取消靠右
+        status = status & ~this.HCenter; // 有居中则取消居中
 
-        status = status | this.Left;
-        // status = status | this.Width; // 自带宽度固定
-
-        return this.Mask ^ status;
+        return status | this.Left;
     },
 
     /**
      * @description 2. 设置为靠右固定
      */
     setToFixedRight(status: number) {
-        status = this.Mask ^ status;
-
         status = status & ~this.Left;
+        status = status & ~this.HCenter;
 
-        status = status | this.Right;
-        // status = status | this.Width; // 自带宽度固定
-
-        return this.Mask ^ status;
+        return status | this.Right;
     },
 
     /**
      * @description 3. 设置为靠左靠右固定
      */
     setToFixedLeftAndRight(status: number) {
-        status = this.Mask ^ status;
+        status = status & ~this.Width;
+        status = status & ~this.HCenter;
 
-        status = status & ~this.Width; // 与宽度固定互斥
-
-        status = status | this.Right
-        status = status | this.Left
-
-        return this.Mask ^ status;
+        return status | this.Left | this.Right;
     },
 
     /**
      * @description 4. 设置为水平居中
      */
     setToHorizontalJustifyCenter(status: number) {
-        status = this.Mask ^ status;
-
         status = status & ~this.Left;
         status = status & ~this.Right;
 
-        status = status | this.Width; // 一定要有宽度固定，不然就成了跟随缩放了
-
-        return this.Mask ^ status;
+        return status | this.HCenter;
     },
 
     /**
      * @description 5. 设置为水平跟随缩放
      */
-    setToWidthFlex(status: number) { // 设置为水平方向上跟随缩放，即不左、不右、不定宽
-        status = this.Mask ^ status;
-
-        status = status & ~this.Width; // 水平上的值都不要有
-        status = status & ~this.Left;
-        status = status & ~this.Right;
-
-        return this.Mask ^ status;
+    setToScaleByWidth(status: number) {
+        return status & ~this.Left & ~this.HCenter & ~this.Right & ~this.Width;
     },
 
-    // /**
-    //  * @deprecated 固定宽度是和左、右、中同时存在并和左右互斥的，所以应该不能有固定宽度这个选项
-    //  */
+    /**
+     * @description 6. 设置为不固定宽度
+     */
+    setToWidthFlex(status: number) {
+        return status & ~this.Width;
+    },
+
+    /**
+     * @description 7. 设置为固定宽度
+     */
     setToWidthFixed(status: number) {
-        status = this.Mask ^ status;
-
-        if ((status & this.Left) === this.Left && (status & this.Right) === this.Right) {
-            status = status ^ ~this.Left;
-            status = status ^ ~this.Right;
+        if ((status & this.Left) && (status & this.Right)) { // 靠左靠右固定不可以设置固定宽度
+            return status;
         }
-        // if ((status & this.Right) === this.Right) {
-        //     status = status ^ this.Right;
-        // }
+        if (this.isHorizontalScale(status)) { // 水平跟随缩放不可以设置固定宽度
+            return status;
+        }
 
-            if ((status & this.Width) !== this.Width) {
-                status = status ^ this.Width;
-            }
-
-            if ((status & this.Width) === this.Width) {
-                status = status ^ ~this.Width;
-            }
-
-        return this.Mask ^ status;
+        return status | this.Width;
     },
 
     // Vertical
     isFixedToTop(val: number): boolean {
-        val = this.Mask ^ val;
-        return (val & this.Top) === this.Top && (val & this.Bottom) !== this.Bottom;
+        return !!(val & this.Top) && !(val & this.Bottom) && !(val & this.VCenter);
     },
 
     isFixedToBottom(val: number): boolean {
-        val = this.Mask ^ val;
         return (val & this.Top) !== this.Top && (val & this.Bottom) === this.Bottom;
     },
 
     isFixedTopAndBottom(val: number): boolean {
-        val = this.Mask ^ val;
-        return (val & this.Top) === this.Top && (val & this.Bottom) === this.Bottom;
+        return !!(val & this.Top) && !!(val & this.Bottom) && !(val & this.VCenter);
     },
 
     isVerticalJustifyCenter(val: number): boolean {
-        val = this.Mask ^ val;
-        return (val & this.Top) !== this.Top && (val & this.Bottom) !== this.Bottom && (val & this.Height) === this.Height
+        return !(val & this.Top) && !(val & this.Bottom) && !!(val & this.VCenter);
+    },
+
+    isVerticalScale(val: number): boolean {
+        return !(val & this.Top) && !(val & this.Bottom) && !(val & this.VCenter);
     },
 
     isFlexHeight(val: number) {
-        val = this.Mask ^ val
-        return (val & this.Top) !== this.Top && (val & this.Bottom) !== this.Bottom && (val & this.Height) !== this.Height
+        return !(val & this.Height);
     },
 
-    // /**
-    //  * 
-    //  * @deprecated
-    //  */
     isFixedHeight(val: number): boolean {
-        val = this.Mask ^ val;
-        return (val & this.Height) === this.Height;
+        return !!(val & this.Height);
     },
 
     setToFixedTop(status: number) {
-        status = this.Mask ^ status;
-
         status = status & ~this.Bottom;
+        status = status & ~this.VCenter;
 
-        status = status | this.Top;
-        status = status | this.Height;
-
-        return this.Mask ^ status;
+        return status | this.Top;
     },
 
     setToFixedBottom(status: number) {
-        status = this.Mask ^ status;
+        status = status & ~this.Top;
+        status = status & ~this.VCenter;
 
-        status = status & ~this.Top
-
-        status = status | this.Bottom
-        status = status | this.Height;
-
-        return this.Mask ^ status;
+        return status | this.Bottom;
     },
 
     setToFixedTopAndBottom(status: number) {
-        status = this.Mask ^ status;
+        status = status & ~this.Height;
+        status = status & ~this.VCenter;
 
-        status = status & ~this.Height
-
-        status = status | this.Top;
-        status = status | this.Bottom;
-
-        return this.Mask ^ status;
+        return status | this.Bottom | this.Top;
     },
 
     setToVerticalJustifyCenter(status: number) {
-        status = this.Mask ^ status;
-
         status = status & ~this.Top
         status = status & ~this.Bottom
 
-        status = status | this.Height
-
-        return this.Mask ^ status;
-    },
-
-    setToHeightFlex(status: number) {
-        status = this.Mask ^ status
-
-        status = status & ~this.Top
-        status = status & ~this.Bottom
-        status = status & ~this.Height
-
-        return this.Mask ^ status
+        return status | this.VCenter;
     },
 
     /**
-     * 
-     * @deprecated
-     */
-    setToHeightFixed(status: number) {
-        status = this.Mask ^ status;
-
-        if ((status & this.Top) === this.Top && (status & this.Bottom) === this.Bottom) {
-            status = status ^ this.Top;
-            status = status ^ this.Bottom;
-        }
-        // if ((status & this.Bottom) === this.Bottom) {
-        //     status = status ^ this.Bottom;
-        // }
-
-        if ((status & this.Height) !== this.Height) {
-            status = status ^ this.Height;
-        }
-
-        return this.Mask ^ status;
+    * @description 5. 设置为水平跟随缩放
+    */
+    setToScaleByHeight(status: number) {
+        return status & ~this.Top & ~this.VCenter & ~this.Bottom & ~this.Height;
     },
 
+    setToHeightFlex(status: number) {
+        return status & ~this.Height
+    },
+
+    setToHeightFixed(status: number) {
+        if ((status & this.Top) && (status & this.Bottom)) {
+            return status;
+        }
+        if (this.isVerticalScale(status)) {
+            return status;
+        }
+
+        return status | this.Height;
+    },
 }
 
 export const RECT_POINTS = (() => {
