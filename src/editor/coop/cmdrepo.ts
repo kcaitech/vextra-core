@@ -509,7 +509,18 @@ export class CmdRepo {
                         } else if (this.postingcmds.length > 0) {
                             break; // 因为要设置准确的baseVer，它的前面不能有要提交的cmd。也可以保证之前的删除cmd已经提交回来了
                         } else {
-                            this._alignDataVersion(cmd);
+                            this.repo.start("_alignDataVersion");
+                            const savetrap = this.repo.transactCtx.settrap;
+                            try {
+                                this.repo.transactCtx.settrap = false;
+                                this._alignDataVersion(cmd);
+                                this.repo.commit();
+                            } catch (e) {
+                                console.error(e);
+                                this.repo.rollback();
+                            } finally {
+                                this.repo.transactCtx.settrap = savetrap;
+                            }
                         }
                     }
                     this.postingcmds.push(cmd);
