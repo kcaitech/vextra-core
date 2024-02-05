@@ -86,6 +86,7 @@ export class CoopRepository {
     }
     setSelection(selection: ISave4Restore) {
         this.selection = selection;
+        this.__cmdrepo.setSelection(selection);
     }
 
     /**

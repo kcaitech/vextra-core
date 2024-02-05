@@ -252,7 +252,7 @@ export class TextRepoNode extends RepoNode {
         const local = this.localops.map(op => op.op as ArrayOp);
         if (selectionOp) local.push(selectionOp);
         const { lhs, rhs } = transform(remote, local);
-        if (selectionOp) selectionOp = local.pop() as ArrayOpSelection;
+        if (selectionOp) selectionOp = rhs.pop() as ArrayOpSelection;
         // replace local
         for (let i = 0; i < this.localops.length; i++) {
             const item = this.localops[i];
