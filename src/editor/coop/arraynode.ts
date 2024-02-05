@@ -188,14 +188,6 @@ export class CrdtArrayReopNode extends RepoNode {
             // check
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
             this.ops.push(op2);
-
-            // 将order更新到crdtindex
-            const record = op2.op as ArrayMoveOp;
-            if (record.to && target) {
-                const toIdx = arrLowerIndex(target, record.to);
-                const item = target[toIdx] as CrdtItem;
-                if (item) item.crdtidx.order = op2.op.order;
-            }
         }
     }
 

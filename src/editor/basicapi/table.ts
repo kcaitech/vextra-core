@@ -1,6 +1,6 @@
 import { Text } from "../../data/text";
 import { TableCell, TableCellType, TableShape } from "../../data/table";
-import { Color, CrdtIndex, CrdtNumber, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
+import { Color, CrdtNumber, Page, ShapeFrame, ShapeType, StrikethroughType, Style, TextAttr, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../../data/classes";
 import { crdtArrayInsert, crdtArrayRemove, crdtSetAttr, newText } from "./basic";
 import { deleteText, insertComplexText } from "./text";
 import { uuid } from "../../basic/uuid";
@@ -10,7 +10,7 @@ import { Op } from "../../coop/common/op";
 export function tableInitCell(table: TableShape, rowIdx: number, colIdx: number) {
     const cellId = table.rowHeights[rowIdx].id + "," + table.colWidths[colIdx].id;
     if (table.cells.has(cellId)) return;
-    const cell = new TableCell(new CrdtIndex([]),
+    const cell = new TableCell(new BasicArray(),
         cellId,
         "",
         ShapeType.TableCell,
@@ -55,7 +55,7 @@ export function tableModifyRowHeight(page: Page, table: TableShape, idx: number,
 }
 
 export function tableInsertRow(table: TableShape, idx: number, height: number) {
-    return crdtArrayInsert(table.rowHeights, idx, new CrdtNumber(uuid(), new CrdtIndex([]), height))
+    return crdtArrayInsert(table.rowHeights, idx, new CrdtNumber(uuid(), new BasicArray(), height))
 }
 
 export function tableRemoveRow(table: TableShape, idx: number) {
@@ -72,7 +72,7 @@ export function tableRemoveRow(table: TableShape, idx: number) {
 }
 
 export function tableInsertCol(table: TableShape, idx: number, width: number) {
-    return crdtArrayInsert(table.colWidths, idx, new CrdtNumber(uuid(), new CrdtIndex([]), width))
+    return crdtArrayInsert(table.colWidths, idx, new CrdtNumber(uuid(), new BasicArray(), width))
 }
 
 export function tableRemoveCol(table: TableShape, idx: number) {

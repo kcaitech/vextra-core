@@ -1,22 +1,23 @@
 import { Document, PageListItem } from "../../data/document";
 import { Page } from "../../data/page";
 import { Op } from "../../coop/common/op";
-import { CrdtIndex } from "../../data/crdt";
 import { crdtArrayInsert, crdtArrayMove, crdtArrayRemove, crdtSetAttr, crdtShapeInsert, crdtShapeMove, crdtShapeRemove } from "./basic";
 import { GroupShape, Shape, SymbolShape } from "../../data/shape";
 import { SymbolUnionShape } from "../../data/baseclasses";
+import { BasicArray } from "../../data/basic";
 
 export function pageInsert(document: Document, page: Page, index: number) {
     if (index < 0) return;
     const pagesList = document.pagesList;
     if (index >= pagesList.length) index = pagesList.length;
     const ops: Op[] = [];
-    const idx = new CrdtIndex();
+    const idx = new BasicArray<number>();
     const item = new PageListItem(idx, page.id, page.name);
 
     let op;
     op = crdtArrayInsert(pagesList, index, item);
-    if (op) ops.push(op);
+    if (Array.isArray(op)) ops.push(...op);
+    else if (op) ops.push(op);
 
     op = crdtSetAttr(document.pagesMgr, page.id, page);
     if (op) ops.push(op);
@@ -61,7 +62,7 @@ export function pageMove(document: Document, fromIdx: number, toIdx: number) {
 
 export function shapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
     const op = crdtShapeInsert(page, parent, shape, index);
-    page.onAddShape(op.data2 as Shape);
+    page.onAddShape(op[op.length - 1].data2 as Shape);
     needUpdateFrame.push({ shape, page });
     return op;
 }
@@ -105,8 +106,8 @@ export function shapeDelete(document: Document, page: Page, parent: GroupShape, 
  */
 export function shapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number, needUpdateFrame: { shape: Shape, page: Page }[]) {
     const op = crdtShapeMove(page, parent, index, parent2, index2);
-    if (op) {
-        needUpdateFrame.push({ shape: op.data2 as Shape, page })
+    if (op && op.length > 0) {
+        needUpdateFrame.push({ shape: op[op.length - 1].data2 as Shape, page })
         if (parent.id !== parent2.id && parent.childs.length > 0) {
             needUpdateFrame.push({ shape: parent.childs[0], page })
         }

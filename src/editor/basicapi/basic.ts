@@ -7,21 +7,31 @@ import { Para, ParaAttr, Span, SpanAttr, Text } from "../../data/text";
 import { Page } from "../../data/page";
 import { SNumber } from "../../coop/client/snumber";
 // 对象树操作
-export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord {
-    shape.crdtidx = crdtGetArrIndex(parent.childs, index);
+export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord[] {
+    const ops: TreeMoveOpRecord[] = [];
+    let crdtidx = crdtGetArrIndex(parent.childs, index);
+    if (!crdtidx.valid) {
+        const _ops = _crdtFixShapeIndex(page, parent, index + 1);
+        if (Array.isArray(_ops)) ops.push(..._ops);
+        else if (_ops) ops.push(_ops);
+        crdtidx = crdtGetArrIndex(parent.childs, index);
+        if (!crdtidx.valid) throw new Error();
+    }
+    shape.crdtidx = crdtidx.index;
     shape = parent.addChildAt(shape, index);
-    return {
+    ops.push({
         id: shape.id,
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
         order: SNumber.MAX_SAFE_INTEGER,
         data: JSON.stringify(shape, (k, v) => k.startsWith('__') ? undefined : v),
         from: undefined,
-        to: { id: parent.id, index: shape.crdtidx.index, order: SNumber.MAX_SAFE_INTEGER },
+        to: { id: parent.id, index: shape.crdtidx },
         origin: undefined,
         target: page,
         data2: shape
-    };
+    });
+    return ops;
 }
 export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): TreeMoveOpRecord | undefined {
     const shape = parent.removeChildAt(index);
@@ -31,7 +41,7 @@ export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): 
         path: page.getCrdtPath(), // shape 操作统一到page
         order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
-        from: { id: parent.id, index: shape.crdtidx.index, order: shape.crdtidx.order },
+        from: { id: parent.id, index: shape.crdtidx },
         to: undefined,
         origin: shape,
         target: page,
@@ -48,26 +58,65 @@ export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): 
  * @param needUpdateFrame 
  * @returns 
  */
-export function crdtShapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number): TreeMoveOpRecord | undefined {
+export function crdtShapeMove(page: Page, parent: GroupShape, index: number, parent2: GroupShape, index2: number): TreeMoveOpRecord[] | undefined {
     if (index === index2 && parent.id === parent2.id) return;
     const shape = parent.childs.splice(index, 1)[0]
     if (!shape) return;
-    const newidx = crdtGetArrIndex(parent2.childs, index2);
+    const ops: TreeMoveOpRecord[] = [];
+    let newidx = crdtGetArrIndex(parent2.childs, index2);
+    if (!newidx.valid) {
+        const _ops = _crdtFixShapeIndex(page, parent2, index2 + 1);
+        if (Array.isArray(_ops)) ops.push(..._ops);
+        else if (_ops) ops.push(_ops);
+        newidx = crdtGetArrIndex(parent.childs, index);
+        if (!newidx.valid) throw new Error();
+    }
     const oldidx = shape.crdtidx;
-    shape.crdtidx = newidx;
+    shape.crdtidx = newidx.index;
     parent2.childs.splice(index2, 0, shape);
-    return {
+    ops.push({
         id: shape.id,
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
         order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
-        from: { id: parent.id, index: oldidx.index, order: oldidx.order },
-        to: { id: parent2.id, index: newidx.index, order: SNumber.MAX_SAFE_INTEGER },
+        from: { id: parent.id, index: oldidx },
+        to: { id: parent2.id, index: newidx.index },
         origin: undefined,
         target: page,
         data2: shape
-    };
+    });
+    return ops;
+}
+
+function _crdtFixShapeIndex(page: Page, parent: GroupShape, index: number): TreeMoveOpRecord[] | undefined {
+    console.log("_crdtFixShapeIndex", parent, index)
+    const ops: TreeMoveOpRecord[] = [];
+    const shape = parent.childs[index];
+    if (!shape) return;
+    let newidx = crdtGetArrIndex(parent.childs, index);
+    if (!newidx.valid) {
+        const _ops = _crdtFixShapeIndex(page, parent, index + 1);
+        if (Array.isArray(_ops)) ops.push(..._ops);
+        else if (_ops) ops.push(_ops);
+        newidx = crdtGetArrIndex(parent.childs, index);
+        if (!newidx.valid) throw new Error();
+    }
+    const oldidx = shape.crdtidx;
+    shape.crdtidx = newidx.index;
+    ops.push({
+        id: shape.id,
+        type: OpType.CrdtTree,
+        path: page.getCrdtPath(), // shape 操作统一到page
+        order: SNumber.MAX_SAFE_INTEGER,
+        data: undefined,
+        from: { id: parent.id, index: oldidx },
+        to: { id: parent.id, index: newidx.index },
+        origin: undefined,
+        target: page,
+        data2: shape
+    });
+    return ops;
 }
 
 // 属性设置操作
@@ -125,14 +174,14 @@ export function otTextInsert(parent: Shape | Variable, text: Text | string, inde
             text: str as string,
             props,
         },
-        text)
+            text)
     } else {
         text.insertFormatText(str as Text, index);
         return new TextOpInsertRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, str.length, {
             type: 'complex',
             text: str as Text
         },
-        text)
+            text)
     }
 }
 export function otTextRemove(parent: Shape | Variable, text: Text | string, index: number, length: number): TextOpRemoveRecord | undefined {
@@ -180,24 +229,33 @@ export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string,
 }
 
 // 数据操作
-export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: CrdtItem): ArrayMoveOpRecord {
+export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: CrdtItem): ArrayMoveOpRecord[] {
     // check index
     if (index < 0 || index > arr.length) throw new Error("index out of range");
-    const newidx = crdtGetArrIndex(arr, index);
-    item.crdtidx = newidx;
+    const ops: ArrayMoveOpRecord[] = [];
+    let newidx = crdtGetArrIndex(arr, index);
+    if (!newidx.valid) {
+        const _ops = _crdtFixArrayIndex(arr, index + 1);
+        if (Array.isArray(_ops)) ops.push(..._ops);
+        else if (_ops) ops.push(_ops);
+        newidx = crdtGetArrIndex(arr, index);
+        if (!newidx.valid) throw new Error();
+    }
+    item.crdtidx = newidx.index;
     arr.splice(index, 0, item);
-    return {
+    ops.push({
         id: item.id,
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
         order: SNumber.MAX_SAFE_INTEGER,
         data: typeof item === 'object' ? JSON.stringify(item, (k, v) => k.startsWith('__') ? undefined : v) : item,
         from: undefined,
-        to: newidx,
+        to: newidx.index,
         origin: undefined,
         target: arr,
         data2: item
-    }
+    });
+    return ops;
 }
 
 export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): ArrayMoveOpRecord | undefined {
@@ -227,26 +285,66 @@ export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): Array
  * @param to 移动前的index
  * @returns 
  */
-export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: number): ArrayMoveOpRecord | undefined {
+export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: number): ArrayMoveOpRecord[] | undefined {
     if (from < 0 || from >= arr.length) throw new Error("index out of range");
     if (to < 0 || to > arr.length) throw new Error("index out of range");
     const item = arr[from];
     if (!item || Math.abs(from - to) <= 1) return;
+    const ops: ArrayMoveOpRecord[] = [];
     const oldidx = item.crdtidx;
-    const newidx = crdtGetArrIndex(arr, to);
+    let newidx = crdtGetArrIndex(arr, to);
+    if (!newidx.valid) {
+        const _ops = _crdtFixArrayIndex(arr, to + 1);
+        if (Array.isArray(_ops)) ops.push(..._ops);
+        else if (_ops) ops.push(_ops);
+        newidx = crdtGetArrIndex(arr, to);
+        if (!newidx.valid) throw new Error();
+    }
     arr.splice(from, 1);
     if (from < to) --to;
     arr.splice(to, 0, item);
-    return {
+    ops.push({
         id: item.id,
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
         order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: oldidx,
-        to: newidx,
+        to: newidx.index,
         origin: undefined,
         target: arr,
         data2: undefined
+    });
+    return ops;
+}
+
+function _crdtFixArrayIndex(arr: BasicArray<CrdtItem>, index: number): ArrayMoveOpRecord[] | undefined {
+    console.log("_crdtFixArrayIndex", arr, index)
+    if (index < 0 || index > arr.length) throw new Error("index out of range");
+    const item = arr[index];
+    if (!item) return;
+    const ops: ArrayMoveOpRecord[] = [];
+    let newidx = crdtGetArrIndex(arr, index);
+    if (!newidx.valid) {
+        const _ops = _crdtFixArrayIndex(arr, index + 1);
+        if (Array.isArray(_ops)) ops.push(..._ops);
+        else if (_ops) ops.push(_ops);
+        newidx = crdtGetArrIndex(arr, index);
+        if (!newidx.valid) throw new Error();
     }
+    const oldidx = item.crdtidx;
+    item.crdtidx = newidx.index;
+    ops.push({
+        id: item.id,
+        type: OpType.CrdtArr,
+        path: arr.getCrdtPath(),
+        order: SNumber.MAX_SAFE_INTEGER,
+        data: undefined,
+        from: oldidx,
+        to: newidx.index,
+        origin: undefined,
+        target: arr,
+        data2: undefined
+    });
+    return ops;
 }

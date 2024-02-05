@@ -172,12 +172,6 @@ export class CrdtShapeRepoNode extends RepoNode {
             // check
             if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
             this.ops.push(op2);
-            // 将order更新到crdtindex
-            const record = op2.op as TreeMoveOp;
-            if (record.to && target) {
-                const item = target.getShape(record.id);
-                if (item) item.crdtidx.order = op2.op.order;
-            }
         }
     }
     commit(ops: OpItem[]) {

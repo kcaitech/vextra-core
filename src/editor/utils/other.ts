@@ -21,10 +21,9 @@ import {
     TextShape,
     Variable,
     VariableType,
-    CrdtIndex
 } from "../../data/classes";
 import { Api } from "../coop/recordapi";
-import { BasicMap } from "../../data/basic";
+import { BasicArray, BasicMap } from "../../data/basic";
 import { newSymbolRefShape, newSymbolShape, newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
@@ -215,7 +214,7 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name
     
     const border_style = new BorderStyle(5, 5);
     const border = new Border(
-        new CrdtIndex([union.style.borders.length]),
+        ([union.style.borders.length] as BasicArray<number>),
         uuid(),
         true,
         types.FillType.SolidColor,

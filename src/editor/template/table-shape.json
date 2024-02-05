@@ -1,10 +1,7 @@
 {
     "typeId": "table-shape",
     "id": "7B35A2C4-87A6-7033-A030-87CDE15F803B",
-    "crdtidx": {
-        "index": [],
-        "order": 0
-    },
+    "crdtidx": [],
     "name": "Table",
     "type": "table",
     "boolOp": "none",
@@ -20,10 +17,7 @@
             {
                 "typeId": "border",
                 "id": "4f0e6459-9d3c-4e71-9f60-3f11b2db7d0e",
-                "crdtidx": {
-                    "index": [0],
-                    "order": 0
-                },
+                "crdtidx": [0],
                 "isEnabled": true,
                 "fillType": "solid-color",
                 "color": {

@@ -14,7 +14,8 @@ export function repalcePoints(shape: PathShape, points: CurvePoint[]) {
         const p = points[i];
         const copy = new CurvePoint(p.crdtidx, uuid(), p.x, p.y, CurveMode.Straight);
         const op = crdtArrayInsert(shape.points, i, copy);
-        if (op) ops.push(op);
+        if (Array.isArray(op)) ops.push(...op);
+        else if (op) ops.push(op);
     }
     return ops;
 }
