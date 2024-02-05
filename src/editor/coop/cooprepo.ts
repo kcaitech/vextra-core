@@ -76,6 +76,11 @@ export class CoopRepository {
         })
     }
 
+    __initingDoc: boolean = false;
+    setInitingDocument(init: boolean) {
+        this.__initingDoc = init;
+    }
+
     public setNet(net: ICoopNet) {
         this.__cmdrepo.setNet(net);
     }
@@ -158,7 +163,7 @@ export class CoopRepository {
         const cmd = this.__api.commit();
         if (!cmd) throw new Error("no cmd to commit")
         this.__repo.commit();
-        this.__cmdrepo.commit(cmd);
+        if (!this.__initingDoc) this.__cmdrepo.commit(cmd);
         if (this.selection) cmd.selectionupdater(this.selection, false, cmd);
     }
     rollback(from: string = "") {
