@@ -109,7 +109,6 @@ export function export_shape(shapes: Shape[]) {
             result.push(content);
         }
     }
-    console.log('export ctx:', ctx);
     return { shapes: result, ctx }
 }
 
