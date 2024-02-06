@@ -557,6 +557,7 @@ export class DocumentMeta extends Basic {
     pagesList: BasicArray<PageListItem >
     lastCmdId: string
     symbolregist: BasicMap<string, string>
+    freesymbolsVersionId?: string
     constructor(
         id: string,
         name: string,

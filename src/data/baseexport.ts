@@ -555,6 +555,7 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
             });
             return ret;
         })(),
+        freesymbolsVersionId: source.freesymbolsVersionId,
     }
     return ret
 }

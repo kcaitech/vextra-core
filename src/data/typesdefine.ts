@@ -378,6 +378,7 @@ export type DocumentMeta = {
     pagesList: PageListItem[]
     lastCmdId: string
     symbolregist: Map<string, string>
+    freesymbolsVersionId?: string
 }
 /* curve point */
 export type CurvePoint = {
