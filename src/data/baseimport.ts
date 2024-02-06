@@ -572,6 +572,7 @@ export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportCont
             return ret
         })()
     )
+    if (source.freesymbolsVersionId !== undefined) ret.freesymbolsVersionId = source.freesymbolsVersionId
     return ret
 }
 /* curve point */

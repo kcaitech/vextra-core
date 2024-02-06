@@ -124,7 +124,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     document.__freesymbolsLoader = async () => {
         if (hasLoadFreeSymbols) return undefined;
         ctx.curPage = "freesymbols";
-        await loader.loadFreeSymbols(ctx, versionId);
+        await loader.loadFreeSymbols(ctx, meta.freesymbolsVersionId);
         ctx.curPage = "";
         hasLoadFreeSymbols = true;
     }
