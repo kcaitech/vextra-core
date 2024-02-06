@@ -84,6 +84,11 @@ export class CoopRepository {
     public setNet(net: ICoopNet) {
         this.__cmdrepo.setNet(net);
     }
+
+    public receive(cmds: Cmd[]) {
+        this.__cmdrepo.receive(cmds);
+    }
+
     setSelection(selection: ISave4Restore) {
         this.selection = selection;
         this.__cmdrepo.setSelection(selection);
