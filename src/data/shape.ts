@@ -65,6 +65,12 @@ export class Shape extends Basic implements classes.Shape {
         else return [this.id];
     }
 
+    getOpTarget(path: string[]): any {
+        const id0 = path[0];
+        if (id0 === 'style') return this.style.getOpTarget(path.slice(1));
+        return super.getOpTarget(path);
+    }
+
     // shape
     typeId = 'shape'
     crdtidx: BasicArray<number>
@@ -580,15 +586,6 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             childs
         )
         this.variables = variables;
-    }
-
-    getOpTarget(path: string[]): any {
-        const id0 = path[0];
-        if (typeof id0 === 'string' && id0.startsWith('varid:')) {
-            const varid = id0.substring('varid:'.length);
-            return this.getVar(varid);
-        }
-        return super.getOpTarget(path);
     }
 
     private _createVar4Override(type: OverrideType, value: any) {

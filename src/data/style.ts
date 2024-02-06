@@ -191,6 +191,11 @@ export class Style extends Basic implements classes.Style {
         this.shadows = shadows
     }
 
+    getOpTarget(path: string[]) {
+        if (path[0] === 'contacts' && !this.contacts) this.contacts = new BasicArray<ContactRole>();
+        return super.getOpTarget(path);
+    }
+
     private findVar(varId: string, ret: Variable[]): boolean {
         return !!(this.__parent as any)?.findVar(varId, ret);
     }
