@@ -186,7 +186,7 @@ export function otTextRemove(parent: Shape | Variable, text: Text | string, inde
         parent.value = text;
     }
     const del = text.deleteText(index, length);
-    return del && new TextOpRemoveRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, length, del, text);
+    return del && new TextOpRemoveRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, del.length, del, text);
 }
 export function otTextSetAttr(parent: Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
     if (typeof text === "string") {
@@ -194,11 +194,13 @@ export function otTextSetAttr(parent: Shape | Variable, text: Text | string, ind
         text = newText(text);
         parent.value = text;
     }
+    length = Math.min(text.length, length);
     const ret = text.formatText(index, length, key, value);
     return new TextOpAttrRecord("", text.getCrdtPath(), SNumber.MAX_SAFE_INTEGER, index, length, { target: "span", key, value }, ret, text);
 }
 
 export function otTextSetParaAttr(parent: Shape | Variable, text: Text | string, index: number, length: number, key: string, value: any): TextOpAttrRecord {
+    length = Math.min(text.length, length);
     if (typeof text === "string") {
         if (!(parent instanceof Variable)) throw new Error("something wrong"); // 目前仅variable会是string
         text = newText(text);

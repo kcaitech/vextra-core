@@ -81,7 +81,7 @@ function apply(document: Document, text: Text, op: ArrayOp) {
             }
             break;
         case ArrayOpType.Selection:
-            break; // todo
+            break;
     }
 }
 
@@ -93,7 +93,6 @@ function revert(item: OpItem) {
     return revertOp(op);
 }
 function revertOp(op: ArrayOp) {
-    // todo text 需要import
     // if (item.op.type !== OpType.Array) {
     //     throw new Error("not array op");
     // }
