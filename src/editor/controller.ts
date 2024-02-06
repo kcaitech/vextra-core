@@ -22,10 +22,10 @@ import { ContactRoleType, CurveMode, FillType, ShapeType } from "../data/typesde
 import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape, getTransformByEnv, modifyTransformByEnv } from "./creator";
 
 import { Page } from "../data/page";
-import { CoopRepository } from "./command/cooprepo";
+import { CoopRepository } from "./coop/cooprepo";
 import { v4 } from "uuid";
 import { Document } from "../data/document";
-import { Api } from "./command/recordapi";
+import { Api } from "./coop/recordapi";
 import { Matrix } from "../basic/matrix";
 import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
@@ -39,6 +39,8 @@ import { get_state_name, shape4fill } from "./utils/symbol";
 import { __pre_curve, after_insert_point, pathEdit, contact_edit, pointsEdit, update_frame_by_points, before_modify_side } from "./utils/path";
 import { Color } from "../data/color";
 import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from "../dataview";
+import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
+import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
 
 interface PageXY { // 页面坐标系的xy
@@ -219,10 +221,15 @@ export class Controller {
     // 创建自定义frame的图形
     public asyncCreator(mousedownOnPage: PageXY): AsyncCreator {
         const anchor: PageXY = mousedownOnPage;
-        const api = this.__repo.start("createshape", {});
         let status: Status = Status.Pending;
         let newShape: Shape | undefined;
         let savepage: Page | undefined;
+        const api = this.__repo.start("createshape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = newShape ? [newShape.id] : [];
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
         const init = (page: Page, parent: GroupShape, type: ShapeType, name: string, frame: ShapeFrame): Shape | undefined => {
             try {
                 savepage = page;
@@ -237,7 +244,7 @@ export class Controller {
                 newShape = parent.childs[parent.childs.length - 1];
 
                 if (newShape.type === ShapeType.Artboard && parent instanceof Page) {
-                    api.addFillAt(page, newShape, new Fill(uuid(), true, FillType.SolidColor, new Color(0, 0, 0, 0)), 0);
+                    api.addFillAt(page, newShape, new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, new Color(0, 0, 0, 0)), 0);
                 }
 
                 translateTo(api, savepage, newShape, frame.x, frame.y);
@@ -408,7 +415,9 @@ export class Controller {
                 status = Status.Pending;
                 const origin: GroupShape = newShape.parent as GroupShape;
                 const { x, y } = newShape.frame2Root();
-                api.shapeMove(savepage, origin, origin.indexOfChild(newShape), targetParent, targetParent.childs.length);
+                let toIdx = targetParent.childs.length;
+                if (origin.id === targetParent.id) --toIdx;
+                api.shapeMove(savepage, origin, origin.indexOfChild(newShape), targetParent, toIdx);
                 translateTo(api, savepage, newShape, x, y);
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -465,7 +474,7 @@ export class Controller {
                         const idx = p.indexOfChild(s);
                         api.shapeMove(page, p, idx, target, 0);
                         if (p.childs.length <= 0) {
-                            deleteEmptyGroupShape(page, s, api);
+                            deleteEmptyGroupShape(this.__document, page, s, api);
                         }
                     }
                     const realXY = shapes.map((s) => s.frame2Root());
@@ -500,13 +509,13 @@ export class Controller {
                         if ((newShape as ContactShape).from) {
                             const shape1 = savepage?.getShape((newShape as ContactShape).from!.shapeId);
                             if (shape1) {
-                                api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.From, newShape.id), shape1.style.contacts?.length || 0);
+                                api.addContactAt(savepage!, shape1, new ContactRole(new BasicArray<number>(), v4(), ContactRoleType.From, newShape.id), shape1.style.contacts?.length || 0);
                             }
                         }
                         if ((newShape as ContactShape).to) {
                             const shape1 = savepage?.getShape((newShape as ContactShape).to!.shapeId);
                             if (shape1) {
-                                api.addContactAt(savepage!, shape1, new ContactRole(v4(), ContactRoleType.To, newShape.id), shape1.style.contacts?.length || 0);
+                                api.addContactAt(savepage!, shape1, new ContactRole(new BasicArray<number>(), v4(), ContactRoleType.To, newShape.id), shape1.style.contacts?.length || 0);
                             }
                         }
                     }
@@ -533,7 +542,7 @@ export class Controller {
         const shape = _shape instanceof ShapeView ? adapt2Shape(_shape) : _shape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("action", {});
+        const api = this.__repo.start("action");
         let status: Status = Status.Pending;
         let need_update_frame = false;
         const executeRotate = (deg: number) => {
@@ -630,7 +639,7 @@ export class Controller {
         const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("action", {});
+        const api = this.__repo.start("action");
         let status: Status = Status.Pending;
         const pMap: Map<string, Matrix> = new Map();
         const executeScale = (origin1: PageXY, origin2: PageXY, sx: number, sy: number) => {
@@ -714,7 +723,7 @@ export class Controller {
         let except_envs: ShapeView[] = [];
         let current_env_id: string = '';
 
-        const api = this.__repo.start("transfer", {});
+        const api = this.__repo.start("transfer");
         let status: Status = Status.Pending;
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             try {
@@ -728,7 +737,7 @@ export class Controller {
 
                 let index = targetParent.childs.length;
                 for (let i = 0, len = sortedShapes.length; i < len; i++) {
-                    __migrate(api, page, targetParent, sortedShapes[i], dlt, index, env_transform);
+                    __migrate(this.__document, api, page, targetParent, sortedShapes[i], dlt, index, env_transform);
                     index++;
                 }
 
@@ -759,7 +768,7 @@ export class Controller {
 
                     for (let i = 0, l = v.length; i < l; i++) {
                         const _v = v[i];
-                        __migrate(api, page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index, env_transform);
+                        __migrate(this.__document, api, page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index, env_transform);
                     }
                 });
                 this.__repo.transactCtx.fireNotify();
@@ -869,7 +878,7 @@ export class Controller {
         const shape: PathShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as PathShape : _shape as PathShape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("asyncPathEditor", {});
+        const api = this.__repo.start("asyncPathEditor");
         let status: Status = Status.Pending;
         const w = shape.frame.width, h = shape.frame.height;
         let m = new Matrix(shape.matrix2Root());
@@ -878,7 +887,7 @@ export class Controller {
         const addNode = (index: number) => {
             status === Status.Pending
             try {
-                const p = new CurvePoint(uuid(), 0, 0, CurveMode.Straight);
+                const p = new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight);
                 api.addPointAt(page, shape as PathShape, index, p);
                 after_insert_point(page, api, shape, index);
                 this.__repo.transactCtx.fireNotify();
@@ -936,7 +945,7 @@ export class Controller {
         const shape: ContactShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as ContactShape : _shape as ContactShape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("action", {});
+        const api = this.__repo.start("action");
         let status: Status = Status.Pending;
         const pre = () => {
             try {
@@ -1059,7 +1068,7 @@ export class Controller {
         const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("asyncOpacityEditor", {});
+        const api = this.__repo.start("asyncOpacityEditor");
         let status: Status = Status.Pending;
         const execute = (contextSettingOpacity: number) => {
             status = Status.Pending;
@@ -1093,7 +1102,7 @@ export class Controller {
         const curvePoint = shape.points[index];
         let mode = curvePoint.mode;
         let status: Status = Status.Pending;
-        const api = this.__repo.start("asyncPathHandle", {});
+        const api = this.__repo.start("asyncPathHandle");
         const pre = (index: number) => {
             try {
                 __pre_curve(page, api, shape, index);
@@ -1146,7 +1155,7 @@ export class Controller {
     public asyncGradientEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView, index: number, type: 'fills' | 'borders'): AsyncGradientEditor {
         const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
-        const api = this.__repo.start("asyncGradientEditor", {});
+        const api = this.__repo.start("asyncGradientEditor");
         let status: Status = Status.Pending;
         const execute_from = (from: { x: number, y: number }) => {
             status = Status.Pending;
@@ -1163,7 +1172,7 @@ export class Controller {
                     const new_gradient = importGradient(exportGradient(gradient));
                     new_gradient.from.x = from.x;
                     new_gradient.from.y = from.y;
-                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
+                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                     const s = shape4fill(api, page, shape);
                     f(page, s, index, new_gradient);
                 }
@@ -1189,7 +1198,7 @@ export class Controller {
                     const new_gradient = importGradient(exportGradient(gradient));
                     new_gradient.to.x = to.x;
                     new_gradient.to.y = to.y;
-                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
+                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                     const s = shape4fill(api, page, shape);
                     f(page, s, index, new_gradient);
                 }
@@ -1214,7 +1223,7 @@ export class Controller {
                     if (!gradient) return;
                     const new_gradient = importGradient(exportGradient(gradient));
                     new_gradient.elipseLength = length;
-                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
+                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                     const s = shape4fill(api, page, shape);
                     f(page, s, index, new_gradient);
                 }
@@ -1252,7 +1261,7 @@ export class Controller {
                             return -1;
                         }
                     })
-                    const f = type === 'fills' ? api.modifyFillGradient.bind(api) : api.modifyBorderGradient.bind(api);
+                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                     const s = shape4fill(api, page, shape);
                     f(page, s, index, new_gradient);
                 }
@@ -1275,12 +1284,12 @@ export class Controller {
     }
 }
 
-function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
+function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Api): boolean {
     const p = shape.parent as GroupShape;
     if (!p) return false;
-    api.shapeDelete(page, p, p.indexOfChild(shape))
+    api.shapeDelete(document, page, p, p.indexOfChild(shape))
     if (p.childs.length <= 0) {
-        deleteEmptyGroupShape(page, p, api)
+        deleteEmptyGroupShape(document, page, p, api)
     }
     return true;
 }
@@ -1404,7 +1413,7 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
     }
 }
 
-function __migrate(
+function __migrate(document: Document,
     api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
     transform: { ohflip: boolean, ovflip: boolean, pminverse: number[] }
 ) {
@@ -1472,7 +1481,7 @@ function __migrate(
     }
 
     translateTo(api, page, shape, x, y);
-    after_migrate(page, api, origin);
+    after_migrate(document, page, api, origin);
 }
 function __get_env_transform_for_migrate(target_env: GroupShape) {
     let ohflip = false;

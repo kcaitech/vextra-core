@@ -24,8 +24,8 @@ import {
     ShapeType,
     Variable, Document, TableShape, FillType
 } from "../data/classes";
-import { CoopRepository } from "./command/cooprepo";
-import { Api } from "./command/recordapi";
+import { CoopRepository } from "./coop/cooprepo";
+import { Api } from "./coop/recordapi";
 import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data/basic";
@@ -120,11 +120,11 @@ export class TextShapeEditor extends ShapeEditor {
             index = 0;
         }
         if (count <= 0) return 0;
-        const api = this.__repo.start("deleteText", {});
+        const api = this.__repo.start("deleteText");
         try {
             const shape = this.shape4edit(api);
             const deleted = api.deleteText(this.__page, shape, index, count);
-            count = deleted ? deleted.length : count;
+            // count = deleted ? deleted.length : count;
             if (count <= 0) {
                 this.__repo.rollback();
                 return 0;
@@ -155,7 +155,7 @@ export class TextShapeEditor extends ShapeEditor {
         attr = attr ?? this.__cachedSpanAttr;
         this.resetCachedSpanAttr();
         let count = text.length; // 插入字符数
-        const api = this.__repo.start("insertText", {});
+        const api = this.__repo.start("insertText");
         try {
             const shape = this.shape4edit(api);
             if (del > 0) api.deleteText(this.__page, shape, index, del);
@@ -175,7 +175,7 @@ export class TextShapeEditor extends ShapeEditor {
             if (paraInfo && paraInfo.index === 1 && paraInfo.para.text.at(0) === '*') {
                 const span0 = paraInfo.para.spans[0];
                 if (!span0 || !span0.placeholder) {
-                    const api = this.__repo.start("auto bullet", {});
+                    const api = this.__repo.start("auto bullet");
                     try {
                         const shape = this.shape4edit(api);
                         api.deleteText(this.__page, shape, index - 1, 2); // 删除*+空格
@@ -195,7 +195,7 @@ export class TextShapeEditor extends ShapeEditor {
                 const numInt = parseInt(numStr);
                 if (('' + numInt) === numStr) {
 
-                    const api = this.__repo.start("auto number", {});
+                    const api = this.__repo.start("auto number");
                     try {
                         const shape = this.shape4edit(api);
                         const paraStartIndex = index - paraInfo.index;
@@ -257,7 +257,7 @@ export class TextShapeEditor extends ShapeEditor {
         attr = attr ?? this.__cachedSpanAttr;
         this.resetCachedSpanAttr();
         const text = '\n';
-        const api = this.__repo.start("insertTextForNewLine", {});
+        const api = this.__repo.start("insertTextForNewLine");
         try {
             const shape = this.shape4edit(api);
             let count = text.length;
@@ -314,7 +314,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public insertFormatText(text: Text, index: number, del: number): boolean {
-        const api = this.__repo.start("insertText", {});
+        const api = this.__repo.start("insertText");
         try {
             const shape = this.shape4edit(api);
             if (del > 0) api.deleteText(this.__page, shape, index, del);
@@ -338,7 +338,7 @@ export class TextShapeEditor extends ShapeEditor {
         this.__composingIndex = index;
         this.__composingDel = del;
         this.__composingAttr = attr;
-        const api = this.__repo.start("composingInput", {});
+        const api = this.__repo.start("composingInput");
         const shape = this.shape4edit(api);
         try {
             if (del > 0) api.deleteText(this.__page, shape, index, del);
@@ -348,7 +348,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
     public composingInputUpdate(text: string): boolean {
         this.__repo.rollback("composingInput");
-        const api = this.__repo.start("composingInput", {});
+        const api = this.__repo.start("composingInput");
         try {
             const shape = this.shape4edit(api);
             if (this.__composingDel > 0) api.deleteText(this.__page, shape, this.__composingIndex, this.__composingDel);
@@ -379,7 +379,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.colorIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextColor", {});
+        const api = this.__repo.start("setTextColor");
         try {
             const shape = this.shape4edit(api);
             api.textModifyColor(this.__page, shape, index, len, color)
@@ -393,7 +393,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextColorMulti(shapes: Shape[], color: Color | undefined) {
-        const api = this.__repo.start("setTextColorMulti", {});
+        const api = this.__repo.start("setTextColorMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -419,7 +419,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.highlightIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextHighlightColor", {});
+        const api = this.__repo.start("setTextHighlightColor");
         try {
             const shape = this.shape4edit(api);
             api.textModifyHighlightColor(this.__page, shape, index, len, color)
@@ -433,7 +433,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextHighlightColorMulti(shapes: Shape[], color: Color | undefined) {
-        const api = this.__repo.start("setTextHighlightColorMulti", {});
+        const api = this.__repo.start("setTextHighlightColorMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -459,7 +459,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.fontNameIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextFontName", {});
+        const api = this.__repo.start("setTextFontName");
         try {
             const shape = this.shape4edit(api);
             api.textModifyFontName(this.__page, shape, index, len, fontName)
@@ -473,7 +473,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextFontNameMulti(shapes: Shape[], fontName: string) {
-        const api = this.__repo.start("setTextFontNameMulti", {});
+        const api = this.__repo.start("setTextFontNameMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -505,7 +505,7 @@ export class TextShapeEditor extends ShapeEditor {
             return;
         }
 
-        const api = this.__repo.start("setTextFontSize", {});
+        const api = this.__repo.start("setTextFontSize");
         try {
             const shape = this.shape4edit(api);
             api.textModifyFontSize(this.__page, shape, index, len, fontSize)
@@ -520,7 +520,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextFontSizeMulti(shapes: Shape[], fontSize: number) {
-        const api = this.__repo.start("setTextFontSizeMulti", {});
+        const api = this.__repo.start("setTextFontSizeMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -541,7 +541,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
     // 对象属性
     public setTextBehaviour(textBehaviour: TextBehaviour) {
-        const api = this.__repo.start("setTextBehaviour", {});
+        const api = this.__repo.start("setTextBehaviour");
         try {
             const shape = this.shape4edit(api);
             const text = shape instanceof Shape ? shape.text : shape.value as Text;
@@ -556,7 +556,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextBehaviourMulti(shapes: Shape[], textBehaviour: TextBehaviour) {
-        const api = this.__repo.start("setTextBehaviourMulti", {});
+        const api = this.__repo.start("setTextBehaviourMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -578,7 +578,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
     // 对象属性
     public setTextVerAlign(verAlign: TextVerAlign) {
-        const api = this.__repo.start("setTextVerAlign", {});
+        const api = this.__repo.start("setTextVerAlign");
         try {
             const shape = this.shape4edit(api);
             api.shapeModifyTextVerAlign(this.__page, this.shape, verAlign)
@@ -591,7 +591,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextVerAlignMulti(shapes: Shape[], verAlign: TextVerAlign) {
-        const api = this.__repo.start("setTextVerAlignMulti", {});
+        const api = this.__repo.start("setTextVerAlignMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -610,7 +610,7 @@ export class TextShapeEditor extends ShapeEditor {
 
     // 段属性
     public setTextHorAlign(horAlign: TextHorAlign, index: number, len: number) {
-        const api = this.__repo.start("setTextHorAlign", {});
+        const api = this.__repo.start("setTextHorAlign");
         try {
             const shape = this.shape4edit(api);
             api.textModifyHorAlign(this.__page, shape, horAlign, index, len)
@@ -624,7 +624,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextHorAlignMulti(shapes: Shape[], horAlign: TextHorAlign) {
-        const api = this.__repo.start("setTextHorAlignMulti", {});
+        const api = this.__repo.start("setTextHorAlignMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -645,7 +645,7 @@ export class TextShapeEditor extends ShapeEditor {
 
     // 行高 段属性
     public setMinLineHeight(minLineHeight: number, index: number, len: number) {
-        const api = this.__repo.start("setMinLineHeight", {});
+        const api = this.__repo.start("setMinLineHeight");
         try {
             const shape = this.shape4edit(api);
             api.textModifyMinLineHeight(this.__page, shape, minLineHeight, index, len)
@@ -661,7 +661,7 @@ export class TextShapeEditor extends ShapeEditor {
 
     // 行高 段属性
     public setMaxLineHeight(maxLineHeight: number, index: number, len: number) {
-        const api = this.__repo.start("setMaxLineHeight", {});
+        const api = this.__repo.start("setMaxLineHeight");
         try {
             const shape = this.shape4edit(api);
             api.textModifyMaxLineHeight(this.__page, shape, maxLineHeight, index, len)
@@ -675,7 +675,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setLineHeight(lineHeight: number, index: number, len: number) {
-        const api = this.__repo.start("setLineHeight", {});
+        const api = this.__repo.start("setLineHeight");
         try {
             const shape = this.shape4edit(api);
             api.textModifyMinLineHeight(this.__page, shape, lineHeight, index, len)
@@ -690,7 +690,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setLineHeightMulit(shapes: Shape[], lineHeight: number) {
-        const api = this.__repo.start("setLineHeightMulit", {});
+        const api = this.__repo.start("setLineHeightMulit");
         try {
             for (let i = 0; i < shapes.length; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -719,7 +719,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.kerningIsSet = true;
             return;
         }
-        const api = this.__repo.start("setCharSpace", {});
+        const api = this.__repo.start("setCharSpace");
         try {
             const shape = this.shape4edit(api);
             api.textModifyKerning(this.__page, shape, kerning, index, len)
@@ -733,7 +733,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setCharSpacingMulit(shapes: Shape[], kerning: number) {
-        const api = this.__repo.start("setCharSpacingMulit", {});
+        const api = this.__repo.start("setCharSpacingMulit");
         try {
             for (let i = 0; i < shapes.length; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -754,7 +754,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
     // 段间距 段属性
     public setParaSpacing(paraSpacing: number, index: number, len: number) {
-        const api = this.__repo.start("setParaSpacing", {});
+        const api = this.__repo.start("setParaSpacing");
         try {
             const shape = this.shape4edit(api);
             api.textModifyParaSpacing(this.__page, shape, paraSpacing, index, len)
@@ -768,7 +768,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setParaSpacingMulit(shapes: Shape[], paraSpacing: number) {
-        const api = this.__repo.start("setParaSpacingMulit", {});
+        const api = this.__repo.start("setParaSpacingMulit");
         try {
             for (let i = 0; i < shapes.length; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -795,7 +795,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.underlineIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextUnderline", {});
+        const api = this.__repo.start("setTextUnderline");
         try {
             const shape = this.shape4edit(api);
             api.textModifyUnderline(this.__page, shape, underline ? UnderlineType.Single : undefined, index, len)
@@ -812,7 +812,7 @@ export class TextShapeEditor extends ShapeEditor {
      * @description 多选文字对象时，给每个文字对象的全部文字设置下划线
      */
     public setTextUnderlineMulti(shapes: Shape[], underline: boolean) {
-        const api = this.__repo.start("setTextUnderlineMulti", {});
+        const api = this.__repo.start("setTextUnderlineMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -839,7 +839,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.strikethroughIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextStrikethrough", {});
+        const api = this.__repo.start("setTextStrikethrough");
         try {
             const shape = this.shape4edit(api);
             api.textModifyStrikethrough(this.__page, shape, strikethrough ? StrikethroughType.Single : undefined, index, len)
@@ -853,7 +853,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextStrikethroughMulti(shapes: Shape[], strikethrough: boolean) {
-        const api = this.__repo.start("setTextStrikethroughMulti", {});
+        const api = this.__repo.start("setTextStrikethroughMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -880,7 +880,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.fillTypeIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextFillType", {});
+        const api = this.__repo.start("setTextFillType");
         try {
             const shape = this.shape4edit(api);
             api.textModifyFillType(this.__page, shape, fillType, index, len)
@@ -893,7 +893,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextFillTypeMulti(shapes: Shape[], fillType: FillType) {
-        const api = this.__repo.start("setTextFillTypeMulti", {});
+        const api = this.__repo.start("setTextFillTypeMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -920,7 +920,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.boldIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextBold", {});
+        const api = this.__repo.start("setTextBold");
         try {
             const shape = this.shape4edit(api);
             api.textModifyBold(this.__page, shape, bold, index, len)
@@ -933,7 +933,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public template(shapes: Shape[]) {
-        const api = this.__repo.start("setTextsBold", {});
+        const api = this.__repo.start("setTextsBold");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -953,7 +953,7 @@ export class TextShapeEditor extends ShapeEditor {
      * @description 多选文字对象时，给每个文字对象的全部文字设置粗体
      */
     public setTextBoldMulti(shapes: Shape[], bold: boolean) {
-        const api = this.__repo.start("setTextBoldMulti", {});
+        const api = this.__repo.start("setTextBoldMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -980,7 +980,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.italicIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextItalic", {});
+        const api = this.__repo.start("setTextItalic");
         try {
             const shape = this.shape4edit(api);
             api.textModifyItalic(this.__page, shape, italic, index, len)
@@ -996,7 +996,7 @@ export class TextShapeEditor extends ShapeEditor {
      * @description 多选文字对象时，给每个文字对象的全部文字设置斜体
      */
     public setTextItalicMulti(shapes: Shape[], italic: boolean) {
-        const api = this.__repo.start("setTextItalicMulti", {});
+        const api = this.__repo.start("setTextItalicMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -1018,7 +1018,7 @@ export class TextShapeEditor extends ShapeEditor {
     // 需要个占位符
 
     public setTextBulletNumbers(type: BulletNumbersType, index: number, len: number) {
-        const api = this.__repo.start("setTextBulletNumbers", {});
+        const api = this.__repo.start("setTextBulletNumbers");
         try {
             const shape = this.shape4edit(api);
             api.textModifyBulletNumbers(this.__page, shape, type, index, len);
@@ -1032,7 +1032,7 @@ export class TextShapeEditor extends ShapeEditor {
         return false;
     }
     public setTextBulletNumbersMulti(shapes: Shape[], type: BulletNumbersType) {
-        const api = this.__repo.start("setTextBulletNumbersMulti", {});
+        const api = this.__repo.start("setTextBulletNumbersMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -1054,7 +1054,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextBulletNumbersStart(start: number, index: number, len: number) {
-        const api = this.__repo.start("setTextBulletNumbersStart", {});
+        const api = this.__repo.start("setTextBulletNumbersStart");
         try {
             const shape = this.shape4edit(api);
             api.textModifyBulletNumbersStart(this.__page, shape, start, index, len);
@@ -1069,7 +1069,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextBulletNumbersInherit(inherit: boolean, index: number, len: number) {
-        const api = this.__repo.start("setTextBulletNumbersInherit", {});
+        const api = this.__repo.start("setTextBulletNumbersInherit");
         try {
             const shape = this.shape4edit(api);
             api.textModifyBulletNumbersInherit(this.__page, shape, inherit, index, len);
@@ -1090,7 +1090,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__cachedSpanAttr.transformIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextTransform", {});
+        const api = this.__repo.start("setTextTransform");
         try {
             const shape = this.shape4edit(api);
             api.textModifyTransform(this.__page, shape, transform, index, len);
@@ -1105,7 +1105,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextTransformMulti(shapes: Shape[], type: TextTransformType | undefined) {
-        const api = this.__repo.start("setTextTransformMulti", {});
+        const api = this.__repo.start("setTextTransformMulti");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape: TextShape = shapes[i] as TextShape;
@@ -1127,7 +1127,7 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public offsetParaIndent(offset: number, index: number, len: number) {
-        const api = this.__repo.start("offsetParaIndent", {});
+        const api = this.__repo.start("offsetParaIndent");
         try {
             const shape = this.shape4edit(api);
             const text = (shape instanceof Shape) ? shape.text : shape.value as Text;

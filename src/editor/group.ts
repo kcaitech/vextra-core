@@ -6,7 +6,8 @@
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
 import { GroupShape, Shape } from "../data/shape";
-import { Api } from "./command/recordapi";
+import { Api } from "./coop/recordapi";
+import { Document } from "../data/document"
 
 export function expandBounds(bounds: { left: number, top: number, right: number, bottom: number }, x: number, y: number) {
     if (x < bounds.left) bounds.left = x;
@@ -15,17 +16,17 @@ export function expandBounds(bounds: { left: number, top: number, right: number,
     else if (y > bounds.bottom) bounds.bottom = y;
 }
 
-export function deleteEmptyGroupShape(page: Page, shape: Shape, api: Api): boolean {
+export function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Api): boolean {
     const p = shape.parent as GroupShape;
     if (!p) return false;
-    api.shapeDelete(page, p, p.indexOfChild(shape))
+    api.shapeDelete(document, page, p, p.indexOfChild(shape))
     if (p.childs.length <= 0) {
-        deleteEmptyGroupShape(page, p, api)
+        deleteEmptyGroupShape(document, page, p, api)
     }
     return true;
 }
 
-export function group(page: Page, shapes: Shape[], gshape: GroupShape, savep: GroupShape, saveidx: number, api: Api): GroupShape {
+export function group(document: Document, page: Page, shapes: Shape[], gshape: GroupShape, savep: GroupShape, saveidx: number, api: Api): GroupShape {
     // 计算frame
     //   计算每个shape的绝对坐标
     const boundsArr = shapes.map((s) => {
@@ -67,7 +68,7 @@ export function group(page: Page, shapes: Shape[], gshape: GroupShape, savep: Gr
         api.shapeMove(page, p, idx, gshape, 0); // 层级低的放前面
 
         if (p.childs.length <= 0) {
-            deleteEmptyGroupShape(page, p, api)
+            deleteEmptyGroupShape(document, page, p, api)
         }
     }
 
@@ -85,7 +86,7 @@ export function group(page: Page, shapes: Shape[], gshape: GroupShape, savep: Gr
     }
     return gshape;
 }
-export function ungroup(page: Page, shape: GroupShape, api: Api): Shape[] {
+export function ungroup(document: Document, page: Page, shape: GroupShape, api: Api): Shape[] {
     const savep = shape.parent as GroupShape;
     let idx = savep.indexOfChild(shape);
     const saveidx = idx;
@@ -120,6 +121,6 @@ export function ungroup(page: Page, shape: GroupShape, api: Api): Shape[] {
         childs.push(c);
     }
 
-    api.shapeDelete(page, savep, saveidx + childs.length);
+    api.shapeDelete(document, page, savep, saveidx + childs.length);
     return childs;
 }

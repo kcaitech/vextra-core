@@ -1,12 +1,12 @@
 import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
-import { CoopRepository } from "./command/cooprepo";
-import { BorderPosition, BorderStyle, FillType, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType } from "../data/baseclasses";
+import { CoopRepository } from "./coop/cooprepo";
+import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
 import { Border, Fill } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
-import { Api } from "./command/recordapi";
+import { Api } from "./coop/recordapi";
 import { importBorder, importFill } from "../data/baseimport";
 import { Document, Color } from "../data/classes";
 import { newText } from "../data/textutils";
@@ -31,7 +31,7 @@ export class TableEditor extends ShapeEditor {
         const layout = this.shape.getLayout();
         const cellLayout = layout.grid.get(rowIdx, colIdx);
         const cell = this.shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
-        const api = this.__repo.start("horSplitCell", {});
+        const api = this.__repo.start("horSplitCell");
         try {
 
             if (cell && (cell.rowSpan ?? 1) > 1) {
@@ -42,13 +42,13 @@ export class TableEditor extends ShapeEditor {
                     let total = 0;
                     const rowStart = cellLayout.index.row;
                     for (let i = rowStart, end = rowStart + rowSpan; i < end; ++i) {
-                        total += this.shape.rowHeights[i];
+                        total += this.shape.rowHeights[i].value;
                     }
                     total /= 2;
                     let topSpan = 0;
                     let cur = 0;
                     for (let i = rowStart, end = rowStart + rowSpan; i < end; ++i) {
-                        cur += this.shape.rowHeights[i];
+                        cur += this.shape.rowHeights[i].value;
                         if (cur >= total) {
                             topSpan = i - rowStart + 1;
                             break;
@@ -79,9 +79,9 @@ export class TableEditor extends ShapeEditor {
                 // 将当前行可见的单元格，rowSpan+1
                 // 当前单元格rowSpan-1
 
-                const weight = this.shape.rowHeights[rowIdx] / 2;
+                const weight = this.shape.rowHeights[rowIdx].value / 2;
 
-                api.tableInsertRow(this.__page, this.shape, rowIdx + 1, weight, []);
+                api.tableInsertRow(this.__page, this.shape, rowIdx + 1, weight);
                 api.tableModifyRowHeight(this.__page, this.shape, rowIdx, weight);
                 const cells = this.shape.getVisibleCells(rowIdx, rowIdx, 0, this.shape.colWidths.length);
                 cells.forEach((c) => {
@@ -103,7 +103,7 @@ export class TableEditor extends ShapeEditor {
         const layout = this.shape.getLayout();
         const cellLayout = layout.grid.get(rowIdx, colIdx);
         const cell = this.shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
-        const api = this.__repo.start("verSplitCell", {});
+        const api = this.__repo.start("verSplitCell");
         try {
             if (cell && (cell.colSpan ?? 1) > 1) {
                 // const cell = cellLayout.cell;
@@ -113,13 +113,13 @@ export class TableEditor extends ShapeEditor {
                     let total = 0;
                     const colStart = cellLayout.index.col;
                     for (let i = colStart, end = colStart + colSpan; i < end; ++i) {
-                        total += this.shape.colWidths[i];
+                        total += this.shape.colWidths[i].value;
                     }
                     total /= 2;
                     let leftSpan = 0;
                     let cur = 0;
                     for (let i = colStart, end = colStart + colSpan; i < end; ++i) {
-                        cur += this.shape.rowHeights[i];
+                        cur += this.shape.rowHeights[i].value;
                         if (cur >= total) {
                             leftSpan = i - colStart + 1;
                             break;
@@ -149,9 +149,9 @@ export class TableEditor extends ShapeEditor {
                 // 当前列后插入列
                 // 将当前列可见的单元格，colSpan+1
                 // 当前单元格colSpan-1
-                const weight = this.shape.colWidths[colIdx] / 2;
+                const weight = this.shape.colWidths[colIdx].value / 2;
 
-                api.tableInsertCol(this.__page, this.shape, colIdx + 1, weight, []);
+                api.tableInsertCol(this.__page, this.shape, colIdx + 1, weight);
                 api.tableModifyColWidth(this.__page, this.shape, colIdx, weight);
                 const cells = this.shape.getVisibleCells(0, this.shape.rowCount, colIdx, colIdx);
                 cells.forEach((c) => {
@@ -171,7 +171,7 @@ export class TableEditor extends ShapeEditor {
 
     // 合并单元格
     mergeCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
-        const api = this.__repo.start('mergeCells', {});
+        const api = this.__repo.start('mergeCells');
         try {
             const cells = this.shape.getCells(rowStart, rowStart, colStart, colStart);
             const cellsVisible = this.shape.getVisibleCells(rowStart, rowEnd, colStart, colEnd);
@@ -238,7 +238,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     setCellContentImage(rowIdx: number, colIdx: number, ref: string) {
-        const api = this.__repo.start('setCellContentImage', {});
+        const api = this.__repo.start('setCellContentImage');
         try {
             api.tableSetCellContentType(this.__page, this.shape, rowIdx, colIdx, TableCellType.Image);
             api.tableSetCellContentImage(this.__page, this.shape, rowIdx, colIdx, ref);
@@ -255,7 +255,7 @@ export class TableEditor extends ShapeEditor {
         _text.setTextBehaviour(TextBehaviour.Fixed);
         _text.setPadding(5, 0, 3, 0);
         if (text && text.length > 0) _text.insertText(text, 0);
-        const api = this.__repo.start('setCellContentText', {});
+        const api = this.__repo.start('setCellContentText');
         try {
             api.tableSetCellContentType(this.__page, this.shape, rowIdx, colIdx, TableCellType.Text);
             api.tableSetCellContentText(this.__page, this.shape, rowIdx, colIdx, _text);
@@ -268,7 +268,7 @@ export class TableEditor extends ShapeEditor {
     }
     // 批量初始化单元格
     initCells(rs: number, re: number, cs: number, ce: number) {
-        const api = this.__repo.start('initCells', {});
+        const api = this.__repo.start('initCells');
         try {
             this._initCells(rs, re, cs, ce, api);
             this.__repo.commit();
@@ -295,7 +295,7 @@ export class TableEditor extends ShapeEditor {
     }
     // 重置单元格内容
     resetCells(rs: number, re: number, cs: number, ce: number) {
-        const api = this.__repo.start('resetCells', {});
+        const api = this.__repo.start('resetCells');
         try {
             this._resetCells(rs, re, cs, ce, api);
             this.__repo.commit();
@@ -305,7 +305,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     resetTextCells(rs: number, re: number, cs: number, ce: number) {
-        const api = this.__repo.start('resetCells', {});
+        const api = this.__repo.start('resetCells');
         try {
             this._resetTextCells(rs, re, cs, ce, api);
             this.__repo.commit();
@@ -347,11 +347,11 @@ export class TableEditor extends ShapeEditor {
 
     // 调整列宽
     setColWidth(idx: number, width: number) {
-        const total = this.shape.colWidths.reduce((pre, w) => pre + w, 0);
-        const curWidth = this.shape.colWidths[idx] / total * this.shape.frame.width;
+        const total = this.shape.colWidths.reduce((pre, w) => pre + w.value, 0);
+        const curWidth = this.shape.colWidths[idx].value / total * this.shape.frame.width;
         if (width === curWidth) return;
-        const weight = this.shape.colWidths[idx] * width / curWidth;
-        const api = this.__repo.start('setColWidth', {});
+        const weight = this.shape.colWidths[idx].value * width / curWidth;
+        const api = this.__repo.start('setColWidth');
         try {
             api.tableModifyColWidth(this.__page, this.shape, idx, weight);
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width - curWidth + width, this.shape.frame.height);
@@ -369,7 +369,7 @@ export class TableEditor extends ShapeEditor {
      * @param width table坐标系空间宽度
      */
     adjColWidth(fromIdx: number, toIdx: number, width: number) {
-        const api = this.__repo.start('adjColWidth', {});
+        const api = this.__repo.start('adjColWidth');
         try {
             adjColum(this.__page, this.shape, fromIdx, toIdx, width, api);
             this.__repo.commit();
@@ -382,10 +382,10 @@ export class TableEditor extends ShapeEditor {
     // 调整行高
     setRowHeight(idx: number, height: number) {
         const total = this.shape.heightTotalWeights;
-        const curHeight = this.shape.rowHeights[idx] / total * this.shape.frame.height;
+        const curHeight = this.shape.rowHeights[idx].value / total * this.shape.frame.height;
         if (height === curHeight) return;
-        const weight = this.shape.rowHeights[idx] * height / curHeight;
-        const api = this.__repo.start('setRowHeight', {});
+        const weight = this.shape.rowHeights[idx].value * height / curHeight;
+        const api = this.__repo.start('setRowHeight');
         try {
             api.tableModifyRowHeight(this.__page, this.shape, idx, weight);
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height - curHeight + height);
@@ -403,7 +403,7 @@ export class TableEditor extends ShapeEditor {
      * @param height table坐标系空间长度
      */
     adjRowHeight(fromIdx: number, toIdx: number, height: number) {
-        const api = this.__repo.start('adjColWidth', {});
+        const api = this.__repo.start('adjColWidth');
         try {
             adjRow(this.__page, this.shape, fromIdx, toIdx, height, api);
             this.__repo.commit();
@@ -413,12 +413,12 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    insertRow(idx: number, height: number, data?: TableCell[]) {
+    insertRow(idx: number, height: number) {
         const total = this.shape.heightTotalWeights;
         const weight = height / this.shape.frame.height * total;
-        const api = this.__repo.start('insertRow', {});
+        const api = this.__repo.start('insertRow');
         try {
-            api.tableInsertRow(this.__page, this.shape, idx, weight, data ?? []);
+            api.tableInsertRow(this.__page, this.shape, idx, weight);
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height + height);
             this.__repo.commit();
         } catch (e) {
@@ -427,14 +427,13 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    insertMultiRow(idx: number, height: number, count: number, data?: TableCell[][]) {
+    insertMultiRow(idx: number, height: number, count: number) {
         const total = this.shape.heightTotalWeights;
         const weight = height / this.shape.frame.height * total;
-        const api = this.__repo.start('insertMultiRow', {});
+        const api = this.__repo.start('insertMultiRow');
         try {
             for (let i = 0; i < count; ++i) {
-                const d = data && data[i]
-                api.tableInsertRow(this.__page, this.shape, idx + i, weight, d ?? []);
+                api.tableInsertRow(this.__page, this.shape, idx + i, weight);
             }
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width, this.shape.frame.height + height * count);
             this.__repo.commit();
@@ -453,11 +452,11 @@ export class TableEditor extends ShapeEditor {
         }
 
         const total = this.shape.heightTotalWeights;
-        const api = this.__repo.start('removeRow', {});
+        const api = this.__repo.start('removeRow');
         try {
             let removeWeight = 0;
             for (let i = 0; i < count; ++i) {
-                removeWeight += this.shape.rowHeights[idx];
+                removeWeight += this.shape.rowHeights[idx].value;
                 api.tableRemoveRow(this.__page, this.shape, idx);
             }
             // modify rowSpan
@@ -482,12 +481,12 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    insertCol(idx: number, width: number, data?: any[]) {
+    insertCol(idx: number, width: number) {
         const total = this.shape.widthTotalWeights;
         const weight = width / this.shape.frame.width * total;
-        const api = this.__repo.start('insertCol', {});
+        const api = this.__repo.start('insertCol');
         try {
-            api.tableInsertCol(this.__page, this.shape, idx, weight, data ?? []);
+            api.tableInsertCol(this.__page, this.shape, idx, weight);
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width + width, this.shape.frame.height);
             this.__repo.commit();
         } catch (e) {
@@ -496,14 +495,13 @@ export class TableEditor extends ShapeEditor {
         }
     }
 
-    insertMultiCol(idx: number, width: number, count: number, data?: TableCell[][]) {
+    insertMultiCol(idx: number, width: number, count: number) {
         const total = this.shape.widthTotalWeights;
         const weight = width / this.shape.frame.width * total;
-        const api = this.__repo.start('insertMultiCol', {});
+        const api = this.__repo.start('insertMultiCol');
         try {
             for (let i = 0; i < count; ++i) {
-                const d = data && data[i]
-                api.tableInsertCol(this.__page, this.shape, idx + i, weight, d ?? []);
+                api.tableInsertCol(this.__page, this.shape, idx + i, weight);
             }
             api.shapeModifyWH(this.__page, this.shape, this.shape.frame.width + width * count, this.shape.frame.height);
             this.__repo.commit();
@@ -523,11 +521,11 @@ export class TableEditor extends ShapeEditor {
         }
 
         const total = this.shape.widthTotalWeights;
-        const api = this.__repo.start('removeCol', {});
+        const api = this.__repo.start('removeCol');
         try {
             let removeWeight = 0;
             for (let i = 0; i < count; ++i) {
-                removeWeight += this.shape.colWidths[idx];
+                removeWeight += this.shape.colWidths[idx].value;
                 api.tableRemoveCol(this.__page, this.shape, idx);
             }
             // modify colSpan
@@ -569,11 +567,11 @@ export class TableEditor extends ShapeEditor {
         const colTotal = this.shape.widthTotalWeights;
         const rowTotal = this.shape.heightTotalWeights;
 
-        const api = this.__repo.start('removeRowAndCol', {});
+        const api = this.__repo.start('removeRowAndCol');
         try {
             let removeColWeight = 0;
             for (let i = 0; i < colCount; ++i) {
-                removeColWeight += this.shape.colWidths[colStart];
+                removeColWeight += this.shape.colWidths[colStart].value;
                 api.tableRemoveCol(this.__page, this.shape, colStart);
             }
             const removeWidth = removeColWeight / colTotal * this.shape.frame.width;
@@ -594,7 +592,7 @@ export class TableEditor extends ShapeEditor {
 
             let removeRowWeight = 0;
             for (let i = 0; i < rowCount; ++i) {
-                removeRowWeight += this.shape.rowHeights[rowStart];
+                removeRowWeight += this.shape.rowHeights[rowStart].value;
                 api.tableRemoveRow(this.__page, this.shape, rowStart);
             }
             const removeHeight = removeRowWeight / rowTotal * this.shape.frame.height;
@@ -627,7 +625,7 @@ export class TableEditor extends ShapeEditor {
 
     // text attr
     public setTextColor(color: Color | undefined, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextColor", {});
+        const api = this.__repo.start("setTableTextColor");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -657,7 +655,7 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
     public setTextHighlightColor(color: Color | undefined, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextHighlightColor", {});
+        const api = this.__repo.start("setTableTextHighlightColor");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -687,7 +685,7 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
     public setTextFontName(fontName: string, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextFontName", {});
+        const api = this.__repo.start("setTableTextFontName");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -719,7 +717,7 @@ export class TableEditor extends ShapeEditor {
         return false;
     }
     public setTextFontSize(fontSize: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextFontSize", {});
+        const api = this.__repo.start("setTableTextFontSize");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -753,7 +751,7 @@ export class TableEditor extends ShapeEditor {
 
     // 对象属性
     public setTextVerAlign(verAlign: TextVerAlign, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextVerAlign", {});
+        const api = this.__repo.start("setTableTextVerAlign");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -786,7 +784,7 @@ export class TableEditor extends ShapeEditor {
 
     // 段属性
     public setTextHorAlign(horAlign: TextHorAlign, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextHorAlign", {});
+        const api = this.__repo.start("setTableTextHorAlign");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -818,7 +816,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     public setLineHeight(lineHeight: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setLineHeight", {});
+        const api = this.__repo.start("setLineHeight");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -857,7 +855,7 @@ export class TableEditor extends ShapeEditor {
 
     // 字间距 段属性
     public setCharSpacing(kerning: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableCharSpace", {});
+        const api = this.__repo.start("setTableCharSpace");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -891,7 +889,7 @@ export class TableEditor extends ShapeEditor {
 
     // 段间距 段属性
     public setParaSpacing(paraSpacing: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableParaSpacing", {});
+        const api = this.__repo.start("setTableParaSpacing");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -924,7 +922,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     public setTextUnderline(underline: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextUnderline", {});
+        const api = this.__repo.start("setTableTextUnderline");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -955,7 +953,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     public setTextStrikethrough(strikethrough: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextStrikethrough", {});
+        const api = this.__repo.start("setTableTextStrikethrough");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -986,7 +984,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     public setTextBold(bold: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextBold", {});
+        const api = this.__repo.start("setTableTextBold");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -1017,7 +1015,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     public setTextItalic(italic: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextItalic", {});
+        const api = this.__repo.start("setTableTextItalic");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -1048,7 +1046,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     public setTextTransform(transform: TextTransformType | undefined, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setTableTextTransform", {});
+        const api = this.__repo.start("setTableTextTransform");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -1081,7 +1079,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     public initTextCell(rowIdx: number, colIdx: number) { // 初始化为文本单元格
-        const api = this.__repo.start("initCell", {});
+        const api = this.__repo.start("initCell");
         try {
             const text = newText(this.shape.textAttr);
             text.setTextBehaviour(TextBehaviour.Fixed);
@@ -1097,7 +1095,7 @@ export class TableEditor extends ShapeEditor {
 
     // fill
     public addFill(fill: Fill, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("addFill", {});
+        const api = this.__repo.start("addFill");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -1124,7 +1122,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public addFill4Multi(fill: Fill, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("addFill4Multi", {});
+        const api = this.__repo.start("addFill4Multi");
         try {
             this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
             const imageMgr = fill.getImageMgr();
@@ -1150,7 +1148,7 @@ export class TableEditor extends ShapeEditor {
         // const fill: Fill = this.__shape.style.fills[idx];
         // if (!fill) return;
 
-        const api = this.__repo.start("setFillColor", {});
+        const api = this.__repo.start("setFillColor");
         try {
             if (range) {
                 this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
@@ -1168,7 +1166,7 @@ export class TableEditor extends ShapeEditor {
     }
 
     public setFillEnable(idx: number, value: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setFillEnable", {});
+        const api = this.__repo.start("setFillEnable");
         try {
             if (range) {
                 this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
@@ -1185,7 +1183,7 @@ export class TableEditor extends ShapeEditor {
         }
     }
     public setFillType(idx: number, type: FillType, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
-        const api = this.__repo.start("setFillType", {});
+        const api = this.__repo.start("setFillType");
         try {
             if (range) {
                 this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
@@ -1204,7 +1202,7 @@ export class TableEditor extends ShapeEditor {
     public deleteFill(idx: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         // const fill = this.__shape.style.fills[idx];
         // if (!fill) return;
-        const api = this.__repo.start("deleteFill", {});
+        const api = this.__repo.start("deleteFill");
         try {
             if (range) {
                 this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
@@ -1225,7 +1223,7 @@ export class TableEditor extends ShapeEditor {
     public setBorderEnable(idx: number, isEnabled: boolean, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         // const border = this.__shape.style.borders[idx];
         // if (!border) return;
-        const api = this.__repo.start("setBorderEnable", {});
+        const api = this.__repo.start("setBorderEnable");
         try {
             if (range) {
                 this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
@@ -1245,7 +1243,7 @@ export class TableEditor extends ShapeEditor {
         // const border = this.__shape.style.borders[idx];
         // if (!border) return;
 
-        const api = this.__repo.start("setBorderColor", {});
+        const api = this.__repo.start("setBorderColor");
         try {
             if (range) {
                 this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
@@ -1264,7 +1262,7 @@ export class TableEditor extends ShapeEditor {
     public setBorderThickness(idx: number, thickness: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         // const border = this.__shape.style.borders[idx];
         // if (!border) return;
-        const api = this.__repo.start("setBorderThickness", {});
+        const api = this.__repo.start("setBorderThickness");
         try {
             if (range) {
                 this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
@@ -1283,7 +1281,7 @@ export class TableEditor extends ShapeEditor {
     public setBorderPosition(idx: number, position: BorderPosition, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         // const border = this.__shape.style.borders[idx];
         // if (!border) return;
-        const api = this.__repo.start("setBorderPosition", {});
+        const api = this.__repo.start("setBorderPosition");
         try {
             if (range) {
                 this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
@@ -1302,7 +1300,7 @@ export class TableEditor extends ShapeEditor {
     public setBorderStyle(idx: number, borderStyle: BorderStyle, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         // const border = this.__shape.style.borders[idx];
         // if (!border) return;
-        const api = this.__repo.start("setBorderStyle", {});
+        const api = this.__repo.start("setBorderStyle");
         try {
             if (range) {
                 this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
@@ -1322,7 +1320,7 @@ export class TableEditor extends ShapeEditor {
     public deleteBorder(idx: number, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         // const border = this.__shape.style.borders[idx];
         // if (!border) return;
-        const api = this.__repo.start("deleteBorder", {});
+        const api = this.__repo.start("deleteBorder");
         try {
             if (range) {
                 this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
@@ -1340,7 +1338,7 @@ export class TableEditor extends ShapeEditor {
     }
     public addBorder(border: Border, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         border.position = BorderPosition.Center; // 只支持居中
-        const api = this.__repo.start("addBorder", {});
+        const api = this.__repo.start("addBorder");
         try {
             if (range) {
                 this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
@@ -1366,7 +1364,7 @@ export class TableEditor extends ShapeEditor {
     }
     public addBorder4Multi(border: Border, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
         border.position = BorderPosition.Center; // 只支持居中
-        const api = this.__repo.start("addBorder4Multi", {});
+        const api = this.__repo.start("addBorder4Multi");
         try {
             this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
             const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd);

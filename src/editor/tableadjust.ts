@@ -1,7 +1,7 @@
 
 import { Page } from "../data/page";
 import { TableShape } from "../data/table";
-import { Api } from "./command/recordapi";
+import { Api } from "./coop/recordapi";
 
 const MinCellSize = TableShape.MinCellSize;
 
@@ -25,8 +25,8 @@ export function adjColum(page: Page, table: TableShape, fromIdx: number, toIdx: 
     const total = table.widthTotalWeights;
     const frame = table.frame;
 
-    let fromWidth = colWidths[fromIdx] / total * frame.width;
-    let toWidth = colWidths[toIdx] / total * frame.width;
+    let fromWidth = colWidths[fromIdx].value / total * frame.width;
+    let toWidth = colWidths[toIdx].value / total * frame.width;
 
     const totalWidth = fromWidth + toWidth;
 
@@ -66,8 +66,8 @@ export function adjRow(page: Page, table: TableShape, fromIdx: number, toIdx: nu
     const total = table.heightTotalWeights;
     const frame = table.frame;
 
-    let fromHeight = rowHeights[fromIdx] / total * frame.height;
-    let toHeight = rowHeights[toIdx] / total * frame.height;
+    let fromHeight = rowHeights[fromIdx].value / total * frame.height;
+    let toHeight = rowHeights[toIdx].value / total * frame.height;
 
     const totalWidth = fromHeight + toHeight;
 

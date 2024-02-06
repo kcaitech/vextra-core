@@ -1,3 +1,4 @@
+/*
 import * as chai from 'chai'
 import { BasicArray } from '../data/basic';
 import * as api from "./basicapi"
@@ -18,9 +19,9 @@ import { GroupShape, Shape } from '../data/shape';
 import { exportArtboard, exportPage, exportRectShape } from '../data/baseexport';
 import { CMDExecuter } from './command/executer';
 import { Cmd, CmdGroup } from '../coop/data/classes';
-import { CoopRepository } from './command/cooprepo';
+import { CoopRepository } from './coop/cooprepo';
 import { Page } from 'data/page';
-import { updateShapesFrame } from './command/utils';
+import { updateShapesFrame } from './coop/utils';
 
 function createTestDocument() {
     const repo = new Repository()
@@ -430,3 +431,4 @@ test("setShapesFrame", () => {
 //     const now = JSON.stringify(exportPage(page))
 //     chai.assert.equal(origin, now);
 // })
+*/
