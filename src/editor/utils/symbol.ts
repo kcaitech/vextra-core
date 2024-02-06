@@ -6,6 +6,8 @@ import { Api } from "../coop/recordapi";
 import { BasicArray } from "../../data/basic";
 import { Border, Fill, Shadow } from "../../data/style";
 import { importBorder, importFill, importShadow } from "../../data/baseimport";
+import { newText2 } from "../../editor/creator";
+import { Text } from "../../data/classes";
 
 /**
  * @description 图层是否为组件实例的引用部分
@@ -59,35 +61,90 @@ function varParent(_var: Variable) {
     return p;
 }
 
-function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
+export function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
     const p = varParent(_var); // todo 如果p是symbolref(root), shape.isVirtual
-        if (!p) throw new Error();
-        let r: Shape | undefined = shape;
-        if (r.isVirtualShape) {
-            while (r && r.isVirtualShape) r = r.parent;
-        } else if (r instanceof SymbolRefShape) {
-            // do nothing
+    if (!p) {
+        console.log('!p');
+        return;
+    }
+
+    const vars = shape.varsContainer;
+
+    if (!vars) {
+        if (shape.isVirtualShape) {
+            throw new Error();
         } else {
-            while (
-                r
-                &&
-                !(r instanceof SymbolShape && !(r.parent instanceof SymbolUnionShape))
-            ) {
-                r = r.parent;
+            if (shape instanceof SymbolRefShape && p.id !== shape?.id) {
+                _override_variable(page, shape, _var, value, api);
+            } else {
+                api.shapeModifyVariable(page, _var, value);
             }
         }
 
-        if (!r) throw new Error();
+        console.log('!vars');
+        return;
+    }
 
-    // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
-    // shape, 可能是virtual, 任意对象，比如在修改填充，它的root是symbolref
-    // shape, 非virtual的情况：symbolref, symbol, 其它不需要修改variable, root是自己
-    // r.id === p.id时，p非virtual(symbolref or symbol), 同时p是shape的直接父级，可直接修改
-    // r.id !== p.id时
-    //     p为virtual，则应该override
-    //     p非virtual，p应该是symbol，不是shape的直接父级，应该override
-    if (r.id !== p.id) {
-        _override_variable(page, shape, _var, value, api);
+    // 直接在组件图层下操作变量
+    let __p: Shape | undefined = shape;
+    while (__p) {
+        if (__p instanceof SymbolRefShape) {
+            break;
+        }
+
+        if (__p instanceof SymbolShape) {
+            api.shapeModifyVariable(page, _var, value);
+            return;
+        }
+
+        __p = __p.parent;
+    }
+
+    let first_symbolref_index = -1;
+    let p_index = -1;
+
+    for (let i = vars.length - 1; i > -1; i--) {
+        const item = vars[i];
+
+        if (item.type === ShapeType.SymbolRef) {
+            first_symbolref_index = i
+        }
+
+        if (item.id === p.id) {
+            p_index = i;
+        }
+    }
+
+    if (first_symbolref_index === -1) {
+        if (shape instanceof SymbolRefShape && p.id !== shape?.id) {
+            _override_variable(page, shape, _var, value, api);
+        } else {
+            api.shapeModifyVariable(page, _var, value);
+        }
+        console.log('first_symbolref_index === -1');
+        return;
+    }
+
+    if (p_index === -1) {
+        if (shape instanceof SymbolRefShape && p.id !== shape?.id) {
+            if (p instanceof SymbolShape) { // 组件上未被覆盖过的变量
+                _override_variable(page, shape, _var, value, api);
+            } else { // 在实例上被覆盖过的变量
+                _override_variable_for_symbolref(page, vars[0] as any, _var, value, api);
+            }
+        } else {
+            api.shapeModifyVariable(page, _var, value);
+        }
+        console.log('p_index === -1');
+        return;
+    }
+
+    if (first_symbolref_index < p_index) {
+        if (p instanceof SymbolShape) {
+            _override_variable(page, shape, _var, value, api);
+        } else {
+            _override_variable_for_symbolref(page, vars[0] as any, _var, value, api);
+        }
     } else {
         api.shapeModifyVariable(page, _var, value);
     }
@@ -97,21 +154,26 @@ function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, a
  * @description override "editor/shape/_overrideVariable"
  */
 function _override_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
+    console.log('override');
+
     let p = varParent(_var);
     if (!p) throw new Error();
     if (p instanceof SymbolShape) {
         if (p.isVirtualShape) throw new Error();
         p = shape;
     }
+    let symisp = true;
     let sym: Shape | undefined = p;
     while (sym && sym.isVirtualShape) {
         sym = sym.parent;
+        symisp = false;
     }
     if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
-    let override_id = p.id;
-    override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-    if (override_id.length === 0) throw new Error();
-    if (!(p instanceof SymbolRefShape)) {
+
+    let override_id = symisp ? "" : p.id;
+    if (!symisp) override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
+    if (!symisp && override_id.length === 0) throw new Error();
+    if (!(p instanceof SymbolRefShape)) { // 普通对象
         const idx = override_id.lastIndexOf('/');
         if (idx > 0) {
             override_id = override_id.substring(0, idx);
@@ -119,12 +181,52 @@ function _override_variable(page: Page, shape: Shape, _var: Variable, value: any
             override_id = ""
         }
     }
-    if (override_id.length > 0) override_id = override_id + "/";
+
+    if (override_id.length > 0) {
+        override_id += "/";
+    }
+
     override_id += _var.id;
+
+    // override text
+    if (_var.type === VariableType.Text
+        && typeof value === 'string') {
+        const origin = _var.value as Text;
+        const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
+        text.insertText(value, 0);
+        value = text;
+    }
     const _var2 = new Variable(uuid(), _var.type, _var.name, value);
     api.shapeAddVariable(page, sym, _var2);
     api.shapeAddOverride(page, sym, override_id, OverrideType.Variable, _var2.id);
     return sym.getVar(_var2.id)!;
+}
+
+/**
+ * @description override "editor/shape/_overrideVariable"
+ */
+export function _override_variable_for_symbolref(page: Page, shape: SymbolRefShape, _var: Variable, value: any, api: Api) {
+    let p = varParent(_var);
+    if (!p) throw new Error();
+
+    let override_id = p.id.substring(p.id.indexOf('/') + 1);
+
+    if (override_id.length === 0) throw new Error();
+
+    override_id += `/${_var.id}`;
+
+    // override text
+    if (_var.type === VariableType.Text
+        && typeof value === 'string') {
+        const origin = _var.value as Text;
+        const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
+        text.insertText(value, 0);
+        value = text;
+    }
+    const _var2 = new Variable(uuid(), _var.type, _var.name, value);
+    api.shapeAddVariable(page, shape, _var2);
+    api.shapeAddOverride(page, shape, override_id, OverrideType.Variable, _var2.id);
+    return shape.getVar(_var2.id)!;
 }
 
 /**
@@ -304,9 +406,15 @@ export function is_exist_invalid_shape2(selected: Shape[]) {
     let result = false;
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
-        if ([ShapeType.Contact, ShapeType.Table, ShapeType.Symbol].includes(item.type)) return true;
-        if ((item as GroupShape).childs?.length) result = is_exist_invalid_shape((item as GroupShape).childs);
-        if (result) return true;
+        if (ShapeType.Symbol === item.type || ShapeType.Table === item.type || ShapeType.Contact === item.type) {
+            return true;
+        }
+        if ((item as GroupShape).childs?.length) {
+            result = is_exist_invalid_shape2((item as GroupShape).childs);
+        }
+        if (result) {
+            return true;
+        }
     }
     return false;
 }

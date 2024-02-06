@@ -34,7 +34,7 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, shape4shadow } from "./utils/symbol";
+import { _override_variable_for_symbolref, is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, shape4shadow } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
 import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
@@ -204,42 +204,11 @@ export class ShapeEditor {
      * @param api
      */
     modifyVariable2(_var: Variable, value: any, api: Api) {
-        const p = varParent(_var); // todo 如果p是symbolref(root), shape.isVirtual
-        if (!p) throw new Error();
-        const shape = this.__shape;
-        let r: Shape | undefined = shape;
-        if (r.isVirtualShape) {
-            while (r && r.isVirtualShape) r = r.parent;
-        } else if (r instanceof SymbolRefShape) {
-            // do nothing
-        } else {
-            while (
-                r
-                &&
-                !(r instanceof SymbolShape && !(r.parent instanceof SymbolUnionShape))
-            ) {
-                r = r.parent;
-            }
-        }
-
-        if (!r) throw new Error();
-
-        // p 可能是symbolref(可能virtual), symbol(可能是被引用，todo 要看一下此时是否是virtual)
-        // shape, 可能是virtual, 任意对象，比如在修改填充，它的root是symbolref
-        // shape, 非virtual的情况：symbolref, symbol, 其它不需要修改variable, root是自己
-        // r.id === p.id时，p非virtual(symbolref or symbol), 同时p是shape的直接父级，可直接修改
-        // r.id !== p.id时
-        //     p为virtual，则应该override
-        //     p非virtual，p应该是symbol，不是shape的直接父级，应该override
-        if (r.id !== p.id) {
-            this._overrideVariable(_var, value, api);
-        } else {
-            api.shapeModifyVariable(this.__page, _var, value);
-        }
+        modify_variable(this.__page, this.__shape, _var, value, api);
     }
 
     /**
-     * @description 修改实例身上某一个变量的值 --01b627f5b636
+     * @description 修改实例身上某一个变量的值
      * @param _var
      * @param value
      */
@@ -258,11 +227,24 @@ export class ShapeEditor {
      * @description 重置实例属性
      */
     resetSymbolRefVariable() {
-        const variables = (this.__shape as SymbolRefShape).variables;
-        const overrides = (this.__shape as SymbolRefShape).overrides;
-        const symData = (this.__shape as SymbolRefShape).symData;
-        const symParent = symData?.parent;
-        const root_data = (symParent instanceof SymbolUnionShape ? symParent : symData);
+        let shape = this.__shape as SymbolRefShape;
+
+        let p: Shape | undefined = shape;
+        while (p) {
+            if (p instanceof SymbolRefShape) {
+                shape = p;
+            }
+            p = p.parent;
+        }
+
+        const variables = (shape as SymbolRefShape).variables;
+        const overrides = (shape as SymbolRefShape).overrides;
+        const symData = (shape as SymbolRefShape).symData;
+        // const symParent = symData?.parent;
+        // const root_data = (symParent instanceof SymbolUnionShape ? symParent : symData);
+
+        const root_data = symData;
+
         if (!variables || !overrides || !root_data) {
             console.log('!variables || !overrides || !root_data');
             return false;
@@ -274,19 +256,19 @@ export class ShapeEditor {
                 overrides.forEach((v, k) => {
                     const variable = variables.get(v);
                     if (!variable) return;
-                    api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, k, variable.id, variable.type);
+                    api.shapeRemoveVirbindsEx(this.__page, shape as SymbolRefShape, k, variable.id, variable.type);
                 })
                 variables.forEach((_, k) => {
-                    api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
+                    api.shapeRemoveVariable(this.__page, shape as SymbolRefShape, k);
                 });
             } else {
                 variables.forEach((v, k) => {
                     if (v.type === VariableType.Status) return;
-                    api.shapeRemoveVariable(this.__page, this.__shape as SymbolRefShape, k);
+                    api.shapeRemoveVariable(this.__page, shape as SymbolRefShape, k);
                 });
                 root_variables.forEach((v, k) => {
                     if (v.type === VariableType.Status || !overrides.has(k)) return;
-                    api.shapeRemoveVirbindsEx(this.__page, this.__shape as SymbolRefShape, k, v.id, v.type);
+                    api.shapeRemoveVirbindsEx(this.__page, shape as SymbolRefShape, k, v.id, v.type);
                 })
             }
             this.__repo.commit();
@@ -530,7 +512,7 @@ export class ShapeEditor {
         // 先查varbinds
         if (shape.varbinds && shape.varbinds.has(overrideType)) {
             const _vars: Variable[] = [];
-            const vars_path: Shape[] = [];
+            // const vars_path: Shape[] = shape.varsContainer;
             shape.findVar(shape.varbinds.get(overrideType)!, _vars);
             // if (_vars.length !== vars_path.length) throw new Error();
             const _var = _vars[_vars.length - 1];
@@ -538,6 +520,13 @@ export class ShapeEditor {
 
                 let p = varParent(_var);
                 if (!p) throw new Error();
+
+                // if (vars_path.length) {
+                //     const f = vars_path[0];
+                //     if (p instanceof SymbolRefShape && p.id !== f.id) {
+                //         return _override_variable_for_symbolref(this.__page, f as any, _var, _var.value, api);
+                //     }
+                // }
 
                 if (p.isVirtualShape || p instanceof SymbolShape) {
                     // override variable

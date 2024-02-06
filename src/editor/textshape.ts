@@ -106,7 +106,8 @@ export class TextShapeEditor extends ShapeEditor {
                 return importText(_shape.text);
             }
             throw new Error();
-        }, api, shape)
+        }, api, shape);
+        
         if (_var && typeof _var.value === 'string') {
             api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape));
         }

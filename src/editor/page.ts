@@ -1473,58 +1473,6 @@ export class PageEditor {
         }
     }
 
-    /**
-     * wanderer 被拖动的shape item
-     * host 处于目的地的shape item
-     * offsetOverhalf 鼠标光标在目的地的位置是否超过目的地DOM范围的一半，此参数将影响wanderer插入的位置在host的上下位置
-     * @returns
-     */
-    shapeListDrag(wanderer: Shape, host: Shape, offsetOverhalf: boolean) {
-        if (!wanderer || !host) return;
-        const beforeXY = wanderer.frame2Root();
-        const api = this.__repo.start('shapeLayerMove');
-        try {
-            if (wanderer.id !== host.parent?.id) {
-                if (host.type === ShapeType.Artboard) {
-                    if (offsetOverhalf) {
-                        const wandererParent = wanderer.parent as GroupShape;
-                        if (wandererParent && wandererParent.id !== host.id) {
-                            api.shapeMove(this.__page, wandererParent, wandererParent.indexOfChild(wanderer), host as GroupShape, (host as GroupShape).childs.length);
-                        }
-                    } else {
-                        const hostParent = host.parent as GroupShape;
-                        const wandererParent = wanderer.parent as GroupShape;
-                        if (hostParent && wandererParent) {
-                            const saveidx = (wandererParent).indexOfChild(wanderer);
-                            const childs = (hostParent).childs;
-                            const idx = childs.findIndex(i => i.id === host.id) + 1; // 列表是倒序!!!
-                            api.shapeMove(this.__page, wandererParent, saveidx, hostParent, idx);
-                        }
-                    }
-                } else {
-                    const hostParent = host.parent as GroupShape;
-                    const wandererParent = wanderer.parent as GroupShape;
-                    if (hostParent && wandererParent) {
-                        const saveidx = (wandererParent).indexOfChild(wanderer);
-                        const childs = (hostParent).childs;
-                        let idx = childs.findIndex(i => i.id === host.id);
-                        idx = offsetOverhalf ? idx : idx + 1; // 列表是倒序!!!
-                        api.shapeMove(this.__page, wandererParent, saveidx, hostParent, idx);
-                        // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
-                        if (!wandererParent.childs.length && wandererParent.type === ShapeType.Group) {
-                            this.delete_inner(this.__page, wandererParent, api)
-                        }
-                    }
-                }
-            }
-            translateTo(api, this.__page, wanderer, beforeXY.x, beforeXY.y);
-            this.__repo.commit();
-        } catch (error) {
-            console.log(error)
-            this.__repo.rollback();
-        }
-    }
-
     arrange(actions: PositonAdjust[]) {
         const api = this.__repo.start('arrange');
         try {
@@ -2208,11 +2156,7 @@ export class PageEditor {
      */
     afterShapeListDrag(shapes: Shape[], host: Shape, position: 'upper' | 'inner' | 'lower') {
         // 整体数据校验
-        if (host.type === ShapeType.SymbolRef && position === 'inner') {
-            return false;
-        }
-
-        if (is_part_of_symbolref(host)) {
+        if ((host.type === ShapeType.SymbolRef || host.type === ShapeType.SymbolUnion || host.isVirtualShape) && position === 'inner') {
             return false;
         }
 
@@ -2224,7 +2168,7 @@ export class PageEditor {
         let pre: Shape[] = [];
         for (let i = 0, l = shapes.length; i < l; i++) {
             const item = shapes[i];
-            if (is_exist_invalid_shape([item])) {
+            if (item.isVirtualShape) {
                 continue;
             }
 
@@ -2255,9 +2199,7 @@ export class PageEditor {
                 for (let i = 0, l = pre.length; i < l; i++) {
                     const item = pre[i];
                     const parent: GroupShape | undefined = item.parent as GroupShape;
-                    if (!parent
-                        || host.type === ShapeType.SymbolRef
-                        || (host instanceof SymbolUnionShape)) {
+                    if (!parent) {
                         continue;
                     }
 
@@ -2304,7 +2246,7 @@ export class PageEditor {
 
                     if (!parent
                         || host_parent.type === ShapeType.SymbolRef
-                        || (host_parent instanceof SymbolUnionShape)
+                        || host_parent.type === ShapeType.SymbolUnion
                     ) {
                         continue;
                     }
