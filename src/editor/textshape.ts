@@ -22,7 +22,7 @@ import {
     ParaAttr,
     Span,
     ShapeType,
-    Variable, Document, TableShape
+    Variable, Document, TableShape, FillType
 } from "../data/classes";
 import { CoopRepository } from "./command/cooprepo";
 import { Api } from "./command/recordapi";
@@ -863,6 +863,46 @@ export class TextShapeEditor extends ShapeEditor {
                 const text_length = text.length;
                 if (text_length === 0) continue;
                 api.textModifyStrikethrough(this.__page, shape, strikethrough ? StrikethroughType.Single : undefined, 0, text_length);
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+
+    public setTextFillType(fillType: FillType, index: number, len: number) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.fillType = fillType;
+            this.__cachedSpanAttr.fillTypeIsSet = true;
+            return;
+        }
+        const api = this.__repo.start("setTextFillType", {});
+        try {
+            const shape = this.shape4edit(api);
+            api.textModifyFillType(this.__page, shape, fillType, index, len)
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextFillTypeMulti(shapes: Shape[], fillType: FillType) {
+        const api = this.__repo.start("setTextFillTypeMulti", {});
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const shape = this.shape4edit(api, text_shape);
+                const text = shape instanceof Shape ? shape.text : shape.value as Text;
+                const text_length = text.length;
+                if (text_length === 0) continue;
+                api.textModifyFillType(this.__page, shape, fillType, 0, text_length);
             }
             this.__repo.commit();
             return true;

@@ -138,6 +138,8 @@ export const TEXT_ATTR_ID = {
     bulletNumbersStart: "bulletNumbersStart",
     bulletNumbersBehavior: "bulletNumbersBehavior",
     indent: "indent",
+    fillType: 'fillType',
+    gradient: 'gradient'
 }
 
 export const POINTS_ID = "points"

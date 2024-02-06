@@ -70,7 +70,8 @@ import {
     ExportFormat,
     Shadow,
     TextShape,
-    CurveMode
+    CurveMode,
+    FillType
 } from "../../data/classes";
 
 import * as api from "../basicapi"
@@ -791,6 +792,13 @@ export class CMDExecuter {
         } else if (attrId === TEXT_ATTR_ID.indent) {
             const indent = value && JSON.parse(value) || undefined;
             api.textModifyParaIndent(shapetext, indent, op.start, op.length)
+        } else if (attrId === TEXT_ATTR_ID.strikethrough) {
+            api.textModifyFillType(shapetext, value as FillType, op.start, op.length)
+        } else if (attrId === TEXT_ATTR_ID.gradient) {
+            if (value) {
+                const gradient = importGradient(JSON.parse(value));
+                api.textModifyGradient(shapetext, gradient, op.start, op.length)
+            }
         } else {
             console.error("not implemented ", attrId)
         }

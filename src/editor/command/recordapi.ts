@@ -54,12 +54,12 @@ import {
     VariableType, CurveMode
 } from "../../data/shape";
 import { exportShape, updateShapesFrame } from "./utils";
-import { Border, BorderPosition, BorderStyle, ContextSettings, Fill, MarkerType, Style, Shadow } from "../../data/style";
+import { Border, BorderPosition, BorderStyle, ContextSettings, Fill, MarkerType, Style, Shadow, Gradient } from "../../data/style";
 import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAlign, TextVerAlign } from "../../data/text";
 import { cmdmerge } from "./merger";
 import { RectShape, SymbolRefShape, TableCell, TableCellType, TableShape } from "../../data/classes";
 import { CmdGroup } from "../../coop/data/cmdgroup";
-import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, Gradient, FillType } from "../../data/typesdefine";
+import { BlendMode, BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, FillType } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
 import { ContactForm, ContactRole, CurvePoint, ExportFormat, ExportOptions } from "../../data/baseclasses";
@@ -1473,6 +1473,18 @@ export class Api {
             })
         });
     }
+    textModifyFillType(page: Page, shape: TextShapeLike | Variable, type: FillType, index: number, len: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const _text = shape instanceof Shape ? shape.text : shape.value;
+            if (!_text || !(_text instanceof Text)) throw Error();
+            const ret = basicapi.textModifyFillType(_text, type, index, len);
+            ret.forEach((m) => {
+                if (type !== m.fillType) this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.fillType, type, m.fillType));
+                index += m.length;
+            })
+        });
+    }
     textModifyBold(page: Page, shape: TextShapeLike | Variable, bold: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
         this.__trap(() => {
@@ -1965,5 +1977,18 @@ export class Api {
             border.gradient = gradient;
             this.addCmd(ShapeArrayAttrModify.Make(page.id, genShapeId(shape), BORDER_ID, border.id, BORDER_ATTR_ID.gradient, exportGradient(gradient), save));
         })
+    }
+    //text gradient
+    modifyTextGradient(page: Page, shape: TextShapeLike | Variable, gradient: Gradient, index: number, len: number) {
+        checkShapeAtPage(page, shape);
+        this.__trap(() => {
+            const _text = shape instanceof Shape ? shape.text : shape.value;
+            if (!_text || !(_text instanceof Text)) throw Error();
+            const ret = basicapi.textModifyGradient(_text, gradient, index, len);
+            ret.forEach((m) => {
+                this.addCmd(TextCmdModify.Make(page.id, genShapeId(shape), index, m.length, TEXT_ATTR_ID.gradient, gradient, m.gradient));
+                index += m.length;
+            })
+        });
     }
 }

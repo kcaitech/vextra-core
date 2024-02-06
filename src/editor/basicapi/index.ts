@@ -1,7 +1,7 @@
 import { Document } from "../../data/document";
 import { Page } from "../../data/page";
 import { GroupShape, PathShape, PathShape2, RectShape, Shape, SymbolShape, Variable } from "../../data/shape";
-import { ContactShape, ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign, ContactForm } from "../../data/classes";
+import { ContactShape, ParaAttr, ParaAttrSetter, SpanAttr, SpanAttrSetter, SymbolRefShape, Text, TextBehaviour, TextHorAlign, TextVerAlign, ContactForm, Gradient } from "../../data/classes";
 import { BoolOp, BulletNumbersBehavior, BulletNumbersType, CurveMode, FillType, MarkerType, OverrideType, Point2D, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { BasicMap } from "../../data/basic";
 import { Color } from "../../data/classes";
@@ -450,12 +450,24 @@ export function textModifyStrikethrough(shapetext: Text, strikethrough: Striketh
 export function textModifyFillType(shapetext: Text, type: FillType, index: number, len: number) {
     const attr = new SpanAttrSetter();
     attr.fillType = type;
-    attr.fillTypeIsMulti = true;
+    attr.fillTypeIsSet = true;
     const ret = shapetext.formatText(index, len, { attr })
     const spans = ret.spans;
     const origin: { fillType: FillType | undefined, length: number }[] = [];
     spans.forEach((span) => {
         origin.push({ fillType: span.fillType, length: span.length })
+    })
+    return origin;
+}
+export function textModifyGradient(shapetext: Text, gradient: Gradient, index: number, len: number) {
+    const attr = new SpanAttrSetter();
+    attr.gradient = gradient;
+    attr.gradientIsSet = true;
+    const ret = shapetext.formatText(index, len, { attr })
+    const spans = ret.spans;
+    const origin: { gradient: Gradient | undefined, length: number }[] = [];
+    spans.forEach((span) => {
+        origin.push({ gradient: span.gradient, length: span.length })
     })
     return origin;
 }
