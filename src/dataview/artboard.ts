@@ -2,6 +2,8 @@ import { EL, elh } from "./el";
 import { GroupShapeView } from "./groupshape";
 import { innerShadowId, renderBorders, renderFills } from "../render";
 import { objectId } from "../basic/objectid";
+import { render as clippathR } from "../render/clippath"
+
 
 export class ArtboradView extends GroupShapeView {
 
@@ -85,7 +87,13 @@ export class ArtboradView extends GroupShapeView {
             svgprops.filter = `url(#pd_outer-${filterId}) ${inner_url}`;
         }
 
-        const body = elh("svg", svgprops, [...fills, ...childs]);
+        const id = "clippath-artboard-" + objectId(this);
+        const cp = clippathR(elh, id, this.getPathStr());
+
+        const content_container = elh("g", { "clip-path": "url(#" + id + ")" }, [...fills, ...childs]);
+
+        const body = elh("svg", svgprops, [cp, content_container]);
+
         this.reset("g", props, [...shadows, body, ...borders])
         return ++this.m_render_version;
     }

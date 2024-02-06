@@ -131,6 +131,8 @@ marker[MarkerType.Round] = function (h: Function, style: Style, border: Border, 
         orient: "auto-start-reverse"
     }
     if (range === 1) {
+        marker_props.markerWidth = range * 2;
+        marker_props.markerHeight = range * 2
         marker_props.viewBox = `0 0 ${range * 12} ${range * 12}` ;
     }
     const marker_content_props: any = {

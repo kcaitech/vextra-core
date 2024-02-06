@@ -65,6 +65,7 @@ export function render(h: Function, shape: PathShape,
             const ex_props = Object.assign({}, props);
             delete props.style;
             delete props.transform;
+            delete props.opacity;
             const inner_url = innerShadowId(shape_id, shadows);
             if (shadows.length) props.filter = `url(#pd_outer-${shape_id}) ${inner_url}`;
             const body = h("g", props, childs);

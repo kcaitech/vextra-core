@@ -112,7 +112,7 @@ export class DataView extends EventEL {
         this.m_data = data;
     }
 
-    protected get varsContainer() {
+    get varsContainer() {
         return this.m_varsContainer;
     }
     protected set varsContainer(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {

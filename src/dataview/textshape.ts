@@ -4,6 +4,7 @@ import { EL, elh } from "./el";
 import { ShapeView, isDiffShapeFrame } from "./shape";
 import { renderText2Path, renderTextLayout } from "../render/text";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "../data/textlocate";
+import { newText, newText2 } from "../data/textutils";
 
 export class TextShapeView extends ShapeView {
 
@@ -67,7 +68,6 @@ export class TextShapeView extends ShapeView {
         }
         return this.m_textpath;
     }
-
 
 
     onDataChange(...args: any[]): void {

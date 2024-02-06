@@ -32,7 +32,7 @@ export class TableCell extends Shape implements classes.TableCell {
     rowSpan?: number
     colSpan?: number
 
-    private __cacheData?: { buff: Uint8Array, base64: string };
+    private __cacheData?: { media: { buff: Uint8Array, base64: string }, ref: string };
 
     constructor(
         crdtidx: BasicArray<number>,
@@ -115,29 +115,37 @@ export class TableCell extends Shape implements classes.TableCell {
     // image
     private __startLoad: boolean = false;
     peekImage(startLoad: boolean = false) {
-        const ret = this.__cacheData?.base64;
-        if (ret) return ret;
+        if (this.__cacheData?.ref === this.imageRef) {
+            return this.__cacheData?.media.base64;
+        }
         if (!this.imageRef) return "";
         if (startLoad && !this.__startLoad) {
             this.__startLoad = true;
             const mediaMgr = (this.parent as TableShape).__imageMgr;
-            mediaMgr && mediaMgr.get(this.imageRef).then((val) => {
-                if (!this.__cacheData) {
-                    this.__cacheData = val;
-                    if (val) this.notify();
-                }
-            })
+            mediaMgr && mediaMgr
+                .get(this.imageRef)
+                .then((val) => {
+                    if (val) {
+                        this.__cacheData = { media: val, ref: this.imageRef! };
+                    }
+                }).finally(() => {
+                    this.__startLoad = false;
+                    this.notify('image-reload');
+                    return this.__cacheData?.media.base64;
+                })
         }
-        return ret;
     }
     // image shape
     async loadImage(): Promise<string> {
-        if (this.__cacheData) return this.__cacheData.base64;
+        if (this.__cacheData) return this.__cacheData.media.base64;
         if (!this.imageRef) return "";
         const mediaMgr = (this.parent as TableShape).__imageMgr;
-        this.__cacheData = mediaMgr && await mediaMgr.get(this.imageRef)
-        if (this.__cacheData) this.notify();
-        return this.__cacheData && this.__cacheData.base64 || "";
+        const val = mediaMgr && await mediaMgr.get(this.imageRef);
+        if (val) {
+            this.__cacheData = { media: val, ref: this.imageRef }
+            this.notify();
+        }
+        return this.__cacheData && this.__cacheData.media.base64 || "";
     }
 
     // text

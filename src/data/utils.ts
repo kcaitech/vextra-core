@@ -793,7 +793,7 @@ __handle['vertical'] = function (points: CurvePoint[], start: CurvePoint, end: C
 }
 export function path_for_free_contact(points: CurvePoint[]) {
     const start = points[0];
-    const end = points[1];
+    const end = points[points.length - 1];
 
     if (!start || !end) {
         return;
@@ -803,7 +803,7 @@ export function path_for_free_contact(points: CurvePoint[]) {
 
     __handle[direction](points, start, end);
 }
-export function path_for_free_end_contact(shape: ContactShape,points: CurvePoint[], start: PageXY | undefined) {
+export function path_for_free_end_contact(shape: ContactShape, points: CurvePoint[], start: PageXY | undefined) {
     if (!start) {
         const _s = points[0];
         start = { x: _s.x, y: _s.y };

@@ -29,8 +29,14 @@ export class TableView extends ShapeView {
     }
 
     protected _bubblewatcher(...args: any[]) {
-        // this.onChildChange(...args);
-        if (args.includes('borders')) this.m_ctx.setDirty(this);
+        // // this.onChildChange(...args);
+        // if (args.includes('borders')) this.m_ctx.setDirty(this);
+
+        if (args.includes('text')) {
+            return;
+        }
+        this.updateChildren();
+        this.m_ctx.setDirty(this);
     }
 
     onDestory(): void {
