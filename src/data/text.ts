@@ -132,7 +132,6 @@ export class AttrGetter extends TextAttr {
     transformIsMulti: boolean = false;
     bulletNumbersIsMulti: boolean = false;
     fillTypeIsMulti: boolean = false;
-    gradientIsMulti: boolean = false;
 }
 
 export class SpanAttrSetter extends SpanAttr {
