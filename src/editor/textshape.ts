@@ -22,7 +22,7 @@ import {
     ParaAttr,
     Span,
     ShapeType,
-    Variable, Document, TableShape, FillType
+    Variable, Document, TableShape, FillType, GradientType, Gradient, Point2D, Stop
 } from "../data/classes";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
@@ -30,8 +30,9 @@ import { ShapeEditor } from "./shape";
 import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
-import { importText } from "../data/baseimport";
+import { importGradient, importText } from "../data/baseimport";
 import * as basicapi from "./basicapi"
+import { uuid } from "../basic/uuid";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -1144,6 +1145,28 @@ export class TextShapeEditor extends ShapeEditor {
             })
 
             this.fixFrameByLayout(api);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextGradientType(gradient: Gradient, index: number, len: number) {
+        if (len === 0) {
+            if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+            this.__cachedSpanAttr.fillType = FillType.Gradient;
+            this.__cachedSpanAttr.fillTypeIsSet = true;
+            this.__cachedSpanAttr.gradient = gradient;
+            this.__cachedSpanAttr.gradientIsSet = true;
+            return;
+        }
+        const api = this.__repo.start("setTextGradientType");
+        try {
+            const shape = this.shape4edit(api);
+            api.textModifyFillType(this.__page, shape, FillType.Gradient, index, len)
+            api.setTextGradient(this.__page, shape, gradient, index, len);
             this.__repo.commit();
             return true;
         } catch (error) {

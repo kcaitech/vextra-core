@@ -3,6 +3,7 @@ import { ParaAttr, Shape, SpanAttr, Text, TextAttr, TextBehaviour, TextHorAlign,
 import { BulletNumbersBehavior, BulletNumbersType, FillType, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
 import { Color } from "../../data/classes";
 import { crdtSetAttr, otTextInsert, otTextRemove, otTextSetAttr, otTextSetParaAttr } from "./basic";
+import { Gradient } from "data/baseclasses";
 
 export function insertSimpleText(parent: Shape | Variable, shapetext: Text, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
     return otTextInsert(parent, shapetext, index, text, props);
@@ -22,6 +23,10 @@ export function textModifyFontName(parent: Shape | Variable, shapetext: Text, id
 }
 export function textModifyFontSize(parent: Shape | Variable, shapetext: Text, idx: number, len: number, fontsize: number | undefined) {
     return otTextSetAttr(parent, shapetext, idx, len, "fontSize", fontsize);
+}
+
+export function textModifyGradient(parent: Shape | Variable, shapetext: Text, idx: number, len: number, gradient: Gradient | undefined) {
+    return otTextSetAttr(parent, shapetext, idx, len, "gradient", gradient);
 }
 
 export function shapeModifyTextBehaviour(page: Page, shapetext: Text, textBehaviour: TextBehaviour) {

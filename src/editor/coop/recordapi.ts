@@ -31,6 +31,7 @@ import { LocalCmd as Cmd, CmdMergeType, ISave4Restore, LocalCmd, SelectionState 
 import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
+import { log } from "console";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -919,6 +920,14 @@ export class Api {
             len = alignRange.len;
         }
         this.addOp(basicapi.textModifySpanTransfrom(shape, _text, transform, index, len));
+    }
+    setTextGradient(page: Page, shape: TextShapeLike | Variable, gradient: Gradient | undefined, index: number, len: number) {
+        checkShapeAtPage(page, shape);
+        const _text = shape instanceof Shape ? shape.text : shape.value;
+        if (!_text || !(_text instanceof Text)) throw Error();
+        console.log("set text gradient", gradient);
+        
+        this.addOp(basicapi.textModifyGradient(shape, _text, index, len, gradient));
     }
 
     // table
