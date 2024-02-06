@@ -27,11 +27,10 @@ export {
     Padding
 } from "./baseclasses";
 import * as classes from "./baseclasses"
-import { deleteText, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
-import { TextLayout, layoutText } from "./textlayout";
+import { deleteText, formatPara, formatText, insertComplexText, insertSimpleText, setBulletNumbersBehavior, setBulletNumbersStart, setBulletNumbersType, setParaIndent } from "./textedit";
+import { LayoutItem, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
-import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 import { _travelTextPara } from "./texttravel";
 import { FillType, Padding } from "./baseclasses";
 import { Gradient } from "./style"
@@ -217,10 +216,84 @@ export class Text extends Basic implements classes.Text {
     paras: BasicArray<Para>
     attr?: TextAttr
 
-    private __layout?: TextLayout;
-    private __layoutWidth: number = 0;
-    private __frameWidth: number = 0;
-    private __frameHeight: number = 0;
+    // private __layout?: TextLayout;
+    // private __layoutWidth: number = 0;
+    // private __frameWidth: number = 0;
+    // private __frameHeight: number = 0;
+
+    // layout与显示窗口大小有关
+    // 尽量复用, layout缓存排版信息，进行update
+
+    dropLayout(token: string, owner: string) {
+        let o = this.__layouts.get(token);
+        if (o) {
+            const i = o.owners.indexOf(owner);
+            if (i >= 0) {
+                o.owners.splice(i, 1);
+                if (o.owners.length === 0) this.__layouts.delete(token!);
+            }
+        }
+    }
+
+    private __layouts: Map<string, LayoutItem> = new Map();
+    getLayout3(width: number, height: number, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
+        const cur = [width, height].join(',');
+        if (cur !== token) {
+            let o = token && this.__layouts.get(token);
+            if (o) {
+                if (o.owners.length === 1) {
+                    if (o.owners[0] !== owner) throw new Error();
+                    this.__layouts.delete(token!);
+                    this.__layouts.set(cur, o);
+                } else {
+                    const i = o.owners.indexOf(owner);
+                    if (i >= 0) {
+                        o.owners.splice(i, 1);
+                        if (o.owners.length === 0) this.__layouts.delete(token!);
+                    }
+                }
+            }
+        }
+
+        let o = this.__layouts.get(cur);
+        if (o) {
+            if (cur !== token) o.owners.push(owner); // 不一定唯一
+            o.update(width, height, this.attr);
+        } else {
+            o = new LayoutItem();
+            this.__layouts.set(cur, o)
+        }
+
+        if (!o.layout) {
+            const layoutWidth = ((b: TextBehaviour): number => {
+                switch (b) {
+                    case TextBehaviour.Flexible: return Number.MAX_VALUE;
+                    case TextBehaviour.Fixed: return width;
+                    case TextBehaviour.FixWidthAndHeight: return width;
+                }
+            })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+            o.layout = layoutText(this, layoutWidth, height);
+        }
+
+        return { token: cur, layout: o.layout }
+    }
+
+    getLayout2(width: number, height: number, id: string): TextLayout {
+        const layout = this.getLayout3(width, height, id, undefined);
+        this.dropLayout(layout.token, id);
+        return layout.layout;
+    }
+
+    /**
+     * for command
+     */
+    getOpTarget(path: string[]): any {
+        if (path.length === 0) return this;
+        // 只有attr走idset
+        if (path[0] !== 'attr') return;
+        if (!this.attr) this.attr = new TextAttr();
+        return this.attr.getOpTarget(path.splice(1));
+    }
 
     constructor(
         paras: BasicArray<Para>
@@ -351,27 +424,36 @@ export class Text extends Basic implements classes.Text {
             throw new Error("index < 0");
         }
         insertSimpleText(this, text, index, props);
-        if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, index, text.length, this.__layout);
+        this.__layouts.forEach(l => l.layout = l.layout && layoutAtInsert(this, l.__layoutWidth, l.__frameHeight, index, text.length, l.layout));
     }
+    // 这个没走api,纯是用于更新排版
     composingInputUpdate(index: number) {
         if (index < 0) {
             throw new Error("index < 0");
         }
-        if (this.__layout) this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, index, 1, this.__layout);
+        this.__layouts.forEach(l => l.layout = l.layout && layoutAtDelete(this, l.__layoutWidth, l.__frameHeight, index, 1, l.layout));
     }
     insertFormatText(text: Text, index: number) {
         if (index < 0) {
             throw new Error("index < 0");
         }
         insertComplexText(this, text, index);
-        if (this.__layout) this.__layout = layoutAtInsert(this, this.__layoutWidth, this.__frameHeight, index, text.length, this.__layout);
+        this.__layouts.forEach(l => l.layout = l.layout && layoutAtInsert(this, l.__layoutWidth, l.__frameHeight, index, text.length, l.layout));
     }
-    formatText(index: number, length: number, props: { attr?: SpanAttrSetter, paraAttr?: ParaAttrSetter }): { spans: Span[], paras: (ParaAttr & { length: number })[] } {
+    formatText(index: number, length: number, key: string, value: any): { index: number, len: number, value: any }[] {
         if (index < 0) {
             throw new Error("index < 0");
         }
-        const ret = formatText(this, index, length, props)
-        if (this.__layout) this.__layout = layoutAtFormat(this, this.__layoutWidth, this.__frameHeight, index, length, this.__layout, props);
+        const ret = formatText(this, index, length, key, value);
+        this.__layouts.forEach(l => l.layout = l.layout && layoutAtFormat(this, l.__layoutWidth, l.__frameHeight, index, length, l.layout));
+        return ret;
+    }
+    formatPara(index: number, length: number, key: string, value: any): { index: number, len: number, value: any }[] {
+        if (index < 0) {
+            throw new Error("index < 0");
+        }
+        const ret = formatPara(this, index, length, key, value)
+        this.__layouts.forEach(l => l.layout = l.layout && layoutAtFormat(this, l.__layoutWidth, l.__frameHeight, index, length, l.layout));
         return ret;
     }
     deleteText(index: number, count: number): Text | undefined {
@@ -379,7 +461,7 @@ export class Text extends Basic implements classes.Text {
             throw new Error("index < 0");
         }
         const ret = deleteText(this, index, count);
-        if (ret && this.__layout) {
+        if (ret && this.__layouts.size > 0) {
             const paras = ret.paras;
             let hasBulletNumbers = false;
             for (let i = 0, len = paras.length; i < len; i++) {
@@ -397,166 +479,122 @@ export class Text extends Basic implements classes.Text {
                 this.reLayout();
             }
             else {
-                this.__layout = layoutAtDelete(this, this.__layoutWidth, this.__frameHeight, index, count, this.__layout);
+                this.__layouts.forEach(l => l.layout = l.layout && layoutAtDelete(this, l.__layoutWidth, l.__frameHeight, index, count, l.layout));
             }
         }
         return ret;
     }
 
-    updateSize(w: number, h: number) {
-        const layoutWidth = ((b: TextBehaviour) => {
-            switch (b) {
-                case TextBehaviour.Flexible: return Number.MAX_VALUE;
-                case TextBehaviour.Fixed: return w;
-                case TextBehaviour.FixWidthAndHeight: return w;
-            }
-            // return Number.MAX_VALUE
-        })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
-        if (this.__layoutWidth !== layoutWidth) {
-            this.__frameHeight = h;
-            this.__layoutWidth = layoutWidth;
-            this.reLayout();
-        }
-        else if (this.__frameHeight !== h && this.__layout) {
-            const vAlign = this.attr?.verAlign ?? TextVerAlign.Top;
-            const yOffset: number = ((align: TextVerAlign) => {
-                switch (align) {
-                    case TextVerAlign.Top: return 0;
-                    case TextVerAlign.Middle: return (h - this.__layout.contentHeight) / 2;
-                    case TextVerAlign.Bottom: return h - this.__layout.contentHeight;
-                }
-            })(vAlign);
-            this.__layout.yOffset = yOffset;
-        }
-        this.__frameWidth = w;
-        this.__frameHeight = h;
-    }
+    // updateSize(w: number, h: number) {
+    //     const layoutWidth = ((b: TextBehaviour) => {
+    //         switch (b) {
+    //             case TextBehaviour.Flexible: return Number.MAX_VALUE;
+    //             case TextBehaviour.Fixed: return w;
+    //             case TextBehaviour.FixWidthAndHeight: return w;
+    //         }
+    //         // return Number.MAX_VALUE
+    //     })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+    //     if (this.__layoutWidth !== layoutWidth) {
+    //         this.__frameHeight = h;
+    //         this.__layoutWidth = layoutWidth;
+    //         this.reLayout();
+    //     }
+    //     else if (this.__frameHeight !== h && this.__layout) {
+    //         const vAlign = this.attr?.verAlign ?? TextVerAlign.Top;
+    //         const yOffset: number = ((align: TextVerAlign) => {
+    //             switch (align) {
+    //                 case TextVerAlign.Top: return 0;
+    //                 case TextVerAlign.Middle: return (h - this.__layout.contentHeight) / 2;
+    //                 case TextVerAlign.Bottom: return h - this.__layout.contentHeight;
+    //             }
+    //         })(vAlign);
+    //         this.__layout.yOffset = yOffset;
+    //     }
+    //     this.__frameWidth = w;
+    //     this.__frameHeight = h;
+    // }
 
     onRollback(from: string): void {
         if (from !== "composingInput") this.reLayout();
     }
 
     reLayout() {
-        this.__layout = undefined;
+        // this.__layout = undefined;
+        this.__layouts.forEach(l => l.layout = undefined);
     }
 
     // 无缓存
-    getLayout2(width: number, height: number) {
-        if (this.__layout && this.__frameHeight === height && this.__frameWidth === width) {
-            return this.__layout;
-        }
+    // getLayout2(width: number, height: number) {
+    //     if (this.__layout && this.__frameHeight === height && this.__frameWidth === width) {
+    //         return this.__layout;
+    //     }
 
-        const layoutWidth = ((b: TextBehaviour) => {
-            switch (b) {
-                case TextBehaviour.Flexible: return Number.MAX_VALUE;
-                case TextBehaviour.Fixed: return width;
-                case TextBehaviour.FixWidthAndHeight: return width;
-            }
-            // return Number.MAX_VALUE
-        })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+    //     const layoutWidth = ((b: TextBehaviour) => {
+    //         switch (b) {
+    //             case TextBehaviour.Flexible: return Number.MAX_VALUE;
+    //             case TextBehaviour.Fixed: return width;
+    //             case TextBehaviour.FixWidthAndHeight: return width;
+    //         }
+    //         // return Number.MAX_VALUE
+    //     })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
 
-        return layoutText(this, layoutWidth, height);
-    }
-
-    getLayout() {
-        if (this.__layout) return this.__layout;
-        this.__layout = layoutText(this, this.__layoutWidth, this.__frameHeight);
-        return this.__layout;
-    }
-    locateText(x: number, y: number): TextLocate {
-        return locateText(this.getLayout(), x, y);
-    }
-    locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
-        return locateCursor(this.getLayout(), index, cursorAtBefore);
-    }
-    locateRange(start: number, end: number): { x: number, y: number }[] {
-        return locateRange(this.getLayout(), start, end);
-    }
-
-    getContentWidth(): number {
-        return this.getLayout().contentWidth;
-    }
-    getContentHeight(): number {
-        return this.getLayout().contentHeight;
-    }
+    //     return layoutText(this, layoutWidth, height);
+    // }
+    // getLayout() {
+    //     if (this.__layout) return this.__layout;
+    //     this.__layout = layoutText(this, this.__layoutWidth, this.__frameHeight);
+    //     return this.__layout;
+    // }
+    // locateText(x: number, y: number): TextLocate {
+    //     return locateText(this.getLayout(), x, y);
+    // }
+    // locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
+    //     return locateCursor(this.getLayout(), index, cursorAtBefore);
+    // }
+    // locateRange(start: number, end: number): { x: number, y: number }[] {
+    //     return locateRange(this.getLayout(), start, end);
+    // }
+    // getContentWidth(): number {
+    //     return this.getLayout().contentWidth;
+    // }
+    // getContentHeight(): number {
+    //     return this.getLayout().contentHeight;
+    // }
 
     setTextBehaviour(textBehaviour: TextBehaviour) {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.textBehaviour = textBehaviour;
         // 宽度变化时要重排
-        const layoutWidth = ((b: TextBehaviour) => {
-            switch (b) {
-                case TextBehaviour.Flexible: return Number.MAX_VALUE;
-                case TextBehaviour.Fixed: return this.__frameWidth;
-                case TextBehaviour.FixWidthAndHeight: return this.__frameWidth;
-            }
-            // return Number.MAX_VALUE
-        })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
-        if (this.__layoutWidth !== layoutWidth) {
-            this.__layoutWidth = layoutWidth;
-            this.reLayout();
-        }
+        // const layoutWidth = ((b: TextBehaviour) => {
+        //     switch (b) {
+        //         case TextBehaviour.Flexible: return Number.MAX_VALUE;
+        //         case TextBehaviour.Fixed: return this.__frameWidth;
+        //         case TextBehaviour.FixWidthAndHeight: return this.__frameWidth;
+        //     }
+        //     // return Number.MAX_VALUE
+        // })(this.attr?.textBehaviour ?? TextBehaviour.Flexible)
+        // if (this.__layoutWidth !== layoutWidth) {
+        //     this.__layoutWidth = layoutWidth;
+        //     this.reLayout();
+        // }
     }
     setTextVerAlign(verAlign: TextVerAlign) {
         if (!this.attr) this.attr = new TextAttr();
         this.attr.verAlign = verAlign;
-        if (this.__layout) {
-            const padding = this.attr?.padding;
-            const paddingTop = padding?.top ?? 0;
-            const paddingBottom = padding?.bottom ?? 0;
-            const vAlign = this.attr?.verAlign ?? TextVerAlign.Top;
-            const yOffset: number = ((align: TextVerAlign) => {
-                switch (align) {
-                    case TextVerAlign.Top: return paddingTop;
-                    case TextVerAlign.Middle: return (this.__frameHeight - this.__layout.contentHeight - paddingTop - paddingBottom) / 2;
-                    case TextVerAlign.Bottom: return this.__frameHeight - this.__layout.contentHeight - paddingBottom;
-                }
-            })(vAlign);
-            this.__layout.yOffset = yOffset;
-        }
-    }
-
-    setDefaultTextColor(color: Color | undefined) {
-        // 不需要重排
-        if (!this.attr) this.attr = new TextAttr();
-        this.attr.color = color;
-    }
-    setDefaultFontName(fontName: string | undefined) {
-        if (!this.attr) this.attr = new TextAttr();
-        this.attr.fontName = fontName;
-        this.reLayout();
-    }
-    setDefaultFontSize(fontSize: number) {
-        if (!this.attr) this.attr = new TextAttr();
-        this.attr.fontSize = fontSize;
-        this.reLayout();
-    }
-    setDefaultTextHorAlign(horAlign: TextHorAlign) {
-        if (!this.attr) {
-            if (horAlign === TextHorAlign.Left) return;
-            this.attr = new TextAttr();
-            this.attr.alignment = horAlign;
-            this.reLayout();
-        }
-        else if (this.attr.alignment !== horAlign) {
-            this.attr.alignment = horAlign;
-            this.reLayout();
-        }
-    }
-    setDefaultMinLineHeight(minLineHeight: number) {
-        if (!this.attr) this.attr = new TextAttr();
-        this.attr.minimumLineHeight = minLineHeight;
-        this.reLayout(); // todo
-    }
-    setDefaultMaxLineHeight(maxLineHeight: number) {
-        if (!this.attr) this.attr = new TextAttr();
-        this.attr.maximumLineHeight = maxLineHeight;
-        this.reLayout(); // todo
-    }
-    setDefaultTransform(transform: TextTransformType | undefined) {
-        if (!this.attr) this.attr = new TextAttr();
-        this.attr.transform = transform;
-        this.reLayout(); // todo
+        // if (this.__layout) {
+        //     const padding = this.attr?.padding;
+        //     const paddingTop = padding?.top ?? 0;
+        //     const paddingBottom = padding?.bottom ?? 0;
+        //     const vAlign = this.attr?.verAlign ?? TextVerAlign.Top;
+        //     const yOffset: number = ((align: TextVerAlign) => {
+        //         switch (align) {
+        //             case TextVerAlign.Top: return paddingTop;
+        //             case TextVerAlign.Middle: return (this.__frameHeight - this.__layout.contentHeight - paddingTop - paddingBottom) / 2;
+        //             case TextVerAlign.Bottom: return this.__frameHeight - this.__layout.contentHeight - paddingBottom;
+        //         }
+        //     })(vAlign);
+        //     this.__layout.yOffset = yOffset;
+        // }
     }
 
     setBulletNumbersType(type: BulletNumbersType, index: number, len: number) {

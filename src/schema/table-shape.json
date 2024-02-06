@@ -2,30 +2,25 @@
     "description": "table shape",
     "type": "object",
     "properties": {
-        "datas": {
-            "type": "array",
-            "items": {
-                "oneOf": [
-                    {
-                        "type": "undefined"
-                    },
-                    {
-                        "$ref": "./table-cell.json"
-                    }
-                ],
-                "containUndefined": true
+        "cells": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "$ref": "./table-cell.json"
             }
         },
         "rowHeights": {
             "type": "array",
             "items": {
-                "type": "number"
+                "$ref": "./crdt-number.json"
             }
         },
         "colWidths": {
             "type": "array",
             "items": {
-                "type": "number"
+                "$ref": "./crdt-number.json"
             }
         },
         "textAttr": {
@@ -33,7 +28,7 @@
         }
     },
     "required": [
-        "datas",
+        "cells",
         "rowHeights",
         "colWidths"
     ],

@@ -3,7 +3,8 @@ import { Style } from "./style";
 import * as classes from "./baseclasses"
 import { BasicArray, WatchableObject } from "./basic";
 import { Artboard } from "./artboard";
-import { SymbolRefShape, TableCell } from "./classes";
+import { Color } from "./color";
+import { TableCell } from "./table";
 class PageCollectNotify extends WatchableObject {
     constructor() {
         super();
@@ -11,6 +12,7 @@ class PageCollectNotify extends WatchableObject {
 }
 export class Page extends GroupShape implements classes.Page {
     typeId = 'page';
+    backgroundColor?: Color;
     artboards: Map<string, Artboard> = new Map();
     shapes: Map<string, Shape> = new Map();
     __allshapes: Map<string, WeakRef<Shape>> = new Map(); // 包含被删除的
@@ -19,6 +21,7 @@ export class Page extends GroupShape implements classes.Page {
     isReserveLib: boolean;
     cutouts: Map<string, CutoutShape> = new Map();
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -28,6 +31,7 @@ export class Page extends GroupShape implements classes.Page {
         isReserveLib?: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             ShapeType.Page,
@@ -40,17 +44,17 @@ export class Page extends GroupShape implements classes.Page {
         this.isReserveLib = !!isReserveLib;
     }
 
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
-        if (targetId.length > 0) {
-            const shapeId = targetId[0] as string;
-            const shape = this.getShape(shapeId);
-            if (!shape) {
-                console.log("shape not find", shapeId)
-                return;
-            }
-            return shape.getTarget(targetId.slice(1));
+    getOpTarget(path: string[]): any {
+        if (path.length === 0) throw new Error("path is empty");
+        const path0 = path[0];
+        if (path.length === 1) {
+            if (path0 === this.id) return this;
+            throw new Error("The shape is not found");
         }
-        return this;
+        const path1 = path[1];
+        const shape = this.getShape(path1);
+        if (shape) return shape.getOpTarget(path.slice(2));
+        return super.getOpTarget(path.slice(1));
     }
 
     onAddShape(shape: Shape, recursive: boolean = true) {

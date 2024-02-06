@@ -1,14 +1,15 @@
 import { v4 } from "uuid";
 import { Matrix } from "../basic/matrix";
-import { CurvePoint, PathShape, Point2D, Shape, SymbolShape, Variable } from "./shape";
+import { CurvePoint, PathShape, Shape, SymbolShape, Variable } from "./shape";
 import { ContactType, CurveMode, OverrideType } from "./typesdefine";
-import { Api } from "../editor/command/recordapi";
+import { Api } from "../editor/coop/recordapi";
 import { Page } from "./page";
 import { importCurvePoint } from "./baseimport";
 import { exportCurvePoint } from "./baseexport";
 import { importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
 import * as types from "./typesdefine"
 import { ContactShape, SymbolRefShape } from "./classes";
+import { BasicArray } from "./basic";
 
 /**
  * @description root -> 图形自身上且单位为比例系数的矩阵
@@ -536,7 +537,7 @@ export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2
     const points: CurvePoint[] = [];
     for (let i = 0, len = path.length; i < len; i++) {
         const p = m3.computeCoord3(path[i]);
-        points.push(new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+        points.push(new CurvePoint([i] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
     }
 
     return points;
@@ -653,7 +654,7 @@ export function handle_contact_from(page: Page, shape: ContactShape, points: Cur
 
     const start_point = p;
 
-    points[0] = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
+    points[0] = new CurvePoint([0] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
 
     let border_p = shape.get_nearest_border_point(fromShape, type1);
 
@@ -663,7 +664,7 @@ export function handle_contact_from(page: Page, shape: ContactShape, points: Cur
 
     border_p = self_matrix.computeCoord3(border_p);
 
-    points.splice(1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
+    points.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), border_p.x, border_p.y, CurveMode.Straight));
 
     const s1 = border_p;
 
@@ -693,7 +694,7 @@ export function handle_contact_to(page: Page, shape: ContactShape, points: Curve
 
     p = self_matrix.computeCoord3(p);
     const end_point = p;
-    points[points.length - 1] = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
+    points[points.length - 1] = new CurvePoint(([points.length - 1] as BasicArray<number>), v4(), p.x, p.y, CurveMode.Straight);
 
     let border_p = shape.get_nearest_border_point(toShape, type2);
 
@@ -702,7 +703,7 @@ export function handle_contact_to(page: Page, shape: ContactShape, points: Curve
     }
 
     border_p = self_matrix.computeCoord3(border_p);
-    points.splice(points.length - 1, 0, new CurvePoint(v4(), border_p.x, border_p.y, CurveMode.Straight));
+    points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), border_p.x, border_p.y, CurveMode.Straight));
 
     const s2 = border_p;
 
@@ -734,9 +735,9 @@ export function path_for_edited(points: CurvePoint[], start_point: PageXY, end_p
             const _d = d(flex_point1, s1 as PageXY);
 
             if (_d === 'hor') {
-                p = new CurvePoint(v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
+                p = new CurvePoint([1] as BasicArray<number>, v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
             } else if (_d === 'ver') {
-                p = new CurvePoint(v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
+                p = new CurvePoint([1] as BasicArray<number>, v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
             }
             if (p) {
                 result.splice(1, 1, p);
@@ -752,10 +753,10 @@ export function path_for_edited(points: CurvePoint[], start_point: PageXY, end_p
             const _d = d(flex_point1, s2 as PageXY);
 
             if (_d === 'hor') {
-                const p = new CurvePoint(v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
+                const p = new CurvePoint(([len - 2] as BasicArray<number>), v4(), flex_point2.x, flex_point1.y, CurveMode.Straight);
                 result.splice(len - 2, 1, p);
             } else if (_d === 'ver') {
-                const p = new CurvePoint(v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
+                const p = new CurvePoint(([len - 2] as BasicArray<number>), v4(), flex_point1.x, flex_point2.y, CurveMode.Straight);
                 result.splice(len - 2, 1, p);
             }
         }
@@ -773,8 +774,8 @@ const __handle: { [key: string]: (points: CurvePoint[], start: CurvePoint, end: 
 __handle['horizontal'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint) {
     const mid = (end.x + start.x) / 2;
 
-    const _p1 = new CurvePoint(v4(), mid, start.y, CurveMode.Straight);
-    const _p2 = new CurvePoint(v4(), mid, end.y, CurveMode.Straight);
+    const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), mid, start.y, CurveMode.Straight);
+    const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), mid, end.y, CurveMode.Straight);
 
     points.splice(1, 0, _p1, _p2);
 
@@ -783,8 +784,8 @@ __handle['horizontal'] = function (points: CurvePoint[], start: CurvePoint, end:
 __handle['vertical'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint) {
     const mid = (end.y + start.y) / 2;
 
-    const _p1 = new CurvePoint(v4(), start.x, mid, CurveMode.Straight);
-    const _p2 = new CurvePoint(v4(), end.x, mid, CurveMode.Straight);
+    const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), start.x, mid, CurveMode.Straight);
+    const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), end.x, mid, CurveMode.Straight);
 
     points.splice(1, 0, _p1, _p2);
 
@@ -814,9 +815,9 @@ export function path_for_free_end_contact(shape: ContactShape, points: CurvePoin
     }
 
     if (Math.abs(start.y - end.y) * shape.frame.height < 5) {
-        points.push(new CurvePoint(v4(), end.x, start.y, CurveMode.Straight));
+        points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
     } else {
-        points.push(new CurvePoint(v4(), end.x, start.y, CurveMode.Straight), end);
+        points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight), end);
     }
 }
 export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | undefined) {
@@ -824,7 +825,7 @@ export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | 
         return path_for_free_contact(points);
     }
     const start = points[0];
-    const _end = new CurvePoint(v4(), end.x, end.y, CurveMode.Straight);
+    const _end = new CurvePoint(([points.length - 1] as BasicArray<number>), v4(), end.x, end.y, CurveMode.Straight);
 
     const direction = get_direction_for_free_contact(start, _end);
 

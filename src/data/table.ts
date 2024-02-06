@@ -1,18 +1,27 @@
-import { Border, Fill, Style, Shadow } from "./style";
+import { Style } from "./style";
 import * as classes from "./baseclasses"
-import { BasicArray, ResourceMgr } from "./basic";
-import { ShapeType, ShapeFrame, TableCellType } from "./baseclasses"
-import { Shape, Variable } from "./shape";
+import { BasicArray, BasicMap, ResourceMgr } from "./basic";
+import { ShapeType, ShapeFrame, TableCellType, CrdtNumber } from "./baseclasses"
+import { Shape } from "./shape";
 import { Path } from "./path";
-import { Text, TextAttr } from "./text"
+import { Para, Span, Text, TextAttr } from "./text"
 import { TextLayout } from "./textlayout";
-import { TableGridItem, TableLayout, layoutTable } from "./tablelayout";
-import { tableInsertCol, tableInsertRow, tableRemoveCol, tableRemoveRow } from "./tableedit";
+import { LayoutItem, TableGridItem, TableLayout, layoutTable } from "./tablelayout";
 import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
-import { uuid } from "../basic/uuid";
+import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
+export { CrdtNumber } from "./baseclasses";
+
+export function newText(content: string): Text {
+    const text = new Text(new BasicArray());
+    const para = new Para(content + '\n', new BasicArray());
+    text.paras.push(para);
+    const span = new Span(para.length);
+    para.spans.push(span);
+    return text;
+}
 
 export class TableCell extends Shape implements classes.TableCell {
 
@@ -26,6 +35,7 @@ export class TableCell extends Shape implements classes.TableCell {
     private __cacheData?: { media: { buff: Uint8Array, base64: string }, ref: string };
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -33,12 +43,28 @@ export class TableCell extends Shape implements classes.TableCell {
         style: Style
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
             frame,
             style
         )
+    }
+
+    getOpTarget(path: string[]) {
+        if (path.length === 0) return this;
+        if (path[0] === 'text') {
+            if (!this.text) this.text = newText("");
+            return this.text?.getOpTarget(path.slice(1));
+        }
+        return super.getOpTarget(path);
+    }
+
+    getCrdtPath(): string[] {
+        const cells = this.__parent;
+        if (!cells) throw new Error("cell not inside table?");
+        return cells.getCrdtPath().concat(this.id);
     }
 
     get shapeId(): (string | { rowIdx: number, colIdx: number })[] {
@@ -123,15 +149,18 @@ export class TableCell extends Shape implements classes.TableCell {
     }
 
     // text
-    setFrameSize(w: number, h: number) {
-        super.setFrameSize(w, h);
-        if (this.text) this.text.updateSize(this.frame.width, this.frame.height)
-    }
+    // setFrameSize(w: number, h: number) {
+    //     super.setFrameSize(w, h);
+    //     if (this.text) this.text.updateSize(this.frame.width, this.frame.height)
+    // }
 
     getText(): Text {
         if (!this.text) throw new Error("");
         return this.text;
     }
+
+    // todo
+    __layoutToken: string | undefined;
 
     getLayout(): TextLayout | undefined {
         if (!this.text) return;
@@ -142,20 +171,33 @@ export class TableCell extends Shape implements classes.TableCell {
         const rowSpan = Math.max(this.rowSpan ?? 1, 1);
         const colSpan = Math.max(this.colSpan ?? 1, 1);
 
-        let widthWeight = table.colWidths[indexCell.colIdx];
+        let widthWeight = table.colWidths[indexCell.colIdx].value;
         for (let i = 1; i < colSpan; ++i) {
-            widthWeight += table.colWidths[indexCell.colIdx + i];
+            widthWeight += table.colWidths[indexCell.colIdx + i].value;
         }
-        let heightWeight = table.rowHeights[indexCell.rowIdx];
+        let heightWeight = table.rowHeights[indexCell.rowIdx].value;
         for (let i = 1; i < rowSpan; ++i) {
-            heightWeight += table.rowHeights[indexCell.rowIdx + i];
+            heightWeight += table.rowHeights[indexCell.rowIdx + i].value;
         }
 
         const width = widthWeight / table.widthTotalWeights * table.frame.width;
         const height = heightWeight / table.heightTotalWeights * table.frame.height;
-        this.text.updateSize(width, height);
+        // this.text.updateSize(width, height);
 
-        return this.text.getLayout();
+        const layout = this.text.getLayout3(width, height, this.id, this.__layoutToken);
+
+        this.__layoutToken = layout.token;
+        return layout.layout;
+    }
+
+    locateText(x: number, y: number): TextLocate {
+        return locateText(this.getLayout()!, x, y);
+    }
+    locateCursor(index: number, cursorAtBefore: boolean): CursorLocate | undefined {
+        return locateCursor(this.getLayout()!, index, cursorAtBefore);
+    }
+    locateRange(start: number, end: number): { x: number, y: number }[] {
+        return locateRange(this.getLayout()!, start, end);
     }
 
     setContentType(contentType: TableCellType | undefined) {
@@ -189,13 +231,13 @@ export class TableCell extends Shape implements classes.TableCell {
     }
 }
 
-export function newCell(): TableCell {
-    return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
-        new BasicArray<Border>(),
-        new BasicArray<Fill>(),
-        new BasicArray<Shadow>()
-    ))
-}
+// export function newCell(): TableCell {
+//     return new TableCell(uuid(), "", ShapeType.TableCell, new ShapeFrame(0, 0, 0, 0), new Style(
+//         new BasicArray<Border>(),
+//         new BasicArray<Fill>(),
+//         new BasicArray<Shadow>()
+//     ))
+// }
 
 export class TableShape extends Shape implements classes.TableShape {
 
@@ -204,28 +246,29 @@ export class TableShape extends Shape implements classes.TableShape {
     static MaxColCount = 50;
 
     typeId = 'table-shape'
-    datas: BasicArray<(TableCell | undefined)>
-    rowHeights: BasicArray<number>
-    colWidths: BasicArray<number>
+    cells: BasicMap<string, TableCell>
+    rowHeights: BasicArray<CrdtNumber>
+    colWidths: BasicArray<CrdtNumber>
     textAttr?: TextAttr // 文本默认属性
 
     __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
-    private __layout?: TableLayout;
-    private __cellIndexs: Map<string, number> = new Map();
+    private __layout: LayoutItem = new LayoutItem();
     private __heightTotalWeights: number;
     private __widthTotalWeights: number;
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
         frame: ShapeFrame,
         style: Style,
-        datas: BasicArray<(TableCell | undefined)>,
-        rowHeights: BasicArray<number>,
-        colWidths: BasicArray<number>
+        cells: BasicMap<string, TableCell>,
+        rowHeights: BasicArray<CrdtNumber>,
+        colWidths: BasicArray<CrdtNumber>
     ) {
         super(
+            crdtidx,
             id,
             name,
             ShapeType.Table,
@@ -234,20 +277,22 @@ export class TableShape extends Shape implements classes.TableShape {
         )
         this.rowHeights = rowHeights
         this.colWidths = colWidths
-        this.datas = datas;
-        this.datas.setTypeId('cells');
-        this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur, 0);
-        this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur, 0);
+        this.cells = cells;
+        this.__heightTotalWeights = rowHeights.reduce((pre, cur) => pre + cur.value, 0);
+        this.__widthTotalWeights = colWidths.reduce((pre, cur) => pre + cur.value, 0);
     }
 
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
-        if (targetId.length > 0 && typeof targetId[0] !== 'string') {
-            const index = targetId[0];
-            const cell = this.getCellAt(index.rowIdx, index.colIdx, true);
-            if (!cell) throw new Error("table cell not find")
-            return cell.getTarget(targetId.slice(1))
+    getOpTarget(path: string[]): any {
+        const path0 = path[0];
+        if (path0 === "cells" && path.length > 1) {
+            const cellId = path[1];
+            let cell = this.cells.get(cellId);
+            // if (!cell) {
+            //     cell = this._initCell(cellId);
+            // }
+            return cell?.getOpTarget(path.slice(2));
         }
-        return this;
+        return super.getOpTarget(path);
     }
 
     setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
@@ -261,8 +306,13 @@ export class TableShape extends Shape implements classes.TableShape {
     /**
      * @deprecated
      */
-    get childs() {
-        return this.datas;
+    get datas() {
+        return this.cells;
+    }
+
+    updateTotalWeights() {
+        this.__heightTotalWeights = this.rowHeights.reduce((pre, cur) => pre + cur.value, 0);
+        this.__widthTotalWeights = this.colWidths.reduce((pre, cur) => pre + cur.value, 0);
     }
 
     get widthTotalWeights() {
@@ -291,91 +341,88 @@ export class TableShape extends Shape implements classes.TableShape {
         return new Path(path);
     }
     getLayout(): TableLayout {
-        if (!this.__layout) this.__layout = layoutTable(this);
-        return this.__layout;
+        this.__layout.update(this);
+        if (!this.__layout.layout) this.__layout.layout = layoutTable(this);
+        return this.__layout.layout;
     }
     getColWidths() {
         const frame = this.frame;
         const width = frame.width;
         const colWidths = this.colWidths;
-        const colWBase = colWidths.reduce((sum, cur) => sum + cur, 0);
-        return colWidths.map((val) => val / colWBase * width);
+        const colWBase = colWidths.reduce((sum, cur) => sum + cur.value, 0);
+        return colWidths.map((val) => val.value / colWBase * width);
     }
     getRowHeights() {
         const frame = this.frame;
         const height = frame.height;
         const rowHeights = this.rowHeights;
         const rowHBase = this.heightTotalWeights;
-        return rowHeights.map((val) => val / rowHBase * height);
+        return rowHeights.map((val) => val.value / rowHBase * height);
     }
-    insertRow(idx: number, weight: number, data: (TableCell | undefined)[]) {
-        tableInsertRow(this, idx, weight, data);
-        this.__heightTotalWeights += weight;
-        this.reLayout();
-    }
-    removeRow(idx: number): (TableCell | undefined)[] {
-        const weight = this.rowHeights[idx];
-        const ret = tableRemoveRow(this, idx);
-        this.__heightTotalWeights -= weight;
-        this.reLayout();
-        return ret;
-    }
-    insertCol(idx: number, weight: number, data: (TableCell | undefined)[]) {
-        tableInsertCol(this, idx, weight, data);
-        this.__widthTotalWeights += weight;
-        this.reLayout();
-    }
-    removeCol(idx: number): (TableCell | undefined)[] {
-        const weight = this.colWidths[idx];
-        const ret = tableRemoveCol(this, idx);
-        this.__widthTotalWeights -= weight;
-        this.reLayout();
-        return ret;
-    }
-
-    setColWidth(idx: number, weight: number) {
-        const colWidths = this.colWidths;
-        const origin = colWidths[idx];
-        colWidths[idx] = weight;
-        this.__widthTotalWeights -= origin;
-        this.__widthTotalWeights += weight;
-        this.reLayout();
-    }
-
-    setRowHeight(idx: number, weight: number) {
-        const rowHeights = this.rowHeights;
-        const origin = rowHeights[idx];
-        rowHeights[idx] = weight;
-        this.__heightTotalWeights -= origin;
-        this.__heightTotalWeights += weight;
-        this.reLayout();
-    }
-
-    setFrameSize(w: number, h: number) {
-        super.setFrameSize(w, h);
-        this.reLayout();
-    }
+    // insertRow(idx: number, weight: number, data: (TableCell | undefined)[]) {
+    //     tableInsertRow(this, idx, weight, data);
+    //     this.__heightTotalWeights += weight;
+    //     this.reLayout();
+    // }
+    // removeRow(idx: number): (TableCell | undefined)[] {
+    //     const weight = this.rowHeights[idx];
+    //     const ret = tableRemoveRow(this, idx);
+    //     this.__heightTotalWeights -= weight.value;
+    //     this.reLayout();
+    //     return ret;
+    // }
+    // insertCol(idx: number, weight: number, data: (TableCell | undefined)[]) {
+    //     tableInsertCol(this, idx, weight, data);
+    //     this.__widthTotalWeights += weight;
+    //     this.reLayout();
+    // }
+    // removeCol(idx: number): (TableCell | undefined)[] {
+    //     const weight = this.colWidths[idx];
+    //     const ret = tableRemoveCol(this, idx);
+    //     this.__widthTotalWeights -= weight.value;
+    //     this.reLayout();
+    //     return ret;
+    // }
+    // setColWidth(idx: number, weight: number) {
+    //     const colWidths = this.colWidths;
+    //     const origin = colWidths[idx].value;
+    //     colWidths[idx].value = weight;
+    //     this.__widthTotalWeights -= origin;
+    //     this.__widthTotalWeights += weight;
+    //     this.reLayout();
+    // }
+    // setRowHeight(idx: number, weight: number) {
+    //     const rowHeights = this.rowHeights;
+    //     const origin = rowHeights[idx].value;
+    //     rowHeights[idx].value = weight;
+    //     this.__heightTotalWeights -= origin;
+    //     this.__heightTotalWeights += weight;
+    //     this.reLayout();
+    // }
+    // setFrameSize(w: number, h: number) {
+    //     super.setFrameSize(w, h);
+    //     this.reLayout();
+    // }
 
     onRollback(from: string): void {
         if (from !== "composingInput") {
             this.reLayout();
             return;
         }
-        const widthTotalWeights = this.colWidths.reduce((p, c) => p + c, 0);
-        const heightTotalWeights = this.rowHeights.reduce((p, c) => p + c, 0);
+        const widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
+        const heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
         if (this.__widthTotalWeights !== widthTotalWeights ||
             this.__heightTotalWeights !== heightTotalWeights) {
             this.__widthTotalWeights = widthTotalWeights;
             this.__heightTotalWeights = heightTotalWeights;
-            this.__layout = undefined;
+            this.__layout.layout = undefined;
         }
     }
 
     reLayout() {
-        this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c, 0);
-        this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c, 0);
-        this.__layout = undefined;
-        this.__cellIndexs.clear();
+        this.__widthTotalWeights = this.colWidths.reduce((p, c) => p + c.value, 0);
+        this.__heightTotalWeights = this.rowHeights.reduce((p, c) => p + c.value, 0);
+        this.__layout.layout = undefined;
     }
 
     locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
@@ -401,33 +448,21 @@ export class TableShape extends Shape implements classes.TableShape {
         }
     }
 
-    private getCellIndexs() {
-        if (this.__cellIndexs.size === 0) {
-            this.datas.forEach((c, i) => {
-                if (c) this.__cellIndexs.set(c.id, i);
-            })
-        }
-        return this.__cellIndexs;
-    }
-
     indexOfCell2(cell: TableCell): { rowIdx: number, colIdx: number } | undefined {
         // cell indexs
-        const cellIndexs = this.getCellIndexs();
-        const index = cellIndexs.get(cell.id) ?? -1;
-        if (index < 0) return;
-        const rowIdx = Math.floor(index / this.colCount);
-        const colIdx = index % this.colCount;
+        const ids = cell.id.split(',');
+        if (ids.length !== 2) throw new Error("cell index error");
+        const rowIdx = this.rowHeights.findIndex(v => v.id === ids[0]);
+        const colIdx = this.colWidths.findIndex(v => v.id === ids[1]);
+        if (rowIdx < 0 || colIdx < 0) return;
         return { rowIdx, colIdx }
     }
 
     indexOfCell(cell: TableCell): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
         // cell indexs
-        const cellIndexs = this.getCellIndexs();
-        const index = cellIndexs.get(cell.id) ?? -1;
-        if (index < 0) return;
-        const rowIdx = Math.floor(index / this.colCount);
-        const colIdx = index % this.colCount;
-
+        const cellIdx = this.indexOfCell2(cell);
+        if (!cellIdx) return;
+        const { rowIdx, colIdx } = cellIdx;
         const layout = this.getLayout();
         const item = layout.grid.get(rowIdx, colIdx);
         const visible = item.index.row === rowIdx && item.index.col === colIdx;
@@ -447,26 +482,27 @@ export class TableShape extends Shape implements classes.TableShape {
         return getTableCells(this, rowStart, rowEnd, colStart, colEnd);
     }
 
-    getCellAt(rowIdx: number, colIdx: number, initCell: boolean = false): (TableCell | undefined) {
+    // todo 错的。不可以，除非cell是不可删除的才可以。这里也要跟shape一样的undo、redo
+    // _initCell(cellId: string) {
+    //     const cell = new TableCell(new BasicArray<number>([], 0),
+    //         cellId,
+    //         "",
+    //         ShapeType.TableCell,
+    //         new ShapeFrame(0, 0, 0, 0),
+    //         new Style(new BasicArray(), new BasicArray(), new BasicArray()));
+    //     this.cells.set(cellId, cell);
+    //     return cell;
+    // }
+
+    getCellAt(rowIdx: number, colIdx: number): (TableCell | undefined) {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
             throw new Error("cell index outof range: " + rowIdx + " " + colIdx)
         }
-        const index = rowIdx * this.colWidths.length + colIdx;
-        const cell = this.datas[index];
-        if (!cell && initCell) {
-            return this.initCell(index);
-        }
-        return cell;
-    }
-
-    private initCell(index: number) {
-        this.datas[index] = newCell();
-        // add to index
-        const cell = this.datas[index];
-        // this.getCellIndexs().set(cell!.id, index);
-        if (this.__cellIndexs.size > 0) {
-            this.__cellIndexs.set(cell!.id, index)
-        }
+        const cellId = this.rowHeights[rowIdx].id + "," + this.colWidths[colIdx].id;
+        let cell = this.cells.get(cellId);
+        // if (!cell && initCell) {
+        //     cell = this._initCell(cellId);
+        // }
         return cell;
     }
 

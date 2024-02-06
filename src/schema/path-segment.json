@@ -2,6 +2,12 @@
     "description": "path segment",
     "type": "object",
     "properties": {
+        "crdtidx": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
         "points": {
             "type": "array",
             "items": {
@@ -13,6 +19,7 @@
         }
     },
     "required": [
+        "crdtidx",
         "points",
         "isClosed"
     ],

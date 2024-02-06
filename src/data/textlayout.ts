@@ -4,6 +4,7 @@ import { BasicArray } from "./basic"
 import { layoutBulletNumber } from "./textbnlayout";
 import { transformText } from "./textlayouttransform";
 import { gPal } from "../basic/pal";
+import { TextAttr } from "./typesdefine";
 
 const TAB_WIDTH = 28;
 const INDENT_WIDTH = TAB_WIDTH;
@@ -65,6 +66,61 @@ export class TextLayout {
     public paras: ParaLayout[] = [];
     public contentHeight: number = 0;
     public contentWidth: number = 0;
+}
+
+export class LayoutItem {
+    layout: TextLayout | undefined;
+    owners: string[] = [];
+
+    // save infos
+    __layoutWidth: number = 0;
+    __frameWidth: number = 0;
+    __frameHeight: number = 0;
+    __textBehaviour: TextBehaviour | undefined;
+    __verAlign: TextVerAlign | undefined;
+
+    update(w: number, h: number, attr: TextAttr | undefined) {
+
+        if (!this.layout) {
+            this.__frameHeight = h;
+            this.__frameWidth = w;
+            this.__layoutWidth = 0;
+            this.__textBehaviour = attr?.textBehaviour;
+            this.__verAlign = attr?.verAlign;
+            return;
+        }
+
+        const layoutWidth = ((b: TextBehaviour) => {
+            switch (b) {
+                case TextBehaviour.Flexible: return Number.MAX_VALUE;
+                case TextBehaviour.Fixed: return w;
+                case TextBehaviour.FixWidthAndHeight: return w;
+            }
+            // return Number.MAX_VALUE
+        })(attr?.textBehaviour ?? TextBehaviour.Flexible)
+
+        if (this.__layoutWidth !== layoutWidth) {
+            this.__frameHeight = h;
+            this.__layoutWidth = layoutWidth;
+            // this.reLayout();
+            this.layout = undefined;
+        }
+        else if (this.__frameHeight !== h || this.__verAlign !== (attr?.verAlign ?? TextVerAlign.Top)) {
+            const vAlign = attr?.verAlign ?? TextVerAlign.Top;
+            const yOffset: number = ((align: TextVerAlign) => {
+                switch (align) {
+                    case TextVerAlign.Top: return 0;
+                    case TextVerAlign.Middle: return (h - this.layout.contentHeight) / 2;
+                    case TextVerAlign.Bottom: return h - this.layout.contentHeight;
+                }
+            })(vAlign);
+            this.layout.yOffset = yOffset;
+        }
+        this.__frameWidth = w;
+        this.__frameHeight = h;
+        this.__textBehaviour = attr?.textBehaviour;
+        this.__verAlign = attr?.verAlign;
+    }
 }
 
 export function fixLineHorAlign(line: Line, align: TextHorAlign, width: number) {
@@ -510,7 +566,13 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     return paraLayout;
 }
 
-export function layoutText(text: Text, layoutWidth: number, layoutHeight: number): TextLayout {
+export function layoutText(text: Text, layoutWidth: number, layoutHeight: number): {
+    xOffset: number,
+    yOffset: number,
+    paras: ParaLayout[],
+    contentHeight: number,
+    contentWidth: number,
+} {
     // const layoutWidth = ((b: TextBehaviour) => {
     //     switch (b) {
     //         case TextBehaviour.Flexible: return Number.MAX_VALUE;

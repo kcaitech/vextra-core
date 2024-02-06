@@ -7,9 +7,11 @@ import * as impl from "./classes"
 import * as types from "./typesdefine"
 import { BasicArray, BasicMap } from "./basic"
 
+import { uuid } from "../basic/uuid"
 
 export interface IImportContext {
     document: impl.Document
+    curPage: string
 }
 /* winding rule */
 export function importWindingRule(source: types.WindingRule, ctx?: IImportContext): impl.WindingRule {
@@ -34,9 +36,11 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
                         const r = (() => {
                             const val = _val[i]
                             if (val.typeId == 'border') {
+                                if (!val.crdtidx) val.crdtidx = [i]
                                 return importBorder(val as types.Border, ctx)
                             }
                             if (val.typeId == 'fill') {
+                                if (!val.crdtidx) val.crdtidx = [i]
                                 return importFill(val as types.Fill, ctx)
                             }
                             {
@@ -129,6 +133,8 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         (() => {
             const ret = new BasicArray<impl.Border>()
             for (let i = 0, len = source.borders && source.borders.length; i < len; i++) {
+                const val = source.borders[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importBorder(source.borders[i], ctx)
                 if (r) ret.push(r)
             }
@@ -137,6 +143,8 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         (() => {
             const ret = new BasicArray<impl.Fill>()
             for (let i = 0, len = source.fills && source.fills.length; i < len; i++) {
+                const val = source.fills[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importFill(source.fills[i], ctx)
                 if (r) ret.push(r)
             }
@@ -145,6 +153,8 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         (() => {
             const ret = new BasicArray<impl.Shadow>()
             for (let i = 0, len = source.shadows && source.shadows.length; i < len; i++) {
+                const val = source.shadows[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importShadow(source.shadows[i], ctx)
                 if (r) ret.push(r)
             }
@@ -160,6 +170,8 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
     if (source.innerShadows !== undefined) ret.innerShadows = (() => {
         const ret = new BasicArray<impl.Shadow>()
         for (let i = 0, len = source.innerShadows && source.innerShadows.length; i < len; i++) {
+            const val = source.innerShadows[i]
+            if (!val.crdtidx) val.crdtidx = [i]
             const r = importShadow(source.innerShadows[i], ctx)
             if (r) ret.push(r)
         }
@@ -168,6 +180,8 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
     if (source.contacts !== undefined) ret.contacts = (() => {
         const ret = new BasicArray<impl.ContactRole>()
         for (let i = 0, len = source.contacts && source.contacts.length; i < len; i++) {
+            const val = source.contacts[i]
+            if (!val.crdtidx) val.crdtidx = [i]
             const r = importContactRole(source.contacts[i], ctx)
             if (r) ret.push(r)
         }
@@ -193,9 +207,17 @@ export function importStrikethroughType(source: types.StrikethroughType, ctx?: I
 /* stop */
 export function importStop(source: types.Stop, ctx?: IImportContext): impl.Stop {
     const ret: impl.Stop = new impl.Stop (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.id,
         source.position,
-        importColor(source.color, ctx),
-        source.id
+        importColor(source.color, ctx)
     )
     return ret
 }
@@ -222,6 +244,14 @@ export function importSpanAttr(source: types.SpanAttr, ctx?: IImportContext): im
 /* shape */
 export function importShape(source: types.Shape, ctx?: IImportContext): impl.Shape {
     const ret: impl.Shape = new impl.Shape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -273,6 +303,14 @@ export function importShapeFrame(source: types.ShapeFrame, ctx?: IImportContext)
 /* shadow */
 export function importShadow(source: types.Shadow, ctx?: IImportContext): impl.Shadow {
     const ret: impl.Shadow = new impl.Shadow (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.isEnabled,
         source.blurRadius,
@@ -305,8 +343,18 @@ export function importPoint2D(source: types.Point2D, ctx?: IImportContext): impl
 export function importPathSegment(source: types.PathSegment, ctx?: IImportContext): impl.PathSegment {
     const ret: impl.PathSegment = new impl.PathSegment (
         (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const val = source.points[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -335,6 +383,14 @@ export function importPara(source: types.Para, ctx?: IImportContext): impl.Para 
 /* page list item */
 export function importPageListItem(source: types.PageListItem, ctx?: IImportContext): impl.PageListItem {
     const ret: impl.PageListItem = new impl.PageListItem (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name
     )
@@ -384,6 +440,8 @@ export function importGradient(source: types.Gradient, ctx?: IImportContext): im
         (() => {
             const ret = new BasicArray<impl.Stop>()
             for (let i = 0, len = source.stops && source.stops.length; i < len; i++) {
+                const val = source.stops[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importStop(source.stops[i], ctx)
                 if (r) ret.push(r)
             }
@@ -401,6 +459,14 @@ export function importGradientType(source: types.GradientType, ctx?: IImportCont
 /* fill */
 export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill {
     const ret: impl.Fill = new impl.Fill (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.isEnabled,
         importFillType(source.fillType, ctx),
@@ -427,15 +493,9 @@ export function importExportOptions(source: types.ExportOptions, ctx?: IImportCo
         (() => {
             const ret = new BasicArray<impl.ExportFormat>()
             for (let i = 0, len = source.exportFormats && source.exportFormats.length; i < len; i++) {
+                const val = source.exportFormats[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importExportFormat(source.exportFormats[i], ctx)
-                if (r) ret.push(r)
-            }
-            return ret
-        })(),
-        (() => {
-            const ret = new BasicArray<string>()
-            for (let i = 0, len = source.includedChildIds && source.includedChildIds.length; i < len; i++) {
-                const r = source.includedChildIds[i]
                 if (r) ret.push(r)
             }
             return ret
@@ -451,6 +511,14 @@ export function importExportOptions(source: types.ExportOptions, ctx?: IImportCo
 /* export format */
 export function importExportFormat(source: types.ExportFormat, ctx?: IImportContext): impl.ExportFormat {
     const ret: impl.ExportFormat = new impl.ExportFormat (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.absoluteSize,
         importExportFileFormat(source.fileFormat, ctx),
@@ -479,35 +547,33 @@ export function importEllipse(source: types.Ellipse, ctx?: IImportContext): impl
     )
     return ret
 }
-/* document syms */
-export function importDocumentSyms(source: types.DocumentSyms, ctx?: IImportContext): impl.DocumentSyms {
-    const ret: impl.DocumentSyms = new impl.DocumentSyms (
-        source.pageId,
-        (() => {
-            const ret = new BasicArray<string>()
-            for (let i = 0, len = source.symbols && source.symbols.length; i < len; i++) {
-                const r = source.symbols[i]
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    return ret
-}
 /* document meta */
 export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
+    // inject code
+    if (!(source as any).symbolregist) (source as any).symbolregist = {};
     const ret: impl.DocumentMeta = new impl.DocumentMeta (
         source.id,
         source.name,
         (() => {
             const ret = new BasicArray<impl.PageListItem>()
             for (let i = 0, len = source.pagesList && source.pagesList.length; i < len; i++) {
+                const val = source.pagesList[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importPageListItem(source.pagesList[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
-        source.lastCmdId
+        source.lastCmdId,
+        (() => {
+            const ret = new BasicMap<string, string>()
+            const val = source.symbolregist as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+            Object.keys(val).forEach((k) => {
+                const v = val[k];
+                ret.set(k, v)
+            });
+            return ret
+        })()
     )
     return ret
 }
@@ -534,6 +600,14 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
         _source.mode = _source.curveMode;
     }
     const ret: impl.CurvePoint = new impl.CurvePoint (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.x,
         source.y,
@@ -552,6 +626,22 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
 export function importCurveMode(source: types.CurveMode, ctx?: IImportContext): impl.CurveMode {
     return source
 }
+/* crdt number */
+export function importCrdtNumber(source: types.CrdtNumber, ctx?: IImportContext): impl.CrdtNumber {
+    const ret: impl.CrdtNumber = new impl.CrdtNumber (
+        source.id,
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.value
+    )
+    return ret
+}
 /* context settings */
 export function importContextSettings(source: types.ContextSettings, ctx?: IImportContext): impl.ContextSettings {
     const ret: impl.ContextSettings = new impl.ContextSettings (
@@ -567,6 +657,14 @@ export function importContactType(source: types.ContactType, ctx?: IImportContex
 /* contactstyle */
 export function importContactRole(source: types.ContactRole, ctx?: IImportContext): impl.ContactRole {
     const ret: impl.ContactRole = new impl.ContactRole (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         importContactRoleType(source.roleType, ctx),
         source.shapeId
@@ -641,6 +739,14 @@ export function importBulletNumbersBehavior(source: types.BulletNumbersBehavior,
 /* border */
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
     const ret: impl.Border = new impl.Border (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.isEnabled,
         importFillType(source.fillType, ctx),
@@ -701,6 +807,14 @@ export function importBlendMode(source: types.BlendMode, ctx?: IImportContext): 
 /* text shape */
 export function importTextShape(source: types.TextShape, ctx?: IImportContext): impl.TextShape {
     const ret: impl.TextShape = new impl.TextShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -739,44 +853,68 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
 export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
     // inject code
     // 兼容旧数据
-    if ((source as any).childs) source.datas = (source as any).childs;
+    if ((source as any).datas || (source as any).childs) {
+        source.colWidths = ((source as any).colWidths as number[]).map((v, i) => ({
+            id: uuid(),
+            crdtidx: [i],
+            value: v
+        } as types.CrdtNumber));
+        source.rowHeights = ((source as any).rowHeights as number[]).map((v, i) => ({
+            id: uuid(),
+            crdtidx: [i],
+            value: v
+        } as types.CrdtNumber));
+
+        const colCount = source.colWidths.length;
+        const rowCount = source.rowHeights.length;
+        const datas: types.TableCell[] = (source as any).datas || (source as any).childs;
+        const cells: {[key: string]: types.TableCell} = {};
+        for (let i = 0; i < datas.length; ++i) {
+            const c = datas[i];
+            if (!c) continue;
+            const ri = Math.floor(i / colCount);
+            const ci = i % colCount;
+            if (ri >= rowCount) break;
+            const id = source.rowHeights[ri].id + ',' + source.colWidths[ci].id;
+            cells[id] = c;
+        }
+        source.cells = cells as any;
+    }
     const ret: impl.TableShape = new impl.TableShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
         importShapeFrame(source.frame, ctx),
         importStyle(source.style, ctx),
         (() => {
-            const ret = new BasicArray<(undefined | impl.TableCell)>()
-            for (let i = 0, len = source.datas && source.datas.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.datas[i]
-                    if (!val) {
-                        return val ?? undefined
-                    }
-                    if (val.typeId == 'table-cell') {
-                        return importTableCell(val as types.TableCell, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                ret.push(r)
-            }
+            const ret = new BasicMap<string, impl.TableCell>()
+            const val = source.cells as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+            Object.keys(val).forEach((k) => {
+                const v = val[k];
+                ret.set(k, importTableCell(v, ctx))
+            });
             return ret
         })(),
         (() => {
-            const ret = new BasicArray<number>()
+            const ret = new BasicArray<impl.CrdtNumber>()
             for (let i = 0, len = source.rowHeights && source.rowHeights.length; i < len; i++) {
-                const r = source.rowHeights[i]
+                const r = importCrdtNumber(source.rowHeights[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
         })(),
         (() => {
-            const ret = new BasicArray<number>()
+            const ret = new BasicArray<impl.CrdtNumber>()
             for (let i = 0, len = source.colWidths && source.colWidths.length; i < len; i++) {
-                const r = source.colWidths[i]
+                const r = importCrdtNumber(source.colWidths[i], ctx)
                 if (r) ret.push(r)
             }
             return ret
@@ -813,7 +951,18 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
 }
 /* table cell */
 export function importTableCell(source: types.TableCell, ctx?: IImportContext): impl.TableCell {
+    // inject code
+    // 兼容旧数据
+    if (!(source as any).crdtidx) (source as any).crdtidx = []
     const ret: impl.TableCell = new impl.TableCell (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -861,6 +1010,14 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         source.overrides = (source as any).virbindsEx
     }
     const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -941,6 +1098,14 @@ export function importSpan(source: types.Span, ctx?: IImportContext): impl.Span 
 /* path shape */
 export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
     const ret: impl.PathShape2 = new impl.PathShape2 (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -949,6 +1114,8 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
         (() => {
             const ret = new BasicArray<impl.PathSegment>()
             for (let i = 0, len = source.pathsegs && source.pathsegs.length; i < len; i++) {
+                const val = source.pathsegs[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importPathSegment(source.pathsegs[i], ctx)
                 if (r) ret.push(r)
             }
@@ -985,6 +1152,14 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
 /* path shape */
 export function importPathShape(source: types.PathShape, ctx?: IImportContext): impl.PathShape {
     const ret: impl.PathShape = new impl.PathShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -993,6 +1168,8 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const val = source.points[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1030,6 +1207,14 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
 /* rect shape */
 export function importRectShape(source: types.RectShape, ctx?: IImportContext): impl.RectShape {
     const ret: impl.RectShape = new impl.RectShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1038,6 +1223,8 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const val = source.points[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1126,105 +1313,17 @@ export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): im
     if (source.padding !== undefined) ret.padding = importPadding(source.padding, ctx)
     return ret
 }
-/* page */
-export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
-    const ret: impl.Page = new impl.Page (
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importShapeFrame(source.frame, ctx),
-        importStyle(source.style, ctx),
-        (() => {
-            const ret = new BasicArray<(impl.Shape | impl.FlattenShape | impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.TextShape | impl.OvalShape | impl.LineShape | impl.Artboard | impl.ContactShape | impl.SymbolRefShape | impl.TableShape | impl.CutoutShape | impl.SymbolUnionShape | impl.SymbolShape)>()
-            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
-                const r = (() => {
-                    const val = source.childs[i]
-                    if (val.typeId == 'shape') {
-                        return importShape(val as types.Shape, ctx)
-                    }
-                    if (val.typeId == 'flatten-shape') {
-                        return importFlattenShape(val as types.FlattenShape, ctx)
-                    }
-                    if (val.typeId == 'group-shape') {
-                        return importGroupShape(val as types.GroupShape, ctx)
-                    }
-                    if (val.typeId == 'image-shape') {
-                        return importImageShape(val as types.ImageShape, ctx)
-                    }
-                    if (val.typeId == 'path-shape') {
-                        return importPathShape(val as types.PathShape, ctx)
-                    }
-                    if (val.typeId == 'rect-shape') {
-                        return importRectShape(val as types.RectShape, ctx)
-                    }
-                    if (val.typeId == 'text-shape') {
-                        return importTextShape(val as types.TextShape, ctx)
-                    }
-                    if (val.typeId == 'oval-shape') {
-                        return importOvalShape(val as types.OvalShape, ctx)
-                    }
-                    if (val.typeId == 'line-shape') {
-                        return importLineShape(val as types.LineShape, ctx)
-                    }
-                    if (val.typeId == 'artboard') {
-                        return importArtboard(val as types.Artboard, ctx)
-                    }
-                    if (val.typeId == 'contact-shape') {
-                        return importContactShape(val as types.ContactShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-ref-shape') {
-                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
-                    }
-                    if (val.typeId == 'table-shape') {
-                        return importTableShape(val as types.TableShape, ctx)
-                    }
-                    if (val.typeId == 'cutout-shape') {
-                        return importCutoutShape(val as types.CutoutShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-union-shape') {
-                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
-                    }
-                    if (val.typeId == 'symbol-shape') {
-                        return importSymbolShape(val as types.SymbolShape, ctx)
-                    }
-                    {
-                        throw new Error('unknow val: ' + val)
-                    }
-                })()
-                if (r) ret.push(r)
-            }
-            return ret
-        })()
-    )
-    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
-    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
-    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
-    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
-    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
-    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
-    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
-    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
-    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
-    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
-    if (source.rotation !== undefined) ret.rotation = source.rotation
-    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
-    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
-    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
-    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
-    if (source.varbinds !== undefined) ret.varbinds = (() => {
-        const ret = new BasicMap<string, string>()
-        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
-        Object.keys(val).forEach((k) => {
-            const v = val[k];
-            ret.set(k, v)
-        });
-        return ret
-    })()
-    return ret
-}
 /* oval shape */
 export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
     const ret: impl.OvalShape = new impl.OvalShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1233,6 +1332,8 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const val = source.points[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1271,6 +1372,14 @@ export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): 
 /* line shape */
 export function importLineShape(source: types.LineShape, ctx?: IImportContext): impl.LineShape {
     const ret: impl.LineShape = new impl.LineShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1279,6 +1388,8 @@ export function importLineShape(source: types.LineShape, ctx?: IImportContext): 
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const val = source.points[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1324,22 +1435,26 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         const id3 = "1519da3c-c692-4e1d-beb4-01a85cc56738"
         const id4 = "e857f541-4e7f-491b-96e6-2ca38f1d4c09"
         const p1: types.CurvePoint = {
+            crdtidx: [0],
             id: id1,
             mode: types.CurveMode.Straight,
             x: 0, y: 0
         }; // lt
         const p2: types.CurvePoint =
         {
+            crdtidx: [1],
             id: id2,
             mode: types.CurveMode.Straight,
             x: 1, y: 0
         }; // rt
         const p3: types.CurvePoint = {
+            crdtidx: [2],
             id: id3,
             mode: types.CurveMode.Straight,
             x: 1, y: 1
         }; // rb
         const p4: types.CurvePoint = {
+            crdtidx: [3],
             id: id4,
             mode: types.CurveMode.Straight,
             x: 0, y: 1
@@ -1347,6 +1462,14 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         source.points.push(p1, p2, p3, p4);
     }
     const ret: impl.ImageShape = new impl.ImageShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1355,6 +1478,8 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const val = source.points[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1395,6 +1520,14 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
 /* group shape */
 export function importGroupShape(source: types.GroupShape, ctx?: IImportContext): impl.GroupShape {
     const ret: impl.GroupShape = new impl.GroupShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1406,51 +1539,67 @@ export function importGroupShape(source: types.GroupShape, ctx?: IImportContext)
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importGroupShape(val as types.GroupShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importImageShape(val as types.ImageShape, ctx)
                     }
                     if (val.typeId == 'path-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importPathShape(val as types.PathShape, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importRectShape(val as types.RectShape, ctx)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'symbol-union-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importTextShape(val as types.TextShape, ctx)
                     }
                     if (val.typeId == 'artboard') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importArtboard(val as types.Artboard, ctx)
                     }
                     if (val.typeId == 'line-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importLineShape(val as types.LineShape, ctx)
                     }
                     if (val.typeId == 'oval-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importOvalShape(val as types.OvalShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importTableShape(val as types.TableShape, ctx)
                     }
                     if (val.typeId == 'contact-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importContactShape(val as types.ContactShape, ctx)
                     }
                     if (val.typeId == 'shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importShape(val as types.Shape, ctx)
                     }
                     if (val.typeId == 'flatten-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'cutout-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importCutoutShape(val as types.CutoutShape, ctx)
                     }
                     {
@@ -1500,6 +1649,14 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         source.overrides = (source as any).virbindsEx
     }
     const ret: impl.SymbolShape = new impl.SymbolShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1511,51 +1668,67 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importGroupShape(val as types.GroupShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importImageShape(val as types.ImageShape, ctx)
                     }
                     if (val.typeId == 'path-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importPathShape(val as types.PathShape, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importRectShape(val as types.RectShape, ctx)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'symbol-union-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importTextShape(val as types.TextShape, ctx)
                     }
                     if (val.typeId == 'artboard') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importArtboard(val as types.Artboard, ctx)
                     }
                     if (val.typeId == 'line-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importLineShape(val as types.LineShape, ctx)
                     }
                     if (val.typeId == 'oval-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importOvalShape(val as types.OvalShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importTableShape(val as types.TableShape, ctx)
                     }
                     if (val.typeId == 'contact-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importContactShape(val as types.ContactShape, ctx)
                     }
                     if (val.typeId == 'shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importShape(val as types.Shape, ctx)
                     }
                     if (val.typeId == 'flatten-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'cutout-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importCutoutShape(val as types.CutoutShape, ctx)
                     }
                     {
@@ -1621,12 +1794,25 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
         return ret
     })()
     // inject code
-    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    if (ctx?.document) {
+        const registed = ctx.document.symbolregist.get(ret.id);
+        if (!registed || registed === ctx.curPage) {
+            ctx.document.symbolsMgr.add(ret.id, ret);
+        }
+    }
     return ret
 }
 /* symbol union shape */
 export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IImportContext): impl.SymbolUnionShape {
     const ret: impl.SymbolUnionShape = new impl.SymbolUnionShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1638,51 +1824,67 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importGroupShape(val as types.GroupShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importImageShape(val as types.ImageShape, ctx)
                     }
                     if (val.typeId == 'path-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importPathShape(val as types.PathShape, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importRectShape(val as types.RectShape, ctx)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'symbol-union-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importTextShape(val as types.TextShape, ctx)
                     }
                     if (val.typeId == 'artboard') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importArtboard(val as types.Artboard, ctx)
                     }
                     if (val.typeId == 'line-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importLineShape(val as types.LineShape, ctx)
                     }
                     if (val.typeId == 'oval-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importOvalShape(val as types.OvalShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importTableShape(val as types.TableShape, ctx)
                     }
                     if (val.typeId == 'contact-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importContactShape(val as types.ContactShape, ctx)
                     }
                     if (val.typeId == 'shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importShape(val as types.Shape, ctx)
                     }
                     if (val.typeId == 'flatten-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'cutout-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importCutoutShape(val as types.CutoutShape, ctx)
                     }
                     {
@@ -1747,6 +1949,132 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
         });
         return ret
     })()
+    return ret
+}
+/* page */
+export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
+    // inject code
+    // 兼容旧数据
+    if (!(source as any).crdtidx) (source as any).crdtidx = []
+    const ret: impl.Page = new impl.Page (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importShapeFrame(source.frame, ctx),
+        importStyle(source.style, ctx),
+        (() => {
+            const ret = new BasicArray<(impl.GroupShape | impl.ImageShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.FlattenShape | impl.CutoutShape)>()
+            for (let i = 0, len = source.childs && source.childs.length; i < len; i++) {
+                const r = (() => {
+                    const val = source.childs[i]
+                    if (val.typeId == 'group-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importGroupShape(val as types.GroupShape, ctx)
+                    }
+                    if (val.typeId == 'image-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importImageShape(val as types.ImageShape, ctx)
+                    }
+                    if (val.typeId == 'path-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importPathShape(val as types.PathShape, ctx)
+                    }
+                    if (val.typeId == 'rect-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importRectShape(val as types.RectShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-ref-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importSymbolRefShape(val as types.SymbolRefShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importSymbolShape(val as types.SymbolShape, ctx)
+                    }
+                    if (val.typeId == 'symbol-union-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
+                    }
+                    if (val.typeId == 'text-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importTextShape(val as types.TextShape, ctx)
+                    }
+                    if (val.typeId == 'artboard') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importArtboard(val as types.Artboard, ctx)
+                    }
+                    if (val.typeId == 'line-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importLineShape(val as types.LineShape, ctx)
+                    }
+                    if (val.typeId == 'oval-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importOvalShape(val as types.OvalShape, ctx)
+                    }
+                    if (val.typeId == 'table-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importTableShape(val as types.TableShape, ctx)
+                    }
+                    if (val.typeId == 'contact-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importContactShape(val as types.ContactShape, ctx)
+                    }
+                    if (val.typeId == 'shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importShape(val as types.Shape, ctx)
+                    }
+                    if (val.typeId == 'flatten-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importFlattenShape(val as types.FlattenShape, ctx)
+                    }
+                    if (val.typeId == 'cutout-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
+                        return importCutoutShape(val as types.CutoutShape, ctx)
+                    }
+                    {
+                        throw new Error('unknow val: ' + val)
+                    }
+                })()
+                if (r) ret.push(r)
+            }
+            return ret
+        })()
+    )
+    if (source.isBoolOpShape !== undefined) ret.isBoolOpShape = source.isBoolOpShape
+    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
+    if (source.boolOp !== undefined) ret.boolOp = importBoolOp(source.boolOp, ctx)
+    if (source.isFixedToViewport !== undefined) ret.isFixedToViewport = source.isFixedToViewport
+    if (source.isFlippedHorizontal !== undefined) ret.isFlippedHorizontal = source.isFlippedHorizontal
+    if (source.isFlippedVertical !== undefined) ret.isFlippedVertical = source.isFlippedVertical
+    if (source.isLocked !== undefined) ret.isLocked = source.isLocked
+    if (source.isVisible !== undefined) ret.isVisible = source.isVisible
+    if (source.exportOptions !== undefined) ret.exportOptions = importExportOptions(source.exportOptions, ctx)
+    if (source.nameIsFixed !== undefined) ret.nameIsFixed = source.nameIsFixed
+    if (source.resizingConstraint !== undefined) ret.resizingConstraint = source.resizingConstraint
+    if (source.resizingType !== undefined) ret.resizingType = importResizeType(source.resizingType, ctx)
+    if (source.rotation !== undefined) ret.rotation = source.rotation
+    if (source.constrainerProportions !== undefined) ret.constrainerProportions = source.constrainerProportions
+    if (source.clippingMaskMode !== undefined) ret.clippingMaskMode = source.clippingMaskMode
+    if (source.hasClippingMask !== undefined) ret.hasClippingMask = source.hasClippingMask
+    if (source.shouldBreakMaskChain !== undefined) ret.shouldBreakMaskChain = source.shouldBreakMaskChain
+    if (source.varbinds !== undefined) ret.varbinds = (() => {
+        const ret = new BasicMap<string, string>()
+        const val = source.varbinds as any; // json没有map对象,导入导出的是{[key: string]: value}对象
+        Object.keys(val).forEach((k) => {
+            const v = val[k];
+            ret.set(k, v)
+        });
+        return ret
+    })()
+    if (source.backgroundColor !== undefined) ret.backgroundColor = importColor(source.backgroundColor, ctx)
     return ret
 }
 /* flatten shape */
@@ -1760,6 +2088,14 @@ export function importFlattenShape(source: types.FlattenShape, ctx?: IImportCont
 /* cutout shape */
 export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContext): impl.CutoutShape {
     const ret: impl.CutoutShape = new impl.CutoutShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1768,6 +2104,8 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const val = source.points[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1806,6 +2144,14 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
 /* contact shape */
 export function importContactShape(source: types.ContactShape, ctx?: IImportContext): impl.ContactShape {
     const ret: impl.ContactShape = new impl.ContactShape (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1814,6 +2160,8 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
         (() => {
             const ret = new BasicArray<impl.CurvePoint>()
             for (let i = 0, len = source.points && source.points.length; i < len; i++) {
+                const val = source.points[i]
+                if (!val.crdtidx) val.crdtidx = [i]
                 const r = importCurvePoint(source.points[i], ctx)
                 if (r) ret.push(r)
             }
@@ -1856,6 +2204,14 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
 /* artboard shape */
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
     const ret: impl.Artboard = new impl.Artboard (
+        (() => {
+            const ret = new BasicArray<number>()
+            for (let i = 0, len = source.crdtidx && source.crdtidx.length; i < len; i++) {
+                const r = source.crdtidx[i]
+                if (r) ret.push(r)
+            }
+            return ret
+        })(),
         source.id,
         source.name,
         importShapeType(source.type, ctx),
@@ -1867,51 +2223,67 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
                 const r = (() => {
                     const val = source.childs[i]
                     if (val.typeId == 'group-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importGroupShape(val as types.GroupShape, ctx)
                     }
                     if (val.typeId == 'image-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importImageShape(val as types.ImageShape, ctx)
                     }
                     if (val.typeId == 'path-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importPathShape(val as types.PathShape, ctx)
                     }
                     if (val.typeId == 'rect-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importRectShape(val as types.RectShape, ctx)
                     }
                     if (val.typeId == 'symbol-ref-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolRefShape(val as types.SymbolRefShape, ctx)
                     }
                     if (val.typeId == 'symbol-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolShape(val as types.SymbolShape, ctx)
                     }
                     if (val.typeId == 'symbol-union-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importSymbolUnionShape(val as types.SymbolUnionShape, ctx)
                     }
                     if (val.typeId == 'text-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importTextShape(val as types.TextShape, ctx)
                     }
                     if (val.typeId == 'artboard') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importArtboard(val as types.Artboard, ctx)
                     }
                     if (val.typeId == 'line-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importLineShape(val as types.LineShape, ctx)
                     }
                     if (val.typeId == 'oval-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importOvalShape(val as types.OvalShape, ctx)
                     }
                     if (val.typeId == 'table-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importTableShape(val as types.TableShape, ctx)
                     }
                     if (val.typeId == 'contact-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importContactShape(val as types.ContactShape, ctx)
                     }
                     if (val.typeId == 'shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importShape(val as types.Shape, ctx)
                     }
                     if (val.typeId == 'flatten-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importFlattenShape(val as types.FlattenShape, ctx)
                     }
                     if (val.typeId == 'cutout-shape') {
+                        if (!val.crdtidx) val.crdtidx = [i]
                         return importCutoutShape(val as types.CutoutShape, ctx)
                     }
                     {
@@ -1949,7 +2321,5 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
         });
         return ret
     })()
-    // inject code
-    if (ctx?.document) ctx.document.artboardMgr.add(ret.id, ret);
     return ret
 }

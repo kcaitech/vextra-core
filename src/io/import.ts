@@ -1,10 +1,11 @@
 import { Page } from "../data/page";
-import { IImportContext, importDocumentMeta, importDocumentSyms, importPage } from "../data/baseimport";
+import { IImportContext, importDocumentMeta, importPage, importSymbolShape, importSymbolUnionShape } from "../data/baseimport";
 import * as types from "../data/typesdefine"
 import { IDataGuard } from "../data/basic";
-import { Document, DocumentMeta, DocumentSyms } from "../data/document";
+import { Document, DocumentMeta } from "../data/document";
 import * as storage from "./storage";
 import { base64Encode, base64ToDataUrl } from "../basic/utils";
+import { SymbolShape } from "../data/classes";
 
 interface IJSON {
     [key: string]: any
@@ -12,14 +13,9 @@ interface IJSON {
 
 interface IDataLoader {
     loadDocumentMeta(id: string): Promise<DocumentMeta>
-
-    loadDocumentSyms(ctx: IImportContext, id: string): Promise<DocumentSyms[]>
-
     loadPage(ctx: IImportContext, id: string): Promise<Page>
-
-    // loadArtboard(ctx: IImportContext, id: string): Promise<Artboard>
-    // loadSymbol(ctx: IImportContext, id: string): Promise<SymbolShape>
     loadMedia(ctx: IImportContext, id: string): Promise<{ buff: Uint8Array, base64: string }>
+    loadFreeSymbols(ctx: IImportContext, id: string, versionId?: string): Promise<SymbolShape[]>
 }
 
 class RemoteLoader {
@@ -60,25 +56,19 @@ export class DataLoader implements IDataLoader {
         return importDocumentMeta(json as types.DocumentMeta, undefined)
     }
 
-    async loadDocumentSyms(ctx: IImportContext, id: string, versionId?: string): Promise<DocumentSyms[]> {
-        const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/document-syms.json`, versionId)
-        return (json as Array<types.DocumentSyms>).map((val) => importDocumentSyms(val, ctx))
-    }
-
     async loadPage(ctx: IImportContext, id: string, versionId?: string): Promise<Page> {
         const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/pages/${id}.json`, versionId)
         return importPage(json as types.Page, ctx)
     }
 
-    // async loadArtboard(ctx: IImportContext, id: string, versionId?: string): Promise<Artboard> {
-    //     const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/artboards/${id}.json`, versionId)
-    //     return importArtboard(json as types.Artboard, ctx)
-    // }
-
-    // async loadSymbol(ctx: IImportContext, id: string, versionId?: string): Promise<SymbolShape> {
-    //     const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/symbols/${id}.json`, versionId)
-    //     return importSymbolShape(json as types.SymbolShape, ctx)
-    // }
+    async loadFreeSymbols(ctx: IImportContext, versionId?: string): Promise<SymbolShape[]> {
+        const json: IJSON = await this.remoteLoader.loadJson(`${this.documentPath}/freesymbols.json`, versionId)
+        const syms = json as types.SymbolShape[] || [];
+        return syms.map((s) => {
+            if (s.typeId === 'symbol-union-shape') return importSymbolUnionShape(s, ctx);
+            return importSymbolShape(s, ctx)
+        })
+    }
 
     async loadMedia(ctx: IImportContext, id: string, versionId?: string): Promise<{
         buff: Uint8Array;
@@ -116,20 +106,28 @@ export class DataLoader implements IDataLoader {
 export async function importDocument(storage: storage.IStorage, documentPath: string, fid: string, versionId: string, gurad: IDataGuard) {
     const loader = new DataLoader(storage, documentPath);
 
-
     const meta = await loader.loadDocumentMeta(versionId);
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
 
-    const document = new Document(meta.id, versionId ?? "", meta.lastCmdId, meta.name, meta.pagesList, gurad);
-    const ctx: IImportContext = new class implements IImportContext { document: Document = document };
+    const document = new Document(meta.id, versionId ?? "", meta.lastCmdId, meta.symbolregist, meta.name, meta.pagesList, gurad);
+    const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = "" };
 
-    // const document_syms = new ResourceMgr<DocumentSyms[]>();
-    // document_syms.setLoader((id: string) => loader.loadDocumentSyms(ctx, ""));
-
-    document.pagesMgr.setLoader((id: string) => loader.loadPage(ctx, id, idToVersionId.get(id)));
+    document.pagesMgr.setLoader((id: string) => {
+        ctx.curPage = id;
+        const page = loader.loadPage(ctx, id, idToVersionId.get(id))
+        ctx.curPage = '';
+        return page;
+    });
     document.mediasMgr.setLoader((id: string) => loader.loadMedia(ctx, id));
-    // document.artboardMgr.setLoader((id: string) => loader.loadArtboard(ctx, id));
-    // document.symbolsMgr.setLoader((id: string) => loader.loadSymbol(ctx, id));
+
+    let hasLoadFreeSymbols = false;
+    document.__freesymbolsLoader = async () => {
+        if (hasLoadFreeSymbols) return undefined;
+        ctx.curPage = "freesymbols";
+        await loader.loadFreeSymbols(ctx, versionId);
+        ctx.curPage = "";
+        hasLoadFreeSymbols = true;
+    }
 
     return document;
 }

@@ -112,9 +112,10 @@ export enum StrikethroughType {
 }
 /* stop */
 export type Stop = {
+    crdtidx: number[]
+    id: string
     position: number
     color: Color
-    id: string
 }
 /* span attr */
 export type SpanAttr = {
@@ -135,6 +136,7 @@ export type SpanAttr = {
 }
 /* shape */
 export type Shape = {
+    crdtidx: number[]
     typeId: string
     id: string
     type: ShapeType
@@ -194,6 +196,7 @@ export type ShapeFrame = {
 }
 /* shadow */
 export type Shadow = {
+    crdtidx: number[]
     id: string
     isEnabled: boolean
     blurRadius: number
@@ -223,6 +226,7 @@ export type Point2D = {
 }
 /* path segment */
 export type PathSegment = {
+    crdtidx: number[]
     points: CurvePoint[]
     isClosed: boolean
 }
@@ -234,6 +238,7 @@ export type Para = {
 }
 /* page list item */
 export type PageListItem = {
+    crdtidx: number[]
     id: string
     name: string
     versionId?: string
@@ -302,6 +307,7 @@ export enum GradientType {
 }
 /* fill */
 export type Fill = {
+    crdtidx: number[]
     typeId: string
     id: string
     isEnabled: boolean
@@ -326,7 +332,6 @@ export enum ExportVisibleScaleType {
 /* export options */
 export type ExportOptions = {
     exportFormats: ExportFormat[]
-    includedChildIds: string[]
     childOptions: number
     shouldTrim: boolean
     trimTransparent: boolean
@@ -335,6 +340,7 @@ export type ExportOptions = {
 }
 /* export format */
 export type ExportFormat = {
+    crdtidx: number[]
     id: string
     absoluteSize: number
     fileFormat: ExportFileFormat
@@ -365,20 +371,17 @@ export type Ellipse = {
     rx: number
     ry: number
 }
-/* document syms */
-export type DocumentSyms = {
-    pageId: string
-    symbols: string[]
-}
 /* document meta */
 export type DocumentMeta = {
     id: string
     name: string
     pagesList: PageListItem[]
     lastCmdId: string
+    symbolregist: Map<string, string>
 }
 /* curve point */
 export type CurvePoint = {
+    crdtidx: number[]
     id: string
     radius?: number
     fromX?: number
@@ -399,6 +402,12 @@ export enum CurveMode {
     Asymmetric = 'asymmetric',
     Disconnected = 'disconnected',
 }
+/* crdt number */
+export type CrdtNumber = {
+    id: string
+    crdtidx: number[]
+    value: number
+}
 /* context settings */
 export type ContextSettings = {
     blenMode: BlendMode
@@ -413,6 +422,7 @@ export enum ContactType {
 }
 /* contactstyle */
 export type ContactRole = {
+    crdtidx: number[]
     id: string
     roleType: ContactRoleType
     shapeId: string
@@ -474,6 +484,7 @@ export enum BulletNumbersBehavior {
 }
 /* border */
 export type Border = {
+    crdtidx: number[]
     typeId: string
     id: string
     isEnabled: boolean
@@ -554,9 +565,9 @@ export type TextShape = Shape & {
 }
 /* table shape */
 export type TableShape = Shape & {
-    datas: (undefined | TableCell)[]
-    rowHeights: number[]
-    colWidths: number[]
+    cells: Map<string, TableCell>
+    rowHeights: CrdtNumber[]
+    colWidths: CrdtNumber[]
     textAttr?: TextAttr
 }
 /* table cell */
@@ -606,10 +617,6 @@ export type TextAttr = ParaAttr & {
     textBehaviour?: TextBehaviour
     padding?: Padding
 }
-/* page */
-export type Page = Shape & {
-    childs: (Shape | FlattenShape | GroupShape | ImageShape | PathShape | RectShape | TextShape | OvalShape | LineShape | Artboard | ContactShape | SymbolRefShape | TableShape | CutoutShape | SymbolUnionShape | SymbolShape)[]
-}
 /* oval shape */
 export type OvalShape = PathShape & {
     ellipse: Ellipse
@@ -635,6 +642,10 @@ export type SymbolShape = GroupShape & {
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape & {
+}
+/* page */
+export type Page = GroupShape & {
+    backgroundColor?: Color
 }
 /* flatten shape */
 export type FlattenShape = GroupShape & {

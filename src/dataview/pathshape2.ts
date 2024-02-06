@@ -31,7 +31,7 @@ export class PathShapeView2 extends ShapeView {
 
         const pathsegs = shape.pathsegs;
         const newpathsegs = pathsegs.map((seg) => {
-            return { points: transformPoints(seg.points, m), isClosed: seg.isClosed }
+            return { crdtidx: seg.crdtidx, points: transformPoints(seg.points, m), isClosed: seg.isClosed }
         });
         this.m_pathsegs = newpathsegs;
 

@@ -2,24 +2,28 @@
     "description": "stop",
     "type": "object",
     "properties": {
+        "crdtidx": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
+        "id": {
+            "type": "string"
+        },
         "position": {
             "type": "number",
             "default": 0
         },
         "color": {
             "$ref": "./color.json"
-        },
-        "id": {
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 36,
-            "default": "$uuid"
         }
     },
     "required": [
+        "crdtidx",
+        "id",
         "position",
-        "color",
-        "id"
+        "color"
     ],
     "additionalProperties": false
 }
