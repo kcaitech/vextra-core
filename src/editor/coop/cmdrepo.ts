@@ -107,13 +107,6 @@ export class CmdRepo {
             if (this.localcmds.length > 0) {
                 localcmds.forEach(item => this._commit(item));
             }
-            // update frame
-            // todo
-            // for (let [k, v] of needUpdateFrame) {
-            //     const page = document.pagesMgr.getSync(k);
-            //     if (!page) continue;
-            //     updateShapesFrame(page, v, basicapi);
-            // }
             repo.commit();
         } catch (e) {
             repo.rollback();
@@ -169,11 +162,6 @@ export class CmdRepo {
 
     private _receive(cmds: Cmd[]) {
         // 处理远程过来的cmds
-        // 可能的情况是，本地有cmd, 需要做变换
-        // 1. 分类op
-
-        // todo isRecovery的cmd需要处理
-
         for (; cmds.length > 0;) {
             const idx = cmds.findIndex((cmd) => cmd.isRecovery);
             if (idx < 0) {
@@ -338,14 +326,6 @@ export class CmdRepo {
             this.cmds.push(...this.pendingcmds);
             this.pendingcmds.length = 0;
         }
-
-        // update frame
-        // todo
-        // for (let [k, v] of needUpdateFrame) {
-        //     const page = this.document.pagesMgr.getSync(k);
-        //     if (!page) continue;
-        //     updateShapesFrame(page, v, basicapi);
-        // }
     }
 
     private _commit(cmd: LocalCmd) { // 不需要应用的
@@ -425,15 +405,36 @@ export class CmdRepo {
             lastVer = this.cmds[this.cmds.length - 1].version;
         }
         // check
-        for (let i = 0; i < cmds.length; ++i) {
+        const aborts: Cmd[] = [];
+        for (let i = 0; i < cmds.length;) {
             const cmd = cmds[i];
-            if (SNumber.comp(cmd.previousVersion, lastVer) !== 0) {
-                const aborts = cmds.splice(i, cmds.length - i);
-                console.log("abort received cmds: ", aborts, lastVer, this.cmds, this.pendingcmds);
+            const diff = SNumber.comp(cmd.previousVersion, lastVer);
+            if (diff < 0 && i === 0) { // 可能批量重传过来的，去掉头部重复的
+                aborts.push(cmd);
+                cmds.shift();
+                continue;
+            }
+            if (diff !== 0) {
+                aborts.push(...cmds.splice(i, cmds.length - i));
                 break;
             }
             lastVer = cmd.version;
+            ++i;
         }
+        if (aborts.length > 0) {
+            console.log("abort received cmds: ", aborts,
+                "lastVer: " + lastVer,
+                "cmds: ", this.cmds,
+                "pendingcmds: ", this.pendingcmds);
+            if (cmds.length === 0) {
+                const abortVer = aborts[aborts.length - 1].version;
+                if (SNumber.comp(lastVer, abortVer) < 0) {
+                    // 有新版本需要拉取
+                    // todo
+                }
+            }
+        }
+
         if (cmds.length === 0) return;
         // 更新op.order
         cmds.forEach(cmd => {
@@ -467,14 +468,14 @@ export class CmdRepo {
             return; // 等返回
         }
 
-        // if (!this.net.hasConnected()) {
-        //     const delay = POST_TIMEOUT;
-        //     if (!this.__timeOutToken) this.__timeOutToken = setTimeout(() => {
-        //         this.__timeOutToken = undefined;
-        //         this._postcmds();
-        //     }, delay);
-        //     return;
-        // }
+        if (!this.net.hasConnected()) {
+            const delay = POST_TIMEOUT;
+            if (!this.__timeOutToken) this.__timeOutToken = setTimeout(() => {
+                this.__timeOutToken = undefined;
+                this._postcmds();
+            }, delay);
+            return;
+        }
 
         const baseVer = this.cmds.length > 0 ? this.cmds[this.cmds.length - 1].version : this.baseVer;
         let delay = POST_TIMEOUT;
@@ -674,13 +675,6 @@ export class CmdRepo {
             // apply op
             node.undo(v, newCmd);
         }
-        // update frame
-        // todo
-        // for (let [k, v] of needUpdateFrame) {
-        //     const page = this.document.pagesMgr.getSync(k);
-        //     if (!page) continue;
-        //     updateShapesFrame(page, v, basicapi);
-        // }
 
         if (posted && newCmd) {
 
@@ -737,13 +731,6 @@ export class CmdRepo {
             // apply op
             node.redo(v, newCmd);
         }
-        // update frame
-        // todo
-        // for (let [k, v] of needUpdateFrame) {
-        //     const page = this.document.pagesMgr.getSync(k);
-        //     if (!page) continue;
-        //     updateShapesFrame(page, v, basicapi);
-        // }
 
         if (posted && newCmd) {
             if (newCmd.saveselection?.text) {
