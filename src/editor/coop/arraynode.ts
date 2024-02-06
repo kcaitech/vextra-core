@@ -77,7 +77,6 @@ function revert(op: ArrayMoveOpRecord): ArrayMoveOpRecord {
         to: op.from,
         type: op.type,
         data: op.origin,
-        order: SNumber.MAX_SAFE_INTEGER,
         id: op.id,
         path: op.path,
         origin: op.data,
@@ -131,7 +130,7 @@ export class CrdtArrayReopNode extends RepoNode {
         }
     }
 
-    receive(ops: OpItem[], needUpdateFrame: Shape[]) {
+    receive(ops: OpItem[]) {
         if (ops.length === 0) throw new Error();
 
         // undo-do-redo
@@ -218,7 +217,7 @@ export class CrdtArrayReopNode extends RepoNode {
     dropOps(ops: OpItem[]): void {
     }
 
-    undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
+    undo(ops: OpItem[], receiver?: Cmd) {
         // check
         if (ops.length === 0) throw new Error();
         const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
@@ -247,7 +246,7 @@ export class CrdtArrayReopNode extends RepoNode {
         }
     }
 
-    redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
+    redo(ops: OpItem[], receiver?: Cmd) {
         // check
         if (ops.length === 0) throw new Error();
         ops.reverse();
@@ -280,7 +279,7 @@ export class CrdtArrayReopNode extends RepoNode {
         }
     }
 
-    roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]): void {
+    roll2Version(baseVer: string, version: string): void {
         if (SNumber.comp(baseVer, version) > 0) throw new Error();
         // search and apply
         const ops = this.ops.concat(...this.localops);

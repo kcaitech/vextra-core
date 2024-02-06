@@ -219,7 +219,7 @@ export class TextRepoNode extends RepoNode {
     }
 
     // todo 上级要判断baseVer是存在的
-    receive(ops: OpItem[], needUpdateFrame: Shape[]) {
+    receive(ops: OpItem[]) {
         if (ops.length === 0) return;
 
         // 服务端过来的先进行本地变换
@@ -333,7 +333,7 @@ export class TextRepoNode extends RepoNode {
         this.popedOps.length = 0;
     }
 
-    undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) { // 自己popLocal & 自己commit ?
+    undo(ops: OpItem[], receiver?: Cmd) { // 自己popLocal & 自己commit ?
         if (ops.length === 0) throw new Error();
         // check 一次只有一个cmd
         for (let i = 1; i < ops.length; i++) {
@@ -388,7 +388,7 @@ export class TextRepoNode extends RepoNode {
             // ops[0].cmd.ops.push(...record);
         }
     }
-    redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
+    redo(ops: OpItem[], receiver?: Cmd) {
 
         // 两种情况
         // 1. undo时新提交的ops，则直接变换后undo，
@@ -396,7 +396,7 @@ export class TextRepoNode extends RepoNode {
 
         // 情况1 ops在localops中 或者 cmd 已经提交
         if (receiver || this.localops.length > 0 && ops[0].cmd === this.localops[this.localops.length - 1].cmd) {
-            return this.undo(ops, needUpdateFrame, receiver);
+            return this.undo(ops, receiver);
         }
 
         if (ops.length === 0) throw new Error();
@@ -469,7 +469,7 @@ export class TextRepoNode extends RepoNode {
         ops[0].cmd.ops.push(...record);
         this.commit(record.map(op => ({ cmd: ops[0].cmd, op })))
     }
-    roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]) {
+    roll2Version(baseVer: string, version: string) {
         if (SNumber.comp(baseVer, version) > 0) throw new Error();
         // search and apply
         const ops = this.ops.concat(...this.localops);

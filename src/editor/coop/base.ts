@@ -15,15 +15,15 @@ export abstract class RepoNode {
         this.type = type;
     }
 
-    abstract receive(ops: OpItem[], needUpdateFrame: Shape[]): void;
+    abstract receive(ops: OpItem[]): void;
     abstract receiveLocal(ops: OpItem[]): void;
     abstract commit(ops: OpItem[]): void;
 
-    abstract undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd): void;
-    abstract redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd): void;
+    abstract undo(ops: OpItem[], receiver?: Cmd): void;
+    abstract redo(ops: OpItem[], receiver?: Cmd): void;
     abstract dropOps(ops: OpItem[]): void;
 
-    abstract roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]): void;
+    abstract roll2Version(baseVer: string, version: string): void;
 
     abstract undoLocals(): void;
     abstract redoLocals(): void;
@@ -77,11 +77,11 @@ export class RepoNodePath {
     }
 
     // 将数据前进到特定版本
-    roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]) {
+    roll2Version(baseVer: string, version: string) {
         const roll = (node: RepoNodePath, baseVer: string) => {
             if (node.node) {
                 baseVer = SNumber.comp(baseVer, node.node.baseVer) < 0 ? node.node.baseVer : baseVer;
-                node.node.roll2Version(baseVer, version, needUpdateFrame);
+                node.node.roll2Version(baseVer, version);
             }
             node.childs.forEach((n) => roll(n, baseVer));
         }

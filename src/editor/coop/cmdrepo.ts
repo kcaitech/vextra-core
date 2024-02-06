@@ -3,8 +3,6 @@ import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { ISave4Restore, LocalCmd, cloneSelectionState } from "./localcmd";
 import { Document } from "../../data/document";
-import { updateShapesFrame } from "./utils";
-import * as basicapi from "../basicapi"
 import { ICoopNet } from "./net";
 import { uuid } from "../../basic/uuid";
 import { RepoNode, RepoNodePath } from "./base";
@@ -12,6 +10,7 @@ import { nodecreator } from "./creator";
 import { ArrayMoveOpRecord, IdOpRecord, TreeMoveOpRecord } from "coop/client/crdt";
 import { SNumber } from "../../coop/client/snumber";
 import { Repository } from "../../data/transact";
+import { ArrayOp } from "../../coop/client/arrayop";
 
 const POST_TIMEOUT = 5000; // 5s
 
@@ -27,10 +26,7 @@ function classifyOps(cmds: Cmd[]) {
         const cmd = cmds[i];
         for (let j = 0; j < cmd.ops.length; ++j) {
             const op = cmd.ops[j];
-            // op.order = cmd.version; // set order // 应该是设置过的
-            if (op.order !== cmd.version) throw new Error("op.order !== cmd.version");
-            // client端，非array op也要处理
-            // if (op.type !== OpType.Array) continue; // 仅array op需要变换
+            if (op instanceof ArrayOp && op.order !== cmd.version) throw new Error("op.order !== cmd.version");
             const oppath = op.path.join('/');
             let arr = subrepos.get(oppath);
             if (!arr) {
@@ -105,9 +101,8 @@ export class CmdRepo {
         const document = this.document;
         repo.start("init");
         try {
-            const needUpdateFrame: Map<string, Shape[]> = new Map();
             if (cmds.length > 0) {
-                this._receive(cmds, needUpdateFrame);
+                this._receive(cmds);
             }
             if (this.localcmds.length > 0) {
                 localcmds.forEach(item => this._commit(item));
@@ -159,7 +154,7 @@ export class CmdRepo {
         return repotree;
     }
 
-    private __receive(cmds: Cmd[], needUpdateFrame: Map<string, Shape[]>) {
+    private __receive(cmds: Cmd[]) {
         const subrepos = classifyOps(cmds);
         for (let [k, v] of subrepos) {
             // 建立repotree
@@ -168,16 +163,11 @@ export class CmdRepo {
             let repotree = this.getRepoTree(blockId);
             const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
             // apply op
-            let nuf = needUpdateFrame.get(blockId);
-            if (!nuf) {
-                nuf = [];
-                needUpdateFrame.set(blockId, nuf);
-            }
-            node.receive(v, nuf);
+            node.receive(v);
         }
     }
 
-    private _receive(cmds: Cmd[], needUpdateFrame: Map<string, Shape[]>) {
+    private _receive(cmds: Cmd[]) {
         // 处理远程过来的cmds
         // 可能的情况是，本地有cmd, 需要做变换
         // 1. 分类op
@@ -187,12 +177,12 @@ export class CmdRepo {
         for (; cmds.length > 0;) {
             const idx = cmds.findIndex((cmd) => cmd.isRecovery);
             if (idx < 0) {
-                this.__receive(cmds, needUpdateFrame);
+                this.__receive(cmds);
                 break;
             }
 
             if (idx > 0) {
-                this.__receive(cmds.slice(0, idx), needUpdateFrame);
+                this.__receive(cmds.slice(0, idx));
             }
             const recoveryCmd = cmds[idx];
             cmds.splice(0, idx + 1);
@@ -205,12 +195,7 @@ export class CmdRepo {
                 let repotree = this.getRepoTree(blockId);
                 const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
                 // apply op
-                let nuf = needUpdateFrame.get(blockId);
-                if (!nuf) {
-                    nuf = [];
-                    needUpdateFrame.set(blockId, nuf);
-                }
-                node.receive(v, nuf);
+                node.receive(v);
 
                 const op = v[0].op; // 需要重新获取
                 switch (op.type) {
@@ -223,7 +208,7 @@ export class CmdRepo {
                             const record = op as ArrayMoveOpRecord | TreeMoveOpRecord;
                             const node = repotree.get2(record.path.concat(record.id));
                             if (node) {
-                                node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER, nuf)
+                                node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER)
                             }
                         }
                         break;
@@ -232,7 +217,7 @@ export class CmdRepo {
                             const record = op as IdOpRecord;
                             const node = repotree.get2(record.path);
                             if (node) {
-                                node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER, nuf)
+                                node.roll2Version(recoveryCmd.baseVer, SNumber.MAX_SAFE_INTEGER)
                             }
                         }
                         break;
@@ -312,7 +297,6 @@ export class CmdRepo {
 
     // debounce or add to render loop
     _processCmds() {
-        const needUpdateFrame: Map<string, Shape[]> = new Map();
         const p0id: string | undefined = this.postingcmds[0]?.id;
         const index = p0id ? this.pendingcmds.findIndex(p => p.id === p0id) : -1;
         // check是否已返回
@@ -332,14 +316,14 @@ export class CmdRepo {
             // 1. 先处理index之前的cmds
             if (index > 0) {
                 const pcmds = this.pendingcmds.slice(0, index);
-                this._receive(pcmds, needUpdateFrame);
+                this._receive(pcmds);
             }
             // 2. 再处理postingcmds, 与服务端对齐
             this._receiveLocal(this.pendingcmds.slice(index, index + this.postingcmds.length));
             // 3. 再处理index之后的cmds
             if (this.pendingcmds.length > index + this.postingcmds.length) {
                 const pcmds = this.pendingcmds.slice(index + this.postingcmds.length);
-                this._receive(pcmds, needUpdateFrame);
+                this._receive(pcmds);
             }
             this.cmds.push(...this.pendingcmds);
             this.postingcmds.length = 0;
@@ -350,7 +334,7 @@ export class CmdRepo {
         // apply pending and transform local // 仅remote
         if (this.pendingcmds.length > 0) {
             // 先处理pending
-            this._receive(this.pendingcmds.slice(0), needUpdateFrame);
+            this._receive(this.pendingcmds.slice(0));
             this.cmds.push(...this.pendingcmds);
             this.pendingcmds.length = 0;
         }
@@ -453,7 +437,7 @@ export class CmdRepo {
         if (cmds.length === 0) return;
         // 更新op.order
         cmds.forEach(cmd => {
-            cmd.ops.forEach((op) => op.order = cmd.version);
+            cmd.ops.forEach((op) => { if (op instanceof ArrayOp) op.order = cmd.version });
         })
         this.pendingcmds.push(...cmds);
         // need process
@@ -610,7 +594,6 @@ export class CmdRepo {
         // create repotree
         // check
         const set = new Set<string>();
-        const needUpdateFrame: Map<string, Shape[]> = new Map();
         // update
         for (let i = 0; i < _blockIds.length; i++) {
             const _blockId = _blockIds[i];
@@ -621,10 +604,7 @@ export class CmdRepo {
             const repotree = this.repotrees.get(_blockId);
             if (!repotree) return; // 无需更新
 
-            const nuf: Shape[] = [];
-            needUpdateFrame.set(_blockId, nuf);
-
-            repotree.roll2Version(this.baseVer, SNumber.MAX_SAFE_INTEGER, nuf)
+            repotree.roll2Version(this.baseVer, SNumber.MAX_SAFE_INTEGER)
         }
 
         // todo
@@ -683,7 +663,6 @@ export class CmdRepo {
             selectionupdater: cmd.selectionupdater
         } : undefined;
 
-        const needUpdateFrame: Map<string, Shape[]> = new Map();
         const subrepos = classifyOps([cmd]);
         for (let [k, v] of subrepos) {
             // 建立repotree
@@ -693,12 +672,7 @@ export class CmdRepo {
             const node = repotree && repotree.get(op0.path);
             if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
             // apply op
-            let nuf = needUpdateFrame.get(blockId);
-            if (!nuf) {
-                nuf = [];
-                needUpdateFrame.set(blockId, nuf);
-            }
-            node.undo(v, nuf, newCmd);
+            node.undo(v, newCmd);
         }
         // update frame
         // todo
@@ -752,7 +726,6 @@ export class CmdRepo {
             selectionupdater: cmd.selectionupdater
         } : undefined;
 
-        const needUpdateFrame: Map<string, Shape[]> = new Map();
         const subrepos = classifyOps([cmd]); // 这个得有顺序
         for (let [k, v] of subrepos) {
             // 建立repotree
@@ -762,12 +735,7 @@ export class CmdRepo {
             const node = repotree && repotree.get(op0.path);
             if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
             // apply op
-            let nuf = needUpdateFrame.get(blockId);
-            if (!nuf) {
-                nuf = [];
-                needUpdateFrame.set(blockId, nuf);
-            }
-            node.redo(v, nuf, newCmd);
+            node.redo(v, newCmd);
         }
         // update frame
         // todo

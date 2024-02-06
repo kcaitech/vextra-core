@@ -8,7 +8,7 @@ import { Document } from "../../data/document";
 import { IImportContext, importColor, importPage, importTableCell, importVariable } from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 
-function apply(document: Document, target: Object, op: IdOp, needUpdateFrame: Shape[]): IdOpRecord {
+function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
     let value = op.data;
     if (typeof op.data === 'string' && (op.data[0] === '{' || op.data[0] === '[')) {
         // import data
@@ -49,7 +49,6 @@ function apply(document: Document, target: Object, op: IdOp, needUpdateFrame: Sh
         id: op.id, // 这个跟随cmd id 的？
         type: op.type,
         path: op.path,
-        order: SNumber.MAX_SAFE_INTEGER,
         origin: origin,
         target,
         data2: value
@@ -62,7 +61,6 @@ function revert(op: IdOpRecord): IdOpRecord {
         id: op.id,
         type: op.type,
         path: op.path,
-        order: SNumber.MAX_SAFE_INTEGER,
         origin: op.data,
         target: undefined,
         data2: undefined
@@ -107,7 +105,7 @@ export class CrdtIdRepoNode extends RepoNode {
         const op0 = this.localops[0].op as IdOpRecord;
         const target = op0.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const rop = revert(op0);
-        target && apply(this.document, target, rop, []);
+        target && apply(this.document, target, rop);
     }
     redoLocals(): void {
         if (this.localops.length === 0) return;
@@ -116,13 +114,13 @@ export class CrdtIdRepoNode extends RepoNode {
             const op = this.localops[i].op as IdOpRecord;
             const target = op.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
             if (target) {
-                apply(this.document, target, op, []);
+                apply(this.document, target, op);
                 break;
             }
         }
     }
 
-    receive(ops: OpItem[], needUpdateFrame: Shape[]) {
+    receive(ops: OpItem[]) {
         if (ops.length === 0) throw new Error();
 
         const op0 = ops[0].op;
@@ -143,7 +141,7 @@ export class CrdtIdRepoNode extends RepoNode {
             this.localops.forEach(item => (item.op as IdOpRecord).target = undefined) // 不可再undo
         } else {
             if (this.localops.length === 0) {
-                apply(this.document, target, this.ops[this.ops.length - 1].op as IdOp, needUpdateFrame)
+                apply(this.document, target, this.ops[this.ops.length - 1].op as IdOp)
             }
         }
     }
@@ -180,12 +178,12 @@ export class CrdtIdRepoNode extends RepoNode {
     }
     dropOps(ops: OpItem[]): void {
     }
-    undo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
+    undo(ops: OpItem[], receiver?: Cmd) {
         if (ops.length === 0) throw new Error();
         const op0 = ops[0].op as IdOpRecord;
         const target = op0.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const rop = revert(op0);
-        const record = target && apply(this.document, target, rop, needUpdateFrame) || stringifyData(rop)
+        const record = target && apply(this.document, target, rop) || stringifyData(rop)
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
@@ -197,14 +195,14 @@ export class CrdtIdRepoNode extends RepoNode {
             ops[0].cmd.ops.splice(idx, 1, record);
         }
     }
-    redo(ops: OpItem[], needUpdateFrame: Shape[], receiver?: Cmd) {
+    redo(ops: OpItem[], receiver?: Cmd) {
         if (ops.length === 0) throw new Error();
         const op0 = ops[0].op;
         // 没有target也要保证op正确
         const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const op = ops[ops.length - 1].op as IdOpRecord;
         const rop = revert(op);
-        const record = target && apply(this.document, target, rop, needUpdateFrame) || stringifyData(rop);
+        const record = target && apply(this.document, target, rop) || stringifyData(rop);
         if (receiver) {
             receiver.ops.push(record);
             this.commit([{ cmd: receiver, op: record }]);
@@ -216,7 +214,7 @@ export class CrdtIdRepoNode extends RepoNode {
             ops[0].cmd.ops.splice(idx, 1, record);
         }
     }
-    roll2Version(baseVer: string, version: string, needUpdateFrame: Shape[]) {
+    roll2Version(baseVer: string, version: string) {
         if (SNumber.comp(baseVer, version) > 0) throw new Error();
         // search and apply
         const ops = this.ops.concat(...this.localops);
@@ -248,12 +246,11 @@ export class CrdtIdRepoNode extends RepoNode {
                 id: op.id,
                 type: op.type,
                 path: op.path,
-                order: op.order
-            }, needUpdateFrame);
+            });
         } else {
             const op = ops[verIdx - 1];
             if (!op) throw new Error("not found");
-            apply(this.document, target, op.op as IdOp, needUpdateFrame);
+            apply(this.document, target, op.op as IdOp);
         }
     }
 

@@ -23,7 +23,6 @@ export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, in
         id: shape.id,
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
-        order: SNumber.MAX_SAFE_INTEGER,
         data: JSON.stringify(shape, (k, v) => k.startsWith('__') ? undefined : v),
         from: undefined,
         to: { id: parent.id, index: shape.crdtidx },
@@ -39,7 +38,6 @@ export function crdtShapeRemove(page: Page, parent: GroupShape, index: number): 
         id: shape.id,
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
-        order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: { id: parent.id, index: shape.crdtidx },
         to: undefined,
@@ -78,7 +76,6 @@ export function crdtShapeMove(page: Page, parent: GroupShape, index: number, par
         id: shape.id,
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
-        order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: { id: parent.id, index: oldidx },
         to: { id: parent2.id, index: newidx.index },
@@ -108,7 +105,6 @@ function _crdtFixShapeIndex(page: Page, parent: GroupShape, index: number): Tree
         id: shape.id,
         type: OpType.CrdtTree,
         path: page.getCrdtPath(), // shape 操作统一到page
-        order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: { id: parent.id, index: oldidx },
         to: { id: parent.id, index: newidx.index },
@@ -142,7 +138,6 @@ export function crdtSetAttr(obj: Basic | BasicMap<any, any>, key: string, value:
         id: key,
         type: OpType.Idset,
         path: obj.getCrdtPath().concat(key), // 用于路径能找到唯一的reponode
-        order: SNumber.MAX_SAFE_INTEGER,
         data: typeof value === 'object' ? JSON.stringify(value, (k, v) => k.startsWith('__') ? undefined : v) : value,
         origin,
         target: obj,
@@ -247,7 +242,6 @@ export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: 
         id: item.id,
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
-        order: SNumber.MAX_SAFE_INTEGER,
         data: typeof item === 'object' ? JSON.stringify(item, (k, v) => k.startsWith('__') ? undefined : v) : item,
         from: undefined,
         to: newidx.index,
@@ -268,7 +262,6 @@ export function crdtArrayRemove(arr: BasicArray<CrdtItem>, index: number): Array
         id: item.id,
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
-        order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: oldidx,
         to: undefined,
@@ -307,7 +300,6 @@ export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: numbe
         id: item.id,
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
-        order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: oldidx,
         to: newidx.index,
@@ -338,7 +330,6 @@ function _crdtFixArrayIndex(arr: BasicArray<CrdtItem>, index: number): ArrayMove
         id: item.id,
         type: OpType.CrdtArr,
         path: arr.getCrdtPath(),
-        order: SNumber.MAX_SAFE_INTEGER,
         data: undefined,
         from: oldidx,
         to: newidx.index,
