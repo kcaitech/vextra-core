@@ -395,7 +395,7 @@ export class CmdRepo {
     }
 
     // 收到远程cmd
-    receive(cmds: Cmd[]) {
+    public receive(cmds: Cmd[]) {
         console.log("receive", cmds);
         // 检查版本号是否连续
         let lastVer = this.baseVer;
