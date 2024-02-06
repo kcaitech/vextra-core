@@ -1,11 +1,19 @@
 import { OpType } from "../../coop/common/op";
 import { Basic, ResourceMgr } from "../../data/basic";
-import { Shape } from "../../data/shape";
 import { IdOp, IdOpRecord } from "../../coop/client/crdt";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
-import { IImportContext, importColor, importGradient, importPage, importTableCell, importVariable } from "../../data/baseimport";
+import {
+    IImportContext,
+    importBorderStyle,
+    importColor,
+    importContactForm,
+    importGradient,
+    importPage,
+    importTableCell,
+    importVariable
+} from "../../data/baseimport";
 import { SNumber } from "../../coop/client/snumber";
 
 function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
@@ -26,6 +34,10 @@ function apply(document: Document, target: Object, op: IdOp): IdOpRecord {
             value = importPage(data, ctx);
         } else if (typeId === 'color') {
             value = importColor(data, ctx);
+        } else if (typeId === 'contact-form') {
+            value = importContactForm(data, ctx);
+        } else if (typeId === 'border-style') {
+            value = importBorderStyle(data, ctx);
         } else if (typeId === 'gradient') {
             value = importGradient(data, ctx);
         } else {
