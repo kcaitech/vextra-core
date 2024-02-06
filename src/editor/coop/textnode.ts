@@ -1,30 +1,37 @@
 import { RepoNode } from "./base";
-import { Op, OpType } from "../../coop/common/op";
+import { OpType } from "../../coop/common/op";
 import { Text } from "../../data/text";
 import { transform } from "../../coop/client/arrayoptransform";
 import { ArrayOp, ArrayOpSelection, ArrayOpType } from "../../coop/client/arrayop";
 import { TextOpAttr, TextOpAttrRecord, TextOpInsert, TextOpInsertRecord, TextOpRemove, TextOpRemoveRecord } from "../../coop/client/textop";
-import { Shape } from "../../data/shape";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";
 import { SNumber } from "../../coop/client/snumber";
 import { ISave4Restore } from "./localcmd";
+import { IImportContext, importColor, importParaAttr, importSpanAttr, importText } from "../../data/baseimport";
 
 // todo 考虑text是string?
-function apply(text: Text, op: ArrayOp) {
+function apply(document: Document, text: Text, op: ArrayOp) {
     // todo text 需要import
     if (op.type !== OpType.Array) {
         throw new Error("not array op");
     }
+    const ctx: IImportContext = new class implements IImportContext {
+        document: Document = document;
+        curPage: string = "" // 这个用于判断symbol 可以不设置
+    };
     // const op = _op as ArrayOp;
     switch (op.type1) {
         case ArrayOpType.None: break;
         case ArrayOpType.Insert:
             if (!(op instanceof TextOpInsert)) throw new Error("not text insert op");
             if (op.text.type === "simple") {
-                text.insertText(op.text.text, op.start, { attr: op.text.props?.attr, paraAttr: op.text.props?.paraAttr });
+                const attr = op.text.props?.attr ? importSpanAttr(op.text.props?.attr) : undefined;
+                const paraAttr = op.text.props?.paraAttr ? importParaAttr(op.text.props?.paraAttr) : undefined;
+                text.insertText(op.text.text, op.start, { attr, paraAttr });
             } else if (op.text.type === "complex") {
-                text.insertFormatText(op.text.text, op.start);
+                const text = importText(op.text.text, ctx)
+                text.insertFormatText(text, op.start);
             } else {
                 throw new Error("not valid text insert op");
             }
@@ -36,9 +43,17 @@ function apply(text: Text, op: ArrayOp) {
         case ArrayOpType.Attr:
             if (!(op instanceof TextOpAttr)) throw new Error("not text attr op");
             const key = op.props.key;
-            const value = op.props.value;
+            let value = op.props.value;
             const index = op.start;
             const length = op.length;
+            // import value
+            if (typeof value === 'object' && value.typeId) {
+                if (value.typeId === 'color') {
+                    value = importColor(value, ctx);
+                } else {
+                    throw new Error('need import ' + value)
+                }
+            }
             if (op.props.target === "span") {
                 const ret = text.formatText(index, length, key, value);
                 if (ret.length > 0) return new TextOpAttrRecord(op.id, op.path, op.order, op.start, op.length, op.props, ret, text);
@@ -124,20 +139,20 @@ function getOpTarget(op: ArrayOp) {
     }
 }
 
-function unapply(op: ArrayOp) {
+function unapply(document: Document, op: ArrayOp) {
     const ret: ArrayOp[] = [];
     const rop = revertOp(op);
     if (Array.isArray(rop)) {
         const text = getOpTarget(op);
         for (let i = 0; i < rop.length; ++i) {
             const op = rop[i];
-            const r = text && apply(text, op);
+            const r = text && apply(document, text, op);
             if (!r) throw new Error();
             ret.push(r);
         }
     } else if (rop) {
         const text = getOpTarget(op);
-        const r = text && apply(text, rop);
+        const r = text && apply(document, text, rop);
         if (!r) throw new Error();
         ret.push(r);
     }
@@ -206,7 +221,7 @@ export class TextRepoNode extends RepoNode {
     undoLocals(): void {
         for (let i = this.localops.length - 1; i >= 0; i--) {
             const op = this.localops[i];
-            unapply(op.op as ArrayOp);
+            unapply(this.document, op.op as ArrayOp);
         }
     }
 
@@ -214,7 +229,7 @@ export class TextRepoNode extends RepoNode {
         for (let i = 0; i < this.localops.length; i++) {
             const op = this.localops[i];
             const target = getOpTarget(op.op as ArrayOp);
-            target && apply(target, op.op as ArrayOp);
+            target && apply(this.document, target, op.op as ArrayOp);
         }
     }
 
@@ -229,14 +244,14 @@ export class TextRepoNode extends RepoNode {
         // undo
         for (let i = this.localops.length - 1; i >= 0; i--) {
             const op = this.localops[i];
-            unapply(op.op as ArrayOp);
+            unapply(this.document, op.op as ArrayOp);
         }
 
         const target = this.getOpTarget(ops[0].op.path);
         // do
         if (target) for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
-            const record = apply(target, op.op as ArrayOp);
+            const record = apply(this.document, target, op.op as ArrayOp);
             if (record) {
                 // replace op
                 const idx = op.cmd.ops.indexOf(op.op);
@@ -270,7 +285,7 @@ export class TextRepoNode extends RepoNode {
             for (let i = 0; i < this.localops.length; i++) {
                 const op = this.localops[i];
                 if ((op.op as ArrayOp).type1 === ArrayOpType.Selection) continue;// 选区不用执行
-                const record = apply(target, op.op as ArrayOp);
+                const record = apply(this.document, target, op.op as ArrayOp);
                 if (record) {
                     // replace op
                     const idx = op.cmd.ops.indexOf(op.op);
@@ -368,7 +383,7 @@ export class TextRepoNode extends RepoNode {
             const { lhs, rhs } = transform(cur, revertops);
             revertops = rhs;
         }
-        const record = revertops.map((op: ArrayOp) => (op as any).target ? apply((op as any).target, op) || op : op);
+        const record = revertops.map((op: ArrayOp) => (op as any).target ? apply(this.document, (op as any).target, op) || op : op);
         // update to ops
         if (receiver) {
             // todo transform popedops
@@ -455,7 +470,7 @@ export class TextRepoNode extends RepoNode {
 
         if (lhs.length !== ops.length) throw new Error();
         const text: Text = this.getOpTarget(ops[0].op.path); // todo text 是string的情况？
-        const record = text ? lhs.map((op) => apply(text, op) || op) : lhs;
+        const record = text ? lhs.map((op) => apply(this.document, text, op) || op) : lhs;
         // update to ops
 
         // replace op
@@ -486,7 +501,7 @@ export class TextRepoNode extends RepoNode {
         if (verIdx < 0) verIdx = ops.length;
         for (let i = baseIdx; i < verIdx; i++) {
             const op = ops[i];
-            const record = apply(target, op.op as ArrayOp);
+            const record = apply(this.document, target, op.op as ArrayOp);
             if (record) {
                 // replace op
                 const idx = op.cmd.ops.indexOf(op.op);
