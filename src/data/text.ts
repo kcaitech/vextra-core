@@ -133,6 +133,7 @@ export class AttrGetter extends TextAttr {
     transformIsMulti: boolean = false;
     bulletNumbersIsMulti: boolean = false;
     fillTypeIsMulti: boolean = false;
+    gradientIsMulti: boolean = false;
 }
 
 export class SpanAttrSetter extends SpanAttr {
@@ -146,7 +147,8 @@ export class SpanAttrSetter extends SpanAttr {
     strikethroughIsSet: boolean = false;
     kerningIsSet: boolean = false;
     transformIsSet: boolean = false;
-    fillTypeIsMulti: boolean = false;
+    fillTypeIsSet: boolean = false;
+    gradientIsSet: boolean = false;
 }
 
 export class ParaAttrSetter extends ParaAttr {
@@ -165,7 +167,8 @@ export class ParaAttrSetter extends ParaAttr {
     paraSpacingIsSet: boolean = false;
     minimumLineHeightIsSet: boolean = false;
     maximumLineHeightIsSet: boolean = false;
-    fillTypeIsMulti: boolean = false;
+    fillTypeIsSet: boolean = false;
+    gradientIsSet: boolean = false;
 }
 
 export class Span extends SpanAttr implements classes.Span {
