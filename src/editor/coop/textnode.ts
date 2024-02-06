@@ -182,23 +182,24 @@ export class TextRepoNode extends RepoNode {
         for (let i = 0; i < segs.length; ++i) {
             const s = segs[i];
             const baseVer = s[0].cmd.baseVer; // 同一批次的baseVer是一样的
-            const index = this.ops.findIndex((item) => item.cmd.version > baseVer);
-            if (index < 0) continue;
-            const lhs = this.ops.slice(index).map((item) => item.op as ArrayOp);
-            const rhs = s.map(op => op.op as ArrayOp);
-            const trans = transform(lhs, rhs);
-            // replace op
-            const _rhs = trans.rhs;
-            for (let j = 0; j < _rhs.length; j++) {
-                const originop = s[j].op;
-                const cmd = s[j].cmd;
-                const op = _rhs[j];
-                s[j].op = op;
-                this.ops.push({ cmd, op });
-                const idx = cmd.ops.indexOf(originop);
-                if (idx < 0) throw new Error();
-                cmd.ops.splice(idx, 1, op);
+            const index = this.ops.findIndex((item) => SNumber.comp(item.cmd.version, baseVer) > 0);
+            if (index >= 0) {
+                const lhs = this.ops.slice(index).map((item) => item.op as ArrayOp);
+                const rhs = s.map(op => op.op as ArrayOp);
+                const trans = transform(lhs, rhs);
+                // replace op
+                const _rhs = trans.rhs;
+                for (let j = 0; j < _rhs.length; j++) {
+                    const originop = s[j].op;
+                    const cmd = s[j].cmd;
+                    const op = _rhs[j];
+                    s[j].op = op;
+                    const idx = cmd.ops.indexOf(originop);
+                    if (idx < 0) throw new Error();
+                    cmd.ops.splice(idx, 1, op);
+                }
             }
+            this.ops.push(...s);
         }
     }
 
@@ -244,7 +245,7 @@ export class TextRepoNode extends RepoNode {
                 op.cmd.ops.splice(idx, 1, record);
             }
         }
-        this.ops.push(...ops);
+        // this.ops.push(...ops); // _otreceive已经push了
 
         let selectionOp = this.selection?.saveText(ops[0].op.path);
         // transform local
