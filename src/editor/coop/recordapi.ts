@@ -778,6 +778,8 @@ export class Api {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof Shape ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
+        console.log(fillType, 'fillTYpe');
+        
         this.addOp(basicapi.textModifyFillType(shape, _text, index, len, fillType));
     }
 
