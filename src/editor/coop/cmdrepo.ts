@@ -333,6 +333,10 @@ export class CmdRepo {
     }
 
     private _commit(cmd: LocalCmd) { // 不需要应用的
+        // check
+        for (let i = 0; i < this.nopostcmds.length; ++i) {
+            if (this.nopostcmds[i].id === cmd.id) throw new Error("duplicate cmd id");
+        }
         this.nopostcmds.push(cmd); // 本地cmd也要应用到nodetree
         // 处理本地提交后返回的cmds
         // 1. 分类op
@@ -356,6 +360,10 @@ export class CmdRepo {
     }
 
     private _commit2(cmd: LocalCmd) { // 不需要应用的
+        // check
+        for (let i = 0; i < this.nopostcmds.length; ++i) {
+            if (this.nopostcmds[i].id === cmd.id) throw new Error("duplicate cmd id");
+        }
         this.nopostcmds.push(cmd);
         this.processCmds();
     }
@@ -462,7 +470,7 @@ export class CmdRepo {
     commit(cmd: LocalCmd) {
         // 有丢弃掉的cmd，要通知到textnode
         if (this.localcmds.length > this.localindex) {
-            const droped = this.localcmds.splice(this.localindex);
+            const droped = this.localcmds.splice(this.localindex); // 这里的有些cmd也是要提交的
             const subrepos = classifyOps(droped);
             for (let [k, v] of subrepos) {
                 // 建立repotree
@@ -791,7 +799,7 @@ export class CmdRepo {
             node.undo(v, newCmd);
         }
 
-        if (posted && newCmd) {
+        if (newCmd) {
 
             if (newCmd.saveselection?.text) {
                 // 替换掉selection op
@@ -805,8 +813,9 @@ export class CmdRepo {
             // need commit new command
             this._commit2(newCmd)
             this.localcmds.splice(this.localindex - 1, 1, newCmd);
-
-
+        } else {
+            const last = this.nopostcmds.pop();
+            if (!last || last.id !== cmd.id) throw new Error();
         }
 
         --this.localindex;
@@ -847,7 +856,7 @@ export class CmdRepo {
             node.redo(v, newCmd);
         }
 
-        if (posted && newCmd) {
+        if (newCmd) {
             if (newCmd.saveselection?.text) {
                 // 替换掉selection op
                 const sop = newCmd.saveselection.text;
@@ -861,7 +870,11 @@ export class CmdRepo {
             this._commit2(newCmd)
             this.localcmds.splice(this.localindex, 1, newCmd);
         } else {
-            this._commit2(cmd);
+            if (this.nopostcmds[this.nopostcmds.length - 1] === cmd) {
+                this.nopostcmds.pop(); // undo时生成的新cmd，不上传就行了？
+            } else {
+                this._commit2(cmd);
+            }
         }
 
         ++this.localindex;

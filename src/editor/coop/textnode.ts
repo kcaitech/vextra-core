@@ -336,7 +336,10 @@ export class TextRepoNode extends RepoNode {
     }
     _popLocal(ops: OpItem[]) { // todo 这些也是要参与变换的，在redo的时候才不会错
         // check
-        if (this.localops.length < ops.length) throw new Error();
+        if (this.localops.length < ops.length) {
+            console.log(this.localops, ops);
+            throw new Error();
+        }
         const cmd = ops[0].cmd;
         const item: { cmd: Cmd, ops: ArrayOp[], otpath: OpItem[], refIdx: number } = { cmd, ops: [], otpath: [], refIdx: this.ops.length - 1 }
         for (let i = ops.length - 1; i >= 0; i--) {
@@ -366,7 +369,7 @@ export class TextRepoNode extends RepoNode {
         }
         // const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
 
-        const curops: OpItem[] = this.ops.concat(...this.localops);
+        const curops: OpItem[] = this.ops.concat(...this.localops.filter((op) => ((op.op as ArrayOp).type1 !== ArrayOpType.Selection)));
         if (curops.length === 0) throw new Error();
         if (curops.length < realOpCount) throw new Error();
 
@@ -395,7 +398,7 @@ export class TextRepoNode extends RepoNode {
             const { lhs, rhs } = transform(cur, revertops);
             revertops = rhs;
         }
-        const record = revertops.map((op: ArrayOp) => (op as any).target ? apply(this.document, (op as any).target, op) || op : op);
+        const record = revertops.map((op: ArrayOp) => (op as any).target ? (apply(this.document, (op as any).target, op) || op) : op);
         // update to ops
         if (receiver) {
             // todo transform popedops
