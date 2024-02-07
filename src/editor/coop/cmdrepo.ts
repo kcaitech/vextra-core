@@ -455,12 +455,13 @@ export class CmdRepo {
             lastVer = this.cmds[this.cmds.length - 1].version;
         }
         // check
+        const abortshead: Cmd[] = [];
         const aborts: Cmd[] = [];
         for (let i = 0; i < cmds.length;) {
             const cmd = cmds[i];
             const diff = SNumber.comp(cmd.previousVersion, lastVer);
             if (diff < 0 && i === 0) { // 可能批量重传过来的，去掉头部重复的
-                aborts.push(cmd);
+                abortshead.push(cmd);
                 cmds.shift();
                 continue;
             }
@@ -470,6 +471,9 @@ export class CmdRepo {
             }
             lastVer = cmd.version;
             ++i;
+        }
+        if (abortshead.length > 0) {
+            console.log("abort head cmds: ", abortshead);
         }
         if (aborts.length > 0) {
             console.log("abort received cmds: ", aborts,
@@ -505,6 +509,15 @@ export class CmdRepo {
             if (now - this.posttime > POST_TIMEOUT) {
                 // 超时了
                 // repost
+                // check
+                // todo 一起重传不成功要处理
+                const cmdids = new Set<string>();
+                for (let i = 0; i < this.postingcmds.length; ++i) {
+                    const id = this.postingcmds[i].id;
+                    if (cmdids.has(id)) throw new Error("duplicate cmd id");
+                    cmdids.add(id);
+                }
+
                 this.net.postCmds(this.postingcmds);
                 this.posttime = now;
             }
@@ -572,6 +585,15 @@ export class CmdRepo {
                 this.posttime = now;
                 if (this.nopostcmds.length === this.postingcmds.length) this.nopostcmds.length = 0;
                 else this.nopostcmds.splice(0, this.postingcmds.length);
+
+                // check
+                const cmdids = new Set<string>();
+                for (let i = 0; i < this.postingcmds.length; ++i) {
+                    const id = this.postingcmds[i].id;
+                    if (cmdids.has(id)) throw new Error("duplicate cmd id");
+                    cmdids.add(id);
+                }
+
                 // post
                 this.net.postCmds(this.postingcmds);
             }
