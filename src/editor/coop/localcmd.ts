@@ -5,7 +5,6 @@ export enum CmdMergeType {
     None,
     TextInsert,
     TextDelete,
-    ShapeMove,
 }
 
 export interface SelectionState {

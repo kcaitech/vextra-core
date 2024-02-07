@@ -1,16 +1,20 @@
 import { Shape, ShapeFrame } from "../../data/shape";
 import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
-import { CmdMergeType, ISave4Restore, LocalCmd, cloneSelectionState } from "./localcmd";
+import { CmdMergeType, ISave4Restore, LocalCmd, cloneSelectionState, isDiffStringArr } from "./localcmd";
 import { Document } from "../../data/document";
 import { ICoopNet } from "./net";
 import { uuid } from "../../basic/uuid";
 import { RepoNode, RepoNodePath } from "./base";
 import { nodecreator } from "./creator";
-import { ArrayMoveOpRecord, IdOpRecord, TreeMoveOpRecord } from "coop/client/crdt";
+import { ArrayMoveOpRecord, IdOp, IdOpRecord, TreeMoveOpRecord } from "coop/client/crdt";
 import { SNumber } from "../../coop/client/snumber";
 import { Repository } from "../../data/transact";
 import { ArrayOp } from "../../coop/client/arrayop";
+import { TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
+import { BasicArray } from "../../data/basic";
+import { Para, Span, Text } from "../../data/text";
+import { mergeParaAttr, mergeSpanAttr } from "../../data/textutils";
 
 const POST_TIMEOUT = 5000; // 5s
 
@@ -356,6 +360,103 @@ export class CmdRepo {
         this.processCmds();
     }
 
+    _mergeTextDelete(last: LocalCmd, cmd: LocalCmd) {
+        // 处理只有deleteop跟selectionop的情况
+        const canMerge1 = (ops: Op[]) => {
+            let canMerge = true;
+            for (let i = 0; i < ops.length; ++i) {
+                const op = ops[i] as ArrayOp;
+                if (op.type !== OpType.Array && op.type !== OpType.Idset) {
+                    canMerge = false;
+                    break;
+                }
+            }
+            return canMerge;
+        }
+        if (!(canMerge1(last.ops) && canMerge1(cmd.ops))) return false;
+        const delOp = last.ops.find((op) => op instanceof TextOpRemoveRecord) as TextOpRemoveRecord;
+        const delOp2 = cmd.ops.find((op) => op instanceof TextOpRemoveRecord) as TextOpRemoveRecord;
+
+        // 连续的
+        if (!(delOp && delOp2 && (delOp.start === (delOp2.start + delOp2.length) || (delOp.start + delOp.length) === delOp2.start))) return false;
+        if (isDiffStringArr(delOp.path, delOp2.path)) return false;
+
+
+        if (delOp.start === (delOp2.start + delOp2.length)) {
+            delOp.text.insertFormatText(delOp2.text, 0);
+        } else {
+            delOp2.text.insertFormatText(delOp.text, 0);
+            delOp.text = delOp2.text;
+        }
+        delOp.start = Math.min(delOp.start, delOp2.start);
+        delOp.length = delOp.length + delOp2.length;
+        last.time = cmd.time;
+        console.log("merge localcmd: ", last);
+        return true;
+
+    }
+    _mergeTextInsert(last: LocalCmd, cmd: LocalCmd) {
+        // 处理只有insertop跟selectionop的情况
+        const canMerge2 = (ops: Op[]) => {
+            let canMerge = true;
+            for (let i = 0; i < ops.length; ++i) {
+                const op = ops[i] as ArrayOp | IdOp;
+                if (op.type !== OpType.Array && op.type !== OpType.Idset) {
+                    canMerge = false;
+                    break;
+                }
+            }
+            return canMerge;
+        }
+
+        if (!(canMerge2(last.ops) && canMerge2(cmd.ops))) return false;
+
+        // 找到insertop
+
+        const insertOp = last.ops.find((op) => op instanceof TextOpInsertRecord) as TextOpInsertRecord;
+        const insertOp2 = cmd.ops.find((op) => op instanceof TextOpInsertRecord) as TextOpInsertRecord;
+        // 连续的
+        if (!(insertOp && insertOp2 && ((insertOp.start + insertOp.length) === insertOp2.start))) return false;
+        if (isDiffStringArr(insertOp.path, insertOp2.path)) return false;
+
+        if (insertOp.text.type === 'simple' && insertOp2.text.type === 'simple' &&
+            (!insertOp.text.props || !insertOp.text.props.attr && !insertOp.text.props.paraAttr) &&
+            (!insertOp2.text.props || !insertOp2.text.props.attr && !insertOp2.text.props.paraAttr)) {
+            insertOp.text.text += insertOp2.text.text;
+        } else {
+            let _text;
+            if (insertOp2.text.type === 'simple') {
+                _text = new Text(new BasicArray<Para>());
+                const para = new Para(insertOp2.text.text, new BasicArray<Span>());
+                _text.paras.push(para);
+                const span = new Span(para.length);
+                para.spans.push(span);
+                if (insertOp2.text.props?.attr) {
+                    mergeSpanAttr(span, insertOp2.text.props.attr);
+                }
+                if (insertOp2.text.props?.paraAttr) {
+                    mergeParaAttr(para, insertOp2.text.props?.paraAttr);
+                }
+            } else {
+                _text = insertOp2.text.text;
+            }
+            if (insertOp.text.type === 'simple') {
+                _text.insertText(insertOp.text.text, 0, insertOp.text.props);
+                insertOp.text = {
+                    type: 'complex', text: _text
+                }
+            } else {
+                _text.insertFormatText(insertOp.text.text, 0);
+                insertOp.text.text = _text;
+            }
+        }
+        insertOp.start = Math.min(insertOp.start, insertOp2.start);
+        insertOp.length = insertOp.length + insertOp2.length;
+        last.time = cmd.time;
+        console.log("merge localcmd: ", last);
+        return true;
+    }
+
     // 本地cmd
     // 区分需要应用的与不需要应用的
     commit(cmd: LocalCmd) {
@@ -372,71 +473,20 @@ export class CmdRepo {
                 if (!node) throw new Error("op not found");
                 node.dropOps(v);
             }
-        } else {
-            // todo check merge
-            // 要此cmd前没有插入其他用户的cmd
-            // 文本输入
-            // 键盘移动
-            // 
-            const last = this.localcmds[this.localcmds.length - 1];
-            if (last && this.nopostcmds.length > 0 &&
-                last.mergetype !== CmdMergeType.None &&
-                last.mergetype === cmd.mergetype &&
-                last.time + last.delay > Date.now()) {
-                // 考虑合并
-                // 需要个cmdtype
-                switch (last.mergetype) {
-                    case CmdMergeType.ShapeMove: // 这个在应用层处理了合并
-                        // 这个有一堆op的概率比较大
-                        // 处理只有修改frame的op的情况？
-                        const canMerge = (ops: Op[]) => {
-                            let canMerge = true;
-                            for (let i = 0; last.ops.length; ++i) {
-                                const op = last.ops[i] as IdOpRecord;
-                                if (op.type !== OpType.Idset) {
-                                    canMerge = false;
-                                    break;
-                                }
-                                if (!(op.target instanceof ShapeFrame)) {
-                                    canMerge = false;
-                                    break;
-                                }
-                            }
-                            return canMerge;
-                        }
-                        if (canMerge(last.ops) && canMerge(cmd.ops)) {
-                            console.log("merge localcmd: ", cmd);
-                            // merge
-                            const idsetops = new Map<string, Op>();
-                            for (let i = 0; i < last.ops.length; i++) {
-                                const op = last.ops[i];
-                                const path = op.path.join(',');
-                                idsetops.set(path, op);
-                            }
-                            for (let i = 0; i < cmd.ops.length; i++) {
-                                const op = cmd.ops[i];
-                                const path = op.path.join(',');
-                                const pre = idsetops.get(path) as IdOpRecord;
-                                if (pre) {
-                                    pre.data = (op as IdOpRecord).data;
-                                } else {
-                                    idsetops.set(path, op);
-                                    last.ops.push(op);
-                                }
-                            }
-                            last.time = cmd.time; // 继续延迟
-                            return;
-                        }
-                        break;
-                    case CmdMergeType.TextDelete:
-                        // 处理只有deleteop跟selectionop的情况
-                        break;
-                    case CmdMergeType.TextInsert:
-                        // 处理只有insertop跟selectionop的情况
-                        break;
-                }
-            }
         }
+
+        // check merge
+        const last = this.localcmds[this.localcmds.length - 1];
+        if (last && this.nopostcmds.length > 0 &&
+            last.mergetype !== CmdMergeType.None &&
+            last.mergetype === cmd.mergetype &&
+            last.time + last.delay > Date.now()) {
+            // 考虑合并
+            // 需要个cmdtype
+            if (last.mergetype === CmdMergeType.TextDelete && this._mergeTextDelete(last, cmd)) return;
+            if (last.mergetype === CmdMergeType.TextInsert && this._mergeTextInsert(last, cmd)) return;
+        }
+
         console.log("commit localcmd: ", cmd);
         this.localcmds.push(cmd);
         ++this.localindex;

@@ -317,10 +317,18 @@ export class TextRepoNode extends RepoNode {
             const op2 = this.localops.shift();
             if (!op2) throw new Error();
             // check
-            if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
-            this.ops.push(op2);
+            if (op.cmd.id !== op2?.cmd.id) {
+                console.log(ops, op2, this.localops);
+                throw new Error("op not match");
+            }
             if ((op2.op as ArrayOp).type1 === ArrayOpType.Selection) continue;
+            this.ops.push(op2);
             ++i;
+        }
+        while(this.localops.length > 0 && this.localops[0].cmd.id === ops[ops.length - 1].cmd.id) {
+            const op2 = this.localops.shift();
+            if (!op2) throw new Error();
+            if (!((op2.op as ArrayOp).type1 === ArrayOpType.Selection)) throw new Error("op not match");
         }
     }
     commit(ops: OpItem[]) {
@@ -350,21 +358,26 @@ export class TextRepoNode extends RepoNode {
     undo(ops: OpItem[], receiver?: Cmd) { // 自己popLocal & 自己commit ?
         if (ops.length === 0) throw new Error();
         // check 一次只有一个cmd
+        let realOpCount = 0;
         for (let i = 1; i < ops.length; i++) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
+            const type = (ops[i].op as ArrayOp).type1;
+            if (type !== ArrayOpType.Selection) ++realOpCount;
         }
         // const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
 
         const curops: OpItem[] = this.ops.concat(...this.localops);
         if (curops.length === 0) throw new Error();
-        if (curops.length < ops.length) throw new Error();
+        if (curops.length < realOpCount) throw new Error();
 
         // 需要变换
-        const index = ((curops as any/* 这里神奇的编译报错 */).findLastIndex((v: OpItem) => (v.cmd.id === ops[0].cmd.id))) - ops.length + 1;
+        const index = ((curops as any/* 这里神奇的编译报错 */).findLastIndex((v: OpItem) => (v.cmd.id === ops[0].cmd.id))) - realOpCount + 1;
         if (index < 0) throw new Error("not find ops");
         // check
-        for (let i = 0; i < ops.length; i++) {
-            if (curops[index + i].cmd.id !== ops[0].cmd.id) throw new Error("cmd");
+        for (let i = 0; i < realOpCount; i++) {
+            if (curops[index + i].cmd.id !== ops[0].cmd.id) {
+                throw new Error("cmd");
+            }
         }
         // revert
         let revertops = ops.map((item) => {
@@ -377,7 +390,7 @@ export class TextRepoNode extends RepoNode {
             else res.push(op);
             return res;
         }, [] as ArrayOp[]);
-        const cur = curops.slice(index + ops.length).map(op => op.op) as ArrayOp[];
+        const cur = curops.slice(index + realOpCount).map(op => op.op) as ArrayOp[];
         if (cur.length > 0) {
             const { lhs, rhs } = transform(cur, revertops);
             revertops = rhs;
