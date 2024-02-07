@@ -1278,7 +1278,7 @@ function __migrate(
     const origin: GroupShape = shape.parent as GroupShape;
 
     if (origin.id === targetParent.id) {
-        console.log('origin.id === targetParent.id');
+        // console.log('origin.id === targetParent.id');
         return;
     }
 
