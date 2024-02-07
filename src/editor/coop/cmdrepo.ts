@@ -1,7 +1,7 @@
-import { Shape } from "../../data/shape";
+import { Shape, ShapeFrame } from "../../data/shape";
 import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
-import { ISave4Restore, LocalCmd, cloneSelectionState } from "./localcmd";
+import { CmdMergeType, ISave4Restore, LocalCmd, cloneSelectionState } from "./localcmd";
 import { Document } from "../../data/document";
 import { ICoopNet } from "./net";
 import { uuid } from "../../basic/uuid";
@@ -378,14 +378,64 @@ export class CmdRepo {
             // 文本输入
             // 键盘移动
             // 
-            // if (this.__localcmds.length > 0 && this.__cmdrepo.nopostcmds.length > 0) {
-            //     const now = Date.now();
-            //     const last = this.__localcmds[this.__localcmds.length - 1];
-            //     if (now - last.time < 1000) {
-            //         // 考虑合并
-            //         // 需要个cmdtype
-            //     }
-            // }
+            const last = this.localcmds[this.localcmds.length - 1];
+            if (last && this.nopostcmds.length > 0 &&
+                last.mergetype !== CmdMergeType.None &&
+                last.mergetype === cmd.mergetype &&
+                last.time + last.delay > Date.now()) {
+                // 考虑合并
+                // 需要个cmdtype
+                switch (last.mergetype) {
+                    case CmdMergeType.ShapeMove: // 这个在应用层处理了合并
+                        // 这个有一堆op的概率比较大
+                        // 处理只有修改frame的op的情况？
+                        const canMerge = (ops: Op[]) => {
+                            let canMerge = true;
+                            for (let i = 0; last.ops.length; ++i) {
+                                const op = last.ops[i] as IdOpRecord;
+                                if (op.type !== OpType.Idset) {
+                                    canMerge = false;
+                                    break;
+                                }
+                                if (!(op.target instanceof ShapeFrame)) {
+                                    canMerge = false;
+                                    break;
+                                }
+                            }
+                            return canMerge;
+                        }
+                        if (canMerge(last.ops) && canMerge(cmd.ops)) {
+                            console.log("merge localcmd: ", cmd);
+                            // merge
+                            const idsetops = new Map<string, Op>();
+                            for (let i = 0; i < last.ops.length; i++) {
+                                const op = last.ops[i];
+                                const path = op.path.join(',');
+                                idsetops.set(path, op);
+                            }
+                            for (let i = 0; i < cmd.ops.length; i++) {
+                                const op = cmd.ops[i];
+                                const path = op.path.join(',');
+                                const pre = idsetops.get(path) as IdOpRecord;
+                                if (pre) {
+                                    pre.data = (op as IdOpRecord).data;
+                                } else {
+                                    idsetops.set(path, op);
+                                    last.ops.push(op);
+                                }
+                            }
+                            last.time = cmd.time; // 继续延迟
+                            return;
+                        }
+                        break;
+                    case CmdMergeType.TextDelete:
+                        // 处理只有deleteop跟selectionop的情况
+                        break;
+                    case CmdMergeType.TextInsert:
+                        // 处理只有insertop跟selectionop的情况
+                        break;
+                }
+            }
         }
         console.log("commit localcmd: ", cmd);
         this.localcmds.push(cmd);
@@ -607,13 +657,6 @@ export class CmdRepo {
 
             repotree.roll2Version(this.baseVer, SNumber.MAX_SAFE_INTEGER)
         }
-
-        // todo
-        // for (let [k, v] of needUpdateFrame) {
-        //     const page = this.document.pagesMgr.getSync(k);
-        //     if (!page) continue;
-        //     updateShapesFrame(page, v, basicapi);
-        // }
     }
 
     roll2NewVersion(_blockIds: string[]) {

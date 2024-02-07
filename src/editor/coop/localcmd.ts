@@ -2,10 +2,10 @@ import { Cmd } from "../../coop/common/repo";
 import { ArrayOpSelection } from "../../coop/client/arrayop";
 
 export enum CmdMergeType {
+    None,
     TextInsert,
     TextDelete,
     ShapeMove,
-    Others,
 }
 
 export interface SelectionState {

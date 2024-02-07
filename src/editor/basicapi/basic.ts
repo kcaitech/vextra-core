@@ -10,8 +10,8 @@ import { SNumber } from "../../coop/client/snumber";
 export function crdtShapeInsert(page: Page, parent: GroupShape, shape: Shape, index: number): TreeMoveOpRecord[] {
     const ops: TreeMoveOpRecord[] = [];
     let crdtidx = crdtGetArrIndex(parent.childs, index);
-    if (!crdtidx.valid) {
-        const _ops = _crdtFixShapeIndex(page, parent, index + 1);
+    if (!crdtidx.valid) { // index - 1跟index 重复， 将index的进行修改
+        const _ops = _crdtFixShapeIndex(page, parent, index);
         if (Array.isArray(_ops)) ops.push(..._ops);
         else if (_ops) ops.push(_ops);
         crdtidx = crdtGetArrIndex(parent.childs, index);
@@ -63,10 +63,10 @@ export function crdtShapeMove(page: Page, parent: GroupShape, index: number, par
     const ops: TreeMoveOpRecord[] = [];
     let newidx = crdtGetArrIndex(parent2.childs, index2);
     if (!newidx.valid) {
-        const _ops = _crdtFixShapeIndex(page, parent2, index2 + 1);
+        const _ops = _crdtFixShapeIndex(page, parent2, index2);
         if (Array.isArray(_ops)) ops.push(..._ops);
         else if (_ops) ops.push(_ops);
-        newidx = crdtGetArrIndex(parent.childs, index);
+        newidx = crdtGetArrIndex(parent.childs, index2);
         if (!newidx.valid) throw new Error();
     }
     const oldidx = shape.crdtidx;
@@ -91,12 +91,12 @@ function _crdtFixShapeIndex(page: Page, parent: GroupShape, index: number): Tree
     const ops: TreeMoveOpRecord[] = [];
     const shape = parent.childs[index];
     if (!shape) return;
-    let newidx = crdtGetArrIndex(parent.childs, index);
+    let newidx = crdtGetArrIndex(parent.childs, index + 1);
     if (!newidx.valid) {
         const _ops = _crdtFixShapeIndex(page, parent, index + 1);
         if (Array.isArray(_ops)) ops.push(..._ops);
         else if (_ops) ops.push(_ops);
-        newidx = crdtGetArrIndex(parent.childs, index);
+        newidx = crdtGetArrIndex(parent.childs, index + 1);
         if (!newidx.valid) throw new Error();
     }
     const oldidx = shape.crdtidx;
@@ -232,7 +232,7 @@ export function crdtArrayInsert(arr: BasicArray<CrdtItem>, index: number, item: 
     const ops: ArrayMoveOpRecord[] = [];
     let newidx = crdtGetArrIndex(arr, index);
     if (!newidx.valid) {
-        const _ops = _crdtFixArrayIndex(arr, index + 1);
+        const _ops = _crdtFixArrayIndex(arr, index);
         if (Array.isArray(_ops)) ops.push(..._ops);
         else if (_ops) ops.push(_ops);
         newidx = crdtGetArrIndex(arr, index);
@@ -289,7 +289,7 @@ export function crdtArrayMove(arr: BasicArray<CrdtItem>, from: number, to: numbe
     const oldidx = item.crdtidx;
     let newidx = crdtGetArrIndex(arr, to);
     if (!newidx.valid) {
-        const _ops = _crdtFixArrayIndex(arr, to + 1);
+        const _ops = _crdtFixArrayIndex(arr, to);
         if (Array.isArray(_ops)) ops.push(..._ops);
         else if (_ops) ops.push(_ops);
         newidx = crdtGetArrIndex(arr, to);
@@ -318,12 +318,12 @@ function _crdtFixArrayIndex(arr: BasicArray<CrdtItem>, index: number): ArrayMove
     const item = arr[index];
     if (!item) return;
     const ops: ArrayMoveOpRecord[] = [];
-    let newidx = crdtGetArrIndex(arr, index);
+    let newidx = crdtGetArrIndex(arr, index + 1);
     if (!newidx.valid) {
         const _ops = _crdtFixArrayIndex(arr, index + 1);
         if (Array.isArray(_ops)) ops.push(..._ops);
         else if (_ops) ops.push(_ops);
-        newidx = crdtGetArrIndex(arr, index);
+        newidx = crdtGetArrIndex(arr, index + 1);
         if (!newidx.valid) throw new Error();
     }
     const oldidx = item.crdtidx;

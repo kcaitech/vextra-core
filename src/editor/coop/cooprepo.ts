@@ -3,7 +3,7 @@ import { Document } from "../../data/document";
 import { Repository } from "../../data/transact";
 import { Api } from "./recordapi";
 import { Page } from "../../data/page";
-import { ISave4Restore, LocalCmd, cloneSelectionState, isDiffSelectionState, isDiffStringArr } from "./localcmd";
+import { CmdMergeType, ISave4Restore, LocalCmd, cloneSelectionState, isDiffSelectionState, isDiffStringArr } from "./localcmd";
 import { CmdRepo } from "./cmdrepo";
 import { Cmd } from "../../coop/common/repo";
 import { ICoopNet } from "./net";
@@ -149,15 +149,15 @@ export class CoopRepository {
     canRedo() {
         return this.__cmdrepo.canRedo();
     }
-    start(name: string, selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void = defaultSU): Api {
-        this.__repo.start(name);
-        this.__api.start(this.selection?.save(), selectionupdater);
+    start(description: string, selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void = defaultSU): Api {
+        this.__repo.start(description);
+        this.__api.start(this.selection?.save(), selectionupdater, description);
         return this.__api;
     }
     isNeedCommit(): boolean {
         return this.__api.isNeedCommit();
     }
-    commit() {
+    commit(mergetype: CmdMergeType = CmdMergeType.None) {
         if (!this.isNeedCommit()) {
             this.rollback("commit");
             return;
@@ -166,7 +166,7 @@ export class CoopRepository {
         if (transact === undefined) {
             throw new Error("not inside transact!");
         }
-        const cmd = this.__api.commit();
+        const cmd = this.__api.commit(mergetype);
         if (!cmd) throw new Error("no cmd to commit")
         this.__repo.commit();
         if (!this.__initingDoc) this.__cmdrepo.commit(cmd);

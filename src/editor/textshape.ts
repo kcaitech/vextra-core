@@ -32,6 +32,7 @@ import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { importText } from "../data/baseimport";
 import * as basicapi from "./basicapi"
+import { CmdMergeType } from "./coop/localcmd";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -131,7 +132,7 @@ export class TextShapeEditor extends ShapeEditor {
             }
             this.fixFrameByLayout(api);
             this.updateName(api);
-            this.__repo.commit();
+            this.__repo.commit(CmdMergeType.TextDelete);
             return count;
 
         } catch (error) {
@@ -162,7 +163,7 @@ export class TextShapeEditor extends ShapeEditor {
             api.insertSimpleText(this.__page, shape, index, text, attr);
             this.fixFrameByLayout(api);
             this.updateName(api);
-            this.__repo.commit();
+            this.__repo.commit(CmdMergeType.TextInsert);
         } catch (error) {
             console.log(error)
             this.__repo.rollback();

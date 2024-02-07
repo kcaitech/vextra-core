@@ -80,13 +80,12 @@ export class Api {
 
     start(saveselection: SelectionState | undefined, 
         selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void, 
-        description: string = "", 
-        mergetype: CmdMergeType = CmdMergeType.Others) {
+        description: string = "") {
         // todo 添加selection op
         this.cmd = {
             id: "",
             // mergeable: true,
-            mergetype,
+            mergetype: CmdMergeType.None,
             delay: 500,
             version: SNumber.MAX_SAFE_INTEGER,
             previousVersion: "",
@@ -109,11 +108,12 @@ export class Api {
         this.cmd = undefined;
         this.needUpdateFrame.length = 0;
     }
-    commit(): Cmd | undefined {
+    commit(mergetype: CmdMergeType = CmdMergeType.None): Cmd | undefined {
         const cmd = this.cmd;
         if (!cmd || cmd.ops.length === 0) return undefined;
         cmd.id = uuid();
         cmd.time = Date.now();
+        cmd.mergetype = mergetype;
         if (this.needUpdateFrame.length > 0) {
             // todo 不同page
             const update = this.needUpdateFrame.slice(0);
