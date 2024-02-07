@@ -30,8 +30,8 @@ function apply(document: Document, text: Text, op: ArrayOp) {
                 const paraAttr = op.text.props?.paraAttr ? importParaAttr(op.text.props?.paraAttr) : undefined;
                 text.insertText(op.text.text, op.start, { attr, paraAttr });
             } else if (op.text.type === "complex") {
-                const text = importText(op.text.text, ctx)
-                text.insertFormatText(text, op.start);
+                const _text = importText(op.text.text, ctx)
+                text.insertFormatText(_text, op.start);
             } else {
                 throw new Error("not valid text insert op");
             }
