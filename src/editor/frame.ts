@@ -608,7 +608,7 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
 
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
-export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number) {    
+export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number) {
     const p = shape.parent;
     if (!p) return;
     // 需要满足左下(lt)不动
@@ -657,7 +657,6 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
 
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
-
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
 /**
