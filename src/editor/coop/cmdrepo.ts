@@ -1,4 +1,3 @@
-import { Shape, ShapeFrame } from "../../data/shape";
 import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { CmdMergeType, ISave4Restore, LocalCmd, cloneSelectionState, isDiffStringArr } from "./localcmd";
@@ -74,12 +73,12 @@ function quickRejectRecovery(cmd: LocalCmd) {
     }
     return true;
 }
-
+// 与远程同步的cmdrepo
 // 一个page一个curversion，不可见page，cmd仅暂存
 // symbols要同步更新
 // 一个文档一个总的repo
-export class CmdRepo {
-    private repo: Repository;
+class CmdSync {
+    repo: Repository;
     // private selection: ISave4Restore | undefined;
     private nodecreator: (op: Op) => RepoNode
     private net: ICoopNet;
@@ -92,29 +91,6 @@ export class CmdRepo {
         this.nodecreator = nodecreator(document, undefined);
         this.net = net;
         this.net.watchCmds(this.receive.bind(this));
-    }
-
-    restore(cmds: Cmd[], localcmds: LocalCmd[]) {
-        // todo 只有本地编辑undo时，需要往回回退版本。初始化时的cmd是不能回退回去的。可以考虑不以undo-do-redo的方式来restore!
-        // 比如离线编辑，有比较多的本地cmd需要同步时，太多的undo比较费时。
-        // restore
-
-        if (cmds.length === 0 && this.localcmds.length === 0) return;
-
-        const repo = this.repo;
-        const document = this.document;
-        repo.start("init");
-        try {
-            if (cmds.length > 0) {
-                this._receive(cmds);
-            }
-            if (this.localcmds.length > 0) {
-                localcmds.forEach(item => this._commit(item));
-            }
-            repo.commit();
-        } catch (e) {
-            repo.rollback();
-        }
     }
 
     setSelection(selection: ISave4Restore) {
@@ -135,9 +111,7 @@ export class CmdRepo {
     posttime: number = 0; // 提交cmd的时间
     postingcmds: Cmd[] = []; // 已提交未返回cmd
     nopostcmds: LocalCmd[] = []; // 本地未提交cmd
-
-    localcmds: LocalCmd[] = []; // 本地用户的所有cmd
-    localindex: number = 0;
+    nopostcmdidx: number = 0; // 本地未提交cmd,可提交的cmd的length. index之后为被undo掉的cmd
 
     // 不同bolck（page、document，不同repotree）
     repotrees: Map<string, RepoNodePath> = new Map();
@@ -164,7 +138,7 @@ export class CmdRepo {
         }
     }
 
-    private _receive(cmds: Cmd[]) {
+    _receive(cmds: Cmd[]) {
         // 处理远程过来的cmds
         for (; cmds.length > 0;) {
             const idx = cmds.findIndex((cmd) => cmd.isRecovery);
@@ -333,11 +307,13 @@ export class CmdRepo {
     }
 
     private _commit(cmd: LocalCmd) { // 不需要应用的
+        this.nopostcmds.length = this.nopostcmdidx;
         // check
         for (let i = 0; i < this.nopostcmds.length; ++i) {
             if (this.nopostcmds[i].id === cmd.id) throw new Error("duplicate cmd id");
         }
         this.nopostcmds.push(cmd); // 本地cmd也要应用到nodetree
+        ++this.nopostcmdidx;
         // 处理本地提交后返回的cmds
         // 1. 分类op
         const subrepos = classifyOps([cmd]);
@@ -360,146 +336,147 @@ export class CmdRepo {
     }
 
     private _commit2(cmd: LocalCmd) { // 不需要应用的
+        this.nopostcmds.length = this.nopostcmdidx;
         // check
         for (let i = 0; i < this.nopostcmds.length; ++i) {
             if (this.nopostcmds[i].id === cmd.id) throw new Error("duplicate cmd id");
         }
         this.nopostcmds.push(cmd);
+        ++this.nopostcmdidx;
         this.processCmds();
-    }
-
-    _mergeTextDelete(last: LocalCmd, cmd: LocalCmd) {
-        // 处理只有deleteop跟selectionop的情况
-        const canMerge1 = (ops: Op[]) => {
-            let canMerge = true;
-            for (let i = 0; i < ops.length; ++i) {
-                const op = ops[i] as ArrayOp;
-                if (op.type !== OpType.Array && op.type !== OpType.Idset) {
-                    canMerge = false;
-                    break;
-                }
-            }
-            return canMerge;
-        }
-        if (!(canMerge1(last.ops) && canMerge1(cmd.ops))) return false;
-        const delOp = last.ops.find((op) => op instanceof TextOpRemoveRecord) as TextOpRemoveRecord;
-        const delOp2 = cmd.ops.find((op) => op instanceof TextOpRemoveRecord) as TextOpRemoveRecord;
-
-        // 连续的
-        if (!(delOp && delOp2 && (delOp.start === (delOp2.start + delOp2.length) || (delOp.start + delOp.length) === delOp2.start))) return false;
-        if (isDiffStringArr(delOp.path, delOp2.path)) return false;
-
-
-        if (delOp.start === (delOp2.start + delOp2.length)) {
-            delOp.text.insertFormatText(delOp2.text, 0);
-        } else {
-            delOp2.text.insertFormatText(delOp.text, 0);
-            delOp.text = delOp2.text;
-        }
-        delOp.start = Math.min(delOp.start, delOp2.start);
-        delOp.length = delOp.length + delOp2.length;
-        last.time = cmd.time;
-        console.log("merge localcmd: ", last);
-        return true;
-
-    }
-    _mergeTextInsert(last: LocalCmd, cmd: LocalCmd) {
-        // 处理只有insertop跟selectionop的情况
-        const canMerge2 = (ops: Op[]) => {
-            let canMerge = true;
-            for (let i = 0; i < ops.length; ++i) {
-                const op = ops[i] as ArrayOp | IdOp;
-                if (op.type !== OpType.Array && op.type !== OpType.Idset) {
-                    canMerge = false;
-                    break;
-                }
-            }
-            return canMerge;
-        }
-
-        if (!(canMerge2(last.ops) && canMerge2(cmd.ops))) return false;
-
-        // 找到insertop
-
-        const insertOp = last.ops.find((op) => op instanceof TextOpInsertRecord) as TextOpInsertRecord;
-        const insertOp2 = cmd.ops.find((op) => op instanceof TextOpInsertRecord) as TextOpInsertRecord;
-        // 连续的
-        if (!(insertOp && insertOp2 && ((insertOp.start + insertOp.length) === insertOp2.start))) return false;
-        if (isDiffStringArr(insertOp.path, insertOp2.path)) return false;
-
-        if (insertOp.text.type === 'simple' && insertOp2.text.type === 'simple' &&
-            (!insertOp.text.props || !insertOp.text.props.attr && !insertOp.text.props.paraAttr) &&
-            (!insertOp2.text.props || !insertOp2.text.props.attr && !insertOp2.text.props.paraAttr)) {
-            insertOp.text.text += insertOp2.text.text;
-        } else {
-            let _text;
-            if (insertOp2.text.type === 'simple') {
-                _text = new Text(new BasicArray<Para>());
-                const para = new Para(insertOp2.text.text, new BasicArray<Span>());
-                _text.paras.push(para);
-                const span = new Span(para.length);
-                para.spans.push(span);
-                if (insertOp2.text.props?.attr) {
-                    mergeSpanAttr(span, insertOp2.text.props.attr);
-                }
-                if (insertOp2.text.props?.paraAttr) {
-                    mergeParaAttr(para, insertOp2.text.props?.paraAttr);
-                }
-            } else {
-                _text = insertOp2.text.text;
-            }
-            if (insertOp.text.type === 'simple') {
-                _text.insertText(insertOp.text.text, 0, insertOp.text.props);
-                insertOp.text = {
-                    type: 'complex', text: _text
-                }
-            } else {
-                _text.insertFormatText(insertOp.text.text, 0);
-                insertOp.text.text = _text;
-            }
-        }
-        insertOp.start = Math.min(insertOp.start, insertOp2.start);
-        insertOp.length = insertOp.length + insertOp2.length;
-        last.time = cmd.time;
-        console.log("merge localcmd: ", last);
-        return true;
     }
 
     // 本地cmd
     // 区分需要应用的与不需要应用的
     commit(cmd: LocalCmd) {
-        // 有丢弃掉的cmd，要通知到textnode
-        if (this.localcmds.length > this.localindex) {
-            const droped = this.localcmds.splice(this.localindex); // 这里的有些cmd也是要提交的
-            const subrepos = classifyOps(droped);
-            for (let [k, v] of subrepos) {
-                // 建立repotree
-                const op0 = v[0].op;
-                const blockId = op0.path[0];
-                const repotree = this.repotrees.get(blockId);
-                const node = repotree && repotree.get(op0.path);
-                if (!node) throw new Error("op not found");
-                node.dropOps(v);
+        this._commit(cmd);
+    }
+
+    undo(cmd: LocalCmd) {
+        const posted = cmd.posttime > 0;
+
+        const newCmd: LocalCmd | undefined = posted ? {
+            id: uuid(),
+            mergetype: cmd.mergetype,
+            delay: 500,
+            version: SNumber.MAX_SAFE_INTEGER,
+            previousVersion: "",
+            baseVer: "",
+            batchId: "",
+            ops: [],
+            isRecovery: true,
+            description: cmd.description,
+            time: Date.now(),
+            posttime: 0,
+            saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
+            selectionupdater: cmd.selectionupdater
+        } : undefined;
+
+        const subrepos = classifyOps([cmd]);
+        for (let [k, v] of subrepos) {
+            // 建立repotree
+            const op0 = v[0].op;
+            const blockId = op0.path[0];
+            const repotree = this.repotrees.get(blockId);
+            const node = repotree && repotree.get(op0.path);
+            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
+            // apply op
+            if (newCmd) {
+                node.undo(v, newCmd);
+            } else if (cmd === this.nopostcmds[this.nopostcmdidx]) {
+                node.redo(v, undefined);
+            } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
+                node.undo(v, undefined);
+            } else {
+                throw new Error();
             }
         }
 
-        // check merge
-        const last = this.localcmds[this.localcmds.length - 1];
-        if (last && this.nopostcmds.length > 0 &&
-            last.mergetype !== CmdMergeType.None &&
-            last.mergetype === cmd.mergetype &&
-            last.time + last.delay > Date.now()) {
-            // 考虑合并
-            // 需要个cmdtype
-            if (last.mergetype === CmdMergeType.TextDelete && this._mergeTextDelete(last, cmd)) return;
-            if (last.mergetype === CmdMergeType.TextInsert && this._mergeTextInsert(last, cmd)) return;
+        if (newCmd) {
+            if (newCmd.saveselection?.text) {
+                // 替换掉selection op
+                const sop = newCmd.saveselection.text;
+                const idx = newCmd.ops.findIndex(op => op.id === sop.id);
+                if (idx < 0) throw new Error();
+                newCmd.ops.splice(idx, 1, sop); // 不需要变换的可以直接替换
+            }
+            this._commit2(newCmd);
+        } else {
+            if (cmd === this.nopostcmds[this.nopostcmdidx]) {
+                ++this.nopostcmdidx;
+            } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
+                --this.nopostcmdidx;
+            } else {
+                throw new Error();
+            }
+            this.processCmds();
         }
 
-        console.log("commit localcmd: ", cmd);
-        this.localcmds.push(cmd);
-        ++this.localindex;
+        return newCmd ?? cmd;
+    }
+    redo(cmd: LocalCmd) {
+        const posted = cmd.posttime > 0;
 
-        this._commit(cmd);
+        const newCmd: LocalCmd | undefined = posted ? {
+            id: uuid(),
+            mergetype: cmd.mergetype,
+            delay: 500,
+            version: SNumber.MAX_SAFE_INTEGER,
+            previousVersion: "",
+            batchId: "",
+            baseVer: "",
+            ops: [],
+            isRecovery: true,
+            description: cmd.description,
+            time: Date.now(),
+            posttime: 0,
+            saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
+            selectionupdater: cmd.selectionupdater
+        } : undefined;
+
+        const subrepos = classifyOps([cmd]); // 这个得有顺序
+        for (let [k, v] of subrepos) {
+            // 建立repotree
+            const op0 = v[0].op;
+            const blockId = op0.path[0];
+            const repotree = this.repotrees.get(blockId);
+            const node = repotree && repotree.get(op0.path);
+            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
+            // apply op
+            if (newCmd) {
+                node.redo(v, newCmd);
+            } else if (cmd === this.nopostcmds[this.nopostcmdidx]) {
+                node.redo(v, undefined);
+            } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
+                node.undo(v, undefined);
+            } else {
+                throw new Error();
+            }
+        }
+
+        if (newCmd) {
+            if (newCmd.saveselection?.text) {
+                // 替换掉selection op
+                const sop = newCmd.saveselection.text;
+                const idx = newCmd.ops.findIndex(op => op.id === sop.id);
+                if (idx < 0) throw new Error();
+                newCmd.ops.splice(idx, 1, sop); // 不需要变换的可以直接替换
+            }
+            // posted
+            // need commit new command
+            this._commit2(newCmd)
+        } else {
+            if (cmd === this.nopostcmds[this.nopostcmdidx]) {
+                ++this.nopostcmdidx;
+            } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
+                --this.nopostcmdidx;
+            } else {
+                throw new Error();
+            }
+            this.processCmds();
+        }
+
+        return newCmd ?? cmd;
     }
 
     // 收到远程cmd
@@ -600,12 +577,12 @@ export class CmdRepo {
 
         const baseVer = this.cmds.length > 0 ? this.cmds[this.cmds.length - 1].version : this.baseVer;
         let delay = POST_TIMEOUT;
-        if (this.nopostcmds.length > 0) {
+        if (this.nopostcmdidx > 0) {
             // check
             // post local (根据cmd提交时间是否保留最后个cmd用于合并)
             // 所有cmd延迟1s提交？cmd应该能设置delay & mergeable
             const now = Date.now();
-            const len = this.nopostcmds.length;
+            const len = this.nopostcmdidx;
             for (let i = 0; i < len; i++) {
                 const cmd = this.nopostcmds[i];
                 if ((i < len - 1) || (now - cmd.time > cmd.delay)) {
@@ -641,8 +618,8 @@ export class CmdRepo {
 
             if (this.postingcmds.length > 0) {
                 this.posttime = now;
-                if (this.nopostcmds.length === this.postingcmds.length) this.nopostcmds.length = 0;
-                else this.nopostcmds.splice(0, this.postingcmds.length);
+                this.nopostcmds.splice(0, this.postingcmds.length);
+                this.nopostcmdidx -= this.postingcmds.length;
 
                 // check
                 const cmdids = new Set<string>();
@@ -758,6 +735,175 @@ export class CmdRepo {
             this.repo.transactCtx.settrap = savetrap;
         }
     }
+}
+
+function _mergeTextDelete(last: LocalCmd, cmd: LocalCmd) {
+    // 处理只有deleteop跟selectionop的情况
+    const canMerge1 = (ops: Op[]) => {
+        let canMerge = true;
+        for (let i = 0; i < ops.length; ++i) {
+            const op = ops[i] as ArrayOp;
+            if (op.type !== OpType.Array && op.type !== OpType.Idset) {
+                canMerge = false;
+                break;
+            }
+        }
+        return canMerge;
+    }
+    if (!(canMerge1(last.ops) && canMerge1(cmd.ops))) return false;
+    const delOp = last.ops.find((op) => op instanceof TextOpRemoveRecord) as TextOpRemoveRecord;
+    const delOp2 = cmd.ops.find((op) => op instanceof TextOpRemoveRecord) as TextOpRemoveRecord;
+
+    // 连续的
+    if (!(delOp && delOp2 && (delOp.start === (delOp2.start + delOp2.length) || (delOp.start + delOp.length) === delOp2.start))) return false;
+    if (isDiffStringArr(delOp.path, delOp2.path)) return false;
+
+
+    if (delOp.start === (delOp2.start + delOp2.length)) {
+        delOp.text.insertFormatText(delOp2.text, 0);
+    } else {
+        delOp2.text.insertFormatText(delOp.text, 0);
+        delOp.text = delOp2.text;
+    }
+    delOp.start = Math.min(delOp.start, delOp2.start);
+    delOp.length = delOp.length + delOp2.length;
+    last.time = cmd.time;
+    console.log("merge localcmd: ", last);
+    return true;
+
+}
+function _mergeTextInsert(last: LocalCmd, cmd: LocalCmd) {
+    // 处理只有insertop跟selectionop的情况
+    const canMerge2 = (ops: Op[]) => {
+        let canMerge = true;
+        for (let i = 0; i < ops.length; ++i) {
+            const op = ops[i] as ArrayOp | IdOp;
+            if (op.type !== OpType.Array && op.type !== OpType.Idset) {
+                canMerge = false;
+                break;
+            }
+        }
+        return canMerge;
+    }
+
+    if (!(canMerge2(last.ops) && canMerge2(cmd.ops))) return false;
+
+    // 找到insertop
+
+    const insertOp = last.ops.find((op) => op instanceof TextOpInsertRecord) as TextOpInsertRecord;
+    const insertOp2 = cmd.ops.find((op) => op instanceof TextOpInsertRecord) as TextOpInsertRecord;
+    // 连续的
+    if (!(insertOp && insertOp2 && ((insertOp.start + insertOp.length) === insertOp2.start))) return false;
+    if (isDiffStringArr(insertOp.path, insertOp2.path)) return false;
+
+    if (insertOp.text.type === 'simple' && insertOp2.text.type === 'simple' &&
+        (!insertOp.text.props || !insertOp.text.props.attr && !insertOp.text.props.paraAttr) &&
+        (!insertOp2.text.props || !insertOp2.text.props.attr && !insertOp2.text.props.paraAttr)) {
+        insertOp.text.text += insertOp2.text.text;
+    } else {
+        let _text;
+        if (insertOp2.text.type === 'simple') {
+            _text = new Text(new BasicArray<Para>());
+            const para = new Para(insertOp2.text.text, new BasicArray<Span>());
+            _text.paras.push(para);
+            const span = new Span(para.length);
+            para.spans.push(span);
+            if (insertOp2.text.props?.attr) {
+                mergeSpanAttr(span, insertOp2.text.props.attr);
+            }
+            if (insertOp2.text.props?.paraAttr) {
+                mergeParaAttr(para, insertOp2.text.props?.paraAttr);
+            }
+        } else {
+            _text = insertOp2.text.text;
+        }
+        if (insertOp.text.type === 'simple') {
+            _text.insertText(insertOp.text.text, 0, insertOp.text.props);
+            insertOp.text = {
+                type: 'complex', text: _text
+            }
+        } else {
+            _text.insertFormatText(insertOp.text.text, 0);
+            insertOp.text.text = _text;
+        }
+    }
+    insertOp.start = Math.min(insertOp.start, insertOp2.start);
+    insertOp.length = insertOp.length + insertOp2.length;
+    last.time = cmd.time;
+    console.log("merge localcmd: ", last);
+    return true;
+}
+
+export class CmdRepo {
+
+    cmdsync: CmdSync;
+    localcmds: LocalCmd[] = []; // 本地用户的所有cmd
+    localindex: number = 0;
+
+    constructor(document: Document, repo: Repository, net: ICoopNet) {
+        this.cmdsync = new CmdSync(document, repo, net);
+    }
+    restore(cmds: Cmd[], localcmds: LocalCmd[]) {
+        // todo 只有本地编辑undo时，需要往回回退版本。初始化时的cmd是不能回退回去的。可以考虑不以undo-do-redo的方式来restore!
+        // 比如离线编辑，有比较多的本地cmd需要同步时，太多的undo比较费时。
+        // restore
+
+        if (this.localcmds.length > 0 || this.cmdsync.cmds.length > 0) throw new Error();
+
+        if (cmds.length === 0 && localcmds.length === 0) return;
+        const repo = this.cmdsync.repo;
+        repo.start("init");
+        try {
+            if (cmds.length > 0) {
+                this.cmdsync._receive(cmds);
+            }
+            if (localcmds.length > 0) {
+                localcmds.forEach(item => this.cmdsync.commit(item));
+                this.localcmds.push(...localcmds);
+            }
+            repo.commit();
+        } catch (e) {
+            repo.rollback();
+        }
+    }
+
+    // 本地cmd
+    // 区分需要应用的与不需要应用的
+    commit(cmd: LocalCmd) {
+        // 有丢弃掉的cmd，要通知到textnode
+        // todo 这里不对了？
+        if (this.localcmds.length > this.localindex) {
+            const droped = this.localcmds.splice(this.localindex); // 这里的有些cmd也是要提交的
+            const subrepos = classifyOps(droped);
+            for (let [k, v] of subrepos) {
+                // 建立repotree
+                const op0 = v[0].op;
+                const blockId = op0.path[0];
+                const repotree = this.cmdsync.repotrees.get(blockId);
+                const node = repotree && repotree.get(op0.path);
+                if (!node) throw new Error("op not found");
+                node.dropOps(v);
+            }
+        }
+
+        // check merge
+        const last = this.localcmds[this.localcmds.length - 1];
+        if (last && last.posttime === 0 &&
+            last.mergetype !== CmdMergeType.None &&
+            last.mergetype === cmd.mergetype &&
+            last.time + last.delay > Date.now()) {
+            // 考虑合并
+            // 需要个cmdtype
+            if (last.mergetype === CmdMergeType.TextDelete && _mergeTextDelete(last, cmd)) return;
+            if (last.mergetype === CmdMergeType.TextInsert && _mergeTextInsert(last, cmd)) return;
+        }
+
+        console.log("commit localcmd: ", cmd);
+        this.localcmds.push(cmd);
+        ++this.localindex;
+
+        this.cmdsync.commit(cmd);
+    }
 
     canUndo() {
         return this.localindex > 0;
@@ -768,54 +914,9 @@ export class CmdRepo {
     undo() {
         if (!this.canUndo()) return;
         const cmd = this.localcmds[this.localindex - 1];
-        const posted = cmd.posttime > 0;
-
-        const newCmd: LocalCmd | undefined = posted ? {
-            id: uuid(),
-            mergetype: cmd.mergetype,
-            delay: 500,
-            version: SNumber.MAX_SAFE_INTEGER,
-            previousVersion: "",
-            baseVer: "",
-            batchId: "",
-            ops: [],
-            isRecovery: true,
-            description: cmd.description,
-            time: Date.now(),
-            posttime: 0,
-            saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
-            selectionupdater: cmd.selectionupdater
-        } : undefined;
-
-        const subrepos = classifyOps([cmd]);
-        for (let [k, v] of subrepos) {
-            // 建立repotree
-            const op0 = v[0].op;
-            const blockId = op0.path[0];
-            const repotree = this.repotrees.get(blockId);
-            const node = repotree && repotree.get(op0.path);
-            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
-            // apply op
-            node.undo(v, newCmd);
-        }
-
-        if (newCmd) {
-
-            if (newCmd.saveselection?.text) {
-                // 替换掉selection op
-                const sop = newCmd.saveselection.text;
-                const idx = newCmd.ops.findIndex(op => op.id === sop.id);
-                if (idx < 0) throw new Error();
-                newCmd.ops.splice(idx, 1, sop); // 不需要变换的可以直接替换
-            }
-
-            // posted
-            // need commit new command
-            this._commit2(newCmd)
+        const newCmd = this.cmdsync.undo(cmd);
+        if (newCmd !== cmd) {
             this.localcmds.splice(this.localindex - 1, 1, newCmd);
-        } else {
-            const last = this.nopostcmds.pop();
-            if (!last || last.id !== cmd.id) throw new Error();
         }
 
         --this.localindex;
@@ -825,60 +926,27 @@ export class CmdRepo {
     redo() {
         if (!this.canRedo()) return;
         const cmd = this.localcmds[this.localindex];
-        const posted = cmd.posttime > 0;
-
-        const newCmd: LocalCmd | undefined = posted ? {
-            id: uuid(),
-            mergetype: cmd.mergetype,
-            delay: 500,
-            version: SNumber.MAX_SAFE_INTEGER,
-            previousVersion: "",
-            batchId: "",
-            baseVer: "",
-            ops: [],
-            isRecovery: true,
-            description: cmd.description,
-            time: Date.now(),
-            posttime: 0,
-            saveselection: cmd.saveselection && cloneSelectionState(cmd.saveselection),
-            selectionupdater: cmd.selectionupdater
-        } : undefined;
-
-        const subrepos = classifyOps([cmd]); // 这个得有顺序
-        for (let [k, v] of subrepos) {
-            // 建立repotree
-            const op0 = v[0].op;
-            const blockId = op0.path[0];
-            const repotree = this.repotrees.get(blockId);
-            const node = repotree && repotree.get(op0.path);
-            if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
-            // apply op
-            node.redo(v, newCmd);
-        }
-
-        if (newCmd) {
-            if (newCmd.saveselection?.text) {
-                // 替换掉selection op
-                const sop = newCmd.saveselection.text;
-                const idx = newCmd.ops.findIndex(op => op.id === sop.id);
-                if (idx < 0) throw new Error();
-                newCmd.ops.splice(idx, 1, sop); // 不需要变换的可以直接替换
-            }
-
-            // posted
-            // need commit new command
-            this._commit2(newCmd)
+        const newCmd = this.cmdsync.redo(cmd);
+        if (newCmd !== cmd) {
             this.localcmds.splice(this.localindex, 1, newCmd);
-        } else {
-            if (this.nopostcmds[this.nopostcmds.length - 1] === cmd) {
-                this.nopostcmds.pop(); // undo时生成的新cmd，不上传就行了？
-            } else {
-                this._commit2(cmd);
-            }
         }
 
         ++this.localindex;
         console.log("redo", newCmd ?? cmd);
         return newCmd ?? cmd;
+    }
+
+    // adapt
+    roll2NewVersion(_blockIds: string[]) {
+        return this.cmdsync.roll2NewVersion(_blockIds);
+    }
+    setNet(net: ICoopNet) {
+        return this.cmdsync.setNet(net);
+    }
+    receive(cmds: Cmd[]) {
+        return this.cmdsync.receive(cmds);
+    }
+    setSelection(selection: ISave4Restore) {
+        return this.cmdsync.setSelection(selection);
     }
 }

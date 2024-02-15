@@ -294,7 +294,7 @@ export class TextRepoNode extends RepoNode {
                 } else {
                     const idx = op.cmd.ops.indexOf(op.op);
                     if (idx < 0) throw new Error();
-                    op.cmd.ops.splice(idx, 1);
+                    op.cmd.ops.splice(idx, 1); // 选区过滤掉了
                     this.localops.splice(i, 1);
                     --i;
                 }
@@ -307,6 +307,8 @@ export class TextRepoNode extends RepoNode {
         }
 
         if (selectionOp) this.selection?.restoreText(selectionOp);
+
+        console.log("receive", this.localops.slice(0))
     }
     receiveLocal(ops: OpItem[]) {
         // check
@@ -330,10 +332,16 @@ export class TextRepoNode extends RepoNode {
             if (!op2) throw new Error();
             if (!((op2.op as ArrayOp).type1 === ArrayOpType.Selection)) throw new Error("op not match");
         }
+        console.log("_popLocal", this.localops.slice(0))
     }
     commit(ops: OpItem[]) {
         this.localops.push(...ops);
+        console.log("commit", this.localops.slice(0))
     }
+
+    // todo
+    // undo时由外面cmds自行记录前置cmds，在redo时进行变换
+
     _popLocal(ops: OpItem[]) { // todo 这些也是要参与变换的，在redo的时候才不会错
         // check
         if (this.localops.length < ops.length) {
@@ -351,6 +359,7 @@ export class TextRepoNode extends RepoNode {
         }
         item.otpath = this.localops.slice(0);
         this.popedOps.push(item);
+        console.log("_popLocal", this.localops.slice(0))
     }
     dropOps(ops: OpItem[]): void {
         // 这里的ops也有可能是新的需要上传的ops
@@ -426,6 +435,7 @@ export class TextRepoNode extends RepoNode {
 
         // 情况1 ops在localops中 或者 cmd 已经提交
         if (receiver || this.localops.length > 0 && ops[0].cmd === this.localops[this.localops.length - 1].cmd) {
+            console.log("redo - undo")
             return this.undo(ops, receiver);
         }
 

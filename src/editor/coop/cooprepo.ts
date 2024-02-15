@@ -7,7 +7,6 @@ import { CmdMergeType, ISave4Restore, LocalCmd, cloneSelectionState, isDiffSelec
 import { CmdRepo } from "./cmdrepo";
 import { Cmd } from "../../coop/common/repo";
 import { ICoopNet } from "./net";
-import { Op } from "../../coop/common/op";
 import { transform } from "../../coop/client/arrayoptransform";
 import { ArrayOp, ArrayOpSelection } from "coop/client/arrayop";
 
