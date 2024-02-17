@@ -117,8 +117,8 @@ export class CoopRepository {
         try {
             this.__repo.transactCtx.settrap = false;
             const cmd = this.__cmdrepo.undo();
-            this.__repo.commit();
             if (cmd && this.selection) cmd.selectionupdater(this.selection, true, cmd);
+            this.__repo.commit();
         } catch(e) {
             this.__repo.rollback();
             throw e;
@@ -133,8 +133,8 @@ export class CoopRepository {
         try {
             this.__repo.transactCtx.settrap = false;
             const cmd = this.__cmdrepo.redo();
-            this.__repo.commit();
             if (cmd && this.selection) cmd.selectionupdater(this.selection, false, cmd);
+            this.__repo.commit();
         } catch(e) {
             this.__repo.rollback();
             throw e;

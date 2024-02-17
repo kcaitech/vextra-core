@@ -9,7 +9,7 @@ import { nodecreator } from "./creator";
 import { ArrayMoveOpRecord, IdOp, IdOpRecord, TreeMoveOpRecord } from "coop/client/crdt";
 import { SNumber } from "../../coop/client/snumber";
 import { Repository } from "../../data/transact";
-import { ArrayOp } from "../../coop/client/arrayop";
+import { ArrayOp, ArrayOpSelection } from "../../coop/client/arrayop";
 import { TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop";
 import { BasicArray } from "../../data/basic";
 import { Para, Span, Text } from "../../data/text";
@@ -382,11 +382,11 @@ class CmdSync {
             if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
             // apply op
             if (newCmd) {
-                node.undo(v, newCmd);
+                node.undo(v, newCmd); // 已posted
             } else if (cmd === this.nopostcmds[this.nopostcmdidx]) {
-                node.redo(v, undefined);
+                node.redo(v, undefined); // 刚undo时生成新cmd，再redo（此时走的是undo），再undo
             } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
-                node.undo(v, undefined);
+                node.undo(v, undefined); // 正常
             } else {
                 throw new Error();
             }
@@ -402,6 +402,14 @@ class CmdSync {
             }
             this._commit2(newCmd);
         } else {
+            if (cmd.saveselection?.text) {
+                // 替换掉selection op
+                const sop = cmd.saveselection.text;
+                const idx = cmd.ops.findIndex(op => op.id === sop.id);
+                if (idx < 0) throw new Error();
+                // newCmd.ops.splice(idx, 1, sop); // 不需要变换的可以直接替换
+                cmd.saveselection.text = cmd.ops[idx] as ArrayOpSelection;
+            }
             if (cmd === this.nopostcmds[this.nopostcmdidx]) {
                 ++this.nopostcmdidx;
             } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
@@ -444,13 +452,14 @@ class CmdSync {
             if (!node) throw new Error("cmd"); // 本地cmd 不应该没有
             // apply op
             if (newCmd) {
-                node.redo(v, newCmd);
+                node.redo(v, newCmd); // posted
             } else if (cmd === this.nopostcmds[this.nopostcmdidx]) {
-                node.redo(v, undefined);
+                node.redo(v, undefined); // 正常
             } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
-                node.undo(v, undefined);
+                node.undo(v, undefined); // undo时刚commit的cmd
             } else {
-                throw new Error();
+                // throw new Error();
+                node.redo(v, undefined); // 如在undo时commit新cmd后被清理的cmds，这时重新提交过来
             }
         }
 
@@ -466,12 +475,21 @@ class CmdSync {
             // need commit new command
             this._commit2(newCmd)
         } else {
+            if (cmd.saveselection?.text) {
+                // 替换掉selection op
+                const sop = cmd.saveselection.text;
+                const idx = cmd.ops.findIndex(op => op.id === sop.id);
+                if (idx < 0) throw new Error();
+                // newCmd.ops.splice(idx, 1, sop); // 不需要变换的可以直接替换
+                cmd.saveselection.text = cmd.ops[idx] as ArrayOpSelection;
+            }
             if (cmd === this.nopostcmds[this.nopostcmdidx]) {
                 ++this.nopostcmdidx;
             } else if (cmd === this.nopostcmds[this.nopostcmdidx - 1]) {
                 --this.nopostcmdidx;
             } else {
-                throw new Error();
+                // throw new Error();
+                this._commit2(cmd)
             }
             this.processCmds();
         }

@@ -220,8 +220,9 @@ export class CrdtArrayReopNode extends RepoNode {
     undo(ops: OpItem[], receiver?: Cmd) {
         // check
         if (ops.length === 0) throw new Error();
-        const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
-        for (let i = ops.length - 1; i >= 0; i--) {
+        const saveops = ops.slice(0);
+        ops.reverse();
+        for (let i = 0; i < ops.length; ++i) { // reverse
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
             const record: ArrayMoveOpRecord | undefined = unapply(this.document, ops[i].op as ArrayMoveOpRecord);
             if (record) ops[i].op = record;
@@ -234,15 +235,16 @@ export class CrdtArrayReopNode extends RepoNode {
                 return { op: item.op, cmd: receiver }
             })))
         } else {
-            this.popLocal(ops);
+            this.popLocal(saveops);
             // replace op
             for (let i = 0; i < ops.length; i++) {
                 const op = ops[i];
                 const saveop = saveops![i];
-                const idx = op.cmd.ops.indexOf(saveop);
+                const idx = op.cmd.ops.indexOf(saveop.op);
                 if (idx < 0) throw new Error();
-                op.cmd.ops.splice(idx, 1, op.op);
+                op.cmd.ops.splice(idx, 1);
             }
+            ops[0].cmd.ops.push(...(ops.map(item => item.op)));
         }
     }
 
@@ -253,7 +255,7 @@ export class CrdtArrayReopNode extends RepoNode {
 
         const target = this.getOpTarget(ops[0].op.path);
         const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
-        for (let i = ops.length - 1; i >= 0; i--) {
+        for (let i = 0; i < ops.length; ++i) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
             const rop = revert(ops[i].op as ArrayMoveOpRecord);
             const record: ArrayMoveOpRecord | undefined = target && apply(this.document, target, rop);
@@ -273,8 +275,9 @@ export class CrdtArrayReopNode extends RepoNode {
                 const saveop = saveops![i];
                 const idx = op.cmd.ops.indexOf(saveop);
                 if (idx < 0) throw new Error();
-                op.cmd.ops.splice(idx, 1, op.op);
+                op.cmd.ops.splice(idx, 1);
             }
+            ops[0].cmd.ops.push(...(ops.map(item => item.op)));
             this.commit(ops);
         }
     }

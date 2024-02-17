@@ -332,7 +332,7 @@ export class TextRepoNode extends RepoNode {
             if (!op2) throw new Error();
             if (!((op2.op as ArrayOp).type1 === ArrayOpType.Selection)) throw new Error("op not match");
         }
-        console.log("_popLocal", this.localops.slice(0))
+        console.log("receiveLocal", ops)
     }
     commit(ops: OpItem[]) {
         this.localops.push(...ops);
@@ -376,7 +376,6 @@ export class TextRepoNode extends RepoNode {
             const type = (ops[i].op as ArrayOp).type1;
             if (type !== ArrayOpType.Selection) ++realOpCount;
         }
-        // const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
 
         const curops: OpItem[] = this.ops.concat(...this.localops.filter((op) => ((op.op as ArrayOp).type1 !== ArrayOpType.Selection)));
         if (curops.length === 0) throw new Error();
@@ -416,15 +415,14 @@ export class TextRepoNode extends RepoNode {
         } else {
             // todo 需要记录ot path
             this._popLocal(ops);
-            // replace op
-            // for (let i = 0; i < ops.length; i++) {
-            //     const op = ops[i];
-            //     const saveop = saveops![i];
-            //     const idx = op.cmd.ops.indexOf(saveop);
-            //     if (idx < 0) throw new Error();
-            //     op.cmd.ops.splice(idx, 1);
-            // }
-            // ops[0].cmd.ops.push(...record);
+            // replace op // 不替换，在redo时可以直接应用 // 不替换选区不对
+            for (let i = 0; i < ops.length; i++) {
+                const op = ops[i];
+                const idx = op.cmd.ops.indexOf(op.op);
+                if (idx < 0) throw new Error();
+                op.cmd.ops.splice(idx, 1);
+            }
+            ops[0].cmd.ops.push(...record);
         }
     }
     redo(ops: OpItem[], receiver?: Cmd) {
@@ -434,7 +432,7 @@ export class TextRepoNode extends RepoNode {
         // 2. undo时pop出去的ops，根据otpath进行变换后应用
 
         // 情况1 ops在localops中 或者 cmd 已经提交
-        if (receiver || this.localops.length > 0 && ops[0].cmd === this.localops[this.localops.length - 1].cmd) {
+        if (receiver /*|| this.localops.length > 0 && ops[0].cmd === this.localops[this.localops.length - 1].cmd*/) {
             console.log("redo - undo")
             return this.undo(ops, receiver);
         }
@@ -454,19 +452,16 @@ export class TextRepoNode extends RepoNode {
         const item = this.popedOps.splice(itemIdx, 1)[0];
         if (!item) throw new Error("not find ops");
 
-        // ops.reverse();
-        const saveops = ops.map(op => op.op as ArrayOp);
-
-        // let revertops = ops.map(revert).reduce((res, op) => {
-        //     if (Array.isArray(op)) res.push(...op.slice(0).reverse());
-        //     else res.push(op);
-        //     return res;
-        // }, [] as ArrayOp[]);
+        const revertops = ops.map(revert).reduce((res, op) => {
+            if (Array.isArray(op)) res.push(...op.slice(0).reverse());
+            else res.push(op);
+            return res;
+        }, [] as ArrayOp[]).reverse();
 
         // 开始变换
         const curops: OpItem[] = this.ops.slice(item.refIdx + 1).concat(...this.localops);
         const otpath = item.otpath;
-        let lhs = otpath.map(item => item.op as ArrayOp).concat(...saveops);
+        let lhs = otpath.map(item => item.op as ArrayOp).concat(...revertops);
         for (let i = 0; i < otpath.length; i++) {
             const c = otpath[i].cmd;
             const idx = curops.findIndex((v) => v.cmd === c);
@@ -493,7 +488,7 @@ export class TextRepoNode extends RepoNode {
             lhs = t.lhs;
         }
 
-        if (lhs.length !== ops.length) throw new Error();
+        if (lhs.length !== revertops.length) throw new Error();
         const text: Text = this.getOpTarget(ops[0].op.path); // todo text 是string的情况？
         const record = text ? lhs.map((op) => apply(this.document, text, op) || op) : lhs;
         // update to ops
@@ -501,8 +496,7 @@ export class TextRepoNode extends RepoNode {
         // replace op
         for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
-            const saveop = saveops![i];
-            const idx = op.cmd.ops.indexOf(saveop);
+            const idx = op.cmd.ops.indexOf(op.op);
             if (idx < 0) throw new Error();
             op.cmd.ops.splice(idx, 1);
         }
