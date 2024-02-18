@@ -1,6 +1,5 @@
 import { Op, OpType } from "../../coop/common/op";
-import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, arrLowerIndex, crdtArrayMove } from "../../coop/client/crdt";
-import { Shape } from "../../data/shape";
+import { ArrayMoveOp, ArrayMoveOpRecord, CrdtItem, crdtArrayMove } from "../../coop/client/crdt";
 import { RepoNode } from "./base";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { Document } from "../../data/document";

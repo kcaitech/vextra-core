@@ -9,6 +9,12 @@ import { SymbolRefShape } from "../../data/classes";
 import { IImportContext, importArtboard, importContactShape, importFlattenShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape, importCutoutShape } from "../../data/baseimport";
 import { Document } from "../../data/document";
 
+interface Api {
+    shapeModifyX(page: Page, shape: Shape, x: number): void;
+    shapeModifyY(page: Page, shape: Shape, y: number): void;
+    shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
+}
+
 export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
     let changed = false;
@@ -137,12 +143,6 @@ function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
     }
 
     return xychanged || whchanged;
-}
-
-interface Api {
-    shapeModifyX(page: Page, shape: Shape, x: number): void;
-    shapeModifyY(page: Page, shape: Shape, y: number): void;
-    shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
 }
 
 export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {

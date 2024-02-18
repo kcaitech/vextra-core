@@ -1,4 +1,3 @@
-import { Shape } from "../../data/shape";
 import { Op, OpType } from "../../coop/common/op";
 import { Cmd, OpItem } from "../../coop/common/repo";
 import { SNumber } from "../../coop/client/snumber";
