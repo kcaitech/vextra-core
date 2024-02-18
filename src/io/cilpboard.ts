@@ -1,5 +1,6 @@
 import { GroupShape, ImageShape, Shape, ShapeFrame, ShapeType, SymbolUnionShape, TextShape } from "../data/shape";
 import {
+    IExportContext,
     exportArtboard,
     exportContactShape,
     exportCutoutShape,
@@ -59,46 +60,58 @@ export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
     }
 }
 
+class ExfContext implements IExportContext {
+
+    symbols = new Set<string>()
+    // artboards = new Set<string>()
+
+    medias = new Set<string>()
+    referenced = new Set<string>()
+    // allartboards = new Set<string>();
+    // allsymbols = new Set<string>();
+}
+
 // 导出图形到剪切板
 export function export_shape(shapes: Shape[]) {
+    const ctx = new ExfContext();
     const result: Shape[] = []
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i], type = shape.type;
         let content: any;
         if (type === ShapeType.Rectangle) {
-            content = exportRectShape(shape as unknown as types.RectShape);
+            content = exportRectShape(shape as unknown as types.RectShape, ctx);
         } else if (type === ShapeType.Oval) {
-            content = exportOvalShape(shape as unknown as types.OvalShape);
+            content = exportOvalShape(shape as unknown as types.OvalShape, ctx);
         } else if (type === ShapeType.Line) {
-            content = exportLineShape(shape as unknown as types.LineShape);
+            content = exportLineShape(shape as unknown as types.LineShape, ctx);
         } else if (type === ShapeType.Image) {
-            content = exportImageShape(shape as unknown as types.ImageShape);
+            content = exportImageShape(shape as unknown as types.ImageShape, ctx);
         } else if (type === ShapeType.Text) {
-            content = exportTextShape(shape as unknown as types.TextShape);
+            content = exportTextShape(shape as unknown as types.TextShape, ctx);
         } else if (type === ShapeType.Path) {
-            content = exportPathShape(shape as unknown as types.PathShape);
+            content = exportPathShape(shape as unknown as types.PathShape, ctx);
         } else if (type === ShapeType.Artboard) {
-            content = exportArtboard(shape as unknown as types.Artboard);
+            content = exportArtboard(shape as unknown as types.Artboard, ctx);
         } else if (type === ShapeType.Group) {
-            content = exportGroupShape(shape as unknown as types.GroupShape);
+            content = exportGroupShape(shape as unknown as types.GroupShape, ctx);
         } else if (type === ShapeType.Table) {
-            content = exportTableShape(shape as unknown as types.TableShape);
+            content = exportTableShape(shape as unknown as types.TableShape, ctx);
         } else if (type === ShapeType.Symbol) {
-            content = exportSymbolShape(shape as unknown as types.SymbolShape);
+            content = exportSymbolShape(shape as unknown as types.SymbolShape, ctx);
         } else if (type === ShapeType.SymbolRef) {
-            content = exportSymbolRefShape(shape as unknown as types.SymbolRefShape);
+            content = exportSymbolRefShape(shape as unknown as types.SymbolRefShape, ctx);
         } else if (type === ShapeType.Contact) {
-            content = exportContactShape(shape as unknown as types.ContactShape);
+            content = exportContactShape(shape as unknown as types.ContactShape, ctx);
         } else if (type === ShapeType.Cutout) {
-            content = exportCutoutShape(shape as unknown as types.CutoutShape);
+            content = exportCutoutShape(shape as unknown as types.CutoutShape, ctx);
         } else if (type === ShapeType.SymbolUnion) {
-            content = exportSymbolUnionShape(shape as unknown as types.SymbolUnionShape);
+            content = exportSymbolUnionShape(shape as unknown as types.SymbolUnionShape, ctx);
         }
         if (content) {
             result.push(content);
         }
     }
-    return result;
+    return { shapes: result, ctx }
 }
 
 /**
@@ -229,10 +242,6 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 r = importLineShape(_s as any as types.LineShape);
             } else if (type === ShapeType.Image) {
                 r = importImageShape(_s as any as types.ImageShape, ctx);
-
-                if (r) {
-                    after_paster_image(document, r as any as ImageShape, medias);
-                }
             } else if (type === ShapeType.Text) {
                 r = importTextShape(_s as any as types.TextShape, ctx);
             } else if (type === ShapeType.Path) {
@@ -272,6 +281,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 result.push(r);
             }
         }
+        after_paster(document, medias);
     } catch (error) {
         console.log(error);
     }
@@ -284,7 +294,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
  * @returns
  */
 export function transform_data(document: Document, page: Page, src: Shape[]): Shape[] {
-    return import_shape_from_clipboard(document, page, export_shape(src));
+    return import_shape_from_clipboard(document, page, export_shape(src).shapes);
 }
 
 /**
@@ -363,37 +373,40 @@ export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
     return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
 }
 
-export function after_paster_image(document: Document, shape: ImageShape, media: any) {
+export function after_paster(document: Document, media: any) {
     if (!media) {
         return;
     }
-    const ref = shape.imageRef;
+    const refs = Array.from(Object.keys(media) || []) as string[];
+    refs.forEach(ref => {
+        const m = media[ref];
 
-    const m = media[ref];
+        if (!m) {
+            return;
+        }
 
-    if (!m) {
-        return;
-    }
+        if (document.mediasMgr.getSync(ref)) {
+            delete media[ref];
+            return;
+        }
 
-    if (document.mediasMgr.getSync(ref)) {
-        delete media[ref];
-        return;
-    }
+        const base64 = atob(m.split('base64,')[1]);
 
-    const base64 = atob(m.split('base64,')[1]);
+        const buff = new Uint8Array(base64.length);
+        for (let i = 0; i < base64.length; i++) {
+            buff[i] = base64.charCodeAt(i);
+        }
 
-    const buff = new Uint8Array(base64.length);
-    for (let i = 0; i < base64.length; i++) {
-        buff[i] = base64.charCodeAt(i);
-    }
+        const _media = { base64: m, buff };
 
-    const _media = { base64: m, buff };
+        media[ref] = _media;
 
-    media[ref] = _media;
+        media[ref] = _media;
 
-    document.mediasMgr.add(ref, _media);
+        document.mediasMgr.add(ref, _media);
+    })
 }
 
-export function cloneGradient(g:types.Gradient) {
+export function cloneGradient(g: types.Gradient) {
     return importGradient(exportGradient(g));
 }

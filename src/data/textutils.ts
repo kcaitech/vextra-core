@@ -61,6 +61,9 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (!!attr.placeholder !== !!span.placeholder) {
         return true;
     }
+    if(attr.fillType !== span.fillType) {
+        return true;
+    }
 
     return false;
 }
@@ -196,6 +199,15 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
                 changed = true;
             }
         }
+    }
+    if (attr.fillType) {
+        if (!span.fillType || attr.fillType !== span.fillType) {
+            span.fillType = attr.fillType;
+            changed = true;
+        }
+    } else if (attrIsSetter && (attr as SpanAttrSetter).fillTypeIsSet && span.fillType) {
+        span.fillType = undefined;
+        changed = true;
     }
 
     return changed;

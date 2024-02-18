@@ -1,7 +1,7 @@
 
 
 import { DefaultColor, findOverrideAndVar, isColorEqual, isVisible, randomId } from "./basic";
-import { TextShape, Path, Color, SymbolShape, SymbolRefShape, OverrideType, VariableType, Para, ParaAttr, Text, Span } from '../data/classes';
+import { TextShape, Path, Color, SymbolShape, SymbolRefShape, OverrideType, VariableType, Para, ParaAttr, Text, Span, FillType, Gradient, ShapeFrame } from '../data/classes';
 import { GraphArray, TextLayout } from "../data/textlayout";
 import { gPal } from "../basic/pal";
 import { renderWithVars as fillR } from "./fill";
@@ -9,7 +9,7 @@ import { renderWithVars as borderR } from "./border";
 import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
-
+import { render as renderGradient } from "./gradient";
 
 function toRGBA(color: Color): string {
     return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
@@ -106,7 +106,7 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
     }
 }
 
-export function renderTextLayout(h: Function, textlayout: TextLayout) {
+export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: ShapeFrame) {
     const childs = [];
 
     const { xOffset, yOffset, paras } = textlayout;
@@ -154,12 +154,23 @@ export function renderTextLayout(h: Function, textlayout: TextLayout) {
                     'alignment-baseline': 'central'
                 }
                 if (span) {
-                    if (span.color) style['fill'] = toRGBA(span.color);
+                    if(span.gradient && span.fillType === FillType.Gradient && frame) {
+                        const g_ = renderGradient(h, span.gradient as Gradient, frame);
+                        if(g_.node) linechilds.push(g_.node);
+                        const gid = g_.id;
+                        if(g_.style) {
+                            if (span.color) style['fill'] = toRGBA(span.color);
+                        }else {
+                            if (span.color) style['fill'] = "url(#" + gid + ")";
+                        }
+                    }else {
+                        if (span.color) style['fill'] = toRGBA(span.color);
+                    }
                     if (span.bold) style['font-weight'] = "bold";
                     if (span.italic) style['font-style'] = "italic";
                 }
 
-                if (gText.length > 0) linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join('')));
+                if (gText.length > 0) linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join(''), ));
 
                 // 下划线、删除线、高亮
                 if (span) {
@@ -258,7 +269,7 @@ export function render(h: Function, shape: TextShape,
     }
 
     const layout = text.getLayout2(frame.width, frame.height, shape.id);
-    childs.push(...renderTextLayout(h, layout));
+    childs.push(...renderTextLayout(h, layout, frame));
     // border
     childs.push(...borderR(h, shape, frame, path, varsContainer));
 
