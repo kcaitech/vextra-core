@@ -16,7 +16,7 @@ import {
     translate,
     translateTo,
 } from "./frame";
-import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
 import { ContactRoleType, CurveMode, FillType, ShapeType } from "../data/typesdefine";
 import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape, getTransformByEnv, modifyTransformByEnv } from "./creator";
@@ -1425,7 +1425,7 @@ function __migrate(document: Document,
     const origin: GroupShape = shape.parent as GroupShape;
 
     if (origin.id === targetParent.id) {
-        console.log('origin.id === targetParent.id');
+        // console.log('origin.id === targetParent.id');
         return;
     }
 

@@ -971,7 +971,7 @@ export class TextShapeEditor extends ShapeEditor {
             console.log(error)
             this.__repo.rollback();
         }
-        return true;
+        return false;
     }
 
     public setTextItalic(italic: boolean, index: number, len: number) {
@@ -1153,20 +1153,37 @@ export class TextShapeEditor extends ShapeEditor {
         }
         return false;
     }
-    public setTextGradientType(gradient: Gradient, index: number, len: number) {
+    public setTextGradient(gradient: Gradient, index: number, len: number) {
         if (len === 0) {
             if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
-            this.__cachedSpanAttr.fillType = FillType.Gradient;
-            this.__cachedSpanAttr.fillTypeIsSet = true;
             this.__cachedSpanAttr.gradient = gradient;
             this.__cachedSpanAttr.gradientIsSet = true;
             return;
         }
-        const api = this.__repo.start("setTextGradientType");
+        const api = this.__repo.start("setTextGradient");
         try {
             const shape = this.shape4edit(api);
-            api.textModifyFillType(this.__page, shape, FillType.Gradient, index, len)
             api.setTextGradient(this.__page, shape, gradient, index, len);
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextGradientMulti(shapes: Shape[], gradient: Gradient) {
+        const api = this.__repo.start("setTextGradientMulti");
+        try {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const text_shape: TextShape = shapes[i] as TextShape;
+                if (text_shape.type !== ShapeType.Text) continue;
+                const shape = this.shape4edit(api, text_shape);
+                const text = shape instanceof Shape ? shape.text : shape.value as Text;
+                const text_length = text.length;
+                if (text_length === 0) continue;
+                api.setTextGradient(this.__page, shape, gradient, 0, text_length);
+            }
             this.__repo.commit();
             return true;
         } catch (error) {
