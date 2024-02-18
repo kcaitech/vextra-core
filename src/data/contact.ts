@@ -234,4 +234,8 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     get isNoSupportDiamondScale() {
         return true;
     }
+
+    get frameType() {
+        return 2;
+    }
 }

@@ -430,6 +430,10 @@ export class Shape extends Basic implements classes.Shape {
     get isNoSupportDiamondScale() {  // 默认都支持压扁缩放
         return false;
     }
+
+    get frameType() {
+        return 1;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -543,6 +547,10 @@ export class GroupShape extends Shape implements classes.GroupShape {
 
     get isNoSupportDiamondScale() {
         return true;
+    }
+
+    get frameType() {
+        return 2;
     }
 }
 
@@ -1036,6 +1044,10 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     get isNoSupportDiamondScale() {
         return true;
     }
+
+    get frameType() {
+        return 2;
+    }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {
@@ -1168,6 +1180,10 @@ export class TextShape extends Shape implements classes.TextShape {
     get isNoSupportDiamondScale() {
         return true;
     }
+
+    get frameType() {
+        return 2;
+    }
 }
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
@@ -1194,8 +1210,12 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         this.scalingStroke = scalingStroke;
         this.isClosed = isClosed;
     }
-    
+
     get isNoSupportDiamondScale() {
         return true;
+    }
+
+    get frameType() {
+        return 2;
     }
 }

@@ -501,4 +501,8 @@ export class TableShape extends Shape implements classes.TableShape {
     get isNoSupportDiamondScale() {
         return true;
     }
+
+    get frameType() {
+        return 2;
+    }
 }

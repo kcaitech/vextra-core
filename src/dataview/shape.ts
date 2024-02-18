@@ -376,6 +376,10 @@ export class ShapeView extends DataView {
         return this.m_frame;
     }
 
+    get frameType() {
+        return this.m_data.frameType;
+    }
+
     getPage(): ShapeView {
         let p: ShapeView = this;
         while (p.m_parent) {
