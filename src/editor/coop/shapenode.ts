@@ -201,7 +201,7 @@ export class CrdtShapeRepoNode extends RepoNode {
     undo(ops: OpItem[], receiver?: Cmd) {
         // check
         if (ops.length === 0) throw new Error();
-        const saveops = ops.slice(0);
+        const saveops: OpItem[] | undefined = receiver ? undefined : ops.map((item) => ({ cmd: item.cmd, op: item.op }));
         ops.reverse();
         for (let i = 0; i < ops.length; ++i) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
@@ -216,7 +216,7 @@ export class CrdtShapeRepoNode extends RepoNode {
                 return { op: item.op, cmd: receiver }
             })))
         } else {
-            this.popLocal(saveops);
+            this.popLocal(saveops!);
             // replace op
             for (let i = 0; i < ops.length; i++) {
                 const op = ops[i];

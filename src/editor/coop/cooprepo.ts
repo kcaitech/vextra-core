@@ -9,6 +9,7 @@ import { Cmd } from "../../coop/common/repo";
 import { ICoopNet } from "./net";
 import { transform } from "../../coop/client/arrayoptransform";
 import { ArrayOp, ArrayOpSelection } from "coop/client/arrayop";
+import { Text } from "../../data/text";
 
 
 class MockNet implements ICoopNet {
@@ -152,6 +153,10 @@ export class CoopRepository {
         this.__repo.start(description);
         this.__api.start(this.selection?.save(), selectionupdater, description);
         return this.__api;
+    }
+    updateTextSelection(text: Text) {
+        const path = text?.getCrdtPath() || [];
+        this.__api.updateTextSelection(this.selection?.saveText(path));
     }
     isNeedCommit(): boolean {
         return this.__api.isNeedCommit();

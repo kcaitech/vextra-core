@@ -112,6 +112,9 @@ export class TextShapeEditor extends ShapeEditor {
         if (_var && typeof _var.value === 'string') {
             api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape));
         }
+        if (_var) {
+            this.__repo.updateTextSelection(_var.value);
+        }
         return _var || _shape as TextShapeLike;
     }
 

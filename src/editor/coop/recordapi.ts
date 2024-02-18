@@ -31,6 +31,7 @@ import { LocalCmd as Cmd, CmdMergeType, ISave4Restore, LocalCmd, SelectionState 
 import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
+import { ArrayOpSelection } from "../../coop/client/arrayop";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -100,6 +101,9 @@ export class Api {
             selectionupdater
         };
         this.needUpdateFrame.length = 0;
+    }
+    updateTextSelection(op: ArrayOpSelection | undefined) {
+        if (this.cmd?.saveselection) this.cmd.saveselection.text = op;
     }
     isNeedCommit(): boolean {
         return this.cmd !== undefined && this.cmd.ops.length > 0;

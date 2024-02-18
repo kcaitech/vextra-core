@@ -14,7 +14,7 @@ export interface SelectionState {
         rows: string[],
         cols: string[],
     },
-    text?: ArrayOpSelection
+    text?: ArrayOpSelection // 在组件变量override时，可能存在由一个var切换到另外一个var的情况，这时就存在2个selectionOp
 }
 
 export function isDiffStringArr(lhs: string[], rhs: string[]): boolean {

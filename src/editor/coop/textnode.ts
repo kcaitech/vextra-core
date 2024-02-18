@@ -380,7 +380,7 @@ export class TextRepoNode extends RepoNode {
         }
 
         const curops: OpItem[] = this.ops.concat(...this.localops.filter((op) => ((op.op as ArrayOp).type1 !== ArrayOpType.Selection)));
-        if (curops.length === 0) throw new Error();
+        if (curops.length === 0) throw new Error(); // todo 是可能的。在组件的变量编辑时，记录的是override前的变量的selection位置，当前节点可能只有一个selectionop。但这会出问题
         if (curops.length < realOpCount) throw new Error();
 
         // 需要变换
