@@ -576,7 +576,7 @@ export function update_contact_points(api: Api, shape: ContactShape, page: Page)
     const len = shape.points.length;
     api.deletePoints(page, shape as PathShape, 0, len);
     for (let i = 0, len2 = _p.length; i < len2; i++) {
-        const p = importCurvePoint(exportCurvePoint(_p[i]));
+        const p = importCurvePoint((_p[i]));
         p.id = v4();
         _p[i] = p;
     }
