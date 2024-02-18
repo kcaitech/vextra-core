@@ -69,7 +69,7 @@ export class Basic {
                 target = target[k];
             }
             if (!target) {
-                console.warn("not find target " + k, "path: " + path.join(','))
+                // console.warn("not find target " + k, "path: " + path.join(','))
                 return;
             }
         }
