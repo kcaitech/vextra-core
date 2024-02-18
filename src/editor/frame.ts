@@ -775,7 +775,6 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
 
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
-
     setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
 }
 /**
