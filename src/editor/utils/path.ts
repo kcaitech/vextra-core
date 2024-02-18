@@ -551,10 +551,9 @@ export function __pre_curve(page: Page, api: Api, path_shape: PathShape, index: 
     init_curv(path_shape, page, api, point, index, 0.01);
 }
 export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {
-    const len = points.length;
-    api.deletePoints(page, shape as PathShape, 0, len);
+    api.deletePoints(page, shape as PathShape, 0, shape.points.length);
     for (let i = 0, len = points.length; i < len; i++) {
-        const p = importCurvePoint(exportCurvePoint(points[i]));
+        const p = importCurvePoint((points[i]));
         p.id = v4();
         points[i] = p;
     }

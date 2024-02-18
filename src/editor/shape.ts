@@ -1455,7 +1455,7 @@ export class ShapeEditor {
             api.deletePoints(this.__page, shape, 0, len);
 
             for (let i = 0, len = points.length; i < len; i++) {
-                const p = importCurvePoint(exportCurvePoint(points[i]));
+                const p = importCurvePoint((points[i]));
                 p.id = v4();
                 points[i] = p;
             }
