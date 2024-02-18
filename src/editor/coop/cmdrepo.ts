@@ -14,6 +14,7 @@ import { TextOpInsertRecord, TextOpRemoveRecord } from "../../coop/client/textop
 import { BasicArray } from "../../data/basic";
 import { Para, Span, Text } from "../../data/text";
 import { mergeParaAttr, mergeSpanAttr } from "../../data/textutils";
+import { CmdNetTask } from "./cmdnettask";
 
 const POST_TIMEOUT = 5000; // 5s
 
@@ -23,7 +24,6 @@ const POST_TIMEOUT = 5000; // 5s
  * @returns 
  */
 function classifyOps(cmds: Cmd[]) {
-    // todo 需要按顺序执行??
     const subrepos: Map<string, OpItem[]> = new Map();
     for (let i = 0; i < cmds.length; i++) {
         const cmd = cmds[i];
@@ -78,6 +78,7 @@ function quickRejectRecovery(cmd: LocalCmd) {
 // symbols要同步更新
 // 一个文档一个总的repo
 class CmdSync {
+    nettask: CmdNetTask;
     repo: Repository;
     // private selection: ISave4Restore | undefined;
     private nodecreator: (op: Op) => RepoNode
@@ -91,6 +92,7 @@ class CmdSync {
         this.nodecreator = nodecreator(document, undefined);
         this.net = net;
         this.net.watchCmds(this.receive.bind(this));
+        this.nettask = new CmdNetTask(net, this.baseVer, this.baseVer, this.receive.bind(this));
     }
 
     setSelection(selection: ISave4Restore) {
@@ -210,6 +212,10 @@ class CmdSync {
     __processTimeToken: any;
     __pullingCmdsTime: number = 0;
     processCmds() {
+
+        // todo 长时间pulling与长时间postcmds时，提示用户出错
+        if (this.nettask.pulling) return;
+
         if (this.repo.isInTransact()) {
             if (this.__processTimeToken) return;
             this.__processTimeToken = setTimeout(() => {
@@ -219,25 +225,13 @@ class CmdSync {
             return;
         }
 
-        // todo 检查cmd baseVer是否本地有,否则需要拉取远程cmds
+        // 检查cmd baseVer是否本地有,否则需要拉取远程cmds
         if (this.pendingcmds.length > 0) {
             const cmds = this.pendingcmds;
             const minBaseVer = cmds.reduce((m, c) => (SNumber.comp(m, c.baseVer) > 0 ? c.baseVer : m), cmds[0].baseVer);
             if (SNumber.comp(this.baseVer, minBaseVer) > 0) {
-                const time = Date.now();
-                if (this.__pullingCmdsTime > 0) {
-
-                }
-                // todo
-                throw new Error("not implemented");
-                // this.net.pullCmds(minBaseVer, this.baseVer).then((cmds) => {
-                // })
-                // if (this.__processTimeToken) return;
-                // this.__processTimeToken = setTimeout(() => {
-                //     this.__processTimeToken = undefined;
-                //     this.processCmds();
-                // }, 1000); // 1s
-                // return;
+                this.nettask.pull(minBaseVer, this.baseVer);
+                return;
             }
         }
         if (this.__processTimeToken) {
@@ -525,8 +519,41 @@ class CmdSync {
             lastVer = cmd.version;
             ++i;
         }
+        let hasheadcmds = false;
         if (abortshead.length > 0) {
-            console.log("abort head cmds: ", abortshead);
+            // 收到头部cmd
+            const basIdx = abortshead.findIndex((cmd) => cmd.version === this.baseVer);
+            if (basIdx >= 0) {
+                hasheadcmds = true;
+                const headcmds: Cmd[] = [];
+                let ver = this.baseVer;
+                for (let i = basIdx; i >= 0; --i) {
+                    const cmd = abortshead[i];
+                    if (cmd.version === ver) {
+                        headcmds.push(cmd);
+                        ver = cmd.previousVersion;
+                    } else {
+                        break;
+                    }
+                }
+                abortshead.splice(basIdx - headcmds.length, headcmds.length);
+                headcmds.forEach(cmd => {
+                    cmd.ops.forEach((op) => { if (op instanceof ArrayOp) op.order = cmd.version });
+                })
+                this.baseVer = headcmds[0].previousVersion;
+                this.cmds.unshift(...headcmds);
+                const subrepos = classifyOps(headcmds);
+                for (let [k, v] of subrepos) {
+                    // 建立repotree
+                    const op0 = v[0].op;
+                    const blockId = op0.path[0];
+                    let repotree = this.getRepoTree(blockId);
+                    const node = repotree.buildAndGet(op0, op0.path, this.nodecreator);
+                    // apply op
+                    node.unshift(v);
+                }
+            }
+            if (abortshead.length > 0) console.log("abort head cmds: ", abortshead);
         }
         if (aborts.length > 0) {
             console.log("abort received cmds: ", aborts,
@@ -537,24 +564,23 @@ class CmdSync {
                 const abortVer = aborts[aborts.length - 1].version;
                 if (SNumber.comp(lastVer, abortVer) < 0) {
                     // 有新版本需要拉取
-                    // todo
+                    this.nettask.pull(lastVer);
                 }
             }
         }
 
-        if (cmds.length === 0) return;
+        if (cmds.length === 0 && !hasheadcmds) return;
         // 更新op.order
         cmds.forEach(cmd => {
             cmd.ops.forEach((op) => { if (op instanceof ArrayOp) op.order = cmd.version });
         })
         this.pendingcmds.push(...cmds);
+        this.nettask.updateVer(this.baseVer, (cmds[cmds.length - 1]?.version) ?? lastVer);
         // need process
         this.processCmds();
     }
 
     // ================ cmd 上传、下拉 ==========================
-    // todo
-    // todo 数据序列化
     private __timeOutToken: any;
     private _postcmds() {
         if (this.postingcmds.length > 0) {
@@ -666,8 +692,7 @@ class CmdSync {
         }
     }
 
-    _alignDataVersion(cmd: LocalCmd) { // recovery的cmd需要单独post？
-        // todo 对齐数据版本
+    _alignDataVersion(cmd: LocalCmd) {
         // 需要判断op 类型
         if (cmd !== this.nopostcmds[0]) throw new Error();
         const ops = cmd.ops;
@@ -873,7 +898,10 @@ export class CmdRepo {
         repo.start("init");
         try {
             if (cmds.length > 0) {
+                if (cmds[0].previousVersion !== this.cmdsync.baseVer) throw new Error();
                 this.cmdsync._receive(cmds);
+                this.cmdsync.cmds.push(...cmds);
+                this.cmdsync.nettask.updateVer(this.cmdsync.baseVer, cmds[cmds.length - 1].version);
             }
             if (localcmds.length > 0) {
                 localcmds.forEach(item => this.cmdsync.commit(item));
@@ -889,7 +917,6 @@ export class CmdRepo {
     // 区分需要应用的与不需要应用的
     commit(cmd: LocalCmd) {
         // 有丢弃掉的cmd，要通知到textnode
-        // todo 这里不对了？
         if (this.localcmds.length > this.localindex) {
             const droped = this.localcmds.splice(this.localindex); // 这里的有些cmd也是要提交的
             const subrepos = classifyOps(droped);

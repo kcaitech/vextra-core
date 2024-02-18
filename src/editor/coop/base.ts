@@ -15,6 +15,9 @@ export abstract class RepoNode {
         this.type = type;
     }
 
+    unshift(ops: OpItem[]): void {
+        this.ops.unshift(...ops);
+    }
     abstract receive(ops: OpItem[]): void;
     abstract receiveLocal(ops: OpItem[]): void;
     abstract commit(ops: OpItem[]): void;
