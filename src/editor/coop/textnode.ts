@@ -141,7 +141,9 @@ function getOpTarget(op: ArrayOp) {
 function unapply(document: Document, op: ArrayOp) {
     const ret: ArrayOp[] = [];
     const rop = revertOp(op);
-    if (Array.isArray(rop)) {
+    if (rop instanceof ArrayOpSelection) {
+        ret.push(rop);
+    } else if (Array.isArray(rop)) {
         const text = getOpTarget(op);
         for (let i = 0; i < rop.length; ++i) {
             const op = rop[i];
