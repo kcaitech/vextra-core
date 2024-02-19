@@ -31,9 +31,9 @@ export interface Api {
 // 在不增加frame缩放值、不修改现有图层变换矩阵的条件下，对frame做以下类型区分(莫名其妙发生循环引用)
 export enum FrameType {
     None = 0, // 无实体：连接线。在约束中的表现为 —— 不需要处理约束表现
-    Path = 1, // 任意形状，PathShape。结构由path路径做支撑，可以表现出菱形特征，在约束中的表现为 —— 摆正、重新整理路径
-    Rect = 2, // 标准矩形：包括容器、文字、图片、表格、实例、组件、组件集合、切图。自身没有path路径，结构固定，在约束中的表现为 —— 根据比例调整尺寸
-    Flex = 3  // 其他：结构由子元素做支撑：编组，在约束中的表现同上
+    Path = 1, // 任意形状：PathShape。结构由path路径做支撑，可以表现出菱形特征，在约束中的表现为 —— 摆正、重新整理路径
+    Rect = 2, // 标准矩形：包括文字、图片、表格、切图。自身没有path路径，结构固定，外切盒子和图层自身都为矩形，在约束中的表现为 —— 根据比例调整尺寸
+    Flex = 3  // 父级矩形：包括编组、容器、实例、组件、组件集合。含有子元素的标准矩形，在约束中的表现同上。
 }
 
 export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
@@ -50,9 +50,9 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
         if (!ft) {
             continue;
         } else if (ft === 1) { // Path
-            modifyFrameForPath(api, page, c, scaleX, scaleY, shape.frame, originFrame)
-        } else if (ft === 2) { // Rect
-
+            modifyFrameForPath(api, page, c, scaleX, scaleY, shape.frame, originFrame);
+        } else if (ft === 2) { // Standard Rect
+            modifyFrameForStandardRect(api, page, c, scaleX, scaleY, shape.frame, originFrame);
         }
         // // 根据resizeconstrain修正scale
         // const resizingConstraint = c.resizingConstraint || 54; // 默认值给54，即靠左、靠顶对齐，尺寸固定
@@ -252,7 +252,9 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
         // }
     }
 }
+function getBoundingBoxForGroup() {
 
+}
 function resetTransformForPath(api: Api, page: Page, shape: PathShape) {
     const matrix = shape.matrix2Parent();
     const cFrame = shape.frame;
@@ -288,7 +290,7 @@ function resetTransformForPath(api: Api, page: Page, shape: PathShape) {
 }
 
 /**
- * @description 没有子元素，需要考虑transform，当存在transform时，需要取外切盒子，根据外切盒子摆正再根据约束值实现约束效果；
+ * @description 处理的场景特征为没有子元素，需要考虑transform，当存在transform时，需要取外切盒子，根据外切盒子摆正再根据约束值实现约束效果；
  */
 function modifyFrameForPath(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame) {
     // 根据transform得到约束前的frame
@@ -296,7 +298,9 @@ function modifyFrameForPath(api: Api, page: Page, shape: Shape, scaleX: number, 
     let y = shape.frame.y;
     let width = shape.frame.width;
     let height = shape.frame.height;
-    if (!shape.isNoTransform()) {
+    const resizingConstraint = shape.resizingConstraint || 54;
+
+    if (!shape.isNoTransform() && resizingConstraint !== 54) {
         const boundingBox = resetTransformForPath(api, page, shape as PathShape);
         x = boundingBox.x;
         y = boundingBox.y;
@@ -304,92 +308,18 @@ function modifyFrameForPath(api: Api, page: Page, shape: Shape, scaleX: number, 
         height = boundingBox.height;
     }
 
-    // 根据约束值修改frame
+    const f = shape.frame;
+    const _f = fixConstrainFrame2(resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame);
+
+    setFrame(page, shape, _f.x, _f.y, _f.width, _f.height, api);
+}
+
+function modifyFrameForStandardRect(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame) {
+    const f = shape.frame;
     const resizingConstraint = shape.resizingConstraint || 54;
-    // 水平 HORIZONTAL
-    if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) { // 跟随缩放。一旦跟随缩放，则不需要考虑其他约束场景了
-        x *= scaleX;
-        width *= scaleX;
-    }
-    else { // 非跟随缩放
-        if (ResizingConstraints2.isFlexWidth(resizingConstraint)) { // 宽度自由，x、width值都需要根据约束场景变化
-            let _width = scaleX * width;
-
-            if (ResizingConstraints2.isFixedToLeft(resizingConstraint)) { // 靠左固定
-                width = _width;
-            }
-            else if (ResizingConstraints2.isFixedToRight(resizingConstraint)) { // 靠右固定                
-                const origin_d_to_right = originEnvFrame.width - width - x;
-                x = currentEnvFrame.width - _width - origin_d_to_right;
-                width = _width;
-            }
-            else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) { // 居中
-                const origin_d_to_center = originEnvFrame.width / 2 - x;
-                x = currentEnvFrame.width / 2 - origin_d_to_center;
-                width = _width;
-            }
-            else if (ResizingConstraints2.isFixedLeftAndRight(resizingConstraint)) { // 左右固定，通过固定x值来使左边固定，通过修改宽度和水平翻转来使右边固定
-                const origin_d_to_right = originEnvFrame.width - width - x;
-                width = currentEnvFrame.width - x - origin_d_to_right;
-
-                // 需要特别注意左右固定有可能会导致图层翻转
-                if (width < 0) {
-                    api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
-                    width = -width;
-                }
-            }
-        }
-        else { // 宽度固定，只需要修改x值，此场景中不存在左右固定，靠左固定不需要修改x的值，所以只需要处理靠右固定和居中场景
-            if (ResizingConstraints2.isFixedToRight(resizingConstraint)) { // 靠右固定，通过修改x值来使图层靠右边固定
-                x = currentEnvFrame.width - originEnvFrame.width + x;
-            }
-            else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) { // 居中
-                x = currentEnvFrame.width / 2 - originEnvFrame.width / 2 + x;
-            }
-        }
-    }
-
-    // 垂直 VERTICAL
-    if (ResizingConstraints2.isVerticalScale(resizingConstraint)) {
-        y *= scaleY;
-        height *= scaleY;
-    }
-    else {
-        if (ResizingConstraints2.isFlexHeight(resizingConstraint)) {
-            let _height = scaleY * height;
-
-            if (ResizingConstraints2.isFixedToTop(resizingConstraint)) {
-                height = _height;
-            }
-            else if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
-                const origin_d_to_bottom = originEnvFrame.height - height - y;
-                y = currentEnvFrame.height - _height - origin_d_to_bottom;
-                height = _height;
-            }
-            else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
-                const origin_d_to_center = originEnvFrame.height / 2 - y;
-                y = currentEnvFrame.height / 2 - origin_d_to_center;
-                height = _height;
-            }
-            else if (ResizingConstraints2.isFixedTopAndBottom(resizingConstraint)) {
-                const origin_d_to_bottom = originEnvFrame.height - height - y;
-                height = currentEnvFrame.height - y - origin_d_to_bottom;
-
-                if (height < 0) {
-                    api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
-                    height = -height;
-                }
-            }
-        }
-        else {
-            if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
-                y = currentEnvFrame.height - originEnvFrame.height + y;
-            }
-            else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
-                y = currentEnvFrame.height / 2 - originEnvFrame.height / 2 + x;
-            }
-        }
-    }
+    
+    // 即使是有transform也不用特别处理，直接忽略transform，因为这类场景不可以摆正
+    const { x, y, width, height } = fixConstrainFrame2(resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame);
 
     setFrame(page, shape, x, y, width, height, api);
 }
@@ -588,6 +518,91 @@ function fixConstrainFrame(page: Page, shape: Shape, x: number, y: number, w: nu
 
         return { x: cx, y: cy, w: cw, h: ch };
     }
+}
+function fixConstrainFrame2(resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame) {
+    // 水平 HORIZONTAL
+    if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) { // 跟随缩放。一旦跟随缩放，则不需要考虑其他约束场景了
+        x *= scaleX;
+        width *= scaleX;
+    }
+    else { // 非跟随缩放
+        if (ResizingConstraints2.isFlexWidth(resizingConstraint)) { // 宽度自由，x、width值都需要根据约束场景变化
+            let _width = scaleX * width;
+
+            if (ResizingConstraints2.isFixedToLeft(resizingConstraint)) { // 靠左固定
+                width = _width;
+            }
+            else if (ResizingConstraints2.isFixedToRight(resizingConstraint)) { // 靠右固定                
+                const origin_d_to_right = originEnvFrame.width - width - x;
+                x = currentEnvFrame.width - _width - origin_d_to_right;
+                width = _width;
+            }
+            else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) { // 居中
+                const origin_d_to_center = originEnvFrame.width / 2 - x;
+                x = currentEnvFrame.width / 2 - origin_d_to_center;
+                width = _width;
+            }
+            else if (ResizingConstraints2.isFixedLeftAndRight(resizingConstraint)) { // 左右固定，通过固定x值来使左边固定，通过修改宽度和水平翻转来使右边固定
+                const origin_d_to_right = originEnvFrame.width - width - x;
+                width = currentEnvFrame.width - x - origin_d_to_right;
+
+                // 需要特别注意左右固定有可能会导致图层翻转
+                if (width <= minimum_WH) {
+                    width = 1;
+                }
+            }
+        }
+        else { // 宽度固定，只需要修改x值，此场景中不存在左右固定，靠左固定不需要修改x的值，所以只需要处理靠右固定和居中场景
+            if (ResizingConstraints2.isFixedToRight(resizingConstraint)) { // 靠右固定，通过修改x值来使图层靠右边固定
+                x = currentEnvFrame.width - originEnvFrame.width + x;
+            }
+            else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) { // 居中
+                x = currentEnvFrame.width / 2 - originEnvFrame.width / 2 + x;
+            }
+        }
+    }
+    // 垂直 VERTICAL
+    if (ResizingConstraints2.isVerticalScale(resizingConstraint)) {
+        y *= scaleY;
+        height *= scaleY;
+    }
+    else {
+        if (ResizingConstraints2.isFlexHeight(resizingConstraint)) {
+            let _height = scaleY * height;
+
+            if (ResizingConstraints2.isFixedToTop(resizingConstraint)) {
+                height = _height;
+            }
+            else if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
+                const origin_d_to_bottom = originEnvFrame.height - height - y;
+                y = currentEnvFrame.height - _height - origin_d_to_bottom;
+                height = _height;
+            }
+            else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
+                const origin_d_to_center = originEnvFrame.height / 2 - y;
+                y = currentEnvFrame.height / 2 - origin_d_to_center;
+                height = _height;
+            }
+            else if (ResizingConstraints2.isFixedTopAndBottom(resizingConstraint)) {
+                const origin_d_to_bottom = originEnvFrame.height - height - y;
+                height = currentEnvFrame.height - y - origin_d_to_bottom;
+
+                if (height <= minimum_WH) {
+                    height = 1;
+                }
+            }
+        }
+        else {
+            if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
+                y = currentEnvFrame.height - originEnvFrame.height + y;
+            }
+            else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
+                y = currentEnvFrame.height / 2 - originEnvFrame.height / 2 + x;
+            }
+        }
+    }
+
+    return { x, y, width, height };
 }
 
 function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
