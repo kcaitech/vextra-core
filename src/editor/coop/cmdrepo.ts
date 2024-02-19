@@ -107,6 +107,11 @@ class CmdSync {
     document: Document;
 
     baseVer: string = "";
+
+    public setBaseVer(baseVer: string) {
+        this.baseVer = baseVer;
+    }
+
     cmds: Cmd[] = [];
     pendingcmds: Cmd[] = []; // 远程过来还未应用的cmd // 在需要拉取更早的版本时，远程的cmd也需要暂存不应用
 
@@ -987,6 +992,9 @@ export class CmdRepo {
     }
     setNet(net: ICoopNet) {
         return this.cmdsync.setNet(net);
+    }
+    setBaseVer(baseVer: string) {
+        return this.cmdsync.setBaseVer(baseVer);
     }
     receive(cmds: Cmd[]) {
         return this.cmdsync.receive(cmds);

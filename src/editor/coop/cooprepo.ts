@@ -85,6 +85,10 @@ export class CoopRepository {
         this.__cmdrepo.setNet(net);
     }
 
+    public setBaseVer(baseVer: string) {
+        this.__cmdrepo.setBaseVer(baseVer);
+    }
+
     public receive(cmds: Cmd[]) {
         this.__cmdrepo.receive(cmds);
     }
