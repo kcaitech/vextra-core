@@ -10,6 +10,7 @@ import { BasicArray } from "../data/basic";
 import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { innerShadowId, renderWithVars as shadowR } from "./shadow";
 import { render as renderGradient } from "./gradient";
+import { objectId } from "../basic/objectid";
 
 function toRGBA(color: Color): string {
     return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
@@ -154,23 +155,38 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                     'alignment-baseline': 'central'
                 }
                 if (span) {
-                    if(span.gradient && span.fillType === FillType.Gradient && frame) {
-                        const g_ = renderGradient(h, span.gradient as Gradient, frame);
-                        if(g_.node) linechilds.push(g_.node);
-                        const gid = g_.id;
-                        if(g_.style) {
-                            if (span.color) style['fill'] = toRGBA(span.color);
-                        }else {
-                            if (span.color) style['fill'] = "url(#" + gid + ")";
-                        }
-                    }else {
-                        if (span.color) style['fill'] = toRGBA(span.color);
-                    }
                     if (span.bold) style['font-weight'] = "bold";
                     if (span.italic) style['font-style'] = "italic";
+                    if (span.gradient && span.fillType === FillType.Gradient && frame) {
+                        const g_ = renderGradient(h, span.gradient as Gradient, frame);
+                        if (g_.node) linechilds.push(g_.node);
+                        const gid = g_.id;
+                        if (span.color) style['fill'] = "url(#" + gid + ")";
+                    } else {
+                        if (span.color) style['fill'] = toRGBA(span.color);
+                    }
                 }
 
-                if (gText.length > 0) linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join(''), ));
+                if (gText.length > 0) {
+                    if (span && span.gradient && span.fillType === FillType.Gradient && frame) {
+                        const g_ = renderGradient(h, span.gradient as Gradient, frame);
+                        if (g_.style) {
+                            const id = "clippath-fill-" + objectId(span.gradient) + randomId();
+                            const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y, style, "clip-rule": "evenodd" }, gText.join(''))]);
+                            linechilds.push(cp);
+                            linechilds.push(h("foreignObject", {
+                                width: textlayout.contentWidth, height: textlayout.contentHeight, x: xOffset, y: yOffset,
+                                "clip-path": "url(#" + id + ")",
+                            },
+                                h("div", { width: "100%", height: "100%", style: g_.style })));
+                        } else {
+                            linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join(''),));
+
+                        }
+                    } else {
+                        linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join(''),));
+                    }
+                }
 
                 // 下划线、删除线、高亮
                 if (span) {
