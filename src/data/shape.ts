@@ -588,6 +588,11 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         this.variables = variables;
     }
 
+    getOpTarget(path: string[]): any {
+        if (path[0] === 'overrides' && !this.overrides) this.overrides = new BasicMap<string, string>();
+        return super.getOpTarget(path);
+    }
+
     private _createVar4Override(type: OverrideType, value: any) {
         switch (type) {
             case OverrideType.Borders:
