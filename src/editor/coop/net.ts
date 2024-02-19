@@ -29,5 +29,4 @@ export interface ICoopNet {
      */
     watchCmds(watcher: (cmds: Cmd[]) => void): void;
 
-    getWatcherList(): ((cmds: Cmd[]) => void)[];
 }

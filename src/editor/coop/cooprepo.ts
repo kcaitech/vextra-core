@@ -13,8 +13,6 @@ import { Text } from "../../data/text";
 
 
 class MockNet implements ICoopNet {
-    private watcherList: ((cmds: Cmd[]) => void)[] = [];
-
     hasConnected(): boolean {
         return false;
     }
@@ -25,11 +23,7 @@ class MockNet implements ICoopNet {
         return false;
     }
     watchCmds(watcher: (cmds: Cmd[]) => void): void {
-        this.watcherList.push(watcher);
-    }
 
-    getWatcherList(): ((cmds: Cmd[]) => void)[] {
-        return this.watcherList;
     }
 }
 
