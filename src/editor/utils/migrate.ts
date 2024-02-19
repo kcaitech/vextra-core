@@ -1,10 +1,10 @@
 import { SymbolRefShape } from "../../data/symbolref";
-import { GroupShape, Shape, ShapeType, SymbolUnionShape, SymbolShape } from "../../data/shape";
-import { is_symbol_but_not_union } from "./other";
+import { GroupShape, Shape, ShapeType, SymbolUnionShape } from "../../data/shape";
 import { is_circular_ref2 } from "./ref_check";
-import { Api } from "../command/recordapi";
+import { Api } from "../coop/recordapi";
 import { Page } from "../../data/page";
 import { is_exist_invalid_shape2, is_part_of_symbol } from "./symbol";
+import { Document } from "../../data/document";
 
 /**
  * @description 检查是否满足迁移条件
@@ -48,12 +48,12 @@ export function unable_to_migrate(target: Shape, wander: Shape): number {
     return 0;
 }
 
-export function after_migrate(page: Page, api: Api, origin: Shape) {
+export function after_migrate(document: Document, page: Page, api: Api, origin: Shape) {
     if (origin instanceof SymbolUnionShape && !origin.childs?.length) {
         const origin_parent = origin.parent;
         if (!origin_parent) return;
         const delete_index = (origin_parent as GroupShape).indexOfChild(origin);
         if (delete_index < 0) return;
-        api.shapeDelete(page, origin_parent as GroupShape, delete_index);
+        api.shapeDelete(document, page, origin_parent as GroupShape, delete_index);
     }
 }

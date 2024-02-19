@@ -1,4 +1,4 @@
-import { Api } from "../../editor/command/recordapi";
+import { Api } from "../coop/recordapi";
 import { ContactForm, CurveMode, ShapeType } from "../../data/typesdefine";
 import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../../data/shape";
 import { Page } from "../../data/page";
@@ -14,6 +14,7 @@ import { getHorizontalAngle } from "../../editor/page";
 import { ContactShape } from "../../data/contact";
 import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
 import { translateTo } from "../../editor/frame";
+import { Document } from "../../data/document";
 interface XY {
     x: number
     y: number
@@ -115,21 +116,21 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         const from = shape.from;
         if (!from) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const fromShape = page.getShape((from as ContactForm).shapeId);
         if (!fromShape) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const xy_result = get_box_pagexy(fromShape);
         if (!xy_result) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
@@ -137,7 +138,7 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         let p = get_nearest_border_point(fromShape, from.contactType, fromShape.matrix2Root(), xy1, xy2);
         if (!p) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
             return result
         }
 
@@ -147,8 +148,8 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         const m2 = new Matrix(m1.inverse);
 
         p = m2.computeCoord3(p);
-        const cp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-        const cp2 = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
+        const cp = new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
+        const cp2 = new CurvePoint([2] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
         result.splice(1, 0, cp, cp2);
     }
     if (index === len - 2) { // 编辑的线为最后一根线；
@@ -156,21 +157,21 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         const to = shape.to;
         if (!to) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const toShape = page.getShape((to as ContactForm).shapeId);
         if (!toShape) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const xy_result = get_box_pagexy(toShape);
         if (!xy_result) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
@@ -178,7 +179,7 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         let p = get_nearest_border_point(toShape, to.contactType, toShape.matrix2Root(), xy1, xy2);
         if (!p) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint(v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
@@ -188,8 +189,8 @@ export function get_points_for_init(page: Page, shape: ContactShape, index: numb
         const m2 = new Matrix(m1.inverse);
 
         p = m2.computeCoord3(p);
-        const cp = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
-        const cp2 = new CurvePoint(v4(), p.x, p.y, CurveMode.Straight);
+        const cp = new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
+        const cp2 = new CurvePoint([len] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
         result.splice(len - 1, 0, cp, cp2)
     }
     return result;
@@ -550,10 +551,9 @@ export function __pre_curve(page: Page, api: Api, path_shape: PathShape, index: 
     init_curv(path_shape, page, api, point, index, 0.01);
 }
 export function replace_path_shape_points(page: Page, shape: PathShape, api: Api, points: CurvePoint[]) {
-    const len = points.length;
-    api.deletePoints(page, shape as PathShape, 0, len);
+    api.deletePoints(page, shape as PathShape, 0, shape.points.length);
     for (let i = 0, len = points.length; i < len; i++) {
-        const p = importCurvePoint(exportCurvePoint(points[i]));
+        const p = importCurvePoint((points[i]));
         p.id = v4();
         points[i] = p;
     }
@@ -571,7 +571,7 @@ function _sort_after_clip(path_shape: PathShape, index: number) {
     result.push(...points.slice(0, index + 1));
     return result;
 }
-function after_clip(page: Page, api: Api, path_shape: PathShape): number {
+function after_clip(document: Document, page: Page, api: Api, path_shape: PathShape): number {
     if (path_shape.points.length < 2) {
         const parent = path_shape.parent;
         if (!parent) {
@@ -583,7 +583,7 @@ function after_clip(page: Page, api: Api, path_shape: PathShape): number {
             console.log('index < 0');
             return 0;
         }
-        api.shapeDelete(page, parent as GroupShape, index);
+        api.shapeDelete(document, page, parent as GroupShape, index);
         return 1;
     }
     return 0;
@@ -642,7 +642,7 @@ function get_frame_by_points(points: CurvePoint[]) {
 function create_path_shape_by_frame(origin: PathShape, frame: ShapeFrame, slice_name: string) {
     const __style = importStyle(exportStyle(origin.style));
     const __points = new BasicArray<CurvePoint>();
-    const __ps = new PathShape(uuid(), slice_name, ShapeType.Path, frame, __style, __points, false);
+    const __ps = new PathShape(new BasicArray(), uuid(), slice_name, ShapeType.Path, frame, __style, __points, false);
     addCommonAttr(__ps)
     return __ps;
 }
@@ -666,7 +666,7 @@ function update_points_xy(page: Page, part: PathShape, points: CurvePoint[], api
     })
     api.addPoints(page, part, points);
 }
-function assemble(page: Page, parts: PathShape[], origin: PathShape, api: Api) {
+function assemble(document: Document, page: Page, parts: PathShape[], origin: PathShape, api: Api) {
     const parent = origin.parent as GroupShape;
     if (!parent) {
         console.log('assemble: !parent');
@@ -678,9 +678,9 @@ function assemble(page: Page, parts: PathShape[], origin: PathShape, api: Api) {
         return;
     }
     const gshape = newGroupShape('图形');
-    return group(page, parts, gshape, parent, index, api);
+    return group(document, page, parts, gshape, parent, index, api);
 }
-function delele_origin(page: Page, origin: PathShape, api: Api) {
+function delele_origin(document: Document, page: Page, origin: PathShape, api: Api) {
     const parent = origin.parent as GroupShape;
     if (!parent) {
         console.log('delele_origin: !parent');
@@ -691,9 +691,9 @@ function delele_origin(page: Page, origin: PathShape, api: Api) {
         console.log('delele_origin: index < 0');
         return;
     }
-    api.shapeDelete(page, parent, index);
+    api.shapeDelete(document, page, parent, index);
 }
-export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
+export function apart_path_shape(document: Document, page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
     // 将要拆分图形
 
     // 拆分结果
@@ -748,15 +748,15 @@ export function apart_path_shape(page: Page, api: Api, path_shape: PathShape, in
     update_path_shape_frame(api, page, [part1, part2]);
 
     // 8.把生成的path组合
-    const g = assemble(page, [part1, part2], path_shape, api);
+    const g = assemble(document, page, [part1, part2], path_shape, api);
     data.ex = g;
 
     // 9.删除原先图形 done
-    delele_origin(page, path_shape, api);
+    delele_origin(document, page, path_shape, api);
 
     return data;
 }
-export function _clip(page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
+export function _clip(document: Document, page: Page, api: Api, path_shape: PathShape, index: number, slice_name: string) {
     let data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
     if (path_shape.isClosed) {
         api.setCloseStatus(page, path_shape, false);
@@ -768,15 +768,15 @@ export function _clip(page: Page, api: Api, path_shape: PathShape, index: number
     const points = path_shape.points;
     if (index === 0) {
         api.deletePoint(page, path_shape, index);
-        data.code = after_clip(page, api, path_shape);
+        data.code = after_clip(document, page, api, path_shape);
         return data;
     }
     if (index === points.length - 2) {
         api.deletePoint(page, path_shape, points.length - 1);
-        data.code = after_clip(page, api, path_shape);
+        data.code = after_clip(document, page, api, path_shape);
         return data;
     }
-    data = apart_path_shape(page, api, path_shape, index, slice_name);
+    data = apart_path_shape(document, page, api, path_shape, index, slice_name);
     return data;
 }
 export function update_path_shape_frame(api: Api, page: Page, shapes: PathShape[]) {

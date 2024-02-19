@@ -1,49 +1,54 @@
 import { Border, BorderPosition, BorderStyle } from "../../data/style";
 import { Color } from "../../data/color";
+import { crdtArrayInsert, crdtArrayMove, crdtArrayRemove, crdtSetAttr } from "./basic";
+import { BasicArray } from "../../data/basic";
+import { ArrayMoveOpRecord } from "../../coop/client/crdt";
 // 边框
 export function setBorderColor(
     border: Border,
     color: Color
 ) {
-    // const border: Border = style.borders[idx];
-    border.color = color;
+    return crdtSetAttr(border, "color", color);
 }
 export function setBorderEnable(
     border: Border,
     isEnabled: boolean,
 ) {
-    // const border: Border = style.borders[idx];
-    border.isEnabled = isEnabled;
+    return crdtSetAttr(border, "isEnabled", isEnabled);
 }
 export function setBorderThickness(border: Border, thickness: number) {
-    border.thickness = thickness;
+    return crdtSetAttr(border, "thickness", thickness);
 }
 export function setBorderPosition(border: Border, position: BorderPosition) {
-    border.position = position;
+    return crdtSetAttr(border, "position", position);
 }
 export function setBorderStyle(border: Border, borderStyle: BorderStyle) {
-    border.borderStyle = borderStyle;
+    return crdtSetAttr(border, "borderStyle", borderStyle);
 }
 
-export function deleteBorderAt(borders: Border[], idx: number) {
-    return borders.splice(idx, 1)[0];
+export function deleteBorderAt(borders: BasicArray<Border>, idx: number) {
+    return crdtArrayRemove(borders, idx);
 }
 /**
  * @param idx 开始删的位置
  * @param strength 删除的个数
  * @returns 被删除的元素
  */
-export function deleteBorders(borders: Border[], idx: number, strength: number) {
-    return borders.splice(idx, strength);
+export function deleteBorders(borders: BasicArray<Border>, idx: number, strength: number) {
+    const ops: ArrayMoveOpRecord[] = [];
+    for (let i = idx + strength - 1; i >= idx; i--) {
+        const op = crdtArrayRemove(borders, i);
+        if (op) ops.push(op);
+    }
+    return ops;
 }
 
-export function addBorder(borders: Border[], border: Border) {
-    borders.push(border);
+export function addBorder(borders: BasicArray<Border>, border: Border) {
+    return crdtArrayInsert(borders, borders.length, border);
 }
-export function addBorderAt(borders: Border[], border: Border, index: number) {
-    borders.splice(index, 0, border);
+export function addBorderAt(borders: BasicArray<Border>, border: Border, index: number) {
+    return crdtArrayInsert(borders, index, border);
 }
-export function moveBorder(borders: Border[], idx: number, idx2: number) {
-    const border = borders.splice(idx, 1)[0];
-    if (border) borders.splice(idx2, 0, border);
+export function moveBorder(borders: BasicArray<Border>, idx: number, idx2: number) {
+    return crdtArrayMove(borders, idx, idx2);
 }
