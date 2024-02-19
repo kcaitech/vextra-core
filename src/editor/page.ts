@@ -1110,7 +1110,7 @@ export class PageEditor {
      * @param shapes 未进入文档的shape
      * @param adjusted 是否提前调整过相对位置
      */
-    pasteShapes1(parent: GroupShape, shapes: Shape[]): { shapes: Shape[], frame: { x: number, y: number }[] } | false {
+    pasteShapes1(parent: GroupShape, shapes: Shape[]): { shapes: Shape[] } | false {
         const api = this.__repo.start("insertShapes1", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
             const state = {} as SelectionState;
             if (!isUndo) state.shapes = shapes.map(s => s.id);
@@ -1128,9 +1128,10 @@ export class PageEditor {
                 index++;
             }
             modify_frame_after_insert(api, this.__page, result);
-            const frame = get_frame(result);
+            // const frame = get_frame(result);
             this.__repo.commit();
-            return { shapes: result, frame };
+            // return { shapes: result, frame };
+            return { shapes: result };
         } catch (e) {
             console.log(e);
             this.__repo.rollback();
@@ -1167,6 +1168,41 @@ export class PageEditor {
             return false;
         }
     }
+
+    /**
+     * @description 批量的图层集体进入不同容器 (与2有区别)
+     * @param actions 
+     * @returns 
+     */
+    pasteShapes3(actions: { env: GroupShape, shapes: Shape[] }[]): Shape[] | false {
+        const api = this.__repo.start("pasteShapes3", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            const state = {} as SelectionState;
+            if (!isUndo) state.shapes = actions.reduce((p, c) => {
+                return [...p, ...c.shapes.map(s => s.id)]
+            }, [] as string[]);
+            else state.shapes = cmd.saveselection?.shapes || [];
+            selection.restore(state);
+        });
+        try {
+            const result: Shape[] = [];
+            for (let i = 0, len = actions.length; i < len; i++) {
+                const { env, shapes } = actions[i];
+                for (let j = 0; j < shapes.length; j++) {
+                    let index = env.childs.length;
+                    api.shapeInsert(this.__page, env, shapes[j], index);
+                    result.push(env.childs[index]);
+                }
+            }
+            modify_frame_after_insert(api, this.__page, result);
+            this.__repo.commit();
+            return result;
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
 
     // 创建一个shape
     create(type: ShapeType, name: string, frame: ShapeFrame): Shape {
