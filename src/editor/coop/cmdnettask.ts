@@ -83,9 +83,9 @@ export class CmdNetTask {
         this.__pulling = true;
         this.net.pullCmds(from, to).then((cmds) => {
             console.log("pull back");
-            this.receive(cmds);
-            this.pullTasks.shift();
             this.__pulling = false;
+            this.pullTasks.shift();
+            this.receive(cmds);
             this._pull();
         }).catch(e => {
             this.__pulling = false;
