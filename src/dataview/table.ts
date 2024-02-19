@@ -96,7 +96,7 @@ export class TableView extends ShapeView {
                 const cell = shape.getCellAt(cellLayout.index.row, cellLayout.index.col);
                 if (cell && cellLayout.index.row === i && cellLayout.index.col === j) {
                     const cdom = reuse.get(cell.id);
-                    const props = { data: cell, transx: this.m_transx, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual };
+                    const props = { data: cell, transx: this.m_transx, varsContainer: this.varsContainer, frame: cellLayout.frame, isVirtual: this.m_isVirtual, index: cellLayout.index };
                     if (cdom) {
                         reuse.delete(cell.id);
                         this.moveChild(cdom, idx);
@@ -150,20 +150,40 @@ export class TableView extends ShapeView {
     }
 
     getVisibleCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
-        return this.data.getVisibleCells(rowStart, rowEnd, colStart, colEnd);
+        return this.data.getVisibleCells(rowStart, rowEnd, colStart, colEnd).map((v) => ({
+            cell: v.cell ? this.cells.get(v.cell.id) : undefined,
+            rowIdx: v.rowIdx,
+            colIdx: v.colIdx
+        }));
     }
 
     getCells(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
-        return this.data.getCells(rowStart, rowEnd, colStart, colEnd);
+        return this.data.getCells(rowStart, rowEnd, colStart, colEnd).map((v) => ({
+            cell: v.cell ? this.cells.get(v.cell.id) : undefined,
+            rowIdx: v.rowIdx,
+            colIdx: v.colIdx
+        }));
+    }
+
+    getCellAt(row: number, col: number) {
+        const cell = this.data.getCellAt(row, col);
+        if (cell) {
+            return this.cells.get(cell.id);
+        }
     }
 
     getLayout() {
         return this.data.getLayout();
     }
 
-    locateCell(x: number, y: number): (TableGridItem & { cell: TableCell | undefined }) | undefined {
-        const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCell | undefined }) | undefined;
-        if (item) item.cell = this.data.getCellAt(item.index.row, item.index.col);
+    locateCell(x: number, y: number): (TableGridItem & { cell: TableCellView | undefined }) | undefined {
+        const item = locateCell(this.getLayout(), x, y) as (TableGridItem & { cell: TableCellView | undefined }) | undefined;
+        if (item) {
+            const cell = this.data.getCellAt(item.index.row, item.index.col);
+            if (cell) {
+                item.cell = this.cells.get(cell.id);
+            }
+        }
         return item;
     }
 
@@ -171,9 +191,9 @@ export class TableView extends ShapeView {
         return locateCellIndex(this.getLayout(), x, y);
     }
 
-    locateCell2(cell: TableCell): (TableGridItem & { cell: TableCell | undefined }) | undefined {
-        return this.data.locateCell2(cell);
-    }
+    // locateCell2(cell: TableCell): (TableGridItem & { cell: TableCellView | undefined }) | undefined {
+    //     return this.data.locateCell2(cell);
+    // }
 
     indexOfCell(cell: TableCell | TableCellView): { rowIdx: number, colIdx: number, visible: boolean } | undefined {
         return cell instanceof TableCellView ? this.data.indexOfCell(cell.data) : this.data.indexOfCell(cell);
