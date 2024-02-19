@@ -33,7 +33,8 @@ export enum FrameType {
     None = 0, // 无实体：连接线。在约束中的表现为 —— 不需要处理约束表现
     Path = 1, // 任意形状：PathShape。结构由path路径做支撑，可以表现出菱形特征，在约束中的表现为 —— 摆正、重新整理路径
     Rect = 2, // 标准矩形：包括文字、图片、表格、切图。自身没有path路径，结构固定，外切盒子和图层自身都为矩形，在约束中的表现为 —— 根据比例调整尺寸
-    Flex = 3  // 父级矩形：包括编组、容器、实例、组件、组件集合。含有子元素的标准矩形，在约束中的表现同上。
+    Flex = 3, // 父级矩形：容器、实例、组件、组件集合。含有子元素的标准矩形，在约束中的表现同上。
+    Comp = 4  // 任意矩形：编组，在约束中的表现为 —— 需要摆正，并把约束行为传递都子元素 --先不摆正
 }
 
 export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
@@ -51,8 +52,8 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
             continue;
         } else if (ft === 1) { // Path
             modifyFrameForPath(api, page, c, scaleX, scaleY, shape.frame, originFrame);
-        } else if (ft === 2) { // Standard Rect
-            modifyFrameForStandardRect(api, page, c, scaleX, scaleY, shape.frame, originFrame);
+        } else {
+            modifyFrameForRect(api, page, c, scaleX, scaleY, shape.frame, originFrame);
         }
         // // 根据resizeconstrain修正scale
         // const resizingConstraint = c.resizingConstraint || 54; // 默认值给54，即靠左、靠顶对齐，尺寸固定
@@ -252,9 +253,6 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
         // }
     }
 }
-function getBoundingBoxForGroup() {
-
-}
 function resetTransformForPath(api: Api, page: Page, shape: PathShape) {
     const matrix = shape.matrix2Parent();
     const cFrame = shape.frame;
@@ -288,7 +286,6 @@ function resetTransformForPath(api: Api, page: Page, shape: PathShape) {
 
     return boundingBox;
 }
-
 /**
  * @description 处理的场景特征为没有子元素，需要考虑transform，当存在transform时，需要取外切盒子，根据外切盒子摆正再根据约束值实现约束效果；
  */
@@ -308,22 +305,20 @@ function modifyFrameForPath(api: Api, page: Page, shape: Shape, scaleX: number, 
         height = boundingBox.height;
     }
 
-    const f = shape.frame;
-    const _f = fixConstrainFrame2(resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame);
+    const _f = fixConstrainFrame2(resizingConstraint, x, y, width, height, scaleX, scaleY, currentEnvFrame, originEnvFrame);
 
     setFrame(page, shape, _f.x, _f.y, _f.width, _f.height, api);
 }
 
-function modifyFrameForStandardRect(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame) {
+function modifyFrameForRect(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame) {
     const f = shape.frame;
     const resizingConstraint = shape.resizingConstraint || 54;
-    
-    // 即使是有transform也不用特别处理，直接忽略transform，因为这类场景不可以摆正
+
+    // 即使有transform也不用特别处理，应直接忽略transform，因为这类场景不可以摆正
     const { x, y, width, height } = fixConstrainFrame2(resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame);
 
     setFrame(page, shape, x, y, width, height, api);
 }
-
 /**
  * @description 忽略约束(或者说把约束表现统一认定为跟随缩放)
  */
@@ -597,14 +592,13 @@ function fixConstrainFrame2(resizingConstraint: number, x: number, y: number, wi
                 y = currentEnvFrame.height - originEnvFrame.height + y;
             }
             else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
-                y = currentEnvFrame.height / 2 - originEnvFrame.height / 2 + x;
+                y = currentEnvFrame.height / 2 - originEnvFrame.height / 2 + y;
             }
         }
     }
 
     return { x, y, width, height };
 }
-
 function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
     const frame = shape.frame;
     let changed = false;
