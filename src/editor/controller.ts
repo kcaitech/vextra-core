@@ -1237,33 +1237,38 @@ export class Controller {
         const execute_stop_position = (position: number, id: string) => {
             status = Status.Pending;
             try {
-                for (let i = 0, l = shapes.length; i < l; i++) {
-                    const shape = shapes[i];
-                    const grad_type = shape.style[type];
-                    if (!grad_type?.length) {
-                        continue;
-                    }
-                    const gradient_container = grad_type[index];
-                    const gradient = gradient_container.gradient;
-                    if (!gradient) return;
-                    const new_gradient = importGradient(exportGradient(gradient));
-                    const stop_i = new_gradient.stops.findIndex((stop) => stop.id === id);
-                    if (stop_i === -1) {
-                        console.warn(`gradient stop not found: ${id}`);
-                        continue;
-                    }
-                    new_gradient.stops[stop_i].position = position;
-                    const g_s = new_gradient.stops;
-                    g_s.sort((a, b) => {
-                        if (a.position > b.position) {
-                            return 1;
-                        } else {
-                            return -1;
+                const f_stop = shapes[0].style[type][index].gradient?.stops;
+                if(f_stop) {
+                    const idx = f_stop.findIndex((stop) => stop.id === id);
+                    for (let i = 0, l = shapes.length; i < l; i++) {
+                        const shape = shapes[i];
+                        const grad_type = shape.style[type];
+                        if (!grad_type?.length) {
+                            continue;
                         }
-                    })
-                    const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
-                    const s = shape4fill(api, page, shape);
-                    f(page, s, index, new_gradient);
+                        const gradient_container = grad_type[index];
+                        const gradient = gradient_container.gradient;
+                        if (!gradient) return;
+                        const new_gradient = importGradient(exportGradient(gradient));
+                        if (idx === -1) {
+                            console.warn(`gradient stop not found: ${id}`);
+                            continue;
+                        }
+                        new_gradient.stops[idx].position = position;
+                        const g_s = new_gradient.stops;
+                        g_s.sort((a, b) => {
+                            if (a.position > b.position) {
+                                return 1;
+                            } else if (a.position < b.position) {
+                                return -1;
+                            } else {
+                                return 0;
+                            }
+                        })
+                        const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
+                        const s = shape4fill(api, page, shape);
+                        f(page, s, index, new_gradient);
+                    }
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;

@@ -33,6 +33,7 @@ import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { importGradient, importText } from "../data/baseimport";
 import * as basicapi from "./basicapi"
 import { uuid } from "../basic/uuid";
+import { AsyncGradientEditor, Status } from "./controller";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -108,7 +109,7 @@ export class TextShapeEditor extends ShapeEditor {
             }
             throw new Error();
         }, api, shape);
-        
+
         if (_var && typeof _var.value === 'string') {
             api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape));
         }
@@ -343,7 +344,7 @@ export class TextShapeEditor extends ShapeEditor {
         const shape = this.shape4edit(api);
         try {
             if (del > 0) api.deleteText(this.__page, shape, index, del);
-        } catch(e) {
+        } catch (e) {
             console.error(e);
         }
     }
@@ -358,7 +359,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.fixFrameByLayout(api);
             this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
             return true;
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             return false;
         }
@@ -1191,5 +1192,106 @@ export class TextShapeEditor extends ShapeEditor {
             this.__repo.rollback();
         }
         return false;
+    }
+    public asyncSetTextGradient(shapes: Shape[], gradient: Gradient, index: number, len: number): AsyncGradientEditor {
+        const api = this.__repo.start("asyncSetTextGradient");
+        let status: Status = Status.Pending;
+        const execute_from = (from: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient);
+                new_gradient.from.x = from.x;
+                new_gradient.from.y = from.y;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_to = (to: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient);
+                new_gradient.to.x = to.x;
+                new_gradient.to.y = to.y;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_elipselength = (length: number) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient);
+                new_gradient.elipseLength = length;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_stop_position = (position: number, id: string) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient);
+                const i = new_gradient.stops.findIndex((item) => item.id === id);
+                new_gradient.stops[i].position = position;
+                const g_s = new_gradient.stops;
+                g_s.sort((a, b) => {
+                    if (a.position > b.position) {
+                        return 1;
+                    } else if (a.position < b.position) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                })
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const close = () => {
+            if (status == Status.Fulfilled && this.__repo.isNeedCommit()) {
+                this.__repo.commit();
+            } else {
+                this.__repo.rollback();
+            }
+            return undefined;
+        }
+        const set_gradient = (new_gradient: Gradient) => {
+            if (shapes.length === 1) {
+                const g = importGradient(new_gradient);
+                if (len === 0) {
+                    if (this.__cachedSpanAttr === undefined) this.__cachedSpanAttr = new SpanAttrSetter();
+                    this.__cachedSpanAttr.gradient = g;
+                    this.__cachedSpanAttr.gradientIsSet = true;
+                }
+                const shape = this.shape4edit(api);
+                api.setTextGradient(this.__page, shape, g, index, len);
+            } else if (shapes.length > 1) {
+                for (let i = 0, l = shapes.length; i < l; i++) {
+                    const g = importGradient(new_gradient);
+                    const text_shape: TextShape = shapes[i] as TextShape;
+                    if (text_shape.type !== ShapeType.Text) continue;
+                    const shape = this.shape4edit(api, text_shape);
+                    const text = shape instanceof Shape ? shape.text : shape.value as Text;
+                    const text_length = text.length;
+                    if (text_length === 0) continue;
+                    api.setTextGradient(this.__page, shape, g, 0, text_length);
+                }
+            }
+        }
+        return { execute_from, execute_to, execute_elipselength, execute_stop_position, close }
     }
 }

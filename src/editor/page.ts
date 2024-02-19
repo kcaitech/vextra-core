@@ -1709,13 +1709,15 @@ export class PageEditor {
                     continue;
                 }
                 const new_gradient = importGradient(exportGradient(gradient));
-                new_gradient.stops.push(value);
+                new_gradient.stops.push(importStop(exportStop(value)));
                 const s = new_gradient.stops;
                 s.sort((a, b) => {
                     if (a.position > b.position) {
                         return 1;
-                    } else {
+                    } else if (a.position < b.position) {
                         return -1;
+                    } else {
+                        return 0;
                     }
                 })
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
