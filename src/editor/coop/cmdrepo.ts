@@ -215,6 +215,11 @@ class CmdSync {
         }
     }
 
+    private processCmdsTrigger: () => void = () => { };
+    public setProcessCmdsTrigger(trigger: () => void) {
+        this.processCmdsTrigger = trigger;
+    }
+
     __processTimeToken: any;
     __pullingCmdsTime: number = 0;
     processCmds() {
@@ -265,6 +270,7 @@ class CmdSync {
             this.repo.transactCtx.settrap = savetrap;
         }
 
+        this.processCmdsTrigger();
         this._postcmds();
     }
 
@@ -1004,6 +1010,9 @@ export class CmdRepo {
     }
     setBaseVer(baseVer: string) {
         return this.cmdsync.setBaseVer(baseVer);
+    }
+    setProcessCmdsTrigger(trigger: () => void) {
+        return this.cmdsync.setProcessCmdsTrigger(trigger);
     }
     receive(cmds: Cmd[]) {
         return this.cmdsync.receive(cmds);
