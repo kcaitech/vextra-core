@@ -221,7 +221,6 @@ class CmdSync {
     }
 
     __processTimeToken: any;
-    __pullingCmdsTime: number = 0;
     processCmds() {
 
         const delayProcess = (timeout: number) => {
@@ -601,8 +600,16 @@ class CmdSync {
     }
 
     // ================ cmd 上传、下拉 ==========================
-    private __timeOutToken: any;
+    private __postTimeToken: any;
     private _postcmds() {
+
+        const delayPost = (delay: number) => {
+            if (!this.__postTimeToken) this.__postTimeToken = setTimeout(() => {
+                this.__postTimeToken = undefined;
+                this._postcmds();
+            }, delay);
+        }
+
         if (this.postingcmds.length > 0) {
             const now = Date.now();
             if (now - this.posttime > NET_TIMEOUT) {
@@ -621,95 +628,80 @@ class CmdSync {
                 this.posttime = now;
             }
             // set timeout
-            const delay = NET_TIMEOUT;
-            if (this.__timeOutToken) clearTimeout(this.__timeOutToken);
-            this.__timeOutToken = setTimeout(() => {
-                this.__timeOutToken = undefined;
-                this._postcmds();
-            }, delay);
+            delayPost(NET_TIMEOUT);
             return; // 等返回
         }
 
         if (!this.net.hasConnected()) {
-            const delay = NET_TIMEOUT;
-            if (!this.__timeOutToken) this.__timeOutToken = setTimeout(() => {
-                this.__timeOutToken = undefined;
-                this._postcmds();
-            }, delay);
+            delayPost(NET_TIMEOUT);
             return;
         }
 
+        if (this.__postTimeToken) {
+            clearTimeout(this.__postTimeToken);
+            this.__postTimeToken = undefined;
+        }
+
+        if (this.nopostcmdidx === 0) return;
         const baseVer = this.cmds.length > 0 ? this.cmds[this.cmds.length - 1].version : this.baseVer;
         let delay = NET_TIMEOUT;
-        if (this.nopostcmdidx > 0) {
-            // check
-            // post local (根据cmd提交时间是否保留最后个cmd用于合并)
-            // 所有cmd延迟1s提交？cmd应该能设置delay & mergeable
-            const now = Date.now();
-            const len = this.nopostcmdidx;
-            for (let i = 0; i < len; i++) {
-                const cmd = this.nopostcmds[i];
-                if ((i < len - 1) || (now - cmd.time > cmd.delay)) {
-                    if (cmd.isRecovery) {
-                        if (quickRejectRecovery(cmd)) {
-                            cmd.isRecovery = false; // 可以不用recovery
-                        } else if (this.postingcmds.length > 0) {
-                            break; // 因为要设置准确的baseVer，它的前面不能有要提交的cmd。也可以保证之前的删除cmd已经提交回来了
-                        } else {
-                            this.repo.start("_alignDataVersion");
-                            const savetrap = this.repo.transactCtx.settrap;
-                            try {
-                                this.repo.transactCtx.settrap = false;
-                                this._alignDataVersion(cmd);
-                                this.repo.commit();
-                            } catch (e) {
-                                console.error(e);
-                                this.repo.rollback();
-                            } finally {
-                                this.repo.transactCtx.settrap = savetrap;
-                            }
+
+        // check
+        // post local (根据cmd提交时间是否保留最后个cmd用于合并)
+        // 所有cmd延迟1s提交？cmd应该能设置delay & mergeable
+        const now = Date.now();
+        const len = this.nopostcmdidx;
+        for (let i = 0; i < len; i++) {
+            const cmd = this.nopostcmds[i];
+            if ((i < len - 1) || (now - cmd.time > cmd.delay)) {
+                if (cmd.isRecovery) {
+                    if (quickRejectRecovery(cmd)) {
+                        cmd.isRecovery = false; // 可以不用recovery
+                    } else if (this.postingcmds.length > 0) {
+                        break; // 因为要设置准确的baseVer，它的前面不能有要提交的cmd。也可以保证之前的删除cmd已经提交回来了
+                    } else {
+                        this.repo.start("_alignDataVersion");
+                        const savetrap = this.repo.transactCtx.settrap;
+                        try {
+                            this.repo.transactCtx.settrap = false;
+                            this._alignDataVersion(cmd);
+                            this.repo.commit();
+                        } catch (e) {
+                            console.error(e);
+                            this.repo.rollback();
+                        } finally {
+                            this.repo.transactCtx.settrap = savetrap;
                         }
                     }
-                    this.postingcmds.push(cmd);
-                    cmd.baseVer = baseVer;
-                    cmd.posttime = now;
-                    cmd.batchId = this.postingcmds[0].id;
-                } else {
-                    delay = cmd.delay;
-                    break;
                 }
+                this.postingcmds.push(cmd);
+                cmd.baseVer = baseVer;
+                cmd.posttime = now;
+                cmd.batchId = this.postingcmds[0].id;
+            } else {
+                delay = cmd.delay;
+                break;
             }
-
-            if (this.postingcmds.length > 0) {
-                this.posttime = now;
-                this.nopostcmds.splice(0, this.postingcmds.length);
-                this.nopostcmdidx -= this.postingcmds.length;
-
-                // check
-                const cmdids = new Set<string>();
-                for (let i = 0; i < this.postingcmds.length; ++i) {
-                    const id = this.postingcmds[i].id;
-                    if (cmdids.has(id)) throw new Error("duplicate cmd id");
-                    cmdids.add(id);
-                }
-
-                // post
-                this.net.postCmds(this.postingcmds);
-            }
-            // set timeout
-            if (this.__timeOutToken) clearTimeout(this.__timeOutToken);
-            this.__timeOutToken = setTimeout(() => {
-                this.__timeOutToken = undefined;
-                this._postcmds();
-            }, delay);
-            return;
         }
 
-        // no cmd need post, remove timeout
-        if (this.__timeOutToken) {
-            clearTimeout(this.__timeOutToken);
-            this.__timeOutToken = undefined;
+        if (this.postingcmds.length > 0) {
+            this.posttime = now;
+            this.nopostcmds.splice(0, this.postingcmds.length);
+            this.nopostcmdidx -= this.postingcmds.length;
+
+            // check
+            const cmdids = new Set<string>();
+            for (let i = 0; i < this.postingcmds.length; ++i) {
+                const id = this.postingcmds[i].id;
+                if (cmdids.has(id)) throw new Error("duplicate cmd id");
+                cmdids.add(id);
+            }
+
+            // post
+            this.net.postCmds(this.postingcmds);
         }
+        // set timeout
+        delayPost(delay);
     }
 
     _alignDataVersion(cmd: LocalCmd) {
