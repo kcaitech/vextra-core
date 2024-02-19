@@ -320,7 +320,7 @@ function modifyFrameForRect(api: Api, page: Page, shape: Shape, scaleX: number, 
     setFrame(page, shape, x, y, width, height, api);
 }
 /**
- * @description 忽略约束(或者说把约束表现统一认定为跟随缩放)
+ * @description 忽略约束(把约束表现都认定为跟随缩放)
  */
 function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame) {
     const childs = shape.childs;
@@ -514,7 +514,7 @@ function fixConstrainFrame(page: Page, shape: Shape, x: number, y: number, w: nu
         return { x: cx, y: cy, w: cw, h: ch };
     }
 }
-function fixConstrainFrame2(resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame) {
+export function fixConstrainFrame2(resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame) {
     // 水平 HORIZONTAL
     if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) { // 跟随缩放。一旦跟随缩放，则不需要考虑其他约束场景了
         x *= scaleX;
