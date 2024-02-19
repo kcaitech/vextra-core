@@ -653,35 +653,34 @@ class CmdSync {
         const len = this.nopostcmdidx;
         for (let i = 0; i < len; i++) {
             const cmd = this.nopostcmds[i];
-            if ((i < len - 1) || (now - cmd.time > cmd.delay)) {
-                if (cmd.isRecovery) {
-                    if (quickRejectRecovery(cmd)) {
-                        cmd.isRecovery = false; // 可以不用recovery
-                    } else if (this.postingcmds.length > 0) {
-                        break; // 因为要设置准确的baseVer，它的前面不能有要提交的cmd。也可以保证之前的删除cmd已经提交回来了
-                    } else {
-                        this.repo.start("_alignDataVersion");
-                        const savetrap = this.repo.transactCtx.settrap;
-                        try {
-                            this.repo.transactCtx.settrap = false;
-                            this._alignDataVersion(cmd);
-                            this.repo.commit();
-                        } catch (e) {
-                            console.error(e);
-                            this.repo.rollback();
-                        } finally {
-                            this.repo.transactCtx.settrap = savetrap;
-                        }
-                    }
-                }
-                this.postingcmds.push(cmd);
-                cmd.baseVer = baseVer;
-                cmd.posttime = now;
-                cmd.batchId = this.postingcmds[0].id;
-            } else {
+            if (!((i < len - 1) || (now - cmd.time > cmd.delay))) {
                 delay = cmd.delay;
                 break;
             }
+            if (cmd.isRecovery) {
+                if (quickRejectRecovery(cmd)) {
+                    cmd.isRecovery = false; // 可以不用recovery
+                } else if (this.postingcmds.length > 0) {
+                    break; // 因为要设置准确的baseVer，它的前面不能有要提交的cmd。也可以保证之前的删除cmd已经提交回来了
+                } else {
+                    this.repo.start("_alignDataVersion");
+                    const savetrap = this.repo.transactCtx.settrap;
+                    try {
+                        this.repo.transactCtx.settrap = false;
+                        this._alignDataVersion(cmd);
+                        this.repo.commit();
+                    } catch (e) {
+                        console.error(e);
+                        this.repo.rollback();
+                    } finally {
+                        this.repo.transactCtx.settrap = savetrap;
+                    }
+                }
+            }
+            this.postingcmds.push(cmd);
+            cmd.baseVer = baseVer;
+            cmd.posttime = now;
+            cmd.batchId = this.postingcmds[0].id;
         }
 
         if (this.postingcmds.length > 0) {
