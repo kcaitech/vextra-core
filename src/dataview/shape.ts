@@ -8,6 +8,7 @@ import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
+import { fixConstrainFrame2 } from "../editor/frame";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -70,73 +71,78 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
     const originParentFrame = shape.parent?.frame; // 至少有page!
     if (!originParentFrame) return;
 
-    const cFrame = shape.frame;
-    const resizingConstraint = shape.resizingConstraint;
-    if (!resizingConstraint || ResizingConstraints.isUnset(resizingConstraint)) {
-        return;
-    }
+    const scaleX = parentFrame.width / originParentFrame.width;
+    const scaleY = parentFrame.height / originParentFrame.height;
 
-    // 水平
-    const hasWidth = ResizingConstraints.hasWidth(resizingConstraint);
-    const hasLeft = ResizingConstraints.hasLeft(resizingConstraint);
-    const hasRight = ResizingConstraints.hasRight(resizingConstraint);
-    // 计算width, x
-    // 宽度与同时设置左右是互斥关系，万一数据出错，以哪个优先？先以左右吧
-    let cw = frame.width;
-    let cx = frame.x;
-    if (hasLeft && hasRight) {
-        if (!hasWidth) {
+    const resizingConstraint = shape.resizingConstraint || 54;
 
-            cx = cFrame.x;
-            const dis = originParentFrame.width - (cFrame.x + cFrame.width);
-            cw = parentFrame.width - dis - cx;
-        }
-    }
-    else if (hasLeft) {
-        cx = cFrame.x;
-    }
-    else if (hasRight) {
-        cx = frame.x;
-        const dis = originParentFrame.width - (cFrame.x + cFrame.width);
-        cw = parentFrame.width - dis - cx;
-    }
-    // else if (hasWidth) {
-    //     // 居中
-    //     cx += (frame.width - cFrame.width) / 2;
+    const __f = fixConstrainFrame2(resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
+
+    // if (!resizingConstraint || ResizingConstraints.isUnset(resizingConstraint)) {
+    //     return;
     // }
 
-    // 垂直
-    const hasHeight = ResizingConstraints.hasHeight(resizingConstraint);
-    const hasTop = ResizingConstraints.hasTop(resizingConstraint);
-    const hasBottom = ResizingConstraints.hasBottom(resizingConstraint);
-    // 计算height, y
-    let ch = frame.height;
-    let cy = frame.y;
-    if (hasTop && hasBottom) {
-        if (!hasHeight) {
+    // // 水平
+    // const hasWidth = ResizingConstraints.hasWidth(resizingConstraint);
+    // const hasLeft = ResizingConstraints.hasLeft(resizingConstraint);
+    // const hasRight = ResizingConstraints.hasRight(resizingConstraint);
+    // // 计算width, x
+    // // 宽度与同时设置左右是互斥关系，万一数据出错，以哪个优先？先以左右吧
+    // let cw = frame.width;
+    // let cx = frame.x;
+    // if (hasLeft && hasRight) {
+    //     if (!hasWidth) {
 
-            cy = cFrame.y;
-            const dis = originParentFrame.height - (cFrame.y + cFrame.height);
-            ch = parentFrame.height - dis - cy;
-        }
-    }
-    else if (hasTop) {
-        cy = cFrame.y;
-    }
-    else if (hasBottom) {
-        cy = frame.y;
-        const dis = originParentFrame.height - (cFrame.y + cFrame.height);
-        ch = parentFrame.height - dis - cy;
-    }
-    // else if (hasHeight) {
-    //     // 居中
-    //     cy += (frame.height - cFrame.height) / 2;
+    //         cx = cFrame.x;
+    //         const dis = originParentFrame.width - (cFrame.x + cFrame.width);
+    //         cw = parentFrame.width - dis - cx;
+    //     }
     // }
+    // else if (hasLeft) {
+    //     cx = cFrame.x;
+    // }
+    // else if (hasRight) {
+    //     cx = frame.x;
+    //     const dis = originParentFrame.width - (cFrame.x + cFrame.width);
+    //     cw = parentFrame.width - dis - cx;
+    // }
+    // // else if (hasWidth) {
+    // //     // 居中
+    // //     cx += (frame.width - cFrame.width) / 2;
+    // // }
 
-    frame.x = cx;
-    frame.y = cy;
-    frame.width = cw;
-    frame.height = ch;
+    // // 垂直
+    // const hasHeight = ResizingConstraints.hasHeight(resizingConstraint);
+    // const hasTop = ResizingConstraints.hasTop(resizingConstraint);
+    // const hasBottom = ResizingConstraints.hasBottom(resizingConstraint);
+    // // 计算height, y
+    // let ch = frame.height;
+    // let cy = frame.y;
+    // if (hasTop && hasBottom) {
+    //     if (!hasHeight) {
+
+    //         cy = cFrame.y;
+    //         const dis = originParentFrame.height - (cFrame.y + cFrame.height);
+    //         ch = parentFrame.height - dis - cy;
+    //     }
+    // }
+    // else if (hasTop) {
+    //     cy = cFrame.y;
+    // }
+    // else if (hasBottom) {
+    //     cy = frame.y;
+    //     const dis = originParentFrame.height - (cFrame.y + cFrame.height);
+    //     ch = parentFrame.height - dis - cy;
+    // }
+    // // else if (hasHeight) {
+    // //     // 居中
+    // //     cy += (frame.height - cFrame.height) / 2;
+    // // }
+
+    frame.x = __f.x;
+    frame.y = __f.y;
+    frame.width = __f.width;
+    frame.height = __f.height;
 }
 
 export function matrix2parent(x: number, y: number, width: number, height: number, rotate: number, hflip: boolean, vflip: boolean, matrix?: Matrix) {
@@ -504,7 +510,7 @@ export class ShapeView extends DataView {
 
         let notTrans = isNoTransform(transform);
 
-        // case 1 不需要变形
+        // case 1 不需要变形  什么场景下不需要变形？
         if (!transform || notTrans) {
             // update frame, hflip, vflip, rotate
             this.updateLayoutArgs(frame, hflip, vflip, rotate, (shape as PathShape).fixedRadius);
@@ -526,7 +532,7 @@ export class ShapeView extends DataView {
         const fixWidth = resizingConstraint && ResizingConstraints.hasWidth(resizingConstraint);
         const fixHeight = resizingConstraint && ResizingConstraints.hasHeight(resizingConstraint);
         // case 2 没有旋转，或者形状规则，不会出现菱形变形
-        if (!rotate || fixWidth || fixHeight) {
+        if (!rotate || fixWidth || fixHeight) { // 这里的rotate应该使用parent上的吗？
             const saveW = width;
             const saveH = height;
             if (!(fixWidth || fixHeight)) { // no fixSize and no rotate
@@ -625,7 +631,7 @@ export class ShapeView extends DataView {
         // update frame, rotate, hflip...
         this.updateLayoutArgs(parentFrame, undefined, undefined, undefined, (shape as PathShape).fixedRadius);
 
-        this.layoutOnDiamondShape(varsContainer, cscaleX, cscaleY, rotate, vflip, hflip, bbox, m);
+        this.layoutOnDiamondShape(varsContainer, cscaleX, cscaleY, rotate, vflip, hflip, bbox, m); // 最终目的是执行这两行？
 
     }
 
