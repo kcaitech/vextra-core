@@ -2,6 +2,12 @@
     "description": "curve point",
     "type": "object",
     "properties": {
+        "crdtidx": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
         "id": {
             "type": "string",
             "minLength": 32,
@@ -43,6 +49,7 @@
         }
     },
     "required": [
+        "crdtidx",
         "id",
         "x",
         "y",

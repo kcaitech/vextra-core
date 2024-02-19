@@ -23,6 +23,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     mark: boolean
     text: Text
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -35,6 +36,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
         mark: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -43,6 +45,7 @@ export class ContactShape extends PathShape implements classes.ContactShape {
             points,
             isClosed
         )
+        this.crdtidx = crdtidx;
         this.isEdited = isEdited; // 路径是否已被编辑
         this.text = text;
         this.mark = mark;

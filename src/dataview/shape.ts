@@ -8,6 +8,7 @@ import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
+import { BasicArray } from "../data/basic";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -48,7 +49,7 @@ export function isDiffVarsContainer(lhs: (SymbolRefShape | SymbolShape)[] | unde
         return true;
     }
     for (let i = 0; i < lhs.length; i++) {
-        if (lhs[i].id !== rhs[i].id) {
+        if (lhs[i].id !== rhs[i].id || objectId(lhs[i]) !== objectId(rhs[i])) {
             return true;
         }
     }
@@ -178,7 +179,7 @@ export function transformPoints(points: CurvePoint[], matrix: Matrix) {
     for (let i = 0, len = points.length; i < len; i++) {
         const p = points[i];
         const point: Point2D = matrix.computeCoord(p.x, p.y) as Point2D;
-        const transp = new CurvePoint("", point.x, point.y, p.mode);
+        const transp = new CurvePoint(([i] as BasicArray<number>), "", point.x, point.y, p.mode);
 
         if (p.hasFrom) {
             transp.hasFrom = true;
@@ -636,10 +637,16 @@ export class ShapeView extends DataView {
         if (props) {
             // 
             if (props.data.id !== this.m_data.id) throw new Error('id not match');
+            const dataChanged = objectId(props.data) !== objectId(this.m_data);
+            if (dataChanged) {
+                // data changed
+                this.setData(props.data);
+            }
             // check
             const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
             const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
             if (!needLayout &&
+                !dataChanged &&
                 !diffTransform &&
                 !diffVars) {
                 return;

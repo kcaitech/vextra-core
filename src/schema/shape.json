@@ -2,6 +2,12 @@
     "description": "shape",
     "type": "object",
     "properties": {
+        "crdtidx": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            }
+        },
         "typeId": {
             "type": "string",
             "default": "shape"
@@ -81,6 +87,7 @@
         }
     },
     "required": [
+        "crdtidx",
         "typeId",
         "id",
         "name",

@@ -9,6 +9,9 @@
         "visible",
         "lock",
         "variable",
-        "symbolID"
+        "symbolID",
+        "contextSettings",
+        "table",
+        "borderStyle"
     ]
 }

@@ -2,7 +2,7 @@ import { Document, Page, Shape, SymbolShape } from "../../../data/classes";
 import { IJSON, LzData } from "./lzdata";
 import { LoadContext } from "./basic";
 import { importArtboard, importGroupShape, importImage, importPage, importPathShape, importRectShape, importShapeGroupShape, importSymbol, importSymbolRef, importTextShape } from "./shapeio";
-import {base64Encode} from "../../../basic/utils";
+import { base64Encode } from "../../../basic/utils";
 
 
 function updatePageFrame(p: Page) {
@@ -51,7 +51,7 @@ function updatePageFrame(p: Page) {
 export class DataLoader {
     private __remote: LzData;
     private __document: Document;
-    private __handler: {[ket: string]: (ctx: LoadContext, data: IJSON)=> Shape} = {}
+    private __handler: { [ket: string]: (ctx: LoadContext, data: IJSON, i: number) => Shape } = {}
     constructor(lzdata: LzData, document: Document) {
         this.__remote = lzdata;
         this.__document = document;
@@ -60,31 +60,31 @@ export class DataLoader {
         const ctx: LoadContext = new LoadContext(document.mediasMgr);
 
         const importer = this.importer = this.importer.bind(this)
-        this.__handler['rectangle'] = (ctx: LoadContext, data: IJSON) => importRectShape(ctx, data, importer)
-        this.__handler['shapeGroup'] = (ctx: LoadContext, data: IJSON) => importShapeGroupShape(ctx, data, importer)
-        this.__handler['group'] = (ctx: LoadContext, data: IJSON) => importGroupShape(ctx, data, importer)
-        this.__handler['shapePath'] = (ctx: LoadContext, data: IJSON) => importPathShape(ctx, data, importer)
-        this.__handler['artboard'] = (ctx: LoadContext, data: IJSON) => {
-            return importArtboard(ctx, data, importer)
+        this.__handler['rectangle'] = (ctx: LoadContext, data: IJSON, i: number) => importRectShape(ctx, data, importer, i)
+        this.__handler['shapeGroup'] = (ctx: LoadContext, data: IJSON, i: number) => importShapeGroupShape(ctx, data, importer, i)
+        this.__handler['group'] = (ctx: LoadContext, data: IJSON, i: number) => importGroupShape(ctx, data, importer, i)
+        this.__handler['shapePath'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
+        this.__handler['artboard'] = (ctx: LoadContext, data: IJSON, i: number) => {
+            return importArtboard(ctx, data, importer, i)
         }
-        this.__handler['bitmap'] = (ctx: LoadContext, data: IJSON) => {
-            const image = importImage(ctx, data, importer)
+        this.__handler['bitmap'] = (ctx: LoadContext, data: IJSON, i: number) => {
+            const image = importImage(ctx, data, importer, i)
             image.setImageMgr(document.mediasMgr)
             return image;
         }
-        this.__handler['page'] = (ctx: LoadContext, data: IJSON) => importPage(ctx, data, importer)
-        this.__handler['text'] = (ctx: LoadContext, data: IJSON) => importTextShape(ctx, data, importer)
-        this.__handler['oval'] = (ctx: LoadContext, data: IJSON) => importPathShape(ctx, data, importer)
-        this.__handler['star'] = (ctx: LoadContext, data: IJSON) => importPathShape(ctx, data, importer)
-        this.__handler['triangle'] = (ctx: LoadContext, data: IJSON) => importPathShape(ctx, data, importer)
-        this.__handler['polygon'] = (ctx: LoadContext, data: IJSON) => importPathShape(ctx, data, importer)
-        this.__handler['symbolMaster'] = (ctx: LoadContext, data: IJSON) => {
-            const symbol = importSymbol(ctx, data, importer)
+        this.__handler['page'] = (ctx: LoadContext, data: IJSON, i: number) => importPage(ctx, data, importer)
+        this.__handler['text'] = (ctx: LoadContext, data: IJSON, i: number) => importTextShape(ctx, data, importer, i)
+        this.__handler['oval'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
+        this.__handler['star'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
+        this.__handler['triangle'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
+        this.__handler['polygon'] = (ctx: LoadContext, data: IJSON, i: number) => importPathShape(ctx, data, importer, i)
+        this.__handler['symbolMaster'] = (ctx: LoadContext, data: IJSON, i: number) => {
+            const symbol = importSymbol(ctx, data, importer, i)
             symbolsSet.set(symbol.id, symbol)
             return symbol
         }
-        this.__handler['symbolInstance'] = (ctx: LoadContext, data: IJSON) => {
-            const symRef = importSymbolRef(ctx, data, importer)
+        this.__handler['symbolInstance'] = (ctx: LoadContext, data: IJSON, i: number) => {
+            const symRef = importSymbolRef(ctx, data, importer, i)
             symRef.setSymbolMgr(document.symbolsMgr);
             return symRef;
         }
@@ -92,8 +92,9 @@ export class DataLoader {
         document.mediasMgr.setLoader((id) => this.loadMedia(id))
         document.pagesMgr.setLoader(async (id) => {
             const page = await this.loadPage(ctx, id)
-            document.pagesMgr.add(page.id, page)
+            // document.pagesMgr.add(page.id, page) // 在pagesMgr里也会add
             symbolsSet.forEach((v, k) => {
+                document.symbolregist.set(k, id);
                 document.symbolsMgr.add(k, v);
             })
             symbolsSet.clear();
@@ -118,10 +119,10 @@ export class DataLoader {
         // loadNext()
     }
 
-    importer(ctx: LoadContext, data: IJSON): Shape {
+    importer(ctx: LoadContext, data: IJSON, i: number): Shape {
         const _class = data['_class']
-        const f = this.__handler[_class] || ((ctx, data) => importRectShape(ctx, data, this.importer))
-        const ret: Shape = f(ctx, data);
+        const f = this.__handler[_class] || ((ctx, data, i: number) => importRectShape(ctx, data, this.importer, i))
+        const ret: Shape = f(ctx, data, i);
         if (data['sharedStyleID']) {
             this.__document.stylesMgr.add(data['sharedStyleID'], ret.style)
         }

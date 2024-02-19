@@ -24,30 +24,29 @@ export class TextShapeView extends ShapeView {
         return this.getText();
     }
 
+    private m_layout?: TextLayout;
+    // private m_layoutText?: Text;
+    private m_textpath?: Path;
+
+    __layoutToken: string | undefined;
+    __preText: Text | undefined;
     getLayout() {
         const text = this.getText();
-        if (this.isVirtualShape || text !== this.data.text/* todo */) {
-            const frame = this.frame;
-            if (!this.m_layout || this.m_layoutText !== text) { // todo text可能是string
-                if (typeof text === 'string') {
-                    if (!this.m_layoutText2) {
-                        const originText = this.data.text;
-                        this.m_layoutText2 = newText2(originText, originText.paras[0], originText.paras[0]?.spans[0]);
-                        this.m_layoutText2.insertText(text, 0);
-                    }
-                    this.m_layout = this.m_layoutText2.getLayout2(frame.width, frame.height);
-                } else {
-                    this.m_layoutText2 = undefined;
-                    this.m_layout = text.getLayout2(frame.width, frame.height);
-                    this.updateFrameByLayout();
-                }
-                this.m_layoutText = text;
-            }
-            return this.m_layout;
+        if (this.__preText !== text && this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id); 
+        const frame = this.frame;
+        const layout = text.getLayout3(frame.width, frame.height, this.id, this.__layoutToken);
+        this.__layoutToken = layout.token;
+        this.__preText = text;
+
+        if (this.m_layout !== layout.layout) {
+            this.m_textpath = undefined;
         }
-        else {
-            return text.getLayout();
+
+        this.m_layout = layout.layout;
+        if (this.isVirtualShape) {
+            this.updateFrameByLayout();
         }
+        return layout.layout;
     }
 
     locateText(x: number, y: number): TextLocate {
@@ -70,21 +69,17 @@ export class TextShapeView extends ShapeView {
         return this.m_textpath;
     }
 
-    private m_layout?: TextLayout;
-    private m_layoutText?: Text;
-    private m_layoutText2?: Text;
-    private m_textpath?: Path;
 
     onDataChange(...args: any[]): void {
         super.onDataChange(...args);
         // if (args.includes('variable')) this.m_layout = undefined; // 不确定是不是text变量？
 
-        if (args.includes('text')) { // todo 文本要支持局部重排
-            this.clearCache();
-        }
-        else if (args.includes('shape-frame')) {
-            this.clearCache();
-        }
+        // if (args.includes('text')) { // todo 文本要支持局部重排
+        //     this.clearCache();
+        // }
+        // else if (args.includes('shape-frame')) {
+        //     this.clearCache();
+        // }
     }
 
     renderContents(): EL[] {
@@ -92,47 +87,10 @@ export class TextShapeView extends ShapeView {
         return renderTextLayout(elh, layout);
     }
 
-    __layoutWidth: number = 0;
-    __frameHeight: number = 0;
-    __frameWidth: number = 0;
-    private updateSize(w: number, h: number) {
-        let text = this.m_layoutText;
-        if (typeof text === 'string') {
-            text = this.m_layoutText2;
-        }
-        if (!text) return;
-        const layoutWidth = ((b: TextBehaviour) => {
-            switch (b) {
-                case TextBehaviour.Flexible: return Number.MAX_VALUE;
-                case TextBehaviour.Fixed: return w;
-                case TextBehaviour.FixWidthAndHeight: return w;
-            }
-            // return Number.MAX_VALUE
-        })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
-        if (this.__layoutWidth !== layoutWidth) {
-            this.__frameHeight = h;
-            this.__layoutWidth = layoutWidth;
-            this.m_layout = undefined;
-        }
-        else if (this.__frameHeight !== h && this.m_layout) {
-            const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
-            const yOffset: number = ((align: TextVerAlign) => {
-                switch (align) {
-                    case TextVerAlign.Top: return 0;
-                    case TextVerAlign.Middle: return (h - this.m_layout.contentHeight) / 2;
-                    case TextVerAlign.Bottom: return h - this.m_layout.contentHeight;
-                }
-            })(vAlign);
-            this.m_layout.yOffset = yOffset;
-        }
-        this.__frameWidth = w;
-        this.__frameHeight = h;
-    }
-
     updateLayoutArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius: number | undefined): void {
-        if (this.isVirtualShape && isDiffShapeFrame(this.m_frame, frame)) {
-            this.updateSize(frame.width, frame.height);
-        }
+        // if (this.isVirtualShape && isDiffShapeFrame(this.m_frame, frame)) {
+        //     this.updateSize(frame.width, frame.height);
+        // }
         super.updateLayoutArgs(frame, hflip, vflip, rotate, radius);
         // update frame by layout
         // this.updateFrameByLayout();
@@ -161,13 +119,14 @@ export class TextShapeView extends ShapeView {
         }
     }
 
-    clearCache() {
-        this.m_layout = undefined;
-        this.m_layoutText = undefined;
-        this.m_layoutText2 = undefined;
-        this.m_textpath = undefined;
-        this.__layoutWidth = 0;
-        this.__frameHeight = 0;
-        this.__frameWidth = 0;
+    // clearCache() {
+    //     this.m_layout = undefined;
+    //     // this.m_layoutText = undefined;
+    //     this.m_textpath = undefined;
+    // }
+
+    onDestory(): void {
+        super.onDestory();
+        if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id); 
     }
 }
