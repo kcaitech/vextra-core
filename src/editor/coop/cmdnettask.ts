@@ -18,7 +18,12 @@ export class CmdNetTask {
         this.receive = receive;
     }
 
+    public setNet(net: ICoopNet) {
+        this.net = net;
+    }
+
     pull(from: string, to?: string) {
+        console.log("pull cmds, from: " + from + " to: " + to);
         this.pullTasks.push({ from, to });
         for (let i = 1; i < this.pullTasks.length; ++i) {
             this._merge(i);
@@ -73,9 +78,11 @@ export class CmdNetTask {
             this._pull();
             return;
         }
-        const { from, to } = this.pullTasks[0];
+        let { from, to } = this.pullTasks[0];
+        if (from === "") from = "0";
         this.__pulling = true;
         this.net.pullCmds(from, to).then((cmds) => {
+            console.log("pull back");
             this.receive(cmds);
             this.pullTasks.shift();
             this.__pulling = false;

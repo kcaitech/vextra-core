@@ -16,7 +16,7 @@ import { Para, Span, Text } from "../../data/text";
 import { mergeParaAttr, mergeSpanAttr } from "../../data/textutils";
 import { CmdNetTask } from "./cmdnettask";
 
-const POST_TIMEOUT = 5000; // 5s
+const NET_TIMEOUT = 5000; // 5s
 
 /**
  * 根据path 分类
@@ -101,6 +101,7 @@ class CmdSync {
 
     public setNet(net: ICoopNet) {
         this.net = net;
+        this.nettask.setNet(net);
         this.net.watchCmds(this.receive.bind(this));
     }
 
@@ -218,15 +219,21 @@ class CmdSync {
     __pullingCmdsTime: number = 0;
     processCmds() {
 
-        // todo 长时间pulling与长时间postcmds时，提示用户出错
-        if (this.nettask.pulling) return;
-
-        if (this.repo.isInTransact()) {
-            if (this.__processTimeToken) return;
-            this.__processTimeToken = setTimeout(() => {
+        const delayProcess = (timeout: number) => {
+            if (!this.__processTimeToken) this.__processTimeToken = setTimeout(() => {
                 this.__processTimeToken = undefined;
                 this.processCmds();
-            }, 1000); // 1s
+            }, timeout);
+        }
+
+        // todo 长时间pulling与长时间postcmds时，提示用户出错
+        if (this.nettask.pulling) {
+            delayProcess(NET_TIMEOUT);
+            return;
+        }
+
+        if (this.repo.isInTransact()) {
+            delayProcess(1000); // 1s
             return;
         }
 
@@ -236,6 +243,7 @@ class CmdSync {
             const minBaseVer = cmds.reduce((m, c) => (SNumber.comp(m, c.baseVer) > 0 ? c.baseVer : m), cmds[0].baseVer);
             if (SNumber.comp(this.baseVer, minBaseVer) > 0) {
                 this.nettask.pull(minBaseVer, this.baseVer);
+                delayProcess(NET_TIMEOUT);
                 return;
             }
         }
@@ -541,7 +549,8 @@ class CmdSync {
                         break;
                     }
                 }
-                abortshead.splice(basIdx - headcmds.length, headcmds.length);
+                abortshead.splice(basIdx - headcmds.length + 1, headcmds.length);
+                headcmds.reverse();
                 headcmds.forEach(cmd => {
                     cmd.ops.forEach((op) => { if (op instanceof ArrayOp) op.order = cmd.version });
                 })
@@ -590,7 +599,7 @@ class CmdSync {
     private _postcmds() {
         if (this.postingcmds.length > 0) {
             const now = Date.now();
-            if (now - this.posttime > POST_TIMEOUT) {
+            if (now - this.posttime > NET_TIMEOUT) {
                 // 超时了
                 // repost
                 // check
@@ -606,7 +615,7 @@ class CmdSync {
                 this.posttime = now;
             }
             // set timeout
-            const delay = POST_TIMEOUT;
+            const delay = NET_TIMEOUT;
             if (this.__timeOutToken) clearTimeout(this.__timeOutToken);
             this.__timeOutToken = setTimeout(() => {
                 this.__timeOutToken = undefined;
@@ -616,7 +625,7 @@ class CmdSync {
         }
 
         if (!this.net.hasConnected()) {
-            const delay = POST_TIMEOUT;
+            const delay = NET_TIMEOUT;
             if (!this.__timeOutToken) this.__timeOutToken = setTimeout(() => {
                 this.__timeOutToken = undefined;
                 this._postcmds();
@@ -625,7 +634,7 @@ class CmdSync {
         }
 
         const baseVer = this.cmds.length > 0 ? this.cmds[this.cmds.length - 1].version : this.baseVer;
-        let delay = POST_TIMEOUT;
+        let delay = NET_TIMEOUT;
         if (this.nopostcmdidx > 0) {
             // check
             // post local (根据cmd提交时间是否保留最后个cmd用于合并)
