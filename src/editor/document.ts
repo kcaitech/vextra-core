@@ -100,4 +100,17 @@ export class DocEditor {
         const result = this.insert(index, page);
         if (result) return page;
     }
+
+    setPageName(name: string, pageId: string) {
+        const api = this.__repo.start("setPageName");
+        try {
+            api.pageModifyName(this.__document, pageId, name);
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error);
+            this.__repo.rollback();
+            return false;
+        }
+    }
+
 }

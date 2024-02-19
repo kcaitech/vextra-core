@@ -87,6 +87,7 @@ import { modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository } from "./coop/cooprepo";
 import { Api } from "./coop/recordapi";
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
+import { ShapeView, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 
 // 用于批量操作的单个操作类型
 export interface PositonAdjust { // 涉及属性：frame.x、frame.y
@@ -539,7 +540,8 @@ export class PageEditor {
      * @param dlt 属性默认值
      * @return symbol 集合union
      */
-    makeStatus(symbol: SymbolShape, attri_name: string, dlt: string, isDefault: boolean) {
+    makeStatus(symbolView: SymbolView, attri_name: string, dlt: string, isDefault: boolean) {
+        let symbol = adapt2Shape(symbolView) as SymbolShape;
         const api = this.__repo.start("makeStatus");
         try {
             if (symbol instanceof SymbolUnionShape) {
@@ -1461,18 +1463,6 @@ export class PageEditor {
         }
     }
 
-    setName(name: string) {
-        const api = this.__repo.start("setName");
-        try {
-            api.pageModifyName(this.__document, this.__page.id, name);
-            this.__repo.commit();
-        } catch (error) {
-            console.log(error);
-            this.__repo.rollback();
-            return false;
-        }
-    }
-
     arrange(actions: PositonAdjust[]) {
         const api = this.__repo.start('arrange');
         try {
@@ -2323,15 +2313,15 @@ export class PageEditor {
         }
     }
 
-    editor4Shape(shape: Shape): ShapeEditor {
+    editor4Shape(shape: ShapeView): ShapeEditor {
         return new ShapeEditor(shape, this.__page, this.__repo, this.__document);
     }
 
-    editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
+    editor4TextShape(shape: TextShapeView | TableCellView): TextShapeEditor {
         return new TextShapeEditor(shape, this.__page, this.__repo, this.__document);
     }
 
-    editor4Table(shape: TableShape): TableEditor {
+    editor4Table(shape: TableView): TableEditor {
         return new TableEditor(shape, this.__page, this.__repo, this.__document);
     }
 }

@@ -37,6 +37,7 @@ import { newText, newText2 } from "./creator";
 import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 import { adapt_for_artboard } from "./utils/common";
+import { ShapeView, SymbolView, adapt2Shape } from "../dataview";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
@@ -45,16 +46,20 @@ function varParent(_var: Variable) {
 }
 
 export class ShapeEditor {
-    protected __shape: Shape;
+    protected __shape: ShapeView;
     protected __repo: CoopRepository;
     protected __page: Page;
     protected __document: Document
 
-    constructor(shape: Shape, page: Page, repo: CoopRepository, document: Document) {
+    constructor(shape: ShapeView, page: Page, repo: CoopRepository, document: Document) {
         this.__shape = shape;
         this.__repo = repo;
         this.__page = page;
         this.__document = document;
+    }
+
+    get shape(): Shape {
+        return adapt2Shape(this.__shape);
     }
 
     private _repoWrap(name: string, func: (api: Api) => void) {
@@ -76,7 +81,7 @@ export class ShapeEditor {
      */
     _override2Variable(varId: string, type: OverrideType, api: Api) {
 
-        const shape: Shape = this.__shape;
+        const shape: Shape = this.shape;
 
         let sym: Shape | undefined = shape;
         while (sym && sym.isVirtualShape) {
@@ -113,7 +118,7 @@ export class ShapeEditor {
      * @returns
      */
     _overrideVariable(_var: Variable, value: any, api: Api) {
-        const shape: Shape = this.__shape;
+        const shape: Shape = this.shape;
 
         let p = varParent(_var);
         if (!p) throw new Error();
@@ -159,7 +164,7 @@ export class ShapeEditor {
 
     _overrideVariableName(_var: Variable, name: string, dlt: any, api: Api) {
 
-        const shape: Shape = this.__shape;
+        const shape: Shape = this.shape;
 
         let p = varParent(_var);
         if (!p) throw new Error();
@@ -202,7 +207,7 @@ export class ShapeEditor {
      * @param api
      */
     modifyVariable2(_var: Variable, value: any, api: Api) {
-        modify_variable(this.__page, this.__shape, _var, value, api);
+        modify_variable(this.__page, this.shape, _var, value, api);
     }
 
     /**
@@ -225,7 +230,7 @@ export class ShapeEditor {
      * @description 重置实例属性
      */
     resetSymbolRefVariable() {
-        let shape = this.__shape as SymbolRefShape;
+        let shape = this.shape as SymbolRefShape;
 
         let p: Shape | undefined = shape;
         while (p) {
@@ -285,7 +290,7 @@ export class ShapeEditor {
         try {
             const p = varParent(_var);
             if (!p) throw new Error('wrong shape type');
-            const shape = this.__shape;
+            const shape = this.shape;
             const api = this.__repo.start("modifyVariableName");
             if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
                 // override
@@ -304,7 +309,7 @@ export class ShapeEditor {
         try {
             const p = varParent(_var);
             if (!p) throw new Error('wrong shape type');
-            const shape = this.__shape;
+            const shape = this.shape;
             const api = this.__repo.start("modifyVariableName");
             if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
                 // override
@@ -322,7 +327,8 @@ export class ShapeEditor {
     /**
      * @description 给组件创建一个图层显示变量
      */
-    makeVisibleVar(symbol: SymbolShape, name: string, dlt_value: boolean, shapes: Shape[]) {
+    makeVisibleVar(symbolView: SymbolView, name: string, dlt_value: boolean, shapes: Shape[]) {
+        let symbol = adapt2Shape(symbolView) as SymbolShape;
         const api = this.__repo.start("makeVisibleVar");
         try {
             if (!is_symbol_or_union(symbol)) {
@@ -345,7 +351,8 @@ export class ShapeEditor {
     /**
      * @description 给组件创建一个实例切换变量
      */
-    makeSymbolRefVar(symbol: SymbolShape, name: string, shapes: SymbolRefShape[]) {
+    makeSymbolRefVar(symbolView: SymbolView, name: string, shapes: SymbolRefShape[]) {
+        let symbol = adapt2Shape(symbolView) as SymbolShape;
         if (!shapes.length) throw new Error('invalid data');
         if (!is_symbol_or_union(symbol)) {
             throw new Error('wrong role!');
@@ -368,7 +375,8 @@ export class ShapeEditor {
     /**
      * @description 给组件创建一个文本变量
      */
-    makeTextVar(symbol: SymbolShape, name: string, dlt: string, shapes: (Shape & { text?: Text })[]) {
+    makeTextVar(symbolView: SymbolView, name: string, dlt: string, shapes: (Shape & { text?: Text })[]) {
+        let symbol = adapt2Shape(symbolView) as SymbolShape;
         if (!is_symbol_or_union(symbol)) {
             throw new Error('wrong role!');
         }
@@ -417,7 +425,7 @@ export class ShapeEditor {
             if (new_name !== variable.name) {
                 const p = varParent(variable);
                 if (!p) throw new Error('wrong shape type');
-                if (p.isVirtualShape || (p instanceof SymbolShape && !(this.__shape instanceof SymbolShape))) {
+                if (p.isVirtualShape || (p instanceof SymbolShape && !(this.shape instanceof SymbolShape))) {
                     this._overrideVariableName(variable, new_name, variable.value, api);
                 } else {
                     api.shapeModifyVariableName(this.__page, variable, new_name);
@@ -432,7 +440,7 @@ export class ShapeEditor {
                     text.insertText(new_dlt_value, 0);
                     new_dlt_value = text;
                 }
-                if (p.isVirtualShape || (p instanceof SymbolShape && !(this.__shape instanceof SymbolShape))) {
+                if (p.isVirtualShape || (p instanceof SymbolShape && !(this.shape instanceof SymbolShape))) {
                     this._overrideVariable(variable, new_dlt_value, api);
                 } else {
                     api.shapeModifyVariable(this.__page, variable, new_dlt_value);
@@ -452,7 +460,7 @@ export class ShapeEditor {
      * 将变量fromVar override 到id为toVarId的变量
      * */
     _overrideVariable2(fromVar: Variable, toVarId: string, api: Api) {
-        const shape = this.__shape;
+        const shape = this.shape;
 
         let p = varParent(fromVar);
         if (!p) throw new Error();
@@ -495,7 +503,7 @@ export class ShapeEditor {
      * @returns
      */
     overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, shape?: Shape) {
-        shape = shape ?? this.__shape;
+        shape = shape ?? this.shape;
         // symbol shape
         if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {
             const _vars: Variable[] = [];
@@ -579,7 +587,7 @@ export class ShapeEditor {
      */
     modifyVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any): boolean {
         // const _var = this.overrideVariable(slot, varType, ov)
-        const shape = this.__shape;
+        const shape = this.shape;
         // symbol shape
         if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {
             const _vars: Variable[] = [];
@@ -664,81 +672,81 @@ export class ShapeEditor {
 
     public setName(name: string) {
         const api = this.__repo.start('setName');
-        api.shapeModifyName(this.__page, this.__shape, name)
-        api.shapeModifyNameFixed(this.__page, this.__shape, true);
+        api.shapeModifyName(this.__page, this.shape, name)
+        api.shapeModifyNameFixed(this.__page, this.shape, true);
         this.__repo.commit();
     }
 
     public toggleVisible() {
         // 实例图层
         if (this.modifyVariable(VariableType.Visible, OverrideType.Visible, (_var) => {
-            return _var ? !_var.value : !this.__shape.isVisible;
+            return _var ? !_var.value : !this.shape.isVisible;
         })) {
             return;
         }
         this._repoWrap('toggleVisible', (api) => {
-            api.shapeModifyVisible(this.__page, this.__shape, !this.__shape.isVisible);
-            // after_toggle_shapes_visible(api, this.__page, [this.__shape]);
+            api.shapeModifyVisible(this.__page, this.shape, !this.shape.isVisible);
+            // after_toggle_shapes_visible(api, this.__page, [this.shape]);
         })
     }
 
     public toggleLock() {
         if (this.modifyVariable(VariableType.Lock, OverrideType.Lock, (_var) => {
-            return _var ? !_var.value : !this.__shape.isLocked;
+            return _var ? !_var.value : !this.shape.isLocked;
         })) {
             return;
         }
         this._repoWrap('toggleLock', (api) => {
-            api.shapeModifyLock(this.__page, this.__shape, !this.__shape.isLocked);
+            api.shapeModifyLock(this.__page, this.shape, !this.shape.isLocked);
         });
     }
 
     public translate(dx: number, dy: number, round: boolean = true) {
         this._repoWrap("translate", (api) => {
-            translate(api, this.__page, this.__shape, dx, dy, round);
+            translate(api, this.__page, this.shape, dx, dy, round);
         });
     }
 
     public translateTo(x: number, y: number) {
         this._repoWrap("translateTo", (api) => {
-            translateTo(api, this.__page, this.__shape, x, y);
+            translateTo(api, this.__page, this.shape, x, y);
         });
     }
 
     public expand(dw: number, dh: number) {
         this._repoWrap("expand", (api) => {
-            expand(api, this.__page, this.__shape, dw, dh);
+            expand(api, this.__page, this.shape, dw, dh);
         });
     }
 
     public expandTo(w: number, h: number) {
         this._repoWrap("expandTo", (api) => {
-            expandTo(api, this.__page, this.__shape, w, h);
+            expandTo(api, this.__page, this.shape, w, h);
         });
     }
 
     public setConstrainerProportions(val: boolean) {
         this._repoWrap("setConstrainerProportions", (api) => {
-            api.shapeModifyConstrainerProportions(this.__page, this.__shape, val)
+            api.shapeModifyConstrainerProportions(this.__page, this.shape, val)
         });
     }
 
     // flip
     public flipH() {
         this._repoWrap("flipHorizontal", (api) => {
-            api.shapeModifyHFlip(this.__page, this.__shape, !this.__shape.isFlippedHorizontal)
+            api.shapeModifyHFlip(this.__page, this.shape, !this.shape.isFlippedHorizontal)
         });
     }
 
     public flipV() {
         this._repoWrap("flipVertical", (api) => {
-            api.shapeModifyVFlip(this.__page, this.__shape, !this.__shape.isFlippedVertical)
+            api.shapeModifyVFlip(this.__page, this.shape, !this.shape.isFlippedVertical)
         });
     }
     public contextSettingOpacity(value: number) {
         try {
             const api = this.__repo.start("contextSettingOpacity");
-            api.shapeModifyContextSettingsOpacity(this.__page, this.__shape, value);
+            api.shapeModifyContextSettingsOpacity(this.__page, this.shape, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -747,7 +755,7 @@ export class ShapeEditor {
     // resizingConstraint
     public setResizingConstraint(value: number) {
         this._repoWrap("setResizingConstraint", (api) => {
-            api.shapeModifyResizingConstraint(this.__page, this.__shape, value);
+            api.shapeModifyResizingConstraint(this.__page, this.shape, value);
         });
     }
 
@@ -755,7 +763,7 @@ export class ShapeEditor {
     public rotate(deg: number) {
         this._repoWrap("rotate", (api) => {
             deg = deg % 360;
-            api.shapeModifyRotate(this.__page, this.__shape, deg)
+            api.shapeModifyRotate(this.__page, this.shape, deg)
         });
     }
     /**
@@ -763,14 +771,14 @@ export class ShapeEditor {
      */
     public clipPathShape(index: number, slice_name: string): { code: number, ex: Shape | undefined } {
         const data: { code: number, ex: Shape | undefined } = { code: 0, ex: undefined };
-        if (!(this.__shape instanceof PathShape)) {
-            console.log('!(this.__shape instanceof PathShape)');
+        if (!(this.shape instanceof PathShape)) {
+            console.log('!(this.shape instanceof PathShape)');
             data.code = -1;
             return data;
         }
         try {
             const api = this.__repo.start("sortPathShapePoints");
-            const code = _clip(this.__document, this.__page, api, this.__shape as PathShape, index, slice_name);
+            const code = _clip(this.__document, this.__page, api, this.shape as PathShape, index, slice_name);
             this.__repo.commit();
             return code;
         } catch (error) {
@@ -783,7 +791,7 @@ export class ShapeEditor {
 
     // radius
     public setRectRadius(lt: number, rt: number, rb: number, lb: number) {
-        const shape = this.__shape;
+        const shape = this.shape;
         if (!(shape instanceof RectShape)) return;
         this._repoWrap("setRectRadius", (api) => {
             api.shapeModifyRadius(this.__page, shape, lt, rt, rb, lb);
@@ -791,21 +799,21 @@ export class ShapeEditor {
     }
 
     public setFixedRadius(fixedRadius: number) {
-        if (this.__shape instanceof GroupShape) {
-            if (!this.__shape.isBoolOpShape) return;
-        } else if (!(this.__shape instanceof PathShape || this.__shape instanceof PathShape2 || this.__shape instanceof TextShape)) {
+        if (this.shape instanceof GroupShape) {
+            if (!this.shape.isBoolOpShape) return;
+        } else if (!(this.shape instanceof PathShape || this.shape instanceof PathShape2 || this.shape instanceof TextShape)) {
             return;
         }
         this._repoWrap("setFixedRadius", (api) => {
-            api.shapeModifyFixedRadius(this.__page, this.__shape as GroupShape, fixedRadius || undefined);
+            api.shapeModifyFixedRadius(this.__page, this.shape as GroupShape, fixedRadius || undefined);
         });
     }
 
     public setBoolOp(op: BoolOp, name?: string) {
-        if (!(this.__shape instanceof GroupShape)) return;
+        if (!(this.shape instanceof GroupShape)) return;
         this._repoWrap("setBoolOp", (api) => {
-            const shape = this.__shape as GroupShape;
-            if (name) api.shapeModifyName(this.__page, this.__shape, name);
+            const shape = this.shape as GroupShape;
+            if (name) api.shapeModifyName(this.__page, this.shape, name);
             shape.childs.forEach((child) => {
                 api.shapeModifyBoolOp(this.__page, child, op);
             })
@@ -814,9 +822,9 @@ export class ShapeEditor {
     }
 
     public setIsBoolOpShape(isOpShape: boolean) {
-        if (!(this.__shape instanceof GroupShape)) return;
+        if (!(this.shape instanceof GroupShape)) return;
         this._repoWrap("setIsBoolOpShape", (api) => {
-            api.shapeModifyBoolOpShape(this.__page, this.__shape as GroupShape, isOpShape);
+            api.shapeModifyBoolOpShape(this.__page, this.shape as GroupShape, isOpShape);
         });
     }
 
@@ -824,7 +832,7 @@ export class ShapeEditor {
      * @description 已提出到 "editor/utils/symbol"
      */
     private shape4fill(api: Api, shape?: Shape) {
-        const _shape = shape ?? this.__shape;
+        const _shape = shape ?? this.shape;
         const _var = this.overrideVariable(VariableType.Fills, OverrideType.Fills, (_var) => {
             const fills = _var?.value ?? _shape.style.fills;
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -872,7 +880,7 @@ export class ShapeEditor {
      * @description 已提出到 "editor/utils/symbol"
      */
     private shape4border(api: Api, shape?: Shape) {
-        const _shape = shape ?? this.__shape;
+        const _shape = shape ?? this.shape;
         const _var = this.overrideVariable(VariableType.Borders, OverrideType.Borders, (_var) => {
             const borders = _var?.value ?? _shape.style.borders;
             return new BasicArray(...(borders as Array<Border>).map((v) => {
@@ -923,19 +931,19 @@ export class ShapeEditor {
     public setMarkerType(mt: MarkerType, isEnd: boolean) {
         this._repoWrap("setMarkerType", (api) => {
             if (isEnd) {
-                api.shapeModifyEndMarkerType(this.__page, this.__shape, mt);
+                api.shapeModifyEndMarkerType(this.__page, this.shape, mt);
             } else {
-                api.shapeModifyStartMarkerType(this.__page, this.__shape, mt);
+                api.shapeModifyStartMarkerType(this.__page, this.shape, mt);
             }
         });
     }
 
     public exchangeMarkerType() {
-        const { endMarkerType, startMarkerType } = this.__shape.style;
+        const { endMarkerType, startMarkerType } = this.shape.style;
         if (endMarkerType !== startMarkerType) {
             this._repoWrap("exchangeMarkerType", (api) => {
-                api.shapeModifyEndMarkerType(this.__page, this.__shape, startMarkerType || MarkerType.Line);
-                api.shapeModifyStartMarkerType(this.__page, this.__shape, endMarkerType || MarkerType.Line);
+                api.shapeModifyEndMarkerType(this.__page, this.shape, startMarkerType || MarkerType.Line);
+                api.shapeModifyStartMarkerType(this.__page, this.shape, endMarkerType || MarkerType.Line);
             });
         }
     }
@@ -960,13 +968,13 @@ export class ShapeEditor {
     // points
     public setPathClosedStatus(val: boolean) {
         this._repoWrap("setPathClosedStatus", (api) => {
-            api.setCloseStatus(this.__page, this.__shape as PathShape, val);
+            api.setCloseStatus(this.__page, this.shape as PathShape, val);
         });
     }
 
     public addPointAt(point: CurvePoint, idx: number) {
         this._repoWrap("addPointAt", (api) => {
-            api.addPointAt(this.__page, this.__shape as PathShape, idx, point);
+            api.addPointAt(this.__page, this.shape as PathShape, idx, point);
         });
     }
 
@@ -976,8 +984,8 @@ export class ShapeEditor {
      */
     public removePoints(indexes: number[]) {
         let result = -1;
-        if (!(this.__shape instanceof PathShape)) {
-            console.log('!(this.__shape instanceof PathShape)');
+        if (!(this.shape instanceof PathShape)) {
+            console.log('!(this.shape instanceof PathShape)');
             return result;
         }
 
@@ -999,23 +1007,23 @@ export class ShapeEditor {
             const api = this.__repo.start("deleteShape");
 
             for (let i = indexes.length - 1; i > -1; i--) {
-                api.deletePoint(this.__page, this.__shape as PathShape, indexes[i]);
+                api.deletePoint(this.__page, this.shape as PathShape, indexes[i]);
             }
 
-            const p = this.__shape.parent as GroupShape;
+            const p = this.shape.parent as GroupShape;
 
             result = 1;
 
-            if (this.__shape.points.length === 2) {
-                api.setCloseStatus(this.__page, this.__shape, false);
+            if (this.shape.points.length === 2) {
+                api.setCloseStatus(this.__page, this.shape, false);
             }
 
-            if (this.__shape.points.length < 2 && p) {
-                const index = p.indexOfChild(this.__shape);
+            if (this.shape.points.length < 2 && p) {
+                const index = p.indexOfChild(this.shape);
                 api.shapeDelete(this.__document, this.__page, p, index)
                 result = 0;
             } else {
-                update_path_shape_frame(api, this.__page, [this.__shape as PathShape]);
+                update_path_shape_frame(api, this.__page, [this.shape as PathShape]);
             }
 
             this.__repo.commit();
@@ -1036,10 +1044,10 @@ export class ShapeEditor {
             const api = this.__repo.start("modifyPointsCurveMode");
             for (let i = indexes.length - 1; i > -1; i--) {
                 const index = indexes[i];
-                _typing_modify(this.__shape as PathShape, this.__page, api, index, curve_mode);
-                api.modifyPointCurveMode(this.__page, this.__shape as PathShape, index, curve_mode);
+                _typing_modify(this.shape as PathShape, this.__page, api, index, curve_mode);
+                api.modifyPointCurveMode(this.__page, this.shape as PathShape, index, curve_mode);
             }
-            update_path_shape_frame(api, this.__page, [this.__shape as PathShape]);
+            update_path_shape_frame(api, this.__page, [this.shape as PathShape]);
             this.__repo.commit();
             return true;
         } catch (e) {
@@ -1056,7 +1064,7 @@ export class ShapeEditor {
         try {
             const api = this.__repo.start("modifyPointsCornerRadius");
             for (let i = indexes.length - 1; i > -1; i--) {
-                api.modifyPointCornerRadius(this.__page, this.__shape as PathShape, indexes[i], cornerRadius);
+                api.modifyPointCornerRadius(this.__page, this.shape as PathShape, indexes[i], cornerRadius);
             }
             this.__repo.commit();
             return true;
@@ -1069,9 +1077,9 @@ export class ShapeEditor {
 
     public modifyPointsXY(actions: { x: number, y: number, index: number }[]) {
         try {
-            if (!(this.__shape instanceof PathShape)) return;
+            if (!(this.shape instanceof PathShape)) return;
             const api = this.__repo.start("deleteShape");
-            modify_points_xy(api, this.__page, this.__shape, actions);
+            modify_points_xy(api, this.__page, this.shape, actions);
             this.__repo.commit();
             return true;
         } catch (e) {
@@ -1085,7 +1093,7 @@ export class ShapeEditor {
     public addShadow(shadow: Shadow) {
         const api = this.__repo.start("addShadow");
         try {
-            const shape = shape4shadow(api, this.__page, this.__shape);
+            const shape = shape4shadow(api, this.__page, this.shape);
             const l = shape instanceof Shape ? shape.style.shadows.length : shape.value.length;
             api.addShadow(this.__page, shape, shadow, l);
             this.__repo.commit();
@@ -1098,7 +1106,7 @@ export class ShapeEditor {
     public deleteShadow(idx: number) {
         const api = this.__repo.start("deleteShadow");
         try {
-            const shape = shape4shadow(api, this.__page, this.__shape);
+            const shape = shape4shadow(api, this.__page, this.shape);
             api.deleteShadowAt(this.__page, shape, idx)
             this.__repo.commit();
         } catch (e) {
@@ -1110,7 +1118,7 @@ export class ShapeEditor {
     public setShadowPosition(idx: number, position: ShadowPosition) {
         const api = this.__repo.start("setShadowPosition");
         try {
-            const shape = shape4shadow(api, this.__page, this.__shape);
+            const shape = shape4shadow(api, this.__page, this.shape);
             api.setShadowPosition(this.__page, shape, idx, position);
             this.__repo.commit();
         } catch (e) {
@@ -1122,7 +1130,7 @@ export class ShapeEditor {
     public setShadowEnable(idx: number, isEnabled: boolean) {
         const api = this.__repo.start("setShadowEnable");
         try {
-            const shape = shape4shadow(api, this.__page, this.__shape);
+            const shape = shape4shadow(api, this.__page, this.shape);
             api.setShadowEnable(this.__page, shape, idx, isEnabled);
             this.__repo.commit();
         } catch (e) {
@@ -1134,7 +1142,7 @@ export class ShapeEditor {
     public setShadowColor(idx: number, color: Color) {
         const api = this.__repo.start("setShadowColor");
         try {
-            const shape = shape4shadow(api, this.__page, this.__shape);
+            const shape = shape4shadow(api, this.__page, this.shape);
             api.setShadowColor(this.__page, shape, idx, color);
             this.__repo.commit();
         } catch (e) {
@@ -1146,7 +1154,7 @@ export class ShapeEditor {
     public setShadowOffsetX(idx: number, offserX: number) {
         const api = this.__repo.start("setShadowOffsetX");
         try {
-            const shape = shape4shadow(api, this.__page, this.__shape);
+            const shape = shape4shadow(api, this.__page, this.shape);
             api.setShadowOffsetX(this.__page, shape, idx, offserX);
             this.__repo.commit();
         } catch (e) {
@@ -1158,7 +1166,7 @@ export class ShapeEditor {
     public setShadowOffsetY(idx: number, offsetY: number) {
         const api = this.__repo.start("setShadowOffsetY");
         try {
-            const shape = shape4shadow(api, this.__page, this.__shape);
+            const shape = shape4shadow(api, this.__page, this.shape);
             api.setShadowOffsetY(this.__page, shape, idx, offsetY);
             this.__repo.commit();
         } catch (e) {
@@ -1170,7 +1178,7 @@ export class ShapeEditor {
     public setShadowBlur(idx: number, blur: number) {
         const api = this.__repo.start("setShadowBlur");
         try {
-            const shape = shape4shadow(api, this.__page, this.__shape);
+            const shape = shape4shadow(api, this.__page, this.shape);
             api.setShadowBlur(this.__page, shape, idx, blur);
             this.__repo.commit();
         } catch (e) {
@@ -1182,8 +1190,8 @@ export class ShapeEditor {
     public setShadowSpread(idx: number, spread: number) {
         const api = this.__repo.start("setShadowSpread");
         try {
-            const shape = shape4shadow(api, this.__page, this.__shape);
-            api.setShadowSpread(this.__page, this.__shape, idx, spread);
+            const shape = shape4shadow(api, this.__page, this.shape);
+            api.setShadowSpread(this.__page, this.shape, idx, spread);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1196,8 +1204,8 @@ export class ShapeEditor {
         try {
             for (let i = 0; i < formats.length; i++) {
                 const format = formats[i];
-                const length = this.__shape.exportOptions ? this.__shape.exportOptions.exportFormats.length : 0;
-                api.addExportFormat(this.__page, this.__shape, format, length);
+                const length = this.shape.exportOptions ? this.shape.exportOptions.exportFormats.length : 0;
+                api.addExportFormat(this.__page, this.shape, format, length);
             }
             this.__repo.commit();
         } catch (e) {
@@ -1206,11 +1214,11 @@ export class ShapeEditor {
         }
     }
     public deleteExportFormat(idx: number) {
-        const format = this.__shape.exportOptions?.exportFormats[idx];
+        const format = this.shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("deleteExportFormat");
             try {
-                api.deleteExportFormatAt(this.__page, this.__shape, idx)
+                api.deleteExportFormatAt(this.__page, this.shape, idx)
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -1219,11 +1227,11 @@ export class ShapeEditor {
         }
     }
     public setExportFormatScale(idx: number, scale: number) {
-        const format = this.__shape.exportOptions?.exportFormats[idx];
+        const format = this.shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatScale");
             try {
-                api.setExportFormatScale(this.__page, this.__shape, idx, scale);
+                api.setExportFormatScale(this.__page, this.shape, idx, scale);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -1232,11 +1240,11 @@ export class ShapeEditor {
         }
     }
     public setExportFormatName(idx: number, name: string) {
-        const format = this.__shape.exportOptions?.exportFormats[idx];
+        const format = this.shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatName");
             try {
-                api.setExportFormatName(this.__page, this.__shape, idx, name);
+                api.setExportFormatName(this.__page, this.shape, idx, name);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -1245,11 +1253,11 @@ export class ShapeEditor {
         }
     }
     public setExportFormatFileFormat(idx: number, fileFormat: ExportFileFormat) {
-        const format = this.__shape.exportOptions?.exportFormats[idx];
+        const format = this.shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatFileFormat");
             try {
-                api.setExportFormatFileFormat(this.__page, this.__shape, idx, fileFormat);
+                api.setExportFormatFileFormat(this.__page, this.shape, idx, fileFormat);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -1258,11 +1266,11 @@ export class ShapeEditor {
         }
     }
     public setExportFormatPerfix(idx: number, perfix: ExportFormatNameingScheme) {
-        const format = this.__shape.exportOptions?.exportFormats[idx];
+        const format = this.shape.exportOptions?.exportFormats[idx];
         if (format) {
             const api = this.__repo.start("setExportFormatPerfix");
             try {
-                api.setExportFormatPerfix(this.__page, this.__shape, idx, perfix);
+                api.setExportFormatPerfix(this.__page, this.shape, idx, perfix);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -1273,7 +1281,7 @@ export class ShapeEditor {
     public setExportTrimTransparent(trim: boolean) {
         const api = this.__repo.start("setExportTrimTransparent");
         try {
-            api.setExportTrimTransparent(this.__page, this.__shape, trim);
+            api.setExportTrimTransparent(this.__page, this.shape, trim);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1283,7 +1291,7 @@ export class ShapeEditor {
     public setExportCanvasBackground(background: boolean) {
         const api = this.__repo.start("setExportTrimTransparent");
         try {
-            api.setExportCanvasBackground(this.__page, this.__shape, background);
+            api.setExportCanvasBackground(this.__page, this.shape, background);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1293,7 +1301,7 @@ export class ShapeEditor {
     public setExportPreviewUnfold(unfold: boolean) {
         const api = this.__repo.start("setExportTrimTransparent");
         try {
-            api.setExportPreviewUnfold(this.__page, this.__shape, unfold);
+            api.setExportPreviewUnfold(this.__page, this.shape, unfold);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1303,14 +1311,14 @@ export class ShapeEditor {
 
     // 容器自适应大小
     public adapt() {
-        if (!(this.__shape instanceof Artboard)) {
-            console.log('adapt: !(this.__shape instanceof Artboard)');
+        if (!(this.shape instanceof Artboard)) {
+            console.log('adapt: !(this.shape instanceof Artboard)');
             return;
         }
 
         try {
             const api = this.__repo.start("adapt");
-            adapt_for_artboard(api, this.__page, this.__shape);
+            adapt_for_artboard(api, this.__page, this.shape);
             this.__repo.commit();
         } catch (error) {
             console.log('adapt', error);
@@ -1320,25 +1328,25 @@ export class ShapeEditor {
 
     // 删除图层
     public delete() {
-        if (is_part_of_symbolref(this.__shape)) {
+        if (is_part_of_symbolref(this.shape)) {
             this.toggleVisible();
             return;
         }
-        const parent = this.__shape.parent as GroupShape;
+        const parent = this.shape.parent as GroupShape;
         if (parent) {
             const childs = parent.type === ShapeType.SymbolRef ? ((parent as GroupShape).naviChilds || []) : (parent as GroupShape).childs;
-            const index = childs.findIndex(s => s.id === this.__shape.id);
+            const index = childs.findIndex(s => s.id === this.shape.id);
             if (index >= 0) {
                 try {
                     const api = this.__repo.start("deleteShape");
-                    if (this.__shape.type === ShapeType.Contact) { // 将执行删除连接线，需要清除连接线对起始两边的影响
-                        this.removeContactSides(api, this.__page, this.__shape as unknown as ContactShape);
+                    if (this.shape.type === ShapeType.Contact) { // 将执行删除连接线，需要清除连接线对起始两边的影响
+                        this.removeContactSides(api, this.__page, this.shape as unknown as ContactShape);
                     } else {
-                        this.removeContact(api, this.__page, this.__shape);
+                        this.removeContact(api, this.__page, this.shape);
                     }
-                    const symbol = get_symbol_by_layer(this.__shape);
+                    const symbol = get_symbol_by_layer(this.shape);
                     if (symbol) { // 将执行删除组件内部图层，需要清除内部图层对组件的影响
-                        clear_binds_effect(this.__page, this.__shape, symbol, api);
+                        clear_binds_effect(this.__page, this.shape, symbol, api);
                     }
                     api.shapeDelete(this.__document, this.__page, parent, index);
                     // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
@@ -1347,7 +1355,7 @@ export class ShapeEditor {
                         const _idx = (_p as GroupShape).childs.findIndex(c => c.id === parent.id);
                         api.shapeDelete(this.__document, this.__page, (_p as GroupShape), _idx);
                     }
-                    if (this.__shape.type === ShapeType.Symbol) {
+                    if (this.shape.type === ShapeType.Symbol) {
                         this.__document.__correspondent.notify('update-symbol-list');
                     }
                     this.__repo.commit();
@@ -1417,7 +1425,7 @@ export class ShapeEditor {
     }
 
     public isDeleted() {
-        return !this.__page.getShape(this.__shape.id);
+        return !this.__page.getShape(this.shape.id);
     }
 
     // contact
@@ -1426,23 +1434,23 @@ export class ShapeEditor {
      * 则在生成路径的时候应该以用户手动确认的点为主体，让两端去连接这些用户手动确认的点。
      */
     public modify_edit_state(state: boolean) {
-        if (this.__shape.type !== ShapeType.Contact) return false;
+        if (this.shape.type !== ShapeType.Contact) return false;
         this._repoWrap("modify_edit_state", (api) => {
-            api.contactModifyEditState(this.__page, this.__shape as ContactShape, state);
+            api.contactModifyEditState(this.__page, this.shape as ContactShape, state);
         });
     }
 
     public modify_frame_by_points() {
         this._repoWrap("modify_frame_by_points", (api) => {
-            update_frame_by_points(api, this.__page, this.__shape as PathShape);
+            update_frame_by_points(api, this.__page, this.shape as PathShape);
         });
     }
 
     public reset_contact_path() {
-        if (!(this.__shape instanceof ContactShape)) {
+        if (!(this.shape instanceof ContactShape)) {
             return false;
         }
-        const shape = this.__shape;
+        const shape = this.shape;
         this._repoWrap("reset_contact_path", (api) => {
             api.contactModifyEditState(this.__page, shape, false);
 
@@ -1466,7 +1474,7 @@ export class ShapeEditor {
 
     // symbolref
     switchSymRef(refId: string) {
-        if (!(this.__shape instanceof SymbolRefShape)) return;
+        if (!(this.shape instanceof SymbolRefShape)) return;
         // check？
 
         if (this.modifyVariable(VariableType.SymbolRef, OverrideType.SymbolID, (_var) => {
@@ -1475,7 +1483,7 @@ export class ShapeEditor {
 
         const api = this.__repo.start("switchSymRef");
         try {
-            api.shapeModifySymRef(this.__page, this.__shape, refId);
+            api.shapeModifySymRef(this.__page, this.shape, refId);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1488,10 +1496,10 @@ export class ShapeEditor {
      * @description 切换实例的可变组件状态
      */
     switchSymState(varId: string, state: string) {
-        if (!(this.__shape instanceof SymbolRefShape)) return;
+        if (!(this.shape instanceof SymbolRefShape)) return;
 
         // 寻找目标组件
-        const shape: SymbolRefShape = this.__shape;
+        const shape: SymbolRefShape = this.shape;
         const sym1 = shape.symData;
         const sym = sym1?.parent;
         if (!sym1 || !sym || !(sym instanceof SymbolUnionShape)) return;
@@ -1533,13 +1541,13 @@ export class ShapeEditor {
 
     // symbol
     modifySymTag(varId: string, tag: string) {
-        if (!(this.__shape instanceof SymbolShape)) return;
-        if (this.__shape.isVirtualShape) return;
+        if (!(this.shape instanceof SymbolShape)) return;
+        if (this.shape.isVirtualShape) return;
 
-        const shape = this.__shape;
+        const shape = this.shape;
 
 
-        const sym = this.__shape.parent;
+        const sym = this.shape.parent;
         if (!sym || !(sym instanceof SymbolShape) || !(sym instanceof SymbolUnionShape)) return;
 
         const symbols: SymbolShape[] = sym.childs as any as SymbolShape[];
@@ -1606,17 +1614,17 @@ export class ShapeEditor {
      * @description 修改可变组件的某一个属性var的属性值 --776a0ac3351f
      */
     modifyStateSymTagValue(varId: string, tag: string) {
-        if (!this.__shape.parent || !(this.__shape.parent instanceof SymbolUnionShape)) return;
+        if (!this.shape.parent || !(this.shape.parent instanceof SymbolUnionShape)) return;
         const api = this.__repo.start("modifyStateSymTagValue");
         try {
-            const is_default = is_default_state(this.__shape as SymbolShape); // 如果修改的可变组件为默认可变组件，则需要更新组件的默认状态
+            const is_default = is_default_state(this.shape as SymbolShape); // 如果修改的可变组件为默认可变组件，则需要更新组件的默认状态
             if (is_default) {
-                const variables = (this.__shape.parent as SymbolUnionShape).variables;
+                const variables = (this.shape.parent as SymbolUnionShape).variables;
                 const _var = variables?.get(varId);
                 if (!_var) throw new Error('wrong variable');
                 api.shapeModifyVariable(this.__page, _var, tag);
             }
-            api.shapeModifyVartag(this.__page, this.__shape as SymbolShape, varId, tag);
+            api.shapeModifyVartag(this.__page, this.shape as SymbolShape, varId, tag);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1626,8 +1634,8 @@ export class ShapeEditor {
 
     // symbol symbolref
     createVar(type: VariableType, name: string, value: any) {
-        if (!(this.__shape instanceof SymbolShape) && !(this.__shape instanceof SymbolRefShape)) return;
-        if (this.__shape.isVirtualShape) return;
+        if (!(this.shape instanceof SymbolShape) && !(this.shape instanceof SymbolRefShape)) return;
+        if (this.shape.isVirtualShape) return;
 
         // virtual? no
 
@@ -1635,7 +1643,7 @@ export class ShapeEditor {
         // _var.value = value;
         const api = this.__repo.start("createVar");
         try {
-            api.shapeAddVariable(this.__page, this.__shape, _var);
+            api.shapeAddVariable(this.__page, this.shape, _var);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1647,11 +1655,11 @@ export class ShapeEditor {
      * @description 给组件移除一个变量
      */
     removeVar(key: string) {
-        if (!(this.__shape instanceof SymbolShape) && !(this.__shape instanceof SymbolRefShape)) return;
-        if (this.__shape.isVirtualShape) return;
+        if (!(this.shape instanceof SymbolShape) && !(this.shape instanceof SymbolRefShape)) return;
+        if (this.shape.isVirtualShape) return;
 
         // virtual? no
-        const _var = this.__shape.getVar(key);
+        const _var = this.shape.getVar(key);
         if (!_var) return;
 
         // 遍历所有子对象
@@ -1666,9 +1674,9 @@ export class ShapeEditor {
         const api = this.__repo.start("removeVar");
         try {
             // 将_var的值保存到对象中
-            if (this.__shape instanceof SymbolShape) switch (_var.type) {
+            if (this.shape instanceof SymbolShape) switch (_var.type) {
                 case VariableType.Visible:
-                    traval(this.__shape, (s: Shape) => {
+                    traval(this.shape, (s: Shape) => {
                         const bindid = s.varbinds?.get(OverrideType.Visible);
                         if (bindid && bindid === _var.id && (!!s.isVisible !== !!_var.value)) {
                             api.shapeModifyVisible(this.__page, s, !s.isVisible);
@@ -1676,7 +1684,7 @@ export class ShapeEditor {
                     });
                     break;
                 case VariableType.Text:
-                    traval(this.__shape, (s: Shape) => {
+                    traval(this.shape, (s: Shape) => {
                         const bindid = s.varbinds?.get(OverrideType.Text);
                         if (bindid && bindid === _var.id && s instanceof TextShape) {
                             api.deleteText(this.__page, s, 0, s.text.length - 1);
@@ -1689,7 +1697,7 @@ export class ShapeEditor {
                     });
                     break;
             }
-            api.shapeRemoveVariable(this.__page, this.__shape, key);
+            api.shapeRemoveVariable(this.__page, this.shape, key);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1702,13 +1710,13 @@ export class ShapeEditor {
      * @param type
      */
     removeBinds(type: OverrideType) {
-        if (!is_part_of_symbol(this.__shape)) return;
+        if (!is_part_of_symbol(this.shape)) return;
         try {
             const api = this.__repo.start("removeBinds");
-            const var_id = this.__shape.varbinds?.get(type);
+            const var_id = this.shape.varbinds?.get(type);
             if (!var_id) throw new Error('Invalid Override');
-            api.shapeUnbinVar(this.__page, this.__shape, type);
-            const symbol = get_symbol_by_layer(this.__shape);
+            api.shapeUnbinVar(this.__page, this.shape, type);
+            const symbol = get_symbol_by_layer(this.shape);
             if (!symbol) {
                 this.__repo.commit();
                 return;
@@ -1728,12 +1736,12 @@ export class ShapeEditor {
     bindVar(slot: OverrideType, varId: string) {
         // check varId
         const _vars: Variable[] = [];
-        this.__shape.findVar(varId, _vars);
+        this.shape.findVar(varId, _vars);
         if (_vars.length === 0) throw new Error();
 
         const _var = _vars[_vars.length - 1];
 
-        const shape = this.__shape;
+        const shape = this.shape;
         // check virtual
         if (shape.isVirtualShape) {
             // override
@@ -1765,7 +1773,7 @@ export class ShapeEditor {
         } else {
             const api = this.__repo.start("bindVar");
             try {
-                api.shapeBindVar(this.__page, this.__shape, slot, varId);
+                api.shapeBindVar(this.__page, this.shape, slot, varId);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);

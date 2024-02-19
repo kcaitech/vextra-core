@@ -33,21 +33,22 @@ import { mergeParaAttr, mergeSpanAttr, mergeTextAttr } from "../data/textutils";
 import { importText } from "../data/baseimport";
 import * as basicapi from "./basicapi"
 import { CmdMergeType } from "./coop/localcmd";
+import { TableCellView, TextShapeView, adapt2Shape } from "../dataview";
 
 type TextShapeLike = Shape & { text: Text }
 
-function createTextByString(stringValue: string, refShape: TextShapeLike) {
+function createTextByString(stringValue: string, refText: Text) {
     const text = new Text(new BasicArray());
-    if (refShape.text.attr) {
-        mergeTextAttr(text, refShape.text.attr);
+    if (refText.attr) {
+        mergeTextAttr(text, refText.attr);
     }
     const para = new Para('\n', new BasicArray());
     para.attr = new ParaAttr();
     text.paras.push(para);
     const span = new Span(para.length);
     para.spans.push(span);
-    mergeParaAttr(para, refShape.text.paras[0]);
-    mergeSpanAttr(span, refShape.text.paras[0].spans[0]);
+    mergeParaAttr(para, refText.paras[0]);
+    mergeSpanAttr(span, refText.paras[0].spans[0]);
     text.insertText(stringValue, 0);
     return text;
 }
@@ -62,15 +63,11 @@ export class TextShapeEditor extends ShapeEditor {
 
     private __cachedSpanAttr?: SpanAttrSetter;
 
-    constructor(shape: TextShapeLike, page: Page, repo: CoopRepository, document: Document) {
+    constructor(shape: TextShapeView | TableCellView, page: Page, repo: CoopRepository, document: Document) {
         super(shape, page, repo, document);
-        //
-        if (shape.isVirtualShape) {
-
-        }
     }
     get shape(): TextShapeLike {
-        return this.__shape as TextShapeLike;
+        return adapt2Shape(this.__shape) as TextShapeLike;
     }
 
     public resetCachedSpanAttr() {
@@ -97,11 +94,11 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     private shape4edit(api: Api, shape?: TextShapeLike) {
-        const _shape = shape ?? this.__shape as TextShapeLike;
+        const _shape = shape ?? this.shape as TextShapeLike;
         const _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
             if (_var) {
                 if (_var.value instanceof Text) return importText(_var.value);
-                if (typeof _var.value === 'string') return createTextByString(_var.value, _shape);
+                if (typeof _var.value === 'string') return createTextByString(_var.value, _shape.text);
             }
             else {
                 return importText(_shape.text);
@@ -110,7 +107,7 @@ export class TextShapeEditor extends ShapeEditor {
         }, api, shape);
         
         if (_var && typeof _var.value === 'string') {
-            api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape));
+            api.shapeModifyVariable(this.__page, _var, createTextByString(_var.value, _shape.text));
         }
         if (_var) {
             this.__repo.updateTextSelection(_var.value);
@@ -145,10 +142,11 @@ export class TextShapeEditor extends ShapeEditor {
         return 0;
     }
     public updateName(api: Api) {
-        if (this.__shape.nameIsFixed || this.__shape.isVirtualShape) return;
-        const name = (this.__shape as TextShape).text.getText(0, Infinity);
+        const shape = this.shape;
+        if (shape.nameIsFixed || shape.isVirtualShape) return;
+        const name = (shape as TextShapeLike).text.getText(0, Infinity);
         const i = name.indexOf('\n');
-        api.shapeModifyName(this.__page, this.__shape, name.slice(0, i));
+        api.shapeModifyName(this.__page, shape, name.slice(0, i));
     }
     public insertText2(text: string, index: number, del: number, attr?: SpanAttr): number {
         //
