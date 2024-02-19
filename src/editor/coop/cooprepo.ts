@@ -83,6 +83,10 @@ export class CoopRepository {
         this.__cmdrepo.setBaseVer(baseVer);
     }
 
+    public setProcessCmdsTrigger(trigger: () => void) {
+        this.__cmdrepo.setProcessCmdsTrigger(trigger);
+    }
+
     public receive(cmds: Cmd[]) {
         this.__cmdrepo.receive(cmds);
     }
