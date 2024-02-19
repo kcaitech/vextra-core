@@ -209,7 +209,7 @@ export const ResizingConstraints2 = {
     },
 
     isFixedToBottom(val: number): boolean {
-        return (val & this.Top) !== this.Top && (val & this.Bottom) === this.Bottom;
+        return !!(val & this.Bottom) && !(val & this.Top) && !(val & this.VCenter);
     },
 
     isFixedTopAndBottom(val: number): boolean {
@@ -217,14 +217,14 @@ export const ResizingConstraints2 = {
     },
 
     isVerticalJustifyCenter(val: number): boolean {
-        return !(val & this.Top) && !(val & this.Bottom) && !!(val & this.VCenter);
+        return !!(val & this.VCenter) && !(val & this.Top) && !(val & this.Bottom);
     },
 
     isVerticalScale(val: number): boolean {
         return !(val & this.Top) && !(val & this.Bottom) && !(val & this.VCenter);
     },
 
-    isFlexHeight(val: number) {
+    isFlexHeight(val: number):boolean {
         return !(val & this.Height);
     },
 
