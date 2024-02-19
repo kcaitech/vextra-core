@@ -550,7 +550,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
     }
 
     get frameType() {
-        return 2;
+        return 3;
     }
 }
 
