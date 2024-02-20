@@ -465,15 +465,14 @@ export function fixConstrainFrame(resizingConstraint: number, x: number, y: numb
                 width = _width;
             }
             else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) { // 居中
-                const origin_d_to_center = originEnvFrame.width / 2 - x;
-                x = currentEnvFrame.width / 2 - origin_d_to_center;
+                const origin_d_to_center = originEnvFrame.width / 2 - x - width / 2;
+                x = currentEnvFrame.width / 2 - origin_d_to_center - _width / 2;
                 width = _width;
             }
             else if (ResizingConstraints2.isFixedLeftAndRight(resizingConstraint)) { // 左右固定，通过固定x值来使左边固定，通过修改宽度和水平翻转来使右边固定
                 const origin_d_to_right = originEnvFrame.width - width - x;
                 width = currentEnvFrame.width - x - origin_d_to_right;
 
-                // 需要特别注意左右固定有可能会导致图层翻转
                 if (width <= minimum_WH) {
                     width = 1;
                 }
@@ -506,8 +505,8 @@ export function fixConstrainFrame(resizingConstraint: number, x: number, y: numb
                 height = _height;
             }
             else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
-                const origin_d_to_center = originEnvFrame.height / 2 - y;
-                y = currentEnvFrame.height / 2 - origin_d_to_center;
+                const origin_d_to_center = originEnvFrame.height / 2 - y - height / 2;
+                y = currentEnvFrame.height / 2 - origin_d_to_center - _height / 2;
                 height = _height;
             }
             else if (ResizingConstraints2.isFixedTopAndBottom(resizingConstraint)) {
