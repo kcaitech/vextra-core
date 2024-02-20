@@ -1,7 +1,7 @@
 import { expandTo, translate, translateTo } from "../../editor/frame";
 import { Page } from "../../data/page";
 import { PathShape, Shape, ShapeFrame } from "../../data/shape";
-import { Api } from "../../editor/command/recordapi";
+import { Api } from "../coop/recordapi";
 import { is_straight, update_frame_by_points } from "./path";
 import { getHorizontalRadians } from "../../editor/page";
 import { Artboard } from "../../data/artboard";

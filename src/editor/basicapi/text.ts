@@ -1,0 +1,119 @@
+import { Page } from "../../data/page";
+import { ParaAttr, Shape, SpanAttr, Text, TextAttr, TextBehaviour, TextHorAlign, TextVerAlign, Variable } from "../../data/classes";
+import { BulletNumbersBehavior, BulletNumbersType, StrikethroughType, TextTransformType, UnderlineType } from "../../data/typesdefine";
+import { Color } from "../../data/classes";
+import { crdtSetAttr, otTextInsert, otTextRemove, otTextSetAttr, otTextSetParaAttr } from "./basic";
+
+export function insertSimpleText(parent: Shape | Variable, shapetext: Text, text: string, index: number, props?: { attr?: SpanAttr, paraAttr?: ParaAttr }) {
+    return otTextInsert(parent, shapetext, index, text, props);
+}
+export function insertComplexText(parent: Shape | Variable, shapetext: Text, text: Text, index: number) {
+    return otTextInsert(parent, shapetext, index, text);
+}
+export function deleteText(parent: Shape | Variable, shapetext: Text, index: number, count: number) {
+    return otTextRemove(parent, shapetext, index, count);
+}
+
+export function textModifyColor(parent: Shape | Variable, shapetext: Text, idx: number, len: number, color: Color | undefined) {
+    return otTextSetAttr(parent, shapetext, idx, len, "color", color);
+}
+export function textModifyFontName(parent: Shape | Variable, shapetext: Text, idx: number, len: number, fontname: string | undefined) {
+    return otTextSetAttr(parent, shapetext, idx, len, "fontName", fontname);
+}
+export function textModifyFontSize(parent: Shape | Variable, shapetext: Text, idx: number, len: number, fontsize: number | undefined) {
+    return otTextSetAttr(parent, shapetext, idx, len, "fontSize", fontsize);
+}
+
+export function shapeModifyTextBehaviour(page: Page, shapetext: Text, textBehaviour: TextBehaviour) {
+    const text = shapetext;
+    if (textBehaviour === TextBehaviour.Flexible) {
+        // default
+        if (!text.attr || !text.attr.textBehaviour || text.attr.textBehaviour === TextBehaviour.Flexible) return;
+    }
+    // todo text 的layout 需要监听text 的变化
+    if (!shapetext.attr) shapetext.attr = new TextAttr();
+    return crdtSetAttr(shapetext.attr, "textBehaviour", textBehaviour);
+}
+export function shapeModifyTextVerAlign(shapetext: Text, verAlign: TextVerAlign) {
+    const text = shapetext;
+    if (verAlign === TextVerAlign.Top) {
+        // default
+        if (!text.attr || !text.attr.verAlign || text.attr.verAlign === TextVerAlign.Top) return;
+    }
+    if (!shapetext.attr) shapetext.attr = new TextAttr();
+    return crdtSetAttr(shapetext.attr, "verAlign", verAlign);
+}
+export function textModifyHorAlign(parent: Shape | Variable, shapetext: Text, horAlign: TextHorAlign, index: number, len: number) {
+    return otTextSetParaAttr(parent, shapetext, index, len, "alignment", horAlign);
+}
+export function shapeModifyTextDefaultHorAlign(shapetext: Text, horAlign: TextHorAlign) {
+    const text = shapetext;
+    if (horAlign === TextHorAlign.Left) {
+        // default
+        if (!text.attr || !text.attr.alignment || text.attr.alignment === TextHorAlign.Left) return;
+    }
+    if (!shapetext.attr) shapetext.attr = new TextAttr();
+    if (shapetext.attr.alignment !== horAlign) {
+        return crdtSetAttr(shapetext.attr, "alignment", horAlign);
+    }
+}
+export function textModifyMinLineHeight(parent: Shape | Variable, shapetext: Text, minLineheight: number, index: number, len: number) {
+    return otTextSetParaAttr(parent, shapetext, index, len, "minimumLineHeight", minLineheight);
+}
+export function textModifyMaxLineHeight(parent: Shape | Variable, shapetext: Text, maxLineheight: number, index: number, len: number) {
+    return otTextSetParaAttr(parent, shapetext, index, len, "maximumLineHeight", maxLineheight);
+}
+export function textModifyParaKerning(parent: Shape | Variable, shapetext: Text, kerning: number | undefined, index: number, len: number) {
+    return otTextSetParaAttr(parent, shapetext, index, len, "kerning", kerning);
+}
+export function textModifySpanKerning(parent: Shape | Variable, shapetext: Text, kerning: number | undefined, index: number, len: number) {
+    return otTextSetAttr(parent, shapetext, index, len, "kerning", kerning);
+}
+export function textModifyParaSpacing(parent: Shape | Variable, shapetext: Text, paraSpacing: number, index: number, len: number) {
+    return otTextSetParaAttr(parent, shapetext, index, len, "paraSpacing", paraSpacing);
+}
+
+export function textModifySpanTransfrom(parent: Shape | Variable, shapetext: Text, transform: TextTransformType | undefined, index: number, len: number) {
+    // 句属性
+    return otTextSetAttr(parent, shapetext, index, len, "transform", transform);
+}
+export function textModifyParaTransfrom(parent: Shape | Variable, shapetext: Text, transform: TextTransformType | undefined, index: number, len: number) {
+    // 段落属性
+    return otTextSetParaAttr(parent, shapetext, index, len, "transform", transform);
+}
+export function shapeModifyTextTransform(shapetext: Text, transform: TextTransformType | undefined) {
+    if (!shapetext.attr) shapetext.attr = new TextAttr();
+    return crdtSetAttr(shapetext.attr, "transform", transform);
+}
+
+export function textModifyHighlightColor(parent: Shape | Variable, shapetext: Text, idx: number, len: number, color: Color | undefined) {
+    return otTextSetAttr(parent, shapetext, idx, len, "highlight", color);
+}
+export function textModifyUnderline(parent: Shape | Variable, shapetext: Text, underline: UnderlineType | undefined, index: number, len: number) {
+    return otTextSetAttr(parent, shapetext, index, len, "underline", underline);
+}
+export function textModifyStrikethrough(parent: Shape | Variable, shapetext: Text, strikethrough: StrikethroughType | undefined, index: number, len: number) {
+    return otTextSetAttr(parent, shapetext, index, len, "strikethrough", strikethrough);
+}
+export function textModifyBold(parent: Shape | Variable, shapetext: Text, bold: boolean, index: number, len: number) {
+    return otTextSetAttr(parent, shapetext, index, len, "bold", bold);
+}
+export function textModifyItalic(parent: Shape | Variable, shapetext: Text, italic: boolean, index: number, len: number) {
+    return otTextSetAttr(parent, shapetext, index, len, "italic", italic);
+}
+
+export function textModifyBulletNumbersType(parent: Shape | Variable, shapetext: Text, type: BulletNumbersType, index: number, len: number) {
+    return otTextSetParaAttr(parent, shapetext, index, len, "bulletNumbersType", type);
+}
+
+export function textModifyBulletNumbersStart(parent: Shape | Variable, shapetext: Text, start: number, index: number, len: number) {
+    return otTextSetParaAttr(parent, shapetext, index, len, "bulletNumbersStart", start);
+}
+
+export function textModifyBulletNumbersBehavior(parent: Shape | Variable, shapetext: Text, behavior: BulletNumbersBehavior, index: number, len: number) {
+    return otTextSetParaAttr(parent, shapetext, index, len, "bulletNumbersBehavior", behavior);
+}
+
+export function textModifyParaIndent(parent: Shape | Variable, shapetext: Text, indent: number | undefined, index: number, len: number) {
+    return otTextSetParaAttr(parent, shapetext, index, len, "indent", indent);
+}

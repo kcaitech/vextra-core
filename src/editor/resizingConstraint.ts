@@ -1,8 +1,8 @@
-import { Page } from "../data/page";
-import { CoopRepository } from "./command/cooprepo";
-import { Document, Shape } from "../data/classes";
+import { Page } from "data/page";
+import { CoopRepository } from "./coop/cooprepo";
 import { ResizingConstraints2 } from "../data/consts";
 import { ShapeType } from "../data/baseclasses";
+import { Document, Shape } from "../data/classes";
 
 export class resizingConstraintEditor {
     protected __repo: CoopRepository;
@@ -38,7 +38,7 @@ export class resizingConstraintEditor {
      */
     fixedToLeft(shapes: Shape[]) { // 调整选中图层靠左固定的值（靠左固定、取消靠左固定）
         try {
-            const api = this.__repo.start("fixedToLeft", {}); // start 修改数据必须通过api去修改
+            const api = this.__repo.start("fixedToLeft"); // start 修改数据必须通过api去修改
             for (let i = 0, l = shapes.length; i < l; i++) { // 对选中的图层挨个设置
                 const shape = shapes[i];
                 // 修改前的校验
@@ -59,7 +59,7 @@ export class resizingConstraintEditor {
 
     fixedToRight(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("fixedToRight", {});
+            const api = this.__repo.start("fixedToRight");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
@@ -79,7 +79,7 @@ export class resizingConstraintEditor {
 
     fixedToLR(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("fixedToLR", {});
+            const api = this.__repo.start("fixedToLR");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
@@ -99,7 +99,7 @@ export class resizingConstraintEditor {
 
     HorizontaljustifyCenter(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("HorizontaljustifyCenter", {});
+            const api = this.__repo.start("HorizontaljustifyCenter");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
@@ -119,7 +119,7 @@ export class resizingConstraintEditor {
 
     scaleByWidth(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("scaleByWidth", {});
+            const api = this.__repo.start("scaleByWidth");
 
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
@@ -140,7 +140,7 @@ export class resizingConstraintEditor {
 
     fixedToWidth(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("fixedToWidth", {});
+            const api = this.__repo.start("fixedToWidth");
 
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
@@ -161,7 +161,7 @@ export class resizingConstraintEditor {
 
     flexWidth(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("flexWidth", {});
+            const api = this.__repo.start("flexWidth");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
@@ -182,7 +182,7 @@ export class resizingConstraintEditor {
     // vertical
     fixedToTop(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("fixedToTop", {});
+            const api = this.__repo.start("fixedToTop");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
@@ -202,7 +202,7 @@ export class resizingConstraintEditor {
 
     fixedToBottom(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("fixedToBottom", {});
+            const api = this.__repo.start("fixedToBottom");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
@@ -222,7 +222,7 @@ export class resizingConstraintEditor {
 
     fixedToTB(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("fixedToTB", {});
+            const api = this.__repo.start("fixedToTB");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
@@ -242,7 +242,7 @@ export class resizingConstraintEditor {
 
     VerticaljustifyCenter(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("VerticaljustifyCenter", {});
+            const api = this.__repo.start("VerticaljustifyCenter");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
@@ -262,7 +262,7 @@ export class resizingConstraintEditor {
 
     scaleByHeight(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("VerticaljustifyCenter", {});
+            const api = this.__repo.start("VerticaljustifyCenter");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
@@ -282,7 +282,7 @@ export class resizingConstraintEditor {
 
     fixedToHeight(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("fixedToHeight", {});
+            const api = this.__repo.start("fixedToHeight");
 
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
@@ -303,7 +303,7 @@ export class resizingConstraintEditor {
 
     flexHeight(shapes: Shape[]) {
         try {
-            const api = this.__repo.start("flexHeight", {});
+            const api = this.__repo.start("flexHeight");
             for (let i = 0, l = shapes.length; i < l; i++) {
                 const shape = shapes[i];
                 if (this.disabled(shape)) {
