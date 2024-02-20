@@ -295,7 +295,7 @@ function modifyFrameForPath(api: Api, page: Page, shape: Shape, scaleX: number, 
     let y = shape.frame.y;
     let width = shape.frame.width;
     let height = shape.frame.height;
-    const resizingConstraint = shape.resizingConstraint || ResizingConstraints2.Default;
+    const resizingConstraint = shape.resizingConstraint!;
 
     if (!shape.isNoTransform() && resizingConstraint !== ResizingConstraints2.Default) {
         const boundingBox = resetTransformForPath(api, page, shape as PathShape);
@@ -312,7 +312,7 @@ function modifyFrameForPath(api: Api, page: Page, shape: Shape, scaleX: number, 
 
 function modifyFrameForRect(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame) {
     const f = shape.frame;
-    const resizingConstraint = shape.resizingConstraint || ResizingConstraints2.Default;
+    const resizingConstraint = shape.resizingConstraint!;
 
     // 即使有transform也不用特别处理，应直接忽略transform，因为这类场景不可以摆正
     const { x, y, width, height } = fixConstrainFrame(resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame);
