@@ -1065,6 +1065,9 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         });
         return ret
     })()
+    if (source.overrideFills !== undefined) ret.overrideFills = source.overrideFills
+    if (source.overrideBorders !== undefined) ret.overrideBorders = source.overrideBorders
+    if (source.overrideShadows !== undefined) ret.overrideShadows = source.overrideShadows
     // inject code
     if (ctx?.document) {
         ret.setSymbolMgr(ctx.document.symbolsMgr);

@@ -23,6 +23,15 @@
             "value": {
                 "$ref": "./variable.json"
             }
+        },
+        "overrideFills": {
+            "type": "boolean"
+        },
+        "overrideBorders": {
+            "type": "boolean"
+        },
+        "overrideShadows": {
+            "type": "boolean"
         }
     },
     "required": [

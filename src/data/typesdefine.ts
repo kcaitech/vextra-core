@@ -31,7 +31,7 @@ export enum VariableType {
     Style = 'style',
     ContextSettings = 'contextSettings',
     Table = 'table',
-    BorderStyle = 'borderStyle',
+    BorderOptions = 'borderOptions',
 }
 /* user infomation */
 export type UserInfo = {
@@ -264,7 +264,7 @@ export enum OverrideType {
     SymbolID = 'symbolID',
     ContextSettings = 'contextSettings',
     Table = 'table',
-    BorderStyle = 'borderStyle',
+    BorderOptions = 'borderOptions',
 }
 /* marker type */
 export enum MarkerType {
@@ -587,6 +587,9 @@ export type SymbolRefShape = Shape & {
     refId: string
     overrides?: Map<string, string>
     variables: Map<string, Variable>
+    overrideFills?: boolean
+    overrideBorders?: boolean
+    overrideShadows?: boolean
 }
 /* span attr */
 export type Span = SpanAttr & {

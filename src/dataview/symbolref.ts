@@ -1,9 +1,9 @@
-import { OverrideType, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
+import { Border, BorderOptions, ContextSettings, Fill, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
 import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
 import { fixFrameByConstrain, isDiffRenderTransform, isDiffVarsContainer, isNoTransform } from "./shape";
-import { RenderTransform, getShapeViewId } from "./basic";
+import { RenderTransform, findOverrideAndVar, getShapeViewId } from "./basic";
 import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
@@ -423,19 +423,38 @@ export class SymbolRefView extends ShapeView {
         throw new Error("Method not implemented.");
     }
 
+    get contextSettings(): ContextSettings | undefined {
+        const v = this._findOV(OverrideType.ContextSettings, VariableType.ContextSettings);
+        if (v) return v.value;
+        if (this.m_data.style.contextSettings) return this.m_data.style.contextSettings;
+        return this.m_sym?.style.contextSettings;
+    }
 
-    protected renderProps(): { [key: string]: string; } {
-        const props = super.renderProps() as any;
-        if (!this.m_sym) return props;
-        const contextSettings = this.m_sym.style.contextSettings;
-        if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
-            if (props.opacity !== undefined) {
-                props.opacity = props.opacity * contextSettings.opacity;
-            }
-            else {
-                props.opacity = contextSettings.opacity;
-            }
-        }
-        return props;
+    getFills(): Fill[] {
+        const v = this._findOV(OverrideType.Fills, VariableType.Fills);
+        if (v) return v.value;
+        if (this.data.overrideFills) return this.data.style.fills;
+        return this.m_sym?.style.fills || [];
+    }
+
+    getBorders(): Border[] {
+        const v = this._findOV(OverrideType.Borders, VariableType.Borders);
+        if (v) return v.value;
+        if (this.data.overrideBorders) return this.data.style.borders;
+        return this.m_sym?.style.borders || [];
+    }
+
+    getBorderOptions(): BorderOptions | undefined {
+        const v = this._findOV(OverrideType.BorderOptions, VariableType.BorderOptions);
+        if (v) return v.value;
+        if (this.data.style.borderOptions) return this.data.style.borderOptions;
+        return this.m_sym?.style.borderOptions;
+    }
+
+    getShadows(): Shadow[] {
+        const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
+        if (v) return v.value;
+        if (this.data.overrideShadows) return this.data.style.shadows;
+        return this.m_sym?.style.shadows || [];
     }
 }

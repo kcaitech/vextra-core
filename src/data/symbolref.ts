@@ -25,7 +25,9 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
     variables: BasicMap<string, Variable>
-
+    overrideFills?: boolean
+    overrideBorders?: boolean
+    overrideShadows?: boolean
     // __childs?: Shape[];
 
     constructor(
@@ -128,8 +130,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             case OverrideType.Variable:
                 const _val = value as Variable;
                 return _val;
-            case OverrideType.BorderStyle:
-                return new Variable(uuid(), classes.VariableType.BorderStyle, "", value);
+            case OverrideType.BorderOptions:
+                return new Variable(uuid(), classes.VariableType.BorderOptions, "", value);
             case OverrideType.ContextSettings:
                 return new Variable(uuid(), classes.VariableType.ContextSettings, "", value);
             case OverrideType.Shadows:
@@ -169,7 +171,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             case OverrideType.Visible:
             case OverrideType.Lock:
             case OverrideType.SymbolID:
-            case OverrideType.BorderStyle:
+            case OverrideType.BorderOptions:
             case OverrideType.ContextSettings:
             case OverrideType.Shadows:
             case OverrideType.Table:

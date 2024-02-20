@@ -1,5 +1,5 @@
 import { innerShadowId, renderBorders, renderFills, renderShadows } from "../render";
-import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape, Fill, Border, Shadow } from "../data/classes";
+import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, SymbolShape, Shape, CurvePoint, Point2D, Path, PathShape, Fill, Border, Shadow, BorderStyle } from "../data/classes";
 import { findOverrideAndVar } from "./basic";
 import { RenderTransform } from "./basic";
 import { EL, elh } from "./el";
@@ -9,6 +9,7 @@ import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { BasicArray } from "../data/basic";
+import { BorderOptions } from "data/typesdefine";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -403,6 +404,11 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.borders;
     }
 
+    getBorderOptions(): BorderOptions | undefined {
+        const v = this._findOV(OverrideType.BorderOptions, VariableType.BorderOptions);
+        return v ? v.value : this.m_data.style.borderOptions;
+    }
+
     getShadows(): Shadow[] {
         const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
         return v ? v.value : this.m_data.style.shadows;
@@ -697,12 +703,11 @@ export class ShapeView extends DataView {
     }
 
     protected renderProps(): { [key: string]: string } {
-        const shape = this.m_data;
         const frame = this.frame;
         // const path = this.getPath(); // cache
         const props: any = {}
 
-        const contextSettings = shape.style.contextSettings;
+        const contextSettings = this.contextSettings;
         if (contextSettings && (contextSettings.opacity ?? 1) !== 1) {
             props.opacity = contextSettings.opacity;
         }

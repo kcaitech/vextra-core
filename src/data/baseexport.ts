@@ -985,6 +985,9 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
             });
             return ret;
         })(),
+        overrideFills: source.overrideFills,
+        overrideBorders: source.overrideBorders,
+        overrideShadows: source.overrideShadows,
     }
     // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);

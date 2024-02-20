@@ -961,6 +961,9 @@ export class SymbolRefShape extends Shape {
     refId: string
     overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
+    overrideFills?: boolean
+    overrideBorders?: boolean
+    overrideShadows?: boolean
     constructor(
         crdtidx: BasicArray<number >,
         id: string,
