@@ -30,8 +30,8 @@ function apply(document: Document, text: Text, op: ArrayOp) {
                 const paraAttr = op.text.props?.paraAttr ? importParaAttr(op.text.props?.paraAttr) : undefined;
                 text.insertText(op.text.text, op.start, { attr, paraAttr });
             } else if (op.text.type === "complex") {
-                const text = importText(op.text.text, ctx)
-                text.insertFormatText(text, op.start);
+                const _text = importText(op.text.text, ctx)
+                text.insertFormatText(_text, op.start);
             } else {
                 throw new Error("not valid text insert op");
             }
@@ -143,7 +143,9 @@ function getOpTarget(op: ArrayOp) {
 function unapply(document: Document, op: ArrayOp) {
     const ret: ArrayOp[] = [];
     const rop = revertOp(op);
-    if (Array.isArray(rop)) {
+    if (rop instanceof ArrayOpSelection) {
+        ret.push(rop);
+    } else if (Array.isArray(rop)) {
         const text = getOpTarget(op);
         for (let i = 0; i < rop.length; ++i) {
             const op = rop[i];
@@ -296,7 +298,7 @@ export class TextRepoNode extends RepoNode {
                 } else {
                     const idx = op.cmd.ops.indexOf(op.op);
                     if (idx < 0) throw new Error();
-                    op.cmd.ops.splice(idx, 1);
+                    op.cmd.ops.splice(idx, 1); // 选区过滤掉了
                     this.localops.splice(i, 1);
                     --i;
                 }
@@ -309,6 +311,8 @@ export class TextRepoNode extends RepoNode {
         }
 
         if (selectionOp) this.selection?.restoreText(selectionOp);
+
+        // console.log("receive", this.localops.slice(0))
     }
     receiveLocal(ops: OpItem[]) {
         // check
@@ -319,18 +323,35 @@ export class TextRepoNode extends RepoNode {
             const op2 = this.localops.shift();
             if (!op2) throw new Error();
             // check
-            if (op.cmd.id !== op2?.cmd.id) throw new Error("op not match");
-            this.ops.push(op2);
+            if (op.cmd.id !== op2?.cmd.id) {
+                console.log(ops, op2, this.localops);
+                throw new Error("op not match");
+            }
             if ((op2.op as ArrayOp).type1 === ArrayOpType.Selection) continue;
+            this.ops.push(op2);
             ++i;
         }
+        while(this.localops.length > 0 && this.localops[0].cmd.id === ops[ops.length - 1].cmd.id) {
+            const op2 = this.localops.shift();
+            if (!op2) throw new Error();
+            if (!((op2.op as ArrayOp).type1 === ArrayOpType.Selection)) throw new Error("op not match");
+        }
+        // console.log("receiveLocal", ops)
     }
     commit(ops: OpItem[]) {
         this.localops.push(...ops);
+        // console.log("commit", this.localops.slice(0))
     }
+
+    // todo
+    // undo时由外面cmds自行记录前置cmds，在redo时进行变换
+
     _popLocal(ops: OpItem[]) { // todo 这些也是要参与变换的，在redo的时候才不会错
         // check
-        if (this.localops.length < ops.length) throw new Error();
+        if (this.localops.length < ops.length) {
+            console.log(this.localops, ops);
+            throw new Error();
+        }
         const cmd = ops[0].cmd;
         const item: { cmd: Cmd, ops: ArrayOp[], otpath: OpItem[], refIdx: number } = { cmd, ops: [], otpath: [], refIdx: this.ops.length - 1 }
         for (let i = ops.length - 1; i >= 0; i--) {
@@ -342,6 +363,7 @@ export class TextRepoNode extends RepoNode {
         }
         item.otpath = this.localops.slice(0);
         this.popedOps.push(item);
+        // console.log("_popLocal", this.localops.slice(0))
     }
     dropOps(ops: OpItem[]): void {
         // 这里的ops也有可能是新的需要上传的ops
@@ -352,21 +374,25 @@ export class TextRepoNode extends RepoNode {
     undo(ops: OpItem[], receiver?: Cmd) { // 自己popLocal & 自己commit ?
         if (ops.length === 0) throw new Error();
         // check 一次只有一个cmd
+        let realOpCount = 0;
         for (let i = 1; i < ops.length; i++) {
             if (ops[i].cmd !== ops[0].cmd) throw new Error("not single cmd");
+            const type = (ops[i].op as ArrayOp).type1;
+            if (type !== ArrayOpType.Selection) ++realOpCount;
         }
-        // const saveops: Op[] | undefined = (!receiver) ? ops.map(op => op.op) : undefined;
 
-        const curops: OpItem[] = this.ops.concat(...this.localops);
-        if (curops.length === 0) throw new Error();
-        if (curops.length < ops.length) throw new Error();
+        const curops: OpItem[] = this.ops.concat(...this.localops.filter((op) => ((op.op as ArrayOp).type1 !== ArrayOpType.Selection)));
+        if (curops.length === 0) throw new Error(); // todo 是可能的。在组件的变量编辑时，记录的是override前的变量的selection位置，当前节点可能只有一个selectionop。但这会出问题
+        if (curops.length < realOpCount) throw new Error();
 
         // 需要变换
-        const index = ((curops as any/* 这里神奇的编译报错 */).findLastIndex((v: OpItem) => (v.cmd.id === ops[0].cmd.id))) - ops.length + 1;
+        const index = ((curops as any/* 这里神奇的编译报错 */).findLastIndex((v: OpItem) => (v.cmd.id === ops[0].cmd.id))) - realOpCount + 1;
         if (index < 0) throw new Error("not find ops");
         // check
-        for (let i = 0; i < ops.length; i++) {
-            if (curops[index + i].cmd.id !== ops[0].cmd.id) throw new Error("cmd");
+        for (let i = 0; i < realOpCount; i++) {
+            if (curops[index + i].cmd.id !== ops[0].cmd.id) {
+                throw new Error("cmd");
+            }
         }
         // revert
         let revertops = ops.map((item) => {
@@ -379,12 +405,12 @@ export class TextRepoNode extends RepoNode {
             else res.push(op);
             return res;
         }, [] as ArrayOp[]);
-        const cur = curops.slice(index + ops.length).map(op => op.op) as ArrayOp[];
+        const cur = curops.slice(index + realOpCount).map(op => op.op) as ArrayOp[];
         if (cur.length > 0) {
             const { lhs, rhs } = transform(cur, revertops);
             revertops = rhs;
         }
-        const record = revertops.map((op: ArrayOp) => (op as any).target ? apply(this.document, (op as any).target, op) || op : op);
+        const record = revertops.map((op: ArrayOp) => (op as any).target ? (apply(this.document, (op as any).target, op) || op) : op);
         // update to ops
         if (receiver) {
             // todo transform popedops
@@ -393,15 +419,14 @@ export class TextRepoNode extends RepoNode {
         } else {
             // todo 需要记录ot path
             this._popLocal(ops);
-            // replace op
-            // for (let i = 0; i < ops.length; i++) {
-            //     const op = ops[i];
-            //     const saveop = saveops![i];
-            //     const idx = op.cmd.ops.indexOf(saveop);
-            //     if (idx < 0) throw new Error();
-            //     op.cmd.ops.splice(idx, 1);
-            // }
-            // ops[0].cmd.ops.push(...record);
+            // replace op // 不替换，在redo时可以直接应用 // 不替换选区不对
+            for (let i = 0; i < ops.length; i++) {
+                const op = ops[i];
+                const idx = op.cmd.ops.indexOf(op.op);
+                if (idx < 0) throw new Error();
+                op.cmd.ops.splice(idx, 1);
+            }
+            ops[0].cmd.ops.push(...record);
         }
     }
     redo(ops: OpItem[], receiver?: Cmd) {
@@ -411,7 +436,8 @@ export class TextRepoNode extends RepoNode {
         // 2. undo时pop出去的ops，根据otpath进行变换后应用
 
         // 情况1 ops在localops中 或者 cmd 已经提交
-        if (receiver || this.localops.length > 0 && ops[0].cmd === this.localops[this.localops.length - 1].cmd) {
+        if (receiver /*|| this.localops.length > 0 && ops[0].cmd === this.localops[this.localops.length - 1].cmd*/) {
+            // console.log("redo - undo")
             return this.undo(ops, receiver);
         }
 
@@ -430,19 +456,16 @@ export class TextRepoNode extends RepoNode {
         const item = this.popedOps.splice(itemIdx, 1)[0];
         if (!item) throw new Error("not find ops");
 
-        // ops.reverse();
-        const saveops = ops.map(op => op.op as ArrayOp);
-
-        // let revertops = ops.map(revert).reduce((res, op) => {
-        //     if (Array.isArray(op)) res.push(...op.slice(0).reverse());
-        //     else res.push(op);
-        //     return res;
-        // }, [] as ArrayOp[]);
+        const revertops = ops.map(revert).reduce((res, op) => {
+            if (Array.isArray(op)) res.push(...op.slice(0).reverse());
+            else res.push(op);
+            return res;
+        }, [] as ArrayOp[]).reverse();
 
         // 开始变换
         const curops: OpItem[] = this.ops.slice(item.refIdx + 1).concat(...this.localops);
         const otpath = item.otpath;
-        let lhs = otpath.map(item => item.op as ArrayOp).concat(...saveops);
+        let lhs = otpath.map(item => item.op as ArrayOp).concat(...revertops);
         for (let i = 0; i < otpath.length; i++) {
             const c = otpath[i].cmd;
             const idx = curops.findIndex((v) => v.cmd === c);
@@ -469,7 +492,7 @@ export class TextRepoNode extends RepoNode {
             lhs = t.lhs;
         }
 
-        if (lhs.length !== ops.length) throw new Error();
+        if (lhs.length !== revertops.length) throw new Error();
         const text: Text = this.getOpTarget(ops[0].op.path); // todo text 是string的情况？
         const record = text ? lhs.map((op) => apply(this.document, text, op) || op) : lhs;
         // update to ops
@@ -477,8 +500,7 @@ export class TextRepoNode extends RepoNode {
         // replace op
         for (let i = 0; i < ops.length; i++) {
             const op = ops[i];
-            const saveop = saveops![i];
-            const idx = op.cmd.ops.indexOf(saveop);
+            const idx = op.cmd.ops.indexOf(op.op);
             if (idx < 0) throw new Error();
             op.cmd.ops.splice(idx, 1);
         }

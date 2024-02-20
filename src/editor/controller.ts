@@ -957,7 +957,7 @@ export class Controller {
 
                 const points = [p[0], p[p.length - 1]];
                 for (let i = 0, len = points.length; i < len; i++) {
-                    const p = importCurvePoint(exportCurvePoint(points[i]));
+                    const p = importCurvePoint((points[i]));
                     p.id = v4();
                     points[i] = p;
                 }

@@ -15,7 +15,7 @@ export interface ICoopNet {
      * @param from 起始id
      * @param to 结束id（包含）
      */
-    pullCmds(from: string, to: string): Promise<Cmd[]>;
+    pullCmds(from: string, to?: string): Promise<Cmd[]>;
 
     /**
      * 
@@ -29,5 +29,4 @@ export interface ICoopNet {
      */
     watchCmds(watcher: (cmds: Cmd[]) => void): void;
 
-    getWatcherList(): ((cmds: Cmd[]) => void)[];
 }

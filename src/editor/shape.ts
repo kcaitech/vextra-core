@@ -15,12 +15,10 @@ import { Border, BorderPosition, BorderStyle, Fill, MarkerType, Shadow } from ".
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { BoolOp, CurvePoint, ExportFormat } from "../data/baseclasses";
 import { Artboard } from "../data/artboard";
-import { createHorizontalBox } from "../basic/utils";
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
 import { CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme } from "../data/typesdefine";
 import { Api } from "./coop/recordapi";
-import { exportCurvePoint } from "../data/baseexport";
 import { importBorder, importCurvePoint, importFill } from "../data/baseimport";
 import { v4 } from "uuid";
 import { ContactShape } from "../data/contact";
@@ -1455,7 +1453,7 @@ export class ShapeEditor {
             api.deletePoints(this.__page, shape, 0, len);
 
             for (let i = 0, len = points.length; i < len; i++) {
-                const p = importCurvePoint(exportCurvePoint(points[i]));
+                const p = importCurvePoint((points[i]));
                 p.id = v4();
                 points[i] = p;
             }

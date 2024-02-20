@@ -3,18 +3,16 @@ import { Document } from "../../data/document";
 import { Repository } from "../../data/transact";
 import { Api } from "./recordapi";
 import { Page } from "../../data/page";
-import { ISave4Restore, LocalCmd, cloneSelectionState, isDiffSelectionState, isDiffStringArr } from "./localcmd";
+import { CmdMergeType, ISave4Restore, LocalCmd, cloneSelectionState, isDiffSelectionState, isDiffStringArr } from "./localcmd";
 import { CmdRepo } from "./cmdrepo";
 import { Cmd } from "../../coop/common/repo";
 import { ICoopNet } from "./net";
-import { Op } from "../../coop/common/op";
 import { transform } from "../../coop/client/arrayoptransform";
 import { ArrayOp, ArrayOpSelection } from "coop/client/arrayop";
+import { Text } from "../../data/text";
 
 
 class MockNet implements ICoopNet {
-    private watcherList: ((cmds: Cmd[]) => void)[] = [];
-
     hasConnected(): boolean {
         return false;
     }
@@ -25,11 +23,7 @@ class MockNet implements ICoopNet {
         return false;
     }
     watchCmds(watcher: (cmds: Cmd[]) => void): void {
-        this.watcherList.push(watcher);
-    }
 
-    getWatcherList(): ((cmds: Cmd[]) => void)[] {
-        return this.watcherList;
     }
 }
 
@@ -85,6 +79,14 @@ export class CoopRepository {
         this.__cmdrepo.setNet(net);
     }
 
+    public setBaseVer(baseVer: string) {
+        this.__cmdrepo.setBaseVer(baseVer);
+    }
+
+    public setProcessCmdsTrigger(trigger: () => void) {
+        this.__cmdrepo.setProcessCmdsTrigger(trigger);
+    }
+
     public receive(cmds: Cmd[]) {
         this.__cmdrepo.receive(cmds);
     }
@@ -118,8 +120,8 @@ export class CoopRepository {
         try {
             this.__repo.transactCtx.settrap = false;
             const cmd = this.__cmdrepo.undo();
-            this.__repo.commit();
             if (cmd && this.selection) cmd.selectionupdater(this.selection, true, cmd);
+            this.__repo.commit();
         } catch(e) {
             this.__repo.rollback();
             throw e;
@@ -134,8 +136,8 @@ export class CoopRepository {
         try {
             this.__repo.transactCtx.settrap = false;
             const cmd = this.__cmdrepo.redo();
-            this.__repo.commit();
             if (cmd && this.selection) cmd.selectionupdater(this.selection, false, cmd);
+            this.__repo.commit();
         } catch(e) {
             this.__repo.rollback();
             throw e;
@@ -149,15 +151,19 @@ export class CoopRepository {
     canRedo() {
         return this.__cmdrepo.canRedo();
     }
-    start(name: string, selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void = defaultSU): Api {
-        this.__repo.start(name);
-        this.__api.start(this.selection?.save(), selectionupdater);
+    start(description: string, selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void = defaultSU): Api {
+        this.__repo.start(description);
+        this.__api.start(this.selection?.save(), selectionupdater, description);
         return this.__api;
+    }
+    updateTextSelection(text: Text) {
+        const path = text?.getCrdtPath() || [];
+        this.__api.updateTextSelection(this.selection?.saveText(path));
     }
     isNeedCommit(): boolean {
         return this.__api.isNeedCommit();
     }
-    commit() {
+    commit(mergetype: CmdMergeType = CmdMergeType.None) {
         if (!this.isNeedCommit()) {
             this.rollback("commit");
             return;
@@ -166,7 +172,7 @@ export class CoopRepository {
         if (transact === undefined) {
             throw new Error("not inside transact!");
         }
-        const cmd = this.__api.commit();
+        const cmd = this.__api.commit(mergetype);
         if (!cmd) throw new Error("no cmd to commit")
         this.__repo.commit();
         if (!this.__initingDoc) this.__cmdrepo.commit(cmd);

@@ -31,7 +31,7 @@ import { LocalCmd as Cmd, CmdMergeType, ISave4Restore, LocalCmd, SelectionState 
 import { IdOpRecord } from "../../coop/client/crdt";
 import { Repository } from "../../data/transact";
 import { SNumber } from "../../coop/client/snumber";
-import { log } from "console";
+import { ArrayOpSelection } from "../../coop/client/arrayop";
 
 // 要支持variable的修改
 type TextShapeLike = Shape & { text: Text }
@@ -81,13 +81,12 @@ export class Api {
 
     start(saveselection: SelectionState | undefined, 
         selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void, 
-        description: string = "", 
-        mergetype: CmdMergeType = CmdMergeType.Others) {
+        description: string = "") {
         // todo 添加selection op
         this.cmd = {
             id: "",
             // mergeable: true,
-            mergetype,
+            mergetype: CmdMergeType.None,
             delay: 500,
             version: SNumber.MAX_SAFE_INTEGER,
             previousVersion: "",
@@ -103,6 +102,9 @@ export class Api {
         };
         this.needUpdateFrame.length = 0;
     }
+    updateTextSelection(op: ArrayOpSelection | undefined) {
+        if (this.cmd?.saveselection) this.cmd.saveselection.text = op;
+    }
     isNeedCommit(): boolean {
         return this.cmd !== undefined && this.cmd.ops.length > 0;
     }
@@ -110,11 +112,12 @@ export class Api {
         this.cmd = undefined;
         this.needUpdateFrame.length = 0;
     }
-    commit(): Cmd | undefined {
+    commit(mergetype: CmdMergeType = CmdMergeType.None): Cmd | undefined {
         const cmd = this.cmd;
         if (!cmd || cmd.ops.length === 0) return undefined;
         cmd.id = uuid();
         cmd.time = Date.now();
+        cmd.mergetype = mergetype;
         if (this.needUpdateFrame.length > 0) {
             // todo 不同page
             const update = this.needUpdateFrame.slice(0);

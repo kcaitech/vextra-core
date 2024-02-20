@@ -193,7 +193,7 @@ export class CrdtIdRepoNode extends RepoNode {
     dropOps(ops: OpItem[]): void {
     }
     undo(ops: OpItem[], receiver?: Cmd) {
-        if (ops.length === 0) throw new Error();
+        if (ops.length !== 1) throw new Error(JSON.stringify(ops, (k, v) => k.startsWith('__')));
         const op0 = ops[0].op as IdOpRecord;
         const target = op0.target; // this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
         const rop = revert(op0);
@@ -210,7 +210,7 @@ export class CrdtIdRepoNode extends RepoNode {
         }
     }
     redo(ops: OpItem[], receiver?: Cmd) {
-        if (ops.length === 0) throw new Error();
+        if (ops.length !== 1) throw new Error(JSON.stringify(ops, (k, v) => k.startsWith('__')));
         const op0 = ops[0].op;
         // 没有target也要保证op正确
         const target = this.getOpTarget(op0.path.slice(0, op0.path.length - 1));
