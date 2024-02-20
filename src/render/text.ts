@@ -159,9 +159,11 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                     if (span.italic) style['font-style'] = "italic";
                     if (span.gradient && span.fillType === FillType.Gradient && frame) {
                         const g_ = renderGradient(h, span.gradient as Gradient, frame);
+                        const opacity = span.gradient.gradientOpacity;
                         if (g_.node) linechilds.push(g_.node);
                         const gid = g_.id;
-                        if (span.color) style['fill'] = "url(#" + gid + ")";
+                        style['fill'] = "url(#" + gid + ")";
+                        style['fill-opacity'] = opacity === undefined ? 1 : opacity;
                     } else {
                         if (span.color) style['fill'] = toRGBA(span.color);
                     }
@@ -171,17 +173,18 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
                     if (span && span.gradient && span.fillType === FillType.Gradient && frame) {
                         const g_ = renderGradient(h, span.gradient as Gradient, frame);
                         if (g_.style) {
+                            const opacity = span.gradient.gradientOpacity;
                             const id = "clippath-fill-" + objectId(span.gradient) + randomId();
                             const cp = h("clipPath", { id }, [h('text', { x: gX.join(' '), y, style, "clip-rule": "evenodd" }, gText.join(''))]);
                             linechilds.push(cp);
                             linechilds.push(h("foreignObject", {
                                 width: textlayout.contentWidth, height: textlayout.contentHeight, x: xOffset, y: yOffset,
                                 "clip-path": "url(#" + id + ")",
+                                opacity: opacity === undefined ? 1 : opacity
                             },
                                 h("div", { width: "100%", height: "100%", style: g_.style })));
                         } else {
                             linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join(''),));
-
                         }
                     } else {
                         linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join(''),));

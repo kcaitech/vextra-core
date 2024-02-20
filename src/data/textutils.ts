@@ -1,6 +1,7 @@
+import { gradient_equals } from "../io/cilpboard";
 import { importParaAttr, importTextAttr } from "./baseimport";
 import { BasicArray } from "./basic";
-import { BulletNumbers, Color } from "./classes";
+import { BulletNumbers, Color, Gradient } from "./classes";
 import { Para, SpanAttr, ParaAttr, Text, TextAttr, SpanAttrSetter, ParaAttrSetter, Span } from "./text";
 
 export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
@@ -61,7 +62,16 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (!!attr.placeholder !== !!span.placeholder) {
         return true;
     }
+
     if(attr.fillType !== span.fillType) {
+        return true;
+    }
+
+    if (attr.gradient) {
+        if (!span.gradient) return true;
+        if (!(gradient_equals(span.gradient, attr.gradient))) return true;
+    }
+    else if (span.gradient) {
         return true;
     }
 
@@ -200,6 +210,7 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
             }
         }
     }
+
     if (attr.fillType) {
         if (!span.fillType || attr.fillType !== span.fillType) {
             span.fillType = attr.fillType;
@@ -207,6 +218,16 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, attrIsSetter: boolean, i
         }
     } else if (attrIsSetter && (attr as SpanAttrSetter).fillTypeIsSet && span.fillType) {
         span.fillType = undefined;
+        changed = true;
+    }
+
+    if (attr.gradient) {
+        if (!span.gradient || !(gradient_equals(span.gradient, attr.gradient))) {
+            span.gradient = new Gradient(attr.gradient.from, attr.gradient.to, attr.gradient.gradientType, attr.gradient.stops, attr.gradient.elipseLength, attr.gradient.gradientOpacity)
+            changed = true;
+        }
+    } else if (attrIsSetter && (attr as SpanAttrSetter).gradientIsSet && span.gradient) {
+        span.gradient = undefined;
         changed = true;
     }
 

@@ -35,8 +35,8 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         body_props['opacity'] = border.color.alpha;
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, shape.frame);
-        const opacity = border.gradient?.gradientOpacity || 1;
-        body_props.opacity = opacity;
+        const opacity = border.gradient?.gradientOpacity;
+        body_props.opacity = opacity === undefined ? 1 : opacity;
         body_props.stroke = "url(#" + g_.id + ")";
     }
     if ((endMarkerType && endMarkerType !== MarkerType.Line) || (startMarkerType && startMarkerType !== MarkerType.Line)) {
@@ -73,7 +73,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
 
 function angular_handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.thickness;
-    const opacity = border.gradient?.gradientOpacity || 1;
+    const opacity = border.gradient?.gradientOpacity;
     const g_ = renderGradient(h, border.gradient as Gradient, shape.frame);
     const gStyle = g_.style;
     const id = "mask-line-" + objectId(border) + randomId();
@@ -93,7 +93,7 @@ function angular_handler(h: Function, style: Style, border: Border, path: string
     elArr.push(h("foreignObject", {
         width: frame.width + thickness, height: frame.height + thickness, x: -thickness / 2, y: -thickness / 2,
         mask: "url(#" + id + ")",
-        opacity: opacity
+        opacity: opacity === undefined ? 1 : opacity
     },
         h("div", { width: "100%", height: "100%", style: gStyle })));
     if ((endMarkerType && endMarkerType !== MarkerType.Line) || (startMarkerType && startMarkerType !== MarkerType.Line)) {

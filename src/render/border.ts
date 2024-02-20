@@ -18,7 +18,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
     const width = frame.width;
     const height = frame.height;
     const g_ = renderGradient(h, border.gradient as Gradient, frame);
-    const opacity = border.gradient?.gradientOpacity || 1;
+    const opacity = border.gradient?.gradientOpacity;
     return h("g", [
 
         h("mask", {
@@ -42,7 +42,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame,
                 stroke: "white",
                 'stroke-width': 2 * thickness,
                 "clip-path": "url(#" + clipId + ")",
-                opacity: opacity
+                opacity: opacity === undefined ? 1 : opacity
             })
         ]),
 
@@ -69,7 +69,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
     const y = -thickness / 2;
     const width = frame.width + thickness;
     const height = frame.height + thickness;
-    const opacity = border.gradient?.gradientOpacity || 1;
+    const opacity = border.gradient?.gradientOpacity;
     return h("g", [
         h("mask", {
             id: maskId,
@@ -84,7 +84,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame
                 d: path,
                 stroke: "white",
                 'stroke-width': thickness,
-                opacity: opacity
+                opacity: opacity === undefined ? 1 : opacity
             })
         ]),
         h("foreignObject", {
@@ -110,7 +110,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
     const rId = randomId();
     const mask1Id = "mask1-border" + objectId(border) + rId;
     const mask2Id = "mask2-border" + objectId(border) + rId;
-    const opacity = border.gradient?.gradientOpacity || 1;
+    const opacity = border.gradient?.gradientOpacity;
     return h("g", [
         h("mask", {
             id: mask2Id,
@@ -133,7 +133,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame,
                 stroke: "white",
                 'stroke-width': 2 * thickness,
                 mask: "url(#" + mask1Id + ")",
-                opacity: opacity
+                opacity: opacity === undefined ? 1 : opacity
             })
         ]),
         h("foreignObject", {
@@ -171,8 +171,8 @@ handler[BorderPosition.Inner] = function (h: Function, frame: ShapeFrame, border
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
-        const opacity = border.gradient?.gradientOpacity || 1;
-        body_props.opacity = opacity;
+        const opacity = border.gradient?.gradientOpacity;
+        body_props.opacity = opacity === undefined ? 1 : opacity;
         body_props.stroke = "url(#" + g_.id + ")";
     }
 
@@ -211,8 +211,8 @@ handler[BorderPosition.Center] = function (h: Function, frame: ShapeFrame, borde
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
-        const opacity = border.gradient?.gradientOpacity || 1;
-        body_props.opacity = opacity;
+        const opacity = border.gradient?.gradientOpacity;
+        body_props.opacity = opacity === undefined ? 1 : opacity;
         body_props.stroke = "url(#" + g_.id + ")";
     }
     const body = h('path', body_props);
@@ -244,8 +244,8 @@ handler[BorderPosition.Outer] = function (h: Function, frame: ShapeFrame, border
         body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
-        const opacity = border.gradient?.gradientOpacity || 1;
-        body_props.opacity = opacity;
+        const opacity = border.gradient?.gradientOpacity;
+        body_props.opacity = opacity === undefined ? 1 : opacity;
         body_props.stroke = "url(#" + g_.id + ")";
     }
 

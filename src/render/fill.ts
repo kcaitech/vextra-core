@@ -23,7 +23,7 @@ handler[FillType.SolidColor] = function (h: Function, frame: ShapeFrame, fill: F
 }
 
 handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fill, path: string): any {
-    const opacity = fill.gradient?.gradientOpacity || 1;
+    const opacity = fill.gradient?.gradientOpacity;
     const elArr = new Array();
     const g_ = renderGradient(h, fill.gradient as Gradient, frame);
     if (g_.node) {
@@ -38,7 +38,7 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fil
         elArr.push(h("foreignObject", {
             width: frame.width, height: frame.height, x: 0, y: 0,
             "clip-path": "url(#" + id + ")",
-            opacity: opacity
+            opacity: opacity === undefined ? 1 : opacity
         },
             h("div", { width: "100%", height: "100%", style: gStyle })));
     }
@@ -46,7 +46,7 @@ handler[FillType.Gradient] = function (h: Function, frame: ShapeFrame, fill: Fil
         elArr.push(h('path', {
             d: path,
             fill: "url(#" + gid + ")",
-            "fill-opacity": opacity,
+            "fill-opacity": opacity === undefined ? 1 : opacity,
             stroke: 'none',
             'stroke-width': 0,
             "fill-rule": "evenodd",

@@ -3,8 +3,8 @@ import { Para, AttrGetter, Span, SpanAttr, Text, ParaAttr, UnderlineType, Strike
 import { _travelTextPara } from "./texttravel";
 import { mergeParaAttr, mergeSpanAttr } from "./textutils";
 import { Color } from "./color";
-import { FillType, Gradient, GradientType, Stop } from "./style";
-import { Point2D } from "./classes";
+import { FillType } from "./style";
+import { gradient_equals } from "../io/cilpboard";
 export function getSimpleText(shapetext: Text, index: number, length: number): string {
     let text = '';
     _travelTextPara(shapetext.paras, index, length, (paraArray, paraIndex, para, index, length) => {
@@ -33,25 +33,7 @@ export function getTextWithFmt(shapetext: Text, index: number, length: number): 
 }
 
 const _NullColor = new Color(1, 0, 0, 0);
-export const gradient_equals = (a: Gradient, b: Gradient) => {
-    if (a.gradientType !== b.gradientType || a.elipseLength !== b.elipseLength || a.gradientOpacity !== b.gradientOpacity) {
-        return false;
-    }
-    if (a.from.x !== b.from.x || a.from.y !== b.from.y || a.to.x !== b.to.x || a.to.y !== b.to.y) {
-        return false;
-    }
-    if (a.stops.length !== b.stops.length) {
-        return false;
-    }
-    for (let i = 0; i < a.stops.length; i++) {
-        const stop1 = a.stops[i];
-        const stop2 = b.stops[i];
-        if (stop1.position !== stop2.position || !(stop1.color as Color).equals(stop2.color as Color)) {
-            return false;
-        }
-    }
-    return true;
-}
+
 function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAttr | undefined, textAttr: TextAttr | undefined) {
     const color = attr.color ?? (paraAttr?.color) ?? (textAttr?.color) ?? _NullColor;
     if (attrGetter.color === undefined) {
@@ -71,7 +53,9 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
     const gradient = attr.gradient ?? (paraAttr?.gradient) ?? (textAttr?.gradient) ?? undefined;
     if (attrGetter.gradient === undefined) {
         attrGetter.gradient = gradient;
-    }else if (gradient === undefined || !gradient_equals(attrGetter.gradient, gradient)) {
+    } else if (gradient === undefined) {
+        attrGetter.gradientIsMulti = true;
+    } else if (!gradient_equals(attrGetter.gradient, gradient)) {
         attrGetter.gradientIsMulti = true;
     }
 

@@ -43,6 +43,8 @@ import { newSymbolRefShape, newTextShape, newTextShapeByText } from "../editor/c
 import { Api } from "../editor/coop/recordapi";
 import { translateTo } from "../editor/frame";
 import { Page } from "../data/page";
+import { Gradient } from "data/style";
+import { Color } from "data/color";
 
 export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
     for (let i = 0, len = shapes.length; i < len; i++) {
@@ -409,4 +411,24 @@ export function after_paster(document: Document, media: any) {
 
 export function cloneGradient(g: types.Gradient) {
     return importGradient(exportGradient(g));
+}
+
+export const gradient_equals = (a: Gradient, b: Gradient) => {
+    if (a.gradientType !== b.gradientType || a.elipseLength !== b.elipseLength || a.gradientOpacity !== b.gradientOpacity) {
+        return false;
+    }
+    if (a.from.x !== b.from.x || a.from.y !== b.from.y || a.to.x !== b.to.x || a.to.y !== b.to.y) {
+        return false;
+    }
+    if (a.stops.length !== b.stops.length) {
+        return false;
+    }
+    for (let i = 0; i < a.stops.length; i++) {
+        const stop1 = a.stops[i];
+        const stop2 = b.stops[i];
+        if (stop1.position !== stop2.position || !(stop1.color as Color).equals(stop2.color as Color)) {
+            return false;
+        }
+    }
+    return true;
 }
