@@ -12,7 +12,7 @@ export function getTableCells(table: TableShape, rowStart: number, rowEnd: numbe
     const rowHeights = table.rowHeights;
     const colWidths = table.colWidths;
 
-    const cells = table.childs;
+    const cells = table.cells;
     let celli = 0;
 
     const ret: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[] = [];
@@ -21,7 +21,8 @@ export function getTableCells(table: TableShape, rowStart: number, rowEnd: numbe
     for (let ri = rowStart, rowLen = rowHeights.length; ri < rowLen && ri <= rowEnd; ++ri) {
         celli += colStart;
         for (let ci = colStart, colLen = colWidths.length; ci < colLen && ci <= colEnd; ++ci, ++celli) {
-            const c = cells[celli];
+            const cellid = rowHeights[ri].id + ',' + colWidths[ci].id;
+            const c = cells.get(cellid);
             ret.push({
                 cell: c,
                 rowIdx: ri,

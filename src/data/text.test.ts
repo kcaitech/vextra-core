@@ -26,10 +26,10 @@ const newText = (content: string): Text => {
 
 test("format", () => {
     const text = newText("input text");
-    const attr = new SpanAttrSetter();
-    attr.color = new Color(1, 1, 1, 1);
-    const ret = text.formatText(1, 1, { attr });
-    assert.isTrue(ret && ret.spans.length > 0)
+    // const attr = new SpanAttrSetter();
+    // attr.color = new Color(1, 1, 1, 1);
+    const ret = text.formatText(1, 1, "color", new Color(1, 1, 1, 1));
+    assert.isTrue(ret && ret.length > 0)
     // check
     assert.equal(text.paras.length, 1);
     const para = text.paras[0];
@@ -45,9 +45,9 @@ test("format", () => {
 
 test("edit1", () => {
     const text = newText("input text");
-    const attr = new SpanAttrSetter();
-    attr.color = new Color(1, 1, 1, 1);
-    text.formatText(1, 1, { attr });
+    // const attr = new SpanAttrSetter();
+    // attr.color = new Color(1, 1, 1, 1);
+    text.formatText(1, 1, "color", new Color(1, 1, 1, 1));
     // check
     text.insertText('1', 2);
     // check

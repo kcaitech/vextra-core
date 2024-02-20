@@ -21,13 +21,27 @@
         "lastCmdId": {
             "type": "string",
             "default": ""
+        },
+        "symbolregist": {
+            "type": "map",
+            "key": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            }
+        },
+        "freesymbolsVersionId": {
+            "type": "string",
+            "default": ""
         }
     },
     "required": [
         "id",
         "name",
         "pagesList",
-        "lastCmdId"
+        "lastCmdId",
+        "symbolregist"
     ],
     "additionalProperties": false
 }

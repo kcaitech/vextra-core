@@ -1,5 +1,5 @@
 {
-    "description": "contactstyle",
+    "description": "stop",
     "type": "object",
     "properties": {
         "crdtidx": {
@@ -9,23 +9,20 @@
             }
         },
         "id": {
-            "type": "string",
-            "minLength": 32,
-            "maxLength": 36,
-            "default": "$uuid"
-        },
-        "roleType": {
-            "$ref": "./contact-role-type.json"
-        },
-        "shapeId": {
             "type": "string"
+        },
+        "position": {
+            "type": "number",
+            "default": 0
+        },
+        "color": {
+            "$ref": "./color.json"
         }
     },
     "required": [
         "crdtidx",
         "id",
-        "roleType",
-        "shapeId"
+        "position"
     ],
     "additionalProperties": false
 }

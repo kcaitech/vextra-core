@@ -15,10 +15,7 @@ function renderSym(h: Function,
     }
     varsContainer.push(sym);
     // 应该同groupshape
-    const childs = sym.childs;
-    const nodes = renderGroupChilds2(h, childs, comsMap, varsContainer);
-    return nodes;
-
+    return renderGroupChilds2(h, sym.childs, comsMap, varsContainer);
 }
 
 export function render(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, any>, reflush?: number): any {

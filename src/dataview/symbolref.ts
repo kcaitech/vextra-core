@@ -8,6 +8,7 @@ import { DViewCtx, PropsType, VarsContainer } from "./viewctx";
 import { ResizingConstraints } from "../data/consts";
 import { Matrix } from "../basic/matrix";
 import { findOverride, findVar } from "./basic";
+import { objectId } from "../basic/objectid";
 
 export class SymbolRefView extends ShapeView {
 
@@ -230,10 +231,16 @@ export class SymbolRefView extends ShapeView {
         if (props) {
             // 
             if (props.data.id !== this.m_data.id) throw new Error('id not match');
+            const dataChanged = objectId(props.data) !== objectId(this.m_data);
+            if (dataChanged) {
+                // data changed
+                this.setData(props.data);
+            }
             // check
             const diffTransform = isDiffRenderTransform(props.transx, this.m_transx);
             const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
             if (!needLayout &&
+                !dataChanged &&
                 !diffTransform &&
                 !diffVars) {
                 return;

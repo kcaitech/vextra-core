@@ -59,9 +59,21 @@ export class Shape extends Basic implements classes.Shape {
         }
         this.parent?.bubblenotify(...args);
     }
+    getCrdtPath(): string[] {
+        const page = this.getPage();
+        if (page && page !== this) return [page.id, this.id];
+        else return [this.id];
+    }
+
+    getOpTarget(path: string[]): any {
+        const id0 = path[0];
+        if (id0 === 'style') return this.style.getOpTarget(path.slice(1));
+        return super.getOpTarget(path);
+    }
 
     // shape
     typeId = 'shape'
+    crdtidx: BasicArray<number>
     id: string
     type: ShapeType
     frame: ShapeFrame
@@ -85,6 +97,7 @@ export class Shape extends Basic implements classes.Shape {
     varbinds?: BasicMap<string, string>
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -92,6 +105,7 @@ export class Shape extends Basic implements classes.Shape {
         style: Style
     ) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.name = name
         this.type = type
@@ -129,13 +143,6 @@ export class Shape extends Basic implements classes.Shape {
             });
         }
         this.parent?.bubblenotify(...args);
-    }
-
-    /**
-     * for command
-     */
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
-        return this;
     }
 
     get naviChilds(): Shape[] | undefined {
@@ -444,6 +451,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
     fixedRadius?: number
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -452,6 +460,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
         childs: BasicArray<(GroupShape | Shape | FlattenShape | ImageShape | PathShape | RectShape | TextShape)>
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -460,7 +469,6 @@ export class GroupShape extends Shape implements classes.GroupShape {
         )
         this.childs = childs;
         this.wideframe = new ShapeFrame(frame.x, frame.y, frame.width, frame.height);
-        (childs as any).typeId = "childs";
     }
 
     get naviChilds(): Shape[] | undefined {
@@ -560,7 +568,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
 export class FlattenShape extends GroupShape implements classes.FlattenShape {
 }
 
-function genRefId(refId: string, type: OverrideType) {
+export function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
     return refId + '/' + type;
 }
@@ -575,6 +583,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -584,6 +593,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
         variables: BasicMap<string, Variable>
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -592,16 +602,11 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
             childs
         )
         this.variables = variables;
-        (variables as any).typeId = "variable";
     }
 
-    getTarget(targetId: (string | { rowIdx: number, colIdx: number })[]): Shape | Variable | undefined {
-        const id0 = targetId[0];
-        if (typeof id0 === 'string' && id0.startsWith('varid:')) {
-            const varid = id0.substring('varid:'.length);
-            return this.getVar(varid);
-        }
-        return super.getTarget(targetId);
+    getOpTarget(path: string[]): any {
+        if (path[0] === 'overrides' && !this.overrides) this.overrides = new BasicMap<string, string>();
+        return super.getOpTarget(path);
     }
 
     private _createVar4Override(type: OverrideType, value: any) {
@@ -771,6 +776,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
 export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnionShape {
     typeId = 'symbol-union-shape'
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -780,6 +786,7 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
         variables: BasicMap<string, Variable>
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -820,6 +827,7 @@ export class PathShape extends Shape implements classes.PathShape {
     fixedRadius?: number
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -829,6 +837,7 @@ export class PathShape extends Shape implements classes.PathShape {
         isClosed: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -837,7 +846,6 @@ export class PathShape extends Shape implements classes.PathShape {
         )
         this.points = points;
         this.isClosed = isClosed;
-        points.setTypeId("points");
     }
     setClosedState(state: boolean) {
         this.isClosed = state;
@@ -886,6 +894,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     fixedRadius?: number
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -894,6 +903,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
         pathsegs: BasicArray<PathSegment>
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -938,6 +948,7 @@ export class RectShape extends PathShape implements classes.RectShape {
     typeId = 'rect-shape'
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -947,6 +958,7 @@ export class RectShape extends PathShape implements classes.RectShape {
         isClosed: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -989,6 +1001,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     private __cacheData?: { buff: Uint8Array, base64: string };
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -999,6 +1012,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         imageRef: string
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -1055,6 +1069,7 @@ export class OvalShape extends PathShape implements classes.OvalShape {
     ellipse: classes.Ellipse
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -1065,6 +1080,7 @@ export class OvalShape extends PathShape implements classes.OvalShape {
         ellipse: classes.Ellipse
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -1082,6 +1098,7 @@ export class LineShape extends PathShape implements classes.LineShape {
     typeId = 'line-shape'
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -1091,6 +1108,7 @@ export class LineShape extends PathShape implements classes.LineShape {
         isClosed: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -1108,6 +1126,7 @@ export class TextShape extends Shape implements classes.TextShape {
     fixedRadius?: number
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -1116,6 +1135,7 @@ export class TextShape extends Shape implements classes.TextShape {
         text: Text
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,
@@ -1123,7 +1143,13 @@ export class TextShape extends Shape implements classes.TextShape {
             style
         )
         this.text = text
-        text.updateSize(frame.width, frame.height);
+        // text.updateSize(frame.width, frame.height);
+    }
+
+    getOpTarget(path: string[]) {
+        if (path.length === 0) return this;
+        if (path[0] === 'text') return this.text.getOpTarget(path.slice(1));
+        return super.getOpTarget(path);
     }
 
     getPathOfFrame(frame: ShapeFrame, fixedRadius?: number): Path {
@@ -1147,17 +1173,24 @@ export class TextShape extends Shape implements classes.TextShape {
         return new Path(path);
     }
 
-    setFrameSize(w: number, h: number) {
-        super.setFrameSize(w, h);
-        this.text.updateSize(this.frame.width, this.frame.height)
+    // setFrameSize(w: number, h: number) {
+    //     super.setFrameSize(w, h);
+    //     this.text.updateSize(this.frame.width, this.frame.height)
+    // }
+
+    dropLayout(token: string, owner: string) {
+        this.text.dropLayout(token, owner);
+    }
+
+    getLayout3(width: number, height: number, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
+        return this.text.getLayout3(width, height, owner, token);
     }
 
     getLayout(): TextLayout {
-        return this.text.getLayout();
-    }
-
-    getLayout2(width: number, height: number): TextLayout {
-        return this.text.getLayout2(width, height);
+        const frame = this.frame;
+        const layout = this.getLayout3(frame.width, frame.height, this.id, undefined);
+        this.dropLayout(layout.token, this.id);
+        return layout.layout;
     }
 
     getText(): Text {
@@ -1189,6 +1222,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
     scalingStroke: boolean;
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         name: string,
         type: ShapeType,
@@ -1199,6 +1233,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         scalingStroke: boolean
     ) {
         super(
+            crdtidx,
             id,
             name,
             type,

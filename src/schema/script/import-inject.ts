@@ -10,22 +10,26 @@ inject['ImageShape']['before'] = `\
         const id3 = "1519da3c-c692-4e1d-beb4-01a85cc56738"
         const id4 = "e857f541-4e7f-491b-96e6-2ca38f1d4c09"
         const p1: types.CurvePoint = {
+            crdtidx: [0],
             id: id1,
             mode: types.CurveMode.Straight,
             x: 0, y: 0
         }; // lt
         const p2: types.CurvePoint =
         {
+            crdtidx: [1],
             id: id2,
             mode: types.CurveMode.Straight,
             x: 1, y: 0
         }; // rt
         const p3: types.CurvePoint = {
+            crdtidx: [2],
             id: id3,
             mode: types.CurveMode.Straight,
             x: 1, y: 1
         }; // rb
         const p4: types.CurvePoint = {
+            crdtidx: [3],
             id: id4,
             mode: types.CurveMode.Straight,
             x: 0, y: 1
@@ -47,7 +51,33 @@ inject['TableShape'] = {};
 inject['TableShape']['before'] = `\
     // inject code
     // 兼容旧数据
-    if ((source as any).childs) source.datas = (source as any).childs;
+    if ((source as any).datas || (source as any).childs) {
+        source.colWidths = ((source as any).colWidths as number[]).map((v, i) => ({
+            id: uuid(),
+            crdtidx: [i],
+            value: v
+        } as types.CrdtNumber));
+        source.rowHeights = ((source as any).rowHeights as number[]).map((v, i) => ({
+            id: uuid(),
+            crdtidx: [i],
+            value: v
+        } as types.CrdtNumber));
+
+        const colCount = source.colWidths.length;
+        const rowCount = source.rowHeights.length;
+        const datas: types.TableCell[] = (source as any).datas || (source as any).childs;
+        const cells: {[key: string]: types.TableCell} = {};
+        for (let i = 0; i < datas.length; ++i) {
+            const c = datas[i];
+            if (!c) continue;
+            const ri = Math.floor(i / colCount);
+            const ci = i % colCount;
+            if (ri >= rowCount) break;
+            const id = source.rowHeights[ri].id + ',' + source.colWidths[ci].id;
+            cells[id] = c;
+        }
+        source.cells = cells as any;
+    }
 `
 inject['TableShape']['after'] = `\
     // inject code
@@ -69,11 +99,6 @@ inject['SymbolRefShape']['after'] = `\
         ret.setSymbolMgr(ctx.document.symbolsMgr);
         ret.setImageMgr(ctx.document.mediasMgr);
     }
-`
-inject['Artboard'] = {};
-inject['Artboard']['after'] = `\
-    // inject code
-    if (ctx?.document) ctx.document.artboardMgr.add(ret.id, ret);
 `
 
 inject['FlattenShape'] = {};
@@ -97,7 +122,12 @@ inject['SymbolShape']['before'] = `\
 `
 inject['SymbolShape']['after'] = `\
     // inject code
-    if (ctx?.document) ctx.document.symbolsMgr.add(ret.id, ret);
+    if (ctx?.document) {
+        const registed = ctx.document.symbolregist.get(ret.id);
+        if (!registed || registed === ctx.curPage) {
+            ctx.document.symbolsMgr.add(ret.id, ret);
+        }
+    }
 `
 
 inject['CurvePoint'] = {};
@@ -122,4 +152,24 @@ inject['CurvePoint']['before'] = `\
     if (_source.curveMode) {
         _source.mode = _source.curveMode;
     }
+`
+
+inject['DocumentMeta'] = {};
+inject['DocumentMeta']['before'] = `\
+    // inject code
+    if (!(source as any).symbolregist) (source as any).symbolregist = {};
+`
+
+inject['Page'] = {};
+inject['Page']['before'] = `\
+    // inject code
+    // 兼容旧数据
+    if (!(source as any).crdtidx) (source as any).crdtidx = []
+`
+
+inject['TableCell'] = {};
+inject['TableCell']['before'] = `\
+    // inject code
+    // 兼容旧数据
+    if (!(source as any).crdtidx) (source as any).crdtidx = []
 `

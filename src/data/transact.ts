@@ -1,5 +1,5 @@
 import { objectId, __objidkey } from '../basic/objectid';
-import { Basic, castNotifiable, castRollbackable, IDataGuard, ISave4Restore, isDataBasicType, Notifiable, WatchableObject } from './basic';
+import { castNotifiable, castRollbackable, IDataGuard, isDataBasicType, Notifiable, WatchableObject } from './basic';
 
 // map 对象record
 interface MapRec {
@@ -7,26 +7,33 @@ interface MapRec {
     key: any // 键
     content: any // 值
 }
-class TContext {
+
+export class TContext {
     public transact?: Transact;
-    public settrap: boolean = false;
     public cache: Map<number, Set<PropertyKey>> = new Map();
-    private __notifys: Map<number, Notifiable> = new Map();
+    private __notifys: Map<number, { target: Notifiable, keys: Set<PropertyKey> }> = new Map();
     public optiNotify: boolean = true;
-    addNotify(target: Notifiable | undefined) {
+    settrap: boolean = true;
+    addNotify(target: Notifiable | undefined, key: PropertyKey) {
         if (!target) {
             //
         }
         else if (this.optiNotify) {
-            this.__notifys.set(objectId(target), target)
+            const id = objectId(target);
+            let item = this.__notifys.get(id);
+            if (!item) {
+                this.__notifys.set(id, { target, keys: new Set([key]) })
+            } else {
+                item.keys.add(key);
+            }
         }
         else {
-            target.notify();
+            target.notify(key);
         }
     }
     fireNotify() {
-        this.__notifys.forEach((target) => {
-            target.notify();
+        this.__notifys.forEach((n) => {
+            n.target.notify(...n.keys);
         })
         this.__notifys.clear();
     }
@@ -51,163 +58,135 @@ function swapCached(context: TContext, target: object, propertyKey: PropertyKey)
         return false;
     }
 }
+
 class ProxyHandler {
-    private __context: TContext;
+    protected __context: TContext;
     constructor(context: TContext) {
         this.__context = context;
     }
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
-        let needNotify = false;
-        let ignore = false;
+
         if (propertyKey.toString().startsWith('__')) {
-            ignore = true;
+            return Reflect.set(target, propertyKey, value, receiver);
         }
-        else if (this.__context.transact === undefined) {
+        if (this.__context.transact === undefined) {
             throw new Error(`NOT inside transact: set '${propertyKey.toString()}'`);
         }
-        else if (this.__context.settrap) {
-            throw new Error(`inside trap: set '${propertyKey.toString()}'`);
+        if (this.__context.settrap) {
+            throw new Error(`NOT inside Api: set '${propertyKey.toString()}'`);
         }
-        else if (target instanceof Array) {
-            if (propertyKey === "length") {
-                if (target.length > value) {
-                    for (let i = value, len = target.length; i < len; i++) {
-                        const a = target[i];
-                        if (a && !swapCached(this.__context, target, i)) {
-                            const r = new Rec(target, i, target[i]);
-                            this.__context.transact.push(r);
-                        }
-                    }
-                }
-                if (target.length != value) {
-                    needNotify = true;
-                    if (!swapCached(this.__context, target, propertyKey)) {
-                        const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
-                        this.__context.transact.push(r);
-                    }
-                }
-            } else {
-                // const propInt: number = Number.parseInt(propertyKey.toString());
-                // const propIsInt = Number.isInteger(propInt) && propInt.toString() == propertyKey;
-                // if ((propIsInt || !propertyKey.toString().startsWith('__'))) {
-                needNotify = true;
-                if (!swapCached(this.__context, target, propertyKey)) {
-                    const saveLen = target.length;
-                    const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
-                    this.__context.transact.push(r);
 
-                    if (!ignore) {
-                        checkSetParent(value, target, this);
-                        value = deepProxy(value, this);
-                    }
-
-                    const ret = Reflect.set(target, propertyKey, value, receiver);
-                    if (needNotify) {
-                        // target.notify();
-                        this.__context.addNotify(castNotifiable(target));
-                    }
-                    // length, 设置完数据后array会自动增长长度，绕过了proxy
-                    if (saveLen !== target.length) {
-                        if (!swapCached(this.__context, target, "length")) {
-                            const r = new Rec(target, "length", saveLen);
-                            this.__context.transact.push(r);
-                        }
-                    }
-                    return ret;
-                }
-                // }
-            }
-        } else {
+        let needNotify = false;
+        if (!(target instanceof Array)) {
             needNotify = true;
             if (!swapCached(this.__context, target, propertyKey)) {
                 const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
                 this.__context.transact.push(r);
             }
         }
+        else if (propertyKey === "length") { // array
+            if (target.length > value) {
+                // delete
+                for (let i = value, len = target.length; i < len; i++) {
+                    const a = target[i];
+                    if (!a) continue;
+                    if (!swapCached(this.__context, target, i)) {
+                        const r = new Rec(target, i, target[i]);
+                        this.__context.transact.push(r);
+                    }
+                }
+            }
+            if (target.length != value) {
+                needNotify = true;
+                if (!swapCached(this.__context, target, propertyKey)) {
+                    const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
+                    this.__context.transact.push(r);
+                }
+            }
+        } else { // array
+            needNotify = true;
+            if (!swapCached(this.__context, target, propertyKey)) {
+                const saveLen = target.length;
+                const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
+                this.__context.transact.push(r);
 
-        if (!ignore) {
-            checkSetParent(value, target, this);
-            value = deepProxy(value, this);
+                checkSetParent(value, target, this, propertyKey);
+                value = deepProxy(value, this);
+
+                const ret = Reflect.set(target, propertyKey, value, receiver);
+
+                this.__context.addNotify(castNotifiable(target), propertyKey);
+
+                // length, 设置完数据后array会自动增长长度，绕过了proxy
+                if (saveLen !== target.length) {
+                    if (!swapCached(this.__context, target, "length")) {
+                        const r = new Rec(target, "length", saveLen);
+                        this.__context.transact.push(r);
+                    }
+                }
+                return ret;
+            }
         }
+
+        checkSetParent(value, target, this, propertyKey);
+        value = deepProxy(value, this);
 
         const ret = Reflect.set(target, propertyKey, value, receiver);
         if (needNotify) {
-            // target.notify();
-            this.__context.addNotify(castNotifiable(target));
+            this.__context.addNotify(castNotifiable(target), propertyKey);
         }
         return ret;
     }
     deleteProperty(target: object, propertyKey: PropertyKey) {
-        let needNotify = false;
         if (propertyKey.toString().startsWith("__")) {
-            // do nothing
+            return Reflect.deleteProperty(target, propertyKey);
         }
-        else if (this.__context.transact === undefined) {
-            throw new Error("NOT inside transact!");
+        if (this.__context.transact === undefined) {
+            throw new Error(`NOT inside transact: delete '${propertyKey.toString()}'`);
         }
-        else if (this.__context.settrap) {
-            throw new Error("inside trap!");
+        if (this.__context.settrap) {
+            throw new Error(`NOT inside Api: delete '${propertyKey.toString()}'`);
         }
-        // else if (target instanceof Array) {
-        //     const propInt: number = Number.parseInt(propertyKey.toString());
-        //     const propIsInt = Number.isInteger(propInt) && propInt.toString() == propertyKey;
-        //     if ((propIsInt || !propertyKey.toString().startsWith('__'))) {
-        //         needNotify = true;
-        //         if (!swapCached(this.__context, target, propertyKey)) {
-        //             const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
-        //             this.__context.transact.push(r);
-        //         }
-        //         // todo length
-        //     }
-        // }
-        else { // if (!propertyKey.toString().startsWith('__')) {
-            needNotify = true;
-            if (!swapCached(this.__context, target, propertyKey)) {
-                const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
-                this.__context.transact.push(r);
-            }
+        if (!swapCached(this.__context, target, propertyKey)) {
+            const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
+            this.__context.transact.push(r);
         }
-
         const result = Reflect.deleteProperty(target, propertyKey);
-        if (needNotify) {
-            // target.notify();
-            this.__context.addNotify(castNotifiable(target));
-        }
+        this.__context.addNotify(castNotifiable(target), propertyKey);
         return result;
     }
     get(target: object, propertyKey: PropertyKey, receiver?: any) {
-        if (target instanceof Map) { // map对象上的属性和方法都会进入get
-            if (propertyKey === 'get') { // 高频操作，单独提出并置顶，提高响应速度
-                return Reflect.get(target, propertyKey, receiver).bind(target);
-            } else if (propertyKey === 'set' || propertyKey === 'delete') { // 需要进入事务的方法
-                if (this.__context.transact === undefined) { // 二级处理中有对底层数据的修改，所以应该在事务内进行
-                    throw new Error("NOT inside transact!");
-                }
-                else if (this.__context.settrap) {
-                    throw new Error("inside trap!");
-                }
-                else {
-                    return Reflect.get(this.sub(this.__context, target, this), propertyKey);
-                }
-            } else if (propertyKey === 'size') { // map对象上唯一的一个可访问属性
-                return target.size;
-            } else if (propertyKey === 'clear') { // todo clear操作为批量删除，也需要进入事务
-                return false;
-            } else { // 其他操作，get、values、has、keys、forEach、entries，不影响数据
-                const val = Reflect.get(target, propertyKey, receiver);
-                if (val === undefined) {
-                    if (propertyKey === "__isProxy") {
-                        return true;
-                    }
-                } else if (typeof val === 'function') {
-                    return val.bind(target);
-                }
-                return val;
-            }
-        } else {
+        if (!(target instanceof Map)) {
             const val = Reflect.get(target, propertyKey, receiver);
             if (val === undefined && propertyKey === "__isProxy") {
                 return true;
+            }
+            return val;
+        }
+
+        // map对象上的属性和方法都会进入get
+        if (propertyKey === 'get') { // 高频操作，单独提出并置顶，提高响应速度
+            return Reflect.get(target, propertyKey, receiver).bind(target);
+        } else if (propertyKey === 'set' || propertyKey === 'delete') { // 需要进入事务的方法
+            if (this.__context.transact === undefined) { // 二级处理中有对底层数据的修改，所以应该在事务内进行
+                throw new Error(`NOT inside transact: set '${propertyKey.toString()}'`);
+            }
+            if (this.__context.settrap) {
+                throw new Error(`NOT inside Api: set '${propertyKey.toString()}'`);
+            }
+            return Reflect.get(this.sub(this.__context, target, this), propertyKey);
+        } else if (propertyKey === 'size') { // map对象上唯一的一个可访问属性
+            return target.size;
+        } else if (propertyKey === 'clear') { // todo clear操作为批量删除，也需要进入事务
+            return false;
+        } else { // 其他操作，get、values、has、keys、forEach、entries，不影响数据
+            const val = Reflect.get(target, propertyKey, receiver);
+            if (val === undefined) {
+                if (propertyKey === "__isProxy") {
+                    return true;
+                }
+            } else if (typeof val === 'function') {
+                return val.bind(target);
             }
             return val;
         }
@@ -217,9 +196,6 @@ class ProxyHandler {
             return target.has(propertyKey);
         }
         const val = Reflect.has(target, propertyKey);
-        // if (target instanceof Map && typeof val === 'function') {
-        //     return val.bind(target);
-        // }
         return val;
     }
     sub(_con: TContext, target: Map<any, any>, h: ProxyHandler) {
@@ -230,17 +206,14 @@ class ProxyHandler {
             },
             set(key: any, value: any) {
                 const set_inner = Map.prototype.set.bind(target);
-                // set经过代理的对象
-                // if (!isProxy(value)) {
-                //     value = deepProxy(value, h)
-                // }
-                checkSetParent(value, target, h);
+
+                checkSetParent(value, target, h, key);
                 value = deepProxy(value, h);
                 set_inner(key, value);
                 const map_rec: MapRec = { isContentExist: true, content: value, key };
                 const r = new Rec(target, 'set', map_rec);
                 _con.transact?.push(r);
-                _con.addNotify(castNotifiable(target));
+                _con.addNotify(castNotifiable(target), key);
             },
             delete(key: any) {
                 const get = Map.prototype.get.bind(target);
@@ -250,7 +223,7 @@ class ProxyHandler {
                 const map_rec: MapRec = { isContentExist: false, content: ori, key };
                 const r = new Rec(target, 'delete', map_rec);
                 _con.transact?.push(r);
-                _con.addNotify(castNotifiable(target));
+                _con.addNotify(castNotifiable(target), key);
             }
         };
     }
@@ -258,8 +231,12 @@ class ProxyHandler {
 
 export const isProxy = (obj: any): boolean => obj && obj["__isProxy"];
 
-function checkSetParent(value: any, parent: any, ph: ProxyHandler) {
-    if (typeof value === 'object' && isDataBasicType(parent)) value.__parent = isProxy(parent) ? parent : new Proxy(parent, ph);
+function checkSetParent(value: any, parent: any, ph: ProxyHandler, propertyKey: PropertyKey) {
+    if (typeof value === 'object' && isDataBasicType(parent)) {
+        // parent 也需要proxy上, 否则数据变动时不会触发通知
+        value.__parent = isProxy(parent) ? parent : new Proxy(parent, ph);
+        value.__propKey = propertyKey; // 这有个问题是，数组
+    }
 }
 
 class Rec {
@@ -290,19 +267,16 @@ class Rec {
                     // 不影响length
                     Reflect.deleteProperty(this.__target, this.__propertyKey);
                 } else {
-                    checkSetParent(this.__value, this.__target, ph);
+                    checkSetParent(this.__value, this.__target, ph, this.__propertyKey);
                     Reflect.set(this.__target, this.__propertyKey, this.__value);
                 }
             } else {
-                checkSetParent(this.__value, this.__target, ph);
+                checkSetParent(this.__value, this.__target, ph, this.__propertyKey);
                 Reflect.set(this.__target, this.__propertyKey, this.__value);
             }
             this.__value = v;
         }
-        if (this.__target) {
-            // this.__target.notify();
-            ctx.addNotify(castNotifiable(this.__target));
-        }
+        ctx.addNotify(castNotifiable(this.__target), this.__propertyKey);
     }
     get target() {
         return this.__target;
@@ -353,14 +327,11 @@ class ArrayRec extends Rec {
 class Transact extends Array<Rec> {
     private __name: string;
     private __cache: Map<number, ArrayRec> = new Map();
-    // private __cmds: Array<ICMD> = [];
     constructor(name: string) {
         super();
         this.__name = name;
     }
     exec(ctx: TContext, ph: ProxyHandler): void {
-        // throw new Error('Method not implemented.');
-        // this.swap(ctx);
         for (let i = 0, len = this.length; i < len; i++) {
             const r = this[i];
             r.swap(ctx, ph);
@@ -399,12 +370,8 @@ class Transact extends Array<Rec> {
             }
         }
         return this.length;
-        // return super.push(...items);
     }
 }
-
-// deletedshapes, 用于undo及op操作
-// 远程操作不需要记录transact, 但需要proxy. 有远程操作后, 之前的transact也不能直接undo了
 
 export class Repository extends WatchableObject implements IDataGuard {
     private __context: TContext;
@@ -415,11 +382,10 @@ export class Repository extends WatchableObject implements IDataGuard {
 
     constructor(props?: { settrap?: boolean, needundo?: boolean }) {
         super();
-        // this.__selection = selection;
         this.__context = new TContext();
         this.__ph = new ProxyHandler(this.__context);
-        this.__context.settrap = props ? (props.settrap ?? false) : false; // default false
-        this.__needundo = props ? (props.needundo ?? true) : true; // default true
+        this.__context.settrap = props ? (props.settrap ?? true) : true; // default true
+        this.__needundo = props ? (props.needundo ?? false) : false; // default false
     }
     get transactCtx() {
         return this.__context;
@@ -461,7 +427,7 @@ export class Repository extends WatchableObject implements IDataGuard {
      * @param name
      * @param saved selection等
      */
-    start(name: string, saved: any) {
+    start(name: string) {
         if (this.__context.transact !== undefined) {
             console.log(this.__saveStartStack);
             throw new Error("has transact not commited");
@@ -535,7 +501,10 @@ function deepProxy(data: any, h: ProxyHandler): any {
                     // donothing
                 }
                 else if (typeof (v) === 'object') { // 还有array set map
-                    if (parent) v.__parent = parent;
+                    if (parent) {
+                        v.__parent = parent;
+                        v.__propKey = k;
+                    }
                     if (!isProxy(v)) {
                         m.set(k, new Proxy(v, h));
                         stack.push(v);
@@ -550,7 +519,10 @@ function deepProxy(data: any, h: ProxyHandler): any {
                     // donothing
                 }
                 else if (typeof (v) === 'object') { // 还有array set map
-                    if (parent) v.__parent = parent;
+                    if (parent) {
+                        v.__parent = parent;
+                        v.__propKey = k;
+                    }
                     if (!isProxy(v)) {
                         const p = new Proxy(v, h);
                         Reflect.set(d, k, p);

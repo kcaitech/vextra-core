@@ -61,6 +61,7 @@ export class TableView extends ShapeView {
         super.onDataChange(...args);
         // if (args.includes('cells')) 
         this.m_need_updatechilds = true;
+        if (args.includes('rowHeights') || args.includes('colWidths')) this.data.reLayout();
     }
 
     // 单元格不展示

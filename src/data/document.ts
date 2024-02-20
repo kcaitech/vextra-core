@@ -1,13 +1,12 @@
 import { DocumentMeta, PageListItem } from "./baseclasses";
 import { Page } from "./page";
-import { Artboard } from "./artboard";
-import { BasicArray, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
+import { BasicArray, BasicMap, IDataGuard, ResourceMgr, WatchableObject } from "./basic";
 import { Style } from "./style";
 import { GroupShape, SymbolShape, TextShape } from "./shape";
-import { TableCell, TableShape } from "./table";
+import { TableShape } from "./table";
 import { SymbolRefShape } from "./symbolref";
 
-export { DocumentMeta, PageListItem, DocumentSyms } from "./baseclasses";
+export { DocumentMeta, PageListItem } from "./baseclasses";
 
 export enum LibType {
     Symbol = 'symbol-lib',
@@ -30,8 +29,9 @@ function getTextFromGroupShape(shape: GroupShape | undefined): string {
         } else if (child instanceof GroupShape) {
             result += getTextFromGroupShape(child);
         } else if (child instanceof TableShape) {
-            result += (child.datas.filter(cell => !!cell) as BasicArray<(TableCell)>)
-                .reduce((previousValue, currentValue) => previousValue + currentValue.text?.toString() ?? "", "");
+            child.cells.forEach(cell => {
+                if (cell.text) result += cell.text.toString();
+            });
         } else if (child instanceof TextShape) {
             result += child.text.toString();
         }
@@ -60,33 +60,83 @@ export class Document extends (DocumentMeta) {
         });
     }
 
+    getCrdtPath(): string[] {
+        return [this.id];
+    }
+
+    /**
+     * for command
+     */
+    getOpTarget(path: string[]): any {
+        if (path.length === 0) throw new Error("path is empty");
+        const path0 = path[0];
+        if (path.length === 1) {
+            if (path0 === this.id) return this;
+            throw new Error("The shape is not found");
+        }
+        let target = this as any;
+        const path1 = path[1];
+        let i = 2;
+        if (path1 === 'pages') {
+            target = this.__pages;
+            // } else if (path1 === 'artboards') {
+            //     target = this.__artboards;
+        } else if (path1 === 'symbols') {
+            target = this.__symbols;
+        } else if (path1 === 'styles') {
+            target = this.__styles;
+        } else if (path1 === 'medias') {
+            target = this.__medias;
+        } else {
+            i = 1;
+        }
+        for (; i < path.length; i++) {
+            const k = path[i];
+            if (target instanceof Map) {
+                target = target.get(k);
+            } else if (target instanceof Array) {
+                target = target.find((v) => v.id === k);
+            } else {
+                target = target[k];
+            }
+            if (!target) {
+                // console.warn("not find target " + k, "path :" + path.join(','))
+                return;
+            }
+        }
+        return target;
+    }
+
     private __pages: ResourceMgr<Page>;
-    private __artboards: ResourceMgr<Artboard>;
     private __symbols: ResourceMgr<SymbolShape>
     private __styles: ResourceMgr<Style>
     private __medias: ResourceMgr<{ buff: Uint8Array, base64: string }>
-    // private __loader: IDataLoader;
-    // private __guard?: IDataGruad;
     private __versionId: string;
     private __name: string;
+    __freesymbolsLoader?: () => Promise<any>;
     __correspondent: SpecialActionCorrespondent; // 额外动作通信
 
     constructor(
         id: string,
         versionId: string, // 版本id
         lastCmdId: string, // 此版本最后一个cmd的id
+        symbolregist: BasicMap<string, string>,
         name: string,
         pagesList: BasicArray<PageListItem>,
         guard: IDataGuard
     ) {
-        super(id, name, pagesList ?? new BasicArray(), lastCmdId)
+        super(id, name, pagesList ?? new BasicArray(), lastCmdId, symbolregist)
         this.__versionId = versionId;
         this.__name = name;
-        this.__pages = new ResourceMgr<Page>(guard);
-        this.__artboards = new ResourceMgr<Artboard>(guard);
-        this.__symbols = new ResourceMgr<SymbolShape>(guard);
-        this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>();
-        this.__styles = new ResourceMgr<Style>();
+        this.__pages = new ResourceMgr<Page>([id, 'pages'], (data: Page) => guard.guard(data));
+        // this.__artboards = new ResourceMgr<Artboard>([id, 'artboards'], (data: Artboard) => guard.guard(data));
+        this.__symbols = new ResourceMgr<SymbolShape>([id, 'symbols'],
+            (data: SymbolShape) => {
+                // check ?
+                return guard.guard(data);
+            });
+        this.__medias = new ResourceMgr<{ buff: Uint8Array, base64: string }>([id, 'medias']);
+        this.__styles = new ResourceMgr<Style>([id, 'styles']);
         this.__correspondent = new SpecialActionCorrespondent();
         return guard.guard(this);
     }
@@ -99,9 +149,9 @@ export class Document extends (DocumentMeta) {
         return this.__pages;
     }
 
-    get artboardMgr() {
-        return this.__artboards;
-    }
+    // get artboardMgr() {
+    //     return this.__artboards;
+    // }
 
     get symbolsMgr() {
         return this.__symbols;
@@ -113,30 +163,6 @@ export class Document extends (DocumentMeta) {
 
     get stylesMgr() {
         return this.__styles;
-    }
-
-    insertPage(index: number, page: Page) {
-        if (index < 0) return;
-        const pageListItem = new PageListItem(page.id, page.name);
-        this.pagesList.splice(index, 0, pageListItem);
-        this.__pages.add(page.id, page);
-    }
-
-    deletePage(id: string): boolean {
-        if (this.pagesList.length > 1) {
-            const index = this.pagesList.findIndex(p => p.id === id);
-            if (index < 0) return false;
-            this.pagesList.splice(index, 1);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    deletePageAt(index: number): boolean {
-        if (index < 0 || index >= this.pagesList.length) return false;
-        this.pagesList.splice(index, 1);
-        return true;
     }
 
     getPageItemAt(index: number): PageListItem | undefined {

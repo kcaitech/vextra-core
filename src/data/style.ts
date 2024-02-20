@@ -1,8 +1,8 @@
 import * as classes from "./baseclasses"
 import {
     Blur, BorderOptions, ColorControls, ContextSettings,
-    Shadow, WindingRule, FillType, Gradient, BorderPosition,
-    BorderStyle, MarkerType, ContactRole, VariableType
+    Shadow, WindingRule, FillType, BorderPosition,
+    BorderStyle, MarkerType, ContactRole, VariableType, Point2D, GradientType, Stop
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
 import { Variable } from "./variable";
@@ -24,7 +24,6 @@ export {
     ExportVisibleScaleType,
     ColorControls,
     Stop,
-    Gradient,
     ContextSettings,
     Shadow,
     GraphicsContextSettings,
@@ -36,8 +35,35 @@ export {
     ShadowPosition
 } from "./baseclasses"
 
+/**
+ * gradient 
+ */
+export class Gradient extends Basic implements classes.Gradient {
+    typeId = 'gradient'
+    elipseLength: number
+    from: Point2D
+    to: Point2D
+    stops: BasicArray<Stop >
+    gradientType: GradientType
+    constructor(
+        elipseLength: number,
+        from: Point2D,
+        to: Point2D,
+        gradientType: GradientType,
+        stops: BasicArray<Stop >
+    ) {
+        super()
+        this.elipseLength = elipseLength
+        this.from = from
+        this.to = to
+        this.gradientType = gradientType
+        this.stops = stops
+    }
+}
+
 export class Border extends Basic implements classes.Border {
     typeId = 'border'
+    crdtidx: BasicArray<number>
     id: string
     isEnabled: boolean
     fillType: FillType
@@ -48,6 +74,7 @@ export class Border extends Basic implements classes.Border {
     gradient?: Gradient
     borderStyle: BorderStyle
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         isEnabled: boolean,
         fillType: FillType,
@@ -57,6 +84,7 @@ export class Border extends Basic implements classes.Border {
         borderStyle: BorderStyle,
     ) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.isEnabled = isEnabled
         this.fillType = fillType
@@ -69,6 +97,7 @@ export class Border extends Basic implements classes.Border {
 
 export class Fill extends Basic implements classes.Fill {
     typeId = 'fill'
+    crdtidx: BasicArray<number>
     id: string
     isEnabled: boolean
     fillType: FillType
@@ -81,12 +110,14 @@ export class Fill extends Basic implements classes.Fill {
     private __cacheData?: { buff: Uint8Array, base64: string };
 
     constructor(
+        crdtidx: BasicArray<number>,
         id: string,
         isEnabled: boolean,
         fillType: FillType,
         color: Color
     ) {
         super()
+        this.crdtidx = crdtidx
         this.id = id
         this.isEnabled = isEnabled
         this.fillType = fillType
@@ -140,7 +171,7 @@ export class Style extends Basic implements classes.Style {
     fills: BasicArray<Fill>
     innerShadows?: BasicArray<Shadow>
     shadows: BasicArray<Shadow>
-    contacts?: BasicArray<ContactRole>
+    contacts?: BasicArray<ContactRole> // todo
     startMarkerType?: MarkerType
     endMarkerType?: MarkerType
     varbinds?: BasicMap<string, string>
@@ -154,8 +185,11 @@ export class Style extends Basic implements classes.Style {
         this.borders = borders
         this.fills = fills
         this.shadows = shadows
-        borders.setTypeId("borders");
-        fills.setTypeId("fills");
+    }
+
+    getOpTarget(path: string[]) {
+        if (path[0] === 'contacts' && !this.contacts) this.contacts = new BasicArray<ContactRole>();
+        return super.getOpTarget(path);
     }
 
     private findVar(varId: string, ret: Variable[]): boolean {
