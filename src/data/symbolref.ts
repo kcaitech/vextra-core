@@ -51,11 +51,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     }
 
     getOpTarget(path: string[]): any {
-        const id0 = path[0];
-        if (typeof id0 === 'string' && id0.startsWith('varid:')) {
-            const varid = id0.substring('varid:'.length);
-            return this.getVar(varid);
-        }
+        if (path[0] === 'overrides' && !this.overrides) this.overrides = new BasicMap<string, string>();
         return super.getOpTarget(path);
     }
 
@@ -132,6 +128,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             case OverrideType.Variable:
                 const _val = value as Variable;
                 return _val;
+            case OverrideType.BorderStyle:
+                return new Variable(uuid(), classes.VariableType.BorderStyle, "", value);
+            case OverrideType.ContextSettings:
+                return new Variable(uuid(), classes.VariableType.ContextSettings, "", value);
+            case OverrideType.Shadows:
+                return new Variable(uuid(), classes.VariableType.Shadows, "", value);
+            case OverrideType.Table:
+                return new Variable(uuid(), classes.VariableType.Table, "", value);
             default:
                 throw new Error("unknow override type: " + type)
         }
@@ -165,6 +169,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             case OverrideType.Visible:
             case OverrideType.Lock:
             case OverrideType.SymbolID:
+            case OverrideType.BorderStyle:
+            case OverrideType.ContextSettings:
+            case OverrideType.Shadows:
+            case OverrideType.Table:
                 {
                     let override = this.getOverrid(refId, attr);
                     if (!override) {
@@ -178,8 +186,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
                     let override = this.getOverrid(refId, attr);
                     if (!override) {
                         override = this.createOverrid(refId, attr, value);
-                    }
-                    else {
+                    } else {
                         const _val = value as Variable;
                         this.overrides?.set(override.refId, _val.id);// 映射到新变量
                         override.v = this.addVar(_val);

@@ -29,6 +29,9 @@ export enum VariableType {
     Borders = 'borders',
     Shadows = 'shadows',
     Style = 'style',
+    ContextSettings = 'contextSettings',
+    Table = 'table',
+    BorderStyle = 'borderStyle',
 }
 /* user infomation */
 export type UserInfo = {
@@ -261,6 +264,9 @@ export enum OverrideType {
     Lock = 'lock',
     Variable = 'variable',
     SymbolID = 'symbolID',
+    ContextSettings = 'contextSettings',
+    Table = 'table',
+    BorderStyle = 'borderStyle',
 }
 /* marker type */
 export enum MarkerType {
