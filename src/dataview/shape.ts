@@ -8,7 +8,7 @@ import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
-import { fixConstrainFrame2 } from "../editor/frame";
+import { fixConstrainFrame } from "../editor/frame";
 import { exportShapeFrame } from "../data/baseexport";
 import { BasicArray } from "../data/basic";
 
@@ -83,7 +83,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
     } else {
         const resizingConstraint = shape.resizingConstraint || ResizingConstraints2.Default; // 默认值为靠左、靠顶、宽高固定
 
-        const __f = fixConstrainFrame2(resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
+        const __f = fixConstrainFrame(resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
 
         frame.x = __f.x;
         frame.y = __f.y;
