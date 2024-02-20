@@ -305,7 +305,7 @@ function modifyFrameForPath(api: Api, page: Page, shape: Shape, scaleX: number, 
         height = boundingBox.height;
     }
 
-    const _f = fixConstrainFrame2(resizingConstraint, x, y, width, height, scaleX, scaleY, currentEnvFrame, originEnvFrame);
+    const _f = fixConstrainFrame(resizingConstraint, x, y, width, height, scaleX, scaleY, currentEnvFrame, originEnvFrame);
 
     setFrame(page, shape, _f.x, _f.y, _f.width, _f.height, api);
 }
@@ -315,7 +315,7 @@ function modifyFrameForRect(api: Api, page: Page, shape: Shape, scaleX: number, 
     const resizingConstraint = shape.resizingConstraint || ResizingConstraints2.Default;
 
     // 即使有transform也不用特别处理，应直接忽略transform，因为这类场景不可以摆正
-    const { x, y, width, height } = fixConstrainFrame2(resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame);
+    const { x, y, width, height } = fixConstrainFrame(resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame);
 
     setFrame(page, shape, x, y, width, height, api);
 }
@@ -446,75 +446,7 @@ function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, sca
         }
     }
 }
-function fixConstrainFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api, originParentFrame: ShapeFrame, curParentFrame: ShapeFrame, cFrame?: ShapeFrame) {
-    cFrame = cFrame ?? shape.frame;
-    const resizingConstraint = shape.resizingConstraint;
-    if (!resizingConstraint || ResizingConstraints.isUnset(resizingConstraint)) {
-        return { x, y, w, h }
-    }
-    else {
-        // 水平
-        const isFixedToLeft = ResizingConstraints2.isFixedToLeft(resizingConstraint); // 靠左
-        const isFixedToRight = ResizingConstraints2.isFixedToRight(resizingConstraint); // 靠右
-        const isFixedToLeftAndRight = ResizingConstraints2.isFixedLeftAndRight(resizingConstraint); // 左右
-        const isHorCenter = ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint); // 水平居中
-        const isFlexWidth = ResizingConstraints2.isFlexWidth(resizingConstraint); // 水平缩放
-        // 计算width, x
-        // 宽度与同时设置左右是互斥关系，万一数据出错，以哪个优先？先以左右吧
-        let cw = w;
-        let cx = x;
-        if (isFixedToLeftAndRight) {
-            cx = cFrame.x;
-            const dis = originParentFrame.width - (cFrame.x + cFrame.width);
-            cw = Math.max(curParentFrame.width - dis - cx, 1);
-        }
-        else if (isFixedToLeft) {
-            cx = cFrame.x;
-        }
-        else if (isFixedToRight) {
-            const orx = originParentFrame.width - cFrame.x;
-            cx = curParentFrame.width - orx;
-        }
-        else if (isHorCenter) {
-            const ocx = originParentFrame.width / 2 - cFrame.x
-            cx = curParentFrame.width / 2 - ocx;
-        }
-        else if (isFlexWidth) {
-            // do not need fix，do nothing
-        }
-
-        // 垂直
-        const isFixedToTop = ResizingConstraints2.isFixedToTop(resizingConstraint);
-        const isFixedToBottom = ResizingConstraints2.isFixedToBottom(resizingConstraint);
-        const isFixedToTopAndBottom = ResizingConstraints2.isFixedTopAndBottom(resizingConstraint);
-        const isVerCenter = ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint);
-        const isFlexHeight = ResizingConstraints2.isFlexHeight(resizingConstraint);
-
-        // 计算height, y
-        let ch = h;
-        let cy = y;
-        if (isFixedToTopAndBottom) {
-            cy = cFrame.y;
-            const dis = originParentFrame.height - (cFrame.y + cFrame.height);
-            ch = Math.max(curParentFrame.height - dis - cy, 1);
-        }
-        else if (isFixedToTop) {
-            cy = cFrame.y;
-        }
-        else if (isFixedToBottom) {
-            const oby = originParentFrame.height - cFrame.y;
-            cy = curParentFrame.height - oby;
-        } else if (isVerCenter) {
-            const ocy = originParentFrame.height / 2 - cFrame.y
-            cy = curParentFrame.height / 2 - ocy;
-        } else if (isFlexWidth) {
-            // do not need fix，do nothing
-        }
-
-        return { x: cx, y: cy, w: cw, h: ch };
-    }
-}
-export function fixConstrainFrame2(resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame) {
+export function fixConstrainFrame(resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame) {
     // 水平 HORIZONTAL
     if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) { // 跟随缩放。一旦跟随缩放，则不需要考虑其他约束场景了
         x *= scaleX;
