@@ -80,9 +80,12 @@ export const ResizingConstraints2 = {
     Height: 0b00010000, // 16
     Top: 0b00100000, // 32
 
-    // extra
+    // extra -- 额外的不兼容sketch的值
     HCenter: 0b01000000, // 64
     VCenter: 0b10000000, // 128
+
+    // default 
+    Default: 0b00110110,
 
     // horizontal
     /**
@@ -224,7 +227,7 @@ export const ResizingConstraints2 = {
         return !(val & this.Top) && !(val & this.Bottom) && !(val & this.VCenter);
     },
 
-    isFlexHeight(val: number):boolean {
+    isFlexHeight(val: number): boolean {
         return !(val & this.Height);
     },
 
