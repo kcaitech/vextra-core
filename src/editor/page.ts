@@ -1727,8 +1727,15 @@ export class PageEditor {
                         return 0;
                     }
                 })
+                new_gradient.stops.forEach((v, i) => { 
+                    const idx = new BasicArray<number>();
+                    idx.push(i);
+                    v.crdtidx = idx;
+                 })
                 const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                 const shape = shape4fill(api, this.__page, target);
+                console.log('stops:', new_gradient.stops);
+                
                 f(this.__page, shape, index, new_gradient);
             }
             this.__repo.commit();
@@ -1775,7 +1782,7 @@ export class PageEditor {
                     const stops = new BasicArray<Stop>();
                     const frame = target.frame;
                     const { alpha, red, green, blue } = gradient_container.color;
-                    stops.push(new Stop(new BasicArray(0), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(1), uuid(), 1, new Color(0, red, green, blue)))
+                    stops.push(new Stop(new BasicArray(), uuid(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(), uuid(), 1, new Color(0, red, green, blue)))
                     const from = value === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
                     const to = { x: 0.5, y: 1 };
                     let elipseLength = undefined;
@@ -1783,6 +1790,11 @@ export class PageEditor {
                         elipseLength = 1;
                     }
                     const new_gradient = new Gradient(from as Point2D, to as Point2D, value, stops, elipseLength);
+                    new_gradient.stops.forEach((v, i) => { 
+                        const idx = new BasicArray<number>();
+                        idx.push(i);
+                        v.crdtidx = idx;
+                     })
                     const f = type === 'fills' ? api.setFillGradient.bind(api) : api.setBorderGradient.bind(api);
                     f(this.__page, s, index, new_gradient);
                 }

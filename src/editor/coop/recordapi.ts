@@ -1059,4 +1059,12 @@ export class Api {
         checkShapeAtPage(page, table);
         this.addOp(basicapi.tableModifyTextTransform(table, transform));
     }
+    tableModifyTextFillType(page: Page, table: TableShape, fillType: FillType | undefined) {
+        checkShapeAtPage(page, table);
+        this.addOp(basicapi.tableModifyTextFillType(table, fillType));
+    }
+    tableModifyTextGradient(page: Page, table: TableShape, gradient: Gradient | undefined) {
+        checkShapeAtPage(page, table);
+        this.addOp(basicapi.tableModifyTextGradient(table, gradient));
+    }
 }

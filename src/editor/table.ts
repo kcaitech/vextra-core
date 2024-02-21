@@ -2,9 +2,9 @@ import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
-import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType } from "../data/baseclasses";
+import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextBehaviour, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ResizeType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
-import { Border, Fill } from "../data/style";
+import { Border, Fill, Gradient } from "../data/style";
 import { fixTableShapeFrameByLayout } from "./utils/other";
 import { Api } from "./coop/recordapi";
 import { importBorder, importFill } from "../data/baseimport";
@@ -1066,6 +1066,65 @@ export class TableEditor extends ShapeEditor {
                     if (cell && cell.cellType === TableCellType.Text && cell.text) {
                         api.textModifyTransform(this.__page, cell as any, transform, 0, cell.text.length);
                         this.fixFrameByLayout(cell, api);
+                    }
+                })
+            }
+            this.__repo.commit();
+            return true;
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextFillType(fillType: FillType, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setTableTextFillType");
+        try {
+            if(range) {
+                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                cells.forEach((c) => {
+                    const cell = c.cell;
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.textModifyFillType(this.__page, cell as any, fillType, 0, cell.text.length);
+                    }
+                })
+            }else {
+                api.tableModifyTextFillType(this.__page, this.shape, fillType);
+                const cells = this.shape.datas;
+                cells.forEach((cell) => {
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.textModifyFillType(this.__page, cell as any, fillType, 0, cell.text.length);
+                    }
+                })
+            }
+            this.__repo.commit();
+            return true;
+        } catch(error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return false;
+    }
+    public setTextGradient(gradient: Gradient | undefined, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }) {
+        const api = this.__repo.start("setTableTextGradient");
+        try {
+            if (range) {
+                this._initCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd, api);
+                const cells = this.shape.getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd)
+                cells.forEach((c) => {
+                    const cell = c.cell;
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.setTextGradient(this.__page, cell as any, gradient, 0, cell.text.length);
+                    }
+                })
+            }
+            else {
+                api.tableModifyTextGradient(this.__page, this.shape, gradient);
+                const cells = this.shape.datas;
+                cells.forEach((cell) => {
+                    if (cell && cell.cellType === TableCellType.Text && cell.text) {
+                        api.setTextGradient(this.__page, cell as any, gradient, 0, cell.text.length);
                     }
                 })
             }
