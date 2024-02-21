@@ -50,7 +50,7 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
         // 两个都不是_NullColor
         attrGetter.colorIsMulti = true;
     }
-    const gradient = attr.gradient ?? (paraAttr?.gradient) ?? (textAttr?.gradient) ?? undefined;
+    const gradient = attr.gradient ?? (paraAttr?.gradient) ?? (textAttr?.gradient);
     if (attrGetter.gradient === undefined) {
         attrGetter.gradient = gradient;
     } else if (gradient === undefined) {
