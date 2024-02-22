@@ -75,6 +75,10 @@ export class CoopRepository {
         this.__initingDoc = init;
     }
 
+    public hasPendingSyncCmd(): boolean {
+        return this.__cmdrepo.hasPendingSyncCmd();
+    }
+
     public setNet(net: ICoopNet) {
         this.__cmdrepo.setNet(net);
     }

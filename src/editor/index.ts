@@ -6,8 +6,10 @@ import { Controller } from "./controller";
 import { CoopRepository } from "./coop/cooprepo";
 import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
+import { resizingConstraintEditor } from "./resizingConstraint";
 import { ISave4Restore } from "./coop/localcmd";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView } from "../dataview";
+import { Page } from "../data/page";
 
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";
@@ -68,6 +70,9 @@ export class Editor {
     controller(): Controller {
         const e = new Controller(this.m_repo, this.data);
         return e;
+    }
+    editor4ResizingConstraint(page: Page) {
+        return new resizingConstraintEditor(page, this.m_repo, this.data);
     }
 
     get data() {

@@ -61,6 +61,7 @@ import { exportShapeFrame } from "../data/baseexport";
 // import i18n from '../../i18n' // data不能引用外面工程的内容
 import { ContactForm, CrdtNumber } from "../data/baseclasses";
 import { Matrix } from "../basic/matrix";
+import { ResizingConstraints2 } from "../data/consts";
 
 export function addCommonAttr(shape: Shape) {
     shape.rotation = 0;
@@ -68,6 +69,7 @@ export function addCommonAttr(shape: Shape) {
     shape.isLocked = false;
     shape.constrainerProportions = false;
     shape.nameIsFixed = false;
+    shape.resizingConstraint = ResizingConstraints2.Default;
 }
 
 export function newDocument(documentName: string, repo: Repository): Document {
