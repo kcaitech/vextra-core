@@ -1,4 +1,5 @@
 import {
+    SizeRecorder,
     adjustLB2,
     adjustLT2,
     adjustRB2,
@@ -533,7 +534,7 @@ export class Controller {
     public asyncRectEditor(_shape: Shape | ShapeView, _page: Page | PageView): AsyncBaseAction {
         const shape = _shape instanceof ShapeView ? adapt2Shape(_shape) : _shape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
-
+        const size_recorder: SizeRecorder = new Map(); // 当约束使得图层尺寸触发极值表现时，记录触发前的图层尺寸，用于摆脱极值表现后回到触发前的状态
         const api = this.__repo.start("action");
         let status: Status = Status.Pending;
         let need_update_frame = false;
@@ -553,21 +554,21 @@ export class Controller {
             status = Status.Pending;
             try {
                 if (type === CtrlElementType.RectLT) {
-                    adjustLT2(api, page, shape, end.x, end.y);
+                    adjustLT2(api, page, shape, end.x, end.y, size_recorder);
                 } else if (type === CtrlElementType.RectRT) {
-                    adjustRT2(api, page, shape, end.x, end.y);
+                    adjustRT2(api, page, shape, end.x, end.y, size_recorder);
                 } else if (type === CtrlElementType.RectRB) {
-                    adjustRB2(api, page, shape, end.x, end.y);
+                    adjustRB2(api, page, shape, end.x, end.y, size_recorder);
                 } else if (type === CtrlElementType.RectLB) {
-                    adjustLB2(api, page, shape, end.x, end.y);
+                    adjustLB2(api, page, shape, end.x, end.y, size_recorder);
                 } else if (type === CtrlElementType.RectTop) {
-                    scaleByT(api, page, shape, end);
+                    scaleByT(api, page, shape, end, size_recorder);
                 } else if (type === CtrlElementType.RectRight) {
-                    scaleByR(api, page, shape, end);
+                    scaleByR(api, page, shape, end, size_recorder);
                 } else if (type === CtrlElementType.RectBottom) {
-                    scaleByB(api, page, shape, end);
+                    scaleByB(api, page, shape, end, size_recorder);
                 } else if (type === CtrlElementType.RectLeft) {
-                    scaleByL(api, page, shape, end);
+                    scaleByL(api, page, shape, end, size_recorder);
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
@@ -580,13 +581,13 @@ export class Controller {
             status = Status.Pending;
             try {
                 if (type === CtrlElementType.RectTop) {
-                    erScaleByT(api, page, shape, scale);
+                    erScaleByT(api, page, shape, scale, size_recorder);
                 } else if (type === CtrlElementType.RectRight) {
-                    erScaleByR(api, page, shape, scale);
+                    erScaleByR(api, page, shape, scale, size_recorder);
                 } else if (type === CtrlElementType.RectBottom) {
-                    erScaleByB(api, page, shape, scale);
+                    erScaleByB(api, page, shape, scale, size_recorder);
                 } else if (type === CtrlElementType.RectLeft) {
-                    erScaleByL(api, page, shape, scale);
+                    erScaleByL(api, page, shape, scale, size_recorder);
                 }
                 this.__repo.transactCtx.fireNotify();
                 status = Status.Fulfilled;
