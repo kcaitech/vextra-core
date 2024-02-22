@@ -590,6 +590,8 @@ export type SymbolRefShape = Shape & {
     overrideFills?: boolean
     overrideBorders?: boolean
     overrideShadows?: boolean
+    overrideBorderOptions?: boolean
+    overrideContextSettings?: boolean
 }
 /* span attr */
 export type Span = SpanAttr & {

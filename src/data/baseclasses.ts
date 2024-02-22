@@ -964,6 +964,8 @@ export class SymbolRefShape extends Shape {
     overrideFills?: boolean
     overrideBorders?: boolean
     overrideShadows?: boolean
+    overrideBorderOptions?: boolean
+    overrideContextSettings?: boolean
     constructor(
         crdtidx: BasicArray<number >,
         id: string,

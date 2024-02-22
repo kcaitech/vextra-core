@@ -426,7 +426,7 @@ export class SymbolRefView extends ShapeView {
     get contextSettings(): ContextSettings | undefined {
         const v = this._findOV(OverrideType.ContextSettings, VariableType.ContextSettings);
         if (v) return v.value;
-        if (this.m_data.style.contextSettings) return this.m_data.style.contextSettings;
+        if (this.data.overrideContextSettings) return this.m_data.style.contextSettings;
         return this.m_sym?.style.contextSettings;
     }
 
@@ -447,7 +447,7 @@ export class SymbolRefView extends ShapeView {
     getBorderOptions(): BorderOptions | undefined {
         const v = this._findOV(OverrideType.BorderOptions, VariableType.BorderOptions);
         if (v) return v.value;
-        if (this.data.style.borderOptions) return this.data.style.borderOptions;
+        if (this.data.overrideBorderOptions) return this.data.style.borderOptions;
         return this.m_sym?.style.borderOptions;
     }
 

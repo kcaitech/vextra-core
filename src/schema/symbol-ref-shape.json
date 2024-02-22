@@ -32,6 +32,12 @@
         },
         "overrideShadows": {
             "type": "boolean"
+        },
+        "overrideBorderOptions": {
+            "type": "boolean"
+        },
+        "overrideContextSettings": {
+            "type": "boolean"
         }
     },
     "required": [

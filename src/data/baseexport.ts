@@ -988,6 +988,8 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
         overrideFills: source.overrideFills,
         overrideBorders: source.overrideBorders,
         overrideShadows: source.overrideShadows,
+        overrideBorderOptions: source.overrideBorderOptions,
+        overrideContextSettings: source.overrideContextSettings,
     }
     // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);

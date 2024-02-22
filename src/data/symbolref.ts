@@ -28,6 +28,8 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     overrideFills?: boolean
     overrideBorders?: boolean
     overrideShadows?: boolean
+    overrideBorderOptions?: boolean
+    overrideContextSettings?: boolean
     // __childs?: Shape[];
 
     constructor(
