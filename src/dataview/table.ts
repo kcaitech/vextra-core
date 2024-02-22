@@ -48,7 +48,7 @@ export class TableView extends ShapeView {
     // }
 
     protected isNoSupportDiamondScale(): boolean {
-        return true;
+        return this.m_data.isNoSupportDiamondScale;
     }
 
     getDataChilds(): Shape[] {
