@@ -5,7 +5,7 @@ import { Text } from "../data/text";
 import { Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
 import { TableShape } from "../data/table";
-import { ResizingConstraints2 } from "../data/consts";
+import { FrameType, ResizingConstraints2 } from "../data/consts";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -28,15 +28,6 @@ export interface Api {
 }
 
 
-// 在不增加frame缩放值、不修改现有图层变换矩阵的条件下，对frame做以下类型区分(莫名其妙发生循环引用)
-export enum FrameType {
-    None = 0, // 无实体：连接线。在约束中的表现为 —— 不需要处理约束表现
-    Path = 1, // 任意形状：PathShape。结构由path路径做支撑，可以表现出菱形特征，在约束中的表现为 —— 摆正、重新整理路径
-    Rect = 2, // 标准矩形：包括文字、图片、表格、切图。自身没有path路径，结构固定，外切盒子和图层自身都为矩形，在约束中的表现为 —— 根据比例调整尺寸
-    Flex = 3, // 父级矩形：容器、实例、组件、组件集合。含有子元素的标准矩形，在约束中的表现同上。
-    Comp = 4  // 任意矩形：编组，在约束中的表现为 —— 需要摆正，并把约束行为传递都子元素 --先不摆正
-}
-
 export type SizeRecorder = Map<string, { toRight: number, exceededX: boolean, toBottom: number, exceededY: boolean }>;
 
 export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
@@ -52,7 +43,7 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
         const ft = c.frameType;
         if (!ft) {
             continue;
-        } else if (ft === 1) { // Path
+        } else if (ft === FrameType.Path) { // Path
             modifyFrameForPath(api, page, c, scaleX, scaleY, shape.frame, originFrame, recorder);
         } else {
             modifyFrameForRect(api, page, c, scaleX, scaleY, shape.frame, originFrame, recorder);

@@ -43,6 +43,7 @@ import { ContactLineView, PageView, PathShapeView, ShapeView, adapt2Shape } from
 import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
+import { FrameType } from "../data/consts";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -653,7 +654,7 @@ export class Controller {
                         set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy, recorder);
                     }
                     else {
-                        if (ft === 1) {
+                        if (ft === FrameType.Path) {
                             adjust_pathshape_rotate_frame(api, page, s as PathShape);
                             set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy, recorder);
                         } else {
