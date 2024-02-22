@@ -11,6 +11,7 @@ import { ContactForm, ContactType } from "./baseclasses";
 import { gen_matrix1, gen_path, handle_contact_from, handle_contact_to, path_for_edited, path_for_free_contact, path_for_free_end_contact, path_for_free_start_contact, slice_invalid_point } from "./utils";
 import { PathShape, Shape } from "./shape";
 import { Page } from "./page";
+import { FrameType } from "./consts";
 interface PageXY {
     x: number
     y: number
@@ -239,6 +240,6 @@ export class ContactShape extends PathShape implements classes.ContactShape {
     }
 
     get frameType() {
-        return 2;
+        return FrameType.None;
     }
 }

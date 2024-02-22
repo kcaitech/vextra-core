@@ -3,7 +3,7 @@ import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, Symbo
 import { findOverrideAndVar } from "./basic";
 import { RenderTransform } from "./basic";
 import { EL, elh } from "./el";
-import { ResizingConstraints, ResizingConstraints2 } from "../data/consts";
+import { FrameType, ResizingConstraints, ResizingConstraints2 } from "../data/consts";
 import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
@@ -479,7 +479,7 @@ export class ShapeView extends DataView {
         if (!frameType) { // 无实体frame
             return;
         } else {
-            if (frameType === 1 && !shape.isNoTransform()) { // 菱形
+            if (frameType === FrameType.Path && !shape.isNoTransform()) { // 菱形
                 const m = matrix2parent(x, y, width, height, rotate, hflip, vflip);
                 const bbox = boundingBox(m, frame, shape.getPathOfFrame(frame));
                 const saveW = bbox.width;

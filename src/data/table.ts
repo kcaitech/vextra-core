@@ -10,6 +10,7 @@ import { LayoutItem, TableGridItem, TableLayout, layoutTable } from "./tablelayo
 import { locateCell, locateCellIndex } from "./tablelocate";
 import { getTableCells, getTableNotCoveredCells, getTableVisibleCells } from "./tableread";
 import { CursorLocate, TextLocate, locateCursor, locateRange, locateText } from "./textlocate";
+import { FrameType } from "./consts";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 export { CrdtNumber } from "./baseclasses";
@@ -539,6 +540,6 @@ export class TableShape extends Shape implements classes.TableShape {
     }
 
     get frameType() {
-        return 2;
+        return FrameType.Rect;
     }
 }

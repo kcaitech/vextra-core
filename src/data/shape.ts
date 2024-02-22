@@ -23,7 +23,7 @@ import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { RECT_POINTS } from "./consts";
+import { FrameType, RECT_POINTS } from "./consts";
 import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
 import { TableShape } from "./table";
@@ -439,7 +439,7 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     get frameType() {
-        return 1;
+        return FrameType.Path;
     }
 }
 
@@ -558,7 +558,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
     }
 
     get frameType() {
-        return 3;
+        return FrameType.Flex;
     }
 }
 
@@ -1060,7 +1060,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     }
 
     get frameType() {
-        return 2;
+        return FrameType.Rect;
     }
 }
 
@@ -1215,7 +1215,7 @@ export class TextShape extends Shape implements classes.TextShape {
     }
 
     get frameType() {
-        return 2;
+        return FrameType.Rect;
     }
 }
 export class CutoutShape extends PathShape implements classes.CutoutShape {
@@ -1251,6 +1251,6 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     }
 
     get frameType() {
-        return 2;
+        return FrameType.Rect;
     }
 }
