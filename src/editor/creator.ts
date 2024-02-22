@@ -19,7 +19,6 @@ import {
 } from "../data/shape";
 import { ContactShape } from "../data/contact"
 import * as types from "../data/typesdefine"
-import { BlendMode } from "../data/typesdefine"
 import {
     importArtboard,
     importGroupShape,
@@ -34,7 +33,6 @@ import template_text_shape from "./template/text-shape.json"
 import {
     Border,
     Color,
-    ContextSettings,
     CurveMode,
     CurvePoint,
     Ellipse,

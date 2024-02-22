@@ -73,40 +73,10 @@ export class ShapeEditor {
         }
     }
 
-    /**
-     * 将当前shape的overridetype对应的属性，override到varid的变量
-     * @param varId
-     * @param type
-     * @param api
-     */
-    _override2Variable(varId: string, type: OverrideType, api: Api) {
-
-        const shape: Shape = this.shape;
-
-        let sym: Shape | undefined = shape;
-        while (sym && sym.isVirtualShape) {
-            sym = sym.parent;
-        }
-        if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
-
-        let override_id = shape.id;
-        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (override_id.length === 0) throw new Error();
-        if (!(shape instanceof SymbolRefShape)) {
-            const idx = override_id.lastIndexOf('/');
-            if (idx > 0) {
-                override_id = override_id.substring(0, idx);
-            } else {
-                override_id = ""
-            }
-        }
-        // if (type !== OverrideType.Variable) {
-        if (override_id.length > 0) override_id += "/";
-        override_id += type;
-        // }
-
-        api.shapeAddOverride(this.__page, sym, override_id, type, varId);
-    }
+    // 修改对象属性
+    // 1. 如果普通对象，正常修改. symbolref需要设置override属性。
+    // 2. 如果对象为virtual，将属性值override到var再修改
+    // 3. 如果为var，判断var是否属于virtual对象，如果是则override到新var再修改，否则正常修改var
 
     /**
      * 已提出到 "editor/utils/symbol"
@@ -117,7 +87,10 @@ export class ShapeEditor {
      * @param api
      * @returns
      */
-    _overrideVariable(_var: Variable, value: any, api: Api) {
+    private _overrideVariable(_var: Variable, value: any, api: Api) {
+        // 1. 找到可修改的shape
+        // 2. 找到var的路径进行override
+
         const shape: Shape = this.shape;
 
         let p = varParent(_var);
@@ -162,7 +135,7 @@ export class ShapeEditor {
         return sym.getVar(_var2.id)!;
     }
 
-    _overrideVariableName(_var: Variable, name: string, dlt: any, api: Api) {
+    private _overrideVariableName(_var: Variable, name: string, dlt: any, api: Api) {
 
         const shape: Shape = this.shape;
 
@@ -199,6 +172,167 @@ export class ShapeEditor {
 
         return sym.getVar(_var2.id)!;
     }
+
+
+    /**
+     * 将变量fromVar override 到id为toVarId的变量
+     * */
+    private _overrideVariable2(fromVar: Variable, toVarId: string, api: Api) {
+        const shape = this.shape;
+
+        let p = varParent(fromVar);
+        if (!p) throw new Error();
+        if (p instanceof SymbolShape) {
+            if (p.isVirtualShape) throw new Error();
+            p = shape;
+        }
+
+        let sym: Shape | undefined = p;
+        while (sym && sym.isVirtualShape) {
+            sym = sym.parent;
+        }
+        if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
+
+        let override_id = shape.id;
+        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
+        if (override_id.length === 0) throw new Error();
+        if (!(shape instanceof SymbolRefShape)) {
+            const idx = override_id.lastIndexOf('/');
+            if (idx > 0) {
+                override_id = override_id.substring(0, idx);
+            } else {
+                override_id = ""
+            }
+        }
+        override_id += '/' + fromVar.id;
+
+        api.shapeAddOverride(this.__page, sym, override_id, OverrideType.Variable, toVarId);
+    }
+
+    /**
+     * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「返回」var，否则先override再「返回」新的var
+     * 适合text这种，value的修改非原子操作的情况 已提出到 "editor/utils/symbol"
+     *
+     * @param varType
+     * @param overrideType
+     * @param valuefun
+     * @param api
+     * @param shape
+     * @returns
+     */
+    overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, shape?: Shape) {
+        shape = shape ?? this.shape;
+        // symbol shape
+        if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {
+            const _vars: Variable[] = [];
+            shape.findVar(shape.varbinds.get(overrideType)!, _vars);
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === varType) {
+                return _var;
+            }
+        }
+        if (!shape.isVirtualShape) return;
+
+        // 先查varbinds
+        if (shape.varbinds && shape.varbinds.has(overrideType)) {
+            const _vars: Variable[] = [];
+            // const vars_path: Shape[] = shape.varsContainer;
+            shape.findVar(shape.varbinds.get(overrideType)!, _vars);
+            // if (_vars.length !== vars_path.length) throw new Error();
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === varType) {
+
+                let p = varParent(_var);
+                if (!p) throw new Error();
+
+                // if (vars_path.length) {
+                //     const f = vars_path[0];
+                //     if (p instanceof SymbolRefShape && p.id !== f.id) {
+                //         return _override_variable_for_symbolref(this.__page, f as any, _var, _var.value, api);
+                //     }
+                // }
+
+                if (p.isVirtualShape || p instanceof SymbolShape) {
+                    // override variable
+                    const ret = this._overrideVariable(_var, valuefun(_var), api);
+                    return ret;
+                } else {
+                    return _var;
+                }
+            }
+        }
+
+        // override
+        let override_id = shape.id;
+        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
+        if (override_id.length === 0) throw new Error();
+
+        const _vars = shape.findOverride(override_id.substring(override_id.lastIndexOf('/') + 1), overrideType);
+        if (_vars) {
+            const _var = _vars[_vars.length - 1];
+            if (_var && _var.type === varType) {
+                let p = varParent(_var); // 这里会有问题！如果p是symbolshape，往上追溯就错了。
+                if (!p) throw new Error();
+                if (p.isVirtualShape || p instanceof SymbolShape) {
+                    const ret = this._overrideVariable(_var, valuefun(_var), api);
+                    return ret;
+                } else {
+                    return _var;
+                }
+            }
+        }
+
+        // get first not virtual
+        let symRef = shape.parent;
+        while (symRef && symRef.isVirtualShape) symRef = symRef.parent;
+        if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
+
+        // add override add variable
+        const _var2 = new Variable(uuid(), varType, "", valuefun(undefined));
+        // _var2.value = valuefun(undefined);
+        api.shapeAddVariable(this.__page, symRef, _var2);
+        api.shapeAddOverride(this.__page, symRef, override_id, overrideType, _var2.id);
+
+        return symRef.getVar(_var2.id)!;
+    }
+
+
+    /**
+     * 将当前shape的overridetype对应的属性，override到varid的变量
+     * @param varId
+     * @param type
+     * @param api
+     */
+    private _override2Variable(varId: string, type: OverrideType, api: Api) {
+
+        const shape: Shape = this.shape;
+
+        let sym: Shape | undefined = shape;
+        while (sym && sym.isVirtualShape) {
+            sym = sym.parent;
+        }
+        if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
+
+        let override_id = shape.id;
+        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
+        if (override_id.length === 0) throw new Error();
+        if (!(shape instanceof SymbolRefShape)) {
+            const idx = override_id.lastIndexOf('/');
+            if (idx > 0) {
+                override_id = override_id.substring(0, idx);
+            } else {
+                override_id = ""
+            }
+        }
+        // if (type !== OverrideType.Variable) {
+        if (override_id.length > 0) override_id += "/";
+        override_id += type;
+        // }
+
+        api.shapeAddOverride(this.__page, sym, override_id, type, varId);
+    }
+
+    // ===================================================
 
     /**
      * 修改_var的值为value，如果_var不可以修改，则override _var到value
@@ -248,15 +382,17 @@ export class ShapeEditor {
 
         const root_data = symData;
 
-        if (!variables || !overrides || !root_data) {
+        if (shape.overrideContextSettings || shape.overrideBorderOptions || shape.overrideBorders || shape.overrideFills || shape.overrideShadows) {
+            // 也需要重置
+        } else if (variables.size === 0 || !overrides || !root_data) {
             console.log('!variables || !overrides || !root_data');
             return false;
         }
-        const root_variables = root_data.variables;
+        const root_variables = root_data?.variables;
         try {
             const api = this.__repo.start('resetSymbolRefVariable');
             if (!root_variables) {
-                overrides.forEach((v, k) => {
+                overrides && overrides.forEach((v, k) => {
                     const variable = variables.get(v);
                     if (!variable) return;
                     api.shapeRemoveVirbindsEx(this.__page, shape as SymbolRefShape, k, variable.id, variable.type);
@@ -270,9 +406,24 @@ export class ShapeEditor {
                     api.shapeRemoveVariable(this.__page, shape as SymbolRefShape, k);
                 });
                 root_variables.forEach((v, k) => {
-                    if (v.type === VariableType.Status || !overrides.has(k)) return;
+                    if (v.type === VariableType.Status || !overrides?.has(k)) return;
                     api.shapeRemoveVirbindsEx(this.__page, shape as SymbolRefShape, k, v.id, v.type);
                 })
+            }
+            if (shape.overrideContextSettings) {
+                api.shapeModifySymOvContextSettings(this.__page, shape, undefined);
+            }
+            if (shape.overrideBorderOptions) {
+                api.shapeModifySymOvBorderOptions(this.__page, shape, undefined);
+            }
+            if (shape.overrideBorders) {
+                api.shapeModifySymOvBorders(this.__page, shape, undefined);
+            }
+            if (shape.overrideFills) {
+                api.shapeModifySymOvFills(this.__page, shape, undefined);
+            }
+            if (shape.overrideShadows) {
+                api.shapeModifySymOvShadows(this.__page, shape, undefined);
             }
             this.__repo.commit();
             return true;
@@ -454,128 +605,6 @@ export class ShapeEditor {
             this.__repo.rollback();
             return false;
         }
-    }
-
-    /**
-     * 将变量fromVar override 到id为toVarId的变量
-     * */
-    _overrideVariable2(fromVar: Variable, toVarId: string, api: Api) {
-        const shape = this.shape;
-
-        let p = varParent(fromVar);
-        if (!p) throw new Error();
-        if (p instanceof SymbolShape) {
-            if (p.isVirtualShape) throw new Error();
-            p = shape;
-        }
-
-        let sym: Shape | undefined = p;
-        while (sym && sym.isVirtualShape) {
-            sym = sym.parent;
-        }
-        if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
-
-        let override_id = shape.id;
-        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (override_id.length === 0) throw new Error();
-        if (!(shape instanceof SymbolRefShape)) {
-            const idx = override_id.lastIndexOf('/');
-            if (idx > 0) {
-                override_id = override_id.substring(0, idx);
-            } else {
-                override_id = ""
-            }
-        }
-        override_id += '/' + fromVar.id;
-
-        api.shapeAddOverride(this.__page, sym, override_id, OverrideType.Variable, toVarId);
-    }
-
-    /**
-     * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「返回」var，否则先override再「返回」新的var
-     * 适合text这种，value的修改非原子操作的情况 已提出到 "editor/utils/symbol"
-     *
-     * @param varType
-     * @param overrideType
-     * @param valuefun
-     * @param api
-     * @param shape
-     * @returns
-     */
-    overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, shape?: Shape) {
-        shape = shape ?? this.shape;
-        // symbol shape
-        if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {
-            const _vars: Variable[] = [];
-            shape.findVar(shape.varbinds.get(overrideType)!, _vars);
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                return _var;
-            }
-        }
-        if (!shape.isVirtualShape) return;
-
-        // 先查varbinds
-        if (shape.varbinds && shape.varbinds.has(overrideType)) {
-            const _vars: Variable[] = [];
-            // const vars_path: Shape[] = shape.varsContainer;
-            shape.findVar(shape.varbinds.get(overrideType)!, _vars);
-            // if (_vars.length !== vars_path.length) throw new Error();
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-
-                let p = varParent(_var);
-                if (!p) throw new Error();
-
-                // if (vars_path.length) {
-                //     const f = vars_path[0];
-                //     if (p instanceof SymbolRefShape && p.id !== f.id) {
-                //         return _override_variable_for_symbolref(this.__page, f as any, _var, _var.value, api);
-                //     }
-                // }
-
-                if (p.isVirtualShape || p instanceof SymbolShape) {
-                    // override variable
-                    const ret = this._overrideVariable(_var, valuefun(_var), api);
-                    return ret;
-                } else {
-                    return _var;
-                }
-            }
-        }
-
-        // override
-        let override_id = shape.id;
-        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (override_id.length === 0) throw new Error();
-
-        const _vars = shape.findOverride(override_id.substring(override_id.lastIndexOf('/') + 1), overrideType);
-        if (_vars) {
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                let p = varParent(_var); // 这里会有问题！如果p是symbolshape，往上追溯就错了。
-                if (!p) throw new Error();
-                if (p.isVirtualShape || p instanceof SymbolShape) {
-                    const ret = this._overrideVariable(_var, valuefun(_var), api);
-                    return ret;
-                } else {
-                    return _var;
-                }
-            }
-        }
-
-        // get first not virtual
-        let symRef = shape.parent;
-        while (symRef && symRef.isVirtualShape) symRef = symRef.parent;
-        if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
-
-        // add override add variable
-        const _var2 = new Variable(uuid(), varType, "", valuefun(undefined));
-        // _var2.value = valuefun(undefined);
-        api.shapeAddVariable(this.__page, symRef, _var2);
-        api.shapeAddOverride(this.__page, symRef, override_id, overrideType, _var2.id);
-
-        return symRef.getVar(_var2.id)!;
     }
 
     /**
