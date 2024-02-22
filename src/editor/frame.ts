@@ -37,6 +37,8 @@ export enum FrameType {
     Comp = 4  // 任意矩形：编组，在约束中的表现为 —— 需要摆正，并把约束行为传递都子元素 --先不摆正
 }
 
+export type SizeRecorder = Map<string, { toRight: number, exceededX: boolean, toBottom: number, exceededY: boolean }>;
+
 export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
 export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame, recorder?: SizeRecorder) {
@@ -525,7 +527,6 @@ export function fixConstrainFrame(shape: Shape, resizingConstraint: number, x: n
 
     return { x, y, width, height };
 }
-export type SizeRecorder = Map<string, { toRight: number, exceededX: boolean, toBottom: number, exceededY: boolean }>;
 function fixWidthByRecorder(shape: Shape, width: number, origin_d_to_right: number, current_env_width: number, x: number, recorder?: SizeRecorder) {
     if (width <= 1) {
         if (!recorder) {

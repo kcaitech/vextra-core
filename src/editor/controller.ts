@@ -535,6 +535,7 @@ export class Controller {
         const shape = _shape instanceof ShapeView ? adapt2Shape(_shape) : _shape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
         const size_recorder: SizeRecorder = new Map(); // 当约束使得图层尺寸触发极值表现时，记录触发前的图层尺寸，用于摆脱极值表现后回到触发前的状态
+        // (window as any).__size_recorder = size_recorder; // 是否可以在不使用全局变量的情况下，实例内部的虚拟图层约束表现可以跟普通图层同步？
         const api = this.__repo.start("action");
         let status: Status = Status.Pending;
         let need_update_frame = false;
@@ -622,6 +623,7 @@ export class Controller {
             } else {
                 this.__repo.rollback();
             }
+            // (window as any).__size_recorder = undefined;
             return undefined;
         }
         return { executeRotate, executeScale, executeErScale, executeForLine, close };
@@ -635,6 +637,7 @@ export class Controller {
         const api = this.__repo.start("action");
         let status: Status = Status.Pending;
         const pMap: Map<string, Matrix> = new Map();
+        const recorder: SizeRecorder = new Map();
         const executeScale = (origin1: PageXY, origin2: PageXY, sx: number, sy: number) => {
             status = Status.Pending;
             try {
@@ -642,15 +645,22 @@ export class Controller {
                     const s = shapes[i];
                     const p = s.parent;
                     if (!p) continue;
+                    const ft = s.frameType;
+                    if (!ft) {
+                        continue;
+                    }
                     if (!s.rotation) {
-                        set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
+                        set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy, recorder);
                     }
-                    else if (s instanceof GroupShape && s.type === ShapeType.Group) {
-                        adjust_group_rotate_frame(api, page, s, sx, sy);
-                    }
-                    else if (s instanceof PathShape) {
-                        adjust_pathshape_rotate_frame(api, page, s);
-                        set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy);
+                    else {
+                        if (ft === 1) {
+                            adjust_pathshape_rotate_frame(api, page, s as PathShape);
+                            set_shape_frame(api, s, page, pMap, origin1, origin2, sx, sy, recorder);
+                        } else {
+                            if (s instanceof GroupShape && s.type === ShapeType.Group) {
+                                adjust_group_rotate_frame(api, page, s, sx, sy);
+                            }
+                        }
                     }
                 }
                 this.__repo.transactCtx.fireNotify();
@@ -1223,7 +1233,7 @@ function adjust_pathshape_rotate_frame(api: Api, page: Page, s: PathShape) {
 function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>,
     origin1: { x: number, y: number },
     origin2: { x: number, y: number },
-    sx: number, sy: number) {
+    sx: number, sy: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) {
         return;
@@ -1271,10 +1281,66 @@ function set_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matri
         api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
     }
 
-    if (s instanceof GroupShape && s.type === ShapeType.Group) {
-        afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH));
+    if (s instanceof GroupShape) {
+        afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH), recorder);
     }
 }
+function set_rect_shape_frame(api: Api, s: Shape, page: Page, pMap: Map<string, Matrix>,
+    origin1: { x: number, y: number },
+    origin2: { x: number, y: number },
+    sx: number, sy: number, recorder?: SizeRecorder) {
+    const p = s.parent;
+    if (!p) {
+        return;
+    }
+    const m = s.matrix2Root();
+    const lt = m.computeCoord2(0, 0);
+
+    const r_o_lt = { x: lt.x - origin1.x, y: lt.y - origin1.y };
+    const target_xy = { x: origin2.x + sx * r_o_lt.x, y: origin2.y + sy * r_o_lt.y };
+
+    let np = new Matrix();
+
+    const ex = pMap.get(p.id);
+    if (ex) {
+        np = ex;
+    }
+    else {
+        np = new Matrix(p.matrix2Root().inverse);
+        pMap.set(p.id, np);
+    }
+    const xy = np.computeCoord3(target_xy);
+    if (sx < 0) {
+        api.shapeModifyHFlip(page, s, !s.isFlippedHorizontal);
+        sx = -sx;
+    }
+    if (sy < 0) {
+        api.shapeModifyVFlip(page, s, !s.isFlippedVertical);
+        sy = -sy;
+    }
+    const saveW = s.frame.width;
+    const saveH = s.frame.height;
+
+    if (s.isFlippedHorizontal || s.isFlippedVertical) {
+        api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
+        const self = s
+            .matrix2Parent()
+            .computeCoord2(0, 0);
+
+        const delta = { x: xy.x - self.x, y: xy.y - self.y };
+        api.shapeModifyX(page, s, s.frame.x + delta.x);
+        api.shapeModifyY(page, s, s.frame.y + delta.y);
+    } else {
+        api.shapeModifyX(page, s, xy.x);
+        api.shapeModifyY(page, s, xy.y);
+        api.shapeModifyWH(page, s, s.frame.width * sx, s.frame.height * sy);
+    }
+
+    if (s instanceof GroupShape) {
+        afterModifyGroupShapeWH(api, page, s, sx, sy, new ShapeFrame(s.frame.x, s.frame.y, saveW, saveH), recorder);
+    }
+}
+
 
 function __migrate(document: Document,
     api: Api, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
