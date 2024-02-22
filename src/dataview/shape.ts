@@ -83,7 +83,7 @@ export function fixFrameByConstrain(shape: Shape, parentFrame: ShapeFrame, frame
     } else {
         const resizingConstraint = shape.resizingConstraint!; // 默认值为靠左、靠顶、宽高固定
 
-        const __f = fixConstrainFrame(resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
+        const __f = fixConstrainFrame(shape, resizingConstraint, frame.x, frame.y, frame.width, frame.height, scaleX, scaleY, parentFrame, originParentFrame);
 
         frame.x = __f.x;
         frame.y = __f.y;
