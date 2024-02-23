@@ -149,6 +149,24 @@ export function newArtboard(name: string, frame: ShapeFrame, style?: Style): Art
     return artboard
 }
 
+export function newArtboard2(name: string, frame: ShapeFrame): Artboard {
+    template_artboard.id = uuid();
+    template_artboard.name = name;
+    template_artboard.frame = frame;
+
+    const artboard = importArtboard(template_artboard as types.Artboard);
+
+    const fillColor = new Color(1, 255, 255, 255);
+    const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, fillColor);
+    artboard.style.fills.push(fill);
+
+    addCommonAttr(artboard);
+
+    artboard.fixedRadius = 0;
+
+    return artboard
+}
+
 export function newPathShape(name: string, frame: ShapeFrame, path: Path, style?: Style): PathShape | PathShape2 {
     style = style || newStyle();
     const id = uuid();

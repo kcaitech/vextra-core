@@ -18,6 +18,7 @@ import {
     initFrame,
     newArrowShape,
     newArtboard,
+    newArtboard2,
     newGroupShape,
     newLineShape,
     newOvalShape,
@@ -1216,6 +1217,10 @@ export class PageEditor {
             default:
                 return newRectShape(name, frame);
         }
+    }
+
+    createArtboard(name: string, frame: ShapeFrame) { // todo 新建图层存在代码冗余
+        return newArtboard2(name, frame)
     }
 
     shapesModifyPointRadius(shapes: Shape[], indexes: number[], val: number) {
