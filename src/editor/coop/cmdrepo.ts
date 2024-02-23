@@ -121,6 +121,11 @@ class CmdSync {
     nopostcmds: LocalCmd[] = []; // 本地未提交cmd
     nopostcmdidx: number = 0; // 本地未提交cmd,可提交的cmd的length. index之后为被undo掉的cmd
 
+    // 是否存在未同步的cmd
+    public hasPendingSyncCmd(): boolean {
+        return this.postingcmds.length > 0 || this.nopostcmdidx > 0;
+    }
+
     // 不同bolck（page、document，不同repotree）
     repotrees: Map<string, RepoNodePath> = new Map();
 
@@ -995,6 +1000,9 @@ export class CmdRepo {
     // adapt
     roll2NewVersion(_blockIds: string[]) {
         return this.cmdsync.roll2NewVersion(_blockIds);
+    }
+    hasPendingSyncCmd(): boolean {
+        return this.cmdsync.pendingcmds.length > 0;
     }
     setNet(net: ICoopNet) {
         return this.cmdsync.setNet(net);

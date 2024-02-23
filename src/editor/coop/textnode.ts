@@ -53,7 +53,7 @@ function apply(document: Document, text: Text, op: ArrayOp) {
                 } else if (value.typeId === "gradient") {
                     value = importGradient(value, ctx);
                 } else {
-                    throw new Error('need import ' + value)
+                    throw new Error('need import ' + value.typeId)
                 }
             }
             if (op.props.target === "span") {
