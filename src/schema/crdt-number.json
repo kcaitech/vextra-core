@@ -1,20 +1,24 @@
 {
-    "description": "document syms",
+    "description": "crdt number",
     "type": "object",
     "properties": {
-        "pageId": {
+        "id": {
             "type": "string"
         },
-        "symbols": {
+        "crdtidx": {
             "type": "array",
             "items": {
-                "type": "string"
+                "type": "number"
             }
+        },
+        "value": {
+            "type": "number"
         }
     },
     "required": [
-        "pageId",
-        "symbols"
+        "id",
+        "crdtidx",
+        "value"
     ],
     "additionalProperties": false
 }

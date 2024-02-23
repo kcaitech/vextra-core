@@ -13,4 +13,4 @@ export class LoadContext {
     }
 }
 
-export type ImportFun = (ctx: LoadContext, data: IJSON) => Shape
+export type ImportFun = (ctx: LoadContext, data: IJSON, i: number) => Shape

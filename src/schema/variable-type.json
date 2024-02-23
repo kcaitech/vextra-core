@@ -12,6 +12,9 @@
         "fills",
         "borders",
         "shadows",
-        "style"
+        "style",
+        "contextSettings",
+        "table",
+        "borderStyle"
     ]
 }

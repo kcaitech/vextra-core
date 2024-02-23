@@ -19,7 +19,7 @@ test("map", () => {
         assert.equal(map.get(i), i)
     }
 
-    repo.start("", {});
+    repo.start("");
     tmap.set(3, 3);
     repo.commit();
     assert.equal(map.size, 4);
@@ -39,7 +39,7 @@ test("map", () => {
         assert.equal(map.get(i), i)
     }
 
-    repo.start("", {});
+    repo.start("");
     tmap.set(4, 4);
     repo.rollback();
     assert.equal(map.size, 4);
@@ -55,7 +55,7 @@ test("BasicArray", () => { // push(x)、push(...xxx)、unshift(x)、splice(0, 1)
     assert.equal(tarray.length, 3);
 
     // push(x) push(...xxx)
-    repo.start("", {});
+    repo.start("");
     tarray.push('delta'); // push单个 len 4 
     repo.commit();
     assert.equal(array.length, 4);
@@ -67,7 +67,7 @@ test("BasicArray", () => { // push(x)、push(...xxx)、unshift(x)、splice(0, 1)
     assert.equal(array.length, 4);
     assert.equal(array.at(-1), 'delta');
     repo.undo(); // ['alpha', 'beta', 'gamma']
-    repo.start("", {});
+    repo.start("");
     tarray.push('delta', 'epsilon', 'zeta', 'eta'); // push 多个 len 7 
     repo.commit();
     assert.equal(array.length, 7);
@@ -79,7 +79,7 @@ test("BasicArray", () => { // push(x)、push(...xxx)、unshift(x)、splice(0, 1)
     repo.undo(); // ['alpha', 'beta', 'gamma']
 
     // unshift(x)
-    repo.start("", {});
+    repo.start("");
     tarray.unshift('delta'); // len 4
     repo.commit();
     assert.equal(array.length, 4);
@@ -93,7 +93,7 @@ test("BasicArray", () => { // push(x)、push(...xxx)、unshift(x)、splice(0, 1)
     repo.undo(); // ['alpha', 'beta', 'gamma']
 
     // splice(0, 1) splice(0, multi)
-    repo.start("", {});
+    repo.start("");
     tarray.splice(0, 1);
     repo.commit();
     assert.equal(array.length, 2);
@@ -105,7 +105,7 @@ test("BasicArray", () => { // push(x)、push(...xxx)、unshift(x)、splice(0, 1)
     assert.equal(array.length, 2);
     assert.equal(array[0], 'beta');
     repo.undo(); // ['alpha', 'beta', 'gamma']
-    repo.start("", {});
+    repo.start("");
     tarray.splice(0, 2);
     repo.commit();
     assert.equal(array.length, 1);
@@ -119,7 +119,7 @@ test("BasicArray", () => { // push(x)、push(...xxx)、unshift(x)、splice(0, 1)
     repo.undo();
 
     // length
-    repo.start("", {});
+    repo.start("");
     tarray.length = 0; // []
     repo.commit();
     assert.equal(array.length, 0);
@@ -131,7 +131,7 @@ test("BasicArray", () => { // push(x)、push(...xxx)、unshift(x)、splice(0, 1)
     repo.undo(); // ['alpha', 'beta', 'gamma']
 
     // pop(x)
-    repo.start("", {});
+    repo.start("");
     const last = tarray.pop();
     repo.commit();
     assert.equal(last, 'gamma');

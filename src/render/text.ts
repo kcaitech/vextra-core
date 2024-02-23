@@ -257,7 +257,7 @@ export function render(h: Function, shape: TextShape,
         }
     }
 
-    const layout = text.getLayout2(frame.width, frame.height);
+    const layout = text.getLayout2(frame.width, frame.height, shape.id);
     childs.push(...renderTextLayout(h, layout));
     // border
     childs.push(...borderR(h, shape, frame, path, varsContainer));
