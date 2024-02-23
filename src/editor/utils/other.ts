@@ -20,14 +20,14 @@ import {
     TextBehaviour,
     TextShape,
     Variable,
-    VariableType
+    VariableType,
 } from "../../data/classes";
-import { Api } from "../command/recordapi";
-import { BasicMap } from "../../data/basic";
+import { Api } from "../coop/recordapi";
+import { BasicArray, BasicMap } from "../../data/basic";
 import { newSymbolRefShape, newSymbolShape, newSymbolShapeUnion } from "../creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
-import { translateTo } from "../frame";
+import { expandTo, translateTo } from "../frame";
 import { exportStyle } from "../../data/baseexport";
 import { importStyle } from "../../data/baseimport";
 
@@ -45,15 +45,17 @@ export function fixTextShapeFrameByLayout(api: _Api, page: Page, shape: TextShap
         case TextBehaviour.FixWidthAndHeight:
             break;
         case TextBehaviour.Fixed: {
-            const layout = shape.text.getLayout();
+            const layout = shape.getLayout();
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
+            // expandTo(api as Api, page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
             api.shapeModifyWH(page, shape, shape.frame.width, Math.max(fontsize, layout.contentHeight));
             break;
         }
         case TextBehaviour.Flexible: {
-            const layout = shape.text.getLayout();
+            const layout = shape.getLayout();
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             api.shapeModifyWH(page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
+            // expandTo(api as Api, page, shape, Math.max(fontsize, layout.contentWidth), Math.max(fontsize, layout.contentHeight));
             break;
         }
     }
@@ -68,24 +70,26 @@ export function fixTableShapeFrameByLayout(api: _Api, page: Page, shape: TableCe
     const rowSpan = Math.max(shape.rowSpan ?? 1, 1);
     const colSpan = Math.max(shape.colSpan ?? 1, 1);
 
-    let widthWeight = table.colWidths[indexCell.colIdx];
+    let widthWeight = table.colWidths[indexCell.colIdx].value;
     for (let i = 1; i < colSpan; ++i) {
-        widthWeight += table.colWidths[indexCell.colIdx + i];
+        widthWeight += table.colWidths[indexCell.colIdx + i].value;
     }
-    let heightWeight = table.rowHeights[indexCell.rowIdx];
+    let heightWeight = table.rowHeights[indexCell.rowIdx].value;
     for (let i = 1; i < rowSpan; ++i) {
-        heightWeight += table.rowHeights[indexCell.rowIdx + i];
+        heightWeight += table.rowHeights[indexCell.rowIdx + i].value;
     }
 
     const width = widthWeight / table.widthTotalWeights * table.frame.width;
     const height = heightWeight / table.heightTotalWeights * table.frame.height;
-    shape.text.updateSize(width, height);
-    const layout = shape.text.getLayout();
+    // shape.text.updateSize(width, height);
+    const layout1 = shape.text.getLayout3(width, height, shape.id, undefined); // 按理这里应该取的是个已有的layout
+    shape.text.dropLayout(layout1.token, shape.id);
+    const layout = layout1.layout;
     if (layout.contentHeight > (height + float_accuracy)) {
         // set row height
         const rowIdx = indexCell.rowIdx + rowSpan - 1;
-        const curHeight = table.rowHeights[rowIdx] / table.heightTotalWeights * table.frame.height;
-        const weight = (curHeight + layout.contentHeight - height) / curHeight * table.rowHeights[rowIdx];
+        const curHeight = table.rowHeights[rowIdx].value / table.heightTotalWeights * table.frame.height;
+        const weight = (curHeight + layout.contentHeight - height) / curHeight * table.rowHeights[rowIdx].value;
         api.tableModifyRowHeight(page, table, rowIdx, weight);
         api.shapeModifyWH(page, table, table.frame.width, table.frame.height + layout.contentHeight - height);
     }
@@ -209,9 +213,10 @@ export function make_union(api: Api, page: Page, symbol: SymbolShape, attri_name
     });
 
     union.fixedRadius = 4;
-    
+
     const border_style = new BorderStyle(5, 5);
     const border = new Border(
+        ([union.style.borders.length] as BasicArray<number>),
         uuid(),
         true,
         types.FillType.SolidColor,

@@ -1,12 +1,11 @@
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
-import { CurvePoint, GroupShape, ImageShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
+import { GroupShape, ImageShape, PathShape, Shape, ShapeFrame, TextShape } from "../data/shape";
 import { Text } from "../data/text";
-import { ContactType, Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
+import { Point2D, ShapeType, TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
 import { TableShape } from "../data/table";
-import { ResizingConstraints } from "../data/consts";
-import { log } from "console";
+import { FrameType, ResizingConstraints2 } from "../data/consts";
 
 type TextShapeLike = Shape & { text: Text }
 
@@ -28,104 +27,306 @@ export interface Api {
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number): void;
 }
 
-const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
 
-export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame) {
-    if (shape.type === ShapeType.Artboard || shape.type === ShapeType.SymbolUnion) return; // 容器不需要调整子对象
+export type SizeRecorder = Map<string, { toRight: number, exceededX: boolean, toBottom: number, exceededY: boolean }>;
+
+export const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
+
+export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame, recorder?: SizeRecorder) {
+    if (shape.type === ShapeType.Group) { // 有且只有编组的子元素只可为跟随缩放，应忽略constraint
+        return modifySizeIgnoreConstraint(api, page, shape, scaleX, scaleY, originFrame);
+    }
+
     const childs = shape.childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const c = childs[i];
-
-        // 根据resizeconstrain修正scale
-        const resizingConstraint = c.resizingConstraint;
-        if (resizingConstraint && (ResizingConstraints.hasWidth(resizingConstraint) || ResizingConstraints.hasHeight(resizingConstraint))) {
-            const fixWidth = ResizingConstraints.hasWidth(resizingConstraint);
-            const fixHeight = ResizingConstraints.hasHeight(resizingConstraint);
-
-            if (fixWidth && fixHeight) {
-                // 不需要缩放，但要调整位置
-                const cFrame = c.frame;
-                const cW = cFrame.width;
-                const cH = cFrame.height;
-                const cX = cFrame.x * scaleX + cW * (scaleX - 1) / 2;
-                const cY = cFrame.y * scaleY + cH * (scaleY - 1) / 2;
-                // constrain position
-                const f = fixConstrainFrame(page, c, cX, cY, cW, cH, api, originFrame, shape.frame);
-                setFrame(page, c, f.x, f.y, f.w, f.h, api);
-            }
-
-            else if (c.rotation) {
-                // 缩放+旋转后 x,y是会变化位置的
-
-                const m = new Matrix();
-                m.rotate(c.rotation / 360 * 2 * Math.PI);
-                m.scale(scaleX, scaleY);
-                const _newscale = m.computeRef(1, 1);
-                m.scale(1 / scaleX, 1 / scaleY);
-                const newscale = m.inverseRef(_newscale.x, _newscale.y);
-
-                const cFrame = c.frame;
-                let cX = cFrame.x * scaleX;
-                let cY = cFrame.y * scaleY;
-                if (fixWidth) {
-                    cX += cFrame.width * (newscale.x - 1) / 2;
-                    newscale.x = 1;
-                }
-                else {
-                    cY += cFrame.height * (newscale.y - 1) / 2;
-                    newscale.y = 1;
-                }
-                if (fixWidth) {
-                    newscale.x = 1;
-                }
-                else {
-                    newscale.y = 1;
-                }
-
-                const cW = cFrame.width * newscale.x;
-                const cH = cFrame.height * newscale.y;
-
-                // constrain position
-                const f = fixConstrainFrame(page, c, cX, cY, cW, cH, api, originFrame, shape.frame);
-                setFrame(page, c, f.x, f.y, f.w, f.h, api);
-
-            }
-            else {
-                const newscaleX = fixWidth ? 1 : scaleX;
-                const newscaleY = fixHeight ? 1 : scaleY;
-                const cFrame = c.frame;
-                let cX = cFrame.x * scaleX;
-                let cY = cFrame.y * scaleY;
-                if (fixWidth) cX += cFrame.width * (scaleX - 1) / 2;
-                if (fixHeight) cY += cFrame.height * (scaleY - 1) / 2;
-                const cW = cFrame.width * newscaleX;
-                const cH = cFrame.height * newscaleY;
-
-                // constrain position
-                const f = fixConstrainFrame(page, c, cX, cY, cW, cH, api, originFrame, shape.frame);
-                setFrame(page, c, f.x, f.y, f.w, f.h, api);
-            }
+        const ft = c.frameType;
+        if (!ft) {
+            continue;
+        } else if (ft === FrameType.Path) { // Path
+            modifyFrameForPath(api, page, c, scaleX, scaleY, shape.frame, originFrame, recorder);
+        } else {
+            modifyFrameForRect(api, page, c, scaleX, scaleY, shape.frame, originFrame, recorder);
         }
+        // // 根据resizeconstrain修正scale
+        // const resizingConstraint = c.resizingConstraint || 54; // 默认值给54，即靠左、靠顶对齐，尺寸固定
+        // const fixWidth = ResizingConstraints2.isFixedWidth(resizingConstraint);
+        // const fixHeight = ResizingConstraints2.isFixedHeight(resizingConstraint);
+        // if (resizingConstraint && (fixWidth || fixHeight)) {
+        //     if (fixWidth && fixHeight) {
+        //         // 不需要缩放，但要调整位置
+        //         const cFrame = c.frame;
+        //         const cW = cFrame.width;
+        //         const cH = cFrame.height;
+        //         const cX = cFrame.x * scaleX + cW * (scaleX - 1) / 2;
+        //         const cY = cFrame.y * scaleY + cH * (scaleY - 1) / 2;
+        //         // constrain position
+        //         const f = fixConstrainFrame(page, c, cX, cY, cW, cH, api, originFrame, shape.frame);
+        //         setFrame(page, c, f.x, f.y, f.w, f.h, api);
+        //     }
+        //     else if (c.rotation) {
+        //         // 缩放+旋转后 x,y是会变化位置的
 
+        //         const m = new Matrix();
+        //         m.rotate(c.rotation / 360 * 2 * Math.PI);
+        //         m.scale(scaleX, scaleY);
+        //         const _newscale = m.computeRef(1, 1);
+        //         m.scale(1 / scaleX, 1 / scaleY);
+        //         const newscale = m.inverseRef(_newscale.x, _newscale.y);
 
-        else if (!c.rotation) {
-            const cFrame = c.frame;
-            const cX = cFrame.x * scaleX;
-            const cY = cFrame.y * scaleY;
-            const cW = cFrame.width * scaleX;
-            const cH = cFrame.height * scaleY;
-            const f = fixConstrainFrame(page, c, cX, cY, cW, cH, api, originFrame, shape.frame);
-            setFrame(page, c, f.x, f.y, f.w, f.h, api);
+        //         const cFrame = c.frame;
+        //         let cX = cFrame.x * scaleX;
+        //         let cY = cFrame.y * scaleY;
+        //         if (fixWidth) {
+        //             cX += cFrame.width * (newscale.x - 1) / 2;
+        //             newscale.x = 1;
+        //         }
+        //         else {
+        //             cY += cFrame.height * (newscale.y - 1) / 2;
+        //             newscale.y = 1;
+        //         }
+        //         if (fixWidth) {
+        //             newscale.x = 1;
+        //         }
+        //         else {
+        //             newscale.y = 1;
+        //         }
+
+        //         const cW = cFrame.width * newscale.x;
+        //         const cH = cFrame.height * newscale.y;
+
+        //         // constrain position
+        //         const f = fixConstrainFrame(page, c, cX, cY, cW, cH, api, originFrame, shape.frame);
+        //         setFrame(page, c, f.x, f.y, f.w, f.h, api);
+
+        //     }
+        //     else {
+        //         const newscaleX = fixWidth ? 1 : scaleX;
+        //         const newscaleY = fixHeight ? 1 : scaleY;
+        //         const cFrame = c.frame;
+        //         let cX = cFrame.x * scaleX;
+        //         let cY = cFrame.y * scaleY;
+        //         if (fixWidth) cX += cFrame.width * (scaleX - 1) / 2;
+        //         if (fixHeight) cY += cFrame.height * (scaleY - 1) / 2;
+        //         const cW = cFrame.width * newscaleX;
+        //         const cH = cFrame.height * newscaleY;
+
+        //         // constrain position
+        //         const f = fixConstrainFrame(page, c, cX, cY, cW, cH, api, originFrame, shape.frame);
+        //         setFrame(page, c, f.x, f.y, f.w, f.h, api);
+        //     }
+        // }
+        // else if (c instanceof GroupShape) {
+        //     // 需要摆正
+        //     // 如果设置了固定高度或者宽度？不需要摆正
+        //     const boundingBox = c.boundingBox();
+        //     const matrix = c.matrix2Parent();
+
+        //     for (let i = 0, len = c.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
+        //         const cc = c.childs[i]
+        //         const m1 = cc.matrix2Parent();
+        //         m1.multiAtLeft(matrix);
+        //         const target = m1.computeCoord(0, 0);
+
+        //         if (c.rotation) api.shapeModifyRotate(page, cc, (cc.rotation || 0) + c.rotation);
+        //         if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, cc, !cc.isFlippedHorizontal);
+        //         if (c.isFlippedVertical) api.shapeModifyVFlip(page, cc, !cc.isFlippedVertical);
+
+        //         const m2 = cc.matrix2Parent();
+        //         m2.trans(boundingBox.x, boundingBox.y);
+        //         const cur = m2.computeCoord(0, 0);
+
+        //         api.shapeModifyX(page, cc, cc.frame.x + target.x - cur.x);
+        //         api.shapeModifyY(page, cc, cc.frame.y + target.y - cur.y);
+        //     }
+
+        //     if (c.rotation) api.shapeModifyRotate(page, c, 0);
+        //     if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
+        //     if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
+
+        //     const width = boundingBox.width * scaleX;
+        //     const height = boundingBox.height * scaleY;
+        //     const f = fixConstrainFrame(page, c, boundingBox.x * scaleX, boundingBox.y * scaleY, width, height, api, originFrame, shape.frame, boundingBox);
+
+        //     api.shapeModifyX(page, c, f.x);
+        //     api.shapeModifyY(page, c, f.y);
+        //     api.shapeModifyWH(page, c, f.w, f.h);
+
+        //     afterModifyGroupShapeWH(api, page, c, scaleX, scaleY, boundingBox);
+        // }
+        // else if (!c.rotation) {
+        //     const cFrame = c.frame;
+        //     const cX = cFrame.x * scaleX;
+        //     const cY = cFrame.y * scaleY;
+        //     const cW = cFrame.width * scaleX;
+        //     const cH = cFrame.height * scaleY;
+        //     const f = fixConstrainFrame(page, c, cX, cY, cW, cH, api, originFrame, shape.frame);
+        //     setFrame(page, c, f.x, f.y, f.w, f.h, api);
+        // }
+        // else if (c instanceof PathShape && !(c instanceof ImageShape)) {
+        //     // 摆正并处理points
+        //     const matrix = c.matrix2Parent();
+        //     const cFrame = c.frame;
+        //     const boundingBox = c.boundingBox();
+
+        //     matrix.preScale(cFrame.width, cFrame.height);
+        //     if (c.rotation) api.shapeModifyRotate(page, c, 0);
+        //     if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
+        //     if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
+
+        //     api.shapeModifyX(page, c, boundingBox.x);
+        //     api.shapeModifyY(page, c, boundingBox.y);
+        //     api.shapeModifyWH(page, c, boundingBox.width, boundingBox.height);
+
+        //     const matrix2 = c.matrix2Parent();
+        //     matrix2.preScale(boundingBox.width, boundingBox.height); // 当对象太小时，求逆矩阵会infinity
+        //     matrix.multiAtLeft(matrix2.inverse);
+        //     const points = c.points;
+        //     for (let i = 0, len = points.length; i < len; i++) {
+        //         const p = points[i];
+        //         if (p.hasFrom) {
+        //             const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
+        //             api.shapeModifyCurvFromPoint(page, c, i, curveFrom);
+        //         }
+        //         if (p.hasTo) {
+        //             const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
+        //             api.shapeModifyCurvToPoint(page, c, i, curveTo);
+        //         }
+        //         const point = matrix.computeCoord(p.x, p.y);
+        //         api.shapeModifyCurvPoint(page, c, i, point);
+        //     }
+
+        //     // scale
+        //     // api.shapeModifyX(page, c, boundingBox.x * scaleX);
+        //     // api.shapeModifyY(page, c, boundingBox.y * scaleY);
+        //     const width = boundingBox.width * scaleX;
+        //     const height = boundingBox.height * scaleY;
+        //     // api.shapeModifyWH(page, c, width, height);
+        //     const f = fixConstrainFrame(page, c, boundingBox.x * scaleX, boundingBox.y * scaleY, width, height, api, originFrame, shape.frame, boundingBox)
+        //     setFrame(page, c, f.x, f.y, f.w, f.h, api);
+        // }
+        // else { // textshape imageshape symbolrefshape
+        //     // // 需要调整位置跟大小
+        //     const cFrame = c.frame;
+        //     const matrix = c.matrix2Parent();
+        //     const current = [{ x: 0, y: 0 }, { x: cFrame.width, y: cFrame.height }]
+        //         .map((p) => matrix.computeCoord(p));
+
+        //     const target = current.map((p) => {
+        //         return { x: p.x * scaleX, y: p.y * scaleY }
+        //     })
+        //     const matrixarr = matrix.toArray();
+        //     matrixarr[4] = target[0].x;
+        //     matrixarr[5] = target[0].y;
+        //     const m2 = new Matrix(matrixarr);
+        //     const m2inverse = new Matrix(m2.inverse)
+
+        //     const invertTarget = target.map((p) => m2inverse.computeCoord(p))
+
+        //     const wh = { x: invertTarget[1].x - invertTarget[0].x, y: invertTarget[1].y - invertTarget[0].y }
+
+        //     // 计算新的matrix 2 parent
+        //     const matrix2 = new Matrix();
+        //     {
+        //         const cx = wh.x / 2;
+        //         const cy = wh.y / 2;
+        //         matrix2.trans(-cx, -cy);
+        //         if (c.rotation) matrix2.rotate(c.rotation / 180 * Math.PI);
+        //         if (c.isFlippedHorizontal) matrix2.flipHoriz();
+        //         if (c.isFlippedVertical) matrix2.flipVert();
+        //         matrix2.trans(cx, cy);
+        //         matrix2.trans(cFrame.x, cFrame.y);
+        //     }
+        //     const xy = matrix2.computeCoord(0, 0);
+
+        //     const dx = target[0].x - xy.x;
+        //     const dy = target[0].y - xy.y;
+        //     const f = fixConstrainFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api, originFrame, shape.frame);
+        //     setFrame(page, c, f.x, f.y, f.w, f.h, api);
+        // }
+    }
+}
+function resetTransformForPath(api: Api, page: Page, shape: PathShape) {
+    const matrix = shape.matrix2Parent();
+    const cFrame = shape.frame;
+    const boundingBox = shape.boundingBox();
+    matrix.preScale(cFrame.width, cFrame.height);
+    if (shape.rotation) api.shapeModifyRotate(page, shape, 0);
+    if (shape.isFlippedHorizontal) api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
+    if (shape.isFlippedVertical) api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
+
+    api.shapeModifyX(page, shape, boundingBox.x);
+    api.shapeModifyY(page, shape, boundingBox.y);
+    api.shapeModifyWH(page, shape, boundingBox.width, boundingBox.height);
+
+    const matrix2 = shape.matrix2Parent();
+    matrix2.preScale(boundingBox.width, boundingBox.height); // 当对象太小时，求逆矩阵会infinity
+    matrix.multiAtLeft(matrix2.inverse);
+    const points = (shape as PathShape).points;
+    for (let i = 0, len = points.length; i < len; i++) {
+        const p = points[i];
+        if (p.hasFrom) {
+            const curveFrom = matrix.computeCoord(p.fromX || 0, p.fromY || 0);
+            api.shapeModifyCurvFromPoint(page, shape as PathShape, i, curveFrom);
         }
-        else if (c instanceof GroupShape && c.type === ShapeType.Group) {
-            // 需要摆正
-            // 如果设置了固定高度或者宽度？不需要摆正
-            // 
+        if (p.hasTo) {
+            const curveTo = matrix.computeCoord(p.toX || 0, p.toY || 0);
+            api.shapeModifyCurvToPoint(page, shape as PathShape, i, curveTo);
+        }
+        const point = matrix.computeCoord(p.x, p.y);
+        api.shapeModifyCurvPoint(page, shape as PathShape, i, point);
+    }
+
+    return boundingBox;
+}
+/**
+ * @description 处理的场景特征为没有子元素，需要考虑transform，当存在transform时，需要取外切盒子，根据外切盒子摆正再根据约束值实现约束效果；
+ */
+function modifyFrameForPath(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame, recorder?: SizeRecorder) {
+    // 根据transform得到约束前的frame
+    let x = shape.frame.x;
+    let y = shape.frame.y;
+    let width = shape.frame.width;
+    let height = shape.frame.height;
+    const resizingConstraint = shape.resizingConstraint!;
+
+    if (!shape.isNoTransform() && resizingConstraint !== ResizingConstraints2.Default) {
+        const boundingBox = resetTransformForPath(api, page, shape as PathShape);
+        x = boundingBox.x;
+        y = boundingBox.y;
+        width = boundingBox.width;
+        height = boundingBox.height;
+    }
+
+    const _f = fixConstrainFrame(shape, resizingConstraint, x, y, width, height, scaleX, scaleY, currentEnvFrame, originEnvFrame, recorder);
+
+    setFrame(page, shape, _f.x, _f.y, _f.width, _f.height, api);
+}
+
+function modifyFrameForRect(api: Api, page: Page, shape: Shape, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame, recorder?: SizeRecorder) {
+    const f = shape.frame;
+    const resizingConstraint = shape.resizingConstraint!;
+
+    // 即使有transform也不用特别处理，应直接忽略transform，因为这类场景不可以摆正
+    const { x, y, width, height } = fixConstrainFrame(shape, resizingConstraint, f.x, f.y, f.width, f.height, scaleX, scaleY, currentEnvFrame, originEnvFrame, recorder);
+
+    setFrame(page, shape, x, y, width, height, api);
+}
+/**
+ * @description 忽略约束(把约束表现都认定为跟随缩放)
+ */
+function modifySizeIgnoreConstraint(api: Api, page: Page, shape: GroupShape, scaleX: number, scaleY: number, originFrame: ShapeFrame) {
+    const childs = shape.childs;
+
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const c = childs[i];
+
+        if (c instanceof GroupShape) {
             const boundingBox = c.boundingBox();
             const matrix = c.matrix2Parent();
 
             for (let i = 0, len = c.childs.length; i < len; i++) { // 将旋转、翻转放入到子对象
-                const cc = c.childs[i]
+                const cc = (c as GroupShape).childs[i]
                 const m1 = cc.matrix2Parent();
                 m1.multiAtLeft(matrix);
                 const target = m1.computeCoord(0, 0);
@@ -146,20 +347,19 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
             if (c.isFlippedHorizontal) api.shapeModifyHFlip(page, c, !c.isFlippedHorizontal);
             if (c.isFlippedVertical) api.shapeModifyVFlip(page, c, !c.isFlippedVertical);
 
-            // api.shapeModifyX(page, c, boundingBox.x * scaleX);
-            // api.shapeModifyY(page, c, boundingBox.y * scaleY);
-            const width = boundingBox.width * scaleX;
-            const height = boundingBox.height * scaleY;
-            // api.shapeModifyWH(page, c, width, height);
-            // afterModifyGroupShapeWH(api, page, c, scaleX, scaleY, boundingBox);
-            const f = fixConstrainFrame(page, c, boundingBox.x * scaleX, boundingBox.y * scaleY, width, height, api, originFrame, shape.frame, boundingBox)
-
-            api.shapeModifyX(page, c, f.x);
-            api.shapeModifyY(page, c, f.y);
-            api.shapeModifyWH(page, c, f.w, f.h);
-            // setFrame(page, c, f.x, f.y, f.w, f.h, api);
+            api.shapeModifyX(page, c, boundingBox.x * scaleX);
+            api.shapeModifyY(page, c, boundingBox.y * scaleY);
+            api.shapeModifyWH(page, c, boundingBox.width * scaleX, boundingBox.height * scaleY);
 
             afterModifyGroupShapeWH(api, page, c, scaleX, scaleY, boundingBox);
+        }
+        else if (!c.rotation) {
+            const cFrame = c.frame;
+            const cX = cFrame.x * scaleX;
+            const cY = cFrame.y * scaleY;
+            const cW = cFrame.width * scaleX;
+            const cH = cFrame.height * scaleY;
+            setFrame(page, c, cX, cY, cW, cH, api);
         }
         else if (c instanceof PathShape && !(c instanceof ImageShape)) {
             // 摆正并处理points
@@ -194,14 +394,9 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
                 api.shapeModifyCurvPoint(page, c, i, point);
             }
 
-            // scale
-            // api.shapeModifyX(page, c, boundingBox.x * scaleX);
-            // api.shapeModifyY(page, c, boundingBox.y * scaleY);
             const width = boundingBox.width * scaleX;
             const height = boundingBox.height * scaleY;
-            // api.shapeModifyWH(page, c, width, height);
-            const f = fixConstrainFrame(page, c, boundingBox.x * scaleX, boundingBox.y * scaleY, width, height, api, originFrame, shape.frame, boundingBox)
-            setFrame(page, c, f.x, f.y, f.w, f.h, api);
+            setFrame(page, c, boundingBox.x * scaleX, boundingBox.y * scaleY, width, height, api);
         }
         else { // textshape imageshape symbolrefshape
             // // 需要调整位置跟大小
@@ -239,83 +434,165 @@ export function afterModifyGroupShapeWH(api: Api, page: Page, shape: GroupShape,
 
             const dx = target[0].x - xy.x;
             const dy = target[0].y - xy.y;
-            const f = fixConstrainFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api, originFrame, shape.frame);
-            setFrame(page, c, f.x, f.y, f.w, f.h, api);
+
+            setFrame(page, c, cFrame.x + dx, cFrame.y + dy, wh.x, wh.y, api);
         }
     }
 }
+export function fixConstrainFrame(shape: Shape, resizingConstraint: number, x: number, y: number, width: number, height: number, scaleX: number, scaleY: number, currentEnvFrame: ShapeFrame, originEnvFrame: ShapeFrame, recorder?: SizeRecorder) {
+    // 水平 HORIZONTAL
+    if (ResizingConstraints2.isHorizontalScale(resizingConstraint)) { // 跟随缩放。一旦跟随缩放，则不需要考虑其他约束场景了
+        x *= scaleX;
+        width *= scaleX;
+    }
+    else { // 非跟随缩放
+        if (ResizingConstraints2.isFlexWidth(resizingConstraint)) { // 宽度自由，x、width值都需要根据约束场景变化
+            let _width = scaleX * width;
 
-function fixConstrainFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api, originParentFrame: ShapeFrame, curParentFrame: ShapeFrame, cFrame?: ShapeFrame) {
-    cFrame = cFrame ?? shape.frame;
-    const resizingConstraint = shape.resizingConstraint;
-    if (!resizingConstraint || ResizingConstraints.isUnset(resizingConstraint)) {
-        // return setFrame(page, shape, x, y, w, h, api);
-        return { x, y, w, h }
+            if (ResizingConstraints2.isFixedToLeft(resizingConstraint)) { // 靠左固定
+                width = _width;
+            }
+            else if (ResizingConstraints2.isFixedToRight(resizingConstraint)) { // 靠右固定                
+                const origin_d_to_right = originEnvFrame.width - width - x;
+                x = currentEnvFrame.width - _width - origin_d_to_right;
+                width = _width;
+            }
+            else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) { // 居中
+                const origin_d_to_center = originEnvFrame.width / 2 - x - width / 2;
+                x = currentEnvFrame.width / 2 - origin_d_to_center - _width / 2;
+                width = _width;
+            }
+            else if (ResizingConstraints2.isFixedLeftAndRight(resizingConstraint)) { // 左右固定，通过固定x值来使左边固定，通过修改宽度和水平翻转来使右边固定
+                const origin_d_to_right = originEnvFrame.width - width - x;
+                width = currentEnvFrame.width - x - origin_d_to_right;
+
+                width = fixWidthByRecorder(shape, width, origin_d_to_right, currentEnvFrame.width, x, recorder);
+            }
+        }
+        else { // 宽度固定，只需要修改x值，此场景中不存在左右固定，靠左固定不需要修改x的值，所以只需要处理靠右固定和居中场景
+            if (ResizingConstraints2.isFixedToRight(resizingConstraint)) { // 靠右固定，通过修改x值来使图层靠右边固定
+                x = currentEnvFrame.width - originEnvFrame.width + x;
+            }
+            else if (ResizingConstraints2.isHorizontalJustifyCenter(resizingConstraint)) { // 居中
+                x = currentEnvFrame.width / 2 - originEnvFrame.width / 2 + x;
+            }
+        }
+    }
+    // 垂直 VERTICAL
+    if (ResizingConstraints2.isVerticalScale(resizingConstraint)) {
+        y *= scaleY;
+        height *= scaleY;
     }
     else {
-        // 水平
-        const hasWidth = ResizingConstraints.hasWidth(resizingConstraint);
-        const hasLeft = ResizingConstraints.hasLeft(resizingConstraint);
-        const hasRight = ResizingConstraints.hasRight(resizingConstraint);
-        // 计算width, x
-        // 宽度与同时设置左右是互斥关系，万一数据出错，以哪个优先？先以左右吧
-        let cw = w;
-        let cx = x;
-        if (hasLeft && hasRight) {
-            if (!hasWidth) {
+        if (ResizingConstraints2.isFlexHeight(resizingConstraint)) {
+            let _height = scaleY * height;
 
-                cx = cFrame.x;
-                const dis = originParentFrame.width - (cFrame.x + cFrame.width);
-                cw = curParentFrame.width - dis - cx;
+            if (ResizingConstraints2.isFixedToTop(resizingConstraint)) {
+                height = _height;
+            }
+            else if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
+                const origin_d_to_bottom = originEnvFrame.height - height - y;
+                y = currentEnvFrame.height - _height - origin_d_to_bottom;
+                height = _height;
+            }
+            else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
+                const origin_d_to_center = originEnvFrame.height / 2 - y - height / 2;
+                y = currentEnvFrame.height / 2 - origin_d_to_center - _height / 2;
+                height = _height;
+            }
+            else if (ResizingConstraints2.isFixedTopAndBottom(resizingConstraint)) {
+                const origin_d_to_bottom = originEnvFrame.height - height - y;
+                height = currentEnvFrame.height - y - origin_d_to_bottom;
+                height = fixHeightByRecorder(shape, height, origin_d_to_bottom, currentEnvFrame.height, y, recorder);
             }
         }
-        else if (hasLeft) {
-            cx = cFrame.x;
-        }
-        else if (hasRight) {
-            cx = x;
-            const dis = originParentFrame.width - (cFrame.x + cFrame.width);
-            cw = curParentFrame.width - dis - cx;
-        }
-        // else if (hasWidth) {
-        //     // 居中
-        //     // cx += (w - cFrame.width) / 2;
-        // }
-
-        // 垂直
-        const hasHeight = ResizingConstraints.hasHeight(resizingConstraint);
-        const hasTop = ResizingConstraints.hasTop(resizingConstraint);
-        const hasBottom = ResizingConstraints.hasBottom(resizingConstraint);
-        // 计算height, y
-        let ch = h;
-        let cy = y;
-        if (hasTop && hasBottom) {
-            if (!hasHeight) {
-
-                cy = cFrame.y;
-                const dis = originParentFrame.height - (cFrame.y + cFrame.height);
-                ch = curParentFrame.height - dis - cy;
+        else {
+            if (ResizingConstraints2.isFixedToBottom(resizingConstraint)) {
+                y = currentEnvFrame.height - originEnvFrame.height + y;
+            }
+            else if (ResizingConstraints2.isVerticalJustifyCenter(resizingConstraint)) {
+                y = currentEnvFrame.height / 2 - originEnvFrame.height / 2 + y;
             }
         }
-        else if (hasTop) {
-            cy = cFrame.y;
-        }
-        else if (hasBottom) {
-            cy = y;
-            const dis = originParentFrame.height - (cFrame.y + cFrame.height);
-            ch = curParentFrame.height - dis - cy;
-        }
-        // else if (hasHeight) {
-        //     // 居中
-        //     cy += (h - cFrame.height) / 2;
-        // }
+    }
 
-        // return setFrame(page, shape, cx, cy, cw, ch, api);
-        return { x: cx, y: cy, w: cw, h: ch }
+    return { x, y, width, height };
+}
+function fixWidthByRecorder(shape: Shape, width: number, origin_d_to_right: number, current_env_width: number, x: number, recorder?: SizeRecorder) {
+    if (width <= 1) {
+        if (!recorder) {
+            return 1;
+        }
+
+        const record = recorder.get(shape.id);
+        if (!record) {
+            recorder.set(shape.id, { toRight: origin_d_to_right, exceededX: true, toBottom: 0, exceededY: false });
+            return 1;
+        }
+
+        if (!record.exceededX) {
+            record.exceededX = true;
+            record.toRight = origin_d_to_right;
+        }
+
+        return 1;
+    } else { // todo 后续捋一捋这块，找到凭空来的像素点 0222
+        if (!recorder) {
+            return width;
+        }
+
+        const record = recorder.get(shape.id);
+        if (!record || !record.exceededX) {
+            return width;
+        }
+
+        const d2r = current_env_width - x - width;
+        if (d2r < record.toRight) {
+            return 1;
+        } else {
+            record.exceededX = false;
+            return current_env_width - x - record.toRight;
+        }
     }
 }
+function fixHeightByRecorder(shape: Shape, height: number, origin_d_to_bottom: number, current_env_height: number, y: number, recorder?: SizeRecorder) {
+    if (height <= 1) {
+        if (!recorder) {
+            return 1;
+        }
 
-function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api): boolean {
+        const record = recorder.get(shape.id);
+        if (!record) {
+            recorder.set(shape.id, { toRight: 0, exceededX: false, toBottom: origin_d_to_bottom, exceededY: true });
+            return 1;
+        }
+
+        if (!record.exceededY) {
+            record.exceededY = true;
+            record.toBottom = origin_d_to_bottom;
+        }
+
+        return 1;
+    } else { // todo 后续捋一捋这块 0222
+        if (!recorder) {
+            return height;
+        }
+
+        const record = recorder.get(shape.id);
+        if (!record || !record.exceededY) {
+            return height;
+        }
+
+        const d2b = current_env_height - y - height;
+        if (d2b < record.toBottom) {
+            return 1;
+        } else {
+            record.exceededY = false;
+            return current_env_height - y - record.toBottom;
+        }
+    }
+}
+function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Api, recorder?: SizeRecorder): boolean {
     const frame = shape.frame;
     let changed = false;
     if (x !== frame.x) {
@@ -350,7 +627,7 @@ function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: 
             const scaleY = frame.height / saveH;
 
             // 这个scaleX, scaleY 不对
-            afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(frame.x, frame.y, saveW, saveH));
+            afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(frame.x, frame.y, saveW, saveH), recorder);
         }
         else {
             api.shapeModifyWH(page, shape, w, h)
@@ -427,7 +704,7 @@ export function expand(api: Api, page: Page, shape: Shape, dw: number, dh: numbe
     expandTo(api, page, shape, frame.width + dw, frame.height + dh);
 }
 
-export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: number) {
+export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
     if (!p) return;
     const frame = shape.frame;
@@ -497,9 +774,9 @@ export function adjustLT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
 
-    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
+    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
 }
-export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: number) { // 左下角    
+export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) { // 左下角    
     const p = shape.parent;
     if (!p) return;
     // 需要满足右上(rt)不动
@@ -551,9 +828,9 @@ export function adjustLB2(api: Api, page: Page, shape: Shape, x: number, y: numb
     // (0,0)需要偏移到target位置
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
-    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
+    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
 }
-export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: number) { // 右上角
+export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) { // 右上角
     const p = shape.parent;
     if (!p) return;
     // 需要满足左下(lb)不动
@@ -606,9 +883,9 @@ export function adjustRT2(api: Api, page: Page, shape: Shape, x: number, y: numb
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
 
-    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
+    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
 }
-export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number) {    
+export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
     if (!p) return;
     // 需要满足左下(lt)不动
@@ -657,13 +934,12 @@ export function adjustRB2(api: Api, page: Page, shape: Shape, x: number, y: numb
 
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
-
-    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api);
+    setFrame(page, shape, frame.x + dx, frame.y + dy, w, h, api, recorder);
 }
 /**
  * @description 自由缩放
  */
-export function scaleByT(api: Api, page: Page, s: Shape, p: PageXY) {
+export function scaleByT(api: Api, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
     const parent = s.parent;
     if (!parent) {
         return;
@@ -727,9 +1003,9 @@ export function scaleByT(api: Api, page: Page, s: Shape, p: PageXY) {
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
 
-    setFrame(page, s, f.x + dx, f.y + dy, w, h, api);
+    setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
 }
-export function scaleByR(api: Api, page: Page, s: Shape, p: PageXY) {
+export function scaleByR(api: Api, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
     const parent = s.parent;
     if (!parent) {
         return;
@@ -782,9 +1058,9 @@ export function scaleByR(api: Api, page: Page, s: Shape, p: PageXY) {
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
 
-    setFrame(page, s, f.x + dx, f.y + dy, w, h, api);
+    setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
 }
-export function scaleByB(api: Api, page: Page, s: Shape, p: PageXY) {
+export function scaleByB(api: Api, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
     const parent = s.parent;
     if (!parent) {
         return;
@@ -840,9 +1116,9 @@ export function scaleByB(api: Api, page: Page, s: Shape, p: PageXY) {
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
 
-    setFrame(page, s, f.x + dx, f.y + dy, w, h, api);
+    setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
 }
-export function scaleByL(api: Api, page: Page, s: Shape, p: PageXY) {
+export function scaleByL(api: Api, page: Page, s: Shape, p: PageXY, recorder?: SizeRecorder) {
     const parent = s.parent;
     if (!parent) {
         return;
@@ -894,14 +1170,14 @@ export function scaleByL(api: Api, page: Page, s: Shape, p: PageXY) {
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
 
-    setFrame(page, s, f.x + dx, f.y + dy, w, h, api);
+    setFrame(page, s, f.x + dx, f.y + dy, w, h, api, recorder);
 }
 /**
  * @description 等比缩放
  * @param { number } scale 缩放比例
  */
 // 拖拽顶部
-export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
+export function erScaleByT(api: Api, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) return;
     const f = s.frame;
@@ -924,10 +1200,10 @@ export function erScaleByT(api: Api, page: Page, s: Shape, scale: number) {
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
-    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH));
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
 }
 // 拖拽右边
-export function erScaleByR(api: Api, page: Page, s: Shape, scale: number) {
+export function erScaleByR(api: Api, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) return;
     const f = s.frame;
@@ -949,10 +1225,10 @@ export function erScaleByR(api: Api, page: Page, s: Shape, scale: number) {
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
-    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH));
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
 }
 // 拖拽底部
-export function erScaleByB(api: Api, page: Page, s: Shape, scale: number) {
+export function erScaleByB(api: Api, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) return;
     const f = s.frame;
@@ -974,10 +1250,10 @@ export function erScaleByB(api: Api, page: Page, s: Shape, scale: number) {
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
-    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH));
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
 }
 // 拖拽左边
-export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
+export function erScaleByL(api: Api, page: Page, s: Shape, scale: number, recorder?: SizeRecorder) {
     const p = s.parent;
     if (!p) return;
     const f = s.frame;
@@ -999,5 +1275,5 @@ export function erScaleByL(api: Api, page: Page, s: Shape, scale: number) {
     const delta = { x: t_xy.x - o_xy.x, y: t_xy.y - o_xy.y };
     api.shapeModifyX(page, s, f.x + delta.x);
     api.shapeModifyY(page, s, f.y + delta.y);
-    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH));
+    if (s instanceof GroupShape) afterModifyGroupShapeWH(api, page, s, scale, scale, new ShapeFrame(f.x, f.y, saveW, saveH), recorder);
 }

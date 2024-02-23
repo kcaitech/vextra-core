@@ -1,4 +1,4 @@
-import { Api } from "../../editor/command/recordapi";
+import { Api } from "../coop/recordapi";
 import { ContactShape } from "../../data/contact";
 import { Page } from "../../data/page";
 import { ContactForm } from "../../data/style";

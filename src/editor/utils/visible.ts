@@ -1,5 +1,5 @@
 import {OverrideType, Shape, Variable, VariableType} from "../../data/shape";
-import {Api} from "../command/recordapi";
+import {Api} from "../coop/recordapi";
 import {Page} from "../../data/page";
 import {get_symbol_by_layer, is_part_of_symbol, modify_variable_with_api} from "./symbol";
 

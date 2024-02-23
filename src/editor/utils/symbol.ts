@@ -2,7 +2,7 @@ import { OverrideType, Shape, ShapeType, SymbolShape, Variable, VariableType, Sy
 import { SymbolRefShape } from "../../data/symbolref";
 import { uuid } from "../../basic/uuid";
 import { Page } from "../../data/page";
-import { Api } from "../command/recordapi";
+import { Api } from "../coop/recordapi";
 import { BasicArray } from "../../data/basic";
 import { Border, Fill, Shadow } from "../../data/style";
 import { importBorder, importFill, importShadow } from "../../data/baseimport";
@@ -406,9 +406,15 @@ export function is_exist_invalid_shape2(selected: Shape[]) {
     let result = false;
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
-        if ([ShapeType.Contact, ShapeType.Table, ShapeType.Symbol].includes(item.type)) return true;
-        if ((item as GroupShape).childs?.length) result = is_exist_invalid_shape((item as GroupShape).childs);
-        if (result) return true;
+        if (ShapeType.Symbol === item.type || ShapeType.Table === item.type || ShapeType.Contact === item.type) {
+            return true;
+        }
+        if ((item as GroupShape).childs?.length) {
+            result = is_exist_invalid_shape2((item as GroupShape).childs);
+        }
+        if (result) {
+            return true;
+        }
     }
     return false;
 }
