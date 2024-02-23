@@ -7,7 +7,7 @@ import { is_exist_invalid_shape2 } from "./symbol";
 import { Document } from "../../data/document";
 
 /**
- * @description 图层迁移是一个危险程度很高的行为，很有可能造成父子循环，应用卡死！因此函数务必要非常可靠，同时还要确保入口尽量单一，便于维护。
+ * @description 图层迁移是一个危险程度很高的行为，很有可能造成父子循环或引用循环，从而导致应用卡死！因此函数务必要非常可靠，同时还要确保入口尽量单一，便于维护。
  */
 export function unable_to_migrate(targetEnv: Shape, wander: Shape) {
     if (targetEnv.isVirtualShape) {
