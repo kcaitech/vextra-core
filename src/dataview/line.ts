@@ -3,7 +3,7 @@ import { EL, elh } from "./el";
 import { PathShapeView } from "./pathshape";
 export class LineView extends PathShapeView {
     protected isNoSupportDiamondScale(): boolean {
-        return true;
+        return this.m_data.isNoSupportDiamondScale;
     }
 
     protected renderFills(): EL[] {

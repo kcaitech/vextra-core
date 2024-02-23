@@ -23,7 +23,7 @@ import { Path } from "./path";
 import { Matrix } from "../basic/matrix";
 import { TextLayout } from "./textlayout";
 import { parsePath } from "./pathparser";
-import { RECT_POINTS } from "./consts";
+import { FrameType, RECT_POINTS } from "./consts";
 import { uuid } from "../basic/uuid";
 import { Variable } from "./variable";
 import { TableShape } from "./table";
@@ -433,6 +433,14 @@ export class Shape extends Basic implements classes.Shape {
     getShadows() {
         return this.style.shadows;
     }
+
+    get isNoSupportDiamondScale() {  // 默认都支持压扁缩放
+        return false;
+    }
+
+    get frameType() {
+        return FrameType.Path;
+    }
 }
 
 export class GroupShape extends Shape implements classes.GroupShape {
@@ -543,6 +551,14 @@ export class GroupShape extends Shape implements classes.GroupShape {
     setWideFrameSize(w: number, h: number) {
         this.wideframe.width = w;
         this.wideframe.height = h;
+    }
+
+    get isNoSupportDiamondScale() {
+        return true;
+    }
+
+    get frameType() {
+        return FrameType.Flex;
     }
 }
 
@@ -1038,6 +1054,14 @@ export class ImageShape extends RectShape implements classes.ImageShape {
         if (this.__cacheData) this.notify();
         return this.__cacheData && this.__cacheData.base64 || "";
     }
+
+    get isNoSupportDiamondScale() {
+        return true;
+    }
+
+    get frameType() {
+        return FrameType.Rect;
+    }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {
@@ -1185,6 +1209,14 @@ export class TextShape extends Shape implements classes.TextShape {
         }
         return this.text;
     }
+
+    get isNoSupportDiamondScale() {
+        return true;
+    }
+
+    get frameType() {
+        return FrameType.Rect;
+    }
 }
 export class CutoutShape extends PathShape implements classes.CutoutShape {
     typeId = 'cutout-shape'
@@ -1212,5 +1244,13 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
         )
         this.scalingStroke = scalingStroke;
         this.isClosed = isClosed;
+    }
+
+    get isNoSupportDiamondScale() {
+        return true;
+    }
+
+    get frameType() {
+        return FrameType.Rect;
     }
 }

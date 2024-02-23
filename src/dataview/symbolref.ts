@@ -46,7 +46,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     protected isNoSupportDiamondScale(): boolean {
-        return true;
+        return this.m_data.isNoSupportDiamondScale;
     }
 
     getDataChilds(): Shape[] {
@@ -346,7 +346,7 @@ export class SymbolRefView extends ShapeView {
             }
             const parentFrame = new ShapeFrame(x, y, width, height);
 
-            fixFrameByConstrain(shape, refframe, parentFrame);
+            fixFrameByConstrain(shape, refframe, parentFrame, scaleX, scaleY);
 
             const cscaleX = parentFrame.width / saveW;
             const cscaleY = parentFrame.height / saveH;
