@@ -19,7 +19,7 @@ import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
 import { CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme } from "../data/typesdefine";
 import { Api } from "./coop/recordapi";
-import { importBorder, importCurvePoint, importFill } from "../data/baseimport";
+import { IImportContext, importBorder, importBorderOptions, importColor, importContextSettings, importCurvePoint, importFill, importGradient, importShadow, importStyle, importTableShape, importText } from "../data/baseimport";
 import { v4 } from "uuid";
 import { ContactShape } from "../data/contact";
 import { Document, SymbolRefShape, Text } from "../data/classes";
@@ -32,18 +32,218 @@ import {
     get_symbol_by_layer,
     is_default_state
 } from "./utils/other";
-import { _override_variable_for_symbolref, is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, shape4shadow } from "./utils/symbol";
+// import { _override_variable_for_symbolref, is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, shape4shadow } from "./utils/symbol";
 import { newText, newText2 } from "./creator";
 import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 import { adapt_for_artboard } from "./utils/common";
-import { ShapeView, SymbolView, adapt2Shape } from "../dataview";
+import { ShapeView, SymbolView, adapt2Shape, findOverride, findVar, isAdaptedShape } from "../dataview";
+import { is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union } from "./utils/symbol";
 
 function varParent(_var: Variable) {
     let p = _var.parent;
     while (p && !(p instanceof Shape)) p = p.parent;
     return p;
 }
+
+
+// 修改对象属性
+// 1. 如果普通对象
+// 1.1 symbolref需要设置override属性。
+// 1.2 varbind, 则到3
+// 1.3 正常修改. 
+// 2. 如果对象为virtual, 将属性值override到var再修改
+// 2.1 创建新var
+// 2.2 将属性 override到新var
+// 2.3 如果已级override到var，则到3
+// 3. 如果为var，判断var是否属于virtual对象:
+// 3.1 如果是则override到新var再修改;
+// 3.1.1 创建新var 同2.1
+// 3.1.2 将var override到新var
+// 3.2 否则正常修改var
+
+/**
+ * 
+ */
+function _ov_2(type: OverrideType, name: string, value: any, varType: VariableType, view: ShapeView, page: Page, api: Api) {
+    // const view = this.__shape;
+    const varsContainer = view.varsContainer;
+    if (!varsContainer || varsContainer.length === 0) throw new Error();
+    const host = varsContainer.find((v) => v instanceof SymbolRefShape);
+    if (!host || !(host instanceof SymbolRefShape)) throw new Error();
+    const _var2 = _ov_newvar(host, name, value, varType, page, api);
+    _ov_2_2(host, type, _var2.id, view, page, api);
+    return _var2;
+}
+
+/**
+ * 将当前shape的overridetype对应的属性，override到varid的变量
+ * @param type
+ * @param varId
+ * @param api
+ */
+function _ov_2_2(host: SymbolRefShape, type: OverrideType, varId: string, view: ShapeView, page: Page, api: Api) {
+
+    // const view = this.__shape;
+    const varsContainer = view.varsContainer;
+    if (!varsContainer || varsContainer.length === 0) throw new Error();
+    // const host = varsContainer.find((v) => v instanceof SymbolRefShape);
+    // if (!host || !(host instanceof SymbolRefShape)) throw new Error();
+
+    let override_id: string = type;
+    for (let i = varsContainer.length - 1; i >= 0; --i) {
+        const c = varsContainer[i];
+        if (c === host) break;
+        if (c instanceof SymbolRefShape) override_id = c.id + '/' + override_id;
+    }
+
+    api.shapeAddOverride(page, host, override_id, type, varId);
+}
+
+function _ov_newvar(host: SymbolRefShape | SymbolShape, name: string, value: any, type: VariableType, page: Page, api: Api) {
+    const _var2 = new Variable(uuid(), type, name, value);
+    api.shapeAddVariable(page, host, _var2); // create var
+    return _var2;
+}
+
+function _ov_3(_var: Variable, name: string, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: Page, api: Api) {
+    const p = varParent(_var);
+    if (!p) throw new Error();
+    const varsContainer = view.varsContainer;
+    if (!varsContainer || varsContainer.length === 0) throw new Error();
+    const pIdx = varsContainer.findIndex((v) => v.id === p.id);
+    if (pIdx < 0) throw new Error();
+    const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
+    if (hostIdx < 0) throw new Error();
+    if (pIdx <= hostIdx) return _var; // 可直接修改
+
+    const value = valuefun(_var);
+    const host = varsContainer[hostIdx] as SymbolRefShape;
+    return _ov_3_1(_var, name, value, host, view, page, api);
+}
+
+function _ov_3_1(_var: Variable, name: string, value: any, host: SymbolRefShape, view: ShapeView, page: Page, api: Api) { // 3.1
+    // override text
+    if (_var.type === VariableType.Text
+        && typeof value === 'string') {
+        const origin = _var.value as Text;
+        const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
+        text.insertText(value, 0);
+        value = text;
+    }
+    // const view = this.__shape;
+    const varsContainer = view.varsContainer;
+    if (!varsContainer || varsContainer.length === 0) throw new Error();
+    // const host = varsContainer.find((v) => v instanceof SymbolRefShape);
+    // if (!host || !(host instanceof SymbolRefShape)) throw new Error();
+    const _var2 = _ov_newvar(host, name, value, _var.type, page, api);
+    _ov_3_1_2(_var, _var2.id, host, view, page, api); // override
+    return _var2;
+}
+
+function _ov_3_1_2(fromVar: Variable, toVarId: string, host: SymbolRefShape | SymbolShape, view: ShapeView, page: Page, api: Api) {
+    let p = varParent(fromVar);
+    if (!p) throw new Error();
+    // if (!p.isVirtualShape) throw new Error(); // 不一定,可能是symbolshape??然后也不在view结构里？
+
+    // const view = this.__shape;
+    const varsContainer = view.varsContainer;
+    if (!varsContainer || varsContainer.length === 0) throw new Error();
+
+    if (isAdaptedShape(p)) throw new Error(); // 不用adapted的
+    const pIdx = varsContainer.findIndex((v) => v.id === p!.id);// 不对？虚拟对象的id？
+    if (pIdx < 0) throw new Error();
+
+    let override_id = fromVar.id;
+    for (let i = pIdx; i >= 0; --i) {
+        const c = varsContainer[i];
+        if (c === host) break;
+        if (c instanceof SymbolRefShape) override_id = c.id + '/' + override_id;
+    }
+
+    api.shapeAddOverride(page, host, override_id, OverrideType.Variable, toVarId);
+}
+
+function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: Page, api: Api) {
+    if (!view.varsContainer) return;
+
+    if (view.varbinds && view.varbinds.has(overrideType)) { // 走var
+        const _vars: Variable[] = [];
+        findVar(view.varbinds.get(overrideType)!, _vars, view.varsContainer);
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === varType) {
+            return _ov_3(_var, _var.name, valuefun, view, page, api);
+        }
+    }
+
+    if (!view.isVirtualShape) {
+        // todo symbolref需要处理？
+        return;
+    }
+
+    const varsContainer = view.varsContainer;
+    if (!varsContainer || varsContainer.length === 0) throw new Error();
+    const _vars = findOverride(view.data.id, overrideType, varsContainer);
+    if (_vars) {
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === varType) {
+            return _ov_3(_var, _var.name, valuefun, view, page, api);
+        }
+    }
+
+    return _ov_2(overrideType, "", valuefun(undefined), varType, view, page, api);
+}
+
+function _clone_value(_var: Variable, document: Document, page: Page) {
+    if (_var.value === undefined) return undefined;
+
+    const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = page.id };
+
+    switch (_var.type) {
+        case VariableType.BorderOptions:
+            return importBorderOptions(_var.value);
+        case VariableType.Borders:
+            return (_var.value as Border[]).reduce((arr, v) => {
+                arr.push(importBorder(v, ctx));
+                return arr;
+            }, new BasicArray<Border>());
+        case VariableType.Color:
+            return importColor(_var.value);
+        case VariableType.ContextSettings:
+            return importContextSettings(_var.value);
+        case VariableType.Fills:
+            return (_var.value as Fill[]).reduce((arr, v) => {
+                arr.push(importFill(v, ctx));
+                return arr;
+            }, new BasicArray<Fill>());
+        case VariableType.Gradient:
+            return importGradient(_var.value, ctx);
+        case VariableType.ImageRef:
+            return _var.value;
+        case VariableType.Lock:
+            return _var.value;
+        case VariableType.Shadows:
+            return (_var.value as Shadow[]).reduce((arr, v) => {
+                arr.push(importShadow(v, ctx));
+                return arr;
+            }, new BasicArray<Shadow>());
+        case VariableType.Status:
+            return _var.value;
+        case VariableType.Style:
+            return importStyle(_var.value, ctx);
+        case VariableType.SymbolRef:
+            return _var.value;
+        case VariableType.Table:
+            return importTableShape(_var.value, ctx);
+        case VariableType.Text:
+            return _var.value instanceof Text ? importText(_var.value) : _var.value;
+        case VariableType.Visible:
+            return _var.value;
+        default:
+            throw new Error();
+    }
+}
+
 
 export class ShapeEditor {
     protected __shape: ShapeView;
@@ -73,142 +273,6 @@ export class ShapeEditor {
         }
     }
 
-    // 修改对象属性
-    // 1. 如果普通对象，正常修改. symbolref需要设置override属性。
-    // 2. 如果对象为virtual，将属性值override到var再修改
-    // 3. 如果为var，判断var是否属于virtual对象，如果是则override到新var再修改，否则正常修改var
-
-    /**
-     * 已提出到 "editor/utils/symbol"
-     * 将变量_var override到值为value的新变量
-     * 变量_var可能来自symbolref(virtual)或者symbolshape
-     * @param _var
-     * @param value
-     * @param api
-     * @returns
-     */
-    private _overrideVariable(_var: Variable, value: any, api: Api) {
-        // 1. 找到可修改的shape
-        // 2. 找到var的路径进行override
-
-        const shape: Shape = this.shape;
-
-        let p = varParent(_var);
-        if (!p) throw new Error();
-        if (p instanceof SymbolShape) {
-            if (p.isVirtualShape) throw new Error();
-            p = shape;
-        }
-        let symisp = true;
-        let sym: Shape | undefined = p;
-        while (sym && sym.isVirtualShape) {
-            sym = sym.parent;
-            symisp = false;
-        }
-        if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
-
-        let override_id = symisp ? "" : p.id;
-        if (!symisp) override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (!symisp && override_id.length === 0) throw new Error();
-        if (!(p instanceof SymbolRefShape)) { // 普通对象
-            const idx = override_id.lastIndexOf('/');
-            if (idx > 0) {
-                override_id = override_id.substring(0, idx);
-            } else {
-                override_id = ""
-            }
-        }
-        if (override_id.length > 0) override_id += "/";
-        override_id += _var.id;
-
-        // override text
-        if (_var.type === VariableType.Text
-            && typeof value === 'string') {
-            const origin = _var.value as Text;
-            const text = newText2(origin.attr, origin.paras[0]?.attr, origin.paras[0]?.spans[0]);
-            text.insertText(value, 0);
-            value = text;
-        }
-        const _var2 = new Variable(uuid(), _var.type, _var.name, value);
-        api.shapeAddVariable(this.__page, sym, _var2);
-        api.shapeAddOverride(this.__page, sym, override_id, OverrideType.Variable, _var2.id);
-        return sym.getVar(_var2.id)!;
-    }
-
-    private _overrideVariableName(_var: Variable, name: string, dlt: any, api: Api) {
-
-        const shape: Shape = this.shape;
-
-        let p = varParent(_var);
-        if (!p) throw new Error();
-        if (p instanceof SymbolShape) {
-            if (p.isVirtualShape) throw new Error();
-            p = shape;
-        }
-        let sym: Shape | undefined = p;
-        while (sym && sym.isVirtualShape) {
-            sym = sym.parent;
-        }
-        if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
-
-        let override_id = p.id;
-        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (override_id.length === 0) throw new Error();
-        if (!(p instanceof SymbolRefShape)) {
-            const idx = override_id.lastIndexOf('/');
-            if (idx > 0) {
-                override_id = override_id.substring(0, idx);
-            } else {
-                override_id = ""
-            }
-        }
-        if (override_id.length > 0) override_id += "/";
-        override_id += _var.id;
-
-        const _var2 = new Variable(uuid(), _var.type, name, _var.value);
-        // _var2.value = value;
-        api.shapeAddVariable(this.__page, sym, _var2);
-        api.shapeAddOverride(this.__page, sym, _var.id, OverrideType.Variable, _var2.id);
-
-        return sym.getVar(_var2.id)!;
-    }
-
-
-    /**
-     * 将变量fromVar override 到id为toVarId的变量
-     * */
-    private _overrideVariable2(fromVar: Variable, toVarId: string, api: Api) {
-        const shape = this.shape;
-
-        let p = varParent(fromVar);
-        if (!p) throw new Error();
-        if (p instanceof SymbolShape) {
-            if (p.isVirtualShape) throw new Error();
-            p = shape;
-        }
-
-        let sym: Shape | undefined = p;
-        while (sym && sym.isVirtualShape) {
-            sym = sym.parent;
-        }
-        if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
-
-        let override_id = shape.id;
-        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (override_id.length === 0) throw new Error();
-        if (!(shape instanceof SymbolRefShape)) {
-            const idx = override_id.lastIndexOf('/');
-            if (idx > 0) {
-                override_id = override_id.substring(0, idx);
-            } else {
-                override_id = ""
-            }
-        }
-        override_id += '/' + fromVar.id;
-
-        api.shapeAddOverride(this.__page, sym, override_id, OverrideType.Variable, toVarId);
-    }
-
     /**
      * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「返回」var，否则先override再「返回」新的var
      * 适合text这种，value的修改非原子操作的情况 已提出到 "editor/utils/symbol"
@@ -220,119 +284,10 @@ export class ShapeEditor {
      * @param shape
      * @returns
      */
-    overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, shape?: Shape) {
-        shape = shape ?? this.shape;
-        // symbol shape
-        if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {
-            const _vars: Variable[] = [];
-            shape.findVar(shape.varbinds.get(overrideType)!, _vars);
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                return _var;
-            }
-        }
-        if (!shape.isVirtualShape) return;
-
-        // 先查varbinds
-        if (shape.varbinds && shape.varbinds.has(overrideType)) {
-            const _vars: Variable[] = [];
-            // const vars_path: Shape[] = shape.varsContainer;
-            shape.findVar(shape.varbinds.get(overrideType)!, _vars);
-            // if (_vars.length !== vars_path.length) throw new Error();
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-
-                let p = varParent(_var);
-                if (!p) throw new Error();
-
-                // if (vars_path.length) {
-                //     const f = vars_path[0];
-                //     if (p instanceof SymbolRefShape && p.id !== f.id) {
-                //         return _override_variable_for_symbolref(this.__page, f as any, _var, _var.value, api);
-                //     }
-                // }
-
-                if (p.isVirtualShape || p instanceof SymbolShape) {
-                    // override variable
-                    const ret = this._overrideVariable(_var, valuefun(_var), api);
-                    return ret;
-                } else {
-                    return _var;
-                }
-            }
-        }
-
-        // override
-        let override_id = shape.id;
-        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (override_id.length === 0) throw new Error();
-
-        const _vars = shape.findOverride(override_id.substring(override_id.lastIndexOf('/') + 1), overrideType);
-        if (_vars) {
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                let p = varParent(_var); // 这里会有问题！如果p是symbolshape，往上追溯就错了。
-                if (!p) throw new Error();
-                if (p.isVirtualShape || p instanceof SymbolShape) {
-                    const ret = this._overrideVariable(_var, valuefun(_var), api);
-                    return ret;
-                } else {
-                    return _var;
-                }
-            }
-        }
-
-        // get first not virtual
-        let symRef = shape.parent;
-        while (symRef && symRef.isVirtualShape) symRef = symRef.parent;
-        if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
-
-        // add override add variable
-        const _var2 = new Variable(uuid(), varType, "", valuefun(undefined));
-        // _var2.value = valuefun(undefined);
-        api.shapeAddVariable(this.__page, symRef, _var2);
-        api.shapeAddOverride(this.__page, symRef, override_id, overrideType, _var2.id);
-
-        return symRef.getVar(_var2.id)!;
+    protected overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view?: ShapeView) {
+        view = view ?? this.__shape;
+        return _ov(varType, overrideType, valuefun, view, this.__page, api);
     }
-
-
-    /**
-     * 将当前shape的overridetype对应的属性，override到varid的变量
-     * @param varId
-     * @param type
-     * @param api
-     */
-    private _override2Variable(varId: string, type: OverrideType, api: Api) {
-
-        const shape: Shape = this.shape;
-
-        let sym: Shape | undefined = shape;
-        while (sym && sym.isVirtualShape) {
-            sym = sym.parent;
-        }
-        if (!sym || !(sym instanceof SymbolRefShape || sym instanceof SymbolShape)) throw new Error();
-
-        let override_id = shape.id;
-        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (override_id.length === 0) throw new Error();
-        if (!(shape instanceof SymbolRefShape)) {
-            const idx = override_id.lastIndexOf('/');
-            if (idx > 0) {
-                override_id = override_id.substring(0, idx);
-            } else {
-                override_id = ""
-            }
-        }
-        // if (type !== OverrideType.Variable) {
-        if (override_id.length > 0) override_id += "/";
-        override_id += type;
-        // }
-
-        api.shapeAddOverride(this.__page, sym, override_id, type, varId);
-    }
-
-    // ===================================================
 
     /**
      * 修改_var的值为value，如果_var不可以修改，则override _var到value
@@ -340,8 +295,30 @@ export class ShapeEditor {
      * @param value
      * @param api
      */
-    modifyVariable2(_var: Variable, value: any, api: Api) {
-        modify_variable(this.__page, this.shape, _var, value, api);
+    private modifyVariable2(_var: Variable, value: any, api: Api) {
+        // modify_variable(this.__page, this.shape, _var, value, api);
+        const _var1 = _ov_3(_var, _var.name, () => value, this.__shape, this.__page, api);
+        if (_var1 === _var) {
+            api.shapeModifyVariable(this.__page, _var, value);
+        }
+    }
+
+    /**
+     * @description 修改_var的名称为name，如果_var不可以修改，则override _var到name
+     */
+    modifyVariableName(_var: Variable, name: string) {
+        try {
+            const api = this.__repo.start("modifyVariableName");
+            const _var1 = _ov_3(_var, name,
+                () => _clone_value(_var, this.__document, this.__page), this.__shape, this.__page, api);
+            if (_var1 === _var) {
+                api.shapeModifyVariableName(this.__page, _var, name);
+            }
+            this.__repo.commit();
+        } catch (e) {
+            console.log(e);
+            this.__repo.rollback();
+        }
     }
 
     /**
@@ -435,56 +412,15 @@ export class ShapeEditor {
     }
 
     /**
-     * @description 修改_var的名称为name，如果_var不可以修改，则override _var到name
-     */
-    modifyVariableName(_var: Variable, name: string) {
-        try {
-            const p = varParent(_var);
-            if (!p) throw new Error('wrong shape type');
-            const shape = this.shape;
-            const api = this.__repo.start("modifyVariableName");
-            if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
-                // override
-                this._overrideVariableName(_var, name, _var.value, api);
-            } else {
-                api.shapeModifyVariableName(this.__page, _var, name);
-            }
-            this.__repo.commit();
-        } catch (e) {
-            console.log(e);
-            this.__repo.rollback();
-        }
-    }
-
-    modifyVariableDltValue(_var: Variable, dlt: any) {
-        try {
-            const p = varParent(_var);
-            if (!p) throw new Error('wrong shape type');
-            const shape = this.shape;
-            const api = this.__repo.start("modifyVariableName");
-            if (p.isVirtualShape || (p instanceof SymbolShape && !(shape instanceof SymbolShape))) {
-                // override
-                this._overrideVariable(_var, _var.value, api);
-            } else {
-                api.shapeModifyVariable(this.__page, _var, dlt);
-            }
-            this.__repo.commit();
-        } catch (e) {
-            console.log(e);
-            this.__repo.rollback();
-        }
-    }
-
-    /**
      * @description 给组件创建一个图层显示变量
      */
     makeVisibleVar(symbolView: SymbolView, name: string, dlt_value: boolean, shapes: Shape[]) {
         let symbol = adapt2Shape(symbolView) as SymbolShape;
+        if (!is_symbol_or_union(symbol)) {
+            throw new Error('wrong role!');
+        }
         const api = this.__repo.start("makeVisibleVar");
         try {
-            if (!is_symbol_or_union(symbol)) {
-                throw new Error('wrong role!');
-            }
             const _var = new Variable(v4(), VariableType.Visible, name, dlt_value);
             api.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
@@ -550,20 +486,19 @@ export class ShapeEditor {
         }
     }
 
-
     /**
      * @description 修改图层显示、文本内容、实例切换变量
      */
     modifyVar(symbol: SymbolShape, variable: Variable, new_name: string, new_dlt_value: any, new_layers: Shape[], old_layers: Shape[]) {
-        const api = this.__repo.start("modifyVar");
         const type: any = {};
         type[VariableType.Text] = OverrideType.Text;
         type[VariableType.Visible] = OverrideType.Visible;
         type[VariableType.SymbolRef] = OverrideType.SymbolID;
+        if (!is_symbol_or_union(symbol)) {
+            throw new Error('wrong role!');
+        }
+        const api = this.__repo.start("modifyVar");
         try {
-            if (!is_symbol_or_union(symbol)) {
-                throw new Error('wrong role!');
-            }
             for (let i = 0, len = new_layers.length; i < len; i++) {
                 const item = new_layers[i];
                 api.shapeBindVar(this.__page, item, type[variable.type], variable.id);
@@ -574,26 +509,17 @@ export class ShapeEditor {
             }
 
             if (new_name !== variable.name) {
-                const p = varParent(variable);
-                if (!p) throw new Error('wrong shape type');
-                if (p.isVirtualShape || (p instanceof SymbolShape && !(this.shape instanceof SymbolShape))) {
-                    this._overrideVariableName(variable, new_name, variable.value, api);
-                } else {
+                const _var1 = _ov_3(variable, new_name,
+                    () => _clone_value(variable, this.__document, this.__page),
+                    this.__shape, this.__page, api);
+                if (_var1 === variable) {
                     api.shapeModifyVariableName(this.__page, variable, new_name);
                 }
             }
 
             if (new_dlt_value !== variable.value) {
-                const p = varParent(variable);
-                if (!p) throw new Error('wrong shape type');
-                if (variable.type === VariableType.Text && typeof new_dlt_value === 'string') {
-                    const text = newText();
-                    text.insertText(new_dlt_value, 0);
-                    new_dlt_value = text;
-                }
-                if (p.isVirtualShape || (p instanceof SymbolShape && !(this.shape instanceof SymbolShape))) {
-                    this._overrideVariable(variable, new_dlt_value, api);
-                } else {
+                const _var1 = _ov_3(variable, variable.name, () => new_dlt_value, this.__shape, this.__page, api);
+                if (_var1 === variable) {
                     api.shapeModifyVariable(this.__page, variable, new_dlt_value);
                 }
             }
@@ -860,8 +786,8 @@ export class ShapeEditor {
     /**
      * @description 已提出到 "editor/utils/symbol"
      */
-    private shape4fill(api: Api, shape?: Shape) {
-        const _shape = shape ?? this.shape;
+    private shape4fill(api: Api, shape?: ShapeView) {
+        const _shape = shape ?? this.__shape;
         const _var = this.overrideVariable(VariableType.Fills, OverrideType.Fills, (_var) => {
             const fills = _var?.value ?? _shape.style.fills;
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -872,7 +798,7 @@ export class ShapeEditor {
             }
             ))
         }, api, shape)
-        return _var || _shape;
+        return _var || _shape.data;
     }
 
     // fill
@@ -908,8 +834,8 @@ export class ShapeEditor {
     /**
      * @description 已提出到 "editor/utils/symbol"
      */
-    private shape4border(api: Api, shape?: Shape) {
-        const _shape = shape ?? this.shape;
+    private shape4border(api: Api, shape?: ShapeView) {
+        const _shape = shape ?? this.__shape;
         const _var = this.overrideVariable(VariableType.Borders, OverrideType.Borders, (_var) => {
             const borders = _var?.value ?? _shape.style.borders;
             return new BasicArray(...(borders as Array<Border>).map((v) => {
@@ -918,7 +844,7 @@ export class ShapeEditor {
             }
             ))
         }, api, shape)
-        return _var || _shape;
+        return _var || _shape.data;
     }
 
     // border
@@ -1118,11 +1044,24 @@ export class ShapeEditor {
         }
     }
 
+    private shape4shadow(api: Api, shape?: ShapeView) {
+        const _shape = shape ?? this.__shape;
+        const _var = this.overrideVariable(VariableType.Shadows, OverrideType.Shadows, (_var) => {
+            const shadows = _var?.value ?? _shape.style.shadows;
+            return new BasicArray(...(shadows as Array<Shadow>).map((v) => {
+                const ret = importShadow(v);
+                return ret;
+            }
+            ))
+        }, api, shape)
+        return _var || _shape.data;
+    }
+
     // shadow
     public addShadow(shadow: Shadow) {
         const api = this.__repo.start("addShadow");
         try {
-            const shape = shape4shadow(api, this.__page, this.shape);
+            const shape = this.shape4shadow(api);
             const l = shape instanceof Shape ? shape.style.shadows.length : shape.value.length;
             api.addShadow(this.__page, shape, shadow, l);
             this.__repo.commit();
@@ -1135,7 +1074,7 @@ export class ShapeEditor {
     public deleteShadow(idx: number) {
         const api = this.__repo.start("deleteShadow");
         try {
-            const shape = shape4shadow(api, this.__page, this.shape);
+            const shape = this.shape4shadow(api);
             api.deleteShadowAt(this.__page, shape, idx)
             this.__repo.commit();
         } catch (e) {
@@ -1147,7 +1086,7 @@ export class ShapeEditor {
     public setShadowPosition(idx: number, position: ShadowPosition) {
         const api = this.__repo.start("setShadowPosition");
         try {
-            const shape = shape4shadow(api, this.__page, this.shape);
+            const shape = this.shape4shadow(api);
             api.setShadowPosition(this.__page, shape, idx, position);
             this.__repo.commit();
         } catch (e) {
@@ -1159,7 +1098,7 @@ export class ShapeEditor {
     public setShadowEnable(idx: number, isEnabled: boolean) {
         const api = this.__repo.start("setShadowEnable");
         try {
-            const shape = shape4shadow(api, this.__page, this.shape);
+            const shape = this.shape4shadow(api);
             api.setShadowEnable(this.__page, shape, idx, isEnabled);
             this.__repo.commit();
         } catch (e) {
@@ -1171,7 +1110,7 @@ export class ShapeEditor {
     public setShadowColor(idx: number, color: Color) {
         const api = this.__repo.start("setShadowColor");
         try {
-            const shape = shape4shadow(api, this.__page, this.shape);
+            const shape = this.shape4shadow(api);
             api.setShadowColor(this.__page, shape, idx, color);
             this.__repo.commit();
         } catch (e) {
@@ -1183,7 +1122,7 @@ export class ShapeEditor {
     public setShadowOffsetX(idx: number, offserX: number) {
         const api = this.__repo.start("setShadowOffsetX");
         try {
-            const shape = shape4shadow(api, this.__page, this.shape);
+            const shape = this.shape4shadow(api);
             api.setShadowOffsetX(this.__page, shape, idx, offserX);
             this.__repo.commit();
         } catch (e) {
@@ -1195,7 +1134,7 @@ export class ShapeEditor {
     public setShadowOffsetY(idx: number, offsetY: number) {
         const api = this.__repo.start("setShadowOffsetY");
         try {
-            const shape = shape4shadow(api, this.__page, this.shape);
+            const shape = this.shape4shadow(api);
             api.setShadowOffsetY(this.__page, shape, idx, offsetY);
             this.__repo.commit();
         } catch (e) {
@@ -1207,7 +1146,7 @@ export class ShapeEditor {
     public setShadowBlur(idx: number, blur: number) {
         const api = this.__repo.start("setShadowBlur");
         try {
-            const shape = shape4shadow(api, this.__page, this.shape);
+            const shape = this.shape4shadow(api);
             api.setShadowBlur(this.__page, shape, idx, blur);
             this.__repo.commit();
         } catch (e) {
@@ -1219,7 +1158,7 @@ export class ShapeEditor {
     public setShadowSpread(idx: number, spread: number) {
         const api = this.__repo.start("setShadowSpread");
         try {
-            const shape = shape4shadow(api, this.__page, this.shape);
+            const shape = this.shape4shadow(api);
             api.setShadowSpread(this.__page, this.shape, idx, spread);
             this.__repo.commit();
         } catch (e) {
@@ -1763,26 +1702,33 @@ export class ShapeEditor {
 
     // shape
     bindVar(slot: OverrideType, varId: string) {
+        const view = this.__shape;
+        const varsContainer = view.varsContainer;
+        if (!varsContainer) throw new Error();
         // check varId
-        const _vars: Variable[] = [];
-        this.shape.findVar(varId, _vars);
-        if (_vars.length === 0) throw new Error();
+        // const _vars: Variable[] = [];
+        // if (varsContainer) findVar(varId, _vars, varsContainer);
+        // if (_vars.length === 0) throw new Error();
 
-        const _var = _vars[_vars.length - 1];
+        // const _var = _vars[_vars.length - 1];
 
-        const shape = this.shape;
+        // 1. 如果是普通shape，直接修改varbinds
+        // 2. 如果是virtual，看varbinds是否绑定了一个变量，如果是找到最终的var，并override var 到新变量？或者修改var??
+        // 2.1 如果varbinds未绑定变量，如何？
+
+        // const shape = this.shape;
         // check virtual
-        if (shape.isVirtualShape) {
+        if (view.isVirtualShape) {
+            const _vars: Variable[] = [];
+            if (view.varbinds && view.varbinds.has(slot)) findVar(view.varbinds.get(slot)!, _vars, varsContainer);
+            const _var = _vars[_vars.length - 1];
+            const host = varsContainer.find((v) => v instanceof SymbolRefShape) as SymbolRefShape | undefined;
+            if (!host) throw new Error();
             // override
-            if (shape.varbinds && shape.varbinds.has(slot)) {
-                // override variable
-                // this.modifyVariable(VariableType., slot, () => varId)
-                const ret: Variable[] = [];
-                shape.findVar(shape.varbinds.get(slot)!, ret);
-
+            if (_var) {
                 const api = this.__repo.start("bindVar");
                 try {
-                    this._overrideVariable2(_var, varId, api);
+                    _ov_3_1_2(_var, varId, host, view, this.__page, api);
                     this.__repo.commit();
                 } catch (e) {
                     console.error(e);
@@ -1792,7 +1738,8 @@ export class ShapeEditor {
                 // override to variable // todo slot要与override相同！
                 const api = this.__repo.start("bindVar");
                 try {
-                    this._override2Variable(varId, slot, api);
+                    // this._override2Variable(varId, slot, api);
+                    _ov_2_2(host, slot, varId, view, this.__page, api);
                     this.__repo.commit();
                 } catch (e) {
                     console.error(e);
