@@ -52,7 +52,7 @@ export class Page extends GroupShape implements classes.Page {
             throw new Error("The shape is not found");
         }
         const path1 = path[1];
-        const shape = this.getShape(path1);
+        const shape = this.getShape(path1, true);
         if (shape) return shape.getOpTarget(path.slice(2));
         return super.getOpTarget(path.slice(1));
     }
