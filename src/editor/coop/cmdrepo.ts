@@ -1002,7 +1002,7 @@ export class CmdRepo {
         return this.cmdsync.roll2NewVersion(_blockIds);
     }
     hasPendingSyncCmd(): boolean {
-        return this.cmdsync.pendingcmds.length > 0;
+        return this.cmdsync.hasPendingSyncCmd()
     }
     setNet(net: ICoopNet) {
         return this.cmdsync.setNet(net);
