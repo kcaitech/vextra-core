@@ -79,8 +79,8 @@ export class Api {
     private cmd: Cmd | undefined;
     private needUpdateFrame: { shape: Shape, page: Page }[] = [];
 
-    start(saveselection: SelectionState | undefined, 
-        selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void, 
+    start(saveselection: SelectionState | undefined,
+        selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void,
         description: string = "") {
         // todo 添加selection op
         this.cmd = {
