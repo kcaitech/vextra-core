@@ -110,24 +110,26 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
 
     const document = new Document(meta.id, versionId ?? "", meta.lastCmdId, meta.symbolregist, meta.name, meta.pagesList, gurad);
-    const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = "" };
 
     document.pagesMgr.setLoader((id: string) => {
-        ctx.curPage = id;
+        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = id };
         const page = loader.loadPage(ctx, id, idToVersionId.get(id))
-        ctx.curPage = '';
         return page;
     });
-    document.mediasMgr.setLoader((id: string) => loader.loadMedia(ctx, id));
+    document.mediasMgr.setLoader((id: string) => {
+        const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = "" };
+        return loader.loadMedia(ctx, id)
+    });
 
-    let hasLoadFreeSymbols = false;
-    document.__freesymbolsLoader = async () => {
-        if (hasLoadFreeSymbols) return undefined;
-        ctx.curPage = "freesymbols";
-        await loader.loadFreeSymbols(ctx, meta.freesymbolsVersionId);
-        ctx.curPage = "";
-        hasLoadFreeSymbols = true;
-    }
+    document.__freesymbolsLoader = (() => {
+        let hasLoadFreeSymbols = false;
+        return async () => {
+            if (hasLoadFreeSymbols) return undefined;
+            const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = "freesymbols" };
+            await loader.loadFreeSymbols(ctx, meta.freesymbolsVersionId);
+            hasLoadFreeSymbols = true;
+        }
+    })();
 
     return document;
 }

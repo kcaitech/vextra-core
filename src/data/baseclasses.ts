@@ -80,12 +80,12 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill) >)
+    value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill | Shadow) > | ContextSettings | TableShape)
     constructor(
         id: string,
         type: VariableType,
         name: string,
-        value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill) >)
+        value: (number | string | boolean | Color | Text | Gradient | Style | BasicArray<(Border | Fill | Shadow) > | ContextSettings | TableShape)
     ) {
         super()
         this.id = id
@@ -961,11 +961,6 @@ export class SymbolRefShape extends Shape {
     refId: string
     overrides?: BasicMap<string, string>
     variables: BasicMap<string, Variable>
-    overrideFills?: boolean
-    overrideBorders?: boolean
-    overrideShadows?: boolean
-    overrideBorderOptions?: boolean
-    overrideContextSettings?: boolean
     constructor(
         crdtidx: BasicArray<number >,
         id: string,

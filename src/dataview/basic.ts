@@ -77,7 +77,7 @@ export function findOverride(refId: string, type: OverrideType, varsContainer: (
             findVar(refId, ret, varsContainer, i - 1);
             return ret;
         }
-        if (container instanceof SymbolRefShape) refId = container.id + '/' + refId;
+        if (container instanceof SymbolRefShape) refId = refId.length > 0 ? (container.id + '/' + refId) : container.id;
     }
 }
 

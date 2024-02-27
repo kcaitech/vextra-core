@@ -13,7 +13,7 @@ export type Variable = {
     id: string
     type: VariableType
     name: string
-    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill)[])
+    value: (number | string | boolean | Color | Text | Gradient | Style | (Border | Fill | Shadow)[] | ContextSettings | TableShape)
 }
 /* variable types */
 export enum VariableType {
@@ -198,6 +198,7 @@ export type ShapeFrame = {
 /* shadow */
 export type Shadow = {
     crdtidx: number[]
+    typeId: string
     id: string
     isEnabled: boolean
     blurRadius: number
@@ -414,6 +415,7 @@ export type CrdtNumber = {
 }
 /* context settings */
 export type ContextSettings = {
+    typeId: string
     blenMode: BlendMode
     opacity: number
 }
@@ -587,11 +589,6 @@ export type SymbolRefShape = Shape & {
     refId: string
     overrides?: Map<string, string>
     variables: Map<string, Variable>
-    overrideFills?: boolean
-    overrideBorders?: boolean
-    overrideShadows?: boolean
-    overrideBorderOptions?: boolean
-    overrideContextSettings?: boolean
 }
 /* span attr */
 export type Span = SpanAttr & {

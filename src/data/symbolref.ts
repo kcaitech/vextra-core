@@ -14,7 +14,7 @@ import { findOverrideAndVar } from "./utils";
 
 function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable) return refId;
-    return refId + '/' + type;
+    return refId.length > 0 ? refId + '/' + type : type;
 }
 
 export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
@@ -25,11 +25,6 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
 
     overrides?: BasicMap<string, string> // 同varbinds，只是作用域为引用的symbol对象
     variables: BasicMap<string, Variable>
-    overrideFills?: boolean
-    overrideBorders?: boolean
-    overrideShadows?: boolean
-    overrideBorderOptions?: boolean
-    overrideContextSettings?: boolean
     // __childs?: Shape[];
 
     constructor(

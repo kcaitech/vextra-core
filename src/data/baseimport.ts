@@ -31,17 +31,18 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
             if (val instanceof Array) {
                 const _val = val;
                 return (() => {
-                    const ret = new BasicArray<(impl.Border | impl.Fill)>()
+                    const ret = new BasicArray<(impl.Border | impl.Fill | impl.Shadow)>()
                     for (let i = 0, len = _val && _val.length; i < len; i++) {
                         const r = (() => {
                             const val = _val[i]
                             if (val.typeId == 'border') {
-                                if (!val.crdtidx) val.crdtidx = [i]
                                 return importBorder(val as types.Border, ctx)
                             }
                             if (val.typeId == 'fill') {
-                                if (!val.crdtidx) val.crdtidx = [i]
                                 return importFill(val as types.Fill, ctx)
+                            }
+                            if (val.typeId == 'shadow') {
+                                return importShadow(val as types.Shadow, ctx)
                             }
                             {
                                 throw new Error('unknow val: ' + val)
@@ -63,6 +64,12 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
             }
             if (val.typeId == 'style') {
                 return importStyle(val as types.Style, ctx)
+            }
+            if (val.typeId == 'context-settings') {
+                return importContextSettings(val as types.ContextSettings, ctx)
+            }
+            if (val.typeId == 'table-shape') {
+                return importTableShape(val as types.TableShape, ctx)
             }
             {
                 throw new Error('unknow val: ' + val)
@@ -1065,11 +1072,6 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
         });
         return ret
     })()
-    if (source.overrideFills !== undefined) ret.overrideFills = source.overrideFills
-    if (source.overrideBorders !== undefined) ret.overrideBorders = source.overrideBorders
-    if (source.overrideShadows !== undefined) ret.overrideShadows = source.overrideShadows
-    if (source.overrideBorderOptions !== undefined) ret.overrideBorderOptions = source.overrideBorderOptions
-    if (source.overrideContextSettings !== undefined) ret.overrideContextSettings = source.overrideContextSettings
     // inject code
     if (ctx?.document) {
         ret.setSymbolMgr(ctx.document.symbolsMgr);

@@ -42,6 +42,9 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
                             if (val.typeId == 'fill') {
                                 return exportFill(val as types.Fill, ctx)
                             }
+                            if (val.typeId == 'shadow') {
+                                return exportShadow(val as types.Shadow, ctx)
+                            }
                             {
                                 throw new Error('unknow val: ' + val)
                             }
@@ -62,6 +65,12 @@ export function exportVariable(source: types.Variable, ctx?: IExportContext): ty
             }
             if (val.typeId == 'style') {
                 return exportStyle(val as types.Style, ctx)
+            }
+            if (val.typeId == 'context-settings') {
+                return exportContextSettings(val as types.ContextSettings, ctx)
+            }
+            if (val.typeId == 'table-shape') {
+                return exportTableShape(val as types.TableShape, ctx)
             }
             {
                 throw new Error('unknow val: ' + val)
@@ -299,6 +308,7 @@ export function exportShadow(source: types.Shadow, ctx?: IExportContext): types.
             }
             return ret
         })(),
+        typeId: source.typeId,
         id: source.id,
         isEnabled: source.isEnabled,
         blurRadius: source.blurRadius,
@@ -604,6 +614,7 @@ export function exportCrdtNumber(source: types.CrdtNumber, ctx?: IExportContext)
 /* context settings */
 export function exportContextSettings(source: types.ContextSettings, ctx?: IExportContext): types.ContextSettings {
     const ret = {
+        typeId: source.typeId,
         blenMode: exportBlendMode(source.blenMode, ctx),
         opacity: source.opacity,
     }
@@ -985,11 +996,6 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
             });
             return ret;
         })(),
-        overrideFills: source.overrideFills,
-        overrideBorders: source.overrideBorders,
-        overrideShadows: source.overrideShadows,
-        overrideBorderOptions: source.overrideBorderOptions,
-        overrideContextSettings: source.overrideContextSettings,
     }
     // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);

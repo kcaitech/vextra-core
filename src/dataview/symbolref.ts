@@ -182,13 +182,17 @@ export class SymbolRefView extends ShapeView {
         }
         if (trysync) {
             const val = symMgr.getSync(refId);
-            onload(val as SymbolShape);
-            return;
+            if (val) {
+                onload(val as SymbolShape);
+                return;
+            }
         }
         symMgr.get(refId).then((val) => {
-            onload(val as SymbolShape);
+            if (val) onload(val as SymbolShape);
+            else this.m_refId = undefined;
         }).catch((e) => {
             console.error(e);
+            this.m_refId = undefined;
         })
     }
 
@@ -423,38 +427,45 @@ export class SymbolRefView extends ShapeView {
         throw new Error("Method not implemented.");
     }
 
+    protected _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
+        const data = this.data;
+        const varsContainer = (this.varsContainer || []).concat(data);
+        const id = ""; // ?
+        const _vars = findOverride(id, ot, varsContainer);
+        if (!_vars) return;
+        const _var = _vars[_vars.length - 1];
+        if (_var && _var.type === vt) {
+            return _var;
+        }
+    }
+
     get contextSettings(): ContextSettings | undefined {
         const v = this._findOV(OverrideType.ContextSettings, VariableType.ContextSettings);
         if (v) return v.value;
-        if (this.data.overrideContextSettings) return this.m_data.style.contextSettings;
         return this.m_sym?.style.contextSettings;
     }
 
     getFills(): Fill[] {
         const v = this._findOV(OverrideType.Fills, VariableType.Fills);
         if (v) return v.value;
-        if (this.data.overrideFills) return this.data.style.fills;
         return this.m_sym?.style.fills || [];
     }
 
     getBorders(): Border[] {
         const v = this._findOV(OverrideType.Borders, VariableType.Borders);
         if (v) return v.value;
-        if (this.data.overrideBorders) return this.data.style.borders;
         return this.m_sym?.style.borders || [];
     }
 
     getBorderOptions(): BorderOptions | undefined {
         const v = this._findOV(OverrideType.BorderOptions, VariableType.BorderOptions);
         if (v) return v.value;
-        if (this.data.overrideBorderOptions) return this.data.style.borderOptions;
         return this.m_sym?.style.borderOptions;
     }
 
     getShadows(): Shadow[] {
         const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
         if (v) return v.value;
-        if (this.data.overrideShadows) return this.data.style.shadows;
         return this.m_sym?.style.shadows || [];
     }
 }
