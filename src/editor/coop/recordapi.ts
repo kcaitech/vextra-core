@@ -348,6 +348,9 @@ export class Api {
         }
         checkShapeAtPage(page, shape);
         this.addOp(basicapi.shapeModifyContextSettingOpacity(shape, contextSettingsOpacity));
+        if (shape instanceof SymbolRefShape && !shape.overrideContextSettings) {
+            this.shapeModifySymOvContextSettings(page, shape, true);
+        }
     }
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
         this._shapeModifyAttr(page, shape, "resizingConstraint", resizingConstraint);

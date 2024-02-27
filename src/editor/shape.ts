@@ -33,7 +33,7 @@ import {
     is_default_state
 } from "./utils/other";
 // import { _override_variable_for_symbolref, is_part_of_symbol, is_part_of_symbolref, is_symbol_or_union, modify_variable, shape4shadow } from "./utils/symbol";
-import { newText, newText2 } from "./creator";
+import { newText2 } from "./creator";
 import { _clip, _typing_modify, get_points_for_init, modify_points_xy, update_frame_by_points, update_path_shape_frame } from "./utils/path";
 import { Color } from "../data/color";
 import { adapt_for_artboard } from "./utils/common";
