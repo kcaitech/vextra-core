@@ -17,6 +17,7 @@ import { findOverrideAndVar } from "../data/utils";
 import { randomId } from "./basic";
 import { render as marker } from "./marker";
 import { render as renderGradient } from "./gradient";
+import { render as lineGradient } from "./line_gradient";
 function handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.thickness;
     const body_props: any = {
@@ -41,6 +42,10 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
     }
     if ((endMarkerType && endMarkerType !== MarkerType.Line) || (startMarkerType && startMarkerType !== MarkerType.Line)) {
         delete body_props.opacity;
+        let line_g;
+        if (border.fillType === FillType.Gradient) {
+            line_g = lineGradient(border.gradient as Gradient, shape.frame, thickness);
+        }
         const g_cs: any[] = [h('path', body_props)];
         if (endMarkerType && endMarkerType !== MarkerType.Line) {
             const rId = randomId();
@@ -54,9 +59,17 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
             g_cs.unshift(marker(h, style, border, startMarkerType, id));
             body_props['marker-start'] = `url(#arrow-${id})`;
         }
-        if (g_ && g_.node) {
-            g_cs.unshift(g_.node);
-            return h('g', g_cs);
+        if (line_g && line_g.style) {
+            body_props.stroke = 'white'
+            const frame = shape.frame;
+            const id = "mask-line-" + objectId(border) + randomId();
+            const mk = h("mask", { id }, g_cs);
+            const fg = h("foreignObject", {
+                width: frame.width + (thickness * 12), height: frame.height + (thickness * 12), x: -(thickness * 6), y: -(thickness * 6),
+                mask: "url(#" + id + ")",
+            },
+                h("div", { width: "100%", height: "100%", style: 'overflow: hidden; height: 100%' }, [h("div", { width: "100%", height: "100%", style: line_g.style })]))
+            return h('g', [mk, fg]);
         } else {
             return h('g', { opacity: border.color.alpha }, g_cs);
         }
@@ -71,11 +84,12 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
     return h('path', body_props);
 }
 
+
+
 function angular_handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.thickness;
     const opacity = border.gradient?.gradientOpacity;
-    const g_ = renderGradient(h, border.gradient as Gradient, shape.frame);
-    const gStyle = g_.style;
+    let line_g = lineGradient(border.gradient as Gradient, shape.frame, thickness);
     const id = "mask-line-" + objectId(border) + randomId();
     const body_props: any = {
         d: path,
@@ -85,17 +99,17 @@ function angular_handler(h: Function, style: Style, border: Border, path: string
     }
     const elArr = new Array();
     const frame = shape.frame;
+    const fg = h("foreignObject", {
+        width: frame.width + (thickness * 12), height: frame.height + (thickness * 12), x: -(thickness * 6), y: -(thickness * 6),
+        mask: "url(#" + id + ")",
+    },
+        h("div", { width: "100%", height: "100%", style: 'overflow: hidden; height: 100%' }, [h("div", { width: "100%", height: "100%", style: line_g.style + "transform: translateZ(0);" })]))
     const { length, gap } = border.borderStyle;
     if (length || gap) body_props['stroke-dasharray'] = `${length}, ${gap}`;
     body_props.stroke = "white";
     const mk = h("mask", { id }, [h("path", body_props)]);
     elArr.push(mk);
-    elArr.push(h("foreignObject", {
-        width: frame.width + thickness, height: frame.height + thickness, x: -thickness / 2, y: -thickness / 2,
-        mask: "url(#" + id + ")",
-        opacity: opacity === undefined ? 1 : opacity
-    },
-        h("div", { width: "100%", height: "100%", style: gStyle })));
+    elArr.push(fg);
     if ((endMarkerType && endMarkerType !== MarkerType.Line) || (startMarkerType && startMarkerType !== MarkerType.Line)) {
         delete body_props.opacity;
         const g_cs: any[] = [h('path', body_props)];
@@ -111,9 +125,16 @@ function angular_handler(h: Function, style: Style, border: Border, path: string
             g_cs.unshift(marker(h, style, border, startMarkerType, id));
             body_props['marker-start'] = `url(#arrow-${id})`;
         }
-        const color = border.color;
-        body_props['stroke'] = "rgb(" + color.red + "," + color.green + "," + color.blue + ")";
-        return h('g', g_cs);
+        if (line_g && line_g.style) {
+            body_props.stroke = 'white'
+            const mk = h("mask", { id }, g_cs);
+
+            return h('g', [mk, fg]);
+        } else {
+            const color = border.color;
+            body_props['stroke'] = "rgb(" + color.red + "," + color.green + "," + color.blue + ")";
+            return h('g', g_cs);
+        }
     }
     return h("g", elArr);
 }
