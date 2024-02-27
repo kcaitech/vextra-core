@@ -19,7 +19,7 @@ import {
 } from "./frame";
 import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame } from "../data/shape";
 import { getFormatFromBase64 } from "../basic/utils";
-import { ContactRoleType, CurveMode, FillType, ShapeType } from "../data/typesdefine";
+import { ContactRoleType, CurveMode, FillType, OverrideType, ShapeType, VariableType } from "../data/typesdefine";
 import { newArrowShape, newArtboard, newContact, newImageShape, newLineShape, newOvalShape, newRectShape, newTable, newTextShape, newCutoutShape, getTransformByEnv, modifyTransformByEnv } from "./creator";
 
 import { Page } from "../data/page";
@@ -32,7 +32,7 @@ import { Artboard } from "../data/artboard";
 import { uuid } from "../basic/uuid";
 import { ContactForm, ContactRole } from "../data/baseclasses";
 import { ContactShape } from "../data/contact";
-import { importCurvePoint } from "../data/baseimport";
+import { importContextSettings, importCurvePoint } from "../data/baseimport";
 import { exportCurvePoint } from "../data/baseexport";
 import { is_state } from "./utils/other";
 import { after_migrate, unable_to_migrate } from "./utils/migrate";
@@ -44,6 +44,7 @@ import { ISave4Restore, LocalCmd, SelectionState } from "./coop/localcmd";
 import { BasicArray } from "../data/basic";
 import { Fill } from "../data/style";
 import { FrameType } from "../data/consts";
+import { shape4contextSettings } from "./shape";
 
 interface PageXY { // 页面坐标系的xy
     x: number
@@ -1068,8 +1069,8 @@ export class Controller {
         return { pre, modify_contact_from, modify_contact_to, before, modify_sides, migrate, close }
     }
 
-    public asyncOpacityEditor(_shapes: Shape[] | ShapeView[], _page: Page | PageView): AsyncOpacityEditor {
-        const shapes: Shape[] = _shapes[0] instanceof ShapeView ? _shapes.map((s) => adapt2Shape(s as ShapeView)) : _shapes as Shape[];
+    public asyncOpacityEditor(_shapes: ShapeView[], _page: Page | PageView): AsyncOpacityEditor {
+        const shapes: ShapeView[] = _shapes;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
         const api = this.__repo.start("asyncOpacityEditor");
@@ -1078,7 +1079,7 @@ export class Controller {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
-                    const shape = shapes[i];
+                    const shape = shape4contextSettings(api, shapes[i], page);
                     api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
                 }
                 this.__repo.transactCtx.fireNotify();

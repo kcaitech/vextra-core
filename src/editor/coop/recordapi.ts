@@ -19,7 +19,7 @@ import { BulletNumbers, SpanAttr, SpanAttrSetter, Text, TextBehaviour, TextHorAl
 import { RectShape, SymbolRefShape, TableCellType, TableShape } from "../../data/classes";
 import {
     BoolOp, BulletNumbersBehavior, BulletNumbersType, ExportFileFormat, OverrideType, Point2D,
-    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme
+    StrikethroughType, TextTransformType, UnderlineType, ShadowPosition, ExportFormatNameingScheme, BlendMode
 } from "../../data/typesdefine";
 import { _travelTextPara } from "../../data/texttravel";
 import { uuid } from "../../basic/uuid";
@@ -316,23 +316,6 @@ export class Api {
     shapeModifySymRef(page: Page, shape: SymbolRefShape, refId: string) {
         this._shapeModifyAttr(page, shape, "refId", refId);
     }
-
-    shapeModifySymOvContextSettings(page: Page, shape: SymbolRefShape, val: true | undefined) {
-        this._shapeModifyAttr(page, shape, "overrideContextSettings", val);
-    }
-    shapeModifySymOvBorderOptions(page: Page, shape: SymbolRefShape, val: true | undefined) {
-        this._shapeModifyAttr(page, shape, "overrideBorderOptions", val);
-    }
-    shapeModifySymOvBorders(page: Page, shape: SymbolRefShape, val: true | undefined) {
-        this._shapeModifyAttr(page, shape, "overrideBorders", val);
-    }
-    shapeModifySymOvFills(page: Page, shape: SymbolRefShape, val: true | undefined) {
-        this._shapeModifyAttr(page, shape, "overrideFills", val);
-    }
-    shapeModifySymOvShadows(page: Page, shape: SymbolRefShape, val: true | undefined) {
-        this._shapeModifyAttr(page, shape, "overrideShadows", val);
-    }
-
     shapeModifyLock(page: Page, shape: Shape, isLocked: boolean) {
         this._shapeModifyAttr(page, shape, "isLocked", isLocked);
     }
@@ -342,15 +325,19 @@ export class Api {
     shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | undefined) {
         this._shapeModifyAttr(page, shape, "isFlippedVertical", vflip);
     }
-    shapeModifyContextSettingsOpacity(page: Page, shape: Shape, contextSettingsOpacity: number) {
-        if (shape.isVirtualShape) {
-            return; // todo
-        }
+    shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
+        // if (shape.isVirtualShape) {
+        //     return; // todo
+        // }
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyContextSettingOpacity(shape, contextSettingsOpacity));
-        if (shape instanceof SymbolRefShape && !shape.overrideContextSettings) {
-            this.shapeModifySymOvContextSettings(page, shape, true);
+        let contextSettings;
+        if (shape instanceof Shape) {
+            if (!shape.style.contextSettings) shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+            contextSettings = shape.style.contextSettings;
+        } else {
+            contextSettings = shape.value;
         }
+        this.addOp(basicapi. crdtSetAttr(contextSettings, 'opacity', contextSettingsOpacity));
     }
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
         this._shapeModifyAttr(page, shape, "resizingConstraint", resizingConstraint);

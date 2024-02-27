@@ -103,12 +103,12 @@ export function shapeModifyVFlip(page: Page, shape: Shape, vflip: boolean | unde
 export function shapeModifyResizingConstraint(shape: Shape, resizingConstraint: number) {
     return crdtSetAttr(shape, 'resizingConstraint', resizingConstraint);
 }
-export function shapeModifyContextSettingOpacity(shape: Shape, contextSettingsOpacity: number) {
-    if (!shape.style.contextSettings) {
-        shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    }
-    return crdtSetAttr(shape.style.contextSettings, 'opacity', contextSettingsOpacity);
-}
+// export function shapeModifyContextSettingOpacity(shape: Shape, contextSettingsOpacity: number) {
+//     if (!shape.style.contextSettings) {
+//         shape.style.contextSettings = new ContextSettings(BlendMode.Normal, 1);
+//     }
+//     return crdtSetAttr(shape.style.contextSettings, 'opacity', contextSettingsOpacity);
+// }
 export function shapeModifyRadius(shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
     const ps = shape.points;
     if (ps.length === 4) {
