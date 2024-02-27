@@ -49,9 +49,8 @@ function varParent(_var: Variable) {
 
 // 修改对象属性
 // 1. 如果普通对象
-// 1.1 symbolref需要设置override属性。
-// 1.2 varbind, 则到3
-// 1.3 正常修改. 
+// 1.1 varbind, 则到3
+// 1.2 正常修改. 
 // 2. 如果对象为virtual, 将属性值override到var再修改
 // 2.1 创建新var
 // 2.2 将属性 override到新var
@@ -155,7 +154,7 @@ function _ov_3_1_2(fromVar: Variable, toVarId: string, host: SymbolRefShape | Sy
     // if (!p.isVirtualShape) throw new Error(); // 不一定,可能是symbolshape??然后也不在view结构里？
 
     // const view = this.__shape;
-    const varsContainer = view.varsContainer;
+    const varsContainer = _varsContainer(view);
     if (!varsContainer || varsContainer.length === 0) throw new Error();
 
     if (isAdaptedShape(p)) throw new Error(); // 不用adapted的
@@ -185,7 +184,10 @@ function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var:
         }
     }
 
-    const _vars = findOverride(view.data.id, overrideType, varsContainer);
+    if (!view.isVirtualShape && !(view.data instanceof SymbolRefShape)) return;
+
+    const refId = view.data instanceof SymbolRefShape ? "" : view.data.id;
+    const _vars = findOverride(refId, overrideType, varsContainer);
     if (_vars) {
         const _var = _vars[_vars.length - 1];
         if (_var && _var.type === varType) {
