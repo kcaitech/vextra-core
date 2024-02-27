@@ -196,7 +196,8 @@ export class ShapeView extends DataView {
         return this.data.exportOptions;
     }
     get contextSettings() {
-        return this.data.style.contextSettings;
+        const v = this._findOV(OverrideType.ContextSettings, VariableType.ContextSettings);
+        return v ? v.value : this.data.style.contextSettings;
     }
     get naviChilds(): ShapeView[] | undefined {
         return this.m_children as ShapeView[];
