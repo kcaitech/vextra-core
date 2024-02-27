@@ -52,7 +52,7 @@ export class Page extends GroupShape implements classes.Page {
             throw new Error("The shape is not found");
         }
         const path1 = path[1];
-        const shape = this.getShape(path1, true);
+        const shape = this.getShape(path1, true); // 由于op是批量按path路径排序执行的，就有可能要修改的shape被提前delete掉了
         if (shape) return shape.getOpTarget(path.slice(2));
         return super.getOpTarget(path.slice(1));
     }
