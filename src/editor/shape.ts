@@ -90,7 +90,7 @@ function _ov_2_2(host: SymbolRefShape, type: OverrideType, varId: string, view: 
     // const host = varsContainer.find((v) => v instanceof SymbolRefShape);
     // if (!host || !(host instanceof SymbolRefShape)) throw new Error();
 
-    let override_id: string = type;
+    let override_id: string = view.data.id + '/' + type;
     for (let i = varsContainer.length - 1; i >= 0; --i) {
         const c = varsContainer[i];
         if (c === host) break;

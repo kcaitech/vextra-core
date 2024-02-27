@@ -178,7 +178,7 @@ export function shapeModifyOverride(page: Page, shape: SymbolShape | SymbolRefSh
 }
 export function shapeAddOverride(page: Page, shape: SymbolShape | SymbolRefShape, refId: string, attr: OverrideType, value: string) {
     if (!shape.overrides) shape.overrides = new BasicMap<string, string>();
-    refId = genRefId(refId, attr); // id+type->var
+    // refId = genRefId(refId, attr); // id+type->var
     shape.overrides.set(refId, value);
     return crdtSetAttr(shape.overrides, refId, value);
 }
