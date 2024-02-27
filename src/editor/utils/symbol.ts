@@ -61,7 +61,7 @@ function varParent(_var: Variable) {
     return p;
 }
 
-export function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
+function modify_variable(page: Page, shape: Shape, _var: Variable, value: any, api: Api) {
     const p = varParent(_var); // todo 如果p是symbolref(root), shape.isVirtual
     if (!p) {
         console.log('!p');
@@ -205,7 +205,7 @@ function _override_variable(page: Page, shape: Shape, _var: Variable, value: any
 /**
  * @description override "editor/shape/_overrideVariable"
  */
-export function _override_variable_for_symbolref(page: Page, shape: SymbolRefShape, _var: Variable, value: any, api: Api) {
+function _override_variable_for_symbolref(page: Page, shape: SymbolRefShape, _var: Variable, value: any, api: Api) {
     let p = varParent(_var);
     if (!p) throw new Error();
 
