@@ -1,4 +1,4 @@
-import { Border, BorderOptions, ContextSettings, Fill, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
+import { Border, BorderOptions, ContextSettings, Fill, MarkerType, OverrideType, Shadow, Shape, ShapeFrame, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType } from "../data/classes";
 import { ShapeView } from "./shape";
 import { ShapeType } from "../data/classes";
 import { DataView, RootView } from "./view";
@@ -457,10 +457,13 @@ export class SymbolRefView extends ShapeView {
         return this.m_sym?.style.borders || [];
     }
 
-    getBorderOptions(): BorderOptions | undefined {
-        const v = this._findOV(OverrideType.BorderOptions, VariableType.BorderOptions);
-        if (v) return v.value;
-        return this.m_sym?.style.borderOptions;
+    get startMarkerType(): MarkerType | undefined {
+        const v = this._findOV(OverrideType.StartMarkerType, VariableType.MarkerType);
+        return v ? v.value : this.m_sym?.style.startMarkerType;
+    }
+    get endMarkerType(): MarkerType | undefined {
+        const v = this._findOV(OverrideType.EndMarkerType, VariableType.MarkerType);
+        return v ? v.value : this.m_sym?.style.endMarkerType;
     }
 
     getShadows(): Shadow[] {

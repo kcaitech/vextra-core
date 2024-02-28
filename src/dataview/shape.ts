@@ -10,7 +10,7 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { fixConstrainFrame } from "../editor/frame";
 import { BasicArray } from "../data/basic";
-import { BorderOptions } from "data/typesdefine";
+import { MarkerType } from "../data/typesdefine";
 
 export function isDiffShapeFrame(lsh: ShapeFrame, rsh: ShapeFrame) {
     return (
@@ -360,9 +360,13 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.borders;
     }
 
-    getBorderOptions(): BorderOptions | undefined {
-        const v = this._findOV(OverrideType.BorderOptions, VariableType.BorderOptions);
-        return v ? v.value : this.m_data.style.borderOptions;
+    get startMarkerType(): MarkerType | undefined {
+        const v = this._findOV(OverrideType.StartMarkerType, VariableType.MarkerType);
+        return v ? v.value : this.m_data.style.startMarkerType;
+    }
+    get endMarkerType(): MarkerType | undefined {
+        const v = this._findOV(OverrideType.EndMarkerType, VariableType.MarkerType);
+        return v ? v.value : this.m_data.style.endMarkerType;
     }
 
     getShadows(): Shadow[] {

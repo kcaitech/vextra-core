@@ -127,8 +127,10 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
             case OverrideType.Variable:
                 const _val = value as Variable;
                 return _val;
-            case OverrideType.BorderOptions:
-                return new Variable(uuid(), classes.VariableType.BorderOptions, "", value);
+            case OverrideType.EndMarkerType:
+                return new Variable(uuid(), classes.VariableType.MarkerType, "", value);
+            case OverrideType.StartMarkerType:
+                return new Variable(uuid(), classes.VariableType.MarkerType, "", value);
             case OverrideType.ContextSettings:
                 return new Variable(uuid(), classes.VariableType.ContextSettings, "", value);
             case OverrideType.Shadows:
@@ -161,14 +163,14 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     addOverrid(refId: string, attr: OverrideType, value: any) {
         switch (attr) {
             case OverrideType.Text:
-            // case OverrideType.StringValue:
             case OverrideType.Image:
             case OverrideType.Borders:
             case OverrideType.Fills:
             case OverrideType.Visible:
             case OverrideType.Lock:
             case OverrideType.SymbolID:
-            case OverrideType.BorderOptions:
+            case OverrideType.StartMarkerType:
+            case OverrideType.EndMarkerType:
             case OverrideType.ContextSettings:
             case OverrideType.Shadows:
             case OverrideType.Table:

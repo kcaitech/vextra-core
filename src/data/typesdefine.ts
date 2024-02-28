@@ -31,7 +31,7 @@ export enum VariableType {
     Style = 'style',
     ContextSettings = 'contextSettings',
     Table = 'table',
-    BorderOptions = 'borderOptions',
+    MarkerType = 'markerType',
 }
 /* user infomation */
 export type UserInfo = {
@@ -265,7 +265,8 @@ export enum OverrideType {
     SymbolID = 'symbolID',
     ContextSettings = 'contextSettings',
     Table = 'table',
-    BorderOptions = 'borderOptions',
+    StartMarkerType = 'startMarkerType',
+    EndMarkerType = 'endMarkerType',
 }
 /* marker type */
 export enum MarkerType {
