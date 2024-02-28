@@ -19,7 +19,7 @@ import { Page } from "../data/page";
 import { CoopRepository } from "./coop/cooprepo";
 import { CurveMode, OverrideType, ShadowPosition, ExportFileFormat, ExportFormatNameingScheme, BlendMode } from "../data/typesdefine";
 import { Api } from "./coop/recordapi";
-import { IImportContext, importBorder, importBorderOptions, importColor, importContextSettings, importCurvePoint, importFill, importGradient, importShadow, importStyle, importTableShape, importText } from "../data/baseimport";
+import { IImportContext, importBorder, importColor, importContextSettings, importCurvePoint, importFill, importGradient, importShadow, importStyle, importTableShape, importText } from "../data/baseimport";
 import { v4 } from "uuid";
 import { ContactShape } from "../data/contact";
 import { Document, SymbolRefShape, Text } from "../data/classes";
@@ -211,8 +211,8 @@ function _clone_value(_var: Variable, document: Document, page: Page) {
     const ctx: IImportContext = new class implements IImportContext { document: Document = document; curPage: string = page.id };
 
     switch (_var.type) {
-        case VariableType.BorderOptions:
-            return importBorderOptions(_var.value);
+        case VariableType.MarkerType:
+            return _var.value;
         case VariableType.Borders:
             return (_var.value as Border[]).reduce((arr, v) => {
                 arr.push(importBorder(v, ctx));
@@ -307,6 +307,21 @@ export class ShapeEditor {
     protected overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view?: ShapeView) {
         view = view ?? this.__shape;
         return _ov(varType, overrideType, valuefun, view, this.__page, api);
+    }
+
+    /**
+     * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「修改」var，否则先override再「修改」新的var zrx?是否用于修改组件身上的变量
+     * @param varType
+     * @param overrideType
+     * @param valuefun
+     * @returns
+     */
+    modifyVariable(varType: VariableType, overrideType: OverrideType, value: any, api: Api): boolean {
+        const _var = _ov(varType, overrideType, () => value, this.__shape, this.__page, api);
+        if (_var && _var.value !== value) {
+            api.shapeModifyVariable(this.__page, _var, value);
+        }
+        return !!_var;
     }
 
     /**
@@ -536,98 +551,6 @@ export class ShapeEditor {
         }
     }
 
-    /**
-     * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「修改」var，否则先override再「修改」新的var zrx?是否用于修改组件身上的变量
-     * @param varType
-     * @param overrideType
-     * @param valuefun
-     * @returns
-     */
-    modifyVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any): boolean {
-        // const _var = this.overrideVariable(slot, varType, ov)
-        const shape = this.shape;
-        // symbol shape
-        if (!shape.isVirtualShape && shape.varbinds && shape.varbinds.has(overrideType)) {
-            const _vars: Variable[] = [];
-            shape.findVar(shape.varbinds.get(overrideType)!, _vars);
-
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                this._repoWrap('modifyVariable', (api) => {
-                    this.modifyVariable2(_var, valuefun(_var), api);
-                });
-                return true;
-            }
-        }
-        if (!shape.isVirtualShape) return false;
-
-        // 先override还是varbinds？？应该是override?
-
-        // 先查varbinds
-        // if (shape.varbinds && shape.varbinds.has(overrideType)) {
-        if (shape.varbinds?.get(overrideType)) {
-            const _vars: Variable[] = [];
-            const vars_path: Shape[] = [];
-            shape.findVar(shape.varbinds.get(overrideType)!, _vars);
-            // if (_vars.length !== vars_path.length) {
-            //     console.log('wrong data: _vars.length !== vars_path.length');
-            //     return false;
-            // }
-            if (!_vars.length) {
-                console.log('wrong data: _vars.length !== vars_path.length');
-                return false;
-            }
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                this._repoWrap('modifyVariable', (api) => {
-                    this.modifyVariable2(_var, valuefun(_var), api)
-                });
-                return true;
-            }
-        }
-
-        // override
-        let override_id = shape.id;
-        override_id = override_id.substring(override_id.indexOf('/') + 1); // 需要截掉第一个
-        if (override_id.length === 0) throw new Error();
-
-        // x 找不到已有的
-        const _vars = shape.findOverride(override_id.substring(override_id.lastIndexOf('/') + 1), overrideType);
-        if (_vars) {
-            const _var = _vars[_vars.length - 1];
-            if (_var && _var.type === varType) {
-                this._repoWrap('modifyVariable', (api) => {
-                    this.modifyVariable2(_var, valuefun(_var), api)
-                });
-                return true;
-            }
-        }
-        //
-        // symRef.addOverrid(override_id, OverrideType.SymbolID, refId);
-
-        // get first not virtual
-        let symRef = shape.parent;
-        while (symRef && symRef.isVirtualShape) symRef = symRef.parent;
-        if (!symRef || !(symRef instanceof SymbolRefShape)) throw new Error();
-
-        // add override
-        //
-
-        // todo api
-        // add override add variable
-        const _symRef = symRef;
-        const api = this._repoWrap('addOverrid', (api) => {
-            const _var2 = new Variable(uuid(), varType, "", valuefun(undefined));
-            // _var2.value = valuefun(undefined);
-            api.shapeAddVariable(this.__page, _symRef, _var2);
-            api.shapeAddOverride(this.__page, _symRef, override_id, overrideType, _var2.id);
-        });
-
-        // symRef.addOverrid(override_id, overrideType, value);
-
-        return true;
-    }
-
     public setName(name: string) {
         const api = this.__repo.start('setName');
         api.shapeModifyName(this.__page, this.shape, name)
@@ -637,25 +560,18 @@ export class ShapeEditor {
 
     public toggleVisible() {
         // 实例图层
-        if (this.modifyVariable(VariableType.Visible, OverrideType.Visible, (_var) => {
-            return _var ? !_var.value : !this.shape.isVisible;
-        })) {
-            return;
-        }
         this._repoWrap('toggleVisible', (api) => {
-            api.shapeModifyVisible(this.__page, this.shape, !this.shape.isVisible);
-            // after_toggle_shapes_visible(api, this.__page, [this.shape]);
+            const isVisible = !this.shape.isVisible;
+            if (this.modifyVariable(VariableType.Visible, OverrideType.Visible, isVisible, api)) return;
+            api.shapeModifyVisible(this.__page, this.shape, isVisible);
         })
     }
 
     public toggleLock() {
-        if (this.modifyVariable(VariableType.Lock, OverrideType.Lock, (_var) => {
-            return _var ? !_var.value : !this.shape.isLocked;
-        })) {
-            return;
-        }
         this._repoWrap('toggleLock', (api) => {
-            api.shapeModifyLock(this.__page, this.shape, !this.shape.isLocked);
+            const isLocked = !this.shape.isLocked;
+            if (this.modifyVariable(VariableType.Lock, OverrideType.Lock, isLocked, api)) return;
+            api.shapeModifyLock(this.__page, this.shape, isLocked);
         });
     }
 
@@ -891,7 +807,8 @@ export class ShapeEditor {
     }
 
     public setMarkerType(mt: MarkerType, isEnd: boolean) {
-        this._repoWrap("setMarkerType", (api) => {
+        this._repoWrap('setMarkerType', (api) => {
+            if (this.modifyVariable(VariableType.MarkerType, isEnd ? OverrideType.EndMarkerType : OverrideType.StartMarkerType, mt, api)) return;
             if (isEnd) {
                 api.shapeModifyEndMarkerType(this.__page, this.shape, mt);
             } else {
@@ -901,9 +818,14 @@ export class ShapeEditor {
     }
 
     public exchangeMarkerType() {
-        const { endMarkerType, startMarkerType } = this.shape.style;
+        const startMarkerType = this.__shape.startMarkerType;
+        const endMarkerType = this.__shape.endMarkerType;
         if (endMarkerType !== startMarkerType) {
             this._repoWrap("exchangeMarkerType", (api) => {
+                if (this.modifyVariable(VariableType.MarkerType, OverrideType.EndMarkerType, startMarkerType || MarkerType.Line, api)) {
+                    this.modifyVariable(VariableType.MarkerType, OverrideType.StartMarkerType, endMarkerType || MarkerType.Line, api)
+                    return;
+                }
                 api.shapeModifyEndMarkerType(this.__page, this.shape, startMarkerType || MarkerType.Line);
                 api.shapeModifyStartMarkerType(this.__page, this.shape, endMarkerType || MarkerType.Line);
             });
@@ -1453,12 +1375,9 @@ export class ShapeEditor {
         if (!(this.shape instanceof SymbolRefShape)) return;
         // check？
 
-        if (this.modifyVariable(VariableType.SymbolRef, OverrideType.SymbolID, (_var) => {
-            return refId;
-        })) return;
-
         const api = this.__repo.start("switchSymRef");
         try {
+            if (this.modifyVariable(VariableType.SymbolRef, OverrideType.SymbolID, refId, api)) return;
             api.shapeModifySymRef(this.__page, this.shape, refId);
             this.__repo.commit();
         } catch (e) {
