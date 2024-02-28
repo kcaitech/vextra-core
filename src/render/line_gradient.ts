@@ -1,3 +1,4 @@
+import { Matrix } from "../basic/matrix";
 import { objectId } from "../basic/objectid";
 import { ShapeFrame, Color, Gradient, GradientType, Stop } from "../data/classes";
 
@@ -14,12 +15,6 @@ export function render(value: Gradient, frame: ShapeFrame, thickness: number): {
         const { from, to, stops } = value;
         let rotate = Math.atan2((to.y * frame.height - from.y * frame.height), (to.x * frame.width - from.x * frame.width)) / Math.PI * 180 + 90;
         const colors: any[] = [];
-        if (stops.length === 1) {
-            style =
-                "background: " + toRGBA(stops[0].color as Color) + ";" +
-                "height:-webkit-fill-available;" +
-                "width:-webkit-fill-available;"
-        }
         const sort_p = [];
         const l = frame.height / (frame.height + (thickness * 12));
         const slope = (to.y - from.y) / (to.x - from.x);
@@ -45,7 +40,7 @@ export function render(value: Gradient, frame: ShapeFrame, thickness: number): {
             _from = f;
             _to = t;
         }
-        
+
         for (let i = 0; i < stops.length; i++) {
             const stop = stops[i];
             const c = toRGBA(stop.color as Color);
@@ -54,7 +49,7 @@ export function render(value: Gradient, frame: ShapeFrame, thickness: number): {
             const m = m_len(from, to, x1, y1, frame);
             const ret = is_positive(from, to, x1, y1) ? m : -m;
             const result = ret + (thickness * 6);
-            
+
             sort_p.push({ color: c, position: result });
         }
         if (stops.length > 1) {
@@ -72,16 +67,33 @@ export function render(value: Gradient, frame: ShapeFrame, thickness: number): {
             "background: " + linear + ";" +
             "height:-webkit-fill-available;" +
             "width:-webkit-fill-available;"
-    }
-    else if (value.gradientType == GradientType.Radial) {
-        const { from, to, stops } = value;
-        const colors = [];
         if (stops.length === 1) {
             style =
                 "background: " + toRGBA(stops[0].color as Color) + ";" +
                 "height:-webkit-fill-available;" +
                 "width:-webkit-fill-available;"
         }
+    }
+    else if (value.gradientType == GradientType.Radial) {
+        const { from, to, stops } = value;
+        const rotate = Math.atan2((value.to.y * frame.height - value.from.y * frame.height), (value.to.x * frame.width - value.from.x * frame.width)) / Math.PI * 180 + 90;
+        const colors = [];
+        const width = frame.width + (thickness * 12);
+        const height = frame.height + (thickness * 12);
+        const max_l = frame.width > frame.height ? width : height;
+        const x1 = (from.x * frame.width);
+        const y1 = (from.y * frame.height);
+        const sx = max_l / frame.width;
+        const sy = max_l / frame.height;
+        const tx = (frame.width - max_l) / 2;
+        const ty = (frame.height - max_l) / 2;
+        const m = new Matrix();
+        m.scale(sx, sy);
+        m.trans(tx, ty);
+        m.rotate(rotate, frame.width / 2, frame.height / 2);
+        const _m = new Matrix(m.inverse)
+        const { x, y } = _m.computeCoord3({ x: x1, y: y1 });
+
         for (let i = 0; i < stops.length; i++) {
             const stop = stops[i];
             const c = toRGBA(stop.color as Color);
@@ -90,12 +102,19 @@ export function render(value: Gradient, frame: ShapeFrame, thickness: number): {
         const l = Math.sqrt((value.to.y * frame.height - value.from.y * frame.height) ** 2 + (value.to.x * frame.width - value.from.x * frame.width) ** 2);
         const scaleX = l;
         const scaleY = value.elipseLength ? (value.elipseLength * l * frame.width / frame.height) : 0;
-        const radial = `radial-gradient(${scaleY}px ${scaleX}px at ${from.x * frame.width + (thickness * 6)}px ${from.y * frame.height + (thickness * 6)}px, ${colors.join(', ')})`
+        const radial = `radial-gradient(${Math.abs(scaleY)}px ${scaleX}px at ${x}px ${y}px, ${colors.join(', ')})`
         style =
             "background: " + radial + ";" +
-            "transform-origin: " + ((to.x * frame.width) + (thickness * 6)) + "px " + ((to.y * frame.height) + (thickness * 6)) + "px;" +
+            "transform: rotate(" + rotate + "deg);" +
+            "transform-origin: center;" +
             "height:-webkit-fill-available;" +
             "width:-webkit-fill-available;"
+        if (stops.length === 1) {
+            style =
+                "background: " + toRGBA(stops[0].color as Color) + ";" +
+                "height:-webkit-fill-available;" +
+                "width:-webkit-fill-available;"
+        }
     }
     else if (value.gradientType == GradientType.Angular) {
         let gradient = "";

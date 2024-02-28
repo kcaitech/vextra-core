@@ -37,7 +37,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, shape.frame);
         const opacity = border.gradient?.gradientOpacity;
-        body_props.opacity = opacity === undefined ? 1 : opacity;
+        body_props.opacity = opacity === undefined ? 1 : opacity; ``
         body_props.stroke = "url(#" + g_.id + ")";
     }
     if ((endMarkerType && endMarkerType !== MarkerType.Line) || (startMarkerType && startMarkerType !== MarkerType.Line)) {
@@ -62,14 +62,28 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         if (line_g && line_g.style) {
             body_props.stroke = 'white'
             const frame = shape.frame;
+            const gradient_type = border.gradient!.gradientType;
             const id = "mask-line-" + objectId(border) + randomId();
             const mk = h("mask", { id }, g_cs);
-            const fg = h("foreignObject", {
-                width: frame.width + (thickness * 12), height: frame.height + (thickness * 12), x: -(thickness * 6), y: -(thickness * 6),
+            const width = frame.width + (thickness * 12);
+            const height = frame.height + (thickness * 12);
+            const max_l = frame.width > frame.height ? width : height;
+            const offsetX = gradient_type === GradientType.Radial ? (frame.width - max_l) / 2 : -(thickness * 6);
+            const offsetY = gradient_type === GradientType.Radial ? (frame.height - max_l) / 2 : -(thickness * 6);
+            // const fg = h("foreignObject", {
+            //     width: gradient_type === GradientType.Radial ? max_l : width, height: gradient_type === GradientType.Radial ? max_l : height, x: offsetX, y: offsetY,
+            //     mask: "url(#" + id + ")",
+            // },
+            //     h("div", { width: "100%", height: "100%", style: 'overflow: hidden; height: 100%' }, [h("div", { width: "100%", height: "100%", style: line_g.style })]))
+            const rect_h = h("rect", {
+                x: 0,
+                y: 0,
+                width,
+                height,
+                fill: "url(#" + line_g.id + ")",
                 mask: "url(#" + id + ")",
-            },
-                h("div", { width: "100%", height: "100%", style: 'overflow: hidden; height: 100%' }, [h("div", { width: "100%", height: "100%", style: line_g.style })]))
-            return h('g', [mk, fg]);
+            })
+            return h('g', [mk, rect_h]);
         } else {
             return h('g', { opacity: border.color.alpha }, g_cs);
         }
@@ -103,7 +117,7 @@ function angular_handler(h: Function, style: Style, border: Border, path: string
         width: frame.width + (thickness * 12), height: frame.height + (thickness * 12), x: -(thickness * 6), y: -(thickness * 6),
         mask: "url(#" + id + ")",
     },
-        h("div", { width: "100%", height: "100%", style: 'overflow: hidden; height: 100%' }, [h("div", { width: "100%", height: "100%", style: line_g.style + "transform: translateZ(0);" })]))
+        h("div", { width: "100%", height: "100%", style: 'overflow: hidden; height: 100%' }, [h("div", { width: "100%", height: "100%", style: line_g.style })]))
     const { length, gap } = border.borderStyle;
     if (length || gap) body_props['stroke-dasharray'] = `${length}, ${gap}`;
     body_props.stroke = "white";
