@@ -48,10 +48,10 @@ function varParent(_var: Variable) {
 
 
 // 修改对象属性
-// 1. 如果普通对象
+// 1. 如果普通对象(非virtual、非symbolref)
 // 1.1 varbind, 则到3
 // 1.2 正常修改. 
-// 2. 如果对象为virtual, 将属性值override到var再修改
+// 2. 如果对象为virtual或者symbolref, 将属性值override到var再修改
 // 2.1 创建新var
 // 2.2 将属性 override到新var
 // 2.3 如果已级override到var，则到3
@@ -117,12 +117,16 @@ function _ov_3(_var: Variable, name: string, valuefun: (_var: Variable | undefin
     const p = varParent(_var);
     if (!p) throw new Error();
     const varsContainer = _varsContainer(view);
-    if (!varsContainer || varsContainer.length === 0) throw new Error();
+    if (!varsContainer || varsContainer.length === 0) {
+        // p.isVirtual??
+        return _var; // symbolshape?
+    }
+
     const pIdx = varsContainer.findIndex((v) => v.id === p.id);
-    if (pIdx < 0) throw new Error();
+    // if (pIdx < 0) throw new Error(); // 可能的，当前view为symbolref，正在修改组件变量
     const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
     if (hostIdx < 0) throw new Error();
-    if (pIdx <= hostIdx) return _var; // 可直接修改
+    if (pIdx >= 0 && pIdx <= hostIdx) return _var; // 可直接修改
 
     const value = valuefun(_var);
     const host = varsContainer[hostIdx] as SymbolRefShape;
@@ -158,8 +162,11 @@ function _ov_3_1_2(fromVar: Variable, toVarId: string, host: SymbolRefShape | Sy
     if (!varsContainer || varsContainer.length === 0) throw new Error();
 
     if (isAdaptedShape(p)) throw new Error(); // 不用adapted的
-    const pIdx = varsContainer.findIndex((v) => v.id === p!.id);// 不对？虚拟对象的id？
-    if (pIdx < 0) throw new Error();
+    let pIdx = varsContainer.findIndex((v) => v.id === p!.id);// 不对？虚拟对象的id？
+    if (pIdx < 0) { // 可能的，当前view为symbolref，正在修改组件变量
+        // 组件中的变量，不在ref中也不在view的子view中
+        pIdx = varsContainer.length - 1;
+    }
 
     let override_id = fromVar.id;
     for (let i = pIdx; i >= 0; --i) {
