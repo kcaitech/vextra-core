@@ -3,13 +3,12 @@ import { VariableType, OverrideType, Variable, ShapeFrame, SymbolRefShape, Symbo
 import { findOverrideAndVar } from "./basic";
 import { RenderTransform } from "./basic";
 import { EL, elh } from "./el";
-import { FrameType, ResizingConstraints, ResizingConstraints2 } from "../data/consts";
+import { FrameType } from "../data/consts";
 import { Matrix } from "../basic/matrix";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { fixConstrainFrame } from "../editor/frame";
-import { exportShapeFrame } from "../data/baseexport";
 import { BasicArray } from "../data/basic";
 import { BorderOptions } from "data/typesdefine";
 
