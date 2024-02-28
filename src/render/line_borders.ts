@@ -44,7 +44,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
         delete body_props.opacity;
         let line_g;
         if (border.fillType === FillType.Gradient) {
-            line_g = lineGradient(border.gradient as Gradient, shape.frame, thickness);
+            line_g = lineGradient(h, border.gradient as Gradient, shape.frame, thickness);
         }
         const g_cs: any[] = [h('path', body_props)];
         if (endMarkerType && endMarkerType !== MarkerType.Line) {
@@ -59,31 +59,23 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
             g_cs.unshift(marker(h, style, border, startMarkerType, id));
             body_props['marker-start'] = `url(#arrow-${id})`;
         }
-        if (line_g && line_g.style) {
+        if (line_g) {
             body_props.stroke = 'white'
             const frame = shape.frame;
-            const gradient_type = border.gradient!.gradientType;
             const id = "mask-line-" + objectId(border) + randomId();
             const mk = h("mask", { id }, g_cs);
             const width = frame.width + (thickness * 12);
             const height = frame.height + (thickness * 12);
-            const max_l = frame.width > frame.height ? width : height;
-            const offsetX = gradient_type === GradientType.Radial ? (frame.width - max_l) / 2 : -(thickness * 6);
-            const offsetY = gradient_type === GradientType.Radial ? (frame.height - max_l) / 2 : -(thickness * 6);
-            // const fg = h("foreignObject", {
-            //     width: gradient_type === GradientType.Radial ? max_l : width, height: gradient_type === GradientType.Radial ? max_l : height, x: offsetX, y: offsetY,
-            //     mask: "url(#" + id + ")",
-            // },
-            //     h("div", { width: "100%", height: "100%", style: 'overflow: hidden; height: 100%' }, [h("div", { width: "100%", height: "100%", style: line_g.style })]))
+            const offset = -(thickness * 6);
             const rect_h = h("rect", {
-                x: 0,
-                y: 0,
+                x: offset,
+                y: offset,
                 width,
                 height,
                 fill: "url(#" + line_g.id + ")",
                 mask: "url(#" + id + ")",
             })
-            return h('g', [mk, rect_h]);
+            return h('g', [line_g.node, mk, rect_h]);
         } else {
             return h('g', { opacity: border.color.alpha }, g_cs);
         }
@@ -103,7 +95,7 @@ function handler(h: Function, style: Style, border: Border, path: string, shape:
 function angular_handler(h: Function, style: Style, border: Border, path: string, shape: Shape, startMarkerType?: MarkerType, endMarkerType?: MarkerType): any {
     const thickness = border.thickness;
     const opacity = border.gradient?.gradientOpacity;
-    let line_g = lineGradient(border.gradient as Gradient, shape.frame, thickness);
+    let line_g = lineGradient(h, border.gradient as Gradient, shape.frame, thickness);
     const id = "mask-line-" + objectId(border) + randomId();
     const body_props: any = {
         d: path,
