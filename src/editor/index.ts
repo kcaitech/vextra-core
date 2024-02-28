@@ -12,6 +12,7 @@ import { TableShape } from "../data/table";
 import { Text } from "../data/text"
 import { resizingConstraintEditor } from "./resizingConstraint";
 import { ISave4Restore } from "./coop/localcmd";
+import { AsyncApiCaller } from "./transform/handler";
 
 export { DocEditor } from "./document";
 export { PageEditor } from "./page";
