@@ -168,7 +168,7 @@ function _ov_3(_var: Variable[], name: string, valuefun: (_var: Variable | undef
     const pIdx = varsContainer.findIndex((v) => v.id === p.id);
     // if (pIdx < 0) throw new Error(); // 可能的，当前view为symbolref，正在修改组件变量
     const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
-    if (hostIdx < 0) throw new Error();
+    if (hostIdx < 0) return _var[_var.length - 1]; // 可直接修改;
     if (pIdx >= 0 && pIdx <= hostIdx) return _var[_var.length - 1]; // 可直接修改
 
     const value = valuefun(_var[_var.length - 1]);
@@ -355,8 +355,8 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
     let pIdx = varsContainer.findIndex((v) => v.id === p.id); // 不一定找的到
     // if (pIdx < 0) throw new Error(); // 可能的，当前view为symbolref，正在修改组件变量
     const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
-    if (hostIdx < 0) throw new Error();
-    if (pIdx >= 0 && pIdx <= hostIdx) {
+    // if (hostIdx < 0) throw new Error();
+    if (hostIdx < 0 || pIdx >= 0 && pIdx <= hostIdx) {
         if (attr.name && _var.name !== attr.name) api.shapeModifyVariableName(page, _var, attr.name);
         if (attr.value) api.shapeModifyVariable(page, _var, attr.value);
         return;
