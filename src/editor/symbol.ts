@@ -362,6 +362,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
         return;
     }
 
+    // fix text
     let value = attr.value;
     if (_var.type === VariableType.Text
         && typeof value === 'string') {
@@ -409,22 +410,28 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
 
         const _vars = findOverride(override_id, ot, pIdx >= 0 ? varsContainer.slice(0, pIdx) : varsContainer)
         if (_vars) {
-            const _var1 = _ov_3(_vars, _var.name, () => value, view, page, api);
-            if (_var1 && _var1 === _vars[_vars.length - 1]) {
-                api.shapeModifyVariable(page, _var1, value);
+            const p = varParent(_vars[_vars.length - 1]);
+            if (!p) throw new Error();
+            // 判断是否可以修改，如可以则直接修改。否则走override
+            const pIdx = varsContainer.findIndex((v) => v.id === p.id);
+            if (pIdx >= 0 && pIdx <= hostIdx) {
+                api.shapeModifyVariable(page, _vars[_vars.length - 1], value);
+                return;
             }
-            return;
         }
     } else {
         // SymbolShape
         override_id = _var.id;
         const _vars = findOverride(override_id, OverrideType.Variable, pIdx >= 0 ? varsContainer.slice(0, pIdx) : varsContainer)
         if (_vars) {
-            const _var1 = _ov_3(_vars, _var.name, () => value, view, page, api);
-            if (_var1 && _var1 === _vars[_vars.length - 1]) {
-                api.shapeModifyVariable(page, _var1, value);
+            const p = varParent(_vars[_vars.length - 1]);
+            if (!p) throw new Error();
+            // 判断是否可以修改，如可以则直接修改。否则走override
+            const pIdx = varsContainer.findIndex((v) => v.id === p.id);
+            if (pIdx >= 0 && pIdx <= hostIdx) {
+                api.shapeModifyVariable(page, _vars[_vars.length - 1], value);
+                return;
             }
-            return;
         }
     }
     if (pIdx < 0) { // 可能的，当前view为symbolref，正在修改组件变量

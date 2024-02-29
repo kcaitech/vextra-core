@@ -1100,8 +1100,9 @@ export class ShapeEditor {
 
         const api = this.__repo.start("switchSymRef");
         try {
-            if (this.modifyVariable(VariableType.SymbolRef, OverrideType.SymbolID, refId, api)) return;
-            api.shapeModifySymRef(this.__page, this.shape, refId);
+            if (!this.modifyVariable(VariableType.SymbolRef, OverrideType.SymbolID, refId, api)) {
+                api.shapeModifySymRef(this.__page, this.shape, refId);
+            }
             this.__repo.commit();
         } catch (e) {
             console.error(e);
