@@ -1141,9 +1141,47 @@ export class TableEditor extends ShapeEditor {
     public asyncSetTextGradient(gradient: Gradient | undefined, range?: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }): AsyncGradientEditor {
         const api = this.__repo.start("asyncSetTextGradient");
         let status: Status = Status.Pending;
-        const execute_from = () => { }
-        const execute_to = () => { }
-        const execute_elipselength = () => { }
+        const execute_from = (from: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                new_gradient.from.x = from.x;
+                new_gradient.from.y = from.y;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_to = (to: { x: number, y: number }) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                new_gradient.to.x = to.x;
+                new_gradient.to.y = to.y;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
+        const execute_elipselength = (length: number) => {
+            status = Status.Pending;
+            try {
+                const new_gradient = importGradient(gradient!);
+                new_gradient.elipseLength = length;
+                set_gradient(new_gradient);
+                this.__repo.transactCtx.fireNotify();
+                status = Status.Fulfilled;
+            } catch (e) {
+                console.error(e);
+                status = Status.Exception;
+            }
+        }
         const execute_stop_position = (position: number, id: string) => {
             status = Status.Pending;
             try {
